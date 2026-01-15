@@ -23,7 +23,7 @@ export default function Dashboard() {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl md:text-4xl font-display font-bold text-white uppercase tracking-tight">Team Dashboard</h2>
+          <h2 className="text-3xl md:text-4xl font-display font-bold text-white uppercase tracking-tight">Caliber Dashboard</h2>
           <p className="text-muted-foreground font-medium">Season 2024-25 Overview</p>
         </div>
         <Link href="/analyze" className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-xl font-bold transition-all shadow-lg hover:shadow-primary/25 hover:-translate-y-0.5 active:translate-y-0">

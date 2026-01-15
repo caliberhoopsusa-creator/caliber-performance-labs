@@ -18,7 +18,7 @@ export function Sidebar() {
           <Activity className="w-6 h-6" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold font-display text-white tracking-wider">SCOUT<span className="text-primary">IQ</span></h1>
+          <h1 className="text-2xl font-bold font-display text-white tracking-wider uppercase">CALIBER</h1>
           <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium">Performance Labs</p>
         </div>
       </div>

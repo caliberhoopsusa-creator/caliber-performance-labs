@@ -37,7 +37,7 @@ export default function AnalyzeGame() {
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="text-3xl font-display font-bold text-white uppercase tracking-tight">Game Analysis</h1>
+          <h1 className="text-3xl font-display font-bold text-white uppercase tracking-tight">Caliber Analysis</h1>
           <p className="text-muted-foreground text-sm font-medium">Input stats to generate a performance report card.</p>
         </div>
       </div>
