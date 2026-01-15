@@ -82,6 +82,37 @@ export const api = {
       },
     }
   },
+  analytics: {
+    leaderboard: {
+      method: 'GET' as const,
+      path: '/api/analytics/leaderboard',
+      responses: {
+        200: z.array(z.object({
+          playerId: z.number(),
+          name: z.string(),
+          team: z.string().nullable(),
+          jerseyNumber: z.number().nullable(),
+          avgPoints: z.number(),
+          avgGrade: z.string(),
+          gamesPlayed: z.number(),
+        })),
+      },
+    },
+    compare: {
+      method: 'GET' as const,
+      path: '/api/analytics/compare',
+      input: z.object({
+        player1Id: z.coerce.number(),
+        player2Id: z.coerce.number(),
+      }),
+      responses: {
+        200: z.object({
+          player1: z.any(),
+          player2: z.any(),
+        }),
+      },
+    },
+  },
 };
 
 // ============================================

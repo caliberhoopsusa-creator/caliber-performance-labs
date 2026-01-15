@@ -10,6 +10,8 @@ import Dashboard from "@/pages/Dashboard";
 import PlayersList from "@/pages/PlayersList";
 import PlayerDetail from "@/pages/PlayerDetail";
 import AnalyzeGame from "@/pages/AnalyzeGame";
+import Leaderboard from "@/pages/Leaderboard";
+import ComparePlayers from "@/pages/ComparePlayers";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -21,6 +23,8 @@ function Router() {
           <Route path="/" component={Dashboard} />
           <Route path="/players" component={PlayersList} />
           <Route path="/players/:id" component={PlayerDetail} />
+          <Route path="/leaderboard" component={Leaderboard} />
+          <Route path="/compare" component={ComparePlayers} />
           <Route path="/analyze" component={AnalyzeGame} />
           <Route component={NotFound} />
         </Switch>

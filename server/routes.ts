@@ -175,6 +175,65 @@ export async function registerRoutes(
     res.status(204).send();
   });
 
+  app.get(api.analytics.leaderboard.path, async (req, res) => {
+    const playersList = await storage.getPlayers();
+    const leaderboard = await Promise.all(playersList.map(async (p) => {
+      const fullPlayer = await storage.getPlayer(p.id);
+      const playerGames = fullPlayer?.games || [];
+      const avgPoints = playerGames.length > 0 
+        ? playerGames.reduce((acc, g) => acc + g.points, 0) / playerGames.length 
+        : 0;
+      
+      // Calculate avg grade score for sorting
+      const gradeScores: Record<string, number> = {
+        'A+': 97, 'A': 94, 'A-': 90,
+        'B+': 87, 'B': 84, 'B-': 80,
+        'C+': 77, 'C': 74, 'C-': 70,
+        'D': 65, 'F': 55
+      };
+      
+      const avgGradeScore = playerGames.length > 0
+        ? playerGames.reduce((acc, g) => acc + (gradeScores[g.grade || 'C'] || 70), 0) / playerGames.length
+        : 0;
+
+      // Inverse map back to a grade label for the leaderboard
+      let avgGrade = 'C';
+      if (avgGradeScore >= 90) avgGrade = 'A';
+      else if (avgGradeScore >= 80) avgGrade = 'B';
+      else if (avgGradeScore >= 70) avgGrade = 'C';
+      else if (avgGradeScore >= 60) avgGrade = 'D';
+      else avgGrade = 'F';
+
+      return {
+        playerId: p.id,
+        name: p.name,
+        team: p.team,
+        jerseyNumber: p.jerseyNumber,
+        avgPoints: Number(avgPoints.toFixed(1)),
+        avgGrade,
+        avgGradeScore,
+        gamesPlayed: playerGames.length
+      };
+    }));
+
+    // Sort by avg grade score descending
+    leaderboard.sort((a, b) => b.avgGradeScore - a.avgGradeScore);
+
+    res.json(leaderboard.map(({ avgGradeScore, ...rest }) => rest));
+  });
+
+  app.get(api.analytics.compare.path, async (req, res) => {
+    const { player1Id, player2Id } = api.analytics.compare.input.parse(req.query);
+    const p1 = await storage.getPlayer(player1Id);
+    const p2 = await storage.getPlayer(player2Id);
+    
+    if (!p1 || !p2) {
+      return res.status(404).json({ message: "One or both players not found" });
+    }
+
+    res.json({ player1: p1, player2: p2 });
+  });
+
   await seedDatabase();
 
   return httpServer;
