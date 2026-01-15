@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { usePlayers, useCreatePlayer } from "@/hooks/use-basketball";
 import { Link } from "wouter";
-import { Search, Plus, UserPlus, Trash2 } from "lucide-react";
+import { Search, Plus, UserPlus, Trash2, ChevronRight } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";

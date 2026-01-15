@@ -145,8 +145,30 @@ export async function registerRoutes(
       const { grade, feedback } = calculateGrade(input, player.position);
       
       // Inject calculated fields
-      const gameData = {
-        ...input,
+      const gameData: any = {
+        playerId: input.playerId,
+        date: input.date,
+        opponent: input.opponent,
+        result: input.result,
+        minutes: input.minutes,
+        points: input.points,
+        rebounds: input.rebounds,
+        assists: input.assists,
+        steals: input.steals,
+        blocks: input.blocks,
+        turnovers: input.turnovers,
+        fouls: input.fouls,
+        fgMade: input.fgMade,
+        fgAttempted: input.fgAttempted,
+        threeMade: input.threeMade,
+        threeAttempted: input.threeAttempted,
+        ftMade: input.ftMade,
+        ftAttempted: input.ftAttempted,
+        offensiveRebounds: input.offensiveRebounds,
+        defensiveRebounds: input.defensiveRebounds,
+        hustleScore: input.hustleScore,
+        defenseRating: input.defenseRating,
+        notes: input.notes,
         grade,
         feedback
       };

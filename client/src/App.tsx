@@ -6,13 +6,13 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Sidebar, MobileNav } from "@/components/Sidebar";
 
 // Pages
-import Dashboard from "@/pages/Dashboard";
-import PlayersList from "@/pages/PlayersList";
-import PlayerDetail from "@/pages/PlayerDetail";
-import AnalyzeGame from "@/pages/AnalyzeGame";
-import Leaderboard from "@/pages/Leaderboard";
-import ComparePlayers from "@/pages/ComparePlayers";
-import NotFound from "@/pages/not-found";
+import Dashboard from "./pages/Dashboard";
+import PlayersList from "./pages/PlayersList";
+import PlayerDetail from "./pages/PlayerDetail";
+import AnalyzeGame from "./pages/AnalyzeGame";
+import Leaderboard from "./pages/Leaderboard";
+import ComparePlayers from "./pages/ComparePlayers";
+import NotFound from "./pages/not-found";
 
 function Router() {
   return (

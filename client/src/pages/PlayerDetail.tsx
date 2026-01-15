@@ -2,7 +2,7 @@ import { usePlayer, useDeleteGame } from "@/hooks/use-basketball";
 import { useRoute, Link } from "wouter";
 import { StatCard } from "@/components/StatCard";
 import { GradeBadge } from "@/components/GradeBadge";
-import { ArrowLeft, Plus, Calendar, Trash2, Award, ClipboardList } from "lucide-react";
+import { ArrowLeft, Plus, Calendar, Trash2, Award, ClipboardList, Activity } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { Button } from "@/components/ui/button";
 import {
