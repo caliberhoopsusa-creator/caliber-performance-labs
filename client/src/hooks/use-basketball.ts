@@ -65,6 +65,44 @@ export function useDeletePlayer() {
   });
 }
 
+export type PlayerUpdate = {
+  name?: string;
+  position?: "Guard" | "Wing" | "Big";
+  height?: string;
+  team?: string;
+  jerseyNumber?: number;
+  photoUrl?: string;
+  bannerUrl?: string;
+  bio?: string;
+};
+
+export function useUpdatePlayer() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, updates }: { id: number; updates: PlayerUpdate }) => {
+      const validated = api.players.update.input.parse(updates);
+      const url = buildUrl(api.players.update.path, { id });
+      const res = await fetch(url, {
+        method: api.players.update.method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(validated),
+      });
+      if (!res.ok) {
+        if (res.status === 400) {
+          const error = await res.json();
+          throw new Error(error.message || "Validation failed");
+        }
+        throw new Error("Failed to update player");
+      }
+      return api.players.update.responses[200].parse(await res.json());
+    },
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: [api.players.get.path, id] });
+      queryClient.invalidateQueries({ queryKey: [api.players.list.path] });
+    },
+  });
+}
+
 // ============================================
 // GAMES HOOKS
 // ============================================

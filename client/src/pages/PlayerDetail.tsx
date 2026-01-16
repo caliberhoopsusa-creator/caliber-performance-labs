@@ -1,11 +1,29 @@
-import { usePlayer, useDeleteGame, usePlayerBadges } from "@/hooks/use-basketball";
+import { usePlayer, useDeleteGame, usePlayerBadges, useUpdatePlayer, type PlayerUpdate } from "@/hooks/use-basketball";
 import { GoalsPanel } from "@/components/GoalsPanel";
 import { SocialEngagement } from "@/components/SocialEngagement";
-import { useRoute, Link } from "wouter";
+import { useRoute, Link, useLocation } from "wouter";
 import { StatCard } from "@/components/StatCard";
 import { GradeBadge } from "@/components/GradeBadge";
 import { PlayerArchetype } from "@/components/PlayerArchetype";
-import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Crosshair, Trophy, Share2, BarChart3, Medal, User, ChevronRight, ChevronDown, TrendingUp } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Crosshair, Trophy, Share2, BarChart3, Medal, User, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ObjectUploader } from "@/components/ObjectUploader";
 import { BADGE_DEFINITIONS, type Badge, type Game } from "@shared/schema";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 import { Button } from "@/components/ui/button";
@@ -31,7 +49,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { AvatarImage } from "@/components/ui/avatar";
 
 const BADGE_ICONS: Record<string, any> = {
   twenty_piece: Target,
@@ -96,9 +115,86 @@ export default function PlayerDetail() {
   const { data: player, isLoading } = usePlayer(id);
   const { data: badges = [], isLoading: badgesLoading } = usePlayerBadges(id);
   const { mutate: deleteGame } = useDeleteGame();
+  const { mutate: updatePlayer, isPending: isUpdating } = useUpdatePlayer();
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const [showAllGames, setShowAllGames] = useState(false);
   const [expandedGameId, setExpandedGameId] = useState<number | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editForm, setEditForm] = useState<PlayerUpdate>({});
+
+  useEffect(() => {
+    if (player && isEditDialogOpen) {
+      setEditForm({
+        name: player.name,
+        position: player.position as "Guard" | "Wing" | "Big",
+        height: player.height || "",
+        team: player.team || "",
+        jerseyNumber: player.jerseyNumber || undefined,
+        photoUrl: player.photoUrl || "",
+        bannerUrl: player.bannerUrl || "",
+        bio: player.bio || "",
+      });
+    }
+  }, [player, isEditDialogOpen]);
+
+  const handleSaveProfile = () => {
+    updatePlayer(
+      { id, updates: editForm },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Profile Updated",
+            description: "Your profile changes have been saved.",
+          });
+          setIsEditDialogOpen(false);
+        },
+        onError: () => {
+          toast({
+            title: "Error",
+            description: "Failed to update profile. Please try again.",
+            variant: "destructive",
+          });
+        },
+      }
+    );
+  };
+
+  const handlePhotoUpload = async (file: { name: string; type: string }) => {
+    const res = await fetch("/api/object-storage/put-presigned-url", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fileName: file.name,
+        contentType: file.type,
+        objectDir: "public",
+      }),
+    });
+    const data = await res.json();
+    return {
+      method: "PUT" as const,
+      url: data.url,
+      headers: { "Content-Type": file.type },
+    };
+  };
+
+  const handlePhotoComplete = async (result: any) => {
+    if (result.successful?.[0]) {
+      const file = result.successful[0];
+      const publicUrl = `/api/object-storage/public/${file.meta.name}`;
+      setEditForm((prev) => ({ ...prev, photoUrl: publicUrl }));
+      toast({ title: "Photo Uploaded", description: "Profile photo uploaded successfully." });
+    }
+  };
+
+  const handleBannerComplete = async (result: any) => {
+    if (result.successful?.[0]) {
+      const file = result.successful[0];
+      const publicUrl = `/api/object-storage/public/${file.meta.name}`;
+      setEditForm((prev) => ({ ...prev, bannerUrl: publicUrl }));
+      toast({ title: "Banner Uploaded", description: "Banner image uploaded successfully." });
+    }
+  };
 
   const handleShareProfile = async () => {
     const shareUrl = `${window.location.origin}/players/${id}/card`;
@@ -248,11 +344,22 @@ export default function PlayerDetail() {
 
         <div className="flex flex-col lg:flex-row gap-6 relative z-10">
           <div className="flex items-start gap-5">
-            <Avatar className="w-20 h-20 md:w-28 md:h-28 border-4 border-primary/20">
-              <AvatarFallback className="bg-gradient-to-br from-primary/30 to-primary/10 text-2xl md:text-4xl font-display font-bold text-white">
-                {getInitials(player.name)}
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative group/avatar">
+              <Avatar className="w-20 h-20 md:w-28 md:h-28 border-4 border-primary/20">
+                {player.photoUrl && <AvatarImage src={player.photoUrl} alt={player.name} />}
+                <AvatarFallback className="bg-gradient-to-br from-primary/30 to-primary/10 text-2xl md:text-4xl font-display font-bold text-white">
+                  {getInitials(player.name)}
+                </AvatarFallback>
+              </Avatar>
+              <Button
+                size="icon"
+                onClick={() => setIsEditDialogOpen(true)}
+                className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full opacity-0 group-hover/avatar:opacity-100 transition-opacity"
+                data-testid="button-edit-profile-avatar"
+              >
+                <Pencil className="w-3 h-3" />
+              </Button>
+            </div>
             
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -287,6 +394,14 @@ export default function PlayerDetail() {
             </div>
             
             <div className="flex flex-wrap gap-3">
+              <Button 
+                onClick={() => setIsEditDialogOpen(true)} 
+                variant="outline" 
+                className="gap-2"
+                data-testid="button-edit-profile"
+              >
+                <Pencil className="w-4 h-4" /> Edit Profile
+              </Button>
               <Button 
                 onClick={handleShareProfile} 
                 variant="outline" 
@@ -761,6 +876,168 @@ export default function PlayerDetail() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[500px] bg-card border-white/10 text-white max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-display uppercase tracking-wide">Edit Profile</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Update your player profile and upload photos.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 pt-4">
+            <div className="flex flex-col items-center gap-4">
+              <div className="relative">
+                <Avatar className="w-24 h-24 border-4 border-primary/20">
+                  {editForm.photoUrl && <AvatarImage src={editForm.photoUrl} alt="Profile" />}
+                  <AvatarFallback className="bg-gradient-to-br from-primary/30 to-primary/10 text-2xl font-display font-bold text-white">
+                    {editForm.name ? getInitials(editForm.name) : "?"}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+              <div className="flex gap-2">
+                <ObjectUploader
+                  maxNumberOfFiles={1}
+                  maxFileSize={5242880}
+                  onGetUploadParameters={handlePhotoUpload}
+                  onComplete={handlePhotoComplete}
+                  buttonClassName="gap-2"
+                >
+                  <Camera className="w-4 h-4" /> Upload Photo
+                </ObjectUploader>
+                {editForm.photoUrl && (
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setEditForm((prev) => ({ ...prev, photoUrl: "" }))}
+                    data-testid="button-remove-photo"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Full Name</label>
+                <Input
+                  value={editForm.name || ""}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))}
+                  placeholder="LeBron James"
+                  className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20"
+                  data-testid="input-edit-name"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Position</label>
+                  <Select
+                    value={editForm.position}
+                    onValueChange={(val) => setEditForm((prev) => ({ ...prev, position: val as "Guard" | "Wing" | "Big" }))}
+                  >
+                    <SelectTrigger className="bg-secondary/30 border-white/10 text-white" data-testid="select-edit-position">
+                      <SelectValue placeholder="Position" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-white/10 text-white">
+                      <SelectItem value="Guard">Guard</SelectItem>
+                      <SelectItem value="Wing">Wing</SelectItem>
+                      <SelectItem value="Big">Big</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Jersey #</label>
+                  <Input
+                    type="number"
+                    value={editForm.jerseyNumber || ""}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, jerseyNumber: e.target.value ? Number(e.target.value) : undefined }))}
+                    placeholder="23"
+                    className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20"
+                    data-testid="input-edit-jersey"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Height</label>
+                  <Input
+                    value={editForm.height || ""}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, height: e.target.value }))}
+                    placeholder="6'8"
+                    className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20"
+                    data-testid="input-edit-height"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Team</label>
+                  <Input
+                    value={editForm.team || ""}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, team: e.target.value }))}
+                    placeholder="Lakers"
+                    className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20"
+                    data-testid="input-edit-team"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Bio</label>
+                <Textarea
+                  value={editForm.bio || ""}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, bio: e.target.value }))}
+                  placeholder="Tell us about yourself as a player..."
+                  rows={3}
+                  className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20 resize-none"
+                  data-testid="textarea-edit-bio"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Banner Image</label>
+                <div className="flex gap-2">
+                  <ObjectUploader
+                    maxNumberOfFiles={1}
+                    maxFileSize={10485760}
+                    onGetUploadParameters={handlePhotoUpload}
+                    onComplete={handleBannerComplete}
+                    buttonClassName="gap-2 flex-1"
+                  >
+                    <Upload className="w-4 h-4" /> Upload Banner
+                  </ObjectUploader>
+                  {editForm.bannerUrl && (
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setEditForm((prev) => ({ ...prev, bannerUrl: "" }))}
+                      data-testid="button-remove-banner"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+                {editForm.bannerUrl && (
+                  <div className="mt-2 rounded-lg overflow-hidden border border-white/10">
+                    <img src={editForm.bannerUrl} alt="Banner preview" className="w-full h-24 object-cover" />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="pt-4">
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} data-testid="button-cancel-edit">
+              Cancel
+            </Button>
+            <Button onClick={handleSaveProfile} disabled={isUpdating} data-testid="button-save-profile">
+              {isUpdating ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

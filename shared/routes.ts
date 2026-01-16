@@ -54,6 +54,25 @@ export const api = {
         404: errorSchemas.notFound,
       },
     },
+    update: {
+      method: 'PATCH' as const,
+      path: '/api/players/:id',
+      input: z.object({
+        name: z.string().min(1).optional(),
+        position: z.enum(['Guard', 'Wing', 'Big']).optional(),
+        height: z.string().optional(),
+        team: z.string().optional(),
+        jerseyNumber: z.number().optional(),
+        photoUrl: z.string().optional(),
+        bannerUrl: z.string().optional(),
+        bio: z.string().optional(),
+      }),
+      responses: {
+        200: z.custom<typeof players.$inferSelect>(),
+        400: errorSchemas.validation,
+        404: errorSchemas.notFound,
+      },
+    },
   },
   games: {
     create: {

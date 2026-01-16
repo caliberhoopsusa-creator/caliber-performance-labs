@@ -71,10 +71,10 @@ export default function PlayersList() {
         
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <button className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-xl font-bold transition-all shadow-lg hover:shadow-primary/25 hover:-translate-y-0.5 active:translate-y-0">
+            <Button className="gap-2" data-testid="button-add-player">
               <UserPlus className="w-5 h-5" />
               Add Player
-            </button>
+            </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px] bg-card border-white/10 text-white">
             <DialogHeader>
@@ -91,12 +91,13 @@ export default function PlayersList() {
       {/* Search Bar */}
       <div className="relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
-        <input 
+        <Input 
           type="text" 
           placeholder="Search players by name or team..." 
-          className="w-full bg-card border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+          className="w-full bg-card border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-muted-foreground"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          data-testid="input-search-players"
         />
       </div>
 
@@ -151,17 +152,19 @@ export default function PlayersList() {
                   </div>
                 </Link>
                 
-                <button
+                <Button
+                  size="icon"
+                  variant="ghost"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     setPlayerToDelete({ id: player.id, name: player.name });
                   }}
-                  className="absolute bottom-4 right-4 p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 opacity-0 group-hover:opacity-100 transition-all z-20"
+                  className="absolute bottom-4 right-4 w-8 h-8 text-red-400 opacity-0 group-hover:opacity-100 transition-all z-20"
                   data-testid={`button-delete-player-${player.id}`}
                 >
                   <Trash2 className="w-4 h-4" />
-                </button>
+                </Button>
               </div>
             ))}
           </div>
