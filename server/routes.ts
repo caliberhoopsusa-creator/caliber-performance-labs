@@ -3,7 +3,7 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, type Game, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, type SkillBadgeLevel } from "@shared/schema";
+import { players, games, type Game, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { GoogleGenAI } from "@google/genai";
 import multer from "multer";
@@ -413,6 +413,106 @@ async function updatePlayerStreaks(playerId: number, gameId: number, stats: any,
   }
 }
 
+// Helper function to check for performance drops and generate alerts
+async function checkPerformanceAlerts(playerId: number, gameId: number, currentGame: any, grade: string) {
+  const playerGames = await storage.getGamesByPlayerId(playerId);
+  const player = await storage.getPlayer(playerId);
+  
+  if (!player || playerGames.length < 3) return; // Need at least 3 games to detect trends
+  
+  // Get recent games excluding current one
+  const recentGames = playerGames.filter(g => g.id !== gameId).slice(0, 5);
+  if (recentGames.length < 2) return;
+  
+  // Calculate recent averages
+  const avgPoints = recentGames.reduce((acc, g) => acc + g.points, 0) / recentGames.length;
+  const avgRebounds = recentGames.reduce((acc, g) => acc + g.rebounds, 0) / recentGames.length;
+  const avgAssists = recentGames.reduce((acc, g) => acc + g.assists, 0) / recentGames.length;
+  const avgHustle = recentGames.reduce((acc, g) => acc + (g.hustleScore || 50), 0) / recentGames.length;
+  
+  // Check for significant performance drops (>40% below average)
+  const dropThreshold = 0.4;
+  
+  // Points drop
+  if (avgPoints > 5 && currentGame.points < avgPoints * (1 - dropThreshold)) {
+    await storage.createAlert({
+      playerId,
+      alertType: 'performance_drop',
+      title: 'Scoring Drop Detected',
+      message: `${player.name} scored only ${currentGame.points} points, well below their ${avgPoints.toFixed(1)} PPG average.`,
+      severity: 'warning',
+      relatedGameId: gameId,
+      isRead: false,
+    });
+  }
+  
+  // Rebounds drop for Bigs
+  if (player.position === 'Big' && avgRebounds > 4 && currentGame.rebounds < avgRebounds * (1 - dropThreshold)) {
+    await storage.createAlert({
+      playerId,
+      alertType: 'performance_drop',
+      title: 'Rebounding Drop Detected',
+      message: `${player.name} grabbed only ${currentGame.rebounds} rebounds, below their ${avgRebounds.toFixed(1)} RPG average.`,
+      severity: 'warning',
+      relatedGameId: gameId,
+      isRead: false,
+    });
+  }
+  
+  // Hustle drop
+  if (avgHustle > 60 && (currentGame.hustleScore || 50) < avgHustle * (1 - dropThreshold)) {
+    await storage.createAlert({
+      playerId,
+      alertType: 'performance_drop',
+      title: 'Hustle Drop Detected',
+      message: `${player.name}'s hustle score dropped to ${currentGame.hustleScore || 50}, below their ${avgHustle.toFixed(0)} average.`,
+      severity: 'warning',
+      relatedGameId: gameId,
+      isRead: false,
+    });
+  }
+  
+  // Poor grade alert
+  const poorGrades = ['D', 'F'];
+  if (poorGrades.includes(grade)) {
+    await storage.createAlert({
+      playerId,
+      alertType: 'performance_drop',
+      title: 'Poor Game Grade',
+      message: `${player.name} received a ${grade} grade vs ${currentGame.opponent}. Review film and address issues.`,
+      severity: 'critical',
+      relatedGameId: gameId,
+      isRead: false,
+    });
+  }
+  
+  // Turnovers spike
+  if (currentGame.turnovers >= 5) {
+    await storage.createAlert({
+      playerId,
+      alertType: 'performance_drop',
+      title: 'High Turnover Game',
+      message: `${player.name} had ${currentGame.turnovers} turnovers vs ${currentGame.opponent}. Ball security needs attention.`,
+      severity: 'warning',
+      relatedGameId: gameId,
+      isRead: false,
+    });
+  }
+  
+  // Positive alert for improvement
+  if (avgPoints > 0 && currentGame.points > avgPoints * 1.5) {
+    await storage.createAlert({
+      playerId,
+      alertType: 'improvement',
+      title: 'Scoring Breakout!',
+      message: `${player.name} exploded for ${currentGame.points} points, significantly above their ${avgPoints.toFixed(1)} PPG average!`,
+      severity: 'info',
+      relatedGameId: gameId,
+      isRead: false,
+    });
+  }
+}
+
 // Update activity streak (for consecutive days of activity)
 async function updateActivityStreak(playerId: number, streakType: string): Promise<{ streakCount: number; isNewMilestone: boolean; milestoneReached?: number }> {
   const streak = await storage.getOrCreateActivityStreak(playerId, streakType);
@@ -703,6 +803,9 @@ export async function registerRoutes(
       
       // Update activity streak
       await updateActivityStreak(input.playerId, 'daily_game');
+      
+      // Check for performance alerts (drop detection)
+      await checkPerformanceAlerts(input.playerId, game.id, input, grade);
       
       res.status(201).json({ ...game, xpEarned, newTier, totalXp: updatedPlayer.totalXp, currentTier: updatedPlayer.currentTier });
     } catch (err) {
@@ -2093,6 +2196,938 @@ Respond in this exact JSON format:
     } catch (err) {
       console.error('Create story error:', err);
       res.status(500).json({ message: 'Error creating story' });
+    }
+  });
+
+  // === COACH ANALYSIS ROUTES ===
+
+  // --- Shots (Shot Charts) ---
+  app.post('/api/games/:gameId/shots', async (req, res) => {
+    try {
+      const gameId = Number(req.params.gameId);
+      const game = await storage.getGame(gameId);
+      if (!game) {
+        return res.status(404).json({ error: 'Game not found' });
+      }
+      const input = insertShotSchema.parse({ ...req.body, gameId, playerId: game.playerId });
+      const shot = await storage.createShot(input);
+      res.status(201).json(shot);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ error: err.errors[0].message });
+      }
+      console.error('Create shot error:', err);
+      res.status(500).json({ error: 'Error creating shot' });
+    }
+  });
+
+  app.get('/api/games/:gameId/shots', async (req, res) => {
+    try {
+      const gameId = Number(req.params.gameId);
+      const shots = await storage.getShotsByGame(gameId);
+      res.json(shots);
+    } catch (err) {
+      console.error('Get shots error:', err);
+      res.status(500).json({ error: 'Error fetching shots' });
+    }
+  });
+
+  app.get('/api/players/:playerId/shots', async (req, res) => {
+    try {
+      const playerId = Number(req.params.playerId);
+      const shots = await storage.getShotsByPlayer(playerId);
+      res.json(shots);
+    } catch (err) {
+      console.error('Get player shots error:', err);
+      res.status(500).json({ error: 'Error fetching shots' });
+    }
+  });
+
+  app.delete('/api/shots/:id', async (req, res) => {
+    try {
+      await storage.deleteShot(Number(req.params.id));
+      res.status(204).send();
+    } catch (err) {
+      console.error('Delete shot error:', err);
+      res.status(500).json({ error: 'Error deleting shot' });
+    }
+  });
+
+  // --- Game Notes ---
+  app.post('/api/games/:gameId/notes', async (req, res) => {
+    try {
+      const gameId = Number(req.params.gameId);
+      const game = await storage.getGame(gameId);
+      if (!game) {
+        return res.status(404).json({ error: 'Game not found' });
+      }
+      const input = insertGameNoteSchema.parse({ ...req.body, gameId, playerId: game.playerId });
+      const note = await storage.createGameNote(input);
+      res.status(201).json(note);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ error: err.errors[0].message });
+      }
+      console.error('Create game note error:', err);
+      res.status(500).json({ error: 'Error creating game note' });
+    }
+  });
+
+  app.get('/api/games/:gameId/notes', async (req, res) => {
+    try {
+      const gameId = Number(req.params.gameId);
+      const notes = await storage.getGameNotes(gameId);
+      res.json(notes);
+    } catch (err) {
+      console.error('Get game notes error:', err);
+      res.status(500).json({ error: 'Error fetching notes' });
+    }
+  });
+
+  app.get('/api/players/:playerId/notes', async (req, res) => {
+    try {
+      const playerId = Number(req.params.playerId);
+      const notes = await storage.getPlayerGameNotes(playerId);
+      res.json(notes);
+    } catch (err) {
+      console.error('Get player notes error:', err);
+      res.status(500).json({ error: 'Error fetching notes' });
+    }
+  });
+
+  app.patch('/api/notes/:id', async (req, res) => {
+    try {
+      const updateSchema = insertGameNoteSchema.partial();
+      const input = updateSchema.parse(req.body);
+      const note = await storage.updateGameNote(Number(req.params.id), input);
+      res.json(note);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ error: err.errors[0].message });
+      }
+      console.error('Update note error:', err);
+      res.status(500).json({ error: 'Error updating note' });
+    }
+  });
+
+  app.delete('/api/notes/:id', async (req, res) => {
+    try {
+      await storage.deleteGameNote(Number(req.params.id));
+      res.status(204).send();
+    } catch (err) {
+      console.error('Delete note error:', err);
+      res.status(500).json({ error: 'Error deleting note' });
+    }
+  });
+
+  // --- Practices ---
+  app.post('/api/practices', async (req, res) => {
+    try {
+      const input = insertPracticeSchema.parse(req.body);
+      const practice = await storage.createPractice(input);
+      res.status(201).json(practice);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ error: err.errors[0].message });
+      }
+      console.error('Create practice error:', err);
+      res.status(500).json({ error: 'Error creating practice' });
+    }
+  });
+
+  app.get('/api/practices', async (req, res) => {
+    try {
+      const practices = await storage.getPractices();
+      res.json(practices);
+    } catch (err) {
+      console.error('Get practices error:', err);
+      res.status(500).json({ error: 'Error fetching practices' });
+    }
+  });
+
+  app.get('/api/practices/:id', async (req, res) => {
+    try {
+      const practice = await storage.getPractice(Number(req.params.id));
+      if (!practice) {
+        return res.status(404).json({ error: 'Practice not found' });
+      }
+      const attendance = await storage.getPracticeAttendance(practice.id);
+      res.json({ ...practice, attendance });
+    } catch (err) {
+      console.error('Get practice error:', err);
+      res.status(500).json({ error: 'Error fetching practice' });
+    }
+  });
+
+  app.patch('/api/practices/:id', async (req, res) => {
+    try {
+      const updateSchema = insertPracticeSchema.partial();
+      const input = updateSchema.parse(req.body);
+      const practice = await storage.updatePractice(Number(req.params.id), input);
+      res.json(practice);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ error: err.errors[0].message });
+      }
+      console.error('Update practice error:', err);
+      res.status(500).json({ error: 'Error updating practice' });
+    }
+  });
+
+  app.delete('/api/practices/:id', async (req, res) => {
+    try {
+      await storage.deletePractice(Number(req.params.id));
+      res.status(204).send();
+    } catch (err) {
+      console.error('Delete practice error:', err);
+      res.status(500).json({ error: 'Error deleting practice' });
+    }
+  });
+
+  // --- Practice Attendance ---
+  app.post('/api/practices/:practiceId/attendance', async (req, res) => {
+    try {
+      const practiceId = Number(req.params.practiceId);
+      const practice = await storage.getPractice(practiceId);
+      if (!practice) {
+        return res.status(404).json({ error: 'Practice not found' });
+      }
+      const input = insertPracticeAttendanceSchema.parse({ ...req.body, practiceId });
+      const attendance = await storage.createPracticeAttendance(input);
+      res.status(201).json(attendance);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ error: err.errors[0].message });
+      }
+      console.error('Create attendance error:', err);
+      res.status(500).json({ error: 'Error creating attendance' });
+    }
+  });
+
+  app.get('/api/practices/:practiceId/attendance', async (req, res) => {
+    try {
+      const practiceId = Number(req.params.practiceId);
+      const attendance = await storage.getPracticeAttendance(practiceId);
+      res.json(attendance);
+    } catch (err) {
+      console.error('Get attendance error:', err);
+      res.status(500).json({ error: 'Error fetching attendance' });
+    }
+  });
+
+  app.get('/api/players/:playerId/attendance', async (req, res) => {
+    try {
+      const playerId = Number(req.params.playerId);
+      const attendance = await storage.getPlayerAttendance(playerId);
+      res.json(attendance);
+    } catch (err) {
+      console.error('Get player attendance error:', err);
+      res.status(500).json({ error: 'Error fetching attendance' });
+    }
+  });
+
+  app.patch('/api/attendance/:id', async (req, res) => {
+    try {
+      const updateSchema = insertPracticeAttendanceSchema.partial();
+      const input = updateSchema.parse(req.body);
+      const attendance = await storage.updatePracticeAttendance(Number(req.params.id), input);
+      res.json(attendance);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ error: err.errors[0].message });
+      }
+      console.error('Update attendance error:', err);
+      res.status(500).json({ error: 'Error updating attendance' });
+    }
+  });
+
+  // --- Drills ---
+  app.post('/api/drills', async (req, res) => {
+    try {
+      const input = insertDrillSchema.parse(req.body);
+      const drill = await storage.createDrill(input);
+      res.status(201).json(drill);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ error: err.errors[0].message });
+      }
+      console.error('Create drill error:', err);
+      res.status(500).json({ error: 'Error creating drill' });
+    }
+  });
+
+  app.get('/api/drills', async (req, res) => {
+    try {
+      const drills = await storage.getDrills();
+      res.json(drills);
+    } catch (err) {
+      console.error('Get drills error:', err);
+      res.status(500).json({ error: 'Error fetching drills' });
+    }
+  });
+
+  app.get('/api/drills/category/:category', async (req, res) => {
+    try {
+      const drills = await storage.getDrillsByCategory(req.params.category);
+      res.json(drills);
+    } catch (err) {
+      console.error('Get drills by category error:', err);
+      res.status(500).json({ error: 'Error fetching drills' });
+    }
+  });
+
+  app.get('/api/drills/:id', async (req, res) => {
+    try {
+      const drill = await storage.getDrill(Number(req.params.id));
+      if (!drill) {
+        return res.status(404).json({ error: 'Drill not found' });
+      }
+      res.json(drill);
+    } catch (err) {
+      console.error('Get drill error:', err);
+      res.status(500).json({ error: 'Error fetching drill' });
+    }
+  });
+
+  // --- Drill Scores ---
+  app.post('/api/practices/:practiceId/drill-scores', async (req, res) => {
+    try {
+      const practiceId = Number(req.params.practiceId);
+      const practice = await storage.getPractice(practiceId);
+      if (!practice) {
+        return res.status(404).json({ error: 'Practice not found' });
+      }
+      const input = insertDrillScoreSchema.parse({ ...req.body, practiceId });
+      const score = await storage.createDrillScore(input);
+      res.status(201).json(score);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ error: err.errors[0].message });
+      }
+      console.error('Create drill score error:', err);
+      res.status(500).json({ error: 'Error creating drill score' });
+    }
+  });
+
+  app.get('/api/practices/:practiceId/drill-scores', async (req, res) => {
+    try {
+      const practiceId = Number(req.params.practiceId);
+      const scores = await storage.getDrillScoresByPractice(practiceId);
+      res.json(scores);
+    } catch (err) {
+      console.error('Get drill scores error:', err);
+      res.status(500).json({ error: 'Error fetching drill scores' });
+    }
+  });
+
+  app.get('/api/players/:playerId/drill-scores', async (req, res) => {
+    try {
+      const playerId = Number(req.params.playerId);
+      const scores = await storage.getDrillScoresByPlayer(playerId);
+      res.json(scores);
+    } catch (err) {
+      console.error('Get player drill scores error:', err);
+      res.status(500).json({ error: 'Error fetching drill scores' });
+    }
+  });
+
+  // --- Lineups ---
+  app.post('/api/lineups', async (req, res) => {
+    try {
+      const input = insertLineupSchema.parse(req.body);
+      const lineup = await storage.createLineup(input);
+      res.status(201).json(lineup);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ error: err.errors[0].message });
+      }
+      console.error('Create lineup error:', err);
+      res.status(500).json({ error: 'Error creating lineup' });
+    }
+  });
+
+  app.get('/api/lineups', async (req, res) => {
+    try {
+      const lineups = await storage.getLineups();
+      res.json(lineups);
+    } catch (err) {
+      console.error('Get lineups error:', err);
+      res.status(500).json({ error: 'Error fetching lineups' });
+    }
+  });
+
+  app.get('/api/lineups/:id', async (req, res) => {
+    try {
+      const lineup = await storage.getLineup(Number(req.params.id));
+      if (!lineup) {
+        return res.status(404).json({ error: 'Lineup not found' });
+      }
+      const stats = await storage.getLineupStats(lineup.id);
+      res.json({ ...lineup, stats });
+    } catch (err) {
+      console.error('Get lineup error:', err);
+      res.status(500).json({ error: 'Error fetching lineup' });
+    }
+  });
+
+  app.delete('/api/lineups/:id', async (req, res) => {
+    try {
+      await storage.deleteLineup(Number(req.params.id));
+      res.status(204).send();
+    } catch (err) {
+      console.error('Delete lineup error:', err);
+      res.status(500).json({ error: 'Error deleting lineup' });
+    }
+  });
+
+  // --- Lineup Stats ---
+  app.post('/api/lineups/:lineupId/stats', async (req, res) => {
+    try {
+      const lineupId = Number(req.params.lineupId);
+      const lineup = await storage.getLineup(lineupId);
+      if (!lineup) {
+        return res.status(404).json({ error: 'Lineup not found' });
+      }
+      const input = insertLineupStatSchema.parse({ ...req.body, lineupId });
+      const stat = await storage.createLineupStat(input);
+      res.status(201).json(stat);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ error: err.errors[0].message });
+      }
+      console.error('Create lineup stat error:', err);
+      res.status(500).json({ error: 'Error creating lineup stat' });
+    }
+  });
+
+  app.get('/api/lineups/:lineupId/stats', async (req, res) => {
+    try {
+      const lineupId = Number(req.params.lineupId);
+      const stats = await storage.getLineupStats(lineupId);
+      res.json(stats);
+    } catch (err) {
+      console.error('Get lineup stats error:', err);
+      res.status(500).json({ error: 'Error fetching lineup stats' });
+    }
+  });
+
+  app.get('/api/games/:gameId/lineup-stats', async (req, res) => {
+    try {
+      const gameId = Number(req.params.gameId);
+      const stats = await storage.getLineupStatsByGame(gameId);
+      res.json(stats);
+    } catch (err) {
+      console.error('Get game lineup stats error:', err);
+      res.status(500).json({ error: 'Error fetching lineup stats' });
+    }
+  });
+
+  // --- Opponents (Scouting) ---
+  app.post('/api/opponents', async (req, res) => {
+    try {
+      const input = insertOpponentSchema.parse(req.body);
+      const opponent = await storage.createOpponent(input);
+      res.status(201).json(opponent);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ error: err.errors[0].message });
+      }
+      console.error('Create opponent error:', err);
+      res.status(500).json({ error: 'Error creating opponent' });
+    }
+  });
+
+  app.get('/api/opponents', async (req, res) => {
+    try {
+      const opponents = await storage.getOpponents();
+      res.json(opponents);
+    } catch (err) {
+      console.error('Get opponents error:', err);
+      res.status(500).json({ error: 'Error fetching opponents' });
+    }
+  });
+
+  app.get('/api/opponents/:id', async (req, res) => {
+    try {
+      const opponent = await storage.getOpponent(Number(req.params.id));
+      if (!opponent) {
+        return res.status(404).json({ error: 'Opponent not found' });
+      }
+      res.json(opponent);
+    } catch (err) {
+      console.error('Get opponent error:', err);
+      res.status(500).json({ error: 'Error fetching opponent' });
+    }
+  });
+
+  app.patch('/api/opponents/:id', async (req, res) => {
+    try {
+      const updateSchema = insertOpponentSchema.partial();
+      const input = updateSchema.parse(req.body);
+      const opponent = await storage.updateOpponent(Number(req.params.id), input);
+      res.json(opponent);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ error: err.errors[0].message });
+      }
+      console.error('Update opponent error:', err);
+      res.status(500).json({ error: 'Error updating opponent' });
+    }
+  });
+
+  app.delete('/api/opponents/:id', async (req, res) => {
+    try {
+      await storage.deleteOpponent(Number(req.params.id));
+      res.status(204).send();
+    } catch (err) {
+      console.error('Delete opponent error:', err);
+      res.status(500).json({ error: 'Error deleting opponent' });
+    }
+  });
+
+  // --- Alerts ---
+  app.get('/api/alerts', async (req, res) => {
+    try {
+      const playerId = req.query.playerId ? Number(req.query.playerId) : undefined;
+      const alerts = await storage.getAlerts(playerId);
+      res.json(alerts);
+    } catch (err) {
+      console.error('Get alerts error:', err);
+      res.status(500).json({ error: 'Error fetching alerts' });
+    }
+  });
+
+  app.get('/api/alerts/unread', async (req, res) => {
+    try {
+      const alerts = await storage.getUnreadAlerts();
+      res.json(alerts);
+    } catch (err) {
+      console.error('Get unread alerts error:', err);
+      res.status(500).json({ error: 'Error fetching alerts' });
+    }
+  });
+
+  app.patch('/api/alerts/:id/read', async (req, res) => {
+    try {
+      await storage.markAlertRead(Number(req.params.id));
+      res.json({ success: true });
+    } catch (err) {
+      console.error('Mark alert read error:', err);
+      res.status(500).json({ error: 'Error marking alert as read' });
+    }
+  });
+
+  app.delete('/api/alerts/:id', async (req, res) => {
+    try {
+      await storage.deleteAlert(Number(req.params.id));
+      res.status(204).send();
+    } catch (err) {
+      console.error('Delete alert error:', err);
+      res.status(500).json({ error: 'Error deleting alert' });
+    }
+  });
+
+  // --- Coach Goals ---
+  app.post('/api/coach-goals', async (req, res) => {
+    try {
+      const input = insertCoachGoalSchema.parse(req.body);
+      const goal = await storage.createCoachGoal(input);
+      res.status(201).json(goal);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ error: err.errors[0].message });
+      }
+      console.error('Create coach goal error:', err);
+      res.status(500).json({ error: 'Error creating coach goal' });
+    }
+  });
+
+  app.get('/api/coach-goals', async (req, res) => {
+    try {
+      const goals = await storage.getAllCoachGoals();
+      res.json(goals);
+    } catch (err) {
+      console.error('Get coach goals error:', err);
+      res.status(500).json({ error: 'Error fetching coach goals' });
+    }
+  });
+
+  app.get('/api/players/:playerId/coach-goals', async (req, res) => {
+    try {
+      const playerId = Number(req.params.playerId);
+      const goals = await storage.getCoachGoals(playerId);
+      res.json(goals);
+    } catch (err) {
+      console.error('Get player coach goals error:', err);
+      res.status(500).json({ error: 'Error fetching coach goals' });
+    }
+  });
+
+  app.patch('/api/coach-goals/:id', async (req, res) => {
+    try {
+      const updateSchema = insertCoachGoalSchema.partial();
+      const input = updateSchema.parse(req.body);
+      const goal = await storage.updateCoachGoal(Number(req.params.id), input);
+      res.json(goal);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ error: err.errors[0].message });
+      }
+      console.error('Update coach goal error:', err);
+      res.status(500).json({ error: 'Error updating coach goal' });
+    }
+  });
+
+  app.delete('/api/coach-goals/:id', async (req, res) => {
+    try {
+      await storage.deleteCoachGoal(Number(req.params.id));
+      res.status(204).send();
+    } catch (err) {
+      console.error('Delete coach goal error:', err);
+      res.status(500).json({ error: 'Error deleting coach goal' });
+    }
+  });
+
+  // --- Drill Recommendations ---
+  app.post('/api/players/:playerId/drill-recommendations/generate', async (req, res) => {
+    try {
+      const playerId = Number(req.params.playerId);
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ error: 'Player not found' });
+      }
+
+      // Analyze player's recent games to find weaknesses
+      const recentGames = player.games.slice(0, 10);
+      const drills = await storage.getDrills();
+      const recommendations: any[] = [];
+
+      if (recentGames.length === 0) {
+        return res.json({ message: 'No games to analyze', recommendations: [] });
+      }
+
+      // Calculate averages
+      const avgPoints = recentGames.reduce((acc, g) => acc + g.points, 0) / recentGames.length;
+      const avgRebounds = recentGames.reduce((acc, g) => acc + g.rebounds, 0) / recentGames.length;
+      const avgAssists = recentGames.reduce((acc, g) => acc + g.assists, 0) / recentGames.length;
+      const avgTurnovers = recentGames.reduce((acc, g) => acc + g.turnovers, 0) / recentGames.length;
+      const avgFgPct = recentGames.reduce((acc, g) => {
+        const fga = g.fgAttempted || 1;
+        return acc + (g.fgMade / fga);
+      }, 0) / recentGames.length;
+      const avgThreePct = recentGames.reduce((acc, g) => {
+        const attempts = g.threeAttempted || 1;
+        return acc + (g.threeMade / attempts);
+      }, 0) / recentGames.length;
+
+      // Identify weaknesses and recommend drills
+      const weaknesses: { stat: string; priority: number; reason: string }[] = [];
+
+      if (avgFgPct < 0.4) {
+        weaknesses.push({ stat: 'shooting', priority: 5, reason: `Low FG% (${(avgFgPct * 100).toFixed(1)}%)` });
+      }
+      if (avgThreePct < 0.3) {
+        weaknesses.push({ stat: 'shooting', priority: 4, reason: `Low 3PT% (${(avgThreePct * 100).toFixed(1)}%)` });
+      }
+      if (avgTurnovers > 3) {
+        weaknesses.push({ stat: 'dribbling', priority: 5, reason: `High turnovers (${avgTurnovers.toFixed(1)} per game)` });
+      }
+      if (player.position === 'Guard' && avgAssists < 3) {
+        weaknesses.push({ stat: 'passing', priority: 4, reason: `Low assists for Guard (${avgAssists.toFixed(1)} per game)` });
+      }
+      if (player.position === 'Big' && avgRebounds < 5) {
+        weaknesses.push({ stat: 'rebounding', priority: 4, reason: `Low rebounds for Big (${avgRebounds.toFixed(1)} per game)` });
+      }
+
+      // Match drills to weaknesses
+      for (const weakness of weaknesses) {
+        const matchingDrills = drills.filter(d => d.category === weakness.stat || d.targetStat === weakness.stat);
+        for (const drill of matchingDrills.slice(0, 2)) {
+          const recommendation = await storage.createDrillRecommendation({
+            playerId,
+            drillId: drill.id,
+            reason: weakness.reason,
+            priority: weakness.priority,
+            weakStat: weakness.stat,
+            isActive: true,
+          });
+          recommendations.push({ ...recommendation, drill });
+        }
+      }
+
+      res.status(201).json({ recommendations });
+    } catch (err) {
+      console.error('Generate recommendations error:', err);
+      res.status(500).json({ error: 'Error generating recommendations' });
+    }
+  });
+
+  app.get('/api/players/:playerId/drill-recommendations', async (req, res) => {
+    try {
+      const playerId = Number(req.params.playerId);
+      const recommendations = await storage.getDrillRecommendations(playerId);
+      res.json(recommendations);
+    } catch (err) {
+      console.error('Get recommendations error:', err);
+      res.status(500).json({ error: 'Error fetching recommendations' });
+    }
+  });
+
+  app.delete('/api/drill-recommendations/:id', async (req, res) => {
+    try {
+      await storage.deleteDrillRecommendation(Number(req.params.id));
+      res.status(204).send();
+    } catch (err) {
+      console.error('Delete recommendation error:', err);
+      res.status(500).json({ error: 'Error deleting recommendation' });
+    }
+  });
+
+  // --- Team Dashboard ---
+  app.get('/api/team-dashboard', async (req, res) => {
+    try {
+      const playersWithStats = await storage.getPlayersWithStats();
+
+      let totalPoints = 0, totalRebounds = 0, totalAssists = 0, totalSteals = 0, totalBlocks = 0;
+      let totalGames = 0, totalMinutes = 0;
+      const playerSummaries: any[] = [];
+
+      for (const player of playersWithStats) {
+        const games = player.games || [];
+        const gamesPlayed = games.length;
+        totalGames += gamesPlayed;
+
+        const pts = games.reduce((acc, g) => acc + g.points, 0);
+        const reb = games.reduce((acc, g) => acc + g.rebounds, 0);
+        const ast = games.reduce((acc, g) => acc + g.assists, 0);
+        const stl = games.reduce((acc, g) => acc + g.steals, 0);
+        const blk = games.reduce((acc, g) => acc + g.blocks, 0);
+        const mins = games.reduce((acc, g) => acc + g.minutes, 0);
+
+        totalPoints += pts;
+        totalRebounds += reb;
+        totalAssists += ast;
+        totalSteals += stl;
+        totalBlocks += blk;
+        totalMinutes += mins;
+
+        playerSummaries.push({
+          id: player.id,
+          name: player.name,
+          position: player.position,
+          gamesPlayed,
+          ppg: gamesPlayed > 0 ? (pts / gamesPlayed).toFixed(1) : '0.0',
+          rpg: gamesPlayed > 0 ? (reb / gamesPlayed).toFixed(1) : '0.0',
+          apg: gamesPlayed > 0 ? (ast / gamesPlayed).toFixed(1) : '0.0',
+          totalPoints: pts,
+          totalRebounds: reb,
+          totalAssists: ast,
+          totalXp: player.totalXp,
+          currentTier: player.currentTier,
+        });
+      }
+
+      res.json({
+        teamTotals: {
+          points: totalPoints,
+          rebounds: totalRebounds,
+          assists: totalAssists,
+          steals: totalSteals,
+          blocks: totalBlocks,
+          games: totalGames,
+          minutes: totalMinutes,
+        },
+        teamAverages: {
+          ppg: totalGames > 0 ? (totalPoints / totalGames).toFixed(1) : '0.0',
+          rpg: totalGames > 0 ? (totalRebounds / totalGames).toFixed(1) : '0.0',
+          apg: totalGames > 0 ? (totalAssists / totalGames).toFixed(1) : '0.0',
+        },
+        playerSummaries,
+        playerCount: playersWithStats.length,
+      });
+    } catch (err) {
+      console.error('Get team dashboard error:', err);
+      res.status(500).json({ error: 'Error fetching team dashboard' });
+    }
+  });
+
+  // --- Pre-Game Report ---
+  app.get('/api/players/:playerId/pregame-report', async (req, res) => {
+    try {
+      const playerId = Number(req.params.playerId);
+      const opponentName = req.query.opponent as string;
+
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ error: 'Player not found' });
+      }
+
+      // Recent performance (last 5 games)
+      const recentGames = player.games.slice(0, 5);
+      const recentStats = {
+        gamesPlayed: recentGames.length,
+        avgPoints: recentGames.length > 0 ? (recentGames.reduce((acc, g) => acc + g.points, 0) / recentGames.length).toFixed(1) : '0.0',
+        avgRebounds: recentGames.length > 0 ? (recentGames.reduce((acc, g) => acc + g.rebounds, 0) / recentGames.length).toFixed(1) : '0.0',
+        avgAssists: recentGames.length > 0 ? (recentGames.reduce((acc, g) => acc + g.assists, 0) / recentGames.length).toFixed(1) : '0.0',
+        recentGrades: recentGames.map(g => g.grade).filter(Boolean),
+      };
+
+      // Games against this opponent
+      let opponentMatchups: any[] = [];
+      let opponentScoutInfo = null;
+
+      if (opponentName) {
+        opponentMatchups = player.games.filter(g =>
+          g.opponent.toLowerCase().includes(opponentName.toLowerCase())
+        ).slice(0, 5);
+
+        // Get scouting info if available
+        const opponents = await storage.getOpponents();
+        opponentScoutInfo = opponents.find(o =>
+          o.name.toLowerCase().includes(opponentName.toLowerCase())
+        );
+      }
+
+      // Get coach goals for this player
+      const coachGoals = await storage.getCoachGoals(playerId);
+      const activeGoals = coachGoals.filter(g => g.status === 'active');
+
+      res.json({
+        player: {
+          id: player.id,
+          name: player.name,
+          position: player.position,
+          team: player.team,
+        },
+        recentPerformance: recentStats,
+        opponentHistory: {
+          matchups: opponentMatchups.map(g => ({
+            date: g.date,
+            result: g.result,
+            points: g.points,
+            rebounds: g.rebounds,
+            assists: g.assists,
+            grade: g.grade,
+          })),
+          totalGamesVs: opponentMatchups.length,
+        },
+        scoutingReport: opponentScoutInfo ? {
+          name: opponentScoutInfo.name,
+          tendencies: opponentScoutInfo.tendencies,
+          strengths: opponentScoutInfo.strengths,
+          weaknesses: opponentScoutInfo.weaknesses,
+        } : null,
+        activeCoachGoals: activeGoals.map(g => ({
+          title: g.title,
+          targetType: g.targetType,
+          targetValue: g.targetValue,
+          deadline: g.deadline,
+        })),
+      });
+    } catch (err) {
+      console.error('Get pregame report error:', err);
+      res.status(500).json({ error: 'Error generating pregame report' });
+    }
+  });
+
+  // --- Report Card ---
+  app.get('/api/players/:playerId/report-card', async (req, res) => {
+    try {
+      const playerId = Number(req.params.playerId);
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ error: 'Player not found' });
+      }
+
+      const allGames = player.games || [];
+      const badges = await storage.getPlayerBadges(playerId);
+      const skillBadges = await storage.getPlayerSkillBadges(playerId);
+      const coachGoals = await storage.getCoachGoals(playerId);
+      const coachNotes = await storage.getPlayerGameNotes(playerId);
+
+      // Season stats
+      const totalGames = allGames.length;
+      const seasonStats = {
+        gamesPlayed: totalGames,
+        totalPoints: allGames.reduce((acc, g) => acc + g.points, 0),
+        totalRebounds: allGames.reduce((acc, g) => acc + g.rebounds, 0),
+        totalAssists: allGames.reduce((acc, g) => acc + g.assists, 0),
+        totalSteals: allGames.reduce((acc, g) => acc + g.steals, 0),
+        totalBlocks: allGames.reduce((acc, g) => acc + g.blocks, 0),
+        avgPoints: totalGames > 0 ? (allGames.reduce((acc, g) => acc + g.points, 0) / totalGames).toFixed(1) : '0.0',
+        avgRebounds: totalGames > 0 ? (allGames.reduce((acc, g) => acc + g.rebounds, 0) / totalGames).toFixed(1) : '0.0',
+        avgAssists: totalGames > 0 ? (allGames.reduce((acc, g) => acc + g.assists, 0) / totalGames).toFixed(1) : '0.0',
+        avgHustle: totalGames > 0 ? (allGames.reduce((acc, g) => acc + (g.hustleScore || 50), 0) / totalGames).toFixed(0) : '50',
+        avgDefense: totalGames > 0 ? (allGames.reduce((acc, g) => acc + (g.defenseRating || 50), 0) / totalGames).toFixed(0) : '50',
+      };
+
+      // Grade distribution
+      const gradeDistribution: Record<string, number> = {};
+      allGames.forEach(g => {
+        if (g.grade) {
+          gradeDistribution[g.grade] = (gradeDistribution[g.grade] || 0) + 1;
+        }
+      });
+
+      // Trends (compare first half vs second half of games)
+      let trends: any = null;
+      if (totalGames >= 4) {
+        const mid = Math.floor(totalGames / 2);
+        const firstHalf = allGames.slice(mid);
+        const secondHalf = allGames.slice(0, mid);
+
+        const avgFirst = (arr: Game[], key: keyof Game) =>
+          arr.length > 0 ? arr.reduce((acc, g) => acc + (Number(g[key]) || 0), 0) / arr.length : 0;
+
+        trends = {
+          pointsTrend: avgFirst(secondHalf, 'points') - avgFirst(firstHalf, 'points'),
+          reboundsTrend: avgFirst(secondHalf, 'rebounds') - avgFirst(firstHalf, 'rebounds'),
+          assistsTrend: avgFirst(secondHalf, 'assists') - avgFirst(firstHalf, 'assists'),
+          hustleTrend: avgFirst(secondHalf, 'hustleScore') - avgFirst(firstHalf, 'hustleScore'),
+        };
+      }
+
+      // Recent coach notes
+      const recentNotes = coachNotes.slice(0, 5).map(n => ({
+        content: n.content,
+        noteType: n.noteType,
+        authorName: n.authorName,
+        createdAt: n.createdAt,
+      }));
+
+      res.json({
+        player: {
+          id: player.id,
+          name: player.name,
+          position: player.position,
+          team: player.team,
+          totalXp: player.totalXp,
+          currentTier: player.currentTier,
+        },
+        seasonStats,
+        gradeDistribution,
+        trends,
+        badges: badges.map(b => ({
+          badgeType: b.badgeType,
+          earnedAt: b.earnedAt,
+        })),
+        skillBadges: skillBadges.map(sb => ({
+          skillType: sb.skillType,
+          currentLevel: sb.currentLevel,
+          careerValue: sb.careerValue,
+        })),
+        coachGoals: coachGoals.map(g => ({
+          title: g.title,
+          status: g.status,
+          targetType: g.targetType,
+          targetValue: g.targetValue,
+          coachFeedback: g.coachFeedback,
+        })),
+        recentCoachNotes: recentNotes,
+      });
+    } catch (err) {
+      console.error('Get report card error:', err);
+      res.status(500).json({ error: 'Error generating report card' });
     }
   });
 
