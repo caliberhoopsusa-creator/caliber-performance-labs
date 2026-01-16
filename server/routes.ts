@@ -1273,6 +1273,369 @@ Respond in this exact JSON format:
     }
   });
 
+  // === NEWSFEED / ACTIVITY STREAM ===
+  app.get('/api/feed', async (req, res) => {
+    try {
+      const limit = Number(req.query.limit) || 50;
+      const activities = await storage.getFeedActivities(limit);
+      res.json(activities);
+    } catch (err) {
+      console.error('Get feed error:', err);
+      res.status(500).json({ message: 'Error fetching feed' });
+    }
+  });
+
+  app.get('/api/players/:id/feed', async (req, res) => {
+    try {
+      const playerId = Number(req.params.id);
+      const activities = await storage.getPlayerFeedActivities(playerId);
+      res.json(activities);
+    } catch (err) {
+      console.error('Get player feed error:', err);
+      res.status(500).json({ message: 'Error fetching player feed' });
+    }
+  });
+
+  // === REPOSTS ===
+  app.post('/api/games/:id/repost', async (req, res) => {
+    try {
+      const gameId = Number(req.params.id);
+      const { sessionId, comment } = req.body;
+      
+      if (!sessionId) {
+        return res.status(400).json({ message: 'SessionId is required' });
+      }
+
+      const game = await storage.getGame(gameId);
+      if (!game) {
+        return res.status(404).json({ message: 'Game not found' });
+      }
+
+      const alreadyReposted = await storage.hasUserReposted(gameId, sessionId);
+      if (alreadyReposted) {
+        return res.status(400).json({ message: 'Already reposted' });
+      }
+
+      const repost = await storage.createRepost({ gameId, sessionId, comment });
+      
+      // Create feed activity for repost
+      const player = await storage.getPlayer(game.playerId);
+      await storage.createFeedActivity({
+        activityType: 'repost',
+        playerId: game.playerId,
+        gameId,
+        headline: `${player?.name || 'Someone'}'s game was reposted!`,
+        subtext: comment || `${game.points} PTS, ${game.rebounds} REB vs ${game.opponent}`,
+        sessionId,
+      });
+
+      res.status(201).json(repost);
+    } catch (err) {
+      console.error('Repost error:', err);
+      res.status(500).json({ message: 'Error creating repost' });
+    }
+  });
+
+  app.get('/api/games/:id/reposts', async (req, res) => {
+    try {
+      const gameId = Number(req.params.id);
+      const count = await storage.getGameReposts(gameId);
+      res.json({ count });
+    } catch (err) {
+      console.error('Get reposts error:', err);
+      res.status(500).json({ message: 'Error fetching reposts' });
+    }
+  });
+
+  app.get('/api/games/:id/has-reposted', async (req, res) => {
+    try {
+      const gameId = Number(req.params.id);
+      const sessionId = req.query.sessionId as string;
+      if (!sessionId) {
+        return res.json({ hasReposted: false });
+      }
+      const hasReposted = await storage.hasUserReposted(gameId, sessionId);
+      res.json({ hasReposted });
+    } catch (err) {
+      console.error('Check repost error:', err);
+      res.status(500).json({ message: 'Error checking repost' });
+    }
+  });
+
+  // === POLLS ===
+  app.get('/api/polls', async (req, res) => {
+    try {
+      const polls = await storage.getActivePolls();
+      res.json(polls);
+    } catch (err) {
+      console.error('Get polls error:', err);
+      res.status(500).json({ message: 'Error fetching polls' });
+    }
+  });
+
+  app.post('/api/polls', async (req, res) => {
+    try {
+      const { question, options, createdBy, playerId, expiresAt } = req.body;
+      
+      if (!question || !options || options.length < 2 || !createdBy) {
+        return res.status(400).json({ message: 'Question, at least 2 options, and createdBy are required' });
+      }
+
+      const poll = await storage.createPoll({
+        question,
+        options,
+        createdBy,
+        playerId: playerId || null,
+        expiresAt: expiresAt ? new Date(expiresAt) : null,
+      });
+
+      // Create feed activity
+      await storage.createFeedActivity({
+        activityType: 'poll',
+        playerId: playerId || null,
+        relatedId: poll.id,
+        headline: `New Poll: ${question}`,
+        subtext: `${options.length} options to choose from`,
+      });
+
+      res.status(201).json(poll);
+    } catch (err) {
+      console.error('Create poll error:', err);
+      res.status(500).json({ message: 'Error creating poll' });
+    }
+  });
+
+  app.get('/api/polls/:id', async (req, res) => {
+    try {
+      const pollId = Number(req.params.id);
+      const poll = await storage.getPoll(pollId);
+      if (!poll) {
+        return res.status(404).json({ message: 'Poll not found' });
+      }
+      const votes = await storage.getPollVotes(pollId);
+      res.json({ ...poll, votes });
+    } catch (err) {
+      console.error('Get poll error:', err);
+      res.status(500).json({ message: 'Error fetching poll' });
+    }
+  });
+
+  app.post('/api/polls/:id/vote', async (req, res) => {
+    try {
+      const pollId = Number(req.params.id);
+      const { sessionId, optionIndex } = req.body;
+
+      if (!sessionId || optionIndex === undefined) {
+        return res.status(400).json({ message: 'SessionId and optionIndex are required' });
+      }
+
+      const poll = await storage.getPoll(pollId);
+      if (!poll) {
+        return res.status(404).json({ message: 'Poll not found' });
+      }
+
+      if (optionIndex < 0 || optionIndex >= poll.options.length) {
+        return res.status(400).json({ message: 'Invalid option index' });
+      }
+
+      const hasVoted = await storage.hasUserVoted(pollId, sessionId);
+      if (hasVoted) {
+        return res.status(400).json({ message: 'Already voted' });
+      }
+
+      await storage.votePoll({ pollId, optionIndex, sessionId });
+      const votes = await storage.getPollVotes(pollId);
+      res.json({ success: true, votes });
+    } catch (err) {
+      console.error('Vote poll error:', err);
+      res.status(500).json({ message: 'Error voting' });
+    }
+  });
+
+  app.get('/api/polls/:id/has-voted', async (req, res) => {
+    try {
+      const pollId = Number(req.params.id);
+      const sessionId = req.query.sessionId as string;
+      if (!sessionId) {
+        return res.json({ hasVoted: false });
+      }
+      const hasVoted = await storage.hasUserVoted(pollId, sessionId);
+      res.json({ hasVoted });
+    } catch (err) {
+      console.error('Check vote error:', err);
+      res.status(500).json({ message: 'Error checking vote' });
+    }
+  });
+
+  // === PREDICTIONS ===
+  app.get('/api/predictions', async (req, res) => {
+    try {
+      const predictions = await storage.getPredictions();
+      res.json(predictions);
+    } catch (err) {
+      console.error('Get predictions error:', err);
+      res.status(500).json({ message: 'Error fetching predictions' });
+    }
+  });
+
+  app.post('/api/predictions', async (req, res) => {
+    try {
+      const { player1Id, player2Id, category, createdBy, sessionId, gameDate } = req.body;
+
+      if (!player1Id || !player2Id || !category || !createdBy) {
+        return res.status(400).json({ message: 'player1Id, player2Id, category, and createdBy are required' });
+      }
+
+      if (player1Id === player2Id) {
+        return res.status(400).json({ message: 'Cannot predict against same player' });
+      }
+
+      const prediction = await storage.createPrediction({
+        player1Id,
+        player2Id,
+        category,
+        createdBy,
+        sessionId: sessionId || null,
+        gameDate: gameDate || null,
+      });
+
+      // Get player names for feed
+      const player1 = await storage.getPlayer(player1Id);
+      const player2 = await storage.getPlayer(player2Id);
+
+      await storage.createFeedActivity({
+        activityType: 'prediction',
+        relatedId: prediction.id,
+        headline: `Matchup Prediction: ${player1?.name || 'Player 1'} vs ${player2?.name || 'Player 2'}`,
+        subtext: `Who will dominate in ${category}? Vote now!`,
+        sessionId: sessionId || null,
+      });
+
+      res.status(201).json(prediction);
+    } catch (err) {
+      console.error('Create prediction error:', err);
+      res.status(500).json({ message: 'Error creating prediction' });
+    }
+  });
+
+  app.post('/api/predictions/:id/vote', async (req, res) => {
+    try {
+      const predictionId = Number(req.params.id);
+      const { sessionId, votedFor } = req.body;
+
+      if (!sessionId || !votedFor) {
+        return res.status(400).json({ message: 'SessionId and votedFor are required' });
+      }
+
+      const prediction = await storage.getPrediction(predictionId);
+      if (!prediction) {
+        return res.status(404).json({ message: 'Prediction not found' });
+      }
+
+      if (votedFor !== prediction.player1Id && votedFor !== prediction.player2Id) {
+        return res.status(400).json({ message: 'Invalid vote target' });
+      }
+
+      const hasVoted = await storage.hasUserVotedPrediction(predictionId, sessionId);
+      if (hasVoted) {
+        return res.status(400).json({ message: 'Already voted' });
+      }
+
+      await storage.votePrediction({ predictionId, votedFor, sessionId });
+      const votes = await storage.getPredictionVotes(predictionId);
+      res.json({ success: true, ...votes });
+    } catch (err) {
+      console.error('Vote prediction error:', err);
+      res.status(500).json({ message: 'Error voting' });
+    }
+  });
+
+  app.get('/api/predictions/:id/votes', async (req, res) => {
+    try {
+      const predictionId = Number(req.params.id);
+      const votes = await storage.getPredictionVotes(predictionId);
+      res.json(votes);
+    } catch (err) {
+      console.error('Get prediction votes error:', err);
+      res.status(500).json({ message: 'Error fetching votes' });
+    }
+  });
+
+  // === STORY TEMPLATES ===
+  app.get('/api/story-templates', async (req, res) => {
+    try {
+      const templates = await storage.getActiveStoryTemplates();
+      res.json(templates);
+    } catch (err) {
+      console.error('Get story templates error:', err);
+      res.status(500).json({ message: 'Error fetching templates' });
+    }
+  });
+
+  // === PLAYER STORIES ===
+  app.get('/api/stories', async (req, res) => {
+    try {
+      const limit = Number(req.query.limit) || 20;
+      const stories = await storage.getPublicStories(limit);
+      res.json(stories);
+    } catch (err) {
+      console.error('Get stories error:', err);
+      res.status(500).json({ message: 'Error fetching stories' });
+    }
+  });
+
+  app.get('/api/players/:id/stories', async (req, res) => {
+    try {
+      const playerId = Number(req.params.id);
+      const stories = await storage.getPlayerStories(playerId);
+      res.json(stories);
+    } catch (err) {
+      console.error('Get player stories error:', err);
+      res.status(500).json({ message: 'Error fetching stories' });
+    }
+  });
+
+  app.post('/api/stories', async (req, res) => {
+    try {
+      const { playerId, templateId, headline, stats, sessionId, isPublic } = req.body;
+
+      if (!playerId || !headline) {
+        return res.status(400).json({ message: 'PlayerId and headline are required' });
+      }
+
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: 'Player not found' });
+      }
+
+      const story = await storage.createPlayerStory({
+        playerId,
+        templateId: templateId || null,
+        headline,
+        stats: stats ? JSON.stringify(stats) : null,
+        sessionId: sessionId || null,
+        isPublic: isPublic !== false,
+      });
+
+      // Create feed activity for public stories
+      if (isPublic !== false) {
+        await storage.createFeedActivity({
+          activityType: 'story',
+          playerId,
+          relatedId: story.id,
+          headline: `${player.name} posted a story: ${headline}`,
+          subtext: stats ? `Check out their stats!` : undefined,
+          sessionId,
+        });
+      }
+
+      res.status(201).json(story);
+    } catch (err) {
+      console.error('Create story error:', err);
+      res.status(500).json({ message: 'Error creating story' });
+    }
+  });
+
   await seedDatabase();
 
   return httpServer;

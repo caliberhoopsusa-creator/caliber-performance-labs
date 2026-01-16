@@ -516,7 +516,10 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(feedActivities.createdAt))
       .limit(limit);
     
-    return results;
+    return results.map(r => ({
+      ...r,
+      playerName: r.playerName || undefined,
+    }));
   }
 
   async getPlayerFeedActivities(playerId: number): Promise<FeedActivity[]> {
