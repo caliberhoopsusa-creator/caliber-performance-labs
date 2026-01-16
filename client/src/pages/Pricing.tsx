@@ -121,9 +121,9 @@ export default function Pricing() {
   );
 
   const oneTimePurchases = products.filter((p) => 
-    p.name.toLowerCase().includes("credit") || 
-    p.name.toLowerCase().includes("bundle") ||
-    p.metadata?.type === "one_time"
+    (p.name.toLowerCase().includes("bundle") ||
+    p.metadata?.type === "one_time") &&
+    !p.name.toLowerCase().includes("video analysis")
   );
 
   const formatPrice = (amount: number, currency: string) => {
