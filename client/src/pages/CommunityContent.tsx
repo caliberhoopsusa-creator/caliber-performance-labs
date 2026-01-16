@@ -111,7 +111,7 @@ function PollsTab({ sessionId }: { sessionId: string }) {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/polls"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/polls", sessionId] });
       setCreateDialogOpen(false);
       setQuestion("");
       setOptions(["", ""]);
@@ -131,7 +131,7 @@ function PollsTab({ sessionId }: { sessionId: string }) {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/polls"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/polls", sessionId] });
       toast({ title: "Vote Recorded", description: "Thanks for voting!" });
     },
     onError: () => {
@@ -375,7 +375,7 @@ function PredictionsTab({ sessionId }: { sessionId: string }) {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/predictions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/predictions", sessionId] });
       setCreateDialogOpen(false);
       setPlayer1Id("");
       setPlayer2Id("");
@@ -396,7 +396,7 @@ function PredictionsTab({ sessionId }: { sessionId: string }) {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/predictions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/predictions", sessionId] });
       toast({ title: "Vote Recorded", description: "Your prediction is in!" });
     },
     onError: () => {

@@ -191,12 +191,14 @@ async function checkAndAwardBadges(playerId: number, gameId: number, stats: any,
   }
   
   // Check streak badges by looking at recent games
-  await checkStreakBadges(playerId, gameId);
+  const streakBadges = await checkStreakBadges(playerId, gameId);
+  awardedBadges.push(...streakBadges);
   
   return awardedBadges;
 }
 
-async function checkStreakBadges(playerId: number, latestGameId: number) {
+async function checkStreakBadges(playerId: number, latestGameId: number): Promise<string[]> {
+  const awardedBadges: string[] = [];
   const playerGames = await storage.getGamesByPlayerId(playerId);
   const existingBadges = await storage.getPlayerBadges(playerId);
   
@@ -225,10 +227,14 @@ async function checkStreakBadges(playerId: number, latestGameId: number) {
   // Award streak badges
   if (streakCount >= 5 && !hasHotStreak5) {
     await storage.createBadge({ playerId, badgeType: "hot_streak_5", gameId: latestGameId });
+    awardedBadges.push("hot_streak_5");
   }
   if (streakCount >= 3 && !hasHotStreak3) {
     await storage.createBadge({ playerId, badgeType: "hot_streak_3", gameId: latestGameId });
+    awardedBadges.push("hot_streak_3");
   }
+  
+  return awardedBadges;
 }
 
 async function updateChallengeProgressForPlayer(playerId: number, stats: any, grade: string, gameDate: string) {
@@ -453,6 +459,8 @@ export async function registerRoutes(
         hustle_king: "Hustle King",
         clean_sheet: "Clean Sheet",
         sharpshooter: "Sharpshooter",
+        hot_streak_3: "Hot Streak (3 Games)",
+        hot_streak_5: "Hot Streak (5 Games)",
       };
       for (const badge of awardedBadges) {
         await storage.createFeedActivity({

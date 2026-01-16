@@ -15,7 +15,7 @@ interface FeedActivity {
   headline: string;
   subtext: string | null;
   playerName?: string;
-  createdAt: Date;
+  createdAt: string;
 }
 
 const ACTIVITY_ICONS: Record<string, typeof Target> = {
