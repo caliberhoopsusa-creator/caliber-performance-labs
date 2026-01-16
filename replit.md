@@ -81,6 +81,10 @@ The grading algorithm in `server/routes.ts` calculates a performance score using
 - **Goals & Streaks**: Player-set targets with progress tracking and streak monitoring
 - **Season Statistics**: Comprehensive averages with radar chart visualization
 - **Top 5 Games**: Highlighted best performances with expandable details
+- **Social Engagement**: Public likes and comments on game performances
+- **Scout Mode**: Recruiter discovery page with position, height, and grade filters
+- **Challenges & Events**: Weekly/monthly app-wide challenges with leaderboards and badge rewards
+- **Team Message Boards**: Create/join teams with shared discussion boards
 
 ## External Dependencies
 
