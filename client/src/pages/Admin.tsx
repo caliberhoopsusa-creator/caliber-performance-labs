@@ -369,23 +369,42 @@ function RosterTab() {
 
 function ProductsTab() {
   const { toast } = useToast();
+  const [createOpen, setCreateOpen] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    description: "",
+    price: "",
+    type: "one_time" as "one_time" | "subscription",
+    interval: "month" as "month" | "year",
+  });
 
   const { data, isLoading, isError, error, refetch } = useQuery<{ products: Product[] }>({
     queryKey: ["/api/admin/products"],
     queryFn: async () => {
-      console.log("Fetching admin products...");
-      try {
-        const res = await adminFetch("/api/admin/products");
-        const result = await res.json();
-        console.log("Admin products result:", result);
-        return result;
-      } catch (err) {
-        console.error("Error fetching admin products:", err);
-        throw err;
-      }
+      const res = await adminFetch("/api/admin/products");
+      return res.json();
     },
     staleTime: 0,
     refetchOnMount: "always",
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (productData: { name: string; description: string; priceInCents: number; type: string; interval?: string }) => {
+      const res = await adminFetch("/api/admin/products", {
+        method: "POST",
+        body: JSON.stringify(productData),
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Product created in Stripe" });
+      setCreateOpen(false);
+      setForm({ name: "", description: "", price: "", type: "one_time", interval: "month" });
+      refetch();
+    },
+    onError: (err: any) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
   });
 
   const toggleMutation = useMutation({
@@ -405,6 +424,25 @@ function ProductsTab() {
     },
   });
 
+  const handleCreate = () => {
+    if (!form.name || !form.price) {
+      toast({ title: "Error", description: "Name and price are required", variant: "destructive" });
+      return;
+    }
+    const priceInCents = Math.round(parseFloat(form.price) * 100);
+    if (isNaN(priceInCents) || priceInCents <= 0) {
+      toast({ title: "Error", description: "Invalid price", variant: "destructive" });
+      return;
+    }
+    createMutation.mutate({
+      name: form.name,
+      description: form.description,
+      priceInCents,
+      type: form.type,
+      interval: form.type === "subscription" ? form.interval : undefined,
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center py-8">
@@ -423,7 +461,6 @@ function ProductsTab() {
   }
 
   const products = data?.products || [];
-  console.log("Products data:", data, "Products array:", products);
 
   const formatPrice = (amount: number | null, currency: string) => {
     if (amount === null) return "-";
@@ -435,7 +472,89 @@ function ProductsTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex justify-between items-center">
+        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+          <DialogTrigger asChild>
+            <Button data-testid="button-create-product">
+              <Plus className="w-4 h-4 mr-2" />
+              Create Product
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Product</DialogTitle>
+              <DialogDescription>Add a new product to your Stripe account</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="product-name">Product Name</Label>
+                <Input
+                  id="product-name"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="e.g., Premium Plan"
+                  data-testid="input-product-name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="product-description">Description</Label>
+                <Input
+                  id="product-description"
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  placeholder="Product description"
+                  data-testid="input-product-description"
+                />
+              </div>
+              <div>
+                <Label htmlFor="product-price">Price (USD)</Label>
+                <Input
+                  id="product-price"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={form.price}
+                  onChange={(e) => setForm({ ...form, price: e.target.value })}
+                  placeholder="9.99"
+                  data-testid="input-product-price"
+                />
+              </div>
+              <div>
+                <Label htmlFor="product-type">Product Type</Label>
+                <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v as "one_time" | "subscription" })}>
+                  <SelectTrigger data-testid="select-product-type">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="one_time">One-time purchase</SelectItem>
+                    <SelectItem value="subscription">Subscription</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {form.type === "subscription" && (
+                <div>
+                  <Label htmlFor="product-interval">Billing Interval</Label>
+                  <Select value={form.interval} onValueChange={(v) => setForm({ ...form, interval: v as "month" | "year" })}>
+                    <SelectTrigger data-testid="select-product-interval">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="month">Monthly</SelectItem>
+                      <SelectItem value="year">Yearly</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
+              <Button onClick={handleCreate} disabled={createMutation.isPending} data-testid="button-save-product">
+                {createMutation.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                Create Product
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         <Button variant="outline" size="sm" onClick={() => refetch()} data-testid="button-refresh-products">
           Refresh Products
         </Button>
@@ -477,7 +596,7 @@ function ProductsTab() {
           {products.length === 0 && (
             <TableRow>
               <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                No products found
+                No products found. Click "Create Product" to add one.
               </TableCell>
             </TableRow>
           )}

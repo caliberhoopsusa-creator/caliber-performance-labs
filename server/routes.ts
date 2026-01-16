@@ -3619,55 +3619,81 @@ Respond in this exact JSON format:
     }
   });
 
-  // Get all products with prices (for pricing management)
+  // Get all products with prices (fetch directly from Stripe)
   app.get('/api/admin/products', isAdmin, async (req, res) => {
     try {
-      console.log('Admin products endpoint called');
-      const result = await db.execute(sql`
-        SELECT 
-          p.id as product_id,
-          p.name as product_name,
-          p.description as product_description,
-          p.active as product_active,
-          p.metadata as product_metadata,
-          pr.id as price_id,
-          pr.unit_amount,
-          pr.currency,
-          pr.recurring,
-          pr.active as price_active
-        FROM stripe.products p
-        LEFT JOIN stripe.prices pr ON pr.product = p.id
-        ORDER BY p.name, pr.unit_amount
-      `);
-      console.log('Admin products query result rows:', result.rows?.length);
-
-      const productsMap = new Map<string, any>();
-      for (const row of result.rows as any[]) {
-        if (!productsMap.has(row.product_id)) {
-          productsMap.set(row.product_id, {
-            id: row.product_id,
-            name: row.product_name,
-            description: row.product_description,
-            active: row.product_active,
-            metadata: row.product_metadata,
-            prices: []
-          });
+      const stripe = await getUncachableStripeClient();
+      const products = await stripe.products.list({ limit: 100, active: undefined });
+      const prices = await stripe.prices.list({ limit: 100, active: true });
+      
+      const pricesMap = new Map<string, any[]>();
+      for (const price of prices.data) {
+        const productId = typeof price.product === 'string' ? price.product : price.product.id;
+        if (!pricesMap.has(productId)) {
+          pricesMap.set(productId, []);
         }
-        if (row.price_id) {
-          productsMap.get(row.product_id)!.prices.push({
-            id: row.price_id,
-            unit_amount: row.unit_amount,
-            currency: row.currency,
-            recurring: row.recurring,
-            active: row.price_active,
-          });
-        }
+        pricesMap.get(productId)!.push({
+          id: price.id,
+          unit_amount: price.unit_amount,
+          currency: price.currency,
+          recurring: price.recurring,
+          active: price.active,
+        });
       }
-
-      res.json({ products: Array.from(productsMap.values()) });
-    } catch (err) {
+      
+      const result = products.data.map(p => ({
+        id: p.id,
+        name: p.name,
+        description: p.description,
+        active: p.active,
+        metadata: p.metadata,
+        prices: pricesMap.get(p.id) || [],
+      }));
+      
+      res.json({ products: result });
+    } catch (err: any) {
       console.error('Admin get products error:', err);
-      res.status(500).json({ error: 'Could not fetch products' });
+      res.status(500).json({ error: err.message || 'Could not fetch products' });
+    }
+  });
+
+  // Create a new product with price in Stripe
+  app.post('/api/admin/products', isAdmin, async (req, res) => {
+    try {
+      const { name, description, priceInCents, type, interval } = req.body;
+      
+      if (!name || !priceInCents) {
+        return res.status(400).json({ error: 'Name and price are required' });
+      }
+      
+      const stripe = await getUncachableStripeClient();
+      
+      // Create the product
+      const product = await stripe.products.create({
+        name,
+        description: description || undefined,
+        metadata: {
+          type: type || 'one_time',
+        },
+      });
+      
+      // Create the price
+      const priceData: any = {
+        product: product.id,
+        unit_amount: priceInCents,
+        currency: 'usd',
+      };
+      
+      if (type === 'subscription' && interval) {
+        priceData.recurring = { interval };
+      }
+      
+      const price = await stripe.prices.create(priceData);
+      
+      res.json({ product, price });
+    } catch (err: any) {
+      console.error('Admin create product error:', err);
+      res.status(500).json({ error: err.message || 'Could not create product' });
     }
   });
 
