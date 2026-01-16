@@ -1,5 +1,6 @@
 import { usePlayer, useDeleteGame, usePlayerBadges } from "@/hooks/use-basketball";
 import { GoalsPanel } from "@/components/GoalsPanel";
+import { SocialEngagement } from "@/components/SocialEngagement";
 import { useRoute, Link } from "wouter";
 import { StatCard } from "@/components/StatCard";
 import { GradeBadge } from "@/components/GradeBadge";
@@ -522,6 +523,10 @@ export default function PlayerDetail() {
                         </div>
                       )}
                       
+                      <div className="mt-4 pt-4 border-t border-white/5">
+                        <SocialEngagement gameId={game.id} />
+                      </div>
+                      
                       <div className="flex justify-end gap-2 mt-4">
                         <Button 
                           variant="ghost" 
@@ -711,10 +716,13 @@ export default function PlayerDetail() {
                     </div>
                     
                     <div className="flex justify-between items-end border-t border-white/5 pt-3 mt-1">
-                      <div className="flex gap-3 text-xs font-medium text-white/80">
-                        <span><span className="text-muted-foreground">PTS</span> {game.points}</span>
-                        <span><span className="text-muted-foreground">REB</span> {game.rebounds}</span>
-                        <span><span className="text-muted-foreground">AST</span> {game.assists}</span>
+                      <div className="flex items-center gap-4">
+                        <div className="flex gap-3 text-xs font-medium text-white/80">
+                          <span><span className="text-muted-foreground">PTS</span> {game.points}</span>
+                          <span><span className="text-muted-foreground">REB</span> {game.rebounds}</span>
+                          <span><span className="text-muted-foreground">AST</span> {game.assists}</span>
+                        </div>
+                        <SocialEngagement gameId={game.id} compact />
                       </div>
                       
                       <div className="flex items-center gap-1">

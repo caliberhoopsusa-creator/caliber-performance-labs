@@ -3,7 +3,8 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, type Game, insertGoalSchema } from "@shared/schema";
+import { players, games, type Game, insertGoalSchema, insertCommentSchema } from "@shared/schema";
+import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { GoogleGenAI } from "@google/genai";
 import multer from "multer";
 import fs from "fs";
@@ -448,6 +449,103 @@ export async function registerRoutes(
     res.json(streaks);
   });
 
+  // --- Likes ---
+
+  app.post('/api/games/:id/likes', async (req, res) => {
+    const gameId = Number(req.params.id);
+    const { sessionId } = req.body;
+
+    if (!sessionId) {
+      return res.status(400).json({ message: 'Session ID is required' });
+    }
+
+    const game = await storage.getGame(gameId);
+    if (!game) {
+      return res.status(404).json({ message: 'Game not found' });
+    }
+
+    const hasLiked = await storage.hasUserLiked(gameId, sessionId);
+    if (hasLiked) {
+      await storage.deleteLike(gameId, sessionId);
+      const likeCount = await storage.getGameLikes(gameId);
+      return res.json({ liked: false, likeCount });
+    } else {
+      await storage.createLike({ gameId, sessionId });
+      const likeCount = await storage.getGameLikes(gameId);
+      return res.json({ liked: true, likeCount });
+    }
+  });
+
+  app.get('/api/games/:id/likes', async (req, res) => {
+    const gameId = Number(req.params.id);
+    const sessionId = req.query.sessionId as string | undefined;
+
+    const game = await storage.getGame(gameId);
+    if (!game) {
+      return res.status(404).json({ message: 'Game not found' });
+    }
+
+    const likeCount = await storage.getGameLikes(gameId);
+    const hasLiked = sessionId ? await storage.hasUserLiked(gameId, sessionId) : false;
+
+    res.json({ likeCount, hasLiked });
+  });
+
+  // --- Comments ---
+
+  app.get('/api/games/:id/comments', async (req, res) => {
+    const gameId = Number(req.params.id);
+    const game = await storage.getGame(gameId);
+    if (!game) {
+      return res.status(404).json({ message: 'Game not found' });
+    }
+    const comments = await storage.getGameComments(gameId);
+    res.json(comments);
+  });
+
+  app.post('/api/games/:id/comments', async (req, res) => {
+    try {
+      const gameId = Number(req.params.id);
+      const game = await storage.getGame(gameId);
+      if (!game) {
+        return res.status(404).json({ message: 'Game not found' });
+      }
+
+      const input = insertCommentSchema.parse({ ...req.body, gameId });
+      const comment = await storage.createComment(input);
+      res.status(201).json(comment);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      throw err;
+    }
+  });
+
+  app.delete('/api/comments/:id', async (req, res) => {
+    const commentId = Number(req.params.id);
+    const sessionId = req.query.sessionId as string;
+
+    if (!sessionId) {
+      return res.status(400).json({ message: 'Session ID is required' });
+    }
+
+    const comment = await storage.getComment(commentId);
+    if (!comment) {
+      return res.status(404).json({ message: 'Comment not found' });
+    }
+
+    if (comment.sessionId !== sessionId) {
+      return res.status(403).json({ message: 'You can only delete your own comments' });
+    }
+
+    await storage.deleteComment(commentId);
+    res.status(204).send();
+  });
+
   app.get(api.games.get.path, async (req, res) => {
     const game = await storage.getGame(Number(req.params.id));
     if (!game) return res.status(404).json({ message: "Game not found" });
@@ -457,6 +555,155 @@ export async function registerRoutes(
   app.delete(api.games.delete.path, async (req, res) => {
     await storage.deleteGame(Number(req.params.id));
     res.status(204).send();
+  });
+
+  // --- Scout Mode ---
+  app.get('/api/scout/players', async (req, res) => {
+    try {
+      const { position, minHeight, minGrade, sortBy } = req.query;
+      
+      const playersWithStats = await storage.getPlayersWithStats();
+      const badges = await Promise.all(
+        playersWithStats.map(p => storage.getPlayerBadges(p.id))
+      );
+      
+      // Grade score mapping for filtering and sorting
+      const gradeScores: Record<string, number> = {
+        'A+': 100, 'A': 95, 'A-': 90,
+        'B+': 85, 'B': 80, 'B-': 75,
+        'C+': 70, 'C': 65, 'C-': 60,
+        'D': 50, 'F': 30
+      };
+
+      // Height to inches converter
+      const heightToInches = (height: string | null): number => {
+        if (!height) return 0;
+        const match = height.match(/(\d+)'(\d+)/);
+        if (match) {
+          return parseInt(match[1]) * 12 + parseInt(match[2]);
+        }
+        return 0;
+      };
+
+      // Calculate stats for each player
+      let results = playersWithStats.map((player, idx) => {
+        const games = player.games || [];
+        const gamesPlayed = games.length;
+        
+        if (gamesPlayed === 0) {
+          return {
+            id: player.id,
+            name: player.name,
+            position: player.position,
+            height: player.height,
+            team: player.team,
+            jerseyNumber: player.jerseyNumber,
+            ppg: 0,
+            rpg: 0,
+            apg: 0,
+            avgGrade: null,
+            avgGradeScore: 0,
+            hustleScore: 50,
+            gamesPlayed: 0,
+            topBadge: null,
+            archetype: null,
+            heightInches: heightToInches(player.height),
+          };
+        }
+        
+        const archetypeResult = getPlayerArchetype(games, player.position as "Guard" | "Wing" | "Big");
+        const archetype = archetypeResult ? ARCHETYPES[archetypeResult.primary].name : null;
+
+        const ppg = games.reduce((acc, g) => acc + g.points, 0) / gamesPlayed;
+        const rpg = games.reduce((acc, g) => acc + g.rebounds, 0) / gamesPlayed;
+        const apg = games.reduce((acc, g) => acc + g.assists, 0) / gamesPlayed;
+        const hustleScore = games.reduce((acc, g) => acc + (g.hustleScore || 50), 0) / gamesPlayed;
+        
+        const avgGradeScore = games.reduce((acc, g) => acc + (gradeScores[g.grade || 'C'] || 65), 0) / gamesPlayed;
+        
+        // Map score back to grade label
+        let avgGrade = 'C';
+        if (avgGradeScore >= 95) avgGrade = 'A';
+        else if (avgGradeScore >= 85) avgGrade = 'B+';
+        else if (avgGradeScore >= 75) avgGrade = 'B';
+        else if (avgGradeScore >= 65) avgGrade = 'C';
+        else avgGrade = 'D';
+
+        // Get top badge (most recent notable badge)
+        const playerBadges = badges[idx];
+        const topBadge = playerBadges.length > 0 ? playerBadges[0].badgeType : null;
+
+        return {
+          id: player.id,
+          name: player.name,
+          position: player.position,
+          height: player.height,
+          team: player.team,
+          jerseyNumber: player.jerseyNumber,
+          ppg: Number(ppg.toFixed(1)),
+          rpg: Number(rpg.toFixed(1)),
+          apg: Number(apg.toFixed(1)),
+          avgGrade,
+          avgGradeScore,
+          hustleScore: Number(hustleScore.toFixed(0)),
+          gamesPlayed,
+          topBadge,
+          archetype,
+          heightInches: heightToInches(player.height),
+        };
+      });
+
+      // Apply filters
+      if (position && position !== 'All') {
+        results = results.filter(p => p.position === position);
+      }
+
+      if (minHeight) {
+        const heightRanges: Record<string, { min: number; max: number }> = {
+          'under-5-10': { min: 0, max: 69 },
+          '5-10-to-6-2': { min: 70, max: 74 },
+          '6-2-to-6-6': { min: 74, max: 78 },
+          '6-6-plus': { min: 78, max: 999 },
+        };
+        const range = heightRanges[minHeight as string];
+        if (range) {
+          results = results.filter(p => p.heightInches >= range.min && p.heightInches <= range.max);
+        }
+      }
+
+      if (minGrade) {
+        if (minGrade === 'A') {
+          results = results.filter(p => p.avgGradeScore >= 90);
+        } else if (minGrade === 'B+') {
+          results = results.filter(p => p.avgGradeScore >= 85);
+        }
+      }
+
+      // Sort results
+      const sortKey = (sortBy as string) || 'avgGradeScore';
+      results.sort((a, b) => {
+        switch (sortKey) {
+          case 'ppg':
+            return b.ppg - a.ppg;
+          case 'rpg':
+            return b.rpg - a.rpg;
+          case 'apg':
+            return b.apg - a.apg;
+          case 'hustleScore':
+            return b.hustleScore - a.hustleScore;
+          case 'avgGradeScore':
+          default:
+            return b.avgGradeScore - a.avgGradeScore;
+        }
+      });
+
+      // Remove internal fields before sending
+      const response = results.map(({ avgGradeScore, heightInches, ...rest }) => rest);
+      res.json(response);
+    } catch (err) {
+      console.error('Scout players error:', err);
+      res.status(500).json({ message: 'Error fetching scout data' });
+    }
   });
 
   app.get(api.analytics.leaderboard.path, async (req, res) => {

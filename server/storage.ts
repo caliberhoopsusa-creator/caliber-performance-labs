@@ -1,19 +1,22 @@
 import { db } from "./db";
 import {
-  players, games, badges, goals, streaks,
+  players, games, badges, goals, streaks, likes, comments,
   type Player, type InsertPlayer,
   type Game, type InsertGame,
   type UpdateGameRequest,
   type Badge, type InsertBadge,
   type Goal, type InsertGoal,
-  type Streak, type InsertStreak
+  type Streak, type InsertStreak,
+  type Like, type InsertLike,
+  type Comment, type InsertComment
 } from "@shared/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, count } from "drizzle-orm";
 
 export interface IStorage {
   // Players
   getPlayers(): Promise<Player[]>;
   getPlayer(id: number): Promise<(Player & { games: Game[] }) | undefined>;
+  getPlayersWithStats(): Promise<(Player & { games: Game[] })[]>;
   createPlayer(player: InsertPlayer): Promise<Player>;
   deletePlayer(id: number): Promise<void>;
 
@@ -38,6 +41,18 @@ export interface IStorage {
   getPlayerStreaks(playerId: number): Promise<Streak[]>;
   getOrCreateStreak(playerId: number, streakType: string): Promise<Streak>;
   updateStreak(id: number, updates: Partial<Streak>): Promise<Streak | undefined>;
+
+  // Likes
+  createLike(like: InsertLike): Promise<Like>;
+  deleteLike(gameId: number, sessionId: string): Promise<void>;
+  getGameLikes(gameId: number): Promise<number>;
+  hasUserLiked(gameId: number, sessionId: string): Promise<boolean>;
+
+  // Comments
+  createComment(comment: InsertComment): Promise<Comment>;
+  getGameComments(gameId: number): Promise<Comment[]>;
+  deleteComment(id: number): Promise<void>;
+  getComment(id: number): Promise<Comment | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -66,6 +81,16 @@ export class DatabaseStorage implements IStorage {
   async deletePlayer(id: number): Promise<void> {
     await db.delete(games).where(eq(games.playerId, id)); // Cascade delete games manually if needed, or rely on DB cascade
     await db.delete(players).where(eq(players.id, id));
+  }
+
+  async getPlayersWithStats(): Promise<(Player & { games: Game[] })[]> {
+    const allPlayers = await db.select().from(players).orderBy(desc(players.createdAt));
+    const allGames = await db.select().from(games);
+    
+    return allPlayers.map(player => ({
+      ...player,
+      games: allGames.filter(g => g.playerId === player.id)
+    }));
   }
 
   async createGame(game: InsertGame): Promise<Game> {
@@ -167,6 +192,43 @@ export class DatabaseStorage implements IStorage {
       .where(eq(streaks.id, id))
       .returning();
     return updatedStreak;
+  }
+
+  async createLike(like: InsertLike): Promise<Like> {
+    const [newLike] = await db.insert(likes).values(like).returning();
+    return newLike;
+  }
+
+  async deleteLike(gameId: number, sessionId: string): Promise<void> {
+    await db.delete(likes).where(and(eq(likes.gameId, gameId), eq(likes.sessionId, sessionId)));
+  }
+
+  async getGameLikes(gameId: number): Promise<number> {
+    const [result] = await db.select({ count: count() }).from(likes).where(eq(likes.gameId, gameId));
+    return result?.count || 0;
+  }
+
+  async hasUserLiked(gameId: number, sessionId: string): Promise<boolean> {
+    const [existing] = await db.select().from(likes).where(and(eq(likes.gameId, gameId), eq(likes.sessionId, sessionId)));
+    return !!existing;
+  }
+
+  async createComment(comment: InsertComment): Promise<Comment> {
+    const [newComment] = await db.insert(comments).values(comment).returning();
+    return newComment;
+  }
+
+  async getGameComments(gameId: number): Promise<Comment[]> {
+    return await db.select().from(comments).where(eq(comments.gameId, gameId)).orderBy(desc(comments.createdAt));
+  }
+
+  async deleteComment(id: number): Promise<void> {
+    await db.delete(comments).where(eq(comments.id, id));
+  }
+
+  async getComment(id: number): Promise<Comment | undefined> {
+    const [comment] = await db.select().from(comments).where(eq(comments.id, id));
+    return comment;
   }
 }
 

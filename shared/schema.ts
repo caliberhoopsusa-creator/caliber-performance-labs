@@ -84,6 +84,23 @@ export const games = pgTable("games", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// === SOCIAL ENGAGEMENT TABLES ===
+export const likes = pgTable("likes", {
+  id: serial("id").primaryKey(),
+  gameId: integer("game_id").notNull().references(() => games.id, { onDelete: "cascade" }),
+  sessionId: text("session_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const comments = pgTable("comments", {
+  id: serial("id").primaryKey(),
+  gameId: integer("game_id").notNull().references(() => games.id, { onDelete: "cascade" }),
+  authorName: text("author_name").notNull(),
+  content: text("content").notNull(),
+  sessionId: text("session_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // === RELATIONS ===
 export const playersRelations = relations(players, ({ many }) => ({
   games: many(games),
@@ -162,6 +179,16 @@ export type InsertStreak = {
   bestCount?: number;
   lastGameId?: number | null;
 };
+
+export type Like = typeof likes.$inferSelect;
+export type InsertLike = {
+  gameId: number;
+  sessionId: string;
+};
+
+export type Comment = typeof comments.$inferSelect;
+export const insertCommentSchema = createInsertSchema(comments).omit({ id: true, createdAt: true });
+export type InsertComment = z.infer<typeof insertCommentSchema>;
 
 export const STREAK_DEFINITIONS = {
   grade_above_b: { name: "B+ or Better", description: "Consecutive games with B+ grade or higher" },

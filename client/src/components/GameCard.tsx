@@ -4,6 +4,7 @@ import { Award, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, 
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { BADGE_DEFINITIONS, type Game, type Badge } from "@shared/schema";
+import { LikeCount } from "@/components/SocialEngagement";
 
 const BADGE_ICONS: Record<string, any> = {
   twenty_piece: Target,
@@ -128,9 +129,12 @@ export function GameCard({ game, playerName, badges = [], showShareButton = true
             <Activity className="w-5 h-5 text-primary" />
             <span className="text-xs font-bold uppercase tracking-widest text-primary">Caliber</span>
           </div>
-          <span className="text-xs text-muted-foreground font-medium">
-            {format(new Date(game.date), "MMM dd, yyyy")}
-          </span>
+          <div className="flex items-center gap-3">
+            <LikeCount gameId={game.id} />
+            <span className="text-xs text-muted-foreground font-medium">
+              {format(new Date(game.date), "MMM dd, yyyy")}
+            </span>
+          </div>
         </div>
 
         <div className="mb-4">

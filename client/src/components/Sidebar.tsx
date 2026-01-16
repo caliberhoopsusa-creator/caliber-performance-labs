@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video } from "lucide-react";
+import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function Sidebar() {
@@ -8,6 +8,7 @@ export function Sidebar() {
   const navItems = [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
     { href: "/players", label: "Players", icon: Users },
+    { href: "/scout", label: "Scout Mode", icon: Binoculars, featured: true },
     { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
     { href: "/compare", label: "Head-to-Head", icon: Activity },
     { href: "/video", label: "Video Analysis", icon: Video },
@@ -30,15 +31,21 @@ export function Sidebar() {
       <nav className="flex-1 p-4 space-y-2">
         {navItems.map((item) => {
           const isActive = location === item.href;
+          const isFeatured = 'featured' in item && item.featured;
           return (
             <Link key={item.href} href={item.href} className={cn(
               "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group font-medium",
               isActive 
                 ? "bg-primary text-primary-foreground shadow-md shadow-primary/20" 
+                : isFeatured
+                ? "text-amber-400 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 hover:from-amber-500/20 hover:to-orange-500/20"
                 : "text-muted-foreground hover:bg-white/5 hover:text-white"
-            )}>
+            )} data-testid={`nav-${item.href.replace('/', '') || 'home'}`}>
               <item.icon className={cn("w-5 h-5", isActive ? "stroke-[2.5px]" : "stroke-2")} />
               {item.label}
+              {isFeatured && !isActive && (
+                <span className="ml-auto text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">Pro</span>
+              )}
             </Link>
           );
         })}
@@ -75,6 +82,10 @@ export function MobileNav() {
             <PlusCircle className="w-6 h-6" />
           </div>
           <span className="text-[10px] font-medium uppercase mt-1">Add</span>
+        </Link>
+        <Link href="/scout" className={cn("flex flex-col items-center gap-1 p-2", location === "/scout" ? "text-amber-400" : "text-amber-400/60")} data-testid="mobile-nav-scout">
+          <Binoculars className="w-6 h-6" />
+          <span className="text-[10px] font-medium uppercase">Scout</span>
         </Link>
       </div>
     </div>
