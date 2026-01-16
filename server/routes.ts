@@ -1365,8 +1365,37 @@ Respond in this exact JSON format:
   // === POLLS ===
   app.get('/api/polls', async (req, res) => {
     try {
+      const sessionId = req.query.sessionId as string;
       const polls = await storage.getActivePolls();
-      res.json(polls);
+      
+      const enrichedPolls = await Promise.all(polls.map(async (poll) => {
+        const votes = await storage.getPollVotes(poll.id);
+        const voteCounts = poll.options.map((_, index) => {
+          const voteData = votes.find(v => v.optionIndex === index);
+          return voteData ? Number(voteData.count) : 0;
+        });
+        const totalVotes = voteCounts.reduce((a, b) => a + b, 0);
+        
+        let hasVoted = false;
+        let userVote: number | undefined;
+        if (sessionId) {
+          const userVoteData = await storage.getUserPollVote(poll.id, sessionId);
+          if (userVoteData) {
+            hasVoted = true;
+            userVote = userVoteData.optionIndex;
+          }
+        }
+        
+        return {
+          ...poll,
+          voteCounts,
+          totalVotes,
+          hasVoted,
+          userVote,
+        };
+      }));
+      
+      res.json(enrichedPolls);
     } catch (err) {
       console.error('Get polls error:', err);
       res.status(500).json({ message: 'Error fetching polls' });
@@ -1470,8 +1499,34 @@ Respond in this exact JSON format:
   // === PREDICTIONS ===
   app.get('/api/predictions', async (req, res) => {
     try {
+      const sessionId = req.query.sessionId as string;
       const predictions = await storage.getPredictions();
-      res.json(predictions);
+      
+      const enrichedPredictions = await Promise.all(predictions.map(async (prediction) => {
+        const votes = await storage.getPredictionVotes(prediction.id);
+        const totalVotes = votes.player1Votes + votes.player2Votes;
+        
+        let hasVoted = false;
+        let userVote: number | undefined;
+        if (sessionId) {
+          const userVoteData = await storage.getUserPredictionVote(prediction.id, sessionId);
+          if (userVoteData) {
+            hasVoted = true;
+            userVote = userVoteData.votedFor;
+          }
+        }
+        
+        return {
+          ...prediction,
+          player1Votes: votes.player1Votes,
+          player2Votes: votes.player2Votes,
+          totalVotes,
+          hasVoted,
+          userVote,
+        };
+      }));
+      
+      res.json(enrichedPredictions);
     } catch (err) {
       console.error('Get predictions error:', err);
       res.status(500).json({ message: 'Error fetching predictions' });

@@ -115,6 +115,7 @@ export interface IStorage {
   votePoll(vote: InsertPollVote): Promise<PollVote>;
   getPollVotes(pollId: number): Promise<{ optionIndex: number; count: number }[]>;
   hasUserVoted(pollId: number, sessionId: string): Promise<boolean>;
+  getUserPollVote(pollId: number, sessionId: string): Promise<PollVote | undefined>;
 
   // Predictions
   createPrediction(prediction: InsertPrediction): Promise<Prediction>;
@@ -123,6 +124,7 @@ export interface IStorage {
   votePrediction(vote: InsertPredictionVote): Promise<PredictionVote>;
   getPredictionVotes(predictionId: number): Promise<{ player1Votes: number; player2Votes: number }>;
   hasUserVotedPrediction(predictionId: number, sessionId: string): Promise<boolean>;
+  getUserPredictionVote(predictionId: number, sessionId: string): Promise<PredictionVote | undefined>;
 
   // Story Templates
   createStoryTemplate(template: InsertStoryTemplate): Promise<StoryTemplate>;
@@ -602,6 +604,11 @@ export class DatabaseStorage implements IStorage {
     return !!existing;
   }
 
+  async getUserPollVote(pollId: number, sessionId: string): Promise<PollVote | undefined> {
+    const [vote] = await db.select().from(pollVotes).where(and(eq(pollVotes.pollId, pollId), eq(pollVotes.sessionId, sessionId)));
+    return vote;
+  }
+
   // Predictions
   async createPrediction(prediction: InsertPrediction): Promise<Prediction> {
     const [newPrediction] = await db.insert(predictions).values(prediction).returning();
@@ -648,6 +655,11 @@ export class DatabaseStorage implements IStorage {
   async hasUserVotedPrediction(predictionId: number, sessionId: string): Promise<boolean> {
     const [existing] = await db.select().from(predictionVotes).where(and(eq(predictionVotes.predictionId, predictionId), eq(predictionVotes.sessionId, sessionId)));
     return !!existing;
+  }
+
+  async getUserPredictionVote(predictionId: number, sessionId: string): Promise<PredictionVote | undefined> {
+    const [vote] = await db.select().from(predictionVotes).where(and(eq(predictionVotes.predictionId, predictionId), eq(predictionVotes.sessionId, sessionId)));
+    return vote;
   }
 
   // Story Templates

@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Heart, MessageCircle, Trash2, Send, ChevronDown, ChevronUp } from "lucide-react";
+import { useState } from "react";
+import { Heart, MessageCircle, Trash2, Send, ChevronDown, ChevronUp, Repeat2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -41,13 +41,32 @@ export function SocialEngagement({ gameId, compact = false }: SocialEngagementPr
     return localStorage.getItem("caliber_author_name") || "";
   });
   const [commentText, setCommentText] = useState("");
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [isLikeAnimating, setIsLikeAnimating] = useState(false);
+  const [isRepostAnimating, setIsRepostAnimating] = useState(false);
 
   const { data: likesData } = useQuery<{ likeCount: number; hasLiked: boolean }>({
     queryKey: ["/api/games", gameId, "likes", sessionId],
     queryFn: async () => {
       const res = await fetch(`/api/games/${gameId}/likes?sessionId=${sessionId}`);
       if (!res.ok) throw new Error("Failed to fetch likes");
+      return res.json();
+    },
+  });
+
+  const { data: repostsData } = useQuery<{ repostCount: number }>({
+    queryKey: ["/api/games", gameId, "reposts"],
+    queryFn: async () => {
+      const res = await fetch(`/api/games/${gameId}/reposts`);
+      if (!res.ok) throw new Error("Failed to fetch reposts");
+      return res.json();
+    },
+  });
+
+  const { data: hasRepostedData } = useQuery<{ hasReposted: boolean }>({
+    queryKey: ["/api/games", gameId, "has-reposted", sessionId],
+    queryFn: async () => {
+      const res = await fetch(`/api/games/${gameId}/has-reposted?sessionId=${sessionId}`);
+      if (!res.ok) throw new Error("Failed to check repost status");
       return res.json();
     },
   });
@@ -66,11 +85,25 @@ export function SocialEngagement({ gameId, compact = false }: SocialEngagementPr
       return apiRequest("POST", `/api/games/${gameId}/likes`, { sessionId });
     },
     onMutate: () => {
-      setIsAnimating(true);
-      setTimeout(() => setIsAnimating(false), 300);
+      setIsLikeAnimating(true);
+      setTimeout(() => setIsLikeAnimating(false), 300);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/games", gameId, "likes", sessionId] });
+    },
+  });
+
+  const repostMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("POST", `/api/games/${gameId}/repost`, { sessionId });
+    },
+    onMutate: () => {
+      setIsRepostAnimating(true);
+      setTimeout(() => setIsRepostAnimating(false), 300);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/games", gameId, "reposts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/games", gameId, "has-reposted", sessionId] });
     },
   });
 
@@ -103,6 +136,8 @@ export function SocialEngagement({ gameId, compact = false }: SocialEngagementPr
 
   const likeCount = likesData?.likeCount || 0;
   const hasLiked = likesData?.hasLiked || false;
+  const repostCount = repostsData?.repostCount || 0;
+  const hasReposted = hasRepostedData?.hasReposted || false;
   const commentCount = commentsData.length;
 
   const handleSubmitComment = (e: React.FormEvent) => {
@@ -126,10 +161,28 @@ export function SocialEngagement({ gameId, compact = false }: SocialEngagementPr
             className={cn(
               "w-4 h-4 transition-transform",
               hasLiked && "fill-current",
-              isAnimating && "scale-125"
+              isLikeAnimating && "scale-125"
             )}
           />
           <span>{likeCount}</span>
+        </button>
+        <button
+          data-testid={`repost-button-compact-${gameId}`}
+          onClick={() => !hasReposted && repostMutation.mutate()}
+          disabled={hasReposted || repostMutation.isPending}
+          className={cn(
+            "flex items-center gap-1 text-sm transition-all",
+            hasReposted ? "text-green-500" : "text-muted-foreground hover:text-green-400",
+            hasReposted && "cursor-default"
+          )}
+        >
+          <Repeat2
+            className={cn(
+              "w-4 h-4 transition-transform",
+              isRepostAnimating && "scale-125"
+            )}
+          />
+          <span>{repostCount}</span>
         </button>
         <span className="flex items-center gap-1 text-sm text-muted-foreground">
           <MessageCircle className="w-4 h-4" />
@@ -157,10 +210,30 @@ export function SocialEngagement({ gameId, compact = false }: SocialEngagementPr
             className={cn(
               "w-5 h-5 transition-transform",
               hasLiked && "fill-current",
-              isAnimating && "scale-125"
+              isLikeAnimating && "scale-125"
             )}
           />
           <span>{likeCount}</span>
+        </Button>
+
+        <Button
+          data-testid={`repost-button-${gameId}`}
+          variant="ghost"
+          size="sm"
+          onClick={() => !hasReposted && repostMutation.mutate()}
+          disabled={hasReposted || repostMutation.isPending}
+          className={cn(
+            "gap-2 transition-all",
+            hasReposted && "text-green-500 hover:text-green-600"
+          )}
+        >
+          <Repeat2
+            className={cn(
+              "w-5 h-5 transition-transform",
+              isRepostAnimating && "scale-125"
+            )}
+          />
+          <span>{repostCount}</span>
         </Button>
 
         <Button

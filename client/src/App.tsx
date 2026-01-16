@@ -18,6 +18,9 @@ import VideoAnalysis from "./pages/VideoAnalysis";
 import ScoutMode from "./pages/ScoutMode";
 import Challenges from "./pages/Challenges";
 import Teams from "./pages/Teams";
+import Newsfeed from "./pages/Newsfeed";
+import CommunityContent from "./pages/CommunityContent";
+import Stories from "./pages/Stories";
 import NotFound from "./pages/not-found";
 
 function Router() {
@@ -32,6 +35,9 @@ function Router() {
           <Route path="/players/:id" component={PlayerDetail} />
           <Route path="/challenges" component={Challenges} />
           <Route path="/teams" component={Teams} />
+          <Route path="/feed" component={Newsfeed} />
+          <Route path="/community" component={CommunityContent} />
+          <Route path="/stories" component={Stories} />
           <Route path="/leaderboard" component={Leaderboard} />
           <Route path="/compare" component={ComparePlayers} />
           <Route path="/video" component={VideoAnalysis} />
