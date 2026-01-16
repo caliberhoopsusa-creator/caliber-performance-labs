@@ -2727,6 +2727,16 @@ Respond in this exact JSON format:
     }
   });
 
+  app.post('/api/alerts/mark-all-read', async (req, res) => {
+    try {
+      await storage.markAllAlertsRead();
+      res.json({ success: true });
+    } catch (err) {
+      console.error('Mark all alerts read error:', err);
+      res.status(500).json({ error: 'Error marking all alerts as read' });
+    }
+  });
+
   // --- Coach Goals ---
   app.post('/api/coach-goals', async (req, res) => {
     try {

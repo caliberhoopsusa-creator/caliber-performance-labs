@@ -226,6 +226,7 @@ export interface IStorage {
   getAlerts(playerId?: number): Promise<Alert[]>;
   getUnreadAlerts(): Promise<Alert[]>;
   markAlertRead(id: number): Promise<void>;
+  markAllAlertsRead(): Promise<void>;
   deleteAlert(id: number): Promise<void>;
 
   // Coach Goals
@@ -1102,6 +1103,10 @@ export class DatabaseStorage implements IStorage {
 
   async markAlertRead(id: number): Promise<void> {
     await db.update(alerts).set({ isRead: true }).where(eq(alerts.id, id));
+  }
+
+  async markAllAlertsRead(): Promise<void> {
+    await db.update(alerts).set({ isRead: true }).where(eq(alerts.isRead, false));
   }
 
   async deleteAlert(id: number): Promise<void> {

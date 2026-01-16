@@ -1033,3 +1033,150 @@ export function useDeleteOpponent() {
     },
   });
 }
+
+// ============================================
+// DRILL RECOMMENDATIONS HOOKS
+// ============================================
+
+export type DrillRecommendation = {
+  id: number;
+  playerId: number;
+  drillName: string;
+  drillCategory: string;
+  reason: string;
+  weakStat: string;
+  priority: number;
+  createdAt: string;
+};
+
+export function useDrillRecommendations(playerId: number) {
+  return useQuery<DrillRecommendation[]>({
+    queryKey: ['/api/players', playerId, 'drill-recommendations'],
+    queryFn: async () => {
+      const res = await fetch(`/api/players/${playerId}/drill-recommendations`);
+      if (!res.ok) throw new Error("Failed to fetch drill recommendations");
+      return res.json();
+    },
+    enabled: !!playerId,
+  });
+}
+
+export function useGenerateDrillRecommendations() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (playerId: number) => {
+      const res = await fetch(`/api/players/${playerId}/drill-recommendations/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to generate drill recommendations");
+      }
+      return res.json();
+    },
+    onSuccess: (_, playerId) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/players', playerId, 'drill-recommendations'] });
+    },
+  });
+}
+
+export function useDeleteDrillRecommendation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { id: number; playerId: number }) => {
+      const res = await fetch(`/api/drill-recommendations/${data.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete drill recommendation");
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/players', variables.playerId, 'drill-recommendations'] });
+    },
+  });
+}
+
+// ============================================
+// ALERTS HOOKS
+// ============================================
+
+export type Alert = {
+  id: number;
+  playerId: number;
+  alertType: string;
+  title: string;
+  message: string;
+  severity: string;
+  isRead: boolean;
+  relatedGameId: number | null;
+  createdAt: string;
+};
+
+export type AlertWithPlayer = Alert & {
+  playerName?: string;
+};
+
+export function useAlerts(playerId?: number) {
+  return useQuery<Alert[]>({
+    queryKey: playerId ? ['/api/alerts', playerId] : ['/api/alerts'],
+    queryFn: async () => {
+      const url = playerId ? `/api/alerts?playerId=${playerId}` : '/api/alerts';
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Failed to fetch alerts");
+      return res.json();
+    },
+  });
+}
+
+export function useUnreadAlerts() {
+  return useQuery<Alert[]>({
+    queryKey: ['/api/alerts/unread'],
+    queryFn: async () => {
+      const res = await fetch('/api/alerts/unread');
+      if (!res.ok) throw new Error("Failed to fetch unread alerts");
+      return res.json();
+    },
+  });
+}
+
+export function useMarkAlertRead() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(`/api/alerts/${id}/read`, { method: "PATCH" });
+      if (!res.ok) throw new Error("Failed to mark alert as read");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/alerts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/alerts/unread'] });
+    },
+  });
+}
+
+export function useMarkAllAlertsRead() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/alerts/mark-all-read', { method: "POST" });
+      if (!res.ok) throw new Error("Failed to mark all alerts as read");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/alerts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/alerts/unread'] });
+    },
+  });
+}
+
+export function useDeleteAlert() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(`/api/alerts/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete alert");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/alerts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/alerts/unread'] });
+    },
+  });
+}
