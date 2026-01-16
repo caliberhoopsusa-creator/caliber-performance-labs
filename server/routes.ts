@@ -669,6 +669,9 @@ export async function registerRoutes(
 
       const { grade, feedback } = calculateGrade(input, player.position);
       
+      // Calculate PER (Points + Rebounds + Assists)
+      const per = (input.points || 0) + (input.rebounds || 0) + (input.assists || 0);
+      
       // Inject calculated fields
       const gameData: any = {
         playerId: input.playerId,
@@ -695,7 +698,8 @@ export async function registerRoutes(
         defenseRating: input.defenseRating,
         notes: input.notes,
         grade,
-        feedback
+        feedback,
+        per: per.toString()
       };
 
       const game = await storage.createGame(gameData);

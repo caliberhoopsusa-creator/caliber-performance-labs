@@ -380,6 +380,7 @@ export default function PlayerDetail() {
   const avgAst = games.length ? (games.reduce((acc, g) => acc + g.assists, 0) / games.length).toFixed(1) : "—";
   const avgSteals = games.length ? (games.reduce((acc, g) => acc + g.steals, 0) / games.length).toFixed(1) : "—";
   const avgBlocks = games.length ? (games.reduce((acc, g) => acc + g.blocks, 0) / games.length).toFixed(1) : "—";
+  const avgPER = games.length ? (games.reduce((acc, g) => acc + g.points + g.rebounds + g.assists, 0) / games.length).toFixed(1) : "—";
   
   const totalFgMade = games.reduce((acc, g) => acc + (g.fgMade || 0), 0);
   const totalFgAttempted = games.reduce((acc, g) => acc + (g.fgAttempted || 0), 0);
@@ -585,6 +586,7 @@ export default function PlayerDetail() {
             <StatCard label="PPG" value={avgPoints} highlight={true} />
             <StatCard label="RPG" value={avgReb} />
             <StatCard label="APG" value={avgAst} />
+            <StatCard label="PER" value={avgPER} highlight={true} />
             <StatCard label="SPG" value={avgSteals} />
             <StatCard label="BPG" value={avgBlocks} />
             <StatCard label="FG%" value={fgPercent !== "—" ? `${fgPercent}%` : "—"} />
@@ -710,6 +712,7 @@ export default function PlayerDetail() {
                           <span><span className="text-muted-foreground text-xs">PTS</span> {game.points}</span>
                           <span><span className="text-muted-foreground text-xs">REB</span> {game.rebounds}</span>
                           <span><span className="text-muted-foreground text-xs">AST</span> {game.assists}</span>
+                          <span className="text-primary"><span className="text-primary/60 text-xs">PER</span> {game.points + game.rebounds + game.assists}</span>
                         </div>
                         <GradeBadge grade={game.grade || "-"} size="sm" />
                         <ChevronDown className={cn(
@@ -722,7 +725,7 @@ export default function PlayerDetail() {
                   
                   <CollapsibleContent>
                     <div className="px-4 pb-4 pt-2 border-t border-white/5">
-                      <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
+                      <div className="grid grid-cols-3 sm:grid-cols-7 gap-4">
                         <div className="text-center">
                           <div className="text-xs text-muted-foreground mb-1">Points</div>
                           <div className="text-lg font-bold text-white">{game.points}</div>
@@ -734,6 +737,10 @@ export default function PlayerDetail() {
                         <div className="text-center">
                           <div className="text-xs text-muted-foreground mb-1">Assists</div>
                           <div className="text-lg font-bold text-white">{game.assists}</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-xs text-primary/60 mb-1">PER</div>
+                          <div className="text-lg font-bold text-primary">{game.points + game.rebounds + game.assists}</div>
                         </div>
                         <div className="text-center">
                           <div className="text-xs text-muted-foreground mb-1">Steals</div>
@@ -987,6 +994,7 @@ export default function PlayerDetail() {
                           <span><span className="text-muted-foreground">PTS</span> {game.points}</span>
                           <span><span className="text-muted-foreground">REB</span> {game.rebounds}</span>
                           <span><span className="text-muted-foreground">AST</span> {game.assists}</span>
+                          <span className="text-primary"><span className="text-primary/60">PER</span> {game.points + game.rebounds + game.assists}</span>
                         </div>
                         <SocialEngagement gameId={game.id} compact />
                       </div>
