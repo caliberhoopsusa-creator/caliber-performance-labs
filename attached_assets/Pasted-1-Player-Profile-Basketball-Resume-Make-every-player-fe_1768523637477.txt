@@ -1,0 +1,243 @@
+1. Player Profile & “Basketball Resume”
+
+Make every player feel like they’re building their 2K MyPlayer card in real life.
+
+Add:
+
+Season averages & best games
+
+Custom player card (photo, position, height, class, strengths)
+
+Shareable profile link (for socials, recruiting, group chats)
+
+“Top 5 Games” section
+
+Why it helps:
+If a kid can post a clean-looking “HoopReport Card” on IG / X / Snapchat, they’re marketing your app for you.
+
+2. Team & Coach Mode
+
+If you win over coaches, you get entire teams… and teams bring leagues.
+
+Add:
+
+Coach accounts that can:
+
+Create teams
+
+Add players
+
+Enter stats for the whole roster
+
+View team dashboards (grades, effort, trends)
+
+Export/print report cards for film sessions or parent meetings
+
+Simple import from stat sheets / box score CSVs
+
+Why it helps:
+A coach saying, “Everyone download HoopReport, we’re using this all season,” is way more powerful than you trying to get every kid one-by-one.
+
+3. Leaderboards & Rankings (Local → National)
+
+Hoopers LOVE seeing where they stack up.
+
+Add:
+
+Leaderboards by:
+
+School
+
+City
+
+State
+
+Class year
+
+Position
+
+Filters: “Offense grade”, “Defense grade”, “Hustle grade”, “Most improved”
+
+Weekly “HoopReport Player of the Week” badges
+
+Why it helps:
+Competition + ego = free growth. People will invite teammates and friends just to climb the ranks or prove they’re better.
+
+4. Highlight Integration & Auto-Graphics
+
+Make the app part of their content, not just their stats.
+
+Add:
+
+Ability to:
+
+Upload one game highlight link (YouTube, Hudl, etc.)
+
+Attach it to that game’s report
+
+Auto-generate a shareable graphic:
+
+Player photo
+
+Grade (A-)
+
+Key stats
+
+QR code / link to full HoopReport profile
+
+Why it helps:
+The more your logo and grades are in screenshots on people’s stories, the faster this spreads.
+
+5. Progress, Goals & Training
+
+Turn it into a development tool, not just a stat calculator.
+
+Add:
+
+Player-set goals:
+
+e.g., “Average B+ or higher on Defense by March”
+
+“Reduce turnovers below 2 per game”
+
+Streak tracking:
+
+“3 games in a row with A or better in Effort”
+
+Drill suggestions tied to weaknesses (you already started this):
+
+Missed a lot of FTs? Show FT routine drills.
+
+Low hustle score? Show rebounding / conditioning drills.
+
+Why it helps:
+Parents and serious hoopers will stick with a tool that clearly shows improvement over time, not just one-time grades.
+
+6. “Compare Yourself To…” Mode
+
+Every kid wants to know, “Who do I play like?”
+
+Add:
+
+A page that compares their stat profile to:
+
+Typical college guard/wing/big benchmarks
+
+Play style archetypes: “3&D Wing”, “Slashing Guard”, “Stretch Big”, etc.
+
+A fun label:
+
+“Your profile is similar to a ‘Two-way Slasher’”
+
+“You’re grading like a high-motor glue guy”
+
+Why it helps:
+This makes the app fun and shareable (“Yo, it says I’m like a 3&D guard 😂”).
+
+7. Referral / Team Challenges
+
+This is straight growth-hacking.
+
+Add:
+
+Referral system:
+
+“Invite 3 teammates, unlock advanced charts or custom card themes”
+
+Team challenges:
+
+“If 10+ players from one school use the app in a week → unlock your school badge / theme”
+
+Monthly “Program Leaderboard”:
+
+Which school logs the most games?
+
+Why it helps:
+You bake virality into the product itself, not just rely on luck.
+
+8. Multi-Game & Season Insights
+
+Right now, you’re analyzing single games. Now think season story.
+
+Add:
+
+“Last 5 games” trend charts for each category
+
+“Biggest jump” (e.g., Hustle up 12 points over the last month)
+
+Flags like:
+
+“You’ve improved your Efficiency score from 72 → 84 over the last 10 games.”
+
+“Defense has dropped in your last 3 games – possible fatigue or matchups?”
+
+Why it helps:
+Serious hoopers and coaches LOVE trend data. It feels like real analytics, not just a calculator.
+
+9. Parents & Recruiter View
+
+Two more audiences who can blow this up: parents and eventually scouts.
+
+Add:
+
+Parent-friendly summary:
+
+Simple explanation: “Johnny is a B+ overall, with A- effort and B defense.”
+
+“Recruiting resume” export:
+
+PDF or web link with:
+
+Photo, bio
+
+GPA (if they add it)
+
+Season stats & grades
+
+Honors (POW badges, etc.)
+
+Why it helps:
+If parents see this as a helpful, legit-looking evaluation, they’ll encourage their kids, coaches, and club teams to use it.
+
+10. Make It Stupid Easy to Use
+
+If you want everyone to use it, you’ve gotta remove friction.
+
+Add:
+
+Presets / templates:
+
+“Import from basic box score” (just PTS, REB, AST, STL, BLK, TO, FG, FT)
+
+Advanced mode if someone has full stats
+
+Save stat templates for teams so coaches don’t have to re-enter everything.
+
+Auto-calc some stats (REB = OREB + DREB if they forget one, etc.).
+
+Why it helps:
+If entering stats is annoying, no one uses it long enough for it to spread.
+
+TL;DR — If You Had to Pick Just a Few Killer Adds
+
+If you want to prioritize, I’d start with:
+
+Player profiles + shareable game cards
+
+Team/coach mode + team dashboards
+
+Leaderboards + rankings
+
+Progress charts + goals
+
+Those four alone make it:
+
+Fun for players
+
+Useful for coaches
+
+Impressive to parents
+
+Naturally shareable online
+
+If you want, I can help you rewrite your AI prompt to include these features, or map it out like a “V1, V2, V3” roadmap so you know what to build first.
