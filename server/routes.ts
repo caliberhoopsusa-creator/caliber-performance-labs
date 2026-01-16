@@ -267,18 +267,26 @@ async function updateSkillBadges(playerId: number, stats: any): Promise<{ upgrad
     let newLevel: SkillBadgeLevel = 'none';
     const thresholds = config.thresholds;
     
-    if (newCareerValue >= thresholds.hall_of_fame) {
+    if (newCareerValue >= thresholds.goat) {
+      newLevel = 'goat';
+    } else if (newCareerValue >= thresholds.legend) {
+      newLevel = 'legend';
+    } else if (newCareerValue >= thresholds.hall_of_fame) {
       newLevel = 'hall_of_fame';
+    } else if (newCareerValue >= thresholds.platinum) {
+      newLevel = 'platinum';
     } else if (newCareerValue >= thresholds.gold) {
       newLevel = 'gold';
     } else if (newCareerValue >= thresholds.silver) {
       newLevel = 'silver';
     } else if (newCareerValue >= thresholds.bronze) {
       newLevel = 'bronze';
+    } else if (newCareerValue >= thresholds.brick) {
+      newLevel = 'brick';
     }
     
     // Check if level upgraded
-    const levelOrder: SkillBadgeLevel[] = ['none', 'bronze', 'silver', 'gold', 'hall_of_fame'];
+    const levelOrder: SkillBadgeLevel[] = ['none', 'brick', 'bronze', 'silver', 'gold', 'platinum', 'hall_of_fame', 'legend', 'goat'];
     const oldLevelIndex = levelOrder.indexOf(badge.currentLevel as SkillBadgeLevel);
     const newLevelIndex = levelOrder.indexOf(newLevel);
     
@@ -608,10 +616,14 @@ export async function registerRoutes(
       for (const upgrade of skillBadgeUpdates.newLevels) {
         const skillDef = SKILL_BADGE_TYPES[upgrade.skill as keyof typeof SKILL_BADGE_TYPES];
         const levelNames: Record<string, string> = {
+          brick: 'Brick',
           bronze: 'Bronze',
           silver: 'Silver',
           gold: 'Gold',
-          hall_of_fame: 'Hall of Fame'
+          platinum: 'Platinum',
+          hall_of_fame: 'Hall of Fame',
+          legend: 'Legend',
+          goat: 'GOAT'
         };
         await storage.createFeedActivity({
           activityType: 'badge',

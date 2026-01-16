@@ -45,13 +45,13 @@ Preferred communication style: Simple, everyday language.
 - **Tier Progression**: Rookie (0) → Starter (500) → All-Star (2,000) → MVP (5,000) → Hall of Fame (10,000)
 - **Streak Bonuses**: 3-day (+25 XP), 7-day (+75 XP), 14-day (+150 XP), 30-day (+400 XP)
 - **Milestone Badges**: Special badges for tier promotions (starter_unlock, allstar_unlock, etc.)
-- **Skill Badges**: Progressive career badges that upgrade as players accumulate stats:
-  - Sharpshooter (3-pointers): Bronze(10) → Silver(50) → Gold(150) → HOF(300)
-  - Pure Passer (assists): Bronze(25) → Silver(100) → Gold(250) → HOF(500)
-  - Bucket Getter (points): Bronze(100) → Silver(500) → Gold(1500) → HOF(3000)
-  - Glass Cleaner (rebounds): Bronze(50) → Silver(200) → Gold(500) → HOF(1000)
-  - Rim Protector (blocks): Bronze(10) → Silver(50) → Gold(125) → HOF(250)
-  - Pickpocket (steals): Bronze(15) → Silver(75) → Gold(175) → HOF(350)
+- **Skill Badges**: Progressive career badges with 8 ranks (Brick → Bronze → Silver → Gold → Platinum → HOF → Legend → GOAT):
+  - Sharpshooter (3-pointers): 5 → 15 → 40 → 100 → 200 → 350 → 500 → 750
+  - Pure Passer (assists): 10 → 35 → 80 → 175 → 350 → 600 → 900 → 1500
+  - Bucket Getter (points): 50 → 150 → 400 → 1000 → 2000 → 4000 → 7000 → 12000
+  - Glass Cleaner (rebounds): 25 → 75 → 175 → 400 → 750 → 1250 → 2000 → 3500
+  - Rim Protector (blocks): 5 → 15 → 40 → 90 → 175 → 300 → 500 → 800
+  - Pickpocket (steals): 8 → 25 → 60 → 130 → 250 → 425 → 650 → 1000
 - **Constants**: TIER_THRESHOLDS, XP_REWARDS, and SKILL_BADGE_TYPES defined in shared/schema.ts
 
 ### AI Video Analysis

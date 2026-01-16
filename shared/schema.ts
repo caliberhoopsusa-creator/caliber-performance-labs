@@ -267,7 +267,7 @@ export const BADGE_DEFINITIONS = {
 } as const;
 
 // === SKILL BADGES SYSTEM (Progressive career badges) ===
-export const SKILL_BADGE_LEVELS = ["none", "bronze", "silver", "gold", "hall_of_fame"] as const;
+export const SKILL_BADGE_LEVELS = ["none", "brick", "bronze", "silver", "gold", "platinum", "hall_of_fame", "legend", "goat"] as const;
 export type SkillBadgeLevel = typeof SKILL_BADGE_LEVELS[number];
 
 export const SKILL_BADGE_TYPES = {
@@ -275,37 +275,37 @@ export const SKILL_BADGE_TYPES = {
     name: "Sharpshooter",
     description: "Career 3-pointers made",
     stat: "threeMade",
-    thresholds: { bronze: 10, silver: 50, gold: 150, hall_of_fame: 300 },
+    thresholds: { brick: 5, bronze: 15, silver: 40, gold: 100, platinum: 200, hall_of_fame: 350, legend: 500, goat: 750 },
   },
   pure_passer: {
     name: "Pure Passer",
     description: "Career assists",
     stat: "assists",
-    thresholds: { bronze: 25, silver: 100, gold: 250, hall_of_fame: 500 },
+    thresholds: { brick: 10, bronze: 35, silver: 80, gold: 175, platinum: 350, hall_of_fame: 600, legend: 900, goat: 1500 },
   },
   bucket_getter: {
     name: "Bucket Getter",
     description: "Career points scored",
     stat: "points",
-    thresholds: { bronze: 100, silver: 500, gold: 1500, hall_of_fame: 3000 },
+    thresholds: { brick: 50, bronze: 150, silver: 400, gold: 1000, platinum: 2000, hall_of_fame: 4000, legend: 7000, goat: 12000 },
   },
   glass_cleaner: {
     name: "Glass Cleaner",
     description: "Career rebounds",
     stat: "rebounds",
-    thresholds: { bronze: 50, silver: 200, gold: 500, hall_of_fame: 1000 },
+    thresholds: { brick: 25, bronze: 75, silver: 175, gold: 400, platinum: 750, hall_of_fame: 1250, legend: 2000, goat: 3500 },
   },
   rim_protector: {
     name: "Rim Protector",
     description: "Career blocks",
     stat: "blocks",
-    thresholds: { bronze: 10, silver: 50, gold: 125, hall_of_fame: 250 },
+    thresholds: { brick: 5, bronze: 15, silver: 40, gold: 90, platinum: 175, hall_of_fame: 300, legend: 500, goat: 800 },
   },
   pickpocket: {
     name: "Pickpocket",
     description: "Career steals",
     stat: "steals",
-    thresholds: { bronze: 15, silver: 75, gold: 175, hall_of_fame: 350 },
+    thresholds: { brick: 8, bronze: 25, silver: 60, gold: 130, platinum: 250, hall_of_fame: 425, legend: 650, goat: 1000 },
   },
 } as const;
 

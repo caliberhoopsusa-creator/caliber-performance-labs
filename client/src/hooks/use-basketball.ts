@@ -349,11 +349,11 @@ export type SkillBadge = {
   id: number;
   playerId: number;
   skillType: string;
-  currentLevel: 'none' | 'bronze' | 'silver' | 'gold' | 'hall_of_fame';
+  currentLevel: 'none' | 'brick' | 'bronze' | 'silver' | 'gold' | 'platinum' | 'hall_of_fame' | 'legend' | 'goat';
   careerValue: number;
   name: string;
   description: string;
-  thresholds: { bronze: number; silver: number; gold: number; hall_of_fame: number };
+  thresholds: { brick: number; bronze: number; silver: number; gold: number; platinum: number; hall_of_fame: number; legend: number; goat: number };
 };
 
 export function usePlayerSkillBadges(playerId: number) {

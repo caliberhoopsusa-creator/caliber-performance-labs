@@ -14,18 +14,26 @@ const SKILL_ICONS: Record<string, typeof Target> = {
 
 const LEVEL_COLORS: Record<string, { bg: string; border: string; text: string }> = {
   none: { bg: "bg-muted/30", border: "border-muted", text: "text-muted-foreground" },
+  brick: { bg: "bg-red-900/30", border: "border-red-800", text: "text-red-500" },
   bronze: { bg: "bg-amber-900/30", border: "border-amber-700", text: "text-amber-600" },
   silver: { bg: "bg-slate-300/20", border: "border-slate-400", text: "text-slate-300" },
   gold: { bg: "bg-yellow-500/20", border: "border-yellow-500", text: "text-yellow-400" },
+  platinum: { bg: "bg-cyan-500/20", border: "border-cyan-400", text: "text-cyan-300" },
   hall_of_fame: { bg: "bg-purple-500/20", border: "border-purple-400", text: "text-purple-400" },
+  legend: { bg: "bg-orange-500/20", border: "border-orange-400", text: "text-orange-400" },
+  goat: { bg: "bg-gradient-to-r from-yellow-500/30 to-purple-500/30", border: "border-yellow-400", text: "text-yellow-300" },
 };
 
 const LEVEL_NAMES: Record<string, string> = {
   none: "Locked",
+  brick: "Brick",
   bronze: "Bronze",
   silver: "Silver",
   gold: "Gold",
+  platinum: "Platinum",
   hall_of_fame: "HOF",
+  legend: "Legend",
+  goat: "GOAT",
 };
 
 function SkillBadgeCard({ badge }: { badge: SkillBadge }) {
@@ -33,18 +41,26 @@ function SkillBadgeCard({ badge }: { badge: SkillBadge }) {
   const colors = LEVEL_COLORS[badge.currentLevel] || LEVEL_COLORS.none;
   
   const getNextThreshold = () => {
-    if (badge.currentLevel === 'hall_of_fame') return badge.thresholds.hall_of_fame;
-    if (badge.currentLevel === 'gold') return badge.thresholds.hall_of_fame;
+    if (badge.currentLevel === 'goat') return badge.thresholds.goat;
+    if (badge.currentLevel === 'legend') return badge.thresholds.goat;
+    if (badge.currentLevel === 'hall_of_fame') return badge.thresholds.legend;
+    if (badge.currentLevel === 'platinum') return badge.thresholds.hall_of_fame;
+    if (badge.currentLevel === 'gold') return badge.thresholds.platinum;
     if (badge.currentLevel === 'silver') return badge.thresholds.gold;
     if (badge.currentLevel === 'bronze') return badge.thresholds.silver;
-    return badge.thresholds.bronze;
+    if (badge.currentLevel === 'brick') return badge.thresholds.bronze;
+    return badge.thresholds.brick;
   };
   
   const getCurrentThreshold = () => {
-    if (badge.currentLevel === 'hall_of_fame') return badge.thresholds.gold;
+    if (badge.currentLevel === 'goat') return badge.thresholds.legend;
+    if (badge.currentLevel === 'legend') return badge.thresholds.hall_of_fame;
+    if (badge.currentLevel === 'hall_of_fame') return badge.thresholds.platinum;
+    if (badge.currentLevel === 'platinum') return badge.thresholds.gold;
     if (badge.currentLevel === 'gold') return badge.thresholds.silver;
     if (badge.currentLevel === 'silver') return badge.thresholds.bronze;
-    if (badge.currentLevel === 'bronze') return 0;
+    if (badge.currentLevel === 'bronze') return badge.thresholds.brick;
+    if (badge.currentLevel === 'brick') return 0;
     return 0;
   };
   
@@ -52,7 +68,7 @@ function SkillBadgeCard({ badge }: { badge: SkillBadge }) {
   const currentThreshold = getCurrentThreshold();
   const progressRange = nextThreshold - currentThreshold;
   const progressValue = badge.careerValue - currentThreshold;
-  const progressPercent = badge.currentLevel === 'hall_of_fame' 
+  const progressPercent = badge.currentLevel === 'goat' 
     ? 100 
     : Math.min(100, Math.round((progressValue / progressRange) * 100));
 
