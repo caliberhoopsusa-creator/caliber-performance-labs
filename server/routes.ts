@@ -3622,6 +3622,7 @@ Respond in this exact JSON format:
   // Get all products with prices (for pricing management)
   app.get('/api/admin/products', isAdmin, async (req, res) => {
     try {
+      console.log('Admin products endpoint called');
       const result = await db.execute(sql`
         SELECT 
           p.id as product_id,
@@ -3638,6 +3639,7 @@ Respond in this exact JSON format:
         LEFT JOIN stripe.prices pr ON pr.product = p.id
         ORDER BY p.name, pr.unit_amount
       `);
+      console.log('Admin products query result rows:', result.rows?.length);
 
       const productsMap = new Map<string, any>();
       for (const row of result.rows as any[]) {

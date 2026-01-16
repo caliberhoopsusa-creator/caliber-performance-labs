@@ -367,11 +367,18 @@ function ProductsTab() {
     queryKey: ["/api/admin/products"],
     queryFn: async () => {
       console.log("Fetching admin products...");
-      const res = await adminFetch("/api/admin/products");
-      const result = await res.json();
-      console.log("Admin products result:", result);
-      return result;
+      try {
+        const res = await adminFetch("/api/admin/products");
+        const result = await res.json();
+        console.log("Admin products result:", result);
+        return result;
+      } catch (err) {
+        console.error("Error fetching admin products:", err);
+        throw err;
+      }
     },
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const toggleMutation = useMutation({
