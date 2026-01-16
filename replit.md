@@ -167,3 +167,35 @@ The grading algorithm in `server/routes.ts` calculates a performance score using
 - `date-fns`: Date formatting
 - `wouter`: Client-side routing
 - `zod`: Schema validation
+
+## Premium Design System
+
+### Color Palette
+- **Background**: Dark navy (hsl 222 47% 8%)
+- **Card**: Elevated dark (hsl 222 47% 12%)
+- **Primary/Accent**: Vibrant orange (hsl 24 100% 50%) - used for CTAs, highlights, and branding
+- **Muted Foreground**: Subtle gray (hsl 222 15% 55%)
+
+### Premium Utility Classes (index.css)
+- **glass-card**: Glassmorphic card with backdrop blur, subtle border, and shadow
+- **glass-card-glow**: Glass card with primary-colored glow shadow
+- **card-shine**: Adds hover effect with diagonal gradient sweep animation
+- **text-glow**: Applies primary-colored text shadow glow
+- **stat-value**: Large bold display number styling (font-display, text-4xl, bold)
+- **stat-label**: Small uppercase label styling for stats
+- **divider-glow**: Gradient divider line with center glow
+- **gradient-hero**: Dark radial gradient for hero backgrounds
+- **gradient-spotlight**: Subtle spotlight effect overlay
+- **gradient-radial-glow**: Radial primary glow for emphasis areas
+- **shimmer**: Animated gradient sweep effect for loading/premium states
+- **float**: Gentle floating animation
+- **pulse-glow**: Pulsing scale/opacity animation with shadow
+
+### Design Patterns
+- Cards use glassmorphic styling with `backdrop-blur-xl` and subtle white/10 borders
+- Gradient backgrounds on stat containers (from-primary/10 to-primary/5)
+- Color-coded icons with gradient backgrounds (rounded-xl, border-primary/10)
+- Section headers with gradient divider lines
+- PRO/Premium badges with gradient backgrounds (from-primary to-orange-500)
+- Hover effects use elevation and subtle border color changes
+- Loading states use spinner with centered Activity icon
