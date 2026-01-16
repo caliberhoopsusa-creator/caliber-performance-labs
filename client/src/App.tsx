@@ -12,6 +12,7 @@ import PlayerDetail from "./pages/PlayerDetail";
 import AnalyzeGame from "./pages/AnalyzeGame";
 import Leaderboard from "./pages/Leaderboard";
 import ComparePlayers from "./pages/ComparePlayers";
+import GradingSystem from "./pages/GradingSystem";
 import NotFound from "./pages/not-found";
 
 function Router() {
@@ -25,6 +26,7 @@ function Router() {
           <Route path="/players/:id" component={PlayerDetail} />
           <Route path="/leaderboard" component={Leaderboard} />
           <Route path="/compare" component={ComparePlayers} />
+          <Route path="/grading" component={GradingSystem} />
           <Route path="/analyze" component={AnalyzeGame} />
           <Route component={NotFound} />
         </Switch>
