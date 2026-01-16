@@ -3,6 +3,7 @@ import { GoalsPanel } from "@/components/GoalsPanel";
 import { useRoute, Link } from "wouter";
 import { StatCard } from "@/components/StatCard";
 import { GradeBadge } from "@/components/GradeBadge";
+import { PlayerArchetype } from "@/components/PlayerArchetype";
 import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Crosshair, Trophy, Share2, BarChart3, Medal, User, ChevronRight, ChevronDown, TrendingUp } from "lucide-react";
 import { BADGE_DEFINITIONS, type Badge, type Game } from "@shared/schema";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
@@ -302,6 +303,13 @@ export default function PlayerDetail() {
           </div>
         </div>
       </Card>
+
+      {games.length > 0 && (
+        <PlayerArchetype 
+          games={games} 
+          position={player.position as "Guard" | "Wing" | "Big"}
+        />
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">

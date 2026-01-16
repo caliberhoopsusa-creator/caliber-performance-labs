@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { BADGE_DEFINITIONS, type Badge } from "@shared/schema";
 import { GameCard } from "@/components/GameCard";
+import { PlayerArchetype } from "@/components/PlayerArchetype";
 
 const BADGE_ICONS: Record<string, any> = {
   twenty_piece: Target,
@@ -239,6 +240,16 @@ export default function PlayerCard() {
               </p>
             </div>
           </div>
+
+          {games.length > 0 && (
+            <div className="mb-4">
+              <PlayerArchetype 
+                games={games} 
+                position={player.position as "Guard" | "Wing" | "Big"}
+                variant="badge"
+              />
+            </div>
+          )}
 
           <div className="flex-1 flex flex-col justify-center items-center my-2">
             <div className="text-xs uppercase tracking-widest text-muted-foreground mb-3 font-medium">
