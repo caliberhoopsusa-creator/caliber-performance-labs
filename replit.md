@@ -101,6 +101,34 @@ The grading algorithm in `server/routes.ts` calculates a performance score using
 - **Challenges & Events**: Weekly/monthly app-wide challenges with leaderboards and badge rewards
 - **Team Message Boards**: Create/join teams with shared discussion boards
 
+### Coach Analysis Features
+- **Team Dashboard**: Overview of entire roster with sortable stats, position filters, and best performers
+- **Shot Charts / Heat Maps**: Visual basketball court with shot locations, zone statistics, and clickable shot entry
+- **Game Notes**: Coach observations per game with note types (observation, improvement, praise, strategy)
+- **Lineup Analysis**: Create and track player combinations, position depth charts with tier rankings
+- **Practice Tracker**: Log practice sessions, attendance, effort ratings, and drill scores
+- **Drill Recommendations**: AI-generated drill suggestions based on player weaknesses
+- **Trend Alerts**: Automatic notifications for performance drops, streak endings, and improvements
+- **Improvement Reports**: Weekly/monthly progress summaries with visual trend charts
+- **Opponent Scouting**: Track opposing teams and players with tendencies, strengths, weaknesses
+- **Pre-Game Reports**: Printable summaries with recent performance and opponent matchup history
+- **Player Report Cards**: Comprehensive shareable reports for parents with season stats and progress
+- **Coach-Assigned Goals**: Goal assignments with progress tracking and coach feedback
+
+### Coach Data Models
+- **shots**: Shot chart data with x/y coordinates, shot type, result, quarter
+- **gameNotes**: Coach notes with note type, privacy settings, author
+- **practices**: Practice sessions with date, duration, notes
+- **practiceAttendance**: Attendance records with effort ratings
+- **drills**: Available drill types by category
+- **drillScores**: Player performance on drills
+- **lineups**: Player combinations with names
+- **lineupStats**: Lineup performance metrics
+- **opponents**: Scouting reports for teams/players
+- **alerts**: Trend alerts with severity levels
+- **coachGoals**: Coach-assigned goals with status tracking
+- **drillRecommendations**: AI-generated drill suggestions
+
 ## External Dependencies
 
 ### Database

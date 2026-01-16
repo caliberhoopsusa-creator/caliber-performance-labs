@@ -25,6 +25,7 @@ import TeamDashboard from "./pages/TeamDashboard";
 import LineupAnalysis from "./pages/LineupAnalysis";
 import PracticeTracker from "./pages/PracticeTracker";
 import OpponentScouting from "./pages/OpponentScouting";
+import CoachAlertsPage from "./pages/CoachAlertsPage";
 import NotFound from "./pages/not-found";
 
 function Router() {
@@ -52,6 +53,7 @@ function Router() {
           <Route path="/coach/lineups" component={LineupAnalysis} />
           <Route path="/coach/practices" component={PracticeTracker} />
           <Route path="/coach/scouting" component={OpponentScouting} />
+          <Route path="/coach/alerts" component={CoachAlertsPage} />
           <Route component={NotFound} />
         </Switch>
       </main>

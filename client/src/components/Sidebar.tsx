@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye } from "lucide-react";
+import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AlertsBadge } from "@/components/AlertsCenter";
 
 export function Sidebar() {
   const [location] = useLocation();
@@ -18,6 +19,7 @@ export function Sidebar() {
     { href: "/coach/lineups", label: "Lineup Analysis", icon: UsersRound },
     { href: "/coach/practices", label: "Practice Tracker", icon: CalendarCheck },
     { href: "/coach/scouting", label: "Opponent Scouting", icon: Eye },
+    { href: "/coach/alerts", label: "Coach Alerts", icon: Bell },
     { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
     { href: "/compare", label: "Head-to-Head", icon: Activity },
     { href: "/video", label: "Video Analysis", icon: Video },
@@ -31,10 +33,13 @@ export function Sidebar() {
         <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20">
           <Activity className="w-6 h-6" />
         </div>
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl font-bold font-display text-white tracking-wider uppercase">CALIBER</h1>
           <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium">Performance Labs</p>
         </div>
+        <Link href="/coach/alerts" className="text-muted-foreground hover:text-white transition-colors" data-testid="header-alerts-badge">
+          <AlertsBadge />
+        </Link>
       </div>
 
       <nav className="flex-1 p-4 space-y-2">

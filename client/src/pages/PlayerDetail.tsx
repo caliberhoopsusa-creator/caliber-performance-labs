@@ -3,11 +3,18 @@ import { GoalsPanel } from "@/components/GoalsPanel";
 import { SocialEngagement } from "@/components/SocialEngagement";
 import { PlayerProgression } from "@/components/PlayerProgression";
 import { SkillBadges } from "@/components/SkillBadges";
+import { ShotChart } from "@/components/ShotChart";
+import { GameNotes } from "@/components/GameNotes";
+import { DrillRecommendations } from "@/components/DrillRecommendations";
+import { CoachGoals } from "@/components/CoachGoals";
+import { ImprovementReport } from "@/components/ImprovementReport";
+import { PreGameReport } from "@/components/PreGameReport";
+import { PlayerReportCard } from "@/components/PlayerReportCard";
 import { useRoute, Link, useLocation } from "wouter";
 import { StatCard } from "@/components/StatCard";
 import { GradeBadge } from "@/components/GradeBadge";
 import { PlayerArchetype } from "@/components/PlayerArchetype";
-import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Crosshair, Trophy, Share2, BarChart3, Medal, User, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Crosshair, Trophy, Share2, BarChart3, Medal, User, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -109,6 +116,99 @@ function getInitials(name: string): string {
     .join('')
     .toUpperCase()
     .slice(0, 2);
+}
+
+interface CoachToolsSectionProps {
+  playerId: number;
+  games: Game[];
+}
+
+function CoachToolsSection({ playerId, games }: CoachToolsSectionProps) {
+  const [showReportCard, setShowReportCard] = useState(false);
+  const [selectedGameId, setSelectedGameId] = useState<number | null>(games[0]?.id || null);
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="p-6">
+          <h3 className="text-lg font-bold font-display text-white mb-4 flex items-center gap-2">
+            <Crosshair className="w-5 h-5 text-primary" /> Shot Chart
+          </h3>
+          {games.length > 0 ? (
+            <div className="space-y-4">
+              <Select
+                value={selectedGameId?.toString() || ""}
+                onValueChange={(val) => setSelectedGameId(parseInt(val))}
+              >
+                <SelectTrigger className="bg-secondary/30 border-white/10" data-testid="select-game-for-shot-chart">
+                  <SelectValue placeholder="Select a game" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-white/10">
+                  {games.map(game => (
+                    <SelectItem key={game.id} value={game.id.toString()}>
+                      vs {game.opponent} - {format(new Date(game.date), 'MMM dd, yyyy')}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedGameId && <ShotChart gameId={selectedGameId} playerId={playerId} />}
+            </div>
+          ) : (
+            <div className="text-muted-foreground text-sm text-center py-8">
+              No games logged yet. Log a game to see shot chart data.
+            </div>
+          )}
+        </Card>
+
+        <Card className="p-6">
+          <h3 className="text-lg font-bold font-display text-white mb-4 flex items-center gap-2">
+            <Target className="w-5 h-5 text-primary" /> Coach Goals
+          </h3>
+          <CoachGoals playerId={playerId} />
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="p-6">
+          <h3 className="text-lg font-bold font-display text-white mb-4 flex items-center gap-2">
+            <Dumbbell className="w-5 h-5 text-primary" /> Drill Recommendations
+          </h3>
+          <DrillRecommendations playerId={playerId} />
+        </Card>
+
+        {selectedGameId && (
+          <Card className="p-6">
+            <h3 className="text-lg font-bold font-display text-white mb-4 flex items-center gap-2">
+              <ClipboardList className="w-5 h-5 text-primary" /> Game Notes
+            </h3>
+            <GameNotes gameId={selectedGameId} playerId={playerId} />
+          </Card>
+        )}
+      </div>
+
+      <ImprovementReport playerId={playerId} />
+
+      <PreGameReport playerId={playerId} />
+
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold font-display text-white flex items-center gap-2">
+            <FileText className="w-5 h-5 text-primary" /> Player Report Card
+          </h3>
+          <Button 
+            onClick={() => setShowReportCard(!showReportCard)}
+            variant={showReportCard ? "secondary" : "default"}
+            className="gap-2"
+            data-testid="button-toggle-report-card"
+          >
+            <FileText className="w-4 h-4" />
+            {showReportCard ? "Hide Report Card" : "Generate Report Card"}
+          </Button>
+        </div>
+        {showReportCard && <PlayerReportCard playerId={playerId} />}
+      </Card>
+    </div>
+  );
 }
 
 export default function PlayerDetail() {
@@ -761,12 +861,15 @@ export default function PlayerDetail() {
       </div>
 
       <Tabs defaultValue="trend" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-4">
+        <TabsList className="grid w-full grid-cols-3 mb-4">
           <TabsTrigger value="trend" className="gap-2" data-testid="tab-performance-trend">
             <Activity className="w-4 h-4" /> Performance Trend
           </TabsTrigger>
           <TabsTrigger value="history" className="gap-2" data-testid="tab-game-history">
             <ClipboardList className="w-4 h-4" /> Game History
+          </TabsTrigger>
+          <TabsTrigger value="coach" className="gap-2" data-testid="tab-coach-tools">
+            <Dumbbell className="w-4 h-4" /> Coach Tools
           </TabsTrigger>
         </TabsList>
         
@@ -922,6 +1025,10 @@ export default function PlayerDetail() {
               )}
             </div>
           </Card>
+        </TabsContent>
+        
+        <TabsContent value="coach">
+          <CoachToolsSection playerId={player.id} games={games} />
         </TabsContent>
       </Tabs>
 
