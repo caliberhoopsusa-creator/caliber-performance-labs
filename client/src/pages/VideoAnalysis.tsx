@@ -28,6 +28,8 @@ interface AnalysisResult {
     ftAttempted: number;
     hustleScore: number;
     defenseRating: number;
+    plusMinus?: number;
+    per?: number;
   };
   observations: string;
   confidence?: string;
@@ -300,29 +302,58 @@ Example:
                   <StatBox label="FG" value={`${result.stats.fgMade}/${result.stats.fgAttempted}`} size="sm" />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 bg-white/5 rounded-lg">
-                    <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Hustle Score</div>
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-green-500 transition-all duration-500"
-                          style={{ width: `${result.stats.hustleScore}%` }}
-                        />
-                      </div>
-                      <span className="font-mono font-bold text-white">{result.stats.hustleScore}</span>
-                    </div>
+                {/* AI-Calculated Advanced Metrics */}
+                <div className="p-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg border border-purple-500/20">
+                  <div className="text-xs text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <span className="inline-block w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
+                    AI-Calculated Advanced Metrics
                   </div>
-                  <div className="p-4 bg-white/5 rounded-lg">
-                    <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Defense Rating</div>
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-blue-500 transition-all duration-500"
-                          style={{ width: `${result.stats.defenseRating}%` }}
-                        />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-3 bg-white/5 rounded-lg">
+                      <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Hustle Score</div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-green-500 transition-all duration-500"
+                            style={{ width: `${result.stats.hustleScore}%` }}
+                          />
+                        </div>
+                        <span className="font-mono font-bold text-white">{result.stats.hustleScore}</span>
                       </div>
-                      <span className="font-mono font-bold text-white">{result.stats.defenseRating}</span>
+                    </div>
+                    <div className="p-3 bg-white/5 rounded-lg">
+                      <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Defense Rating</div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-blue-500 transition-all duration-500"
+                            style={{ width: `${result.stats.defenseRating}%` }}
+                          />
+                        </div>
+                        <span className="font-mono font-bold text-white">{result.stats.defenseRating}</span>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-white/5 rounded-lg">
+                      <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Plus/Minus</div>
+                      <div className={cn(
+                        "font-mono font-bold text-xl",
+                        (result.stats.plusMinus ?? 0) > 0 ? "text-green-500" : 
+                        (result.stats.plusMinus ?? 0) < 0 ? "text-red-500" : "text-white"
+                      )}>
+                        {(result.stats.plusMinus ?? 0) > 0 ? "+" : ""}{result.stats.plusMinus ?? 0}
+                      </div>
+                    </div>
+                    <div className="p-3 bg-white/5 rounded-lg">
+                      <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">PER</div>
+                      <div className="font-mono font-bold text-xl text-purple-400">
+                        {(result.stats.per ?? 15).toFixed(1)}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {(result.stats.per ?? 15) >= 25 ? "Elite" : 
+                         (result.stats.per ?? 15) >= 20 ? "All-Star" : 
+                         (result.stats.per ?? 15) >= 15 ? "Above Avg" : 
+                         (result.stats.per ?? 15) >= 10 ? "Average" : "Developing"}
+                      </div>
                     </div>
                   </div>
                 </div>

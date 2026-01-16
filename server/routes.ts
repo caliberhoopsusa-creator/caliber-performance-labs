@@ -853,7 +853,7 @@ export async function registerRoutes(
       fs.unlinkSync(filePath);
 
       // Analyze video with Gemini
-      const prompt = `You are a professional basketball scout analyzing game footage. 
+      const prompt = `You are a professional basketball scout and advanced analytics expert analyzing game footage. 
       
 Watch this basketball video clip carefully and track stats for the player: "${playerName}"
 
@@ -868,9 +868,29 @@ Count and report ONLY what you can clearly see in the video:
 - Three pointers made/attempted
 - Free throws made/attempted
 
-Also provide:
-- A hustle score (0-100) based on effort, running back on defense, diving for balls
-- A defense rating (0-100) based on positioning, contesting shots, staying with assignment
+Calculate these ADVANCED METRICS (AI-calculated based on what you observe):
+
+1. HUSTLE SCORE (0-100): Based on:
+   - Sprint-backs on defense
+   - Diving for loose balls
+   - Boxing out effort
+   - Contesting every shot
+   - Running the floor hard
+   - Communicating on defense
+
+2. DEFENSIVE EFFICIENCY (0-100): Based on:
+   - Staying in defensive stance
+   - Help defense rotation
+   - Closeout technique
+   - Contesting shots without fouling
+   - Forcing difficult shots
+   - Defensive rebounds secured
+
+3. PLUS/MINUS: Estimate the point differential while this player was on court. If you can see score changes, calculate net points. Otherwise estimate based on impact observed (-20 to +20 range).
+
+4. PLAYER EFFICIENCY RATING (PER): Calculate using the formula:
+   PER = (Points + Rebounds + Assists + Steals + Blocks - Turnovers - Missed FG - Missed FT) / Minutes * 15
+   If minutes unknown, assume 20 minutes. Return a value typically between 5-35.
 
 Respond in this exact JSON format:
 {
@@ -889,7 +909,9 @@ Respond in this exact JSON format:
     "ftMade": 0,
     "ftAttempted": 0,
     "hustleScore": 50,
-    "defenseRating": 50
+    "defenseRating": 50,
+    "plusMinus": 0,
+    "per": 15.0
   },
   "observations": "Brief scouting notes about what you observed",
   "confidence": "high/medium/low - how confident you are in the stats"
@@ -945,7 +967,7 @@ Respond in this exact JSON format:
         return res.status(400).json({ error: 'Play-by-play text is required' });
       }
 
-      const prompt = `You are a basketball statistician. Analyze these play-by-play notes and extract stats for player "${playerName || 'the player'}".
+      const prompt = `You are a basketball statistician and advanced analytics expert. Analyze these play-by-play notes and extract stats for player "${playerName || 'the player'}".
 
 Play-by-play notes:
 ${playByPlay}
@@ -953,7 +975,26 @@ ${playByPlay}
 Count stats mentioned or implied:
 - Points, rebounds, assists, steals, blocks, turnovers
 - Field goals made/attempted, three pointers made/attempted, free throws made/attempted
-- Estimate hustle score (0-100) and defense rating (0-100) based on effort described
+
+Calculate these ADVANCED METRICS based on the play-by-play description:
+
+1. HUSTLE SCORE (0-100): Based on mentions of:
+   - Diving for loose balls, hustle plays
+   - Defensive effort, closeouts
+   - Running the floor, boxing out
+   - Extra effort plays
+
+2. DEFENSIVE EFFICIENCY (0-100): Based on:
+   - Defensive stops mentioned
+   - Forced turnovers, contested shots
+   - Help defense plays
+   - Overall defensive impact
+
+3. PLUS/MINUS: Estimate from game context. If the game score or period scores are mentioned, calculate net points. Otherwise estimate based on positive/negative plays described (-20 to +20 range).
+
+4. PLAYER EFFICIENCY RATING (PER): Calculate using:
+   PER = (Points + Rebounds + Assists + Steals + Blocks - Turnovers - Missed FG - Missed FT) / Minutes * 15
+   If minutes not mentioned, assume 20. Return value typically 5-35.
 
 Respond in this exact JSON format:
 {
@@ -972,7 +1013,9 @@ Respond in this exact JSON format:
     "ftMade": 0,
     "ftAttempted": 0,
     "hustleScore": 50,
-    "defenseRating": 50
+    "defenseRating": 50,
+    "plusMinus": 0,
+    "per": 15.0
   },
   "observations": "Summary of the player's performance"
 }`;

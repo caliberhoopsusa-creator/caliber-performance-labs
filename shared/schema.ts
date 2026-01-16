@@ -73,8 +73,10 @@ export const games = pgTable("games", {
   // Advanced / Manual Inputs
   offensiveRebounds: integer("offensive_rebounds").default(0),
   defensiveRebounds: integer("defensive_rebounds").default(0),
-  hustleScore: integer("hustle_score").default(50), // 0-100 subjective score
-  defenseRating: integer("defense_rating").default(50), // 0-100 subjective score
+  hustleScore: integer("hustle_score").default(50), // 0-100 AI-calculated score
+  defenseRating: integer("defense_rating").default(50), // 0-100 AI-calculated defensive efficiency
+  plusMinus: integer("plus_minus").default(0), // Point differential while player on court
+  per: decimal("per", { precision: 5, scale: 2 }).default("0"), // Player Efficiency Rating
   notes: text("notes"), // Video notes or observations
   
   // Calculated / Generated Fields (Stored for easy querying)
