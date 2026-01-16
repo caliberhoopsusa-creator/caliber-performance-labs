@@ -424,13 +424,45 @@ export async function registerRoutes(
       const game = await storage.createGame(gameData);
       
       // Check and award badges after game creation
-      await checkAndAwardBadges(input.playerId, game.id, input, grade);
+      const awardedBadges = await checkAndAwardBadges(input.playerId, game.id, input, grade);
       
       // Update player streaks
       await updatePlayerStreaks(input.playerId, game.id, input, grade);
       
       // Update challenge progress
       await updateChallengeProgressForPlayer(input.playerId, input, grade, input.date);
+      
+      // Create feed activity for the game (player already fetched above)
+      await storage.createFeedActivity({
+        activityType: 'game',
+        playerId: input.playerId,
+        gameId: game.id,
+        headline: `${player?.name || 'Player'} dropped ${input.points} PTS vs ${input.opponent}`,
+        subtext: `Grade: ${grade} | ${input.rebounds} REB, ${input.assists} AST`,
+      });
+      
+      // Create feed activities for badges earned
+      const badgeNames: Record<string, string> = {
+        twenty_piece: "20-Piece",
+        thirty_bomb: "30-Bomb",
+        double_double: "Double-Double",
+        triple_double: "Triple-Double",
+        ironman: "Ironman",
+        efficiency_master: "Efficiency Master",
+        lockdown: "Lockdown Defender",
+        hustle_king: "Hustle King",
+        clean_sheet: "Clean Sheet",
+        sharpshooter: "Sharpshooter",
+      };
+      for (const badge of awardedBadges) {
+        await storage.createFeedActivity({
+          activityType: 'badge',
+          playerId: input.playerId,
+          gameId: game.id,
+          headline: `${player?.name || 'Player'} earned the ${badgeNames[badge] || badge} badge!`,
+          subtext: `Achievement unlocked vs ${input.opponent}`,
+        });
+      }
       
       res.status(201).json(game);
     } catch (err) {
