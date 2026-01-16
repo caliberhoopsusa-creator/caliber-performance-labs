@@ -2,6 +2,7 @@ import { db } from "./db";
 import {
   players, games, badges, goals, streaks, likes, comments, challenges, challengeProgress,
   teams, teamMembers, teamPosts,
+  feedActivities, reposts, polls, pollVotes, predictions, predictionVotes, storyTemplates, playerStories,
   type Player, type InsertPlayer,
   type Game, type InsertGame,
   type UpdateGameRequest,
@@ -14,9 +15,17 @@ import {
   type ChallengeProgress, type InsertChallengeProgress,
   type Team, type InsertTeam,
   type TeamMember, type InsertTeamMember,
-  type TeamPost, type InsertTeamPost
+  type TeamPost, type InsertTeamPost,
+  type FeedActivity, type InsertFeedActivity,
+  type Repost, type InsertRepost,
+  type Poll, type InsertPoll,
+  type PollVote, type InsertPollVote,
+  type Prediction, type InsertPrediction,
+  type PredictionVote, type InsertPredictionVote,
+  type StoryTemplate, type InsertStoryTemplate,
+  type PlayerStory, type InsertPlayerStory
 } from "@shared/schema";
-import { eq, desc, and, count, gte, lte, sql } from "drizzle-orm";
+import { eq, desc, and, count, gte, lte, sql, or } from "drizzle-orm";
 
 export interface IStorage {
   // Players
@@ -86,6 +95,43 @@ export interface IStorage {
   // Team Posts
   createTeamPost(post: InsertTeamPost): Promise<TeamPost>;
   getTeamPosts(teamId: number): Promise<(TeamPost & { authorName: string })[]>;
+
+  // Feed Activities
+  createFeedActivity(activity: InsertFeedActivity): Promise<FeedActivity>;
+  getFeedActivities(limit?: number): Promise<(FeedActivity & { playerName?: string })[]>;
+  getPlayerFeedActivities(playerId: number): Promise<FeedActivity[]>;
+
+  // Reposts
+  createRepost(repost: InsertRepost): Promise<Repost>;
+  getReposts(activityId?: number, gameId?: number): Promise<Repost[]>;
+  hasUserReposted(gameId: number, sessionId: string): Promise<boolean>;
+  getGameReposts(gameId: number): Promise<number>;
+
+  // Polls
+  createPoll(poll: InsertPoll): Promise<Poll>;
+  getPolls(): Promise<Poll[]>;
+  getPoll(id: number): Promise<Poll | undefined>;
+  getActivePolls(): Promise<Poll[]>;
+  votePoll(vote: InsertPollVote): Promise<PollVote>;
+  getPollVotes(pollId: number): Promise<{ optionIndex: number; count: number }[]>;
+  hasUserVoted(pollId: number, sessionId: string): Promise<boolean>;
+
+  // Predictions
+  createPrediction(prediction: InsertPrediction): Promise<Prediction>;
+  getPredictions(): Promise<(Prediction & { player1Name: string; player2Name: string })[]>;
+  getPrediction(id: number): Promise<Prediction | undefined>;
+  votePrediction(vote: InsertPredictionVote): Promise<PredictionVote>;
+  getPredictionVotes(predictionId: number): Promise<{ player1Votes: number; player2Votes: number }>;
+  hasUserVotedPrediction(predictionId: number, sessionId: string): Promise<boolean>;
+
+  // Story Templates
+  createStoryTemplate(template: InsertStoryTemplate): Promise<StoryTemplate>;
+  getActiveStoryTemplates(): Promise<StoryTemplate[]>;
+
+  // Player Stories
+  createPlayerStory(story: InsertPlayerStory): Promise<PlayerStory>;
+  getPlayerStories(playerId: number): Promise<PlayerStory[]>;
+  getPublicStories(limit?: number): Promise<(PlayerStory & { playerName: string })[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -442,6 +488,206 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(teamPosts.createdAt));
     
     return posts;
+  }
+
+  // Feed Activities
+  async createFeedActivity(activity: InsertFeedActivity): Promise<FeedActivity> {
+    const [newActivity] = await db.insert(feedActivities).values(activity).returning();
+    return newActivity;
+  }
+
+  async getFeedActivities(limit: number = 50): Promise<(FeedActivity & { playerName?: string })[]> {
+    const results = await db
+      .select({
+        id: feedActivities.id,
+        activityType: feedActivities.activityType,
+        playerId: feedActivities.playerId,
+        gameId: feedActivities.gameId,
+        badgeId: feedActivities.badgeId,
+        relatedId: feedActivities.relatedId,
+        headline: feedActivities.headline,
+        subtext: feedActivities.subtext,
+        sessionId: feedActivities.sessionId,
+        createdAt: feedActivities.createdAt,
+        playerName: players.name,
+      })
+      .from(feedActivities)
+      .leftJoin(players, eq(feedActivities.playerId, players.id))
+      .orderBy(desc(feedActivities.createdAt))
+      .limit(limit);
+    
+    return results;
+  }
+
+  async getPlayerFeedActivities(playerId: number): Promise<FeedActivity[]> {
+    return await db
+      .select()
+      .from(feedActivities)
+      .where(eq(feedActivities.playerId, playerId))
+      .orderBy(desc(feedActivities.createdAt));
+  }
+
+  // Reposts
+  async createRepost(repost: InsertRepost): Promise<Repost> {
+    const [newRepost] = await db.insert(reposts).values(repost).returning();
+    return newRepost;
+  }
+
+  async getReposts(activityId?: number, gameId?: number): Promise<Repost[]> {
+    if (activityId) {
+      return await db.select().from(reposts).where(eq(reposts.originalActivityId, activityId)).orderBy(desc(reposts.createdAt));
+    }
+    if (gameId) {
+      return await db.select().from(reposts).where(eq(reposts.gameId, gameId)).orderBy(desc(reposts.createdAt));
+    }
+    return await db.select().from(reposts).orderBy(desc(reposts.createdAt));
+  }
+
+  async hasUserReposted(gameId: number, sessionId: string): Promise<boolean> {
+    const [existing] = await db.select().from(reposts).where(and(eq(reposts.gameId, gameId), eq(reposts.sessionId, sessionId)));
+    return !!existing;
+  }
+
+  async getGameReposts(gameId: number): Promise<number> {
+    const [result] = await db.select({ count: count() }).from(reposts).where(eq(reposts.gameId, gameId));
+    return result?.count || 0;
+  }
+
+  // Polls
+  async createPoll(poll: InsertPoll): Promise<Poll> {
+    const [newPoll] = await db.insert(polls).values(poll).returning();
+    return newPoll;
+  }
+
+  async getPolls(): Promise<Poll[]> {
+    return await db.select().from(polls).orderBy(desc(polls.createdAt));
+  }
+
+  async getPoll(id: number): Promise<Poll | undefined> {
+    const [poll] = await db.select().from(polls).where(eq(polls.id, id));
+    return poll;
+  }
+
+  async getActivePolls(): Promise<Poll[]> {
+    const now = new Date();
+    return await db
+      .select()
+      .from(polls)
+      .where(or(sql`${polls.expiresAt} IS NULL`, gte(polls.expiresAt, now)))
+      .orderBy(desc(polls.createdAt));
+  }
+
+  async votePoll(vote: InsertPollVote): Promise<PollVote> {
+    const [newVote] = await db.insert(pollVotes).values(vote).returning();
+    return newVote;
+  }
+
+  async getPollVotes(pollId: number): Promise<{ optionIndex: number; count: number }[]> {
+    const results = await db
+      .select({
+        optionIndex: pollVotes.optionIndex,
+        count: count(),
+      })
+      .from(pollVotes)
+      .where(eq(pollVotes.pollId, pollId))
+      .groupBy(pollVotes.optionIndex);
+    return results;
+  }
+
+  async hasUserVoted(pollId: number, sessionId: string): Promise<boolean> {
+    const [existing] = await db.select().from(pollVotes).where(and(eq(pollVotes.pollId, pollId), eq(pollVotes.sessionId, sessionId)));
+    return !!existing;
+  }
+
+  // Predictions
+  async createPrediction(prediction: InsertPrediction): Promise<Prediction> {
+    const [newPrediction] = await db.insert(predictions).values(prediction).returning();
+    return newPrediction;
+  }
+
+  async getPredictions(): Promise<(Prediction & { player1Name: string; player2Name: string })[]> {
+    const allPredictions = await db.select().from(predictions).orderBy(desc(predictions.createdAt));
+    const allPlayers = await db.select().from(players);
+    
+    return allPredictions.map(p => {
+      const player1 = allPlayers.find(pl => pl.id === p.player1Id);
+      const player2 = allPlayers.find(pl => pl.id === p.player2Id);
+      return {
+        ...p,
+        player1Name: player1?.name || "Unknown",
+        player2Name: player2?.name || "Unknown",
+      };
+    });
+  }
+
+  async getPrediction(id: number): Promise<Prediction | undefined> {
+    const [prediction] = await db.select().from(predictions).where(eq(predictions.id, id));
+    return prediction;
+  }
+
+  async votePrediction(vote: InsertPredictionVote): Promise<PredictionVote> {
+    const [newVote] = await db.insert(predictionVotes).values(vote).returning();
+    return newVote;
+  }
+
+  async getPredictionVotes(predictionId: number): Promise<{ player1Votes: number; player2Votes: number }> {
+    const prediction = await this.getPrediction(predictionId);
+    if (!prediction) return { player1Votes: 0, player2Votes: 0 };
+    
+    const votes = await db.select().from(predictionVotes).where(eq(predictionVotes.predictionId, predictionId));
+    
+    return {
+      player1Votes: votes.filter(v => v.votedFor === prediction.player1Id).length,
+      player2Votes: votes.filter(v => v.votedFor === prediction.player2Id).length,
+    };
+  }
+
+  async hasUserVotedPrediction(predictionId: number, sessionId: string): Promise<boolean> {
+    const [existing] = await db.select().from(predictionVotes).where(and(eq(predictionVotes.predictionId, predictionId), eq(predictionVotes.sessionId, sessionId)));
+    return !!existing;
+  }
+
+  // Story Templates
+  async createStoryTemplate(template: InsertStoryTemplate): Promise<StoryTemplate> {
+    const [newTemplate] = await db.insert(storyTemplates).values(template).returning();
+    return newTemplate;
+  }
+
+  async getActiveStoryTemplates(): Promise<StoryTemplate[]> {
+    return await db.select().from(storyTemplates).where(eq(storyTemplates.isActive, true)).orderBy(desc(storyTemplates.createdAt));
+  }
+
+  // Player Stories
+  async createPlayerStory(story: InsertPlayerStory): Promise<PlayerStory> {
+    const [newStory] = await db.insert(playerStories).values(story).returning();
+    return newStory;
+  }
+
+  async getPlayerStories(playerId: number): Promise<PlayerStory[]> {
+    return await db.select().from(playerStories).where(eq(playerStories.playerId, playerId)).orderBy(desc(playerStories.createdAt));
+  }
+
+  async getPublicStories(limit: number = 20): Promise<(PlayerStory & { playerName: string })[]> {
+    const results = await db
+      .select({
+        id: playerStories.id,
+        playerId: playerStories.playerId,
+        templateId: playerStories.templateId,
+        headline: playerStories.headline,
+        stats: playerStories.stats,
+        imageUrl: playerStories.imageUrl,
+        sessionId: playerStories.sessionId,
+        isPublic: playerStories.isPublic,
+        createdAt: playerStories.createdAt,
+        playerName: players.name,
+      })
+      .from(playerStories)
+      .innerJoin(players, eq(playerStories.playerId, players.id))
+      .where(eq(playerStories.isPublic, true))
+      .orderBy(desc(playerStories.createdAt))
+      .limit(limit);
+    
+    return results;
   }
 }
 

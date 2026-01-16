@@ -302,3 +302,139 @@ export type InsertTeamMember = z.infer<typeof insertTeamMemberSchema>;
 export type TeamPost = typeof teamPosts.$inferSelect;
 export const insertTeamPostSchema = createInsertSchema(teamPosts).omit({ id: true, createdAt: true });
 export type InsertTeamPost = z.infer<typeof insertTeamPostSchema>;
+
+// === NEWSFEED / ACTIVITY STREAM ===
+export const feedActivities = pgTable("feed_activities", {
+  id: serial("id").primaryKey(),
+  activityType: text("activity_type").notNull(), // 'game', 'badge', 'streak', 'goal', 'challenge', 'repost', 'poll', 'prediction'
+  playerId: integer("player_id").references(() => players.id, { onDelete: "cascade" }),
+  gameId: integer("game_id").references(() => games.id, { onDelete: "cascade" }),
+  badgeId: integer("badge_id").references(() => badges.id, { onDelete: "cascade" }),
+  relatedId: integer("related_id"), // For polls, predictions, stories, etc.
+  headline: text("headline").notNull(),
+  subtext: text("subtext"),
+  sessionId: text("session_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// === REPOSTS ===
+export const reposts = pgTable("reposts", {
+  id: serial("id").primaryKey(),
+  originalActivityId: integer("original_activity_id").references(() => feedActivities.id, { onDelete: "cascade" }),
+  gameId: integer("game_id").references(() => games.id, { onDelete: "cascade" }),
+  sessionId: text("session_id").notNull(),
+  comment: text("comment"), // Optional comment when reposting
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// === POLLS ===
+export const polls = pgTable("polls", {
+  id: serial("id").primaryKey(),
+  question: text("question").notNull(),
+  options: text("options").array().notNull(), // Array of options
+  createdBy: text("created_by").notNull(), // session or player name
+  playerId: integer("player_id").references(() => players.id, { onDelete: "set null" }),
+  expiresAt: timestamp("expires_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const pollVotes = pgTable("poll_votes", {
+  id: serial("id").primaryKey(),
+  pollId: integer("poll_id").notNull().references(() => polls.id, { onDelete: "cascade" }),
+  optionIndex: integer("option_index").notNull(),
+  sessionId: text("session_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// === MATCHUP PREDICTIONS ===
+export const predictions = pgTable("predictions", {
+  id: serial("id").primaryKey(),
+  player1Id: integer("player1_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  player2Id: integer("player2_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  category: text("category").notNull(), // 'overall', 'scoring', 'defense', 'hustle', 'passing'
+  createdBy: text("created_by").notNull(),
+  sessionId: text("session_id"),
+  gameDate: date("game_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const predictionVotes = pgTable("prediction_votes", {
+  id: serial("id").primaryKey(),
+  predictionId: integer("prediction_id").notNull().references(() => predictions.id, { onDelete: "cascade" }),
+  votedFor: integer("voted_for").notNull(), // player1_id or player2_id
+  sessionId: text("session_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// === WEEKLY STORY TEMPLATES ===
+export const storyTemplates = pgTable("story_templates", {
+  id: serial("id").primaryKey(),
+  templateName: text("template_name").notNull(), // 'weekly_recap', 'game_highlight', 'badge_earned', 'milestone'
+  title: text("title").notNull(),
+  subtitle: text("subtitle"),
+  isActive: boolean("is_active").default(true).notNull(),
+  weekStart: date("week_start"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const playerStories = pgTable("player_stories", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  templateId: integer("template_id").references(() => storyTemplates.id, { onDelete: "set null" }),
+  headline: text("headline").notNull(),
+  stats: text("stats"), // JSON string of relevant stats
+  imageUrl: text("image_url"),
+  sessionId: text("session_id"),
+  isPublic: boolean("is_public").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Export types
+export type FeedActivity = typeof feedActivities.$inferSelect;
+export const insertFeedActivitySchema = createInsertSchema(feedActivities).omit({ id: true, createdAt: true });
+export type InsertFeedActivity = z.infer<typeof insertFeedActivitySchema>;
+
+export type Repost = typeof reposts.$inferSelect;
+export const insertRepostSchema = createInsertSchema(reposts).omit({ id: true, createdAt: true });
+export type InsertRepost = z.infer<typeof insertRepostSchema>;
+
+export type Poll = typeof polls.$inferSelect;
+export const insertPollSchema = createInsertSchema(polls).omit({ id: true, createdAt: true });
+export type InsertPoll = z.infer<typeof insertPollSchema>;
+
+export type PollVote = typeof pollVotes.$inferSelect;
+export const insertPollVoteSchema = createInsertSchema(pollVotes).omit({ id: true, createdAt: true });
+export type InsertPollVote = z.infer<typeof insertPollVoteSchema>;
+
+export type Prediction = typeof predictions.$inferSelect;
+export const insertPredictionSchema = createInsertSchema(predictions).omit({ id: true, createdAt: true });
+export type InsertPrediction = z.infer<typeof insertPredictionSchema>;
+
+export type PredictionVote = typeof predictionVotes.$inferSelect;
+export const insertPredictionVoteSchema = createInsertSchema(predictionVotes).omit({ id: true, createdAt: true });
+export type InsertPredictionVote = z.infer<typeof insertPredictionVoteSchema>;
+
+export type StoryTemplate = typeof storyTemplates.$inferSelect;
+export const insertStoryTemplateSchema = createInsertSchema(storyTemplates).omit({ id: true, createdAt: true });
+export type InsertStoryTemplate = z.infer<typeof insertStoryTemplateSchema>;
+
+export type PlayerStory = typeof playerStories.$inferSelect;
+export const insertPlayerStorySchema = createInsertSchema(playerStories).omit({ id: true, createdAt: true });
+export type InsertPlayerStory = z.infer<typeof insertPlayerStorySchema>;
+
+// Story template presets
+export const STORY_TEMPLATE_PRESETS = {
+  weekly_recap: { name: "Weekly Recap", description: "Your week in review" },
+  game_highlight: { name: "Game Highlight", description: "Best moments from a game" },
+  badge_earned: { name: "Badge Earned", description: "Celebrate your achievement" },
+  milestone: { name: "Milestone", description: "Career milestone reached" },
+  streak_fire: { name: "Streak Fire", description: "Show off your streak" },
+} as const;
+
+export const PREDICTION_CATEGORIES = {
+  overall: { name: "Overall Performance", description: "Who will have the better game?" },
+  scoring: { name: "Scoring Battle", description: "Who will score more points?" },
+  defense: { name: "Defensive Showdown", description: "Who will defend better?" },
+  hustle: { name: "Hustle War", description: "Who will hustle harder?" },
+  passing: { name: "Dime Contest", description: "Who will dish more assists?" },
+} as const;
