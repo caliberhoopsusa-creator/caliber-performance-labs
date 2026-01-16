@@ -340,3 +340,30 @@ export function useRecordActivity() {
     },
   });
 }
+
+// ============================================
+// SKILL BADGES HOOKS (Progressive career badges)
+// ============================================
+
+export type SkillBadge = {
+  id: number;
+  playerId: number;
+  skillType: string;
+  currentLevel: 'none' | 'bronze' | 'silver' | 'gold' | 'hall_of_fame';
+  careerValue: number;
+  name: string;
+  description: string;
+  thresholds: { bronze: number; silver: number; gold: number; hall_of_fame: number };
+};
+
+export function usePlayerSkillBadges(playerId: number) {
+  return useQuery<SkillBadge[]>({
+    queryKey: ['/api/players', playerId, 'skill-badges'],
+    queryFn: async () => {
+      const res = await fetch(`/api/players/${playerId}/skill-badges`);
+      if (!res.ok) throw new Error("Failed to fetch skill badges");
+      return res.json();
+    },
+    enabled: !!playerId,
+  });
+}

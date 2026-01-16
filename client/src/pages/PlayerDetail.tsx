@@ -2,6 +2,7 @@ import { usePlayer, useDeleteGame, usePlayerBadges, useUpdatePlayer, type Player
 import { GoalsPanel } from "@/components/GoalsPanel";
 import { SocialEngagement } from "@/components/SocialEngagement";
 import { PlayerProgression } from "@/components/PlayerProgression";
+import { SkillBadges } from "@/components/SkillBadges";
 import { useRoute, Link, useLocation } from "wouter";
 import { StatCard } from "@/components/StatCard";
 import { GradeBadge } from "@/components/GradeBadge";
@@ -471,6 +472,8 @@ export default function PlayerDetail() {
           </div>
         </Card>
       </div>
+
+      <SkillBadges playerId={player.id} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">

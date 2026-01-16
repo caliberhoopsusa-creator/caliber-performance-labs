@@ -3,7 +3,7 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, type Game, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS } from "@shared/schema";
+import { players, games, type Game, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, type SkillBadgeLevel } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { GoogleGenAI } from "@google/genai";
 import multer from "multer";
@@ -236,6 +236,65 @@ async function checkStreakBadges(playerId: number, latestGameId: number): Promis
   }
   
   return awardedBadges;
+}
+
+// Update progressive skill badges based on career stats
+async function updateSkillBadges(playerId: number, stats: any): Promise<{ upgraded: string[], newLevels: { skill: string, level: string }[] }> {
+  const upgraded: string[] = [];
+  const newLevels: { skill: string, level: string }[] = [];
+  
+  // Map stat names from game to skill badge types
+  const statMapping: Record<string, keyof typeof stats> = {
+    sharpshooter: 'threeMade',
+    pure_passer: 'assists',
+    bucket_getter: 'points',
+    glass_cleaner: 'rebounds',
+    rim_protector: 'blocks',
+    pickpocket: 'steals',
+  };
+  
+  for (const [skillType, config] of Object.entries(SKILL_BADGE_TYPES)) {
+    const statKey = statMapping[skillType];
+    const gameValue = stats[statKey] || 0;
+    
+    if (gameValue <= 0) continue;
+    
+    // Get or create the skill badge
+    const badge = await storage.getOrCreateSkillBadge(playerId, skillType);
+    const newCareerValue = badge.careerValue + gameValue;
+    
+    // Determine new level based on thresholds
+    let newLevel: SkillBadgeLevel = 'none';
+    const thresholds = config.thresholds;
+    
+    if (newCareerValue >= thresholds.hall_of_fame) {
+      newLevel = 'hall_of_fame';
+    } else if (newCareerValue >= thresholds.gold) {
+      newLevel = 'gold';
+    } else if (newCareerValue >= thresholds.silver) {
+      newLevel = 'silver';
+    } else if (newCareerValue >= thresholds.bronze) {
+      newLevel = 'bronze';
+    }
+    
+    // Check if level upgraded
+    const levelOrder: SkillBadgeLevel[] = ['none', 'bronze', 'silver', 'gold', 'hall_of_fame'];
+    const oldLevelIndex = levelOrder.indexOf(badge.currentLevel as SkillBadgeLevel);
+    const newLevelIndex = levelOrder.indexOf(newLevel);
+    
+    if (newLevelIndex > oldLevelIndex) {
+      upgraded.push(skillType);
+      newLevels.push({ skill: skillType, level: newLevel });
+    }
+    
+    // Always update career value
+    await storage.updateSkillBadge(badge.id, {
+      careerValue: newCareerValue,
+      currentLevel: newLevel,
+    });
+  }
+  
+  return { upgraded, newLevels };
 }
 
 async function updateChallengeProgressForPlayer(playerId: number, stats: any, grade: string, gameDate: string) {
@@ -542,6 +601,27 @@ export async function registerRoutes(
       // Update challenge progress
       await updateChallengeProgressForPlayer(input.playerId, input, grade, input.date);
       
+      // Update progressive skill badges
+      const skillBadgeUpdates = await updateSkillBadges(input.playerId, input);
+      
+      // Create feed activity for skill badge upgrades
+      for (const upgrade of skillBadgeUpdates.newLevels) {
+        const skillDef = SKILL_BADGE_TYPES[upgrade.skill as keyof typeof SKILL_BADGE_TYPES];
+        const levelNames: Record<string, string> = {
+          bronze: 'Bronze',
+          silver: 'Silver',
+          gold: 'Gold',
+          hall_of_fame: 'Hall of Fame'
+        };
+        await storage.createFeedActivity({
+          activityType: 'badge',
+          playerId: input.playerId,
+          gameId: game.id,
+          headline: `${player?.name || 'Player'} unlocked ${levelNames[upgrade.level]} ${skillDef?.name || upgrade.skill}!`,
+          subtext: `Career milestone reached`,
+        });
+      }
+      
       // Create feed activity for the game (player already fetched above)
       await storage.createFeedActivity({
         activityType: 'game',
@@ -634,6 +714,47 @@ export async function registerRoutes(
     }
     const badges = await storage.getPlayerBadges(playerId);
     res.json(badges);
+  });
+
+  // --- Skill Badges (Progressive) ---
+  
+  app.get('/api/players/:id/skill-badges', async (req, res) => {
+    const playerId = Number(req.params.id);
+    const player = await storage.getPlayer(playerId);
+    if (!player) {
+      return res.status(404).json({ message: 'Player not found' });
+    }
+    const skillBadges = await storage.getPlayerSkillBadges(playerId);
+    
+    // Enrich with badge definitions
+    const enrichedBadges = skillBadges.map(badge => {
+      const def = SKILL_BADGE_TYPES[badge.skillType as keyof typeof SKILL_BADGE_TYPES];
+      return {
+        ...badge,
+        name: def?.name || badge.skillType,
+        description: def?.description || '',
+        thresholds: def?.thresholds || {},
+      };
+    });
+    
+    // Also return badges that don't exist yet (show all possible skill badges)
+    const existingTypes = skillBadges.map(b => b.skillType);
+    const allBadges = Object.entries(SKILL_BADGE_TYPES).map(([type, def]) => {
+      const existing = enrichedBadges.find(b => b.skillType === type);
+      if (existing) return existing;
+      return {
+        id: 0,
+        playerId,
+        skillType: type,
+        currentLevel: 'none',
+        careerValue: 0,
+        name: def.name,
+        description: def.description,
+        thresholds: def.thresholds,
+      };
+    });
+    
+    res.json(allBadges);
   });
 
   // --- Goals ---

@@ -45,7 +45,14 @@ Preferred communication style: Simple, everyday language.
 - **Tier Progression**: Rookie (0) → Starter (500) → All-Star (2,000) → MVP (5,000) → Hall of Fame (10,000)
 - **Streak Bonuses**: 3-day (+25 XP), 7-day (+75 XP), 14-day (+150 XP), 30-day (+400 XP)
 - **Milestone Badges**: Special badges for tier promotions (starter_unlock, allstar_unlock, etc.)
-- **Constants**: TIER_THRESHOLDS and XP_REWARDS defined in shared/schema.ts for consistency
+- **Skill Badges**: Progressive career badges that upgrade as players accumulate stats:
+  - Sharpshooter (3-pointers): Bronze(10) → Silver(50) → Gold(150) → HOF(300)
+  - Pure Passer (assists): Bronze(25) → Silver(100) → Gold(250) → HOF(500)
+  - Bucket Getter (points): Bronze(100) → Silver(500) → Gold(1500) → HOF(3000)
+  - Glass Cleaner (rebounds): Bronze(50) → Silver(200) → Gold(500) → HOF(1000)
+  - Rim Protector (blocks): Bronze(10) → Silver(50) → Gold(125) → HOF(250)
+  - Pickpocket (steals): Bronze(15) → Silver(75) → Gold(175) → HOF(350)
+- **Constants**: TIER_THRESHOLDS, XP_REWARDS, and SKILL_BADGE_TYPES defined in shared/schema.ts
 
 ### AI Video Analysis
 - **Integration**: Gemini AI via Replit AI Integrations (no API key required)

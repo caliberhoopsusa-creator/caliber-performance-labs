@@ -25,7 +25,8 @@ import {
   type PredictionVote, type InsertPredictionVote,
   type StoryTemplate, type InsertStoryTemplate,
   type PlayerStory, type InsertPlayerStory,
-  type ActivityStreak, type InsertActivityStreak
+  type ActivityStreak, type InsertActivityStreak,
+  type SkillBadge, type InsertSkillBadge, skillBadges
 } from "@shared/schema";
 import { eq, desc, and, count, gte, lte, sql, or } from "drizzle-orm";
 
@@ -48,6 +49,11 @@ export interface IStorage {
   createBadge(badge: InsertBadge): Promise<Badge>;
   getPlayerBadges(playerId: number): Promise<Badge[]>;
   getBadgesByGame(gameId: number): Promise<Badge[]>;
+
+  // Skill Badges (Progressive)
+  getPlayerSkillBadges(playerId: number): Promise<SkillBadge[]>;
+  getOrCreateSkillBadge(playerId: number, skillType: string): Promise<SkillBadge>;
+  updateSkillBadge(id: number, updates: Partial<SkillBadge>): Promise<SkillBadge | undefined>;
 
   // Goals
   createGoal(goal: InsertGoal): Promise<Goal>;
@@ -231,6 +237,37 @@ export class DatabaseStorage implements IStorage {
       .from(badges)
       .where(eq(badges.gameId, gameId))
       .orderBy(desc(badges.earnedAt));
+  }
+
+  async getPlayerSkillBadges(playerId: number): Promise<SkillBadge[]> {
+    return await db
+      .select()
+      .from(skillBadges)
+      .where(eq(skillBadges.playerId, playerId));
+  }
+
+  async getOrCreateSkillBadge(playerId: number, skillType: string): Promise<SkillBadge> {
+    const [existing] = await db
+      .select()
+      .from(skillBadges)
+      .where(and(eq(skillBadges.playerId, playerId), eq(skillBadges.skillType, skillType)));
+    
+    if (existing) return existing;
+
+    const [newBadge] = await db
+      .insert(skillBadges)
+      .values({ playerId, skillType, currentLevel: "none", careerValue: 0 })
+      .returning();
+    return newBadge;
+  }
+
+  async updateSkillBadge(id: number, updates: Partial<SkillBadge>): Promise<SkillBadge | undefined> {
+    const [updated] = await db
+      .update(skillBadges)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(skillBadges.id, id))
+      .returning();
+    return updated;
   }
 
   async createGoal(goal: InsertGoal): Promise<Goal> {

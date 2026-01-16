@@ -39,6 +39,16 @@ export const badges = pgTable("badges", {
   earnedAt: timestamp("earned_at").defaultNow(),
 });
 
+// === SKILL BADGES (Progressive career-based badges that upgrade) ===
+export const skillBadges = pgTable("skill_badges", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  skillType: text("skill_type").notNull(), // 'sharpshooter', 'pure_passer', 'bucket_getter', etc.
+  currentLevel: text("current_level").notNull().default("none"), // 'none', 'bronze', 'silver', 'gold', 'hall_of_fame'
+  careerValue: integer("career_value").notNull().default(0), // Cumulative stat value
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const goals = pgTable("goals", {
   id: serial("id").primaryKey(),
   playerId: integer("player_id").notNull(),
@@ -255,6 +265,59 @@ export const BADGE_DEFINITIONS = {
   xp_1000: { name: "Grinder", description: "Earned 1,000 XP" },
   xp_5000: { name: "Elite", description: "Earned 5,000 XP" },
 } as const;
+
+// === SKILL BADGES SYSTEM (Progressive career badges) ===
+export const SKILL_BADGE_LEVELS = ["none", "bronze", "silver", "gold", "hall_of_fame"] as const;
+export type SkillBadgeLevel = typeof SKILL_BADGE_LEVELS[number];
+
+export const SKILL_BADGE_TYPES = {
+  sharpshooter: {
+    name: "Sharpshooter",
+    description: "Career 3-pointers made",
+    stat: "threeMade",
+    thresholds: { bronze: 10, silver: 50, gold: 150, hall_of_fame: 300 },
+  },
+  pure_passer: {
+    name: "Pure Passer",
+    description: "Career assists",
+    stat: "assists",
+    thresholds: { bronze: 25, silver: 100, gold: 250, hall_of_fame: 500 },
+  },
+  bucket_getter: {
+    name: "Bucket Getter",
+    description: "Career points scored",
+    stat: "points",
+    thresholds: { bronze: 100, silver: 500, gold: 1500, hall_of_fame: 3000 },
+  },
+  glass_cleaner: {
+    name: "Glass Cleaner",
+    description: "Career rebounds",
+    stat: "rebounds",
+    thresholds: { bronze: 50, silver: 200, gold: 500, hall_of_fame: 1000 },
+  },
+  rim_protector: {
+    name: "Rim Protector",
+    description: "Career blocks",
+    stat: "blocks",
+    thresholds: { bronze: 10, silver: 50, gold: 125, hall_of_fame: 250 },
+  },
+  pickpocket: {
+    name: "Pickpocket",
+    description: "Career steals",
+    stat: "steals",
+    thresholds: { bronze: 15, silver: 75, gold: 175, hall_of_fame: 350 },
+  },
+} as const;
+
+export type SkillBadgeType = keyof typeof SKILL_BADGE_TYPES;
+
+export type SkillBadge = typeof skillBadges.$inferSelect;
+export type InsertSkillBadge = {
+  playerId: number;
+  skillType: string;
+  currentLevel?: string;
+  careerValue?: number;
+};
 
 // === XP & TIER SYSTEM ===
 export const TIER_THRESHOLDS = {
