@@ -17,6 +17,22 @@ import { eq, sql } from "drizzle-orm";
 import { db } from "./db";
 import type { RequestHandler } from "express";
 
+// Admin password middleware
+const isAdmin: RequestHandler = (req: any, res, next) => {
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  const providedPassword = req.headers['x-admin-password'] || req.body?.adminPassword;
+  
+  if (!adminPassword) {
+    return res.status(500).json({ message: "Admin password not configured" });
+  }
+  
+  if (providedPassword !== adminPassword) {
+    return res.status(401).json({ message: "Invalid admin password" });
+  }
+  
+  next();
+};
+
 // Role-based middleware
 const isCoach: RequestHandler = async (req: any, res, next) => {
   try {
@@ -3544,6 +3560,192 @@ Respond in this exact JSON format:
     } catch (err: any) {
       console.error('Portal error:', err);
       res.status(500).json({ error: err.message || 'Portal access failed' });
+    }
+  });
+
+  // --- Admin Routes (password protected) ---
+
+  // Verify admin password
+  app.post('/api/admin/login', (req, res) => {
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    const { password } = req.body;
+    
+    if (!adminPassword) {
+      return res.status(500).json({ error: 'Admin password not configured' });
+    }
+    
+    if (password === adminPassword) {
+      res.json({ success: true });
+    } else {
+      res.status(401).json({ error: 'Invalid password' });
+    }
+  });
+
+  // Get all players (roster management)
+  app.get('/api/admin/players', isAdmin, async (req, res) => {
+    try {
+      const allPlayers = await storage.getPlayers();
+      res.json({ players: allPlayers });
+    } catch (err) {
+      console.error('Admin get players error:', err);
+      res.status(500).json({ error: 'Could not fetch players' });
+    }
+  });
+
+  // Update player
+  app.patch('/api/admin/players/:id', isAdmin, async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      const updates = req.body;
+      delete updates.adminPassword; // Remove password from updates
+      
+      const updated = await storage.updatePlayer(playerId, updates);
+      res.json({ player: updated });
+    } catch (err) {
+      console.error('Admin update player error:', err);
+      res.status(500).json({ error: 'Could not update player' });
+    }
+  });
+
+  // Delete player
+  app.delete('/api/admin/players/:id', isAdmin, async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      await storage.deletePlayer(playerId);
+      res.json({ success: true });
+    } catch (err) {
+      console.error('Admin delete player error:', err);
+      res.status(500).json({ error: 'Could not delete player' });
+    }
+  });
+
+  // Get all products with prices (for pricing management)
+  app.get('/api/admin/products', isAdmin, async (req, res) => {
+    try {
+      const result = await db.execute(sql`
+        SELECT 
+          p.id as product_id,
+          p.name as product_name,
+          p.description as product_description,
+          p.active as product_active,
+          p.metadata as product_metadata,
+          pr.id as price_id,
+          pr.unit_amount,
+          pr.currency,
+          pr.recurring,
+          pr.active as price_active
+        FROM stripe.products p
+        LEFT JOIN stripe.prices pr ON pr.product = p.id
+        ORDER BY p.name, pr.unit_amount
+      `);
+
+      const productsMap = new Map<string, any>();
+      for (const row of result.rows as any[]) {
+        if (!productsMap.has(row.product_id)) {
+          productsMap.set(row.product_id, {
+            id: row.product_id,
+            name: row.product_name,
+            description: row.product_description,
+            active: row.product_active,
+            metadata: row.product_metadata,
+            prices: []
+          });
+        }
+        if (row.price_id) {
+          productsMap.get(row.product_id)!.prices.push({
+            id: row.price_id,
+            unit_amount: row.unit_amount,
+            currency: row.currency,
+            recurring: row.recurring,
+            active: row.price_active,
+          });
+        }
+      }
+
+      res.json({ products: Array.from(productsMap.values()) });
+    } catch (err) {
+      console.error('Admin get products error:', err);
+      res.status(500).json({ error: 'Could not fetch products' });
+    }
+  });
+
+  // Update product active status
+  app.patch('/api/admin/products/:id', isAdmin, async (req, res) => {
+    try {
+      const productId = req.params.id;
+      const { active, name, description } = req.body;
+      
+      const stripe = await getUncachableStripeClient();
+      const updateData: any = {};
+      if (typeof active === 'boolean') updateData.active = active;
+      if (name) updateData.name = name;
+      if (description) updateData.description = description;
+      
+      const product = await stripe.products.update(productId, updateData);
+      res.json({ product });
+    } catch (err: any) {
+      console.error('Admin update product error:', err);
+      res.status(500).json({ error: err.message || 'Could not update product' });
+    }
+  });
+
+  // Create a coupon/promotion
+  app.post('/api/admin/coupons', isAdmin, async (req, res) => {
+    try {
+      const { name, percentOff, duration, durationInMonths } = req.body;
+      
+      const stripe = await getUncachableStripeClient();
+      const coupon = await stripe.coupons.create({
+        name,
+        percent_off: percentOff,
+        duration: duration || 'once',
+        duration_in_months: duration === 'repeating' ? durationInMonths : undefined,
+      });
+      
+      res.json({ coupon });
+    } catch (err: any) {
+      console.error('Admin create coupon error:', err);
+      res.status(500).json({ error: err.message || 'Could not create coupon' });
+    }
+  });
+
+  // Get all coupons
+  app.get('/api/admin/coupons', isAdmin, async (req, res) => {
+    try {
+      const stripe = await getUncachableStripeClient();
+      const coupons = await stripe.coupons.list({ limit: 100 });
+      res.json({ coupons: coupons.data });
+    } catch (err: any) {
+      console.error('Admin get coupons error:', err);
+      res.status(500).json({ error: err.message || 'Could not fetch coupons' });
+    }
+  });
+
+  // Delete a coupon
+  app.delete('/api/admin/coupons/:id', isAdmin, async (req, res) => {
+    try {
+      const couponId = req.params.id;
+      const stripe = await getUncachableStripeClient();
+      await stripe.coupons.del(couponId);
+      res.json({ success: true });
+    } catch (err: any) {
+      console.error('Admin delete coupon error:', err);
+      res.status(500).json({ error: err.message || 'Could not delete coupon' });
+    }
+  });
+
+  // Get all users (subscriber management)
+  app.get('/api/admin/users', isAdmin, async (req, res) => {
+    try {
+      const result = await db.execute(sql`
+        SELECT id, email, role, "stripeCustomerId", "stripeSubscriptionId", "subscriptionStatus", "createdAt"
+        FROM users
+        ORDER BY "createdAt" DESC
+      `);
+      res.json({ users: result.rows });
+    } catch (err) {
+      console.error('Admin get users error:', err);
+      res.status(500).json({ error: 'Could not fetch users' });
     }
   });
 

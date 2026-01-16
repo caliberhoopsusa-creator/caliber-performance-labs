@@ -31,6 +31,7 @@ import PracticeTracker from "./pages/PracticeTracker";
 import OpponentScouting from "./pages/OpponentScouting";
 import CoachAlertsPage from "./pages/CoachAlertsPage";
 import Pricing from "./pages/Pricing";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/not-found";
 
 interface ExtendedUser {
@@ -129,7 +130,12 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <MainRouter />
+        <Switch>
+          <Route path="/admin" component={Admin} />
+          <Route>
+            <MainRouter />
+          </Route>
+        </Switch>
       </TooltipProvider>
     </QueryClientProvider>
   );
