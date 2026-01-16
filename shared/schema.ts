@@ -12,6 +12,9 @@ export const players = pgTable("players", {
   height: text("height"), // e.g., "6'5"
   team: text("team"),
   jerseyNumber: integer("jersey_number"),
+  photoUrl: text("photo_url"), // Player profile photo
+  bannerUrl: text("banner_url"), // Player profile banner
+  bio: text("bio"), // Player biography/description
   createdAt: timestamp("created_at").defaultNow(),
 });
 

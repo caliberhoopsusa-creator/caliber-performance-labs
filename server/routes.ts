@@ -9,6 +9,7 @@ import { GoogleGenAI } from "@google/genai";
 import multer from "multer";
 import fs from "fs";
 import path from "path";
+import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
 
 // Gemini AI client for video analysis
 const ai = new GoogleGenAI({
@@ -350,6 +351,9 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
   
+  // Register object storage routes for file uploads
+  registerObjectStorageRoutes(app);
+  
   // --- Players ---
 
   app.get(api.players.list.path, async (req, res) => {
@@ -384,6 +388,39 @@ export async function registerRoutes(
   app.delete(api.players.delete.path, async (req, res) => {
     await storage.deletePlayer(Number(req.params.id));
     res.status(204).send();
+  });
+
+  app.patch('/api/players/:id', async (req, res) => {
+    try {
+      const playerId = Number(req.params.id);
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: 'Player not found' });
+      }
+      
+      const updateSchema = z.object({
+        name: z.string().min(1).optional(),
+        position: z.enum(['Guard', 'Wing', 'Big']).optional(),
+        height: z.string().optional(),
+        team: z.string().optional(),
+        jerseyNumber: z.number().optional(),
+        photoUrl: z.string().optional(),
+        bannerUrl: z.string().optional(),
+        bio: z.string().optional(),
+      });
+      
+      const input = updateSchema.parse(req.body);
+      const updated = await storage.updatePlayer(playerId, input);
+      res.json(updated);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      throw err;
+    }
   });
 
   // --- Games ---
