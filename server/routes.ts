@@ -3,7 +3,7 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, type Game, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema } from "@shared/schema";
+import { players, games, type Game, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { GoogleGenAI } from "@google/genai";
 import multer from "multer";
@@ -346,6 +346,73 @@ async function updatePlayerStreaks(playerId: number, gameId: number, stats: any,
   }
 }
 
+// Update activity streak (for consecutive days of activity)
+async function updateActivityStreak(playerId: number, streakType: string): Promise<{ streakCount: number; isNewMilestone: boolean; milestoneReached?: number }> {
+  const streak = await storage.getOrCreateActivityStreak(playerId, streakType);
+  const today = new Date().toISOString().split('T')[0];
+  const lastDate = streak.lastActivityDate;
+  
+  let newCount = 1;
+  let isNewMilestone = false;
+  let milestoneReached: number | undefined;
+  
+  if (lastDate) {
+    const lastDateObj = new Date(lastDate);
+    const todayObj = new Date(today);
+    const diffDays = Math.floor((todayObj.getTime() - lastDateObj.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) {
+      // Same day, keep count the same
+      return { streakCount: streak.currentStreak, isNewMilestone: false };
+    } else if (diffDays === 1) {
+      // Consecutive day
+      newCount = streak.currentStreak + 1;
+    } else {
+      // Streak broken
+      newCount = 1;
+    }
+  }
+  
+  const newLongest = Math.max(streak.longestStreak, newCount);
+  
+  // Check for milestone badges
+  const milestones = [3, 7, 14, 30];
+  for (const milestone of milestones) {
+    if (newCount === milestone && streak.currentStreak < milestone) {
+      isNewMilestone = true;
+      milestoneReached = milestone;
+      
+      // Award streak badge
+      const badgeType = `streak_${milestone}`;
+      const existingBadges = await storage.getPlayerBadges(playerId);
+      const hasStreakBadge = existingBadges.some(b => b.badgeType === badgeType);
+      if (!hasStreakBadge) {
+        await storage.createBadge({ playerId, badgeType, gameId: null });
+        
+        // Award streak bonus XP
+        let bonusXp = 0;
+        if (milestone === 3) bonusXp = XP_REWARDS.streak_bonus_3;
+        else if (milestone === 7) bonusXp = XP_REWARDS.streak_bonus_7;
+        else if (milestone === 14) bonusXp = XP_REWARDS.streak_bonus_14;
+        else if (milestone === 30) bonusXp = XP_REWARDS.streak_bonus_30;
+        
+        if (bonusXp > 0) {
+          await storage.addPlayerXp(playerId, bonusXp);
+        }
+      }
+      break;
+    }
+  }
+  
+  await storage.updateActivityStreak(streak.id, {
+    currentStreak: newCount,
+    longestStreak: newLongest,
+    lastActivityDate: today,
+  });
+  
+  return { streakCount: newCount, isNewMilestone, milestoneReached };
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -509,7 +576,43 @@ export async function registerRoutes(
         });
       }
       
-      res.status(201).json(game);
+      // --- XP Rewards ---
+      let xpEarned = XP_REWARDS.game_logged;
+      
+      // Grade bonuses
+      if (grade === 'A+') xpEarned += XP_REWARDS.a_plus_grade;
+      else if (grade.startsWith('A')) xpEarned += XP_REWARDS.a_grade;
+      
+      // Badge bonuses
+      xpEarned += awardedBadges.length * XP_REWARDS.badge_earned;
+      
+      // Award XP and check for tier promotion
+      const { player: updatedPlayer, newTier } = await storage.addPlayerXp(input.playerId, xpEarned);
+      
+      // Award tier promotion badge if promoted
+      if (newTier) {
+        let tierBadge: string | null = null;
+        if (newTier === "Starter") tierBadge = "tier_starter";
+        else if (newTier === "All-Star") tierBadge = "tier_allstar";
+        else if (newTier === "MVP") tierBadge = "tier_mvp";
+        else if (newTier === "Hall of Fame") tierBadge = "tier_hof";
+        
+        if (tierBadge) {
+          await storage.createBadge({ playerId: input.playerId, badgeType: tierBadge, gameId: game.id });
+          await storage.createFeedActivity({
+            activityType: 'badge',
+            playerId: input.playerId,
+            gameId: game.id,
+            headline: `${player?.name || 'Player'} reached ${newTier} tier!`,
+            subtext: `Tier promotion earned with ${updatedPlayer.totalXp} XP`,
+          });
+        }
+      }
+      
+      // Update activity streak
+      await updateActivityStreak(input.playerId, 'daily_game');
+      
+      res.status(201).json({ ...game, xpEarned, newTier, totalXp: updatedPlayer.totalXp, currentTier: updatedPlayer.currentTier });
     } catch (err) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({
@@ -593,6 +696,98 @@ export async function registerRoutes(
     }
     const streaks = await storage.getPlayerStreaks(playerId);
     res.json(streaks);
+  });
+
+  // --- Activity Streaks (for daily activity tracking) ---
+
+  app.get('/api/players/:id/activity-streaks', async (req, res) => {
+    const playerId = Number(req.params.id);
+    const player = await storage.getPlayer(playerId);
+    if (!player) {
+      return res.status(404).json({ message: 'Player not found' });
+    }
+    const activityStreaks = await storage.getPlayerActivityStreaks(playerId);
+    res.json(activityStreaks);
+  });
+
+  app.post('/api/players/:id/activity', async (req, res) => {
+    const playerId = Number(req.params.id);
+    const { streakType = 'daily_login' } = req.body;
+    
+    const player = await storage.getPlayer(playerId);
+    if (!player) {
+      return res.status(404).json({ message: 'Player not found' });
+    }
+    
+    // Check if already recorded activity today BEFORE updating streak
+    const existingStreak = await storage.getOrCreateActivityStreak(playerId, streakType);
+    const today = new Date().toISOString().split('T')[0];
+    const alreadyActiveToday = existingStreak.lastActivityDate === today;
+    
+    const result = await updateActivityStreak(playerId, streakType);
+    
+    // Award daily login XP only if this is first activity today
+    if (!alreadyActiveToday) {
+      await storage.addPlayerXp(playerId, XP_REWARDS.daily_login);
+    }
+    
+    const updatedPlayer = await storage.getPlayer(playerId);
+    
+    res.json({
+      streakCount: result.streakCount,
+      isNewMilestone: result.isNewMilestone,
+      milestoneReached: result.milestoneReached,
+      totalXp: updatedPlayer?.totalXp || 0,
+      currentTier: updatedPlayer?.currentTier || 'Rookie',
+      xpAwarded: alreadyActiveToday ? 0 : XP_REWARDS.daily_login,
+    });
+  });
+
+  // --- Player Progression (XP & Tier) ---
+
+  app.get('/api/players/:id/progression', async (req, res) => {
+    const playerId = Number(req.params.id);
+    const player = await storage.getPlayer(playerId);
+    if (!player) {
+      return res.status(404).json({ message: 'Player not found' });
+    }
+    
+    const activityStreaks = await storage.getPlayerActivityStreaks(playerId);
+    const dailyStreak = activityStreaks.find(s => s.streakType === 'daily_login') || 
+                        activityStreaks.find(s => s.streakType === 'daily_game') || 
+                        { currentStreak: 0, longestStreak: 0 };
+    
+    // Use shared tier thresholds from schema
+    const tiers = ['Rookie', 'Starter', 'All-Star', 'MVP', 'Hall of Fame'] as const;
+    const thresholds = [
+      TIER_THRESHOLDS.Rookie,
+      TIER_THRESHOLDS.Starter,
+      TIER_THRESHOLDS['All-Star'],
+      TIER_THRESHOLDS.MVP,
+      TIER_THRESHOLDS['Hall of Fame']
+    ];
+    const currentTierIndex = tiers.indexOf(player.currentTier as typeof tiers[number]);
+    const nextTierIndex = Math.min(currentTierIndex + 1, tiers.length - 1);
+    const xpToNextTier = currentTierIndex < tiers.length - 1 
+      ? thresholds[nextTierIndex] - (player.totalXp || 0)
+      : 0;
+    const progressPercent = currentTierIndex < tiers.length - 1
+      ? Math.min(100, Math.round(((player.totalXp || 0) - thresholds[currentTierIndex]) / 
+          (thresholds[nextTierIndex] - thresholds[currentTierIndex]) * 100))
+      : 100;
+    
+    res.json({
+      playerId: player.id,
+      playerName: player.name,
+      totalXp: player.totalXp || 0,
+      currentTier: player.currentTier,
+      nextTier: currentTierIndex < tiers.length - 1 ? tiers[nextTierIndex] : null,
+      xpToNextTier,
+      progressPercent,
+      currentStreak: dailyStreak.currentStreak,
+      longestStreak: dailyStreak.longestStreak,
+      tierThresholds: TIER_THRESHOLDS,
+    });
   });
 
   // --- Likes ---

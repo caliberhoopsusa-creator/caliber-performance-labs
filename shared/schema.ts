@@ -15,7 +15,20 @@ export const players = pgTable("players", {
   photoUrl: text("photo_url"), // Player profile photo
   bannerUrl: text("banner_url"), // Player profile banner
   bio: text("bio"), // Player biography/description
+  totalXp: integer("total_xp").notNull().default(0), // Total XP earned
+  currentTier: text("current_tier").notNull().default("Rookie"), // Rookie, Starter, All-Star, MVP, Hall of Fame
   createdAt: timestamp("created_at").defaultNow(),
+});
+
+// === ACTIVITY STREAKS (for daily login/activity tracking) ===
+export const activityStreaks = pgTable("activity_streaks", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  streakType: text("streak_type").notNull(), // 'daily_login', 'daily_game', 'weekly_challenge'
+  currentStreak: integer("current_streak").notNull().default(0),
+  longestStreak: integer("longest_streak").notNull().default(0),
+  lastActivityDate: date("last_activity_date"),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const badges = pgTable("badges", {
@@ -226,6 +239,63 @@ export const BADGE_DEFINITIONS = {
   hustle_champion: { name: "Hustle Champion", description: "Won the weekly hustle challenge" },
   scoring_machine: { name: "Scoring Machine", description: "Won the scorer's sprint challenge" },
   consistency_king: { name: "Consistency King", description: "Won the consistency challenge" },
+  // Tier promotion badges
+  tier_starter: { name: "Starter", description: "Reached Starter tier (500 XP)" },
+  tier_allstar: { name: "All-Star", description: "Reached All-Star tier (2,000 XP)" },
+  tier_mvp: { name: "MVP", description: "Reached MVP tier (5,000 XP)" },
+  tier_hof: { name: "Hall of Fame", description: "Reached Hall of Fame tier (10,000 XP)" },
+  // Streak milestone badges
+  streak_3: { name: "3-Day Streak", description: "Active 3 days in a row" },
+  streak_7: { name: "Week Warrior", description: "Active 7 days in a row" },
+  streak_14: { name: "Two-Week Terror", description: "Active 14 days in a row" },
+  streak_30: { name: "Monthly Monster", description: "Active 30 days in a row" },
+  // XP milestone badges
+  xp_100: { name: "First Hundred", description: "Earned 100 XP" },
+  xp_500: { name: "Rising Star", description: "Earned 500 XP" },
+  xp_1000: { name: "Grinder", description: "Earned 1,000 XP" },
+  xp_5000: { name: "Elite", description: "Earned 5,000 XP" },
+} as const;
+
+// === XP & TIER SYSTEM ===
+export const TIER_THRESHOLDS = {
+  Rookie: 0,
+  Starter: 500,
+  "All-Star": 2000,
+  MVP: 5000,
+  "Hall of Fame": 10000,
+} as const;
+
+export const XP_REWARDS = {
+  game_logged: 50,        // Log a game
+  badge_earned: 25,       // Earn any badge
+  goal_completed: 100,    // Complete a goal
+  challenge_completed: 150, // Complete a challenge
+  daily_login: 10,        // Daily activity bonus
+  streak_bonus_3: 25,     // 3-day streak bonus
+  streak_bonus_7: 75,     // 7-day streak bonus
+  streak_bonus_14: 150,   // 14-day streak bonus
+  streak_bonus_30: 300,   // 30-day streak bonus
+  a_grade: 30,            // Get an A grade in a game
+  a_plus_grade: 50,       // Get an A+ grade in a game
+} as const;
+
+export const TIER_ORDER = ["Rookie", "Starter", "All-Star", "MVP", "Hall of Fame"] as const;
+export type PlayerTier = typeof TIER_ORDER[number];
+
+// Activity streak types
+export type ActivityStreak = typeof activityStreaks.$inferSelect;
+export type InsertActivityStreak = {
+  playerId: number;
+  streakType: string;
+  currentStreak?: number;
+  longestStreak?: number;
+  lastActivityDate?: string | null;
+};
+
+export const ACTIVITY_STREAK_TYPES = {
+  daily_login: { name: "Daily Activity", description: "Consecutive days of activity" },
+  daily_game: { name: "Game Logger", description: "Consecutive days logging games" },
+  weekly_challenge: { name: "Challenge Streak", description: "Consecutive weeks completing challenges" },
 } as const;
 
 // === CHALLENGES TABLES ===

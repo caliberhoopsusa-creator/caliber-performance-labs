@@ -3,6 +3,7 @@ import {
   players, games, badges, goals, streaks, likes, comments, challenges, challengeProgress,
   teams, teamMembers, teamPosts,
   feedActivities, reposts, polls, pollVotes, predictions, predictionVotes, storyTemplates, playerStories,
+  activityStreaks,
   type Player, type InsertPlayer,
   type Game, type InsertGame,
   type UpdateGameRequest,
@@ -23,7 +24,8 @@ import {
   type Prediction, type InsertPrediction,
   type PredictionVote, type InsertPredictionVote,
   type StoryTemplate, type InsertStoryTemplate,
-  type PlayerStory, type InsertPlayerStory
+  type PlayerStory, type InsertPlayerStory,
+  type ActivityStreak, type InsertActivityStreak
 } from "@shared/schema";
 import { eq, desc, and, count, gte, lte, sql, or } from "drizzle-orm";
 
@@ -135,6 +137,14 @@ export interface IStorage {
   createPlayerStory(story: InsertPlayerStory): Promise<PlayerStory>;
   getPlayerStories(playerId: number): Promise<PlayerStory[]>;
   getPublicStories(limit?: number): Promise<(PlayerStory & { playerName: string })[]>;
+
+  // Activity Streaks (for XP/gamification)
+  getPlayerActivityStreaks(playerId: number): Promise<ActivityStreak[]>;
+  getOrCreateActivityStreak(playerId: number, streakType: string): Promise<ActivityStreak>;
+  updateActivityStreak(id: number, updates: Partial<ActivityStreak>): Promise<ActivityStreak | undefined>;
+
+  // XP Management
+  addPlayerXp(playerId: number, xpAmount: number): Promise<{ player: Player; newTier: string | null; oldTier: string }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -709,6 +719,68 @@ export class DatabaseStorage implements IStorage {
       .limit(limit);
     
     return results;
+  }
+
+  // Activity Streaks
+  async getPlayerActivityStreaks(playerId: number): Promise<ActivityStreak[]> {
+    return await db
+      .select()
+      .from(activityStreaks)
+      .where(eq(activityStreaks.playerId, playerId))
+      .orderBy(desc(activityStreaks.updatedAt));
+  }
+
+  async getOrCreateActivityStreak(playerId: number, streakType: string): Promise<ActivityStreak> {
+    const [existing] = await db
+      .select()
+      .from(activityStreaks)
+      .where(and(eq(activityStreaks.playerId, playerId), eq(activityStreaks.streakType, streakType)));
+    
+    if (existing) return existing;
+
+    const [newStreak] = await db
+      .insert(activityStreaks)
+      .values({ playerId, streakType, currentStreak: 0, longestStreak: 0 })
+      .returning();
+    
+    return newStreak;
+  }
+
+  async updateActivityStreak(id: number, updates: Partial<ActivityStreak>): Promise<ActivityStreak | undefined> {
+    const [updated] = await db
+      .update(activityStreaks)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(activityStreaks.id, id))
+      .returning();
+    return updated;
+  }
+
+  // XP Management
+  async addPlayerXp(playerId: number, xpAmount: number): Promise<{ player: Player; newTier: string | null; oldTier: string }> {
+    const [player] = await db.select().from(players).where(eq(players.id, playerId));
+    if (!player) throw new Error("Player not found");
+
+    const oldTier = player.currentTier;
+    const newXp = (player.totalXp || 0) + xpAmount;
+    
+    // Calculate new tier based on XP thresholds
+    let newTier = "Rookie";
+    if (newXp >= 10000) newTier = "Hall of Fame";
+    else if (newXp >= 5000) newTier = "MVP";
+    else if (newXp >= 2000) newTier = "All-Star";
+    else if (newXp >= 500) newTier = "Starter";
+
+    const [updatedPlayer] = await db
+      .update(players)
+      .set({ totalXp: newXp, currentTier: newTier })
+      .where(eq(players.id, playerId))
+      .returning();
+
+    return {
+      player: updatedPlayer,
+      newTier: newTier !== oldTier ? newTier : null,
+      oldTier
+    };
   }
 }
 

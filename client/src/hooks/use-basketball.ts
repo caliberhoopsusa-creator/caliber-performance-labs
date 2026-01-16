@@ -291,3 +291,52 @@ export function usePlayerStreaks(playerId: number) {
     enabled: !!playerId,
   });
 }
+
+// ============================================
+// PLAYER PROGRESSION HOOKS (XP, Tier, Activity Streaks)
+// ============================================
+
+export type PlayerProgression = {
+  playerId: number;
+  playerName: string;
+  totalXp: number;
+  currentTier: string;
+  nextTier: string | null;
+  xpToNextTier: number;
+  progressPercent: number;
+  currentStreak: number;
+  longestStreak: number;
+  tierThresholds: Record<string, number>;
+};
+
+export function usePlayerProgression(playerId: number) {
+  return useQuery<PlayerProgression>({
+    queryKey: ['/api/players', playerId, 'progression'],
+    queryFn: async () => {
+      const res = await fetch(`/api/players/${playerId}/progression`);
+      if (!res.ok) throw new Error("Failed to fetch progression");
+      return res.json();
+    },
+    enabled: !!playerId,
+  });
+}
+
+export function useRecordActivity() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { playerId: number; streakType?: string }) => {
+      const res = await fetch(`/api/players/${data.playerId}/activity`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ streakType: data.streakType || 'daily_login' }),
+      });
+      if (!res.ok) throw new Error("Failed to record activity");
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/players', variables.playerId, 'progression'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/players', variables.playerId, 'streaks'] });
+      queryClient.invalidateQueries({ queryKey: [api.players.get.path, variables.playerId] });
+    },
+  });
+}

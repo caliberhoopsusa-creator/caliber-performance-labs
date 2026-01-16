@@ -1,6 +1,7 @@
 import { usePlayer, useDeleteGame, usePlayerBadges, useUpdatePlayer, type PlayerUpdate } from "@/hooks/use-basketball";
 import { GoalsPanel } from "@/components/GoalsPanel";
 import { SocialEngagement } from "@/components/SocialEngagement";
+import { PlayerProgression } from "@/components/PlayerProgression";
 import { useRoute, Link, useLocation } from "wouter";
 import { StatCard } from "@/components/StatCard";
 import { GradeBadge } from "@/components/GradeBadge";
@@ -434,6 +435,42 @@ export default function PlayerDetail() {
           position={player.position as "Guard" | "Wing" | "Big"}
         />
       )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <PlayerProgression playerId={player.id} />
+        
+        <Card className="p-4">
+          <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+            <Zap className="w-4 h-4 text-primary" /> XP Rewards
+          </h4>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div className="flex items-center justify-between p-2 rounded bg-secondary/30">
+              <span className="text-muted-foreground">Log a Game</span>
+              <span className="font-bold text-primary">+50 XP</span>
+            </div>
+            <div className="flex items-center justify-between p-2 rounded bg-secondary/30">
+              <span className="text-muted-foreground">Earn Badge</span>
+              <span className="font-bold text-primary">+25 XP</span>
+            </div>
+            <div className="flex items-center justify-between p-2 rounded bg-secondary/30">
+              <span className="text-muted-foreground">A Grade</span>
+              <span className="font-bold text-primary">+30 XP</span>
+            </div>
+            <div className="flex items-center justify-between p-2 rounded bg-secondary/30">
+              <span className="text-muted-foreground">A+ Grade</span>
+              <span className="font-bold text-primary">+50 XP</span>
+            </div>
+            <div className="flex items-center justify-between p-2 rounded bg-orange-500/10 border border-orange-500/20">
+              <span className="text-orange-400">3-Day Streak</span>
+              <span className="font-bold text-orange-400">+25 XP</span>
+            </div>
+            <div className="flex items-center justify-between p-2 rounded bg-orange-500/10 border border-orange-500/20">
+              <span className="text-orange-400">7-Day Streak</span>
+              <span className="font-bold text-orange-400">+75 XP</span>
+            </div>
+          </div>
+        </Card>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
