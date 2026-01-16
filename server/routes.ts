@@ -3,7 +3,7 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, type Game } from "@shared/schema";
+import { players, games, type Game, insertGoalSchema } from "@shared/schema";
 import { GoogleGenAI } from "@google/genai";
 import multer from "multer";
 import fs from "fs";
@@ -230,6 +230,48 @@ async function checkStreakBadges(playerId: number, latestGameId: number) {
   }
 }
 
+async function updatePlayerStreaks(playerId: number, gameId: number, stats: any, grade: string) {
+  const goodGrades = ["B+", "A-", "A", "A+"];
+  
+  const streakChecks = [
+    { 
+      type: "grade_above_b", 
+      condition: grade && goodGrades.includes(grade) 
+    },
+    { 
+      type: "double_digit_points", 
+      condition: (stats.points || 0) >= 10 
+    },
+    { 
+      type: "no_turnovers", 
+      condition: (stats.turnovers || 0) === 0 
+    },
+    { 
+      type: "a_defense", 
+      condition: (stats.defenseRating || 0) >= 85 
+    },
+  ];
+
+  for (const check of streakChecks) {
+    const streak = await storage.getOrCreateStreak(playerId, check.type);
+    
+    if (check.condition) {
+      const newCount = streak.currentCount + 1;
+      const newBest = Math.max(streak.bestCount, newCount);
+      await storage.updateStreak(streak.id, {
+        currentCount: newCount,
+        bestCount: newBest,
+        lastGameId: gameId,
+      });
+    } else {
+      await storage.updateStreak(streak.id, {
+        currentCount: 0,
+        lastGameId: gameId,
+      });
+    }
+  }
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -317,6 +359,9 @@ export async function registerRoutes(
       // Check and award badges after game creation
       await checkAndAwardBadges(input.playerId, game.id, input, grade);
       
+      // Update player streaks
+      await updatePlayerStreaks(input.playerId, game.id, input, grade);
+      
       res.status(201).json(game);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -339,6 +384,68 @@ export async function registerRoutes(
     }
     const badges = await storage.getPlayerBadges(playerId);
     res.json(badges);
+  });
+
+  // --- Goals ---
+
+  app.get('/api/players/:id/goals', async (req, res) => {
+    const playerId = Number(req.params.id);
+    const player = await storage.getPlayer(playerId);
+    if (!player) {
+      return res.status(404).json({ message: 'Player not found' });
+    }
+    const goals = await storage.getPlayerGoals(playerId);
+    res.json(goals);
+  });
+
+  app.post('/api/players/:id/goals', async (req, res) => {
+    try {
+      const playerId = Number(req.params.id);
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: 'Player not found' });
+      }
+      
+      const input = insertGoalSchema.parse({ ...req.body, playerId });
+      const goal = await storage.createGoal(input);
+      res.status(201).json(goal);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      throw err;
+    }
+  });
+
+  app.patch('/api/goals/:id', async (req, res) => {
+    const goalId = Number(req.params.id);
+    const updates = req.body;
+    const updatedGoal = await storage.updateGoal(goalId, updates);
+    if (!updatedGoal) {
+      return res.status(404).json({ message: 'Goal not found' });
+    }
+    res.json(updatedGoal);
+  });
+
+  app.delete('/api/goals/:id', async (req, res) => {
+    const goalId = Number(req.params.id);
+    await storage.deleteGoal(goalId);
+    res.status(204).send();
+  });
+
+  // --- Streaks ---
+
+  app.get('/api/players/:id/streaks', async (req, res) => {
+    const playerId = Number(req.params.id);
+    const player = await storage.getPlayer(playerId);
+    if (!player) {
+      return res.status(404).json({ message: 'Player not found' });
+    }
+    const streaks = await storage.getPlayerStreaks(playerId);
+    res.json(streaks);
   });
 
   app.get(api.games.get.path, async (req, res) => {

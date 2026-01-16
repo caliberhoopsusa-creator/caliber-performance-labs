@@ -23,6 +23,28 @@ export const badges = pgTable("badges", {
   earnedAt: timestamp("earned_at").defaultNow(),
 });
 
+export const goals = pgTable("goals", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull(),
+  title: text("title").notNull(),
+  targetType: text("target_type").notNull(), // 'grade_avg', 'stat_min', 'stat_max', 'streak'
+  targetCategory: text("target_category").notNull(), // 'overall', 'defense', 'hustle', 'points', 'rebounds', etc.
+  targetValue: integer("target_value").notNull(),
+  deadline: date("deadline"),
+  completed: boolean("completed").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const streaks = pgTable("streaks", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull(),
+  streakType: text("streak_type").notNull(), // 'grade_above_b', 'double_digit_points', 'no_turnovers', 'a_defense'
+  currentCount: integer("current_count").notNull().default(0),
+  bestCount: integer("best_count").notNull().default(0),
+  lastGameId: integer("last_game_id"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const games = pgTable("games", {
   id: serial("id").primaryKey(),
   playerId: integer("player_id").notNull(),
@@ -127,6 +149,34 @@ export type InsertBadge = {
   badgeType: string;
   gameId?: number | null;
 };
+
+export type Goal = typeof goals.$inferSelect;
+export const insertGoalSchema = createInsertSchema(goals).omit({ id: true, createdAt: true, completed: true });
+export type InsertGoal = z.infer<typeof insertGoalSchema>;
+
+export type Streak = typeof streaks.$inferSelect;
+export type InsertStreak = {
+  playerId: number;
+  streakType: string;
+  currentCount?: number;
+  bestCount?: number;
+  lastGameId?: number | null;
+};
+
+export const STREAK_DEFINITIONS = {
+  grade_above_b: { name: "B+ or Better", description: "Consecutive games with B+ grade or higher" },
+  double_digit_points: { name: "10+ Points", description: "Consecutive games with 10+ points" },
+  no_turnovers: { name: "Clean Ball", description: "Consecutive games with 0 turnovers" },
+  a_defense: { name: "Lockdown", description: "Consecutive games with A defense rating (85+)" },
+} as const;
+
+export const GOAL_PRESETS = [
+  { title: "Average B+ Defense", targetType: "grade_avg", targetCategory: "defense", targetValue: 85 },
+  { title: "Reduce turnovers below 2", targetType: "stat_max", targetCategory: "turnovers", targetValue: 2 },
+  { title: "Score 15+ PPG", targetType: "stat_min", targetCategory: "points", targetValue: 15 },
+  { title: "Get 5+ rebounds per game", targetType: "stat_min", targetCategory: "rebounds", targetValue: 5 },
+  { title: "Dish 4+ assists per game", targetType: "stat_min", targetCategory: "assists", targetValue: 4 },
+] as const;
 
 export const BADGE_DEFINITIONS = {
   twenty_piece: { name: "20-Piece", description: "Scored 20+ points in a game" },

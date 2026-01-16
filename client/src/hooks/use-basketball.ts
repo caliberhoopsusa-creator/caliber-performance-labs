@@ -169,3 +169,87 @@ export function usePlayerBadges(playerId: number) {
     enabled: !!playerId,
   });
 }
+
+// ============================================
+// GOALS HOOKS
+// ============================================
+
+export function usePlayerGoals(playerId: number) {
+  return useQuery({
+    queryKey: ['/api/players', playerId, 'goals'],
+    queryFn: async () => {
+      const res = await fetch(`/api/players/${playerId}/goals`);
+      if (!res.ok) throw new Error("Failed to fetch goals");
+      return res.json();
+    },
+    enabled: !!playerId,
+  });
+}
+
+export function useCreateGoal() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { playerId: number; title: string; targetType: string; targetCategory: string; targetValue: number; deadline?: string | null }) => {
+      const res = await fetch(`/api/players/${data.playerId}/goals`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to create goal");
+      }
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/players', variables.playerId, 'goals'] });
+    },
+  });
+}
+
+export function useUpdateGoal() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { id: number; playerId: number; updates: { completed?: boolean } }) => {
+      const res = await fetch(`/api/goals/${data.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data.updates),
+      });
+      if (!res.ok) throw new Error("Failed to update goal");
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/players', variables.playerId, 'goals'] });
+    },
+  });
+}
+
+export function useDeleteGoal() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { id: number; playerId: number }) => {
+      const res = await fetch(`/api/goals/${data.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete goal");
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/players', variables.playerId, 'goals'] });
+    },
+  });
+}
+
+// ============================================
+// STREAKS HOOKS
+// ============================================
+
+export function usePlayerStreaks(playerId: number) {
+  return useQuery({
+    queryKey: ['/api/players', playerId, 'streaks'],
+    queryFn: async () => {
+      const res = await fetch(`/api/players/${playerId}/streaks`);
+      if (!res.ok) throw new Error("Failed to fetch streaks");
+      return res.json();
+    },
+    enabled: !!playerId,
+  });
+}

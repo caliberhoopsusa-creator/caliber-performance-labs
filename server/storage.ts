@@ -1,12 +1,14 @@
 import { db } from "./db";
 import {
-  players, games, badges,
+  players, games, badges, goals, streaks,
   type Player, type InsertPlayer,
   type Game, type InsertGame,
   type UpdateGameRequest,
-  type Badge, type InsertBadge
+  type Badge, type InsertBadge,
+  type Goal, type InsertGoal,
+  type Streak, type InsertStreak
 } from "@shared/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 
 export interface IStorage {
   // Players
@@ -25,6 +27,17 @@ export interface IStorage {
   createBadge(badge: InsertBadge): Promise<Badge>;
   getPlayerBadges(playerId: number): Promise<Badge[]>;
   getBadgesByGame(gameId: number): Promise<Badge[]>;
+
+  // Goals
+  createGoal(goal: InsertGoal): Promise<Goal>;
+  getPlayerGoals(playerId: number): Promise<Goal[]>;
+  updateGoal(id: number, updates: Partial<Goal>): Promise<Goal | undefined>;
+  deleteGoal(id: number): Promise<void>;
+
+  // Streaks
+  getPlayerStreaks(playerId: number): Promise<Streak[]>;
+  getOrCreateStreak(playerId: number, streakType: string): Promise<Streak>;
+  updateStreak(id: number, updates: Partial<Streak>): Promise<Streak | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -96,6 +109,64 @@ export class DatabaseStorage implements IStorage {
       .from(badges)
       .where(eq(badges.gameId, gameId))
       .orderBy(desc(badges.earnedAt));
+  }
+
+  async createGoal(goal: InsertGoal): Promise<Goal> {
+    const [newGoal] = await db.insert(goals).values(goal).returning();
+    return newGoal;
+  }
+
+  async getPlayerGoals(playerId: number): Promise<Goal[]> {
+    return await db
+      .select()
+      .from(goals)
+      .where(eq(goals.playerId, playerId))
+      .orderBy(desc(goals.createdAt));
+  }
+
+  async updateGoal(id: number, updates: Partial<Goal>): Promise<Goal | undefined> {
+    const [updatedGoal] = await db
+      .update(goals)
+      .set(updates)
+      .where(eq(goals.id, id))
+      .returning();
+    return updatedGoal;
+  }
+
+  async deleteGoal(id: number): Promise<void> {
+    await db.delete(goals).where(eq(goals.id, id));
+  }
+
+  async getPlayerStreaks(playerId: number): Promise<Streak[]> {
+    return await db
+      .select()
+      .from(streaks)
+      .where(eq(streaks.playerId, playerId))
+      .orderBy(desc(streaks.currentCount));
+  }
+
+  async getOrCreateStreak(playerId: number, streakType: string): Promise<Streak> {
+    const [existing] = await db
+      .select()
+      .from(streaks)
+      .where(and(eq(streaks.playerId, playerId), eq(streaks.streakType, streakType)));
+    
+    if (existing) return existing;
+
+    const [newStreak] = await db
+      .insert(streaks)
+      .values({ playerId, streakType, currentCount: 0, bestCount: 0 })
+      .returning();
+    return newStreak;
+  }
+
+  async updateStreak(id: number, updates: Partial<Streak>): Promise<Streak | undefined> {
+    const [updatedStreak] = await db
+      .update(streaks)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(streaks.id, id))
+      .returning();
+    return updatedStreak;
   }
 }
 
