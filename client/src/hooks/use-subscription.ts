@@ -16,6 +16,7 @@ interface Subscription {
 
 interface SubscriptionData {
   subscription: Subscription | null;
+  isOwner?: boolean;
 }
 
 export type SubscriptionTier = "free" | "pro" | "coach_pro";
@@ -30,10 +31,14 @@ export function useSubscription() {
   });
 
   const subscription = data?.subscription;
-  const isActive = subscription?.status === "active" || subscription?.status === "trialing";
+  const isOwner = data?.isOwner ?? false;
+  const isActive = subscription?.status === "active" || subscription?.status === "trialing" || isOwner;
   
   // Determine the subscription tier based on the product
   const getTier = (): SubscriptionTier => {
+    // App owner gets full access
+    if (isOwner) return "coach_pro";
+    
     if (!subscription || !isActive) return "free";
     
     // Check product metadata or name to determine tier

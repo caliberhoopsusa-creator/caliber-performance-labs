@@ -88,12 +88,26 @@ const isSubscriptionActive = (status: string | null | undefined): boolean => {
   return status === 'active' || status === 'trialing';
 };
 
+// Helper to check if user is the app owner (bypasses all restrictions)
+// Uses user ID from session claims - set OWNER_USER_ID env var to your Replit user ID
+const isAppOwner = (userId: string | null | undefined): boolean => {
+  const ownerUserId = process.env.OWNER_USER_ID;
+  if (!ownerUserId || !userId) return false;
+  return userId === ownerUserId;
+};
+
 // Subscription verification middleware
 const requiresSubscription: RequestHandler = async (req: any, res, next) => {
   try {
     if (!req.isAuthenticated() || !req.user?.claims?.sub) {
       return res.status(401).json({ message: "Unauthorized" });
     }
+    
+    // App owner bypasses all subscription requirements (check claims.sub)
+    if (isAppOwner(req.user.claims.sub)) {
+      return next();
+    }
+    
     const user = await authStorage.getUser(req.user.claims.sub);
     if (!user) {
       return res.status(401).json({ message: "User not found" });
@@ -121,6 +135,12 @@ const requiresCoachPro: RequestHandler = async (req: any, res, next) => {
     if (!req.isAuthenticated() || !req.user?.claims?.sub) {
       return res.status(401).json({ message: "Unauthorized" });
     }
+    
+    // App owner bypasses all subscription/role requirements (check claims.sub)
+    if (isAppOwner(req.user.claims.sub)) {
+      return next();
+    }
+    
     const user = await authStorage.getUser(req.user.claims.sub);
     if (!user) {
       return res.status(401).json({ message: "User not found" });
@@ -745,7 +765,10 @@ export async function registerRoutes(
         playerProfile = await storage.getPlayer(user.playerId);
       }
       
-      res.json({ ...user, playerProfile });
+      // Check if user is app owner (has full access)
+      const isOwner = isAppOwner(userId);
+      
+      res.json({ ...user, playerProfile, userId, isOwner });
     } catch (error) {
       console.error('Error fetching user:', error);
       res.status(500).json({ message: 'Failed to fetch user' });
@@ -3573,15 +3596,19 @@ Respond in this exact JSON format:
       }
 
       const user = await authStorage.getUser(userId);
+      
+      // Check if user is app owner (gets full access)
+      const ownerStatus = isAppOwner(userId);
+      
       if (!user?.stripeSubscriptionId) {
-        return res.json({ subscription: null });
+        return res.json({ subscription: null, isOwner: ownerStatus });
       }
 
       const result = await db.execute(sql`
         SELECT * FROM stripe.subscriptions WHERE id = ${user.stripeSubscriptionId}
       `);
       
-      res.json({ subscription: result.rows[0] || null });
+      res.json({ subscription: result.rows[0] || null, isOwner: ownerStatus });
     } catch (err) {
       console.error('Error fetching subscription:', err);
       res.status(500).json({ error: 'Could not fetch subscription' });
