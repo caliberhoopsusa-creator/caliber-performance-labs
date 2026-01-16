@@ -1180,3 +1180,269 @@ export function useDeleteAlert() {
     },
   });
 }
+
+// ============================================
+// PRE-GAME REPORT HOOKS
+// ============================================
+
+export type PreGameReportMatchup = {
+  date: string;
+  result: string | null;
+  points: number;
+  rebounds: number;
+  assists: number;
+  grade: string | null;
+};
+
+export type PreGameReportScoutingReport = {
+  name: string;
+  tendencies: string | null;
+  strengths: string | null;
+  weaknesses: string | null;
+};
+
+export type PreGameReportCoachGoal = {
+  title: string;
+  targetType: string;
+  targetValue: number;
+  deadline: string | null;
+};
+
+export type PreGameReportData = {
+  player: {
+    id: number;
+    name: string;
+    position: string;
+    team: string | null;
+  };
+  recentPerformance: {
+    gamesPlayed: number;
+    avgPoints: string;
+    avgRebounds: string;
+    avgAssists: string;
+    recentGrades: (string | null)[];
+  };
+  opponentHistory: {
+    matchups: PreGameReportMatchup[];
+    totalGamesVs: number;
+  };
+  scoutingReport: PreGameReportScoutingReport | null;
+  activeCoachGoals: PreGameReportCoachGoal[];
+};
+
+export function usePreGameReport(playerId: number, opponent?: string) {
+  return useQuery<PreGameReportData>({
+    queryKey: ['/api/players', playerId, 'pregame-report', opponent || ''],
+    queryFn: async () => {
+      const url = opponent
+        ? `/api/players/${playerId}/pregame-report?opponent=${encodeURIComponent(opponent)}`
+        : `/api/players/${playerId}/pregame-report`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Failed to fetch pregame report");
+      return res.json();
+    },
+    enabled: !!playerId,
+  });
+}
+
+// ============================================
+// PLAYER REPORT CARD HOOKS
+// ============================================
+
+export type ReportCardBadge = {
+  badgeType: string;
+  earnedAt: string;
+};
+
+export type ReportCardSkillBadge = {
+  skillType: string;
+  currentLevel: string;
+  careerValue: number;
+};
+
+export type ReportCardCoachGoal = {
+  title: string;
+  status: string;
+  targetType: string;
+  targetValue: number;
+  coachFeedback: string | null;
+};
+
+export type ReportCardCoachNote = {
+  content: string;
+  noteType: string;
+  authorName: string;
+  createdAt: string;
+};
+
+export type ReportCardTrends = {
+  pointsTrend: number;
+  reboundsTrend: number;
+  assistsTrend: number;
+  hustleTrend: number;
+} | null;
+
+export type PlayerReportCardData = {
+  player: {
+    id: number;
+    name: string;
+    position: string;
+    team: string | null;
+    totalXp: number;
+    currentTier: string;
+  };
+  seasonStats: {
+    gamesPlayed: number;
+    totalPoints: number;
+    totalRebounds: number;
+    totalAssists: number;
+    totalSteals: number;
+    totalBlocks: number;
+    avgPoints: string;
+    avgRebounds: string;
+    avgAssists: string;
+    avgHustle: string;
+    avgDefense: string;
+  };
+  gradeDistribution: Record<string, number>;
+  trends: ReportCardTrends;
+  badges: ReportCardBadge[];
+  skillBadges: ReportCardSkillBadge[];
+  coachGoals: ReportCardCoachGoal[];
+  recentCoachNotes: ReportCardCoachNote[];
+};
+
+export function usePlayerReportCard(playerId: number) {
+  return useQuery<PlayerReportCardData>({
+    queryKey: ['/api/players', playerId, 'report-card'],
+    queryFn: async () => {
+      const res = await fetch(`/api/players/${playerId}/report-card`);
+      if (!res.ok) throw new Error("Failed to fetch report card");
+      return res.json();
+    },
+    enabled: !!playerId,
+  });
+}
+
+// ============================================
+// COACH GOALS HOOKS
+// ============================================
+
+export type CoachGoal = {
+  id: number;
+  playerId: number;
+  coachName: string;
+  title: string;
+  description: string | null;
+  targetType: string;
+  targetCategory: string;
+  targetValue: number;
+  deadline: string | null;
+  status: string;
+  coachFeedback: string | null;
+  createdAt: string;
+};
+
+export type CreateCoachGoalInput = {
+  playerId: number;
+  coachName: string;
+  title: string;
+  description?: string | null;
+  targetType: string;
+  targetCategory: string;
+  targetValue: number;
+  deadline?: string | null;
+  status?: string;
+};
+
+export type UpdateCoachGoalInput = Partial<{
+  title: string;
+  description: string | null;
+  targetType: string;
+  targetCategory: string;
+  targetValue: number;
+  deadline: string | null;
+  status: string;
+  coachFeedback: string | null;
+}>;
+
+export function useCoachGoals(playerId: number) {
+  return useQuery<CoachGoal[]>({
+    queryKey: ['/api/players', playerId, 'coach-goals'],
+    queryFn: async () => {
+      const res = await fetch(`/api/players/${playerId}/coach-goals`);
+      if (!res.ok) throw new Error("Failed to fetch coach goals");
+      return res.json();
+    },
+    enabled: !!playerId,
+  });
+}
+
+export function useAllCoachGoals() {
+  return useQuery<CoachGoal[]>({
+    queryKey: ['/api/coach-goals'],
+    queryFn: async () => {
+      const res = await fetch('/api/coach-goals');
+      if (!res.ok) throw new Error("Failed to fetch all coach goals");
+      return res.json();
+    },
+  });
+}
+
+export function useCreateCoachGoal() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: CreateCoachGoalInput) => {
+      const res = await fetch('/api/coach-goals', {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to create coach goal");
+      }
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/players', variables.playerId, 'coach-goals'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/coach-goals'] });
+    },
+  });
+}
+
+export function useUpdateCoachGoal() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { id: number; playerId: number; updates: UpdateCoachGoalInput }) => {
+      const res = await fetch(`/api/coach-goals/${data.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data.updates),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to update coach goal");
+      }
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/players', variables.playerId, 'coach-goals'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/coach-goals'] });
+    },
+  });
+}
+
+export function useDeleteCoachGoal() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { id: number; playerId: number }) => {
+      const res = await fetch(`/api/coach-goals/${data.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete coach goal");
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/players', variables.playerId, 'coach-goals'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/coach-goals'] });
+    },
+  });
+}
