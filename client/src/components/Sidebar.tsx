@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AlertsBadge } from "@/components/AlertsCenter";
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
         { href: "/compare", label: "Head-to-Head", icon: Activity },
         { href: "/grading", label: "Grading System", icon: Calculator },
+        { href: "/pricing", label: "Pricing", icon: CreditCard },
       ],
     },
     {
@@ -63,6 +64,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         { href: "/", label: "Dashboard", icon: LayoutDashboard },
         { href: "/players", label: "Players", icon: Users },
         { href: "/analyze", label: "New Analysis", icon: PlusCircle },
+        { href: "/pricing", label: "Pricing", icon: CreditCard },
       ],
     },
     {

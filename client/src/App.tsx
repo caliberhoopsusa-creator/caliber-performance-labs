@@ -30,6 +30,7 @@ import LineupAnalysis from "./pages/LineupAnalysis";
 import PracticeTracker from "./pages/PracticeTracker";
 import OpponentScouting from "./pages/OpponentScouting";
 import CoachAlertsPage from "./pages/CoachAlertsPage";
+import Pricing from "./pages/Pricing";
 import NotFound from "./pages/not-found";
 
 interface ExtendedUser {
@@ -114,6 +115,7 @@ function MainRouter() {
           <Route path="/coach/practices" component={PracticeTracker} />
           <Route path="/coach/scouting" component={OpponentScouting} />
           <Route path="/coach/alerts" component={CoachAlertsPage} />
+          <Route path="/pricing" component={Pricing} />
           <Route component={NotFound} />
         </Switch>
       </main>
