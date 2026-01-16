@@ -13,6 +13,7 @@ import AnalyzeGame from "./pages/AnalyzeGame";
 import Leaderboard from "./pages/Leaderboard";
 import ComparePlayers from "./pages/ComparePlayers";
 import GradingSystem from "./pages/GradingSystem";
+import VideoAnalysis from "./pages/VideoAnalysis";
 import NotFound from "./pages/not-found";
 
 function Router() {
@@ -26,6 +27,7 @@ function Router() {
           <Route path="/players/:id" component={PlayerDetail} />
           <Route path="/leaderboard" component={Leaderboard} />
           <Route path="/compare" component={ComparePlayers} />
+          <Route path="/video" component={VideoAnalysis} />
           <Route path="/grading" component={GradingSystem} />
           <Route path="/analyze" component={AnalyzeGame} />
           <Route component={NotFound} />

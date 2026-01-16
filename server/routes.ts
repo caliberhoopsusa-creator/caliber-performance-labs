@@ -4,6 +4,33 @@ import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
 import { players, games } from "@shared/schema";
+import { GoogleGenAI } from "@google/genai";
+import multer from "multer";
+import fs from "fs";
+import path from "path";
+
+// Gemini AI client for video analysis
+const ai = new GoogleGenAI({
+  apiKey: process.env.AI_INTEGRATIONS_GEMINI_API_KEY,
+  httpOptions: {
+    apiVersion: "",
+    baseUrl: process.env.AI_INTEGRATIONS_GEMINI_BASE_URL,
+  },
+});
+
+// Configure multer for video uploads
+const upload = multer({ 
+  dest: 'uploads/',
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['video/mp4', 'video/webm', 'video/quicktime'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only video files are allowed'));
+    }
+  }
+});
 
 // --- Analysis Logic ---
 
@@ -254,6 +281,168 @@ export async function registerRoutes(
     }
 
     res.json({ player1: p1, player2: p2 });
+  });
+
+  // Video Analysis Endpoint
+  app.post('/api/analyze-video', upload.single('video'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'No video file uploaded' });
+      }
+
+      const playerName = req.body.playerName || 'Unknown Player';
+      const filePath = req.file.path;
+
+      // Read video file and convert to base64
+      const videoBuffer = fs.readFileSync(filePath);
+      const base64Video = videoBuffer.toString('base64');
+      const mimeType = req.file.mimetype;
+
+      // Clean up uploaded file
+      fs.unlinkSync(filePath);
+
+      // Analyze video with Gemini
+      const prompt = `You are a professional basketball scout analyzing game footage. 
+      
+Watch this basketball video clip carefully and track stats for the player: "${playerName}"
+
+Count and report ONLY what you can clearly see in the video:
+- Points scored (count each basket: 2 for regular shots, 3 for three-pointers, 1 for free throws)
+- Assists (passes that directly lead to made baskets)
+- Rebounds (grabbing the ball after a missed shot)
+- Steals (taking the ball from opponent)
+- Blocks (swatting away opponent's shot)
+- Turnovers (losing the ball to opponent)
+- Field goals made/attempted
+- Three pointers made/attempted
+- Free throws made/attempted
+
+Also provide:
+- A hustle score (0-100) based on effort, running back on defense, diving for balls
+- A defense rating (0-100) based on positioning, contesting shots, staying with assignment
+
+Respond in this exact JSON format:
+{
+  "playerName": "${playerName}",
+  "stats": {
+    "points": 0,
+    "rebounds": 0,
+    "assists": 0,
+    "steals": 0,
+    "blocks": 0,
+    "turnovers": 0,
+    "fgMade": 0,
+    "fgAttempted": 0,
+    "threeMade": 0,
+    "threeAttempted": 0,
+    "ftMade": 0,
+    "ftAttempted": 0,
+    "hustleScore": 50,
+    "defenseRating": 50
+  },
+  "observations": "Brief scouting notes about what you observed",
+  "confidence": "high/medium/low - how confident you are in the stats"
+}`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [
+          {
+            role: "user",
+            parts: [
+              { text: prompt },
+              {
+                inlineData: {
+                  mimeType: mimeType,
+                  data: base64Video
+                }
+              }
+            ]
+          }
+        ]
+      });
+
+      const responseText = response.text || '';
+      
+      // Extract JSON from response
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        return res.status(500).json({ 
+          error: 'Could not parse AI response',
+          rawResponse: responseText 
+        });
+      }
+
+      const analysisResult = JSON.parse(jsonMatch[0]);
+      res.json(analysisResult);
+
+    } catch (error: any) {
+      console.error('Video analysis error:', error);
+      res.status(500).json({ 
+        error: 'Failed to analyze video',
+        message: error.message 
+      });
+    }
+  });
+
+  // Text-based play analysis (for manual play-by-play input)
+  app.post('/api/analyze-plays', async (req, res) => {
+    try {
+      const { playerName, playByPlay } = req.body;
+
+      if (!playByPlay) {
+        return res.status(400).json({ error: 'Play-by-play text is required' });
+      }
+
+      const prompt = `You are a basketball statistician. Analyze these play-by-play notes and extract stats for player "${playerName || 'the player'}".
+
+Play-by-play notes:
+${playByPlay}
+
+Count stats mentioned or implied:
+- Points, rebounds, assists, steals, blocks, turnovers
+- Field goals made/attempted, three pointers made/attempted, free throws made/attempted
+- Estimate hustle score (0-100) and defense rating (0-100) based on effort described
+
+Respond in this exact JSON format:
+{
+  "playerName": "${playerName || 'Unknown'}",
+  "stats": {
+    "points": 0,
+    "rebounds": 0,
+    "assists": 0,
+    "steals": 0,
+    "blocks": 0,
+    "turnovers": 0,
+    "fgMade": 0,
+    "fgAttempted": 0,
+    "threeMade": 0,
+    "threeAttempted": 0,
+    "ftMade": 0,
+    "ftAttempted": 0,
+    "hustleScore": 50,
+    "defenseRating": 50
+  },
+  "observations": "Summary of the player's performance"
+}`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt
+      });
+
+      const responseText = response.text || '';
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      
+      if (!jsonMatch) {
+        return res.status(500).json({ error: 'Could not parse AI response' });
+      }
+
+      res.json(JSON.parse(jsonMatch[0]));
+    } catch (error: any) {
+      console.error('Play analysis error:', error);
+      res.status(500).json({ error: 'Failed to analyze plays', message: error.message });
+    }
   });
 
   await seedDatabase();

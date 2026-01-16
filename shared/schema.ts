@@ -75,6 +75,23 @@ export const insertGameSchema = createInsertSchema(games).omit({
   feedback: true 
 });
 
+// === CHAT TABLES (for Gemini integration) ===
+import { sql } from "drizzle-orm";
+
+export const conversations = pgTable("conversations", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+export const messages = pgTable("messages", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").notNull().references(() => conversations.id, { onDelete: "cascade" }),
+  role: text("role").notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
 // === EXPLICIT API CONTRACT TYPES ===
 
 export type Player = typeof players.$inferSelect;
@@ -92,3 +109,6 @@ export type UpdateGameRequest = Partial<InsertGame>;
 export type PlayerResponse = Player;
 export type GameResponse = Game;
 export type PlayerWithGames = Player & { games: Game[] };
+
+export type Conversation = typeof conversations.$inferSelect;
+export type Message = typeof messages.$inferSelect;

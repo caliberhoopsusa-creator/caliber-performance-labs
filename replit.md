@@ -34,6 +34,13 @@ Preferred communication style: Simple, everyday language.
 ### Key Data Models
 - **Players**: Name, position (Guard/Wing/Big), height, team, jersey number
 - **Games**: Per-game statistics including points, rebounds, assists, shooting splits, advanced metrics, and calculated grades with feedback
+- **Conversations/Messages**: Chat history tables for AI integration support
+
+### AI Video Analysis
+- **Integration**: Gemini AI via Replit AI Integrations (no API key required)
+- **Video Upload**: Accepts MP4, WebM, MOV files up to 50MB
+- **Play-by-Play**: Text-based stat extraction as alternative to video
+- **Output**: Extracts points, rebounds, assists, steals, blocks, turnovers, shooting stats, hustle/defense ratings
 
 ### Project Structure
 ```
@@ -55,6 +62,16 @@ shared/           # Shared code between client and server
 
 ### Analysis Logic
 The grading algorithm in `server/routes.ts` calculates a performance score using position-weighted stats. Guards are penalized more for turnovers, Bigs get bonuses for rebounds and blocks, and Wings get extra credit for steals. The score maps to a letter grade with generated feedback text.
+
+### Features
+- **Dashboard**: Overview of players and recent games
+- **Player Management**: Add/view players with position, height, team info
+- **Game Analysis**: Full stat entry with instant grade calculation
+- **Leaderboard**: Rankings by average performance grade
+- **Head-to-Head**: Compare two players' stats side-by-side
+- **Video Analysis**: AI-powered stat extraction from game footage
+- **Grading System**: Visual explanation of how grades are calculated
+- **Trend Tracking**: Performance charts over time
 
 ## External Dependencies
 

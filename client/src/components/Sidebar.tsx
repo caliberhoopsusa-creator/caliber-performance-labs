@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator } from "lucide-react";
+import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function Sidebar() {
@@ -10,6 +10,7 @@ export function Sidebar() {
     { href: "/players", label: "Players", icon: Users },
     { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
     { href: "/compare", label: "Head-to-Head", icon: Activity },
+    { href: "/video", label: "Video Analysis", icon: Video },
     { href: "/grading", label: "Grading System", icon: Calculator },
     { href: "/analyze", label: "New Analysis", icon: PlusCircle },
   ];
