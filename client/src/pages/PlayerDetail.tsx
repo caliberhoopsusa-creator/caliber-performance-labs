@@ -117,11 +117,19 @@ export default function PlayerDetail() {
   const { mutate: deleteGame } = useDeleteGame();
   const { mutate: updatePlayer, isPending: isUpdating } = useUpdatePlayer();
   const { toast } = useToast();
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const [showAllGames, setShowAllGames] = useState(false);
   const [expandedGameId, setExpandedGameId] = useState<number | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editForm, setEditForm] = useState<PlayerUpdate>({});
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('edit') === 'true' && player) {
+      setIsEditDialogOpen(true);
+      window.history.replaceState({}, '', `/players/${id}`);
+    }
+  }, [player, id]);
 
   useEffect(() => {
     if (player && isEditDialogOpen) {

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { usePlayers, useCreatePlayer, useDeletePlayer } from "@/hooks/use-basketball";
 import { Link } from "wouter";
-import { Search, Plus, UserPlus, Trash2, ChevronRight } from "lucide-react";
+import { Search, Plus, UserPlus, Trash2, ChevronRight, MoreVertical, Pencil, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,6 +22,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -33,6 +41,7 @@ export default function PlayersList() {
   const { data: players, isLoading } = usePlayers();
   const { mutate: deletePlayer, isPending: isDeleting } = useDeletePlayer();
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const [search, setSearch] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [playerToDelete, setPlayerToDelete] = useState<{ id: number; name: string } | null>(null);
@@ -125,15 +134,48 @@ export default function PlayersList() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredPlayers.map((player) => (
               <div key={player.id} className="group relative h-full">
-                <Link href={`/players/${player.id}`} className="block h-full">
-                  <div className="h-full bg-card border border-white/5 rounded-2xl p-6 shadow-lg transition-all duration-300 hover:border-primary/50 hover:shadow-primary/5 hover:-translate-y-1 overflow-hidden">
-                    <div className="absolute top-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                      <div className="bg-secondary/80 p-1.5 rounded-lg text-white">
-                        <ChevronRight className="w-4 h-4" />
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start justify-between mb-6">
+                <div className="h-full bg-card border border-white/5 rounded-2xl p-6 shadow-lg transition-all duration-300 hover:border-primary/50 hover:shadow-primary/5 overflow-hidden">
+                  <div className="absolute top-3 right-3 z-20">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="w-8 h-8 text-muted-foreground hover:text-white"
+                          data-testid={`button-player-menu-${player.id}`}
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-card border-white/10 text-white">
+                        <DropdownMenuItem
+                          onClick={() => navigate(`/players/${player.id}`)}
+                          className="gap-2 cursor-pointer"
+                          data-testid={`menu-view-player-${player.id}`}
+                        >
+                          <Eye className="w-4 h-4" /> View Profile
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => navigate(`/players/${player.id}?edit=true`)}
+                          className="gap-2 cursor-pointer"
+                          data-testid={`menu-edit-player-${player.id}`}
+                        >
+                          <Pencil className="w-4 h-4" /> Edit Profile
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator className="bg-white/10" />
+                        <DropdownMenuItem
+                          onClick={() => setPlayerToDelete({ id: player.id, name: player.name })}
+                          className="gap-2 cursor-pointer text-red-400 focus:text-red-300 focus:bg-red-500/10"
+                          data-testid={`menu-delete-player-${player.id}`}
+                        >
+                          <Trash2 className="w-4 h-4" /> Delete Player
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                  
+                  <Link href={`/players/${player.id}`} className="block">
+                    <div className="flex items-start justify-between mb-6 pr-8">
                       <div className="w-16 h-16 rounded-full bg-gradient-to-br from-secondary to-background border-2 border-white/10 flex items-center justify-center text-2xl font-display font-bold text-white shadow-inner">
                         {player.jerseyNumber || "#"}
                       </div>
@@ -144,27 +186,38 @@ export default function PlayersList() {
                     
                     <h3 className="text-xl font-bold font-display text-white mb-1 group-hover:text-primary transition-colors truncate">{player.name}</h3>
                     <p className="text-sm text-muted-foreground mb-4 font-medium">{player.team || "No Team"} • {player.height || "N/A"}</p>
-                    
-                    <div className="pt-4 border-t border-white/5 flex justify-between items-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      <span>View Analytics</span>
-                      <span className="group-hover:translate-x-1 transition-transform">→</span>
-                    </div>
+                  </Link>
+                  
+                  <div className="pt-4 border-t border-white/5 flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/players/${player.id}`)}
+                      className="flex-1 gap-1.5"
+                      data-testid={`button-view-player-${player.id}`}
+                    >
+                      <Eye className="w-3.5 h-3.5" /> View
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/players/${player.id}?edit=true`)}
+                      className="flex-1 gap-1.5"
+                      data-testid={`button-edit-player-${player.id}`}
+                    >
+                      <Pencil className="w-3.5 h-3.5" /> Edit
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setPlayerToDelete({ id: player.id, name: player.name })}
+                      className="text-red-400 hover:text-red-300 hover:bg-red-500/10 hover:border-red-500/30"
+                      data-testid={`button-delete-player-${player.id}`}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
                   </div>
-                </Link>
-                
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setPlayerToDelete({ id: player.id, name: player.name });
-                  }}
-                  className="absolute bottom-4 right-4 w-8 h-8 text-red-400 opacity-0 group-hover:opacity-100 transition-all z-20"
-                  data-testid={`button-delete-player-${player.id}`}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
+                </div>
               </div>
             ))}
           </div>
