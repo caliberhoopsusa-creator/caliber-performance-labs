@@ -32,7 +32,7 @@ Preferred communication style: Simple, everyday language.
 - **Migrations**: Managed via `drizzle-kit push`
 
 ### Key Data Models
-- **Players**: Name, position (Guard/Wing/Big), height, team, jersey number
+- **Players**: Name, position (Guard/Wing/Big), height, team, jersey number, photo URL, banner URL, bio
 - **Games**: Per-game statistics including points, rebounds, assists, shooting splits, advanced metrics, and calculated grades with feedback
 - **Badges**: Virtual awards earned through performance (12 types including twenty_piece, double_double, hot_streak, etc.)
 - **Goals**: Player-set targets for improvement with progress tracking
@@ -68,7 +68,7 @@ The grading algorithm in `server/routes.ts` calculates a performance score using
 
 ### Features
 - **Dashboard**: Overview of players and recent games
-- **Player Management**: Add/view players with position, height, team info
+- **Player Management**: Add/view/edit/delete players with position, height, team info, profile photo, and banner
 - **Game Analysis**: Full stat entry with instant grade calculation
 - **Leaderboard**: Rankings by average performance grade
 - **Head-to-Head**: Compare two players' stats side-by-side
