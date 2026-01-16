@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
-import { Check, Zap, Video, FileText, Crown, Settings, Loader2 } from "lucide-react";
+import { Check, Zap, Video, FileText, Crown, Settings, Loader2, Sparkles, Star } from "lucide-react";
 
 interface Price {
   id: string;
@@ -183,15 +183,15 @@ export default function Pricing() {
     return (
       <div className="space-y-8">
         <div className="text-center space-y-2">
-          <Skeleton className="h-10 w-64 mx-auto" />
+          <Skeleton className="h-12 w-72 mx-auto" />
           <Skeleton className="h-6 w-96 mx-auto" />
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
-            <Card key={i} className="p-6">
+            <Card key={i} className="glass-card p-6">
               <Skeleton className="h-8 w-32 mb-4" />
               <Skeleton className="h-12 w-24 mb-4" />
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {[1, 2, 3].map((j) => (
                   <Skeleton key={j} className="h-4 w-full" />
                 ))}
@@ -204,18 +204,27 @@ export default function Pricing() {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold font-display tracking-tight" data-testid="text-pricing-title">
-          Upgrade Your Game
-        </h1>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Choose the plan that fits your goals. Level up with premium analytics and insights.
-        </p>
+    <div className="space-y-10">
+      <div className="text-center space-y-6 relative">
+        <div className="absolute inset-0 gradient-radial-glow pointer-events-none opacity-50" />
+        
+        <div className="relative">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-6">
+            <Sparkles className="w-4 h-4" />
+            Premium Plans
+          </div>
+          
+          <h1 className="text-4xl md:text-5xl font-bold font-display tracking-tight text-white" data-testid="text-pricing-title">
+            Upgrade Your <span className="text-gradient-primary text-glow">Game</span>
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mt-4">
+            Choose the plan that fits your goals. Level up with premium analytics and insights.
+          </p>
+        </div>
 
         {isSubscribed && (
-          <div className="flex items-center justify-center gap-4">
-            <Badge variant="secondary" className="text-sm px-4 py-1" data-testid="badge-subscription-status">
+          <div className="flex items-center justify-center gap-4 flex-wrap">
+            <Badge className="text-sm px-4 py-2 bg-gradient-to-r from-primary/20 to-orange-500/20 border-primary/30" data-testid="badge-subscription-status">
               <Crown className="w-4 h-4 mr-2" />
               Active Subscription
             </Badge>
@@ -223,6 +232,7 @@ export default function Pricing() {
               variant="outline" 
               onClick={() => portalMutation.mutate()}
               disabled={portalMutation.isPending}
+              className="border-white/10"
               data-testid="button-manage-billing"
             >
               {portalMutation.isPending ? (
@@ -237,17 +247,21 @@ export default function Pricing() {
       </div>
 
       {subscriptionPlans.length > 0 && (
-        <section className="space-y-6">
+        <section className="space-y-8">
           <div className="flex items-center justify-between gap-4 flex-wrap">
-            <h2 className="text-2xl font-bold" data-testid="text-subscription-plans-title">
-              Subscription Plans
-            </h2>
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-bold font-display text-white" data-testid="text-subscription-plans-title">
+                Subscription Plans
+              </h2>
+              <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent min-w-[40px]" />
+            </div>
             {subscriptionPlans.some((p) => hasYearlyOption(p.prices)) && (
-              <div className="flex items-center gap-2 bg-muted rounded-lg p-1">
+              <div className="flex items-center gap-1 glass-card rounded-xl p-1.5">
                 <Button
                   size="sm"
                   variant={billingPeriod === "monthly" ? "default" : "ghost"}
                   onClick={() => setBillingPeriod("monthly")}
+                  className="rounded-lg"
                   data-testid="button-billing-monthly"
                 >
                   Monthly
@@ -256,10 +270,11 @@ export default function Pricing() {
                   size="sm"
                   variant={billingPeriod === "yearly" ? "default" : "ghost"}
                   onClick={() => setBillingPeriod("yearly")}
+                  className="rounded-lg"
                   data-testid="button-billing-yearly"
                 >
                   Yearly
-                  <Badge variant="secondary" className="ml-2 text-xs">
+                  <Badge variant="secondary" className="ml-2 text-xs bg-green-500/20 text-green-400 border-green-500/30">
                     Save 20%
                   </Badge>
                 </Button>
@@ -276,30 +291,36 @@ export default function Pricing() {
               return (
                 <Card 
                   key={product.id} 
-                  className={`relative ${isPopular ? "border-primary shadow-lg shadow-primary/10" : ""}`}
+                  className={`relative glass-card card-shine overflow-hidden transition-all duration-300 ${isPopular ? "border-primary/30 shadow-xl shadow-primary/10" : "border-white/5"}`}
                   data-testid={`card-plan-${product.id}`}
                 >
                   {isPopular && (
-                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary">
-                      Most Popular
-                    </Badge>
+                    <>
+                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-orange-500 to-primary" />
+                      <Badge className="absolute -top-0 left-1/2 -translate-x-1/2 translate-y-3 bg-gradient-to-r from-primary to-orange-500 text-white border-0 shadow-lg">
+                        <Star className="w-3 h-3 mr-1 fill-current" />
+                        Most Popular
+                      </Badge>
+                    </>
                   )}
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Zap className="w-5 h-5 text-primary" />
+                  <CardHeader className={isPopular ? "pt-10" : ""}>
+                    <CardTitle className="flex items-center gap-3 text-2xl">
+                      <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/10">
+                        <Zap className="w-6 h-6 text-primary" />
+                      </div>
                       {product.name}
                     </CardTitle>
-                    <CardDescription>{product.description}</CardDescription>
+                    <CardDescription className="text-base">{product.description}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     {price ? (
                       <div className="space-y-1">
-                        <div className="flex items-baseline gap-1">
-                          <span className="text-4xl font-bold">
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-5xl font-bold font-display text-white">
                             {formatPrice(price.unit_amount, price.currency)}
                           </span>
                           {price.recurring && (
-                            <span className="text-muted-foreground">
+                            <span className="text-muted-foreground text-lg">
                               /{price.recurring.interval}
                             </span>
                           )}
@@ -314,18 +335,22 @@ export default function Pricing() {
                       <p className="text-muted-foreground">Contact for pricing</p>
                     )}
 
-                    <ul className="space-y-3">
+                    <div className="divider-glow" />
+
+                    <ul className="space-y-4">
                       {features.map((feature, i) => (
                         <li key={i} className="flex items-start gap-3">
-                          <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                          <span className="text-sm">{feature}</span>
+                          <div className="mt-0.5 p-1 rounded-full bg-primary/10">
+                            <Check className="w-4 h-4 text-primary" />
+                          </div>
+                          <span className="text-sm text-foreground/90">{feature}</span>
                         </li>
                       ))}
                     </ul>
                   </CardContent>
-                  <CardFooter>
+                  <CardFooter className="pt-2">
                     <Button
-                      className="w-full"
+                      className={`w-full ${isPopular ? "shadow-lg shadow-primary/25" : ""}`}
                       size="lg"
                       variant={isPopular ? "default" : "outline"}
                       disabled={!price || !user || checkoutMutation.isPending || !!isSubscribed}
@@ -339,7 +364,7 @@ export default function Pricing() {
                       ) : !user ? (
                         "Sign in to Subscribe"
                       ) : (
-                        "Subscribe"
+                        "Subscribe Now"
                       )}
                     </Button>
                   </CardFooter>
@@ -351,10 +376,13 @@ export default function Pricing() {
       )}
 
       {oneTimePurchases.length > 0 && (
-        <section className="space-y-6">
-          <h2 className="text-2xl font-bold" data-testid="text-one-time-purchases-title">
-            One-Time Purchases
-          </h2>
+        <section className="space-y-8">
+          <div className="flex items-center gap-3">
+            <h2 className="text-2xl font-bold font-display text-white" data-testid="text-one-time-purchases-title">
+              One-Time Purchases
+            </h2>
+            <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
+          </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {oneTimePurchases.map((product) => {
@@ -364,28 +392,32 @@ export default function Pricing() {
               const IconComponent = icon;
 
               return (
-                <Card key={product.id} data-testid={`card-purchase-${product.id}`}>
+                <Card key={product.id} className="glass-card card-shine border-white/5 overflow-hidden" data-testid={`card-purchase-${product.id}`}>
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <IconComponent className="w-5 h-5 text-primary" />
+                    <CardTitle className="flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/10">
+                        <IconComponent className="w-5 h-5 text-primary" />
+                      </div>
                       {product.name}
                     </CardTitle>
                     <CardDescription>{product.description}</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-5">
                     {price ? (
-                      <div className="text-3xl font-bold">
+                      <div className="text-4xl font-bold font-display text-white">
                         {formatPrice(price.unit_amount, price.currency)}
                       </div>
                     ) : (
                       <p className="text-muted-foreground">Contact for pricing</p>
                     )}
 
-                    <ul className="space-y-2">
+                    <ul className="space-y-3">
                       {features.map((feature, i) => (
-                        <li key={i} className="flex items-start gap-2">
-                          <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                          <span className="text-sm">{feature}</span>
+                        <li key={i} className="flex items-start gap-3">
+                          <div className="mt-0.5 p-1 rounded-full bg-primary/10">
+                            <Check className="w-3 h-3 text-primary" />
+                          </div>
+                          <span className="text-sm text-foreground/90">{feature}</span>
                         </li>
                       ))}
                     </ul>
@@ -415,9 +447,12 @@ export default function Pricing() {
       )}
 
       {products.length === 0 && !productsLoading && (
-        <Card className="text-center py-12">
+        <Card className="glass-card text-center py-16 border-white/5">
           <CardContent>
-            <p className="text-muted-foreground">
+            <div className="w-16 h-16 rounded-full bg-card border border-white/10 flex items-center justify-center mx-auto mb-4">
+              <Sparkles className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <p className="text-muted-foreground text-lg">
               No products available at the moment. Check back soon!
             </p>
           </CardContent>

@@ -12,16 +12,86 @@ const SKILL_ICONS: Record<string, typeof Target> = {
   pickpocket: Grab,
 };
 
-const LEVEL_COLORS: Record<string, { bg: string; border: string; text: string }> = {
-  none: { bg: "bg-muted/30", border: "border-muted", text: "text-muted-foreground" },
-  brick: { bg: "bg-red-900/30", border: "border-red-800", text: "text-red-500" },
-  bronze: { bg: "bg-amber-900/30", border: "border-amber-700", text: "text-amber-600" },
-  silver: { bg: "bg-slate-300/20", border: "border-slate-400", text: "text-slate-300" },
-  gold: { bg: "bg-yellow-500/20", border: "border-yellow-500", text: "text-yellow-400" },
-  platinum: { bg: "bg-cyan-500/20", border: "border-cyan-400", text: "text-cyan-300" },
-  hall_of_fame: { bg: "bg-purple-500/20", border: "border-purple-400", text: "text-purple-400" },
-  legend: { bg: "bg-orange-500/20", border: "border-orange-400", text: "text-orange-400" },
-  goat: { bg: "bg-gradient-to-r from-yellow-500/30 to-purple-500/30", border: "border-yellow-400", text: "text-yellow-300" },
+const LEVEL_COLORS: Record<string, { 
+  bg: string; 
+  border: string; 
+  text: string;
+  iconGradient: string;
+  glow: string;
+  shadowColor: string;
+}> = {
+  none: { 
+    bg: "bg-muted/20", 
+    border: "border-muted/30", 
+    text: "text-muted-foreground",
+    iconGradient: "from-muted/40 to-muted/20",
+    glow: "shadow-sm shadow-muted/10",
+    shadowColor: "shadow-muted/5"
+  },
+  brick: { 
+    bg: "bg-gradient-to-br from-red-950/40 to-red-900/20", 
+    border: "border-red-800/40", 
+    text: "text-red-400",
+    iconGradient: "from-red-700/60 to-red-900/40",
+    glow: "shadow-lg shadow-red-500/20",
+    shadowColor: "shadow-red-500/10"
+  },
+  bronze: { 
+    bg: "bg-gradient-to-br from-amber-950/40 to-amber-900/20", 
+    border: "border-amber-700/40", 
+    text: "text-amber-400",
+    iconGradient: "from-amber-600/60 to-amber-800/40",
+    glow: "shadow-lg shadow-amber-500/20",
+    shadowColor: "shadow-amber-500/10"
+  },
+  silver: { 
+    bg: "bg-gradient-to-br from-slate-400/30 to-slate-300/15", 
+    border: "border-slate-400/40", 
+    text: "text-slate-300",
+    iconGradient: "from-slate-300/60 to-slate-400/40",
+    glow: "shadow-lg shadow-slate-400/15",
+    shadowColor: "shadow-slate-400/10"
+  },
+  gold: { 
+    bg: "bg-gradient-to-br from-amber-500/30 to-amber-600/15", 
+    border: "border-amber-500/50", 
+    text: "text-amber-300",
+    iconGradient: "from-amber-500/70 to-yellow-600/50",
+    glow: "shadow-lg shadow-amber-500/25",
+    shadowColor: "shadow-amber-500/15"
+  },
+  platinum: { 
+    bg: "bg-gradient-to-br from-cyan-500/30 to-cyan-600/15", 
+    border: "border-cyan-400/50", 
+    text: "text-cyan-300",
+    iconGradient: "from-cyan-400/70 to-blue-500/50",
+    glow: "shadow-lg shadow-cyan-500/25",
+    shadowColor: "shadow-cyan-500/15"
+  },
+  hall_of_fame: { 
+    bg: "bg-gradient-to-br from-purple-500/30 to-purple-600/15", 
+    border: "border-purple-400/50", 
+    text: "text-purple-300",
+    iconGradient: "from-purple-500/70 to-purple-700/50",
+    glow: "shadow-lg shadow-purple-500/25",
+    shadowColor: "shadow-purple-500/15"
+  },
+  legend: { 
+    bg: "bg-gradient-to-br from-orange-500/30 to-orange-600/15", 
+    border: "border-orange-400/50", 
+    text: "text-orange-300",
+    iconGradient: "from-orange-500/70 to-red-600/50",
+    glow: "shadow-lg shadow-orange-500/25",
+    shadowColor: "shadow-orange-500/15"
+  },
+  goat: { 
+    bg: "bg-gradient-to-br from-amber-500/35 via-yellow-500/25 to-purple-500/25", 
+    border: "border-amber-400/50", 
+    text: "text-amber-200",
+    iconGradient: "from-amber-500/80 via-yellow-500/70 to-purple-600/60",
+    glow: "shadow-xl shadow-amber-500/30",
+    shadowColor: "shadow-amber-500/20"
+  },
 };
 
 const LEVEL_NAMES: Record<string, string> = {
@@ -74,17 +144,17 @@ function SkillBadgeCard({ badge }: { badge: SkillBadge }) {
 
   return (
     <div 
-      className={`p-3 rounded-lg border ${colors.bg} ${colors.border} transition-all hover:scale-[1.02]`}
+      className={`p-4 rounded-lg border backdrop-blur-sm transition-all duration-300 card-shine overflow-hidden hover:scale-[1.02] ${colors.bg} ${colors.border} ${colors.glow}`}
       data-testid={`skill-badge-${badge.skillType}`}
     >
-      <div className="flex items-center gap-2 mb-2">
-        <div className={`w-8 h-8 rounded-full ${colors.bg} flex items-center justify-center`}>
-          <Icon className={`w-4 h-4 ${colors.text}`} />
+      <div className="flex items-center gap-3 mb-3 relative z-10">
+        <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${colors.iconGradient} flex items-center justify-center border border-white/20 ${colors.shadowColor}`}>
+          <Icon className={`w-5 h-5 ${colors.text}`} />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-sm truncate">{badge.name}</span>
-            <span className={`text-xs px-1.5 py-0.5 rounded ${colors.bg} ${colors.text} font-bold`}>
+          <div className="flex items-center gap-2 mb-0.5">
+            <span className={`font-semibold text-sm truncate ${colors.text}`}>{badge.name}</span>
+            <span className={`text-xs px-2 py-0.5 rounded-md font-bold backdrop-blur-sm border ${colors.text} bg-white/5 border-white/10`}>
               {LEVEL_NAMES[badge.currentLevel]}
             </span>
           </div>
@@ -92,13 +162,21 @@ function SkillBadgeCard({ badge }: { badge: SkillBadge }) {
         </div>
       </div>
       
-      <div className="space-y-1">
-        <Progress 
-          value={progressPercent} 
-          className="h-1.5"
-          data-testid={`progress-${badge.skillType}`}
-        />
-        <div className="flex justify-between text-xs text-muted-foreground">
+      <div className="space-y-2 relative z-10">
+        <div className="relative">
+          <Progress 
+            value={progressPercent} 
+            className="h-2 bg-white/5"
+            data-testid={`progress-${badge.skillType}`}
+          />
+          {progressPercent > 0 && badge.currentLevel !== 'none' && (
+            <div 
+              className={`absolute inset-0 h-2 rounded-full opacity-40 blur-sm pointer-events-none ${colors.shadowColor}`}
+              style={{ width: `${progressPercent}%` }}
+            />
+          )}
+        </div>
+        <div className="flex justify-between text-xs text-muted-foreground/80 font-medium">
           <span>{badge.careerValue.toLocaleString()}</span>
           <span>{nextThreshold.toLocaleString()}</span>
         </div>
@@ -116,12 +194,12 @@ export function SkillBadges({ playerId }: SkillBadgesProps) {
 
   if (isLoading) {
     return (
-      <Card className="p-4" data-testid="skill-badges-loading">
+      <Card className="glass-card p-6 border-white/5" data-testid="skill-badges-loading">
         <div className="animate-pulse space-y-3">
-          <div className="h-4 bg-muted rounded w-1/3"></div>
+          <div className="h-4 bg-muted/30 rounded w-1/3"></div>
           <div className="grid grid-cols-2 gap-3">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-20 bg-muted rounded"></div>
+              <div key={i} className="h-24 bg-muted/20 rounded-lg"></div>
             ))}
           </div>
         </div>
@@ -137,33 +215,45 @@ export function SkillBadges({ playerId }: SkillBadgesProps) {
   const lockedBadges = skillBadges.filter(b => b.currentLevel === 'none');
 
   return (
-    <Card className="p-4" data-testid="skill-badges">
-      <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-        <Target className="w-4 h-4 text-primary" /> Skill Badges
-      </h4>
+    <Card className="glass-card p-6 border-white/5 overflow-hidden" data-testid="skill-badges">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
       
-      {unlockedBadges.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-          {unlockedBadges.map((badge) => (
-            <SkillBadgeCard key={badge.skillType} badge={badge} />
-          ))}
-        </div>
-      )}
-      
-      {lockedBadges.length > 0 && (
-        <>
+      <div className="relative z-10">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+            <Target className="w-5 h-5 text-primary" />
+          </div>
+          <h3 className="text-lg font-bold font-display text-foreground uppercase tracking-wider">Skill Badges</h3>
           {unlockedBadges.length > 0 && (
-            <div className="border-t border-border pt-3 mt-3">
-              <p className="text-xs text-muted-foreground mb-2">Locked Badges</p>
-            </div>
+            <span className="ml-auto text-sm font-medium px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
+              {unlockedBadges.length}/{skillBadges.length}
+            </span>
           )}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 opacity-60">
-            {lockedBadges.map((badge) => (
+        </div>
+        
+        {unlockedBadges.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+            {unlockedBadges.map((badge) => (
               <SkillBadgeCard key={badge.skillType} badge={badge} />
             ))}
           </div>
-        </>
-      )}
+        )}
+        
+        {lockedBadges.length > 0 && (
+          <>
+            {unlockedBadges.length > 0 && (
+              <div className="border-t border-white/5 pt-5 mt-5">
+                <p className="text-xs font-semibold text-muted-foreground/60 uppercase tracking-widest mb-3">Locked Badges</p>
+              </div>
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 opacity-50">
+              {lockedBadges.map((badge) => (
+                <SkillBadgeCard key={badge.skillType} badge={badge} />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
     </Card>
   );
 }

@@ -107,11 +107,12 @@ export function GameCard({ game, playerName, badges = [], showShareButton = true
       data-testid={`game-card-${game.id}`}
       className={cn(
         "relative w-full max-w-[400px] aspect-[4/5] rounded-2xl overflow-hidden",
-        "bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a]",
+        "glass-card card-shine",
         "border-2",
         gradeColors.border,
         "shadow-2xl",
         gradeColors.glow,
+        "transition-all duration-500 hover:border-primary/20",
         className
       )}
     >
@@ -147,7 +148,7 @@ export function GameCard({ game, playerName, badges = [], showShareButton = true
         </div>
 
         <div className="flex-1 flex flex-col justify-center items-center my-4">
-          <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2 font-medium">
+          <div className="stat-label mb-2">
             Game Grade
           </div>
           <div
@@ -157,11 +158,13 @@ export function GameCard({ game, playerName, badges = [], showShareButton = true
               gradeColors.bg,
               "border-2",
               gradeColors.border,
-              "shadow-lg",
-              gradeColors.glow
+              "shadow-2xl",
+              gradeColors.glow,
+              "transition-all duration-300 hover:shadow-2xl hover:scale-105 relative overflow-hidden"
             )}
           >
-            <span className={cn("text-6xl font-display font-bold", gradeColors.text)}>
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300" />
+            <span className={cn("text-6xl font-display font-bold relative z-10 text-glow", gradeColors.text)}>
               {game.grade || "—"}
             </span>
           </div>
@@ -175,25 +178,25 @@ export function GameCard({ game, playerName, badges = [], showShareButton = true
             { label: "STL", value: game.steals },
             { label: "BLK", value: game.blocks },
           ].map((stat) => (
-            <div key={stat.label} className="text-center">
-              <div className="text-2xl font-display font-bold text-white">{stat.value}</div>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{stat.label}</div>
+            <div key={stat.label} className="text-center p-2 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/10 transition-all duration-300 hover:border-primary/30 hover:from-primary/15 hover:to-primary/8">
+              <div className="stat-value text-white">{stat.value}</div>
+              <div className="stat-label">{stat.label}</div>
             </div>
           ))}
         </div>
 
-        <div className="flex justify-center gap-6 mb-4 py-3 border-t border-b border-white/10">
-          <div className="text-center">
-            <div className="text-lg font-display font-bold text-white">{fgPct}%</div>
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">FG</div>
+        <div className="flex justify-center gap-3 mb-4 py-3 px-2 rounded-lg bg-gradient-to-r from-white/[0.02] to-transparent border border-white/5">
+          <div className="text-center px-3 py-1 rounded-md bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/10 transition-all duration-300 hover:border-blue-500/20 hover:from-blue-500/15 flex-1">
+            <div className="stat-value text-white text-2xl">{fgPct}%</div>
+            <div className="stat-label">FG</div>
           </div>
-          <div className="text-center">
-            <div className="text-lg font-display font-bold text-white">{threePct}%</div>
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">3PT</div>
+          <div className="text-center px-3 py-1 rounded-md bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/10 transition-all duration-300 hover:border-purple-500/20 hover:from-purple-500/15 flex-1">
+            <div className="stat-value text-white text-2xl">{threePct}%</div>
+            <div className="stat-label">3PT</div>
           </div>
-          <div className="text-center">
-            <div className="text-lg font-display font-bold text-white">{ftPct}%</div>
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">FT</div>
+          <div className="text-center px-3 py-1 rounded-md bg-gradient-to-br from-cyan-500/10 to-cyan-600/5 border border-cyan-500/10 transition-all duration-300 hover:border-cyan-500/20 hover:from-cyan-500/15 flex-1">
+            <div className="stat-value text-white text-2xl">{ftPct}%</div>
+            <div className="stat-label">FT</div>
           </div>
         </div>
 
@@ -205,9 +208,9 @@ export function GameCard({ game, playerName, badges = [], showShareButton = true
               return (
                 <div
                   key={badge.id}
-                  className="flex items-center gap-1.5 bg-primary/20 border border-primary/30 rounded-full px-2.5 py-1"
+                  className="flex items-center gap-1.5 bg-gradient-to-r from-primary/20 to-orange-500/20 border border-primary/40 rounded-full px-2.5 py-1 transition-all duration-300 hover:border-primary/60 hover:from-primary/30 hover:to-orange-500/30 hover:shadow-lg hover:shadow-primary/20"
                 >
-                  <BadgeIcon className="w-3.5 h-3.5 text-primary" />
+                  <BadgeIcon className="w-3.5 h-3.5 text-primary transition-transform duration-300 hover:scale-110" />
                   <span className="text-[10px] font-bold text-primary uppercase tracking-wider">
                     {badgeDef?.name || badge.badgeType}
                   </span>
@@ -222,7 +225,7 @@ export function GameCard({ game, playerName, badges = [], showShareButton = true
             onClick={handleShare}
             variant="outline"
             size="sm"
-            className="w-full bg-white/5 border-white/20 hover:bg-white/10 text-white font-bold gap-2"
+            className="w-full bg-gradient-to-r from-primary/10 to-orange-500/10 border border-primary/30 hover:border-primary/50 text-primary font-bold gap-2 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20"
             data-testid="button-share-game"
           >
             <Share2 className="w-4 h-4" />

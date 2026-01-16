@@ -74,67 +74,70 @@ export function PlayerProgression({ playerId, compact = false }: PlayerProgressi
   
   return (
     <div 
-      className={cn(
-        "rounded-xl border border-white/5 p-4 bg-gradient-to-br",
-        tierConfig.bgGradient
-      )}
+      className="glass-card-glow rounded-xl p-5 animate-in fade-in duration-500"
       data-testid="player-progression"
     >
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
+      <div className="flex items-start justify-between mb-6">
+        <div className="flex items-center gap-4 animate-in slide-in-from-left duration-500">
           <div className={cn(
-            "w-12 h-12 rounded-full flex items-center justify-center",
-            "bg-gradient-to-br from-background/80 to-secondary/50 border border-white/10"
+            "w-16 h-16 rounded-xl flex items-center justify-center",
+            "bg-gradient-to-br from-primary/30 to-primary/10 border-2 border-primary/20",
+            "shadow-lg shadow-primary/20"
           )}>
-            <TierIcon className={cn("w-6 h-6", tierConfig.color)} />
+            <TierIcon className={cn("w-8 h-8", tierConfig.color)} />
           </div>
           <div>
-            <h3 className={cn("text-lg font-bold font-display", tierConfig.color)}>
+            <h3 className={cn("text-2xl font-bold font-display", tierConfig.color)}>
               {progression.currentTier}
             </h3>
-            <p className="text-xs text-muted-foreground">Current Tier</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Current Tier</p>
           </div>
         </div>
         
         {progression.currentStreak > 0 && (
-          <div className="flex flex-col items-center bg-orange-500/10 rounded-lg px-3 py-2 border border-orange-500/20">
+          <div className="animate-in slide-in-from-right duration-500 flex flex-col items-center bg-gradient-to-br from-orange-500/15 to-orange-600/5 rounded-lg px-4 py-3 border border-orange-500/30 shadow-lg shadow-orange-500/10 transition-all hover:shadow-orange-500/20 hover:border-orange-500/40">
             <div className="flex items-center gap-1.5">
-              <Flame className="w-5 h-5 text-orange-400" />
-              <span className="text-xl font-bold text-orange-400">{progression.currentStreak}</span>
+              <Flame className="w-5 h-5 text-orange-400 animate-pulse" />
+              <span className="text-2xl font-bold text-orange-400">{progression.currentStreak}</span>
             </div>
-            <span className="text-[10px] uppercase tracking-wider text-orange-400/70">Day Streak</span>
+            <span className="text-[10px] uppercase tracking-widest text-orange-400/70 font-semibold">Streak</span>
           </div>
         )}
       </div>
       
-      <div className="space-y-2">
+      <div className="divider-glow my-5" />
+      
+      <div className="space-y-3">
         <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">XP Progress</span>
-          <span className="font-bold text-primary">{progression.totalXp.toLocaleString()} XP</span>
+          <span className="text-muted-foreground uppercase tracking-wider font-medium text-xs">XP Progress</span>
+          <span className="font-bold text-primary text-base">{progression.totalXp.toLocaleString()} XP</span>
         </div>
         
-        <Progress 
-          value={progression.progressPercent} 
-          className="h-2.5"
-          data-testid="progress-xp-bar"
-        />
+        <div className="shimmer relative rounded-lg overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent pointer-events-none z-10" />
+          <Progress 
+            value={progression.progressPercent} 
+            className="h-3"
+            data-testid="progress-xp-bar"
+          />
+        </div>
         
         {progression.nextTier && (
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>Next: {progression.nextTier}</span>
-            <span>{progression.xpToNextTier.toLocaleString()} XP to go</span>
+          <div className="flex items-center justify-between text-xs text-muted-foreground font-medium animate-in fade-in duration-300">
+            <span className="uppercase tracking-wider">Next: {progression.nextTier}</span>
+            <span className="text-primary font-semibold">{progression.xpToNextTier.toLocaleString()} XP to go</span>
           </div>
         )}
         
         {!progression.nextTier && (
-          <div className="text-center text-xs text-yellow-400 font-medium mt-2">
+          <div className="text-center text-xs text-yellow-400 font-bold mt-3 px-3 py-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20 animate-pulse">
             Maximum tier reached!
           </div>
         )}
       </div>
       
-      <div className="mt-4 pt-4 border-t border-white/5">
-        <div className="grid grid-cols-5 gap-1 text-center">
+      <div className="mt-6 pt-5 border-t border-primary/10">
+        <div className="grid grid-cols-5 gap-2 text-center">
           {Object.entries(progression.tierThresholds).map(([tier, xp]) => {
             const isCurrentTier = tier === progression.currentTier;
             const isPastTier = progression.totalXp >= xp;
@@ -145,13 +148,14 @@ export function PlayerProgression({ playerId, compact = false }: PlayerProgressi
               <div 
                 key={tier} 
                 className={cn(
-                  "py-1 rounded transition-all",
-                  isCurrentTier && "bg-white/5",
-                  isPastTier ? config.color : "text-muted-foreground/30"
+                  "py-2 px-1 rounded-lg transition-all duration-300",
+                  isCurrentTier && "bg-primary/15 border border-primary/30 shadow-lg shadow-primary/10",
+                  !isCurrentTier && isPastTier && "bg-white/5 border border-white/10",
+                  !isPastTier && "opacity-40"
                 )}
               >
-                <Icon className={cn("w-4 h-4 mx-auto mb-0.5")} />
-                <div className="text-[9px] font-medium truncate px-0.5">{tier}</div>
+                <Icon className={cn("w-5 h-5 mx-auto mb-1 transition-all duration-300", isPastTier ? config.color : "text-muted-foreground/50")} />
+                <div className="text-[10px] font-bold uppercase tracking-wide truncate px-0.5">{tier}</div>
               </div>
             );
           })}

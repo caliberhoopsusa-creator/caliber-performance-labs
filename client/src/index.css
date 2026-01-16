@@ -9,43 +9,47 @@
   --font-display: 'Teko', sans-serif;
   --font-body: 'Inter', sans-serif;
 
-  /* Deep Navy Backgrounds */
-  --background: 222 47% 11%;
+  /* Deep Rich Navy Backgrounds */
+  --background: 222 47% 8%;
   --foreground: 210 40% 98%;
 
-  /* Slightly lighter navy for cards */
-  --card: 217 33% 17%;
+  /* Elevated navy for cards with subtle warmth */
+  --card: 220 35% 14%;
   --card-foreground: 210 40% 98%;
 
   /* Popover matches card */
-  --popover: 217 33% 17%;
+  --popover: 220 35% 14%;
   --popover-foreground: 210 40% 98%;
 
-  /* Vibrant Orange Accent (ESPN-ish but modern) */
-  --primary: 25 95% 53%;
-  --primary-foreground: 222 47% 11%;
+  /* Vibrant Orange Accent - slightly richer */
+  --primary: 24 100% 50%;
+  --primary-foreground: 222 47% 8%;
 
   /* Cool Grey for Secondary actions */
-  --secondary: 215 25% 27%;
+  --secondary: 215 25% 22%;
   --secondary-foreground: 210 40% 98%;
 
-  /* Muted text */
-  --muted: 215 25% 27%;
-  --muted-foreground: 215 20% 65%;
+  /* Muted text - higher contrast */
+  --muted: 215 25% 22%;
+  --muted-foreground: 215 20% 60%;
 
-  /* Borders - subtle separation */
-  --border: 215 25% 27%;
-  --input: 215 25% 27%;
+  /* Borders - more subtle */
+  --border: 215 30% 20%;
+  --input: 215 30% 20%;
   
   /* Focus rings matching primary */
-  --ring: 25 95% 53%;
+  --ring: 24 100% 50%;
 
   /* Semantic Colors for Grades */
-  --grade-a: 142 71% 45%; /* Green */
-  --grade-b: 142 71% 45%; /* Green-ish */
-  --grade-c: 48 96% 53%;  /* Yellow */
-  --grade-d: 25 95% 53%;  /* Orange */
-  --grade-f: 0 84% 60%;   /* Red */
+  --grade-a: 142 71% 45%;
+  --grade-b: 142 71% 45%;
+  --grade-c: 48 96% 53%;
+  --grade-d: 25 95% 53%;
+  --grade-f: 0 84% 60%;
+
+  /* Premium accent colors */
+  --gold: 45 93% 58%;
+  --platinum: 210 20% 80%;
 
   --radius: 0.75rem;
 }
@@ -76,16 +80,120 @@
   .bg-grade-d { background-color: hsl(var(--grade-d)); }
   .bg-grade-f { background-color: hsl(var(--grade-f)); }
 
+  /* Premium glassmorphic card */
   .glass-card {
-    @apply bg-card/90 backdrop-blur-sm border border-white/10 shadow-xl;
+    @apply bg-card/80 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/20;
   }
   
+  /* Enhanced glass with glow */
+  .glass-card-glow {
+    @apply bg-card/80 backdrop-blur-xl border border-white/10 shadow-2xl shadow-primary/10;
+  }
+  
+  /* Stat display styles */
   .stat-value {
     @apply font-display text-4xl font-bold tracking-tight;
   }
   
   .stat-label {
     @apply text-xs uppercase tracking-wider text-muted-foreground font-medium;
+  }
+
+  /* Premium gradient backgrounds */
+  .gradient-hero {
+    background: linear-gradient(135deg, 
+      hsl(222 47% 8%) 0%, 
+      hsl(220 35% 12%) 50%, 
+      hsl(222 47% 8%) 100%);
+  }
+
+  .gradient-radial-glow {
+    background: radial-gradient(ellipse at 50% 0%, 
+      hsl(24 100% 50% / 0.15) 0%, 
+      transparent 60%);
+  }
+
+  .gradient-spotlight {
+    background: radial-gradient(ellipse at 30% 20%, 
+      hsl(24 100% 50% / 0.08) 0%, 
+      transparent 50%),
+    radial-gradient(ellipse at 70% 80%, 
+      hsl(220 100% 50% / 0.05) 0%, 
+      transparent 50%);
+  }
+
+  /* Premium text effects */
+  .text-glow {
+    text-shadow: 0 0 40px hsl(24 100% 50% / 0.3);
+  }
+
+  .text-gradient-primary {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-orange-400 to-primary;
+  }
+
+  /* Shimmer effect for premium elements */
+  .shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, 
+      transparent 0%, 
+      hsl(0 0% 100% / 0.05) 50%, 
+      transparent 100%);
+    animation: shimmer 3s infinite;
+  }
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  /* Premium divider */
+  .divider-glow {
+    @apply h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent;
+  }
+
+  /* Floating animation for hero elements */
+  .float {
+    animation: float 6s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  /* Pulse glow for CTAs */
+  .pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite;
+  }
+  @keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 20px hsl(24 100% 50% / 0.3); }
+    50% { box-shadow: 0 0 40px hsl(24 100% 50% / 0.5); }
+  }
+
+  /* Card shine effect on hover */
+  .card-shine {
+    position: relative;
+    overflow: hidden;
+  }
+  .card-shine::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg, 
+      transparent 40%, 
+      hsl(0 0% 100% / 0.03) 45%, 
+      hsl(0 0% 100% / 0.05) 50%, 
+      hsl(0 0% 100% / 0.03) 55%, 
+      transparent 60%);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+  }
+  .card-shine:hover::before {
+    transform: translateX(100%);
   }
 }
 
