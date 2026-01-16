@@ -3,7 +3,7 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games } from "@shared/schema";
+import { players, games, type Game } from "@shared/schema";
 import { GoogleGenAI } from "@google/genai";
 import multer from "multer";
 import fs from "fs";
@@ -118,6 +118,118 @@ function calculateGrade(stats: any, position: string): { grade: string; feedback
   return { grade, feedback };
 }
 
+// --- Badge Award Logic ---
+
+async function checkAndAwardBadges(playerId: number, gameId: number, stats: any, grade: string) {
+  const awardedBadges: string[] = [];
+  
+  // Check single-game badges
+  
+  // twenty_piece - Scored 20+ points
+  if ((stats.points || 0) >= 20) {
+    await storage.createBadge({ playerId, badgeType: "twenty_piece", gameId });
+    awardedBadges.push("twenty_piece");
+  }
+  
+  // thirty_bomb - Scored 30+ points
+  if ((stats.points || 0) >= 30) {
+    await storage.createBadge({ playerId, badgeType: "thirty_bomb", gameId });
+    awardedBadges.push("thirty_bomb");
+  }
+  
+  // Check double/triple double
+  const pts = (stats.points || 0) >= 10 ? 1 : 0;
+  const reb = (stats.rebounds || 0) >= 10 ? 1 : 0;
+  const ast = (stats.assists || 0) >= 10 ? 1 : 0;
+  const doubleCount = pts + reb + ast;
+  
+  if (doubleCount >= 3) {
+    await storage.createBadge({ playerId, badgeType: "triple_double", gameId });
+    awardedBadges.push("triple_double");
+  } else if (doubleCount >= 2) {
+    await storage.createBadge({ playerId, badgeType: "double_double", gameId });
+    awardedBadges.push("double_double");
+  }
+  
+  // ironman - Played 32+ minutes
+  if ((stats.minutes || 0) >= 32) {
+    await storage.createBadge({ playerId, badgeType: "ironman", gameId });
+    awardedBadges.push("ironman");
+  }
+  
+  // efficiency_master - Got an A+ grade
+  if (grade === "A+") {
+    await storage.createBadge({ playerId, badgeType: "efficiency_master", gameId });
+    awardedBadges.push("efficiency_master");
+  }
+  
+  // lockdown - Defense rating 90+
+  if ((stats.defenseRating || 0) >= 90) {
+    await storage.createBadge({ playerId, badgeType: "lockdown", gameId });
+    awardedBadges.push("lockdown");
+  }
+  
+  // hustle_king - Hustle score 90+
+  if ((stats.hustleScore || 0) >= 90) {
+    await storage.createBadge({ playerId, badgeType: "hustle_king", gameId });
+    awardedBadges.push("hustle_king");
+  }
+  
+  // clean_sheet - Zero turnovers with 20+ minutes
+  if ((stats.turnovers || 0) === 0 && (stats.minutes || 0) >= 20) {
+    await storage.createBadge({ playerId, badgeType: "clean_sheet", gameId });
+    awardedBadges.push("clean_sheet");
+  }
+  
+  // sharpshooter - 50%+ from 3 on 5+ attempts
+  const threeAttempts = stats.threeAttempted || 0;
+  const threeMade = stats.threeMade || 0;
+  if (threeAttempts >= 5 && (threeMade / threeAttempts) >= 0.5) {
+    await storage.createBadge({ playerId, badgeType: "sharpshooter", gameId });
+    awardedBadges.push("sharpshooter");
+  }
+  
+  // Check streak badges by looking at recent games
+  await checkStreakBadges(playerId, gameId);
+  
+  return awardedBadges;
+}
+
+async function checkStreakBadges(playerId: number, latestGameId: number) {
+  const playerGames = await storage.getGamesByPlayerId(playerId);
+  const existingBadges = await storage.getPlayerBadges(playerId);
+  
+  // Sort games by date descending (most recent first)
+  const sortedGames = [...playerGames].sort((a, b) => 
+    new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+  
+  // Check for B+ or better grades (B+, A-, A, A+)
+  const goodGrades = ["B+", "A-", "A", "A+"];
+  
+  // Count consecutive good games from most recent
+  let streakCount = 0;
+  for (const game of sortedGames) {
+    if (game.grade && goodGrades.includes(game.grade)) {
+      streakCount++;
+    } else {
+      break;
+    }
+  }
+  
+  // Check if player already has streak badges
+  const hasHotStreak3 = existingBadges.some(b => b.badgeType === "hot_streak_3");
+  const hasHotStreak5 = existingBadges.some(b => b.badgeType === "hot_streak_5");
+  
+  // Award streak badges
+  if (streakCount >= 5 && !hasHotStreak5) {
+    await storage.createBadge({ playerId, badgeType: "hot_streak_5", gameId: latestGameId });
+  }
+  if (streakCount >= 3 && !hasHotStreak3) {
+    await storage.createBadge({ playerId, badgeType: "hot_streak_3", gameId: latestGameId });
+  }
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
@@ -201,6 +313,10 @@ export async function registerRoutes(
       };
 
       const game = await storage.createGame(gameData);
+      
+      // Check and award badges after game creation
+      await checkAndAwardBadges(input.playerId, game.id, input, grade);
+      
       res.status(201).json(game);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -211,6 +327,18 @@ export async function registerRoutes(
       }
       throw err;
     }
+  });
+
+  // --- Player Badges ---
+
+  app.get('/api/players/:id/badges', async (req, res) => {
+    const playerId = Number(req.params.id);
+    const player = await storage.getPlayer(playerId);
+    if (!player) {
+      return res.status(404).json({ message: 'Player not found' });
+    }
+    const badges = await storage.getPlayerBadges(playerId);
+    res.json(badges);
   });
 
   app.get(api.games.get.path, async (req, res) => {

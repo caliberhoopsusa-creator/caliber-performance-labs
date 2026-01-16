@@ -15,6 +15,14 @@ export const players = pgTable("players", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const badges = pgTable("badges", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull(),
+  badgeType: text("badge_type").notNull(),
+  gameId: integer("game_id"),
+  earnedAt: timestamp("earned_at").defaultNow(),
+});
+
 export const games = pgTable("games", {
   id: serial("id").primaryKey(),
   playerId: integer("player_id").notNull(),
@@ -112,3 +120,25 @@ export type PlayerWithGames = Player & { games: Game[] };
 
 export type Conversation = typeof conversations.$inferSelect;
 export type Message = typeof messages.$inferSelect;
+
+export type Badge = typeof badges.$inferSelect;
+export type InsertBadge = {
+  playerId: number;
+  badgeType: string;
+  gameId?: number | null;
+};
+
+export const BADGE_DEFINITIONS = {
+  twenty_piece: { name: "20-Piece", description: "Scored 20+ points in a game" },
+  thirty_bomb: { name: "30-Bomb", description: "Scored 30+ points in a game" },
+  double_double: { name: "Double-Double", description: "10+ in two stat categories (pts/reb/ast)" },
+  triple_double: { name: "Triple-Double", description: "10+ in three stat categories" },
+  ironman: { name: "Ironman", description: "Played 32+ minutes in a game" },
+  efficiency_master: { name: "Efficiency Master", description: "Got an A+ grade" },
+  lockdown: { name: "Lockdown Defender", description: "Defense rating 90+" },
+  hustle_king: { name: "Hustle King", description: "Hustle score 90+" },
+  clean_sheet: { name: "Clean Sheet", description: "Zero turnovers with 20+ minutes" },
+  hot_streak_3: { name: "Hot Streak 3", description: "3 games in a row with B+ or better" },
+  hot_streak_5: { name: "Hot Streak 5", description: "5 games in a row with B+ or better" },
+  sharpshooter: { name: "Sharpshooter", description: "50%+ from 3 on 5+ attempts" },
+} as const;

@@ -1,8 +1,9 @@
-import { usePlayer, useDeleteGame } from "@/hooks/use-basketball";
+import { usePlayer, useDeleteGame, usePlayerBadges } from "@/hooks/use-basketball";
 import { useRoute, Link } from "wouter";
 import { StatCard } from "@/components/StatCard";
 import { GradeBadge } from "@/components/GradeBadge";
-import { ArrowLeft, Plus, Calendar, Trash2, Award, ClipboardList, Activity } from "lucide-react";
+import { ArrowLeft, Plus, Calendar, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Crosshair, Trophy } from "lucide-react";
+import { BADGE_DEFINITIONS, type Badge } from "@shared/schema";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { Button } from "@/components/ui/button";
 import {
@@ -19,10 +20,26 @@ import {
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
+const BADGE_ICONS: Record<string, any> = {
+  twenty_piece: Target,
+  thirty_bomb: Target,
+  double_double: Award,
+  triple_double: Award,
+  ironman: Clock,
+  efficiency_master: Star,
+  lockdown: Shield,
+  hustle_king: Zap,
+  clean_sheet: CheckCircle,
+  hot_streak_3: Flame,
+  hot_streak_5: Flame,
+  sharpshooter: Crosshair,
+};
+
 export default function PlayerDetail() {
   const [, params] = useRoute("/players/:id");
   const id = Number(params?.id);
   const { data: player, isLoading } = usePlayer(id);
+  const { data: badges = [], isLoading: badgesLoading } = usePlayerBadges(id);
   const { mutate: deleteGame } = useDeleteGame();
 
   if (isLoading) {
@@ -103,6 +120,49 @@ export default function PlayerDetail() {
         <StatCard label="RPG" value={avgReb} />
         <StatCard label="APG" value={avgAst} />
         <StatCard label="Games" value={games.length} />
+      </div>
+
+      {/* Badges & Awards */}
+      <div className="bg-card border border-white/5 rounded-2xl p-6 shadow-xl">
+        <h3 className="text-lg font-bold font-display text-white mb-6 flex items-center gap-2">
+          <Trophy className="w-5 h-5 text-primary" /> Badges & Awards
+        </h3>
+        
+        {badgesLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        ) : badges.length === 0 ? (
+          <div className="text-muted-foreground text-sm text-center py-8">
+            No badges earned yet. Keep playing to unlock achievements!
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+            {badges.map((badge: Badge) => {
+              const BadgeIcon = BADGE_ICONS[badge.badgeType] || Award;
+              const badgeDef = BADGE_DEFINITIONS[badge.badgeType as keyof typeof BADGE_DEFINITIONS];
+              const badgeName = badgeDef?.name || badge.badgeType;
+              const badgeDesc = badgeDef?.description || "";
+              
+              return (
+                <div
+                  key={badge.id}
+                  data-testid={`badge-${badge.badgeType}-${badge.id}`}
+                  className="group bg-secondary/20 hover:bg-secondary/40 border border-white/5 p-4 rounded-xl transition-colors flex flex-col items-center text-center"
+                >
+                  <div className="w-12 h-12 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    <BadgeIcon className="w-6 h-6 text-primary" />
+                  </div>
+                  <div className="text-sm font-bold text-white mb-1">{badgeName}</div>
+                  <div className="text-xs text-muted-foreground mb-2 line-clamp-2">{badgeDesc}</div>
+                  <div className="text-xs text-muted-foreground/70 mt-auto">
+                    {badge.earnedAt ? format(new Date(badge.earnedAt), 'MMM dd, yyyy') : ''}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

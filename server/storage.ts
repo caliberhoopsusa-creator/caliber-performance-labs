@@ -1,9 +1,10 @@
 import { db } from "./db";
 import {
-  players, games,
+  players, games, badges,
   type Player, type InsertPlayer,
   type Game, type InsertGame,
-  type UpdateGameRequest
+  type UpdateGameRequest,
+  type Badge, type InsertBadge
 } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 
@@ -19,6 +20,11 @@ export interface IStorage {
   getGame(id: number): Promise<Game | undefined>;
   deleteGame(id: number): Promise<void>;
   getGamesByPlayerId(playerId: number): Promise<Game[]>;
+
+  // Badges
+  createBadge(badge: InsertBadge): Promise<Badge>;
+  getPlayerBadges(playerId: number): Promise<Badge[]>;
+  getBadgesByGame(gameId: number): Promise<Badge[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -69,6 +75,27 @@ export class DatabaseStorage implements IStorage {
       .from(games)
       .where(eq(games.playerId, playerId))
       .orderBy(desc(games.date));
+  }
+
+  async createBadge(badge: InsertBadge): Promise<Badge> {
+    const [newBadge] = await db.insert(badges).values(badge).returning();
+    return newBadge;
+  }
+
+  async getPlayerBadges(playerId: number): Promise<Badge[]> {
+    return await db
+      .select()
+      .from(badges)
+      .where(eq(badges.playerId, playerId))
+      .orderBy(desc(badges.earnedAt));
+  }
+
+  async getBadgesByGame(gameId: number): Promise<Badge[]> {
+    return await db
+      .select()
+      .from(badges)
+      .where(eq(badges.gameId, gameId))
+      .orderBy(desc(badges.earnedAt));
   }
 }
 

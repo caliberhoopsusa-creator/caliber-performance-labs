@@ -153,3 +153,19 @@ export function useDeleteGame() {
     },
   });
 }
+
+// ============================================
+// BADGES HOOKS
+// ============================================
+
+export function usePlayerBadges(playerId: number) {
+  return useQuery({
+    queryKey: ['/api/players', playerId, 'badges'],
+    queryFn: async () => {
+      const res = await fetch(`/api/players/${playerId}/badges`);
+      if (!res.ok) throw new Error("Failed to fetch badges");
+      return res.json();
+    },
+    enabled: !!playerId,
+  });
+}
