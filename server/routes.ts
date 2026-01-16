@@ -3419,46 +3419,34 @@ Respond in this exact JSON format:
 
   app.get('/api/stripe/products', async (req, res) => {
     try {
-      const result = await db.execute(sql`
-        SELECT 
-          p.id as product_id,
-          p.name as product_name,
-          p.description as product_description,
-          p.active as product_active,
-          p.metadata as product_metadata,
-          pr.id as price_id,
-          pr.unit_amount,
-          pr.currency,
-          pr.recurring,
-          pr.active as price_active
-        FROM stripe.products p
-        LEFT JOIN stripe.prices pr ON pr.product = p.id AND pr.active = true
-        WHERE p.active = true
-        ORDER BY p.name, pr.unit_amount
-      `);
-
-      const productsMap = new Map<string, any>();
-      for (const row of result.rows as any[]) {
-        if (!productsMap.has(row.product_id)) {
-          productsMap.set(row.product_id, {
-            id: row.product_id,
-            name: row.product_name,
-            description: row.product_description,
-            metadata: row.product_metadata,
-            prices: []
-          });
+      // Fetch directly from Stripe API to ensure products are always available
+      const stripe = await getUncachableStripeClient();
+      const products = await stripe.products.list({ limit: 100, active: true });
+      const prices = await stripe.prices.list({ limit: 100, active: true });
+      
+      const pricesMap = new Map<string, any[]>();
+      for (const price of prices.data) {
+        const productId = typeof price.product === 'string' ? price.product : price.product.id;
+        if (!pricesMap.has(productId)) {
+          pricesMap.set(productId, []);
         }
-        if (row.price_id) {
-          productsMap.get(row.product_id)!.prices.push({
-            id: row.price_id,
-            unit_amount: row.unit_amount,
-            currency: row.currency,
-            recurring: row.recurring,
-          });
-        }
+        pricesMap.get(productId)!.push({
+          id: price.id,
+          unit_amount: price.unit_amount,
+          currency: price.currency,
+          recurring: price.recurring,
+        });
       }
+      
+      const result = products.data.map(p => ({
+        id: p.id,
+        name: p.name,
+        description: p.description,
+        metadata: p.metadata,
+        prices: pricesMap.get(p.id) || [],
+      }));
 
-      res.json({ products: Array.from(productsMap.values()) });
+      res.json({ products: result });
     } catch (err) {
       console.error('Error fetching products:', err);
       res.status(500).json({ error: 'Could not fetch products' });
