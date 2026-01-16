@@ -22,6 +22,9 @@ import Newsfeed from "./pages/Newsfeed";
 import CommunityContent from "./pages/CommunityContent";
 import Stories from "./pages/Stories";
 import TeamDashboard from "./pages/TeamDashboard";
+import LineupAnalysis from "./pages/LineupAnalysis";
+import PracticeTracker from "./pages/PracticeTracker";
+import OpponentScouting from "./pages/OpponentScouting";
 import NotFound from "./pages/not-found";
 
 function Router() {
@@ -46,6 +49,9 @@ function Router() {
           <Route path="/scout" component={ScoutMode} />
           <Route path="/analyze" component={AnalyzeGame} />
           <Route path="/coach/dashboard" component={TeamDashboard} />
+          <Route path="/coach/lineups" component={LineupAnalysis} />
+          <Route path="/coach/practices" component={PracticeTracker} />
+          <Route path="/coach/scouting" component={OpponentScouting} />
           <Route component={NotFound} />
         </Switch>
       </main>

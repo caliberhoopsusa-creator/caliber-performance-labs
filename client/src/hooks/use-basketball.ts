@@ -608,3 +608,428 @@ export function useTeamDashboard() {
     },
   });
 }
+
+// ============================================
+// LINEUPS HOOKS
+// ============================================
+
+export type Lineup = {
+  id: number;
+  name: string | null;
+  playerIds: string;
+  createdAt: string;
+};
+
+export type LineupWithStats = Lineup & {
+  stats?: LineupStat[];
+};
+
+export type LineupStat = {
+  id: number;
+  lineupId: number;
+  gameId: number;
+  minutes: number;
+  plusMinus: number;
+  points: number;
+  createdAt: string;
+};
+
+export function useLineups() {
+  return useQuery<Lineup[]>({
+    queryKey: ['/api/lineups'],
+    queryFn: async () => {
+      const res = await fetch('/api/lineups');
+      if (!res.ok) throw new Error("Failed to fetch lineups");
+      return res.json();
+    },
+  });
+}
+
+export function useLineup(id: number) {
+  return useQuery<LineupWithStats>({
+    queryKey: ['/api/lineups', id],
+    queryFn: async () => {
+      const res = await fetch(`/api/lineups/${id}`);
+      if (!res.ok) throw new Error("Failed to fetch lineup");
+      return res.json();
+    },
+    enabled: !!id,
+  });
+}
+
+export function useCreateLineup() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { name?: string; playerIds: string }) => {
+      const res = await fetch('/api/lineups', {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to create lineup");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/lineups'] });
+    },
+  });
+}
+
+export function useDeleteLineup() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(`/api/lineups/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete lineup");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/lineups'] });
+    },
+  });
+}
+
+// ============================================
+// PRACTICES HOOKS
+// ============================================
+
+export type Practice = {
+  id: number;
+  date: string;
+  title: string;
+  duration: number;
+  notes: string | null;
+  createdAt: string;
+  attendance?: PracticeAttendance[];
+};
+
+export type PracticeAttendance = {
+  id: number;
+  practiceId: number;
+  playerId: number;
+  attended: boolean;
+  effortRating: number | null;
+  notes: string | null;
+};
+
+export type CreatePracticeInput = {
+  date: string;
+  title: string;
+  duration: number;
+  notes?: string | null;
+};
+
+export type CreatePracticeAttendanceInput = {
+  playerId: number;
+  attended: boolean;
+  effortRating?: number | null;
+  notes?: string | null;
+};
+
+export function usePractices() {
+  return useQuery<Practice[]>({
+    queryKey: ['/api/practices'],
+    queryFn: async () => {
+      const res = await fetch('/api/practices');
+      if (!res.ok) throw new Error("Failed to fetch practices");
+      return res.json();
+    },
+  });
+}
+
+export function usePractice(id: number) {
+  return useQuery<Practice>({
+    queryKey: ['/api/practices', id],
+    queryFn: async () => {
+      const res = await fetch(`/api/practices/${id}`);
+      if (!res.ok) throw new Error("Failed to fetch practice");
+      return res.json();
+    },
+    enabled: !!id,
+  });
+}
+
+export function useCreatePractice() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: CreatePracticeInput) => {
+      const res = await fetch('/api/practices', {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to create practice");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/practices'] });
+    },
+  });
+}
+
+export function useUpdatePractice() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { id: number; updates: Partial<CreatePracticeInput> }) => {
+      const res = await fetch(`/api/practices/${data.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data.updates),
+      });
+      if (!res.ok) throw new Error("Failed to update practice");
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/practices'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/practices', variables.id] });
+    },
+  });
+}
+
+export function useDeletePractice() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(`/api/practices/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete practice");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/practices'] });
+    },
+  });
+}
+
+export function usePracticeAttendance(practiceId: number) {
+  return useQuery<PracticeAttendance[]>({
+    queryKey: ['/api/practices', practiceId, 'attendance'],
+    queryFn: async () => {
+      const res = await fetch(`/api/practices/${practiceId}/attendance`);
+      if (!res.ok) throw new Error("Failed to fetch attendance");
+      return res.json();
+    },
+    enabled: !!practiceId,
+  });
+}
+
+export function useCreatePracticeAttendance() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { practiceId: number; attendance: CreatePracticeAttendanceInput }) => {
+      const res = await fetch(`/api/practices/${data.practiceId}/attendance`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data.attendance),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to create attendance");
+      }
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/practices', variables.practiceId, 'attendance'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/practices', variables.practiceId] });
+    },
+  });
+}
+
+export function useUpdatePracticeAttendance() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { id: number; practiceId: number; updates: Partial<CreatePracticeAttendanceInput> }) => {
+      const res = await fetch(`/api/attendance/${data.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data.updates),
+      });
+      if (!res.ok) throw new Error("Failed to update attendance");
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/practices', variables.practiceId, 'attendance'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/practices', variables.practiceId] });
+    },
+  });
+}
+
+// ============================================
+// DRILLS HOOKS
+// ============================================
+
+export type Drill = {
+  id: number;
+  name: string;
+  category: string;
+  description: string | null;
+  targetStat: string | null;
+};
+
+export type DrillScore = {
+  id: number;
+  practiceId: number;
+  playerId: number;
+  drillId: number;
+  score: number;
+  notes: string | null;
+  createdAt: string;
+};
+
+export function useDrills() {
+  return useQuery<Drill[]>({
+    queryKey: ['/api/drills'],
+    queryFn: async () => {
+      const res = await fetch('/api/drills');
+      if (!res.ok) throw new Error("Failed to fetch drills");
+      return res.json();
+    },
+  });
+}
+
+export function useCreateDrillScore() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { practiceId: number; score: { playerId: number; drillId: number; score: number; notes?: string } }) => {
+      const res = await fetch(`/api/practices/${data.practiceId}/drill-scores`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data.score),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to create drill score");
+      }
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/practices', variables.practiceId, 'drill-scores'] });
+    },
+  });
+}
+
+// ============================================
+// PLAYER ATTENDANCE SUMMARY HOOK
+// ============================================
+
+export function usePlayerAttendance(playerId: number) {
+  return useQuery<PracticeAttendance[]>({
+    queryKey: ['/api/players', playerId, 'attendance'],
+    queryFn: async () => {
+      const res = await fetch(`/api/players/${playerId}/attendance`);
+      if (!res.ok) throw new Error("Failed to fetch player attendance");
+      return res.json();
+    },
+    enabled: !!playerId,
+  });
+}
+
+// ============================================
+// OPPONENTS HOOKS (Scouting)
+// ============================================
+
+export type Opponent = {
+  id: number;
+  name: string;
+  opponentType: string;
+  position: string | null;
+  tendencies: string | null;
+  strengths: string | null;
+  weaknesses: string | null;
+  notes: string | null;
+  createdAt: string;
+};
+
+export type CreateOpponentInput = {
+  name: string;
+  opponentType: string;
+  position?: string | null;
+  tendencies?: string | null;
+  strengths?: string | null;
+  weaknesses?: string | null;
+  notes?: string | null;
+};
+
+export type UpdateOpponentInput = Partial<CreateOpponentInput>;
+
+export function useOpponents() {
+  return useQuery<Opponent[]>({
+    queryKey: ['/api/opponents'],
+    queryFn: async () => {
+      const res = await fetch('/api/opponents');
+      if (!res.ok) throw new Error("Failed to fetch opponents");
+      return res.json();
+    },
+  });
+}
+
+export function useOpponent(id: number) {
+  return useQuery<Opponent>({
+    queryKey: ['/api/opponents', id],
+    queryFn: async () => {
+      const res = await fetch(`/api/opponents/${id}`);
+      if (!res.ok) throw new Error("Failed to fetch opponent");
+      return res.json();
+    },
+    enabled: !!id,
+  });
+}
+
+export function useCreateOpponent() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: CreateOpponentInput) => {
+      const res = await fetch('/api/opponents', {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to create opponent");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/opponents'] });
+    },
+  });
+}
+
+export function useUpdateOpponent() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { id: number; updates: UpdateOpponentInput }) => {
+      const res = await fetch(`/api/opponents/${data.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data.updates),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to update opponent");
+      }
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/opponents'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/opponents', variables.id] });
+    },
+  });
+}
+
+export function useDeleteOpponent() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(`/api/opponents/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete opponent");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/opponents'] });
+    },
+  });
+}
