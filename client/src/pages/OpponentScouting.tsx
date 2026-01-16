@@ -21,6 +21,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { Paywall } from "@/components/Paywall";
 import {
   useOpponents,
   useOpponent,
@@ -75,7 +76,8 @@ export default function OpponentScouting() {
   }
 
   return (
-    <div className="space-y-6">
+    <Paywall requiredTier="coach_pro" featureName="Opponent Scouting">
+      <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold font-display tracking-tight" data-testid="page-title">
@@ -174,7 +176,8 @@ export default function OpponentScouting() {
           onClose={() => setIsEditDialogOpen(false)}
         />
       )}
-    </div>
+      </div>
+    </Paywall>
   );
 }
 

@@ -18,6 +18,7 @@ import {
   Users, CheckCircle2, XCircle, ClipboardList, Target,
   Trash2
 } from "lucide-react";
+import { Paywall } from "@/components/Paywall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -266,7 +267,8 @@ export default function PracticeTracker() {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <Paywall requiredTier="coach_pro" featureName="Practice Tracker">
+      <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl md:text-4xl font-display font-bold text-white uppercase tracking-tight">Practice Tracker</h2>
@@ -467,7 +469,8 @@ export default function PracticeTracker() {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </Paywall>
   );
 }
 

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { GradeBadge } from "@/components/GradeBadge";
+import { Paywall } from "@/components/Paywall";
 import { Binoculars, Users, TrendingUp, Filter, ChevronRight, Trophy, Zap, Shield, Target, Flame, Star } from "lucide-react";
 import { BADGE_DEFINITIONS } from "@shared/schema";
 import { ARCHETYPES, getPlayerArchetype, type ArchetypeId } from "@shared/archetypes";
@@ -185,134 +186,136 @@ export default function ScoutMode() {
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-3">
-          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
-            <Binoculars className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl md:text-3xl font-display font-bold text-white tracking-tight">
-              Caliber Scout Mode
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Discover and evaluate standout talent
-            </p>
+    <Paywall requiredTier="pro" featureName="Scout Mode">
+      <div className="space-y-6">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-3">
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
+              <Binoculars className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-display font-bold text-white tracking-tight">
+                Caliber Scout Mode
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Discover and evaluate standout talent
+              </p>
+            </div>
           </div>
         </div>
-      </div>
 
-      <Card className="border-border/50 bg-card/50">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-2 mb-4">
-            <Filter className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Filters</span>
+        <Card className="border-border/50 bg-card/50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Filter className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Filters</span>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div>
+                <label className="text-xs text-muted-foreground mb-1.5 block">Position</label>
+                <Select value={position} onValueChange={setPosition}>
+                  <SelectTrigger className="h-9" data-testid="filter-position">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">All Positions</SelectItem>
+                    <SelectItem value="Guard">Guard</SelectItem>
+                    <SelectItem value="Wing">Wing</SelectItem>
+                    <SelectItem value="Big">Big</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-xs text-muted-foreground mb-1.5 block">Height</label>
+                <Select value={height} onValueChange={setHeight}>
+                  <SelectTrigger className="h-9" data-testid="filter-height">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">All Heights</SelectItem>
+                    <SelectItem value="under-5-10">Under 5'10"</SelectItem>
+                    <SelectItem value="5-10-to-6-2">5'10" - 6'2"</SelectItem>
+                    <SelectItem value="6-2-to-6-6">6'2" - 6'6"</SelectItem>
+                    <SelectItem value="6-6-plus">6'6"+</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-xs text-muted-foreground mb-1.5 block">Grade</label>
+                <Select value={grade} onValueChange={setGrade}>
+                  <SelectTrigger className="h-9" data-testid="filter-grade">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">All Grades</SelectItem>
+                    <SelectItem value="A">A Players Only</SelectItem>
+                    <SelectItem value="B+">B+ and Above</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-xs text-muted-foreground mb-1.5 block">Sort By</label>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="h-9" data-testid="filter-sort">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="avgGradeScore">Overall Grade</SelectItem>
+                    <SelectItem value="ppg">Points Per Game</SelectItem>
+                    <SelectItem value="rpg">Rebounds Per Game</SelectItem>
+                    <SelectItem value="apg">Assists Per Game</SelectItem>
+                    <SelectItem value="hustleScore">Hustle Score</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Users className="w-4 h-4" />
+            <span>
+              {isLoading ? "Loading..." : `${players?.length || 0} players found`}
+            </span>
           </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div>
-              <label className="text-xs text-muted-foreground mb-1.5 block">Position</label>
-              <Select value={position} onValueChange={setPosition}>
-                <SelectTrigger className="h-9" data-testid="filter-position">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="All">All Positions</SelectItem>
-                  <SelectItem value="Guard">Guard</SelectItem>
-                  <SelectItem value="Wing">Wing</SelectItem>
-                  <SelectItem value="Big">Big</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-xs text-muted-foreground mb-1.5 block">Height</label>
-              <Select value={height} onValueChange={setHeight}>
-                <SelectTrigger className="h-9" data-testid="filter-height">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="All">All Heights</SelectItem>
-                  <SelectItem value="under-5-10">Under 5'10"</SelectItem>
-                  <SelectItem value="5-10-to-6-2">5'10" - 6'2"</SelectItem>
-                  <SelectItem value="6-2-to-6-6">6'2" - 6'6"</SelectItem>
-                  <SelectItem value="6-6-plus">6'6"+</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-xs text-muted-foreground mb-1.5 block">Grade</label>
-              <Select value={grade} onValueChange={setGrade}>
-                <SelectTrigger className="h-9" data-testid="filter-grade">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="All">All Grades</SelectItem>
-                  <SelectItem value="A">A Players Only</SelectItem>
-                  <SelectItem value="B+">B+ and Above</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-xs text-muted-foreground mb-1.5 block">Sort By</label>
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="h-9" data-testid="filter-sort">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="avgGradeScore">Overall Grade</SelectItem>
-                  <SelectItem value="ppg">Points Per Game</SelectItem>
-                  <SelectItem value="rpg">Rebounds Per Game</SelectItem>
-                  <SelectItem value="apg">Assists Per Game</SelectItem>
-                  <SelectItem value="hustleScore">Hustle Score</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <TrendingUp className="w-3 h-3" />
+            <span>Sorted by {sortBy === "avgGradeScore" ? "Overall Grade" : sortBy.toUpperCase()}</span>
           </div>
-        </CardContent>
-      </Card>
-
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Users className="w-4 h-4" />
-          <span>
-            {isLoading ? "Loading..." : `${players?.length || 0} players found`}
-          </span>
         </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <TrendingUp className="w-3 h-3" />
-          <span>Sorted by {sortBy === "avgGradeScore" ? "Overall Grade" : sortBy.toUpperCase()}</span>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {isLoading ? (
+            <>
+              <PlayerCardSkeleton />
+              <PlayerCardSkeleton />
+              <PlayerCardSkeleton />
+              <PlayerCardSkeleton />
+              <PlayerCardSkeleton />
+              <PlayerCardSkeleton />
+            </>
+          ) : players && players.length > 0 ? (
+            players.map((player) => (
+              <PlayerScoutCard key={player.id} player={player} />
+            ))
+          ) : (
+            <div className="col-span-full text-center py-12">
+              <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4">
+                <Users className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <h3 className="font-medium text-white mb-1">No players found</h3>
+              <p className="text-sm text-muted-foreground">
+                Try adjusting your filters or add more players to the roster.
+              </p>
+            </div>
+          )}
         </div>
       </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {isLoading ? (
-          <>
-            <PlayerCardSkeleton />
-            <PlayerCardSkeleton />
-            <PlayerCardSkeleton />
-            <PlayerCardSkeleton />
-            <PlayerCardSkeleton />
-            <PlayerCardSkeleton />
-          </>
-        ) : players && players.length > 0 ? (
-          players.map((player) => (
-            <PlayerScoutCard key={player.id} player={player} />
-          ))
-        ) : (
-          <div className="col-span-full text-center py-12">
-            <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4">
-              <Users className="w-8 h-8 text-muted-foreground" />
-            </div>
-            <h3 className="font-medium text-white mb-1">No players found</h3>
-            <p className="text-sm text-muted-foreground">
-              Try adjusting your filters or add more players to the roster.
-            </p>
-          </div>
-        )}
-      </div>
-    </div>
+    </Paywall>
   );
 }

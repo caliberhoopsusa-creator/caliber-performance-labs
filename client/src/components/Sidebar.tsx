@@ -1,8 +1,9 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard } from "lucide-react";
+import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AlertsBadge } from "@/components/AlertsCenter";
 import { Button } from "@/components/ui/button";
+import { useSubscription, type SubscriptionTier } from "@/hooks/use-subscription";
 
 type NavSection = {
   title: string;
@@ -11,6 +12,7 @@ type NavSection = {
     label: string;
     icon: React.ComponentType<{ className?: string }>;
     featured?: boolean;
+    premium?: SubscriptionTier;
   }[];
 };
 
@@ -21,6 +23,7 @@ type SidebarProps = {
 
 export function Sidebar({ userRole, playerId }: SidebarProps) {
   const [location] = useLocation();
+  const { hasAccess, isPro } = useSubscription();
 
   // For players: show their profile and limited options
   // For coaches: show full navigation with all coach tools
@@ -52,7 +55,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         { href: "/stories", label: "Stories", icon: Camera },
         { href: "/teams", label: "Teams", icon: MessageSquare },
         { href: "/community", label: "Highlights", icon: BarChart3 },
-        { href: "/challenges", label: "Challenges", icon: Target },
+        { href: "/challenges", label: "Challenges", icon: Target, premium: "pro" },
       ],
     },
   ];
@@ -74,7 +77,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         { href: "/compare", label: "Head-to-Head", icon: Activity },
         { href: "/video", label: "Video Analysis", icon: Video },
         { href: "/grading", label: "Grading System", icon: Calculator },
-        { href: "/scout", label: "Scout Mode", icon: Binoculars, featured: true },
+        { href: "/scout", label: "Scout Mode", icon: Binoculars, premium: "pro" },
       ],
     },
     {
@@ -84,17 +87,17 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         { href: "/stories", label: "Stories", icon: Camera },
         { href: "/teams", label: "Teams", icon: MessageSquare },
         { href: "/community", label: "Highlights", icon: BarChart3 },
-        { href: "/challenges", label: "Challenges", icon: Target },
+        { href: "/challenges", label: "Challenges", icon: Target, premium: "pro" },
       ],
     },
     {
       title: "Coach Tools",
       items: [
-        { href: "/coach/dashboard", label: "Team Overview", icon: ClipboardList },
-        { href: "/coach/lineups", label: "Lineups", icon: UsersRound },
-        { href: "/coach/practices", label: "Practices", icon: CalendarCheck },
-        { href: "/coach/scouting", label: "Scouting", icon: Eye },
-        { href: "/coach/alerts", label: "Alerts", icon: Bell },
+        { href: "/coach/dashboard", label: "Team Overview", icon: ClipboardList, premium: "coach_pro" },
+        { href: "/coach/lineups", label: "Lineups", icon: UsersRound, premium: "coach_pro" },
+        { href: "/coach/practices", label: "Practices", icon: CalendarCheck, premium: "coach_pro" },
+        { href: "/coach/scouting", label: "Scouting", icon: Eye, premium: "coach_pro" },
+        { href: "/coach/alerts", label: "Alerts", icon: Bell, premium: "coach_pro" },
       ],
     },
   ];
@@ -127,20 +130,24 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
             <div className="space-y-1">
               {section.items.map((item) => {
                 const isActive = location === item.href || (item.href.includes('/players/') && location.includes('/players/') && location === item.href);
-                const isFeatured = item.featured;
+                const needsUpgrade = item.premium && !hasAccess(item.premium);
+                const isCoachPro = item.premium === "coach_pro";
                 return (
                   <Link key={item.href} href={item.href} className={cn(
                     "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 group font-medium text-sm",
                     isActive 
                       ? "bg-primary text-primary-foreground shadow-md shadow-primary/20" 
-                      : isFeatured
+                      : needsUpgrade
                       ? "text-amber-400 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 hover:from-amber-500/20 hover:to-orange-500/20"
                       : "text-muted-foreground hover:bg-white/5 hover:text-white"
                   )} data-testid={`nav-${item.href.replace(/\//g, '-').replace(/^-/, '') || 'home'}`}>
                     <item.icon className={cn("w-4 h-4", isActive ? "stroke-[2.5px]" : "stroke-2")} />
                     {item.label}
-                    {isFeatured && !isActive && (
-                      <span className="ml-auto text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">Pro</span>
+                    {needsUpgrade && !isActive && (
+                      <span className="ml-auto inline-flex items-center gap-1 text-[10px] bg-gradient-to-r from-primary to-orange-500 text-white px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">
+                        <Lock className="w-2.5 h-2.5" />
+                        {isCoachPro ? "PRO" : "PRO"}
+                      </span>
                     )}
                   </Link>
                 );

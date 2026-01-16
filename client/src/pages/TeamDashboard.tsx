@@ -6,6 +6,7 @@ import {
   ChevronRight, ArrowUpDown, ArrowUp, ArrowDown,
   Crosshair, Medal, Zap, Calendar
 } from "lucide-react";
+import { Paywall } from "@/components/Paywall";
 import { GradeBadge } from "@/components/GradeBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -109,7 +110,8 @@ export default function TeamDashboard() {
   const { teamStats, bestPerformers, recentGames, positionDistribution } = data;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <Paywall requiredTier="coach_pro" featureName="Team Dashboard">
+      <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl md:text-4xl font-display font-bold text-white uppercase tracking-tight">Coach Dashboard</h2>
@@ -405,6 +407,7 @@ export default function TeamDashboard() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </Paywall>
   );
 }

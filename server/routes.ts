@@ -83,6 +83,70 @@ const canModifyPlayer = async (req: any, playerId: number): Promise<boolean> => 
   return false;
 };
 
+// Helper to check if subscription is active (includes trialing)
+const isSubscriptionActive = (status: string | null | undefined): boolean => {
+  return status === 'active' || status === 'trialing';
+};
+
+// Subscription verification middleware
+const requiresSubscription: RequestHandler = async (req: any, res, next) => {
+  try {
+    if (!req.isAuthenticated() || !req.user?.claims?.sub) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const user = await authStorage.getUser(req.user.claims.sub);
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+    
+    // Check if user has an active subscription (includes trialing)
+    if (!user.stripeSubscriptionId || !isSubscriptionActive(user.subscriptionStatus)) {
+      return res.status(403).json({ 
+        message: "Premium subscription required",
+        code: "SUBSCRIPTION_REQUIRED"
+      });
+    }
+    
+    (req as any).caliberUser = user;
+    next();
+  } catch (error) {
+    console.error('Error in requiresSubscription middleware:', error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Combined middleware for coach + subscription
+const requiresCoachPro: RequestHandler = async (req: any, res, next) => {
+  try {
+    if (!req.isAuthenticated() || !req.user?.claims?.sub) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const user = await authStorage.getUser(req.user.claims.sub);
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+    
+    // Check if user is a coach
+    if (user.role !== 'coach') {
+      return res.status(403).json({ message: "Coach access required" });
+    }
+    
+    // Check if user has an active subscription (includes trialing)
+    if (!user.stripeSubscriptionId || !isSubscriptionActive(user.subscriptionStatus)) {
+      return res.status(403).json({ 
+        message: "Coach Pro subscription required",
+        code: "SUBSCRIPTION_REQUIRED"
+      });
+    }
+    
+    (req as any).caliberUser = user;
+    next();
+  } catch (error) {
+    console.error('Error in requiresCoachPro middleware:', error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 // Gemini AI client for video analysis
 const ai = new GoogleGenAI({
   apiKey: process.env.AI_INTEGRATIONS_GEMINI_API_KEY,
@@ -2510,7 +2574,7 @@ Respond in this exact JSON format:
   });
 
   // --- Practices ---
-  app.post('/api/practices', isCoach, async (req, res) => {
+  app.post('/api/practices', requiresCoachPro, async (req, res) => {
     try {
       const input = insertPracticeSchema.parse(req.body);
       const practice = await storage.createPractice(input);
@@ -2524,7 +2588,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.get('/api/practices', isCoach, async (req, res) => {
+  app.get('/api/practices', requiresCoachPro, async (req, res) => {
     try {
       const practices = await storage.getPractices();
       res.json(practices);
@@ -2534,7 +2598,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.get('/api/practices/:id', async (req, res) => {
+  app.get('/api/practices/:id', requiresCoachPro, async (req, res) => {
     try {
       const practice = await storage.getPractice(Number(req.params.id));
       if (!practice) {
@@ -2548,7 +2612,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.patch('/api/practices/:id', isCoach, async (req, res) => {
+  app.patch('/api/practices/:id', requiresCoachPro, async (req, res) => {
     try {
       const updateSchema = insertPracticeSchema.partial();
       const input = updateSchema.parse(req.body);
@@ -2563,7 +2627,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.delete('/api/practices/:id', isCoach, async (req, res) => {
+  app.delete('/api/practices/:id', requiresCoachPro, async (req, res) => {
     try {
       await storage.deletePractice(Number(req.params.id));
       res.status(204).send();
@@ -2574,7 +2638,7 @@ Respond in this exact JSON format:
   });
 
   // --- Practice Attendance ---
-  app.post('/api/practices/:practiceId/attendance', isCoach, async (req, res) => {
+  app.post('/api/practices/:practiceId/attendance', requiresCoachPro, async (req, res) => {
     try {
       const practiceId = Number(req.params.practiceId);
       const practice = await storage.getPractice(practiceId);
@@ -2593,7 +2657,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.get('/api/practices/:practiceId/attendance', isCoach, async (req, res) => {
+  app.get('/api/practices/:practiceId/attendance', requiresCoachPro, async (req, res) => {
     try {
       const practiceId = Number(req.params.practiceId);
       const attendance = await storage.getPracticeAttendance(practiceId);
@@ -2615,7 +2679,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.patch('/api/attendance/:id', isCoach, async (req, res) => {
+  app.patch('/api/attendance/:id', requiresCoachPro, async (req, res) => {
     try {
       const updateSchema = insertPracticeAttendanceSchema.partial();
       const input = updateSchema.parse(req.body);
@@ -2631,7 +2695,7 @@ Respond in this exact JSON format:
   });
 
   // --- Drills ---
-  app.post('/api/drills', isCoach, async (req, res) => {
+  app.post('/api/drills', requiresCoachPro, async (req, res) => {
     try {
       const input = insertDrillSchema.parse(req.body);
       const drill = await storage.createDrill(input);
@@ -2645,7 +2709,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.get('/api/drills', isCoach, async (req, res) => {
+  app.get('/api/drills', requiresCoachPro, async (req, res) => {
     try {
       const drills = await storage.getDrills();
       res.json(drills);
@@ -2655,7 +2719,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.get('/api/drills/category/:category', async (req, res) => {
+  app.get('/api/drills/category/:category', requiresCoachPro, async (req, res) => {
     try {
       const drills = await storage.getDrillsByCategory(req.params.category);
       res.json(drills);
@@ -2665,7 +2729,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.get('/api/drills/:id', async (req, res) => {
+  app.get('/api/drills/:id', requiresCoachPro, async (req, res) => {
     try {
       const drill = await storage.getDrill(Number(req.params.id));
       if (!drill) {
@@ -2679,7 +2743,7 @@ Respond in this exact JSON format:
   });
 
   // --- Drill Scores ---
-  app.post('/api/practices/:practiceId/drill-scores', isCoach, async (req, res) => {
+  app.post('/api/practices/:practiceId/drill-scores', requiresCoachPro, async (req, res) => {
     try {
       const practiceId = Number(req.params.practiceId);
       const practice = await storage.getPractice(practiceId);
@@ -2698,7 +2762,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.get('/api/practices/:practiceId/drill-scores', isCoach, async (req, res) => {
+  app.get('/api/practices/:practiceId/drill-scores', requiresCoachPro, async (req, res) => {
     try {
       const practiceId = Number(req.params.practiceId);
       const scores = await storage.getDrillScoresByPractice(practiceId);
@@ -2721,7 +2785,7 @@ Respond in this exact JSON format:
   });
 
   // --- Lineups ---
-  app.post('/api/lineups', isCoach, async (req, res) => {
+  app.post('/api/lineups', requiresCoachPro, async (req, res) => {
     try {
       const input = insertLineupSchema.parse(req.body);
       const lineup = await storage.createLineup(input);
@@ -2735,7 +2799,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.get('/api/lineups', isCoach, async (req, res) => {
+  app.get('/api/lineups', requiresCoachPro, async (req, res) => {
     try {
       const lineups = await storage.getLineups();
       res.json(lineups);
@@ -2745,7 +2809,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.get('/api/lineups/:id', async (req, res) => {
+  app.get('/api/lineups/:id', requiresCoachPro, async (req, res) => {
     try {
       const lineup = await storage.getLineup(Number(req.params.id));
       if (!lineup) {
@@ -2759,7 +2823,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.delete('/api/lineups/:id', isCoach, async (req, res) => {
+  app.delete('/api/lineups/:id', requiresCoachPro, async (req, res) => {
     try {
       await storage.deleteLineup(Number(req.params.id));
       res.status(204).send();
@@ -2770,7 +2834,7 @@ Respond in this exact JSON format:
   });
 
   // --- Lineup Stats ---
-  app.post('/api/lineups/:lineupId/stats', isCoach, async (req, res) => {
+  app.post('/api/lineups/:lineupId/stats', requiresCoachPro, async (req, res) => {
     try {
       const lineupId = Number(req.params.lineupId);
       const lineup = await storage.getLineup(lineupId);
@@ -2789,7 +2853,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.get('/api/lineups/:lineupId/stats', isCoach, async (req, res) => {
+  app.get('/api/lineups/:lineupId/stats', requiresCoachPro, async (req, res) => {
     try {
       const lineupId = Number(req.params.lineupId);
       const stats = await storage.getLineupStats(lineupId);
@@ -2812,7 +2876,7 @@ Respond in this exact JSON format:
   });
 
   // --- Opponents (Scouting) ---
-  app.post('/api/opponents', isCoach, async (req, res) => {
+  app.post('/api/opponents', requiresCoachPro, async (req, res) => {
     try {
       const input = insertOpponentSchema.parse(req.body);
       const opponent = await storage.createOpponent(input);
@@ -2826,7 +2890,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.get('/api/opponents', isCoach, async (req, res) => {
+  app.get('/api/opponents', requiresCoachPro, async (req, res) => {
     try {
       const opponents = await storage.getOpponents();
       res.json(opponents);
@@ -2836,7 +2900,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.get('/api/opponents/:id', async (req, res) => {
+  app.get('/api/opponents/:id', requiresCoachPro, async (req, res) => {
     try {
       const opponent = await storage.getOpponent(Number(req.params.id));
       if (!opponent) {
@@ -2849,7 +2913,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.patch('/api/opponents/:id', isCoach, async (req, res) => {
+  app.patch('/api/opponents/:id', requiresCoachPro, async (req, res) => {
     try {
       const updateSchema = insertOpponentSchema.partial();
       const input = updateSchema.parse(req.body);
@@ -2864,7 +2928,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.delete('/api/opponents/:id', isCoach, async (req, res) => {
+  app.delete('/api/opponents/:id', requiresCoachPro, async (req, res) => {
     try {
       await storage.deleteOpponent(Number(req.params.id));
       res.status(204).send();
@@ -2875,7 +2939,7 @@ Respond in this exact JSON format:
   });
 
   // --- Alerts ---
-  app.get('/api/alerts', isCoach, async (req, res) => {
+  app.get('/api/alerts', requiresCoachPro, async (req, res) => {
     try {
       const playerId = req.query.playerId ? Number(req.query.playerId) : undefined;
       const alerts = await storage.getAlerts(playerId);
@@ -2886,7 +2950,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.get('/api/alerts/unread', isCoach, async (req, res) => {
+  app.get('/api/alerts/unread', requiresCoachPro, async (req, res) => {
     try {
       const alerts = await storage.getUnreadAlerts();
       res.json(alerts);
@@ -2896,7 +2960,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.patch('/api/alerts/:id/read', isCoach, async (req, res) => {
+  app.patch('/api/alerts/:id/read', requiresCoachPro, async (req, res) => {
     try {
       await storage.markAlertRead(Number(req.params.id));
       res.json({ success: true });
@@ -2906,7 +2970,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.delete('/api/alerts/:id', isCoach, async (req, res) => {
+  app.delete('/api/alerts/:id', requiresCoachPro, async (req, res) => {
     try {
       await storage.deleteAlert(Number(req.params.id));
       res.status(204).send();
@@ -2916,7 +2980,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.post('/api/alerts/mark-all-read', isCoach, async (req, res) => {
+  app.post('/api/alerts/mark-all-read', requiresCoachPro, async (req, res) => {
     try {
       await storage.markAllAlertsRead();
       res.json({ success: true });
@@ -2927,7 +2991,7 @@ Respond in this exact JSON format:
   });
 
   // --- Coach Goals (Coach Only) ---
-  app.post('/api/coach-goals', isCoach, async (req, res) => {
+  app.post('/api/coach-goals', requiresCoachPro, async (req, res) => {
     try {
       const input = insertCoachGoalSchema.parse(req.body);
       const goal = await storage.createCoachGoal(input);
@@ -2941,7 +3005,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.get('/api/coach-goals', isCoach, async (req, res) => {
+  app.get('/api/coach-goals', requiresCoachPro, async (req, res) => {
     try {
       const goals = await storage.getAllCoachGoals();
       res.json(goals);
@@ -2951,7 +3015,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.get('/api/players/:playerId/coach-goals', isCoach, async (req, res) => {
+  app.get('/api/players/:playerId/coach-goals', requiresCoachPro, async (req, res) => {
     try {
       const playerId = Number(req.params.playerId);
       const goals = await storage.getCoachGoals(playerId);
@@ -2962,7 +3026,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.patch('/api/coach-goals/:id', isCoach, async (req, res) => {
+  app.patch('/api/coach-goals/:id', requiresCoachPro, async (req, res) => {
     try {
       const updateSchema = insertCoachGoalSchema.partial();
       const input = updateSchema.parse(req.body);
@@ -2977,7 +3041,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.delete('/api/coach-goals/:id', isCoach, async (req, res) => {
+  app.delete('/api/coach-goals/:id', requiresCoachPro, async (req, res) => {
     try {
       await storage.deleteCoachGoal(Number(req.params.id));
       res.status(204).send();
@@ -2988,7 +3052,7 @@ Respond in this exact JSON format:
   });
 
   // --- Drill Recommendations ---
-  app.post('/api/players/:playerId/drill-recommendations/generate', isCoach, async (req, res) => {
+  app.post('/api/players/:playerId/drill-recommendations/generate', requiresCoachPro, async (req, res) => {
     try {
       const playerId = Number(req.params.playerId);
       const player = await storage.getPlayer(playerId);
@@ -3061,7 +3125,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.get('/api/players/:playerId/drill-recommendations', async (req, res) => {
+  app.get('/api/players/:playerId/drill-recommendations', requiresCoachPro, async (req, res) => {
     try {
       const playerId = Number(req.params.playerId);
       const recommendations = await storage.getDrillRecommendations(playerId);
@@ -3072,7 +3136,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.delete('/api/drill-recommendations/:id', async (req, res) => {
+  app.delete('/api/drill-recommendations/:id', requiresCoachPro, async (req, res) => {
     try {
       await storage.deleteDrillRecommendation(Number(req.params.id));
       res.status(204).send();

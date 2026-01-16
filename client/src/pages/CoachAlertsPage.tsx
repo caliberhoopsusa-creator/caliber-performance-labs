@@ -1,10 +1,12 @@
 import { AlertsCenter } from "@/components/AlertsCenter";
 import { ArrowLeft, Bell } from "lucide-react";
 import { Link } from "wouter";
+import { Paywall } from "@/components/Paywall";
 
 export default function CoachAlertsPage() {
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <Paywall requiredTier="coach_pro" featureName="Trend Alerts">
+      <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex items-center gap-4">
         <Link href="/coach/dashboard" className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-white transition-colors uppercase tracking-wider">
           <ArrowLeft className="w-4 h-4" /> Back to Coach Dashboard
@@ -22,6 +24,7 @@ export default function CoachAlertsPage() {
       </div>
 
       <AlertsCenter />
-    </div>
+      </div>
+    </Paywall>
   );
 }

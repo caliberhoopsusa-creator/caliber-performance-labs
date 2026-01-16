@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users, Plus, Trash2, ArrowLeftRight, TrendingUp, Clock, Target } from "lucide-react";
+import { Paywall } from "@/components/Paywall";
 import { useToast } from "@/hooks/use-toast";
 
 const TIER_COLORS: Record<string, string> = {
@@ -136,7 +137,8 @@ export default function LineupAnalysis() {
   }
 
   return (
-    <div className="space-y-8">
+    <Paywall requiredTier="coach_pro" featureName="Lineup Analysis">
+      <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold font-display" data-testid="text-page-title">Lineup Analysis</h1>
@@ -346,7 +348,8 @@ export default function LineupAnalysis() {
           </CardContent>
         </Card>
       </section>
-    </div>
+      </div>
+    </Paywall>
   );
 }
 
