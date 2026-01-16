@@ -3,7 +3,7 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, type Game, insertGoalSchema, insertCommentSchema } from "@shared/schema";
+import { players, games, type Game, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { GoogleGenAI } from "@google/genai";
 import multer from "multer";
@@ -231,6 +231,72 @@ async function checkStreakBadges(playerId: number, latestGameId: number) {
   }
 }
 
+async function updateChallengeProgressForPlayer(playerId: number, stats: any, grade: string, gameDate: string) {
+  const activeChallenges = await storage.getActiveChallenges();
+  const goodGrades = ["B+", "A-", "A", "A+"];
+  
+  for (const challenge of activeChallenges) {
+    const progress = await storage.getOrCreateChallengeProgress(challenge.id, playerId);
+    
+    if (progress.completed) continue;
+    
+    let newValue = progress.currentValue;
+    
+    switch (challenge.targetType) {
+      case 'hustle_avg': {
+        const playerGames = await storage.getGamesByPlayerId(playerId);
+        const gamesInRange = playerGames.filter(g => {
+          const gDate = new Date(g.date);
+          return gDate >= new Date(challenge.startDate) && gDate <= new Date(challenge.endDate);
+        });
+        if (gamesInRange.length > 0) {
+          newValue = Math.round(gamesInRange.reduce((acc, g) => acc + (g.hustleScore || 50), 0) / gamesInRange.length);
+        }
+        break;
+      }
+      case 'points_total': {
+        const playerGames = await storage.getGamesByPlayerId(playerId);
+        const gamesInRange = playerGames.filter(g => {
+          const gDate = new Date(g.date);
+          return gDate >= new Date(challenge.startDate) && gDate <= new Date(challenge.endDate);
+        });
+        newValue = gamesInRange.reduce((acc, g) => acc + g.points, 0);
+        break;
+      }
+      case 'games_played': {
+        const playerGames = await storage.getGamesByPlayerId(playerId);
+        const gamesInRange = playerGames.filter(g => {
+          const gDate = new Date(g.date);
+          return gDate >= new Date(challenge.startDate) && gDate <= new Date(challenge.endDate);
+        });
+        newValue = gamesInRange.length;
+        break;
+      }
+      case 'grade_count': {
+        const playerGames = await storage.getGamesByPlayerId(playerId);
+        const gamesInRange = playerGames.filter(g => {
+          const gDate = new Date(g.date);
+          return gDate >= new Date(challenge.startDate) && gDate <= new Date(challenge.endDate);
+        });
+        newValue = gamesInRange.filter(g => g.grade && goodGrades.includes(g.grade)).length;
+        break;
+      }
+    }
+    
+    const isCompleted = newValue >= challenge.targetValue;
+    
+    await storage.updateChallengeProgress(progress.id, {
+      currentValue: newValue,
+      completed: isCompleted,
+      completedAt: isCompleted && !progress.completed ? new Date() : progress.completedAt,
+    });
+    
+    if (isCompleted && !progress.completed && challenge.badgeReward) {
+      await storage.createBadge({ playerId, badgeType: challenge.badgeReward });
+    }
+  }
+}
+
 async function updatePlayerStreaks(playerId: number, gameId: number, stats: any, grade: string) {
   const goodGrades = ["B+", "A-", "A", "A+"];
   
@@ -362,6 +428,9 @@ export async function registerRoutes(
       
       // Update player streaks
       await updatePlayerStreaks(input.playerId, game.id, input, grade);
+      
+      // Update challenge progress
+      await updateChallengeProgressForPlayer(input.playerId, input, grade, input.date);
       
       res.status(201).json(game);
     } catch (err) {
@@ -927,6 +996,240 @@ Respond in this exact JSON format:
     }
   });
 
+  // --- Challenges ---
+
+  app.get('/api/challenges', async (req, res) => {
+    try {
+      const activeChallenges = await storage.getActiveChallenges();
+      res.json(activeChallenges);
+    } catch (err) {
+      console.error('Get challenges error:', err);
+      res.status(500).json({ message: 'Error fetching challenges' });
+    }
+  });
+
+  app.get('/api/challenges/all', async (req, res) => {
+    try {
+      const allChallenges = await storage.getChallenges();
+      res.json(allChallenges);
+    } catch (err) {
+      console.error('Get all challenges error:', err);
+      res.status(500).json({ message: 'Error fetching all challenges' });
+    }
+  });
+
+  app.get('/api/challenges/:id', async (req, res) => {
+    try {
+      const challengeId = Number(req.params.id);
+      const challenge = await storage.getChallenge(challengeId);
+      if (!challenge) {
+        return res.status(404).json({ message: 'Challenge not found' });
+      }
+      const leaderboard = await storage.getChallengeLeaderboard(challengeId);
+      res.json({ challenge, leaderboard });
+    } catch (err) {
+      console.error('Get challenge error:', err);
+      res.status(500).json({ message: 'Error fetching challenge' });
+    }
+  });
+
+  app.get('/api/players/:id/challenges', async (req, res) => {
+    try {
+      const playerId = Number(req.params.id);
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: 'Player not found' });
+      }
+      const progress = await storage.getPlayerChallengeProgress(playerId);
+      res.json(progress);
+    } catch (err) {
+      console.error('Get player challenges error:', err);
+      res.status(500).json({ message: 'Error fetching player challenge progress' });
+    }
+  });
+
+  app.post('/api/challenges', async (req, res) => {
+    try {
+      const input = insertChallengeSchema.parse(req.body);
+      const challenge = await storage.createChallenge(input);
+      res.status(201).json(challenge);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      console.error('Create challenge error:', err);
+      res.status(500).json({ message: 'Error creating challenge' });
+    }
+  });
+
+  // --- Teams ---
+
+  function generateTeamCode(): string {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+  }
+
+  app.post('/api/teams', async (req, res) => {
+    try {
+      const { name, sessionId, displayName } = req.body;
+      if (!name || !sessionId || !displayName) {
+        return res.status(400).json({ message: 'Name, sessionId, and displayName are required' });
+      }
+
+      let code = generateTeamCode();
+      let existingTeam = await storage.getTeamByCode(code);
+      while (existingTeam) {
+        code = generateTeamCode();
+        existingTeam = await storage.getTeamByCode(code);
+      }
+
+      const team = await storage.createTeam({ name, code, createdBy: sessionId });
+      await storage.addTeamMember({
+        teamId: team.id,
+        displayName,
+        sessionId,
+        role: 'admin',
+        playerId: null,
+      });
+
+      res.status(201).json(team);
+    } catch (err) {
+      console.error('Create team error:', err);
+      res.status(500).json({ message: 'Error creating team' });
+    }
+  });
+
+  app.get('/api/teams/:code', async (req, res) => {
+    try {
+      const team = await storage.getTeamByCode(req.params.code);
+      if (!team) {
+        return res.status(404).json({ message: 'Team not found' });
+      }
+      const members = await storage.getTeamMembers(team.id);
+      res.json({ ...team, memberCount: members.length });
+    } catch (err) {
+      console.error('Get team error:', err);
+      res.status(500).json({ message: 'Error fetching team' });
+    }
+  });
+
+  app.post('/api/teams/:id/join', async (req, res) => {
+    try {
+      const teamId = Number(req.params.id);
+      const { sessionId, displayName } = req.body;
+      
+      if (!sessionId || !displayName) {
+        return res.status(400).json({ message: 'SessionId and displayName are required' });
+      }
+
+      const team = await storage.getTeam(teamId);
+      if (!team) {
+        return res.status(404).json({ message: 'Team not found' });
+      }
+
+      const existingMember = await storage.getTeamMember(teamId, sessionId);
+      if (existingMember) {
+        return res.status(400).json({ message: 'Already a member of this team' });
+      }
+
+      const member = await storage.addTeamMember({
+        teamId,
+        displayName,
+        sessionId,
+        role: 'member',
+        playerId: null,
+      });
+
+      res.status(201).json(member);
+    } catch (err) {
+      console.error('Join team error:', err);
+      res.status(500).json({ message: 'Error joining team' });
+    }
+  });
+
+  app.get('/api/teams/:id/members', async (req, res) => {
+    try {
+      const teamId = Number(req.params.id);
+      const team = await storage.getTeam(teamId);
+      if (!team) {
+        return res.status(404).json({ message: 'Team not found' });
+      }
+      const members = await storage.getTeamMembers(teamId);
+      res.json(members);
+    } catch (err) {
+      console.error('Get team members error:', err);
+      res.status(500).json({ message: 'Error fetching team members' });
+    }
+  });
+
+  app.get('/api/teams/:id/posts', async (req, res) => {
+    try {
+      const teamId = Number(req.params.id);
+      const team = await storage.getTeam(teamId);
+      if (!team) {
+        return res.status(404).json({ message: 'Team not found' });
+      }
+      const posts = await storage.getTeamPosts(teamId);
+      res.json(posts);
+    } catch (err) {
+      console.error('Get team posts error:', err);
+      res.status(500).json({ message: 'Error fetching team posts' });
+    }
+  });
+
+  app.post('/api/teams/:id/posts', async (req, res) => {
+    try {
+      const teamId = Number(req.params.id);
+      const { sessionId, content } = req.body;
+
+      if (!sessionId || !content) {
+        return res.status(400).json({ message: 'SessionId and content are required' });
+      }
+
+      const team = await storage.getTeam(teamId);
+      if (!team) {
+        return res.status(404).json({ message: 'Team not found' });
+      }
+
+      const member = await storage.getTeamMember(teamId, sessionId);
+      if (!member) {
+        return res.status(403).json({ message: 'You must be a member to post' });
+      }
+
+      const post = await storage.createTeamPost({
+        teamId,
+        authorId: member.id,
+        content,
+      });
+
+      res.status(201).json({ ...post, authorName: member.displayName });
+    } catch (err) {
+      console.error('Create team post error:', err);
+      res.status(500).json({ message: 'Error creating post' });
+    }
+  });
+
+  app.get('/api/my-teams', async (req, res) => {
+    try {
+      const sessionId = req.query.sessionId as string;
+      if (!sessionId) {
+        return res.status(400).json({ message: 'SessionId is required' });
+      }
+      const teams = await storage.getTeamsBySessionId(sessionId);
+      res.json(teams);
+    } catch (err) {
+      console.error('Get my teams error:', err);
+      res.status(500).json({ message: 'Error fetching teams' });
+    }
+  });
+
   await seedDatabase();
 
   return httpServer;
@@ -960,9 +1263,56 @@ export async function seedDatabase() {
       ftMade: 4,
       ftAttempted: 5,
       hustleScore: 45,
-      defenseRating: 40,
-      grade: "C",
-      feedback: "Strengths: Good scoring flashes. Areas to Improve: Ball security needs work (high TOs). Defense needs effort."
+      defenseRating: 40
+    });
+  }
+
+  // Seed challenges if none exist
+  const existingChallenges = await storage.getChallenges();
+  if (existingChallenges.length === 0) {
+    const today = new Date();
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - today.getDay());
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    
+    await storage.createChallenge({
+      title: "Weekly Hustle Challenge",
+      description: "Maintain the highest hustle average this week. Push on every possession!",
+      challengeType: "weekly",
+      targetType: "hustle_avg",
+      targetValue: 80,
+      startDate: weekStart.toISOString().split('T')[0],
+      endDate: weekEnd.toISOString().split('T')[0],
+      badgeReward: "hustle_champion",
+      isActive: true,
+    });
+
+    await storage.createChallenge({
+      title: "Scorer's Sprint",
+      description: "Score the most total points this month. Put the ball in the bucket!",
+      challengeType: "monthly",
+      targetType: "points_total",
+      targetValue: 100,
+      startDate: monthStart.toISOString().split('T')[0],
+      endDate: monthEnd.toISOString().split('T')[0],
+      badgeReward: "scoring_machine",
+      isActive: true,
+    });
+
+    await storage.createChallenge({
+      title: "Consistency King",
+      description: "Play the most games with a B+ grade or better. Stay consistent!",
+      challengeType: "monthly",
+      targetType: "grade_count",
+      targetValue: 5,
+      startDate: monthStart.toISOString().split('T')[0],
+      endDate: monthEnd.toISOString().split('T')[0],
+      badgeReward: "consistency_king",
+      isActive: true,
     });
   }
 }

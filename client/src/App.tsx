@@ -16,6 +16,8 @@ import ComparePlayers from "./pages/ComparePlayers";
 import GradingSystem from "./pages/GradingSystem";
 import VideoAnalysis from "./pages/VideoAnalysis";
 import ScoutMode from "./pages/ScoutMode";
+import Challenges from "./pages/Challenges";
+import Teams from "./pages/Teams";
 import NotFound from "./pages/not-found";
 
 function Router() {
@@ -28,6 +30,8 @@ function Router() {
           <Route path="/players" component={PlayersList} />
           <Route path="/players/:id/card" component={PlayerCard} />
           <Route path="/players/:id" component={PlayerDetail} />
+          <Route path="/challenges" component={Challenges} />
+          <Route path="/teams" component={Teams} />
           <Route path="/leaderboard" component={Leaderboard} />
           <Route path="/compare" component={ComparePlayers} />
           <Route path="/video" component={VideoAnalysis} />

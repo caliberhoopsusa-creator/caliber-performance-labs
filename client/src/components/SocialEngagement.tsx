@@ -229,7 +229,7 @@ export function SocialEngagement({ gameId, compact = false }: SocialEngagementPr
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-sm">{comment.authorName}</span>
                       <span className="text-xs text-muted-foreground">
-                        {format(new Date(comment.createdAt), "MMM d, h:mm a")}
+                        {comment.createdAt ? format(new Date(comment.createdAt), "MMM d, h:mm a") : "Just now"}
                       </span>
                       {comment.sessionId === sessionId && (
                         <Button

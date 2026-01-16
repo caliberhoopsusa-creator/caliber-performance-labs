@@ -1,6 +1,7 @@
 import { db } from "./db";
 import {
-  players, games, badges, goals, streaks, likes, comments,
+  players, games, badges, goals, streaks, likes, comments, challenges, challengeProgress,
+  teams, teamMembers, teamPosts,
   type Player, type InsertPlayer,
   type Game, type InsertGame,
   type UpdateGameRequest,
@@ -8,9 +9,14 @@ import {
   type Goal, type InsertGoal,
   type Streak, type InsertStreak,
   type Like, type InsertLike,
-  type Comment, type InsertComment
+  type Comment, type InsertComment,
+  type Challenge, type InsertChallenge,
+  type ChallengeProgress, type InsertChallengeProgress,
+  type Team, type InsertTeam,
+  type TeamMember, type InsertTeamMember,
+  type TeamPost, type InsertTeamPost
 } from "@shared/schema";
-import { eq, desc, and, count } from "drizzle-orm";
+import { eq, desc, and, count, gte, lte, sql } from "drizzle-orm";
 
 export interface IStorage {
   // Players
@@ -53,6 +59,33 @@ export interface IStorage {
   getGameComments(gameId: number): Promise<Comment[]>;
   deleteComment(id: number): Promise<void>;
   getComment(id: number): Promise<Comment | undefined>;
+
+  // Challenges
+  createChallenge(challenge: InsertChallenge): Promise<Challenge>;
+  getChallenges(): Promise<Challenge[]>;
+  getChallenge(id: number): Promise<Challenge | undefined>;
+  getActiveChallenges(): Promise<Challenge[]>;
+  getPlayerChallengeProgress(playerId: number): Promise<(ChallengeProgress & { challenge: Challenge })[]>;
+  getChallengeProgressForPlayer(challengeId: number, playerId: number): Promise<ChallengeProgress | undefined>;
+  getOrCreateChallengeProgress(challengeId: number, playerId: number): Promise<ChallengeProgress>;
+  updateChallengeProgress(id: number, updates: Partial<ChallengeProgress>): Promise<ChallengeProgress | undefined>;
+  getChallengeLeaderboard(challengeId: number): Promise<{ playerId: number; playerName: string; currentValue: number; completed: boolean }[]>;
+
+  // Teams
+  createTeam(team: InsertTeam): Promise<Team>;
+  getTeam(id: number): Promise<Team | undefined>;
+  getTeamByCode(code: string): Promise<Team | undefined>;
+  getTeamsBySessionId(sessionId: string): Promise<(Team & { memberCount: number })[]>;
+
+  // Team Members
+  addTeamMember(member: InsertTeamMember): Promise<TeamMember>;
+  getTeamMembers(teamId: number): Promise<TeamMember[]>;
+  getTeamMember(teamId: number, sessionId: string): Promise<TeamMember | undefined>;
+  removeTeamMember(id: number): Promise<void>;
+
+  // Team Posts
+  createTeamPost(post: InsertTeamPost): Promise<TeamPost>;
+  getTeamPosts(teamId: number): Promise<(TeamPost & { authorName: string })[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -229,6 +262,186 @@ export class DatabaseStorage implements IStorage {
   async getComment(id: number): Promise<Comment | undefined> {
     const [comment] = await db.select().from(comments).where(eq(comments.id, id));
     return comment;
+  }
+
+  async createChallenge(challenge: InsertChallenge): Promise<Challenge> {
+    const [newChallenge] = await db.insert(challenges).values(challenge).returning();
+    return newChallenge;
+  }
+
+  async getChallenges(): Promise<Challenge[]> {
+    return await db.select().from(challenges).orderBy(desc(challenges.createdAt));
+  }
+
+  async getChallenge(id: number): Promise<Challenge | undefined> {
+    const [challenge] = await db.select().from(challenges).where(eq(challenges.id, id));
+    return challenge;
+  }
+
+  async getActiveChallenges(): Promise<Challenge[]> {
+    const today = new Date().toISOString().split('T')[0];
+    return await db
+      .select()
+      .from(challenges)
+      .where(and(
+        eq(challenges.isActive, true),
+        lte(challenges.startDate, today),
+        gte(challenges.endDate, today)
+      ))
+      .orderBy(desc(challenges.createdAt));
+  }
+
+  async getPlayerChallengeProgress(playerId: number): Promise<(ChallengeProgress & { challenge: Challenge })[]> {
+    const results = await db
+      .select({
+        id: challengeProgress.id,
+        challengeId: challengeProgress.challengeId,
+        playerId: challengeProgress.playerId,
+        currentValue: challengeProgress.currentValue,
+        completed: challengeProgress.completed,
+        completedAt: challengeProgress.completedAt,
+        challenge: challenges,
+      })
+      .from(challengeProgress)
+      .innerJoin(challenges, eq(challengeProgress.challengeId, challenges.id))
+      .where(eq(challengeProgress.playerId, playerId))
+      .orderBy(desc(challenges.endDate));
+
+    return results.map(r => ({
+      id: r.id,
+      challengeId: r.challengeId,
+      playerId: r.playerId,
+      currentValue: r.currentValue,
+      completed: r.completed,
+      completedAt: r.completedAt,
+      challenge: r.challenge,
+    }));
+  }
+
+  async getChallengeProgressForPlayer(challengeId: number, playerId: number): Promise<ChallengeProgress | undefined> {
+    const [progress] = await db
+      .select()
+      .from(challengeProgress)
+      .where(and(
+        eq(challengeProgress.challengeId, challengeId),
+        eq(challengeProgress.playerId, playerId)
+      ));
+    return progress;
+  }
+
+  async getOrCreateChallengeProgress(challengeId: number, playerId: number): Promise<ChallengeProgress> {
+    const existing = await this.getChallengeProgressForPlayer(challengeId, playerId);
+    if (existing) return existing;
+
+    const [newProgress] = await db
+      .insert(challengeProgress)
+      .values({ challengeId, playerId, currentValue: 0, completed: false })
+      .returning();
+    return newProgress;
+  }
+
+  async updateChallengeProgress(id: number, updates: Partial<ChallengeProgress>): Promise<ChallengeProgress | undefined> {
+    const [updated] = await db
+      .update(challengeProgress)
+      .set(updates)
+      .where(eq(challengeProgress.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getChallengeLeaderboard(challengeId: number): Promise<{ playerId: number; playerName: string; currentValue: number; completed: boolean }[]> {
+    const results = await db
+      .select({
+        playerId: challengeProgress.playerId,
+        playerName: players.name,
+        currentValue: challengeProgress.currentValue,
+        completed: challengeProgress.completed,
+      })
+      .from(challengeProgress)
+      .innerJoin(players, eq(challengeProgress.playerId, players.id))
+      .where(eq(challengeProgress.challengeId, challengeId))
+      .orderBy(desc(challengeProgress.currentValue));
+
+    return results;
+  }
+
+  // Teams
+  async createTeam(team: InsertTeam): Promise<Team> {
+    const [newTeam] = await db.insert(teams).values(team).returning();
+    return newTeam;
+  }
+
+  async getTeam(id: number): Promise<Team | undefined> {
+    const [team] = await db.select().from(teams).where(eq(teams.id, id));
+    return team;
+  }
+
+  async getTeamByCode(code: string): Promise<Team | undefined> {
+    const [team] = await db.select().from(teams).where(eq(teams.code, code));
+    return team;
+  }
+
+  async getTeamsBySessionId(sessionId: string): Promise<(Team & { memberCount: number })[]> {
+    const memberRecords = await db
+      .select()
+      .from(teamMembers)
+      .where(eq(teamMembers.sessionId, sessionId));
+    
+    const teamIds = memberRecords.map(m => m.teamId);
+    if (teamIds.length === 0) return [];
+
+    const results: (Team & { memberCount: number })[] = [];
+    for (const teamId of teamIds) {
+      const [team] = await db.select().from(teams).where(eq(teams.id, teamId));
+      if (team) {
+        const [countResult] = await db.select({ count: count() }).from(teamMembers).where(eq(teamMembers.teamId, teamId));
+        results.push({ ...team, memberCount: countResult?.count || 0 });
+      }
+    }
+    return results;
+  }
+
+  // Team Members
+  async addTeamMember(member: InsertTeamMember): Promise<TeamMember> {
+    const [newMember] = await db.insert(teamMembers).values(member).returning();
+    return newMember;
+  }
+
+  async getTeamMembers(teamId: number): Promise<TeamMember[]> {
+    return await db.select().from(teamMembers).where(eq(teamMembers.teamId, teamId)).orderBy(desc(teamMembers.joinedAt));
+  }
+
+  async getTeamMember(teamId: number, sessionId: string): Promise<TeamMember | undefined> {
+    const [member] = await db.select().from(teamMembers).where(and(eq(teamMembers.teamId, teamId), eq(teamMembers.sessionId, sessionId)));
+    return member;
+  }
+
+  async removeTeamMember(id: number): Promise<void> {
+    await db.delete(teamMembers).where(eq(teamMembers.id, id));
+  }
+
+  // Team Posts
+  async createTeamPost(post: InsertTeamPost): Promise<TeamPost> {
+    const [newPost] = await db.insert(teamPosts).values(post).returning();
+    return newPost;
+  }
+
+  async getTeamPosts(teamId: number): Promise<(TeamPost & { authorName: string })[]> {
+    const posts = await db
+      .select({
+        id: teamPosts.id,
+        teamId: teamPosts.teamId,
+        authorId: teamPosts.authorId,
+        content: teamPosts.content,
+        createdAt: teamPosts.createdAt,
+        authorName: teamMembers.displayName,
+      })
+      .from(teamPosts)
+      .innerJoin(teamMembers, eq(teamPosts.authorId, teamMembers.id))
+      .where(eq(teamPosts.teamId, teamId))
+      .orderBy(desc(teamPosts.createdAt));
+    
+    return posts;
   }
 }
 

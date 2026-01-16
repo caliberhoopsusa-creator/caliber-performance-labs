@@ -218,4 +218,85 @@ export const BADGE_DEFINITIONS = {
   hot_streak_3: { name: "Hot Streak 3", description: "3 games in a row with B+ or better" },
   hot_streak_5: { name: "Hot Streak 5", description: "5 games in a row with B+ or better" },
   sharpshooter: { name: "Sharpshooter", description: "50%+ from 3 on 5+ attempts" },
+  hustle_champion: { name: "Hustle Champion", description: "Won the weekly hustle challenge" },
+  scoring_machine: { name: "Scoring Machine", description: "Won the scorer's sprint challenge" },
+  consistency_king: { name: "Consistency King", description: "Won the consistency challenge" },
 } as const;
+
+// === CHALLENGES TABLES ===
+export const challenges = pgTable("challenges", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  challengeType: text("challenge_type").notNull(), // 'weekly', 'monthly', 'seasonal'
+  targetType: text("target_type").notNull(), // 'hustle_avg', 'points_total', 'games_played', 'grade_count'
+  targetValue: integer("target_value").notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  badgeReward: text("badge_reward"), // badge type to award
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const challengeProgress = pgTable("challenge_progress", {
+  id: serial("id").primaryKey(),
+  challengeId: integer("challenge_id").notNull().references(() => challenges.id, { onDelete: "cascade" }),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  currentValue: integer("current_value").notNull().default(0),
+  completed: boolean("completed").default(false).notNull(),
+  completedAt: timestamp("completed_at"),
+});
+
+export type Challenge = typeof challenges.$inferSelect;
+export const insertChallengeSchema = createInsertSchema(challenges).omit({ id: true, createdAt: true });
+export type InsertChallenge = z.infer<typeof insertChallengeSchema>;
+
+export type ChallengeProgress = typeof challengeProgress.$inferSelect;
+export const insertChallengeProgressSchema = createInsertSchema(challengeProgress).omit({ id: true });
+export type InsertChallengeProgress = z.infer<typeof insertChallengeProgressSchema>;
+
+export const CHALLENGE_TARGET_TYPES = {
+  hustle_avg: { name: "Hustle Average", description: "Average hustle score across games" },
+  points_total: { name: "Total Points", description: "Total points scored" },
+  games_played: { name: "Games Played", description: "Number of games played" },
+  grade_count: { name: "Grade Count", description: "Games with B+ or better" },
+} as const;
+
+// === TEAM MESSAGE BOARDS ===
+export const teams = pgTable("teams", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  code: text("code").notNull().unique(),
+  createdBy: text("created_by").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const teamMembers = pgTable("team_members", {
+  id: serial("id").primaryKey(),
+  teamId: integer("team_id").notNull().references(() => teams.id, { onDelete: "cascade" }),
+  playerId: integer("player_id"),
+  displayName: text("display_name").notNull(),
+  sessionId: text("session_id").notNull(),
+  role: text("role").notNull().default("member"),
+  joinedAt: timestamp("joined_at").defaultNow(),
+});
+
+export const teamPosts = pgTable("team_posts", {
+  id: serial("id").primaryKey(),
+  teamId: integer("team_id").notNull().references(() => teams.id, { onDelete: "cascade" }),
+  authorId: integer("author_id").notNull().references(() => teamMembers.id, { onDelete: "cascade" }),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type Team = typeof teams.$inferSelect;
+export const insertTeamSchema = createInsertSchema(teams).omit({ id: true, createdAt: true });
+export type InsertTeam = z.infer<typeof insertTeamSchema>;
+
+export type TeamMember = typeof teamMembers.$inferSelect;
+export const insertTeamMemberSchema = createInsertSchema(teamMembers).omit({ id: true, joinedAt: true });
+export type InsertTeamMember = z.infer<typeof insertTeamMemberSchema>;
+
+export type TeamPost = typeof teamPosts.$inferSelect;
+export const insertTeamPostSchema = createInsertSchema(teamPosts).omit({ id: true, createdAt: true });
+export type InsertTeamPost = z.infer<typeof insertTeamPostSchema>;
