@@ -81,6 +81,22 @@ shared/           # Shared code between client and server
 ### Analysis Logic
 The grading algorithm in `server/routes.ts` calculates a performance score using position-weighted stats. Guards are penalized more for turnovers, Bigs get bonuses for rebounds and blocks, and Wings get extra credit for steals. The score maps to a letter grade with generated feedback text.
 
+### Authentication & Role-Based Access Control
+- **Authentication**: Replit Auth with session management
+- **User Roles**: Two roles - "player" and "coach" selected on first login
+- **Player Role**: Can only view/edit their own profile and log games for themselves
+- **Coach Role**: Full access to all players, coach tools, scouting, and analysis features
+- **Middleware**: 
+  - `isAuthenticated` - requires login
+  - `isCoach` - requires coach role
+  - `canModifyPlayer(req, playerId)` - checks if user can modify specific player
+- **Protected Routes**:
+  - `POST /api/players` - coaches only
+  - `DELETE /api/players/:id` - coaches only
+  - `PATCH /api/players/:id` - coaches or player's own profile
+  - `POST /api/games` - coaches or player's own games
+  - All coach tools routes (`/api/coach-goals`, `/api/practices`, etc.) - coaches only
+
 ### Features
 - **Dashboard**: Overview of players and recent games
 - **Player Management**: Add/view/edit/delete players with position, height, team info, profile photo, and banner

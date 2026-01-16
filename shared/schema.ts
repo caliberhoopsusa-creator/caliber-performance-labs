@@ -7,6 +7,7 @@ import { z } from "zod";
 
 export const players = pgTable("players", {
   id: serial("id").primaryKey(),
+  userId: text("user_id"), // Links to auth user - null for coach-created players
   name: text("name").notNull(),
   position: text("position").notNull(), // 'Guard', 'Wing', 'Big'
   height: text("height"), // e.g., "6'5"
@@ -753,3 +754,6 @@ export const PREDICTION_CATEGORIES = {
   hustle: { name: "Hustle War", description: "Who will hustle harder?" },
   passing: { name: "Dime Contest", description: "Who will dish more assists?" },
 } as const;
+
+// Export auth models
+export * from "./models/auth";

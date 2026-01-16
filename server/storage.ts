@@ -48,6 +48,7 @@ export interface IStorage {
   // Players
   getPlayers(): Promise<Player[]>;
   getPlayer(id: number): Promise<(Player & { games: Game[] }) | undefined>;
+  getPlayerByUserId(userId: string): Promise<(Player & { games: Game[] }) | undefined>;
   getPlayersWithStats(): Promise<(Player & { games: Game[] })[]>;
   createPlayer(player: InsertPlayer): Promise<Player>;
   updatePlayer(id: number, updates: Partial<Player>): Promise<Player | undefined>;
@@ -256,6 +257,19 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(games)
       .where(eq(games.playerId, id))
+      .orderBy(desc(games.date));
+
+    return { ...player, games: playerGames };
+  }
+
+  async getPlayerByUserId(userId: string): Promise<(Player & { games: Game[] }) | undefined> {
+    const [player] = await db.select().from(players).where(eq(players.userId, userId));
+    if (!player) return undefined;
+
+    const playerGames = await db
+      .select()
+      .from(games)
+      .where(eq(games.playerId, player.id))
       .orderBy(desc(games.date));
 
     return { ...player, games: playerGames };

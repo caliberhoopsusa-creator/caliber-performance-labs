@@ -1,11 +1,15 @@
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Sidebar, MobileNav } from "@/components/Sidebar";
+import { useAuth } from "@/hooks/use-auth";
+import { Loader2 } from "lucide-react";
 
 // Pages
+import Landing from "./pages/Landing";
+import RoleSelection from "./pages/RoleSelection";
 import Dashboard from "./pages/Dashboard";
 import PlayersList from "./pages/PlayersList";
 import PlayerDetail from "./pages/PlayerDetail";
@@ -28,10 +32,66 @@ import OpponentScouting from "./pages/OpponentScouting";
 import CoachAlertsPage from "./pages/CoachAlertsPage";
 import NotFound from "./pages/not-found";
 
-function Router() {
+interface ExtendedUser {
+  id: string;
+  email: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  profileImageUrl: string | null;
+  role: string | null;
+  playerId: number | null;
+  playerProfile?: {
+    id: number;
+    name: string;
+    position: string;
+  } | null;
+}
+
+function useExtendedUser() {
+  return useQuery<ExtendedUser | null>({
+    queryKey: ['/api/users/me'],
+    retry: false,
+    staleTime: 1000 * 60 * 5,
+  });
+}
+
+function MainRouter() {
+  const { user: authUser, isLoading: authLoading } = useAuth();
+  const { data: extendedUser, isLoading: userLoading } = useExtendedUser();
+  
+  const isLoading = authLoading || (authUser && userLoading);
+  
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Not authenticated - show landing page
+  if (!authUser) {
+    return <Landing />;
+  }
+  
+  // Authenticated but no role selected - show role selection
+  if (!extendedUser?.role) {
+    return <RoleSelection />;
+  }
+  
+  // Player without profile - show role selection to create profile
+  if (extendedUser.role === 'player' && !extendedUser.playerId) {
+    return <RoleSelection />;
+  }
+  
+  // Fully authenticated with role - show main app
   return (
     <div className="flex min-h-screen bg-background text-foreground font-body selection:bg-primary/30">
-      <Sidebar />
+      <Sidebar userRole={extendedUser.role} playerId={extendedUser.playerId} />
       <main className="flex-1 p-4 pb-20 md:p-8 md:pb-8 w-full max-w-[1600px] mx-auto overflow-x-hidden">
         <Switch>
           <Route path="/" component={Dashboard} />
@@ -57,7 +117,7 @@ function Router() {
           <Route component={NotFound} />
         </Switch>
       </main>
-      <MobileNav />
+      <MobileNav userRole={extendedUser.role} />
     </div>
   );
 }
@@ -67,7 +127,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <Router />
+        <MainRouter />
       </TooltipProvider>
     </QueryClientProvider>
   );
