@@ -4,6 +4,8 @@ import {
   teams, teamMembers, teamPosts,
   feedActivities, reposts, polls, pollVotes, predictions, predictionVotes, storyTemplates, playerStories,
   activityStreaks,
+  shots, gameNotes, practices, practiceAttendance, drills, drillScores, lineups, lineupStats,
+  opponents, alerts, coachGoals, drillRecommendations,
   type Player, type InsertPlayer,
   type Game, type InsertGame,
   type UpdateGameRequest,
@@ -26,7 +28,19 @@ import {
   type StoryTemplate, type InsertStoryTemplate,
   type PlayerStory, type InsertPlayerStory,
   type ActivityStreak, type InsertActivityStreak,
-  type SkillBadge, type InsertSkillBadge, skillBadges
+  type SkillBadge, type InsertSkillBadge, skillBadges,
+  type Shot, type InsertShot,
+  type GameNote, type InsertGameNote,
+  type Practice, type InsertPractice,
+  type PracticeAttendance, type InsertPracticeAttendance,
+  type Drill, type InsertDrill,
+  type DrillScore, type InsertDrillScore,
+  type Lineup, type InsertLineup,
+  type LineupStat, type InsertLineupStat,
+  type Opponent, type InsertOpponent,
+  type Alert, type InsertAlert,
+  type CoachGoal, type InsertCoachGoal,
+  type DrillRecommendation, type InsertDrillRecommendation
 } from "@shared/schema";
 import { eq, desc, and, count, gte, lte, sql, or } from "drizzle-orm";
 
@@ -151,6 +165,81 @@ export interface IStorage {
 
   // XP Management
   addPlayerXp(playerId: number, xpAmount: number): Promise<{ player: Player; newTier: string | null; oldTier: string }>;
+
+  // Shots
+  createShot(data: InsertShot): Promise<Shot>;
+  getShotsByGame(gameId: number): Promise<Shot[]>;
+  getShotsByPlayer(playerId: number): Promise<Shot[]>;
+  deleteShot(id: number): Promise<void>;
+
+  // Game Notes
+  createGameNote(data: InsertGameNote): Promise<GameNote>;
+  getGameNotes(gameId: number): Promise<GameNote[]>;
+  getPlayerGameNotes(playerId: number): Promise<GameNote[]>;
+  updateGameNote(id: number, data: Partial<InsertGameNote>): Promise<GameNote>;
+  deleteGameNote(id: number): Promise<void>;
+
+  // Practices
+  createPractice(data: InsertPractice): Promise<Practice>;
+  getPractices(): Promise<Practice[]>;
+  getPractice(id: number): Promise<Practice | undefined>;
+  updatePractice(id: number, data: Partial<InsertPractice>): Promise<Practice>;
+  deletePractice(id: number): Promise<void>;
+
+  // Practice Attendance
+  createPracticeAttendance(data: InsertPracticeAttendance): Promise<PracticeAttendance>;
+  getPracticeAttendance(practiceId: number): Promise<PracticeAttendance[]>;
+  getPlayerAttendance(playerId: number): Promise<PracticeAttendance[]>;
+  updatePracticeAttendance(id: number, data: Partial<InsertPracticeAttendance>): Promise<PracticeAttendance>;
+
+  // Drills
+  createDrill(data: InsertDrill): Promise<Drill>;
+  getDrills(): Promise<Drill[]>;
+  getDrill(id: number): Promise<Drill | undefined>;
+  getDrillsByCategory(category: string): Promise<Drill[]>;
+
+  // Drill Scores
+  createDrillScore(data: InsertDrillScore): Promise<DrillScore>;
+  getDrillScoresByPractice(practiceId: number): Promise<DrillScore[]>;
+  getDrillScoresByPlayer(playerId: number): Promise<DrillScore[]>;
+
+  // Lineups
+  createLineup(data: InsertLineup): Promise<Lineup>;
+  getLineups(): Promise<Lineup[]>;
+  getLineup(id: number): Promise<Lineup | undefined>;
+  deleteLineup(id: number): Promise<void>;
+
+  // Lineup Stats
+  createLineupStat(data: InsertLineupStat): Promise<LineupStat>;
+  getLineupStats(lineupId: number): Promise<LineupStat[]>;
+  getLineupStatsByGame(gameId: number): Promise<LineupStat[]>;
+
+  // Opponents
+  createOpponent(data: InsertOpponent): Promise<Opponent>;
+  getOpponents(): Promise<Opponent[]>;
+  getOpponent(id: number): Promise<Opponent | undefined>;
+  updateOpponent(id: number, data: Partial<InsertOpponent>): Promise<Opponent>;
+  deleteOpponent(id: number): Promise<void>;
+
+  // Alerts
+  createAlert(data: InsertAlert): Promise<Alert>;
+  getAlerts(playerId?: number): Promise<Alert[]>;
+  getUnreadAlerts(): Promise<Alert[]>;
+  markAlertRead(id: number): Promise<void>;
+  deleteAlert(id: number): Promise<void>;
+
+  // Coach Goals
+  createCoachGoal(data: InsertCoachGoal): Promise<CoachGoal>;
+  getCoachGoals(playerId: number): Promise<CoachGoal[]>;
+  getAllCoachGoals(): Promise<CoachGoal[]>;
+  updateCoachGoal(id: number, data: Partial<InsertCoachGoal>): Promise<CoachGoal>;
+  deleteCoachGoal(id: number): Promise<void>;
+
+  // Drill Recommendations
+  createDrillRecommendation(data: InsertDrillRecommendation): Promise<DrillRecommendation>;
+  getDrillRecommendations(playerId: number): Promise<DrillRecommendation[]>;
+  updateDrillRecommendation(id: number, data: Partial<InsertDrillRecommendation>): Promise<DrillRecommendation>;
+  deleteDrillRecommendation(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -818,6 +907,247 @@ export class DatabaseStorage implements IStorage {
       newTier: newTier !== oldTier ? newTier : null,
       oldTier
     };
+  }
+
+  // Shots
+  async createShot(data: InsertShot): Promise<Shot> {
+    const [newShot] = await db.insert(shots).values(data).returning();
+    return newShot;
+  }
+
+  async getShotsByGame(gameId: number): Promise<Shot[]> {
+    return await db.select().from(shots).where(eq(shots.gameId, gameId)).orderBy(desc(shots.createdAt));
+  }
+
+  async getShotsByPlayer(playerId: number): Promise<Shot[]> {
+    return await db.select().from(shots).where(eq(shots.playerId, playerId)).orderBy(desc(shots.createdAt));
+  }
+
+  async deleteShot(id: number): Promise<void> {
+    await db.delete(shots).where(eq(shots.id, id));
+  }
+
+  // Game Notes
+  async createGameNote(data: InsertGameNote): Promise<GameNote> {
+    const [newNote] = await db.insert(gameNotes).values(data).returning();
+    return newNote;
+  }
+
+  async getGameNotes(gameId: number): Promise<GameNote[]> {
+    return await db.select().from(gameNotes).where(eq(gameNotes.gameId, gameId)).orderBy(desc(gameNotes.createdAt));
+  }
+
+  async getPlayerGameNotes(playerId: number): Promise<GameNote[]> {
+    return await db.select().from(gameNotes).where(eq(gameNotes.playerId, playerId)).orderBy(desc(gameNotes.createdAt));
+  }
+
+  async updateGameNote(id: number, data: Partial<InsertGameNote>): Promise<GameNote> {
+    const [updated] = await db.update(gameNotes).set(data).where(eq(gameNotes.id, id)).returning();
+    return updated;
+  }
+
+  async deleteGameNote(id: number): Promise<void> {
+    await db.delete(gameNotes).where(eq(gameNotes.id, id));
+  }
+
+  // Practices
+  async createPractice(data: InsertPractice): Promise<Practice> {
+    const [newPractice] = await db.insert(practices).values(data).returning();
+    return newPractice;
+  }
+
+  async getPractices(): Promise<Practice[]> {
+    return await db.select().from(practices).orderBy(desc(practices.date));
+  }
+
+  async getPractice(id: number): Promise<Practice | undefined> {
+    const [practice] = await db.select().from(practices).where(eq(practices.id, id));
+    return practice;
+  }
+
+  async updatePractice(id: number, data: Partial<InsertPractice>): Promise<Practice> {
+    const [updated] = await db.update(practices).set(data).where(eq(practices.id, id)).returning();
+    return updated;
+  }
+
+  async deletePractice(id: number): Promise<void> {
+    await db.delete(practices).where(eq(practices.id, id));
+  }
+
+  // Practice Attendance
+  async createPracticeAttendance(data: InsertPracticeAttendance): Promise<PracticeAttendance> {
+    const [newAttendance] = await db.insert(practiceAttendance).values(data).returning();
+    return newAttendance;
+  }
+
+  async getPracticeAttendance(practiceId: number): Promise<PracticeAttendance[]> {
+    return await db.select().from(practiceAttendance).where(eq(practiceAttendance.practiceId, practiceId));
+  }
+
+  async getPlayerAttendance(playerId: number): Promise<PracticeAttendance[]> {
+    return await db.select().from(practiceAttendance).where(eq(practiceAttendance.playerId, playerId));
+  }
+
+  async updatePracticeAttendance(id: number, data: Partial<InsertPracticeAttendance>): Promise<PracticeAttendance> {
+    const [updated] = await db.update(practiceAttendance).set(data).where(eq(practiceAttendance.id, id)).returning();
+    return updated;
+  }
+
+  // Drills
+  async createDrill(data: InsertDrill): Promise<Drill> {
+    const [newDrill] = await db.insert(drills).values(data).returning();
+    return newDrill;
+  }
+
+  async getDrills(): Promise<Drill[]> {
+    return await db.select().from(drills);
+  }
+
+  async getDrill(id: number): Promise<Drill | undefined> {
+    const [drill] = await db.select().from(drills).where(eq(drills.id, id));
+    return drill;
+  }
+
+  async getDrillsByCategory(category: string): Promise<Drill[]> {
+    return await db.select().from(drills).where(eq(drills.category, category));
+  }
+
+  // Drill Scores
+  async createDrillScore(data: InsertDrillScore): Promise<DrillScore> {
+    const [newScore] = await db.insert(drillScores).values(data).returning();
+    return newScore;
+  }
+
+  async getDrillScoresByPractice(practiceId: number): Promise<DrillScore[]> {
+    return await db.select().from(drillScores).where(eq(drillScores.practiceId, practiceId)).orderBy(desc(drillScores.createdAt));
+  }
+
+  async getDrillScoresByPlayer(playerId: number): Promise<DrillScore[]> {
+    return await db.select().from(drillScores).where(eq(drillScores.playerId, playerId)).orderBy(desc(drillScores.createdAt));
+  }
+
+  // Lineups
+  async createLineup(data: InsertLineup): Promise<Lineup> {
+    const [newLineup] = await db.insert(lineups).values(data).returning();
+    return newLineup;
+  }
+
+  async getLineups(): Promise<Lineup[]> {
+    return await db.select().from(lineups).orderBy(desc(lineups.createdAt));
+  }
+
+  async getLineup(id: number): Promise<Lineup | undefined> {
+    const [lineup] = await db.select().from(lineups).where(eq(lineups.id, id));
+    return lineup;
+  }
+
+  async deleteLineup(id: number): Promise<void> {
+    await db.delete(lineups).where(eq(lineups.id, id));
+  }
+
+  // Lineup Stats
+  async createLineupStat(data: InsertLineupStat): Promise<LineupStat> {
+    const [newStat] = await db.insert(lineupStats).values(data).returning();
+    return newStat;
+  }
+
+  async getLineupStats(lineupId: number): Promise<LineupStat[]> {
+    return await db.select().from(lineupStats).where(eq(lineupStats.lineupId, lineupId)).orderBy(desc(lineupStats.createdAt));
+  }
+
+  async getLineupStatsByGame(gameId: number): Promise<LineupStat[]> {
+    return await db.select().from(lineupStats).where(eq(lineupStats.gameId, gameId)).orderBy(desc(lineupStats.createdAt));
+  }
+
+  // Opponents
+  async createOpponent(data: InsertOpponent): Promise<Opponent> {
+    const [newOpponent] = await db.insert(opponents).values(data).returning();
+    return newOpponent;
+  }
+
+  async getOpponents(): Promise<Opponent[]> {
+    return await db.select().from(opponents).orderBy(desc(opponents.createdAt));
+  }
+
+  async getOpponent(id: number): Promise<Opponent | undefined> {
+    const [opponent] = await db.select().from(opponents).where(eq(opponents.id, id));
+    return opponent;
+  }
+
+  async updateOpponent(id: number, data: Partial<InsertOpponent>): Promise<Opponent> {
+    const [updated] = await db.update(opponents).set(data).where(eq(opponents.id, id)).returning();
+    return updated;
+  }
+
+  async deleteOpponent(id: number): Promise<void> {
+    await db.delete(opponents).where(eq(opponents.id, id));
+  }
+
+  // Alerts
+  async createAlert(data: InsertAlert): Promise<Alert> {
+    const [newAlert] = await db.insert(alerts).values(data).returning();
+    return newAlert;
+  }
+
+  async getAlerts(playerId?: number): Promise<Alert[]> {
+    if (playerId) {
+      return await db.select().from(alerts).where(eq(alerts.playerId, playerId)).orderBy(desc(alerts.createdAt));
+    }
+    return await db.select().from(alerts).orderBy(desc(alerts.createdAt));
+  }
+
+  async getUnreadAlerts(): Promise<Alert[]> {
+    return await db.select().from(alerts).where(eq(alerts.isRead, false)).orderBy(desc(alerts.createdAt));
+  }
+
+  async markAlertRead(id: number): Promise<void> {
+    await db.update(alerts).set({ isRead: true }).where(eq(alerts.id, id));
+  }
+
+  async deleteAlert(id: number): Promise<void> {
+    await db.delete(alerts).where(eq(alerts.id, id));
+  }
+
+  // Coach Goals
+  async createCoachGoal(data: InsertCoachGoal): Promise<CoachGoal> {
+    const [newGoal] = await db.insert(coachGoals).values(data).returning();
+    return newGoal;
+  }
+
+  async getCoachGoals(playerId: number): Promise<CoachGoal[]> {
+    return await db.select().from(coachGoals).where(eq(coachGoals.playerId, playerId)).orderBy(desc(coachGoals.createdAt));
+  }
+
+  async getAllCoachGoals(): Promise<CoachGoal[]> {
+    return await db.select().from(coachGoals).orderBy(desc(coachGoals.createdAt));
+  }
+
+  async updateCoachGoal(id: number, data: Partial<InsertCoachGoal>): Promise<CoachGoal> {
+    const [updated] = await db.update(coachGoals).set(data).where(eq(coachGoals.id, id)).returning();
+    return updated;
+  }
+
+  async deleteCoachGoal(id: number): Promise<void> {
+    await db.delete(coachGoals).where(eq(coachGoals.id, id));
+  }
+
+  // Drill Recommendations
+  async createDrillRecommendation(data: InsertDrillRecommendation): Promise<DrillRecommendation> {
+    const [newRec] = await db.insert(drillRecommendations).values(data).returning();
+    return newRec;
+  }
+
+  async getDrillRecommendations(playerId: number): Promise<DrillRecommendation[]> {
+    return await db.select().from(drillRecommendations).where(eq(drillRecommendations.playerId, playerId)).orderBy(desc(drillRecommendations.priority));
+  }
+
+  async updateDrillRecommendation(id: number, data: Partial<InsertDrillRecommendation>): Promise<DrillRecommendation> {
+    const [updated] = await db.update(drillRecommendations).set(data).where(eq(drillRecommendations.id, id)).returning();
+    return updated;
+  }
+
+  async deleteDrillRecommendation(id: number): Promise<void> {
+    await db.delete(drillRecommendations).where(eq(drillRecommendations.id, id));
   }
 }
 
