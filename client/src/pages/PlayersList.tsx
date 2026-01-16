@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { usePlayers, useCreatePlayer } from "@/hooks/use-basketball";
+import { usePlayers, useCreatePlayer, useDeletePlayer } from "@/hooks/use-basketball";
 import { Link } from "wouter";
 import { Search, Plus, UserPlus, Trash2, ChevronRight } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -10,6 +11,17 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
   DialogDescription, DialogFooter
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -19,8 +31,30 @@ import { cn } from "@/lib/utils";
 
 export default function PlayersList() {
   const { data: players, isLoading } = usePlayers();
+  const { mutate: deletePlayer, isPending: isDeleting } = useDeletePlayer();
+  const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [playerToDelete, setPlayerToDelete] = useState<{ id: number; name: string } | null>(null);
+
+  const handleDeletePlayer = (playerId: number, playerName: string) => {
+    deletePlayer(playerId, {
+      onSuccess: () => {
+        toast({
+          title: "Player Removed",
+          description: `${playerName} has been removed from your roster.`,
+        });
+        setPlayerToDelete(null);
+      },
+      onError: () => {
+        toast({
+          title: "Error",
+          description: "Failed to delete player. Please try again.",
+          variant: "destructive",
+        });
+      },
+    });
+  };
 
   const filteredPlayers = players?.filter(p => 
     p.name.toLowerCase().includes(search.toLowerCase()) || 
@@ -86,36 +120,77 @@ export default function PlayersList() {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredPlayers.map((player) => (
-            <Link key={player.id} href={`/players/${player.id}`} className="group relative block h-full">
-              <div className="h-full bg-card border border-white/5 rounded-2xl p-6 shadow-lg transition-all duration-300 hover:border-primary/50 hover:shadow-primary/5 hover:-translate-y-1 overflow-hidden">
-                <div className="absolute top-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="bg-secondary/80 p-1.5 rounded-lg text-white">
-                    <ChevronRight className="w-4 h-4" />
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredPlayers.map((player) => (
+              <div key={player.id} className="group relative h-full">
+                <Link href={`/players/${player.id}`} className="block h-full">
+                  <div className="h-full bg-card border border-white/5 rounded-2xl p-6 shadow-lg transition-all duration-300 hover:border-primary/50 hover:shadow-primary/5 hover:-translate-y-1 overflow-hidden">
+                    <div className="absolute top-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                      <div className="bg-secondary/80 p-1.5 rounded-lg text-white">
+                        <ChevronRight className="w-4 h-4" />
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start justify-between mb-6">
+                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-secondary to-background border-2 border-white/10 flex items-center justify-center text-2xl font-display font-bold text-white shadow-inner">
+                        {player.jerseyNumber || "#"}
+                      </div>
+                      <div className="bg-secondary/30 px-3 py-1 rounded-full border border-white/5">
+                        <span className="text-xs font-bold uppercase tracking-wider text-primary">{player.position}</span>
+                      </div>
+                    </div>
+                    
+                    <h3 className="text-xl font-bold font-display text-white mb-1 group-hover:text-primary transition-colors truncate">{player.name}</h3>
+                    <p className="text-sm text-muted-foreground mb-4 font-medium">{player.team || "No Team"} • {player.height || "N/A"}</p>
+                    
+                    <div className="pt-4 border-t border-white/5 flex justify-between items-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      <span>View Analytics</span>
+                      <span className="group-hover:translate-x-1 transition-transform">→</span>
+                    </div>
                   </div>
-                </div>
+                </Link>
                 
-                <div className="flex items-start justify-between mb-6">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-secondary to-background border-2 border-white/10 flex items-center justify-center text-2xl font-display font-bold text-white shadow-inner">
-                    {player.jerseyNumber || "#"}
-                  </div>
-                  <div className="bg-secondary/30 px-3 py-1 rounded-full border border-white/5">
-                    <span className="text-xs font-bold uppercase tracking-wider text-primary">{player.position}</span>
-                  </div>
-                </div>
-                
-                <h3 className="text-xl font-bold font-display text-white mb-1 group-hover:text-primary transition-colors truncate">{player.name}</h3>
-                <p className="text-sm text-muted-foreground mb-4 font-medium">{player.team || "No Team"} • {player.height || "N/A"}</p>
-                
-                <div className="pt-4 border-t border-white/5 flex justify-between items-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  <span>View Analytics</span>
-                  <span className="group-hover:translate-x-1 transition-transform">→</span>
-                </div>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setPlayerToDelete({ id: player.id, name: player.name });
+                  }}
+                  className="absolute bottom-4 right-4 p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 opacity-0 group-hover:opacity-100 transition-all z-20"
+                  data-testid={`button-delete-player-${player.id}`}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </div>
-            </Link>
-          ))}
-        </div>
+            ))}
+          </div>
+
+          <AlertDialog open={!!playerToDelete} onOpenChange={(open) => !open && setPlayerToDelete(null)}>
+            <AlertDialogContent className="bg-card border-white/10 text-white">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-xl font-display">Remove Player</AlertDialogTitle>
+                <AlertDialogDescription className="text-muted-foreground">
+                  Are you sure you want to remove <span className="text-white font-semibold">{playerToDelete?.name}</span> from your roster? 
+                  This will also delete all of their game history and stats. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="bg-secondary/30 border-white/10 text-white hover:bg-secondary/50">
+                  Cancel
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => playerToDelete && handleDeletePlayer(playerToDelete.id, playerToDelete.name)}
+                  disabled={isDeleting}
+                  className="bg-red-500 hover:bg-red-600 text-white"
+                  data-testid="button-confirm-delete"
+                >
+                  {isDeleting ? "Removing..." : "Remove Player"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </>
       )}
     </div>
   );
