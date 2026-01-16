@@ -363,11 +363,14 @@ function RosterTab() {
 function ProductsTab() {
   const { toast } = useToast();
 
-  const { data, isLoading, refetch } = useQuery<{ products: Product[] }>({
+  const { data, isLoading, isError, error, refetch } = useQuery<{ products: Product[] }>({
     queryKey: ["/api/admin/products"],
     queryFn: async () => {
+      console.log("Fetching admin products...");
       const res = await adminFetch("/api/admin/products");
-      return res.json();
+      const result = await res.json();
+      console.log("Admin products result:", result);
+      return result;
     },
   });
 
@@ -392,6 +395,15 @@ function ProductsTab() {
     return (
       <div className="flex justify-center py-8">
         <Loader2 className="w-6 h-6 animate-spin" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-destructive mb-4">Error loading products: {(error as Error)?.message || "Unknown error"}</p>
+        <Button onClick={() => refetch()} variant="outline">Retry</Button>
       </div>
     );
   }
