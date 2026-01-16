@@ -2,7 +2,7 @@ import { usePlayer, useDeleteGame, usePlayerBadges } from "@/hooks/use-basketbal
 import { useRoute, Link } from "wouter";
 import { StatCard } from "@/components/StatCard";
 import { GradeBadge } from "@/components/GradeBadge";
-import { ArrowLeft, Plus, Calendar, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Crosshair, Trophy } from "lucide-react";
+import { ArrowLeft, Plus, Calendar, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Crosshair, Trophy, Share2 } from "lucide-react";
 import { BADGE_DEFINITIONS, type Badge } from "@shared/schema";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 const BADGE_ICONS: Record<string, any> = {
   twenty_piece: Target,
@@ -41,6 +42,57 @@ export default function PlayerDetail() {
   const { data: player, isLoading } = usePlayer(id);
   const { data: badges = [], isLoading: badgesLoading } = usePlayerBadges(id);
   const { mutate: deleteGame } = useDeleteGame();
+  const { toast } = useToast();
+
+  const handleShareProfile = async () => {
+    const shareUrl = `${window.location.origin}/players/${id}/card`;
+    const shareData = {
+      title: `${player?.name} - Caliber Player Card`,
+      text: `Check out my player card on Caliber!`,
+      url: shareUrl,
+    };
+
+    if (navigator.share && navigator.canShare?.(shareData)) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        if ((err as Error).name !== "AbortError") {
+          copyToClipboard(shareUrl);
+        }
+      }
+    } else {
+      copyToClipboard(shareUrl);
+    }
+  };
+
+  const handleShareGame = async (gameId: number, opponent: string, grade: string) => {
+    const shareUrl = `${window.location.origin}/players/${id}/card?gameId=${gameId}`;
+    const shareData = {
+      title: `${player?.name} vs ${opponent} - ${grade}`,
+      text: `Check out my game card on Caliber!`,
+      url: shareUrl,
+    };
+
+    if (navigator.share && navigator.canShare?.(shareData)) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        if ((err as Error).name !== "AbortError") {
+          copyToClipboard(shareUrl);
+        }
+      }
+    } else {
+      copyToClipboard(shareUrl);
+    }
+  };
+
+  const copyToClipboard = (url: string) => {
+    navigator.clipboard.writeText(url);
+    toast({
+      title: "Link Copied!",
+      description: "Share link copied to clipboard",
+    });
+  };
 
   if (isLoading) {
     return (
@@ -106,11 +158,21 @@ export default function PlayerDetail() {
             </div>
           </div>
 
-          <Link href={`/analyze?playerId=${player.id}`}>
-            <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 gap-2 h-12 px-8">
-              <Plus className="w-5 h-5" /> Log Game
+          <div className="flex flex-wrap gap-3 relative z-10">
+            <Button 
+              onClick={handleShareProfile} 
+              variant="outline" 
+              className="bg-white/5 border-white/20 hover:bg-white/10 text-white font-bold rounded-xl gap-2"
+              data-testid="button-share-profile"
+            >
+              <Share2 className="w-4 h-4" /> Share Profile
             </Button>
-          </Link>
+            <Link href={`/analyze?playerId=${player.id}`}>
+              <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 gap-2 h-12 px-8">
+                <Plus className="w-5 h-5" /> Log Game
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -266,25 +328,34 @@ export default function PlayerDetail() {
                       <span><span className="text-muted-foreground">AST</span> {game.assists}</span>
                     </div>
                     
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <button className="text-muted-foreground hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 p-1">
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent className="bg-card border-white/10 text-white">
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Game Log?</AlertDialogTitle>
-                          <AlertDialogDescription className="text-muted-foreground">
-                            This will permanently remove this game and affect the player's averages.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel className="bg-secondary text-white hover:bg-secondary/80 border-transparent">Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => deleteGame(game.id)} className="bg-red-500 hover:bg-red-600 text-white font-bold">Delete</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                    <div className="flex items-center gap-1">
+                      <button 
+                        onClick={() => handleShareGame(game.id, game.opponent, game.grade || "")}
+                        className="text-muted-foreground hover:text-primary transition-colors opacity-0 group-hover:opacity-100 p-1"
+                        data-testid={`button-share-game-${game.id}`}
+                      >
+                        <Share2 className="w-3.5 h-3.5" />
+                      </button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <button className="text-muted-foreground hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 p-1">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="bg-card border-white/10 text-white">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Game Log?</AlertDialogTitle>
+                            <AlertDialogDescription className="text-muted-foreground">
+                              This will permanently remove this game and affect the player's averages.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel className="bg-secondary text-white hover:bg-secondary/80 border-transparent">Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => deleteGame(game.id)} className="bg-red-500 hover:bg-red-600 text-white font-bold">Delete</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </div>
                 </div>
               ))

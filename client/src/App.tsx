@@ -9,6 +9,7 @@ import { Sidebar, MobileNav } from "@/components/Sidebar";
 import Dashboard from "./pages/Dashboard";
 import PlayersList from "./pages/PlayersList";
 import PlayerDetail from "./pages/PlayerDetail";
+import PlayerCard from "./pages/PlayerCard";
 import AnalyzeGame from "./pages/AnalyzeGame";
 import Leaderboard from "./pages/Leaderboard";
 import ComparePlayers from "./pages/ComparePlayers";
@@ -24,6 +25,7 @@ function Router() {
         <Switch>
           <Route path="/" component={Dashboard} />
           <Route path="/players" component={PlayersList} />
+          <Route path="/players/:id/card" component={PlayerCard} />
           <Route path="/players/:id" component={PlayerDetail} />
           <Route path="/leaderboard" component={Leaderboard} />
           <Route path="/compare" component={ComparePlayers} />
