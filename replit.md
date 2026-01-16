@@ -32,12 +32,20 @@ Preferred communication style: Simple, everyday language.
 - **Migrations**: Managed via `drizzle-kit push`
 
 ### Key Data Models
-- **Players**: Name, position (Guard/Wing/Big), height, team, jersey number, photo URL, banner URL, bio
+- **Players**: Name, position (Guard/Wing/Big), height, team, jersey number, photo URL, banner URL, bio, totalXp, currentTier
 - **Games**: Per-game statistics including points, rebounds, assists, shooting splits, advanced metrics, and calculated grades with feedback
 - **Badges**: Virtual awards earned through performance (12 types including twenty_piece, double_double, hot_streak, etc.)
 - **Goals**: Player-set targets for improvement with progress tracking
 - **Streaks**: Automatic tracking of consecutive achievements (grade streaks, point streaks, etc.)
+- **ActivityStreaks**: Daily activity tracking with current/longest streak counters per player
 - **Conversations/Messages**: Chat history tables for AI integration support
+
+### Gamification System
+- **XP System**: Players earn XP for actions (game logged: 50, badge earned: 25, A grade: 30, A+ grade: 50, daily login: 10)
+- **Tier Progression**: Rookie (0) → Starter (500) → All-Star (2,000) → MVP (5,000) → Hall of Fame (10,000)
+- **Streak Bonuses**: 3-day (+25 XP), 7-day (+75 XP), 14-day (+150 XP), 30-day (+400 XP)
+- **Milestone Badges**: Special badges for tier promotions (starter_unlock, allstar_unlock, etc.)
+- **Constants**: TIER_THRESHOLDS and XP_REWARDS defined in shared/schema.ts for consistency
 
 ### AI Video Analysis
 - **Integration**: Gemini AI via Replit AI Integrations (no API key required)
