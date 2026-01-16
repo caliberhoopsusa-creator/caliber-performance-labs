@@ -3131,6 +3131,148 @@ Respond in this exact JSON format:
     }
   });
 
+  // --- Team Dashboard (Coach Overview) ---
+  app.get('/api/team-dashboard', async (req, res) => {
+    try {
+      const playersWithStats = await storage.getPlayersWithStats();
+      
+      const gradeScores: Record<string, number> = {
+        'A+': 100, 'A': 95, 'A-': 90,
+        'B+': 85, 'B': 80, 'B-': 75,
+        'C+': 70, 'C': 65, 'C-': 60,
+        'D': 50, 'F': 30
+      };
+
+      const gradeFromScore = (score: number): string => {
+        if (score >= 95) return 'A';
+        else if (score >= 85) return 'B+';
+        else if (score >= 75) return 'B';
+        else if (score >= 65) return 'C';
+        else if (score >= 50) return 'D';
+        return 'F';
+      };
+
+      // Process all players
+      const playerStats = playersWithStats.map(player => {
+        const games = player.games || [];
+        const gamesPlayed = games.length;
+
+        if (gamesPlayed === 0) {
+          return {
+            id: player.id,
+            name: player.name,
+            position: player.position,
+            team: player.team,
+            jerseyNumber: player.jerseyNumber,
+            photoUrl: player.photoUrl,
+            ppg: 0,
+            rpg: 0,
+            apg: 0,
+            spg: 0,
+            bpg: 0,
+            avgGrade: null,
+            avgGradeScore: 0,
+            gamesPlayed: 0,
+          };
+        }
+
+        const ppg = games.reduce((acc, g) => acc + g.points, 0) / gamesPlayed;
+        const rpg = games.reduce((acc, g) => acc + g.rebounds, 0) / gamesPlayed;
+        const apg = games.reduce((acc, g) => acc + g.assists, 0) / gamesPlayed;
+        const spg = games.reduce((acc, g) => acc + g.steals, 0) / gamesPlayed;
+        const bpg = games.reduce((acc, g) => acc + g.blocks, 0) / gamesPlayed;
+
+        const avgGradeScore = games.reduce((acc, g) => acc + (gradeScores[g.grade || 'C'] || 65), 0) / gamesPlayed;
+        const avgGrade = gradeFromScore(avgGradeScore);
+
+        return {
+          id: player.id,
+          name: player.name,
+          position: player.position,
+          team: player.team,
+          jerseyNumber: player.jerseyNumber,
+          photoUrl: player.photoUrl,
+          ppg: Number(ppg.toFixed(1)),
+          rpg: Number(rpg.toFixed(1)),
+          apg: Number(apg.toFixed(1)),
+          spg: Number(spg.toFixed(1)),
+          bpg: Number(bpg.toFixed(1)),
+          avgGrade,
+          avgGradeScore: Number(avgGradeScore.toFixed(1)),
+          gamesPlayed,
+        };
+      });
+
+      // Calculate team totals
+      const totalGamesPlayed = playerStats.reduce((acc, p) => acc + p.gamesPlayed, 0);
+      const playersWithGames = playerStats.filter(p => p.gamesPlayed > 0);
+      const teamPpg = playersWithGames.length > 0 
+        ? playersWithGames.reduce((acc, p) => acc + p.ppg, 0) / playersWithGames.length 
+        : 0;
+      const teamRpg = playersWithGames.length > 0 
+        ? playersWithGames.reduce((acc, p) => acc + p.rpg, 0) / playersWithGames.length 
+        : 0;
+      const teamApg = playersWithGames.length > 0 
+        ? playersWithGames.reduce((acc, p) => acc + p.apg, 0) / playersWithGames.length 
+        : 0;
+
+      // Best performers
+      const topScorer = [...playerStats].sort((a, b) => b.ppg - a.ppg)[0] || null;
+      const topRebounder = [...playerStats].sort((a, b) => b.rpg - a.rpg)[0] || null;
+      const topAssister = [...playerStats].sort((a, b) => b.apg - a.apg)[0] || null;
+
+      // Recent activity (last 5 games across all players)
+      const allGames: { playerId: number; playerName: string; game: any }[] = [];
+      playersWithStats.forEach(player => {
+        (player.games || []).forEach(game => {
+          allGames.push({ playerId: player.id, playerName: player.name, game });
+        });
+      });
+      const recentGames = allGames
+        .sort((a, b) => new Date(b.game.date).getTime() - new Date(a.game.date).getTime())
+        .slice(0, 5)
+        .map(item => ({
+          playerId: item.playerId,
+          playerName: item.playerName,
+          id: item.game.id,
+          date: item.game.date,
+          opponent: item.game.opponent,
+          points: item.game.points,
+          rebounds: item.game.rebounds,
+          assists: item.game.assists,
+          grade: item.game.grade,
+        }));
+
+      // Position distribution
+      const positionDistribution = {
+        Guard: playerStats.filter(p => p.position === 'Guard').length,
+        Wing: playerStats.filter(p => p.position === 'Wing').length,
+        Big: playerStats.filter(p => p.position === 'Big').length,
+      };
+
+      res.json({
+        players: playerStats,
+        teamStats: {
+          totalPlayers: playerStats.length,
+          totalGamesPlayed,
+          teamPpg: Number(teamPpg.toFixed(1)),
+          teamRpg: Number(teamRpg.toFixed(1)),
+          teamApg: Number(teamApg.toFixed(1)),
+        },
+        bestPerformers: {
+          topScorer: topScorer ? { id: topScorer.id, name: topScorer.name, value: topScorer.ppg } : null,
+          topRebounder: topRebounder ? { id: topRebounder.id, name: topRebounder.name, value: topRebounder.rpg } : null,
+          topAssister: topAssister ? { id: topAssister.id, name: topAssister.name, value: topAssister.apg } : null,
+        },
+        recentGames,
+        positionDistribution,
+      });
+    } catch (err) {
+      console.error('Team dashboard error:', err);
+      res.status(500).json({ error: 'Error fetching team dashboard data' });
+    }
+  });
+
   await seedDatabase();
 
   return httpServer;

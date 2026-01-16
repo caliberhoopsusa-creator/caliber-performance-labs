@@ -367,3 +367,244 @@ export function usePlayerSkillBadges(playerId: number) {
     enabled: !!playerId,
   });
 }
+
+// ============================================
+// SHOTS HOOKS (Shot Charts)
+// ============================================
+
+export type Shot = {
+  id: number;
+  gameId: number;
+  playerId: number;
+  x: number;
+  y: number;
+  shotType: string;
+  result: string;
+  quarter: number;
+  createdAt: string;
+};
+
+export type CreateShotInput = {
+  x: number;
+  y: number;
+  shotType: string;
+  result: string;
+  quarter: number;
+};
+
+export function useShotsByGame(gameId: number) {
+  return useQuery<Shot[]>({
+    queryKey: ['/api/games', gameId, 'shots'],
+    queryFn: async () => {
+      const res = await fetch(`/api/games/${gameId}/shots`);
+      if (!res.ok) throw new Error("Failed to fetch shots");
+      return res.json();
+    },
+    enabled: !!gameId,
+  });
+}
+
+export function useShotsByPlayer(playerId: number) {
+  return useQuery<Shot[]>({
+    queryKey: ['/api/players', playerId, 'shots'],
+    queryFn: async () => {
+      const res = await fetch(`/api/players/${playerId}/shots`);
+      if (!res.ok) throw new Error("Failed to fetch shots");
+      return res.json();
+    },
+    enabled: !!playerId,
+  });
+}
+
+export function useCreateShot() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { gameId: number; shot: CreateShotInput }) => {
+      const res = await fetch(`/api/games/${data.gameId}/shots`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data.shot),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to create shot");
+      }
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/games', variables.gameId, 'shots'] });
+    },
+  });
+}
+
+// ============================================
+// GAME NOTES HOOKS
+// ============================================
+
+export type GameNote = {
+  id: number;
+  gameId: number;
+  playerId: number;
+  authorName: string;
+  content: string;
+  noteType: 'observation' | 'improvement' | 'praise' | 'strategy';
+  isPrivate: boolean;
+  createdAt: string;
+};
+
+export type CreateGameNoteInput = {
+  playerId: number;
+  authorName: string;
+  content: string;
+  noteType: 'observation' | 'improvement' | 'praise' | 'strategy';
+  isPrivate: boolean;
+};
+
+export type UpdateGameNoteInput = Partial<{
+  content: string;
+  noteType: 'observation' | 'improvement' | 'praise' | 'strategy';
+  isPrivate: boolean;
+}>;
+
+export function useGameNotes(gameId: number) {
+  return useQuery<GameNote[]>({
+    queryKey: ['/api/games', gameId, 'notes'],
+    queryFn: async () => {
+      const res = await fetch(`/api/games/${gameId}/notes`);
+      if (!res.ok) throw new Error("Failed to fetch game notes");
+      return res.json();
+    },
+    enabled: !!gameId,
+  });
+}
+
+export function usePlayerGameNotes(playerId: number) {
+  return useQuery<GameNote[]>({
+    queryKey: ['/api/players', playerId, 'notes'],
+    queryFn: async () => {
+      const res = await fetch(`/api/players/${playerId}/notes`);
+      if (!res.ok) throw new Error("Failed to fetch player notes");
+      return res.json();
+    },
+    enabled: !!playerId,
+  });
+}
+
+export function useCreateGameNote() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { gameId: number; note: CreateGameNoteInput }) => {
+      const res = await fetch(`/api/games/${data.gameId}/notes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data.note),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to create note");
+      }
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/games', variables.gameId, 'notes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/players', variables.note.playerId, 'notes'] });
+    },
+  });
+}
+
+export function useUpdateGameNote() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { id: number; gameId: number; playerId: number; updates: UpdateGameNoteInput }) => {
+      const res = await fetch(`/api/notes/${data.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data.updates),
+      });
+      if (!res.ok) throw new Error("Failed to update note");
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/games', variables.gameId, 'notes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/players', variables.playerId, 'notes'] });
+    },
+  });
+}
+
+export function useDeleteGameNote() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { id: number; gameId: number; playerId: number }) => {
+      const res = await fetch(`/api/notes/${data.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete note");
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/games', variables.gameId, 'notes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/players', variables.playerId, 'notes'] });
+    },
+  });
+}
+
+// ============================================
+// TEAM DASHBOARD HOOKS
+// ============================================
+
+export type TeamDashboardPlayer = {
+  id: number;
+  name: string;
+  position: string;
+  team: string | null;
+  jerseyNumber: number | null;
+  photoUrl: string | null;
+  ppg: number;
+  rpg: number;
+  apg: number;
+  spg: number;
+  bpg: number;
+  avgGrade: string | null;
+  avgGradeScore: number;
+  gamesPlayed: number;
+};
+
+export type TeamDashboardData = {
+  players: TeamDashboardPlayer[];
+  teamStats: {
+    totalPlayers: number;
+    totalGamesPlayed: number;
+    teamPpg: number;
+    teamRpg: number;
+    teamApg: number;
+  };
+  bestPerformers: {
+    topScorer: { id: number; name: string; value: number } | null;
+    topRebounder: { id: number; name: string; value: number } | null;
+    topAssister: { id: number; name: string; value: number } | null;
+  };
+  recentGames: {
+    playerId: number;
+    playerName: string;
+    id: number;
+    date: string;
+    opponent: string;
+    points: number;
+    rebounds: number;
+    assists: number;
+    grade: string | null;
+  }[];
+  positionDistribution: {
+    Guard: number;
+    Wing: number;
+    Big: number;
+  };
+};
+
+export function useTeamDashboard() {
+  return useQuery<TeamDashboardData>({
+    queryKey: ['/api/team-dashboard'],
+    queryFn: async () => {
+      const res = await fetch('/api/team-dashboard');
+      if (!res.ok) throw new Error("Failed to fetch team dashboard");
+      return res.json();
+    },
+  });
+}

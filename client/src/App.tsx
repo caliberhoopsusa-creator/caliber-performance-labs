@@ -21,6 +21,7 @@ import Teams from "./pages/Teams";
 import Newsfeed from "./pages/Newsfeed";
 import CommunityContent from "./pages/CommunityContent";
 import Stories from "./pages/Stories";
+import TeamDashboard from "./pages/TeamDashboard";
 import NotFound from "./pages/not-found";
 
 function Router() {
@@ -44,6 +45,7 @@ function Router() {
           <Route path="/grading" component={GradingSystem} />
           <Route path="/scout" component={ScoutMode} />
           <Route path="/analyze" component={AnalyzeGame} />
+          <Route path="/coach/dashboard" component={TeamDashboard} />
           <Route component={NotFound} />
         </Switch>
       </main>

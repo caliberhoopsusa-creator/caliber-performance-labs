@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera } from "lucide-react";
+import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function Sidebar() {
@@ -14,6 +14,7 @@ export function Sidebar() {
     { href: "/community", label: "Community", icon: BarChart3 },
     { href: "/challenges", label: "Challenges", icon: Target },
     { href: "/scout", label: "Scout Mode", icon: Binoculars, featured: true },
+    { href: "/coach/dashboard", label: "Coach Dashboard", icon: ClipboardList },
     { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
     { href: "/compare", label: "Head-to-Head", icon: Activity },
     { href: "/video", label: "Video Analysis", icon: Video },
