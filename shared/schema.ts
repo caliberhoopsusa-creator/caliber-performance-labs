@@ -525,6 +525,185 @@ export const playerStories = pgTable("player_stories", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// === COACH ANALYSIS TABLES ===
+
+export const shots = pgTable("shots", {
+  id: serial("id").primaryKey(),
+  gameId: integer("game_id").notNull().references(() => games.id, { onDelete: "cascade" }),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  x: integer("x").notNull(), // 0-100, court position horizontal
+  y: integer("y").notNull(), // 0-100, court position vertical
+  shotType: text("shot_type").notNull(), // '2pt', '3pt', 'ft', 'layup', 'dunk', 'midrange'
+  result: text("result").notNull(), // 'made', 'missed'
+  quarter: integer("quarter").notNull(), // 1-4 or OT (5+)
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const gameNotes = pgTable("game_notes", {
+  id: serial("id").primaryKey(),
+  gameId: integer("game_id").notNull().references(() => games.id, { onDelete: "cascade" }),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  authorName: text("author_name").notNull(), // coach name
+  content: text("content").notNull(),
+  noteType: text("note_type").notNull(), // 'observation', 'improvement', 'praise', 'strategy'
+  isPrivate: boolean("is_private").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const practices = pgTable("practices", {
+  id: serial("id").primaryKey(),
+  date: date("date").notNull(),
+  title: text("title").notNull(),
+  duration: integer("duration").notNull(), // minutes
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const practiceAttendance = pgTable("practice_attendance", {
+  id: serial("id").primaryKey(),
+  practiceId: integer("practice_id").notNull().references(() => practices.id, { onDelete: "cascade" }),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  attended: boolean("attended").default(true).notNull(),
+  effortRating: integer("effort_rating"), // 1-10 scale
+  notes: text("notes"),
+});
+
+export const drills = pgTable("drills", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  category: text("category").notNull(), // 'shooting', 'dribbling', 'defense', 'conditioning', 'passing', 'rebounding'
+  description: text("description"),
+  targetStat: text("target_stat"), // which stat this improves
+});
+
+export const drillScores = pgTable("drill_scores", {
+  id: serial("id").primaryKey(),
+  practiceId: integer("practice_id").notNull().references(() => practices.id, { onDelete: "cascade" }),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  drillId: integer("drill_id").notNull().references(() => drills.id, { onDelete: "cascade" }),
+  score: integer("score").notNull(), // 1-100
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const lineups = pgTable("lineups", {
+  id: serial("id").primaryKey(),
+  name: text("name"), // optional lineup name like "Starting 5"
+  playerIds: text("player_ids").notNull(), // comma-separated player IDs or JSON array as text
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const lineupStats = pgTable("lineup_stats", {
+  id: serial("id").primaryKey(),
+  lineupId: integer("lineup_id").notNull().references(() => lineups.id, { onDelete: "cascade" }),
+  gameId: integer("game_id").notNull().references(() => games.id, { onDelete: "cascade" }),
+  minutes: integer("minutes").notNull(),
+  plusMinus: integer("plus_minus").notNull(),
+  points: integer("points").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const opponents = pgTable("opponents", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(), // team or player name
+  opponentType: text("opponent_type").notNull(), // 'team', 'player'
+  position: text("position"), // if player
+  tendencies: text("tendencies"),
+  strengths: text("strengths"),
+  weaknesses: text("weaknesses"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const alerts = pgTable("alerts", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  alertType: text("alert_type").notNull(), // 'performance_drop', 'streak_ended', 'goal_missed', 'improvement'
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  severity: text("severity").notNull(), // 'info', 'warning', 'critical'
+  isRead: boolean("is_read").default(false).notNull(),
+  relatedGameId: integer("related_game_id").references(() => games.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const coachGoals = pgTable("coach_goals", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  coachName: text("coach_name").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  targetType: text("target_type").notNull(), // 'stat_min', 'stat_max', 'grade_avg', 'attendance'
+  targetCategory: text("target_category").notNull(),
+  targetValue: integer("target_value").notNull(),
+  deadline: date("deadline"),
+  status: text("status").notNull().default("active"), // 'active', 'completed', 'missed'
+  coachFeedback: text("coach_feedback"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const drillRecommendations = pgTable("drill_recommendations", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  drillId: integer("drill_id").references(() => drills.id, { onDelete: "set null" }),
+  reason: text("reason").notNull(), // why this drill is recommended
+  priority: integer("priority").notNull(), // 1-5, higher = more important
+  weakStat: text("weak_stat"), // which stat needs improvement
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// === COACH ANALYSIS INSERT SCHEMAS ===
+export const insertShotSchema = createInsertSchema(shots).omit({ id: true, createdAt: true });
+export const insertGameNoteSchema = createInsertSchema(gameNotes).omit({ id: true, createdAt: true });
+export const insertPracticeSchema = createInsertSchema(practices).omit({ id: true, createdAt: true });
+export const insertPracticeAttendanceSchema = createInsertSchema(practiceAttendance).omit({ id: true });
+export const insertDrillSchema = createInsertSchema(drills).omit({ id: true });
+export const insertDrillScoreSchema = createInsertSchema(drillScores).omit({ id: true, createdAt: true });
+export const insertLineupSchema = createInsertSchema(lineups).omit({ id: true, createdAt: true });
+export const insertLineupStatSchema = createInsertSchema(lineupStats).omit({ id: true, createdAt: true });
+export const insertOpponentSchema = createInsertSchema(opponents).omit({ id: true, createdAt: true });
+export const insertAlertSchema = createInsertSchema(alerts).omit({ id: true, createdAt: true });
+export const insertCoachGoalSchema = createInsertSchema(coachGoals).omit({ id: true, createdAt: true });
+export const insertDrillRecommendationSchema = createInsertSchema(drillRecommendations).omit({ id: true, createdAt: true });
+
+// === COACH ANALYSIS TYPES ===
+export type Shot = typeof shots.$inferSelect;
+export type InsertShot = z.infer<typeof insertShotSchema>;
+
+export type GameNote = typeof gameNotes.$inferSelect;
+export type InsertGameNote = z.infer<typeof insertGameNoteSchema>;
+
+export type Practice = typeof practices.$inferSelect;
+export type InsertPractice = z.infer<typeof insertPracticeSchema>;
+
+export type PracticeAttendance = typeof practiceAttendance.$inferSelect;
+export type InsertPracticeAttendance = z.infer<typeof insertPracticeAttendanceSchema>;
+
+export type Drill = typeof drills.$inferSelect;
+export type InsertDrill = z.infer<typeof insertDrillSchema>;
+
+export type DrillScore = typeof drillScores.$inferSelect;
+export type InsertDrillScore = z.infer<typeof insertDrillScoreSchema>;
+
+export type Lineup = typeof lineups.$inferSelect;
+export type InsertLineup = z.infer<typeof insertLineupSchema>;
+
+export type LineupStat = typeof lineupStats.$inferSelect;
+export type InsertLineupStat = z.infer<typeof insertLineupStatSchema>;
+
+export type Opponent = typeof opponents.$inferSelect;
+export type InsertOpponent = z.infer<typeof insertOpponentSchema>;
+
+export type Alert = typeof alerts.$inferSelect;
+export type InsertAlert = z.infer<typeof insertAlertSchema>;
+
+export type CoachGoal = typeof coachGoals.$inferSelect;
+export type InsertCoachGoal = z.infer<typeof insertCoachGoalSchema>;
+
+export type DrillRecommendation = typeof drillRecommendations.$inferSelect;
+export type InsertDrillRecommendation = z.infer<typeof insertDrillRecommendationSchema>;
+
 // Export types
 export type FeedActivity = typeof feedActivities.$inferSelect;
 export const insertFeedActivitySchema = createInsertSchema(feedActivities).omit({ id: true, createdAt: true });
