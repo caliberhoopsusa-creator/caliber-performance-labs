@@ -34,6 +34,9 @@ Preferred communication style: Simple, everyday language.
 ### Key Data Models
 - **Players**: Name, position (Guard/Wing/Big), height, team, jersey number
 - **Games**: Per-game statistics including points, rebounds, assists, shooting splits, advanced metrics, and calculated grades with feedback
+- **Badges**: Virtual awards earned through performance (12 types including twenty_piece, double_double, hot_streak, etc.)
+- **Goals**: Player-set targets for improvement with progress tracking
+- **Streaks**: Automatic tracking of consecutive achievements (grade streaks, point streaks, etc.)
 - **Conversations/Messages**: Chat history tables for AI integration support
 
 ### AI Video Analysis
@@ -72,6 +75,12 @@ The grading algorithm in `server/routes.ts` calculates a performance score using
 - **Video Analysis**: AI-powered stat extraction from game footage
 - **Grading System**: Visual explanation of how grades are calculated
 - **Trend Tracking**: Performance charts over time
+- **Virtual Badges**: Auto-awarded achievements for performance milestones (20 Piece, Ironman, Hot Streak, etc.)
+- **Shareable Player Cards**: Premium-styled graphics with one-click social sharing
+- **Play Style Archetypes**: "You play like a 3&D Wing" comparisons based on stats
+- **Goals & Streaks**: Player-set targets with progress tracking and streak monitoring
+- **Season Statistics**: Comprehensive averages with radar chart visualization
+- **Top 5 Games**: Highlighted best performances with expandable details
 
 ## External Dependencies
 
