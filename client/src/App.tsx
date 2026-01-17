@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Sidebar, MobileNav } from "@/components/Sidebar";
 import { NotificationBell } from "@/components/NotificationBell";
+import { OfflineBanner, OfflineIndicator } from "@/components/OfflineBanner";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 
@@ -100,48 +101,52 @@ function MainRouter() {
   
   // Fully authenticated with role - show main app
   return (
-    <div className="flex min-h-screen bg-background text-foreground font-body selection:bg-primary/30">
-      <Sidebar userRole={extendedUser.role} playerId={extendedUser.playerId} />
-      <div className="flex-1 flex flex-col">
-        <header className="flex items-center justify-end gap-4 p-4 md:px-8 border-b border-white/5">
-          <NotificationBell />
-        </header>
-        <main className="flex-1 p-4 pb-20 md:px-8 md:pb-8 w-full max-w-[1600px] mx-auto overflow-x-hidden">
-          <Switch>
-          <Route path="/" component={Dashboard} />
-          <Route path="/players" component={PlayersList} />
-          <Route path="/players/:id/card" component={PlayerCard} />
-          <Route path="/players/:id" component={PlayerDetail} />
-          <Route path="/challenges" component={Challenges} />
-          <Route path="/teams" component={Teams} />
-          <Route path="/feed" component={Newsfeed} />
-          <Route path="/community" component={CommunityContent} />
-          <Route path="/stories" component={Stories} />
-          <Route path="/leaderboard" component={Leaderboard} />
-          <Route path="/compare" component={ComparePlayers} />
-          <Route path="/video" component={VideoAnalysis} />
-          <Route path="/grading" component={GradingSystem} />
-          <Route path="/scout" component={ScoutMode} />
-          <Route path="/analyze" component={AnalyzeGame} />
-          <Route path="/coach/dashboard" component={TeamDashboard} />
-          <Route path="/coach/lineups" component={LineupAnalysis} />
-          <Route path="/coach/practices" component={PracticeTracker} />
-          <Route path="/coach/scouting" component={OpponentScouting} />
-          <Route path="/coach/alerts" component={CoachAlertsPage} />
-          <Route path="/pricing" component={Pricing} />
-          <Route path="/workouts" component={WorkoutTracker} />
-          <Route path="/live-game" component={LiveGameMode} />
-          <Route path="/schedule" component={ScheduleCalendar} />
-          <Route path="/shot-chart" component={ShotChartPage} />
-          <Route path="/highlights" component={HighlightClipsPage} />
-          <Route path="/team-comparison" component={TeamComparison} />
-          <Route path="/report-card" component={ReportCardPage} />
-          <Route component={NotFound} />
-        </Switch>
-        </main>
+    <>
+      <OfflineBanner />
+      <div className="flex min-h-screen bg-background text-foreground font-body selection:bg-primary/30">
+        <Sidebar userRole={extendedUser.role} playerId={extendedUser.playerId} />
+        <div className="flex-1 flex flex-col">
+          <header className="flex items-center justify-end gap-4 p-4 md:px-8 border-b border-white/5">
+            <OfflineIndicator />
+            <NotificationBell />
+          </header>
+          <main className="flex-1 p-4 pb-20 md:px-8 md:pb-8 w-full max-w-[1600px] mx-auto overflow-x-hidden">
+            <Switch>
+              <Route path="/" component={Dashboard} />
+              <Route path="/players" component={PlayersList} />
+              <Route path="/players/:id/card" component={PlayerCard} />
+              <Route path="/players/:id" component={PlayerDetail} />
+              <Route path="/challenges" component={Challenges} />
+              <Route path="/teams" component={Teams} />
+              <Route path="/feed" component={Newsfeed} />
+              <Route path="/community" component={CommunityContent} />
+              <Route path="/stories" component={Stories} />
+              <Route path="/leaderboard" component={Leaderboard} />
+              <Route path="/compare" component={ComparePlayers} />
+              <Route path="/video" component={VideoAnalysis} />
+              <Route path="/grading" component={GradingSystem} />
+              <Route path="/scout" component={ScoutMode} />
+              <Route path="/analyze" component={AnalyzeGame} />
+              <Route path="/coach/dashboard" component={TeamDashboard} />
+              <Route path="/coach/lineups" component={LineupAnalysis} />
+              <Route path="/coach/practices" component={PracticeTracker} />
+              <Route path="/coach/scouting" component={OpponentScouting} />
+              <Route path="/coach/alerts" component={CoachAlertsPage} />
+              <Route path="/pricing" component={Pricing} />
+              <Route path="/workouts" component={WorkoutTracker} />
+              <Route path="/live-game" component={LiveGameMode} />
+              <Route path="/schedule" component={ScheduleCalendar} />
+              <Route path="/shot-chart" component={ShotChartPage} />
+              <Route path="/highlights" component={HighlightClipsPage} />
+              <Route path="/team-comparison" component={TeamComparison} />
+              <Route path="/report-card" component={ReportCardPage} />
+              <Route component={NotFound} />
+            </Switch>
+          </main>
+        </div>
+        <MobileNav userRole={extendedUser.role} playerId={extendedUser.playerId} />
       </div>
-      <MobileNav userRole={extendedUser.role} playerId={extendedUser.playerId} />
-    </div>
+    </>
   );
 }
 
