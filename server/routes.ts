@@ -4709,6 +4709,27 @@ Respond in this exact JSON format:
     }
   });
 
+  // Delete a live game event (undo)
+  app.delete('/api/live-game/:sessionId/events/:eventId', isAuthenticated, async (req: any, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      const eventId = parseInt(req.params.eventId);
+      const session = await storage.getLiveGameSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ message: "Session not found" });
+      }
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user || (user.role !== 'coach' && user.playerId !== session.playerId)) {
+        return res.status(403).json({ message: "Not authorized to delete events from this session" });
+      }
+      await storage.deleteLiveGameEvent(eventId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting live game event:', error);
+      res.status(500).json({ message: "Failed to delete event" });
+    }
+  });
+
   // Complete session and create game
   app.post('/api/live-game/:sessionId/complete', isAuthenticated, async (req: any, res) => {
     try {

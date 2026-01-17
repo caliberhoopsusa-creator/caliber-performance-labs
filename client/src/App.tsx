@@ -34,6 +34,8 @@ import CoachAlertsPage from "./pages/CoachAlertsPage";
 import Pricing from "./pages/Pricing";
 import Admin from "./pages/Admin";
 import WorkoutTracker from "./pages/WorkoutTracker";
+import LiveGameMode from "./pages/LiveGameMode";
+import ScheduleCalendar from "./pages/ScheduleCalendar";
 import NotFound from "./pages/not-found";
 
 interface ExtendedUser {
@@ -124,6 +126,8 @@ function MainRouter() {
           <Route path="/coach/alerts" component={CoachAlertsPage} />
           <Route path="/pricing" component={Pricing} />
           <Route path="/workouts" component={WorkoutTracker} />
+          <Route path="/live-game" component={LiveGameMode} />
+          <Route path="/schedule" component={ScheduleCalendar} />
           <Route component={NotFound} />
         </Switch>
         </main>

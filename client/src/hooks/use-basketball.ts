@@ -1519,3 +1519,97 @@ export function useDeleteWorkout() {
     },
   });
 }
+
+// ============================================
+// GOAL SHARING HOOKS
+// ============================================
+
+export type GoalShare = {
+  id: number;
+  goalId: number;
+  sharedWithPlayerId: number | null;
+  sharedWithTeamId: number | null;
+  visibility: string;
+  createdAt: string;
+};
+
+export type SharedGoalWithDetails = GoalShare & {
+  goal?: {
+    id: number;
+    title: string;
+    targetType: string;
+    targetCategory: string;
+    targetValue: number;
+    completed: boolean;
+  };
+  sharedByPlayer?: {
+    id: number;
+    name: string;
+    photoUrl: string | null;
+  };
+};
+
+export type CreateGoalShareInput = {
+  sharedWithPlayerId?: number;
+  sharedWithTeamId?: number;
+  visibility?: string;
+  message?: string;
+};
+
+export function useShareGoal() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { goalId: number; share: CreateGoalShareInput }) => {
+      const res = await fetch(`/api/goals/${data.goalId}/share`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data.share),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to share goal");
+      }
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/goals', variables.goalId, 'shares'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/shared-goals'] });
+    },
+  });
+}
+
+export function useGoalShares(goalId: number) {
+  return useQuery<GoalShare[]>({
+    queryKey: ['/api/goals', goalId, 'shares'],
+    queryFn: async () => {
+      const res = await fetch(`/api/goals/${goalId}/shares`);
+      if (!res.ok) throw new Error("Failed to fetch goal shares");
+      return res.json();
+    },
+    enabled: !!goalId,
+  });
+}
+
+export function useSharedGoals() {
+  return useQuery<SharedGoalWithDetails[]>({
+    queryKey: ['/api/shared-goals'],
+    queryFn: async () => {
+      const res = await fetch('/api/shared-goals');
+      if (!res.ok) throw new Error("Failed to fetch shared goals");
+      return res.json();
+    },
+  });
+}
+
+export function useDeleteGoalShare() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(`/api/goal-shares/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete goal share");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/shared-goals'] });
+    },
+  });
+}

@@ -306,6 +306,7 @@ export interface IStorage {
   // Live Game Events
   createLiveGameEvent(event: InsertLiveGameEvent): Promise<LiveGameEvent>;
   getSessionEvents(sessionId: number): Promise<LiveGameEvent[]>;
+  deleteLiveGameEvent(eventId: number): Promise<void>;
 
   // Share Assets
   createShareAsset(asset: InsertShareAsset): Promise<ShareAsset>;
@@ -1426,6 +1427,10 @@ export class DatabaseStorage implements IStorage {
 
   async getSessionEvents(sessionId: number): Promise<LiveGameEvent[]> {
     return await db.select().from(liveGameEvents).where(eq(liveGameEvents.sessionId, sessionId)).orderBy(desc(liveGameEvents.createdAt));
+  }
+
+  async deleteLiveGameEvent(eventId: number): Promise<void> {
+    await db.delete(liveGameEvents).where(eq(liveGameEvents.id, eventId));
   }
 
   // Share Assets

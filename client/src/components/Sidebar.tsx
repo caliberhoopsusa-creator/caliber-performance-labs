@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell } from "lucide-react";
+import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, Gamepad2, CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AlertsBadge } from "@/components/AlertsCenter";
 import { Button } from "@/components/ui/button";
@@ -35,8 +35,10 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
       title: "My Profile",
       items: [
         { href: playerId ? `/players/${playerId}` : "/", label: "My Stats", icon: UserCircle },
+        { href: "/live-game", label: "Live Game", icon: Gamepad2, featured: true },
         { href: "/analyze", label: "Log Game", icon: PlusCircle },
         { href: "/workouts", label: "Workouts", icon: Dumbbell },
+        { href: "/schedule", label: "Schedule", icon: CalendarDays },
         { href: "/video", label: "Video Analysis", icon: Video },
       ],
     },
@@ -67,8 +69,10 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
       items: [
         { href: "/", label: "Dashboard", icon: LayoutDashboard },
         { href: "/players", label: "Players", icon: Users },
+        { href: "/live-game", label: "Live Game", icon: Gamepad2, featured: true },
         { href: "/analyze", label: "New Analysis", icon: PlusCircle },
         { href: "/workouts", label: "Workouts", icon: Dumbbell },
+        { href: "/schedule", label: "Schedule", icon: CalendarDays },
         { href: "/pricing", label: "Pricing", icon: CreditCard },
       ],
     },
@@ -134,17 +138,25 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
                 const isActive = location === item.href || (item.href.includes('/players/') && location.includes('/players/') && location === item.href);
                 const needsUpgrade = item.premium && !hasAccess(item.premium);
                 const isCoachPro = item.premium === "coach_pro";
+                const isFeatured = item.featured && !isActive;
                 return (
                   <Link key={item.href} href={item.href} className={cn(
                     "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 group font-medium text-sm",
                     isActive 
                       ? "bg-primary text-primary-foreground shadow-md shadow-primary/20" 
+                      : isFeatured
+                      ? "text-primary bg-primary/10 border border-primary/30 hover:bg-primary/20 animate-pulse"
                       : needsUpgrade
                       ? "text-amber-400 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 hover:from-amber-500/20 hover:to-orange-500/20"
                       : "text-muted-foreground hover:bg-white/5 hover:text-white"
                   )} data-testid={`nav-${item.href.replace(/\//g, '-').replace(/^-/, '') || 'home'}`}>
-                    <item.icon className={cn("w-4 h-4", isActive ? "stroke-[2.5px]" : "stroke-2")} />
+                    <item.icon className={cn("w-4 h-4", isActive ? "stroke-[2.5px]" : "stroke-2", isFeatured && "text-primary")} />
                     {item.label}
+                    {isFeatured && (
+                      <span className="ml-auto text-[10px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">
+                        LIVE
+                      </span>
+                    )}
                     {needsUpgrade && !isActive && (
                       <span className="ml-auto inline-flex items-center gap-1 text-[10px] bg-gradient-to-r from-primary to-orange-500 text-white px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">
                         <Lock className="w-2.5 h-2.5" />
@@ -197,11 +209,11 @@ export function MobileNav({ userRole }: MobileNavProps) {
             <span className="text-[10px] font-medium uppercase">Roster</span>
           </Link>
         )}
-        <Link href="/analyze" className={cn("flex flex-col items-center gap-1 p-2", location === "/analyze" ? "text-primary" : "text-muted-foreground")} data-testid="mobile-nav-analyze">
-          <div className="bg-primary text-primary-foreground rounded-full p-2 -mt-6 shadow-lg border-4 border-background">
-            <PlusCircle className="w-6 h-6" />
+        <Link href="/live-game" className={cn("flex flex-col items-center gap-1 p-2", location === "/live-game" ? "text-primary" : "text-muted-foreground")} data-testid="mobile-nav-live-game">
+          <div className={cn("bg-primary text-primary-foreground rounded-full p-2 -mt-6 shadow-lg border-4 border-background", location !== "/live-game" && "animate-pulse")}>
+            <Gamepad2 className="w-6 h-6" />
           </div>
-          <span className="text-[10px] font-medium uppercase mt-1">Add</span>
+          <span className="text-[10px] font-medium uppercase mt-1">Live</span>
         </Link>
         <Link href="/leaderboard" className={cn("flex flex-col items-center gap-1 p-2", location === "/leaderboard" ? "text-primary" : "text-muted-foreground")} data-testid="mobile-nav-leaderboard">
           <Trophy className="w-6 h-6" />

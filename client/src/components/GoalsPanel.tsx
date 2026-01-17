@@ -16,9 +16,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Flame, Target, Plus, Check, Trash2, Trophy, TrendingUp } from "lucide-react";
+import { Flame, Target, Plus, Check, Trash2, Trophy, TrendingUp, Share2 } from "lucide-react";
 import { STREAK_DEFINITIONS, GOAL_PRESETS, type Goal, type Streak, type Game } from "@shared/schema";
 import { cn } from "@/lib/utils";
+import { ShareGoalModal } from "./ShareGoalModal";
 
 interface GoalsPanelProps {
   playerId: number;
@@ -85,6 +86,7 @@ export function GoalsPanel({ playerId, games }: GoalsPanelProps) {
   const [targetCategory, setTargetCategory] = useState("points");
   const [targetValue, setTargetValue] = useState("");
   const [deadline, setDeadline] = useState("");
+  const [shareGoalId, setShareGoalId] = useState<number | null>(null);
 
   const handlePresetSelect = (preset: typeof GOAL_PRESETS[number]) => {
     setTitle(preset.title);
@@ -305,6 +307,15 @@ export function GoalsPanel({ playerId, games }: GoalsPanelProps) {
                       <Button
                         size="icon"
                         variant="ghost"
+                        className="h-7 w-7 text-primary"
+                        onClick={() => setShareGoalId(goal.id)}
+                        data-testid={`button-share-goal-${goal.id}`}
+                      >
+                        <Share2 className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
                         className="h-7 w-7"
                         onClick={() => handleToggleComplete(goal)}
                         data-testid={`button-complete-goal-${goal.id}`}
@@ -408,6 +419,14 @@ export function GoalsPanel({ playerId, games }: GoalsPanelProps) {
           </div>
         )}
       </Card>
+
+      {shareGoalId && (
+        <ShareGoalModal
+          goalId={shareGoalId}
+          isOpen={!!shareGoalId}
+          onClose={() => setShareGoalId(null)}
+        />
+      )}
     </div>
   );
 }
