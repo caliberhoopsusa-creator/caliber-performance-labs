@@ -39,6 +39,18 @@ Preferred communication style: Simple, everyday language.
 - **Coach Features**: Team dashboard, shot charts, game notes, lineup analysis, practice tracking, AI-generated drill recommendations, and comprehensive player report cards.
 - **UI/UX**: Dark theme with glassmorphic design elements, vibrant orange accents, gradient effects, and premium utility classes for visual flair. Mobile-optimized with PWA support and offline capabilities.
 
+### Subscription & Monetization
+- **Stripe Integration**: Subscription-based monetization with Stripe payment processing
+- **Subscription Tiers**:
+  - `free`: Basic player management, game logging, leaderboards
+  - `pro`: Advanced analytics, AI video analysis, shot charts, live game mode, report cards, head-to-head comparisons
+  - `coach_pro`: All pro features + team dashboard, lineup analysis, practice tracker, opponent scouting, trend alerts
+- **Owner Bypass**: User ID 53178287 has permanent full access bypassing all subscription checks
+- **Paywall System**:
+  - Frontend: `<Paywall>` component wraps premium pages, showing upgrade prompt for non-subscribers
+  - Backend: `requiresSubscription` middleware protects premium API routes, returning 403 SUBSCRIPTION_REQUIRED
+  - Hook: `useSubscription()` provides `isPremium`, `hasAccess(tier)` for checking subscription status
+
 ## External Dependencies
 
 ### Database

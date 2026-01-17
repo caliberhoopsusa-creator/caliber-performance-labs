@@ -10,6 +10,7 @@ import { LiveGameStats } from "@/components/LiveGameStats";
 import { LiveGameEventLog } from "@/components/LiveGameEventLog";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { Paywall } from "@/components/Paywall";
 import { 
   Play, 
   Square, 
@@ -235,28 +236,31 @@ export default function LiveGameMode() {
 
   if (!activeSession) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
-        <div className="text-center space-y-2">
-          <h1 className="text-4xl font-bold font-display text-primary">LIVE GAME MODE</h1>
-          <p className="text-muted-foreground">Track your stats in real-time during a game</p>
+      <Paywall requiredTier="pro" featureName="Live Game Mode">
+        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
+          <div className="text-center space-y-2">
+            <h1 className="text-4xl font-bold font-display text-primary">LIVE GAME MODE</h1>
+            <p className="text-muted-foreground">Track your stats in real-time during a game</p>
+          </div>
+          <Button
+            size="lg"
+            className="h-16 px-12 text-xl font-bold pulse-glow"
+            onClick={() => startGameMutation.mutate()}
+            disabled={startGameMutation.isPending}
+            data-testid="button-start-game"
+          >
+            <Play className="w-6 h-6 mr-3" />
+            {startGameMutation.isPending ? "Starting..." : "Start Game"}
+          </Button>
         </div>
-        <Button
-          size="lg"
-          className="h-16 px-12 text-xl font-bold pulse-glow"
-          onClick={() => startGameMutation.mutate()}
-          disabled={startGameMutation.isPending}
-          data-testid="button-start-game"
-        >
-          <Play className="w-6 h-6 mr-3" />
-          {startGameMutation.isPending ? "Starting..." : "Start Game"}
-        </Button>
-      </div>
+      </Paywall>
     );
   }
 
   const currentStats = stats();
 
   return (
+    <Paywall requiredTier="pro" featureName="Live Game Mode">
     <div className="space-y-4 pb-6">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -400,5 +404,6 @@ export default function LiveGameMode() {
         </DialogContent>
       </Dialog>
     </div>
+    </Paywall>
   );
 }

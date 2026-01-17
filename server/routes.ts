@@ -1901,7 +1901,8 @@ export async function registerRoutes(
     res.json(leaderboard.map(({ avgGradeScore, ...rest }) => rest));
   });
 
-  app.get(api.analytics.compare.path, async (req, res) => {
+  // Head-to-Head Comparison (Premium Feature)
+  app.get(api.analytics.compare.path, requiresSubscription, async (req: any, res) => {
     const { player1Id, player2Id } = api.analytics.compare.input.parse(req.query);
     const p1 = await storage.getPlayer(player1Id);
     const p2 = await storage.getPlayer(player2Id);
@@ -2032,8 +2033,8 @@ export async function registerRoutes(
     }
   });
 
-  // Video Analysis Endpoint
-  app.post('/api/analyze-video', upload.single('video'), async (req, res) => {
+  // Video Analysis Endpoint (Premium Feature)
+  app.post('/api/analyze-video', requiresSubscription, upload.single('video'), async (req: any, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: 'No video file uploaded' });
@@ -2156,8 +2157,8 @@ Respond in this exact JSON format:
     }
   });
 
-  // Text-based play analysis (for manual play-by-play input)
-  app.post('/api/analyze-plays', async (req, res) => {
+  // Text-based play analysis (for manual play-by-play input) - Premium Feature
+  app.post('/api/analyze-plays', requiresSubscription, async (req: any, res) => {
     try {
       const { playerName, playByPlay } = req.body;
 
@@ -2902,8 +2903,8 @@ Respond in this exact JSON format:
 
   // === COACH ANALYSIS ROUTES ===
 
-  // --- Shots (Shot Charts) ---
-  app.post('/api/games/:gameId/shots', async (req, res) => {
+  // --- Shots (Shot Charts) --- Premium Feature
+  app.post('/api/games/:gameId/shots', requiresSubscription, async (req: any, res) => {
     try {
       const gameId = Number(req.params.gameId);
       const game = await storage.getGame(gameId);
@@ -2922,7 +2923,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.get('/api/games/:gameId/shots', async (req, res) => {
+  app.get('/api/games/:gameId/shots', requiresSubscription, async (req: any, res) => {
     try {
       const gameId = Number(req.params.gameId);
       const shots = await storage.getShotsByGame(gameId);
@@ -2933,7 +2934,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.get('/api/players/:playerId/shots', async (req, res) => {
+  app.get('/api/players/:playerId/shots', requiresSubscription, async (req: any, res) => {
     try {
       const playerId = Number(req.params.playerId);
       const shots = await storage.getShotsByPlayer(playerId);
@@ -2944,7 +2945,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.delete('/api/shots/:id', async (req, res) => {
+  app.delete('/api/shots/:id', requiresSubscription, async (req: any, res) => {
     try {
       await storage.deleteShot(Number(req.params.id));
       res.status(204).send();
@@ -3595,8 +3596,8 @@ Respond in this exact JSON format:
   });
 
 
-  // --- Pre-Game Report ---
-  app.get('/api/players/:playerId/pregame-report', async (req, res) => {
+  // --- Pre-Game Report --- Premium Feature
+  app.get('/api/players/:playerId/pregame-report', requiresSubscription, async (req: any, res) => {
     try {
       const playerId = Number(req.params.playerId);
       const opponentName = req.query.opponent as string;
@@ -3674,8 +3675,8 @@ Respond in this exact JSON format:
     }
   });
 
-  // --- Report Card ---
-  app.get('/api/players/:playerId/report-card', async (req, res) => {
+  // --- Report Card --- Premium Feature
+  app.get('/api/players/:playerId/report-card', requiresSubscription, async (req: any, res) => {
     try {
       const playerId = Number(req.params.playerId);
       const player = await storage.getPlayer(playerId);
@@ -4786,8 +4787,8 @@ Respond in this exact JSON format:
   // LIVE GAME MODE ROUTES
   // ========================================
 
-  // Start a live game session
-  app.post('/api/live-game/start', isAuthenticated, async (req: any, res) => {
+  // Start a live game session - Premium Feature
+  app.post('/api/live-game/start', requiresSubscription, async (req: any, res) => {
     try {
       const user = await authStorage.getUser(req.user.claims.sub);
       if (!user || !user.playerId) {
@@ -4810,8 +4811,8 @@ Respond in this exact JSON format:
     }
   });
 
-  // Get current active session
-  app.get('/api/live-game/active', isAuthenticated, async (req: any, res) => {
+  // Get current active session - Premium Feature
+  app.get('/api/live-game/active', requiresSubscription, async (req: any, res) => {
     try {
       const user = await authStorage.getUser(req.user.claims.sub);
       if (!user || !user.playerId) {
@@ -4825,8 +4826,8 @@ Respond in this exact JSON format:
     }
   });
 
-  // Log a live game event
-  app.post('/api/live-game/:sessionId/event', isAuthenticated, async (req: any, res) => {
+  // Log a live game event - Premium Feature
+  app.post('/api/live-game/:sessionId/event', requiresSubscription, async (req: any, res) => {
     try {
       const sessionId = parseInt(req.params.sessionId);
       const session = await storage.getLiveGameSession(sessionId);
@@ -4849,8 +4850,8 @@ Respond in this exact JSON format:
     }
   });
 
-  // Get session events
-  app.get('/api/live-game/:sessionId/events', isAuthenticated, async (req, res) => {
+  // Get session events - Premium Feature
+  app.get('/api/live-game/:sessionId/events', requiresSubscription, async (req: any, res) => {
     try {
       const sessionId = parseInt(req.params.sessionId);
       const events = await storage.getSessionEvents(sessionId);
@@ -4861,8 +4862,8 @@ Respond in this exact JSON format:
     }
   });
 
-  // Delete a live game event (undo)
-  app.delete('/api/live-game/:sessionId/events/:eventId', isAuthenticated, async (req: any, res) => {
+  // Delete a live game event (undo) - Premium Feature
+  app.delete('/api/live-game/:sessionId/events/:eventId', requiresSubscription, async (req: any, res) => {
     try {
       const sessionId = parseInt(req.params.sessionId);
       const eventId = parseInt(req.params.eventId);
@@ -4882,8 +4883,8 @@ Respond in this exact JSON format:
     }
   });
 
-  // Complete session and create game
-  app.post('/api/live-game/:sessionId/complete', isAuthenticated, async (req: any, res) => {
+  // Complete session and create game - Premium Feature
+  app.post('/api/live-game/:sessionId/complete', requiresSubscription, async (req: any, res) => {
     try {
       const sessionId = parseInt(req.params.sessionId);
       const session = await storage.getLiveGameSession(sessionId);

@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, Video, FileText, Loader2, CheckCircle, AlertCircle, Target, Shield, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { Paywall } from "@/components/Paywall";
 
 interface AnalysisResult {
   playerName: string;
@@ -116,6 +117,7 @@ export default function VideoAnalysis() {
   const isLoading = videoMutation.isPending || textMutation.isPending;
 
   return (
+    <Paywall requiredTier="pro" featureName="AI Video Analysis">
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div>
         <h2 className="text-3xl md:text-4xl font-display font-bold text-white uppercase tracking-tight">Video Analysis</h2>
@@ -390,6 +392,7 @@ Example:
         </div>
       </div>
     </div>
+    </Paywall>
   );
 }
 

@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { GradeBadge } from "@/components/GradeBadge";
 import { Activity, Target, Zap, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Paywall } from "@/components/Paywall";
 
 export default function ComparePlayers() {
   const { data: players } = usePlayers();
@@ -32,6 +33,7 @@ export default function ComparePlayers() {
   };
 
   return (
+    <Paywall requiredTier="pro" featureName="Head-to-Head Comparison">
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div>
         <h2 className="text-3xl md:text-4xl font-display font-bold text-white uppercase tracking-tight">Head-to-Head</h2>
@@ -110,6 +112,7 @@ export default function ComparePlayers() {
         </div>
       )}
     </div>
+    </Paywall>
   );
 }
 

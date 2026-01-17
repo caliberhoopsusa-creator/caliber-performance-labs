@@ -9,6 +9,7 @@ import { ShotChart, calculateZoneStats, type Shot } from "@/components/ShotChart
 import { ZoneStats } from "@/components/ZoneStats";
 import { usePlayers, useShotsByPlayer, usePlayer } from "@/hooks/use-basketball";
 import { Target, Users, Filter, Calendar, TrendingUp, Crosshair } from "lucide-react";
+import { Paywall } from "@/components/Paywall";
 
 type ShotFilter = "all" | "2pt" | "3pt";
 type TimeFilter = "all" | "last5" | "last10" | "last30";
@@ -86,6 +87,7 @@ export default function ShotChartPage() {
   const isLoading = playersLoading || (playerId && (playerLoading || shotsLoading));
 
   return (
+    <Paywall requiredTier="pro" featureName="Shot Charts">
     <div className="space-y-6" data-testid="shot-chart-page">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -278,5 +280,6 @@ export default function ShotChartPage() {
         </>
       )}
     </div>
+    </Paywall>
   );
 }

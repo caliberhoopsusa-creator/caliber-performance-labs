@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { FileText, Printer, Calendar, Users, Download } from "lucide-react";
 import { format, subDays, startOfYear } from "date-fns";
+import { Paywall } from "@/components/Paywall";
 
 type DateRangeOption = "last30" | "season" | "all";
 
@@ -74,6 +75,7 @@ export default function ReportCardPage() {
   }
 
   return (
+    <Paywall requiredTier="pro" featureName="PDF Report Cards">
     <div className="space-y-6">
       <PrintStyles />
       
@@ -226,5 +228,6 @@ export default function ReportCardPage() {
         </div>
       )}
     </div>
+    </Paywall>
   );
 }
