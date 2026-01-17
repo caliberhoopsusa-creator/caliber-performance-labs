@@ -6,6 +6,7 @@ import {
   activityStreaks,
   shots, gameNotes, practices, practiceAttendance, drills, drillScores, lineups, lineupStats,
   opponents, alerts, coachGoals, drillRecommendations,
+  follows, notifications, highlightClips, workouts, goalShares, scheduleEvents, liveGameSessions, liveGameEvents, shareAssets,
   type Player, type InsertPlayer,
   type Game, type InsertGame,
   type UpdateGameRequest,
@@ -40,7 +41,16 @@ import {
   type Opponent, type InsertOpponent,
   type Alert, type InsertAlert,
   type CoachGoal, type InsertCoachGoal,
-  type DrillRecommendation, type InsertDrillRecommendation
+  type DrillRecommendation, type InsertDrillRecommendation,
+  type Follow, type InsertFollow,
+  type Notification, type InsertNotification,
+  type HighlightClip, type InsertHighlightClip,
+  type Workout, type InsertWorkout,
+  type GoalShare, type InsertGoalShare,
+  type ScheduleEvent, type InsertScheduleEvent,
+  type LiveGameSession, type InsertLiveGameSession,
+  type LiveGameEvent, type InsertLiveGameEvent,
+  type ShareAsset, type InsertShareAsset
 } from "@shared/schema";
 import { eq, desc, and, count, gte, lte, sql, or } from "drizzle-orm";
 
@@ -242,6 +252,65 @@ export interface IStorage {
   getDrillRecommendations(playerId: number): Promise<DrillRecommendation[]>;
   updateDrillRecommendation(id: number, data: Partial<InsertDrillRecommendation>): Promise<DrillRecommendation>;
   deleteDrillRecommendation(id: number): Promise<void>;
+
+  // Follows
+  createFollow(followerPlayerId: number, followeePlayerId: number): Promise<Follow>;
+  deleteFollow(followerPlayerId: number, followeePlayerId: number): Promise<void>;
+  getFollowers(playerId: number): Promise<Follow[]>;
+  getFollowing(playerId: number): Promise<Follow[]>;
+  isFollowing(followerPlayerId: number, followeePlayerId: number): Promise<boolean>;
+  getFollowerCount(playerId: number): Promise<number>;
+  getFollowingCount(playerId: number): Promise<number>;
+
+  // Notifications
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  getPlayerNotifications(playerId: number): Promise<Notification[]>;
+  getUnreadNotificationCount(playerId: number): Promise<number>;
+  markNotificationRead(id: number): Promise<void>;
+  markAllNotificationsRead(playerId: number): Promise<void>;
+
+  // Highlight Clips
+  createHighlightClip(clip: InsertHighlightClip): Promise<HighlightClip>;
+  getPlayerHighlightClips(playerId: number): Promise<HighlightClip[]>;
+  getHighlightClip(id: number): Promise<HighlightClip | undefined>;
+  deleteHighlightClip(id: number): Promise<void>;
+  incrementClipViewCount(id: number): Promise<void>;
+
+  // Workouts
+  createWorkout(workout: InsertWorkout): Promise<Workout>;
+  getPlayerWorkouts(playerId: number): Promise<Workout[]>;
+  getWorkout(id: number): Promise<Workout | undefined>;
+  updateWorkout(id: number, updates: Partial<InsertWorkout>): Promise<Workout>;
+  deleteWorkout(id: number): Promise<void>;
+
+  // Goal Shares
+  createGoalShare(share: InsertGoalShare): Promise<GoalShare>;
+  getGoalShares(goalId: number): Promise<GoalShare[]>;
+  getSharedGoalsWithPlayer(playerId: number): Promise<GoalShare[]>;
+  deleteGoalShare(id: number): Promise<void>;
+
+  // Schedule Events
+  createScheduleEvent(event: InsertScheduleEvent): Promise<ScheduleEvent>;
+  getPlayerScheduleEvents(playerId: number): Promise<ScheduleEvent[]>;
+  getTeamScheduleEvents(teamId: number): Promise<ScheduleEvent[]>;
+  getScheduleEvent(id: number): Promise<ScheduleEvent | undefined>;
+  updateScheduleEvent(id: number, updates: Partial<InsertScheduleEvent>): Promise<ScheduleEvent>;
+  deleteScheduleEvent(id: number): Promise<void>;
+
+  // Live Game Sessions
+  createLiveGameSession(session: InsertLiveGameSession): Promise<LiveGameSession>;
+  getLiveGameSession(id: number): Promise<LiveGameSession | undefined>;
+  getActivePlayerSession(playerId: number): Promise<LiveGameSession | undefined>;
+  updateLiveGameSession(id: number, updates: Partial<LiveGameSession>): Promise<LiveGameSession>;
+
+  // Live Game Events
+  createLiveGameEvent(event: InsertLiveGameEvent): Promise<LiveGameEvent>;
+  getSessionEvents(sessionId: number): Promise<LiveGameEvent[]>;
+
+  // Share Assets
+  createShareAsset(asset: InsertShareAsset): Promise<ShareAsset>;
+  getPlayerShareAssets(playerId: number): Promise<ShareAsset[]>;
+  incrementShareCount(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1167,6 +1236,210 @@ export class DatabaseStorage implements IStorage {
 
   async deleteDrillRecommendation(id: number): Promise<void> {
     await db.delete(drillRecommendations).where(eq(drillRecommendations.id, id));
+  }
+
+  // Follows
+  async createFollow(followerPlayerId: number, followeePlayerId: number): Promise<Follow> {
+    const [newFollow] = await db.insert(follows).values({ followerPlayerId, followeePlayerId }).returning();
+    return newFollow;
+  }
+
+  async deleteFollow(followerPlayerId: number, followeePlayerId: number): Promise<void> {
+    await db.delete(follows).where(
+      and(eq(follows.followerPlayerId, followerPlayerId), eq(follows.followeePlayerId, followeePlayerId))
+    );
+  }
+
+  async getFollowers(playerId: number): Promise<Follow[]> {
+    return await db.select().from(follows).where(eq(follows.followeePlayerId, playerId)).orderBy(desc(follows.createdAt));
+  }
+
+  async getFollowing(playerId: number): Promise<Follow[]> {
+    return await db.select().from(follows).where(eq(follows.followerPlayerId, playerId)).orderBy(desc(follows.createdAt));
+  }
+
+  async isFollowing(followerPlayerId: number, followeePlayerId: number): Promise<boolean> {
+    const [existing] = await db.select().from(follows).where(
+      and(eq(follows.followerPlayerId, followerPlayerId), eq(follows.followeePlayerId, followeePlayerId))
+    );
+    return !!existing;
+  }
+
+  async getFollowerCount(playerId: number): Promise<number> {
+    const [result] = await db.select({ count: count() }).from(follows).where(eq(follows.followeePlayerId, playerId));
+    return result?.count || 0;
+  }
+
+  async getFollowingCount(playerId: number): Promise<number> {
+    const [result] = await db.select({ count: count() }).from(follows).where(eq(follows.followerPlayerId, playerId));
+    return result?.count || 0;
+  }
+
+  // Notifications
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    const [newNotification] = await db.insert(notifications).values(notification).returning();
+    return newNotification;
+  }
+
+  async getPlayerNotifications(playerId: number): Promise<Notification[]> {
+    return await db.select().from(notifications).where(eq(notifications.playerId, playerId)).orderBy(desc(notifications.createdAt));
+  }
+
+  async getUnreadNotificationCount(playerId: number): Promise<number> {
+    const [result] = await db.select({ count: count() }).from(notifications).where(
+      and(eq(notifications.playerId, playerId), eq(notifications.isRead, false))
+    );
+    return result?.count || 0;
+  }
+
+  async markNotificationRead(id: number): Promise<void> {
+    await db.update(notifications).set({ isRead: true }).where(eq(notifications.id, id));
+  }
+
+  async markAllNotificationsRead(playerId: number): Promise<void> {
+    await db.update(notifications).set({ isRead: true }).where(
+      and(eq(notifications.playerId, playerId), eq(notifications.isRead, false))
+    );
+  }
+
+  // Highlight Clips
+  async createHighlightClip(clip: InsertHighlightClip): Promise<HighlightClip> {
+    const [newClip] = await db.insert(highlightClips).values(clip).returning();
+    return newClip;
+  }
+
+  async getPlayerHighlightClips(playerId: number): Promise<HighlightClip[]> {
+    return await db.select().from(highlightClips).where(eq(highlightClips.playerId, playerId)).orderBy(desc(highlightClips.createdAt));
+  }
+
+  async getHighlightClip(id: number): Promise<HighlightClip | undefined> {
+    const [clip] = await db.select().from(highlightClips).where(eq(highlightClips.id, id));
+    return clip;
+  }
+
+  async deleteHighlightClip(id: number): Promise<void> {
+    await db.delete(highlightClips).where(eq(highlightClips.id, id));
+  }
+
+  async incrementClipViewCount(id: number): Promise<void> {
+    await db.update(highlightClips).set({ viewCount: sql`${highlightClips.viewCount} + 1` }).where(eq(highlightClips.id, id));
+  }
+
+  // Workouts
+  async createWorkout(workout: InsertWorkout): Promise<Workout> {
+    const [newWorkout] = await db.insert(workouts).values(workout).returning();
+    return newWorkout;
+  }
+
+  async getPlayerWorkouts(playerId: number): Promise<Workout[]> {
+    return await db.select().from(workouts).where(eq(workouts.playerId, playerId)).orderBy(desc(workouts.date));
+  }
+
+  async getWorkout(id: number): Promise<Workout | undefined> {
+    const [workout] = await db.select().from(workouts).where(eq(workouts.id, id));
+    return workout;
+  }
+
+  async updateWorkout(id: number, updates: Partial<InsertWorkout>): Promise<Workout> {
+    const [updated] = await db.update(workouts).set(updates).where(eq(workouts.id, id)).returning();
+    return updated;
+  }
+
+  async deleteWorkout(id: number): Promise<void> {
+    await db.delete(workouts).where(eq(workouts.id, id));
+  }
+
+  // Goal Shares
+  async createGoalShare(share: InsertGoalShare): Promise<GoalShare> {
+    const [newShare] = await db.insert(goalShares).values(share).returning();
+    return newShare;
+  }
+
+  async getGoalShares(goalId: number): Promise<GoalShare[]> {
+    return await db.select().from(goalShares).where(eq(goalShares.goalId, goalId)).orderBy(desc(goalShares.createdAt));
+  }
+
+  async getSharedGoalsWithPlayer(playerId: number): Promise<GoalShare[]> {
+    return await db.select().from(goalShares).where(eq(goalShares.sharedWithPlayerId, playerId)).orderBy(desc(goalShares.createdAt));
+  }
+
+  async deleteGoalShare(id: number): Promise<void> {
+    await db.delete(goalShares).where(eq(goalShares.id, id));
+  }
+
+  // Schedule Events
+  async createScheduleEvent(event: InsertScheduleEvent): Promise<ScheduleEvent> {
+    const [newEvent] = await db.insert(scheduleEvents).values(event).returning();
+    return newEvent;
+  }
+
+  async getPlayerScheduleEvents(playerId: number): Promise<ScheduleEvent[]> {
+    return await db.select().from(scheduleEvents).where(eq(scheduleEvents.playerId, playerId)).orderBy(desc(scheduleEvents.startTime));
+  }
+
+  async getTeamScheduleEvents(teamId: number): Promise<ScheduleEvent[]> {
+    return await db.select().from(scheduleEvents).where(eq(scheduleEvents.teamId, teamId)).orderBy(desc(scheduleEvents.startTime));
+  }
+
+  async getScheduleEvent(id: number): Promise<ScheduleEvent | undefined> {
+    const [event] = await db.select().from(scheduleEvents).where(eq(scheduleEvents.id, id));
+    return event;
+  }
+
+  async updateScheduleEvent(id: number, updates: Partial<InsertScheduleEvent>): Promise<ScheduleEvent> {
+    const [updated] = await db.update(scheduleEvents).set(updates).where(eq(scheduleEvents.id, id)).returning();
+    return updated;
+  }
+
+  async deleteScheduleEvent(id: number): Promise<void> {
+    await db.delete(scheduleEvents).where(eq(scheduleEvents.id, id));
+  }
+
+  // Live Game Sessions
+  async createLiveGameSession(session: InsertLiveGameSession): Promise<LiveGameSession> {
+    const [newSession] = await db.insert(liveGameSessions).values(session).returning();
+    return newSession;
+  }
+
+  async getLiveGameSession(id: number): Promise<LiveGameSession | undefined> {
+    const [session] = await db.select().from(liveGameSessions).where(eq(liveGameSessions.id, id));
+    return session;
+  }
+
+  async getActivePlayerSession(playerId: number): Promise<LiveGameSession | undefined> {
+    const [session] = await db.select().from(liveGameSessions).where(
+      and(eq(liveGameSessions.playerId, playerId), eq(liveGameSessions.status, "active"))
+    );
+    return session;
+  }
+
+  async updateLiveGameSession(id: number, updates: Partial<LiveGameSession>): Promise<LiveGameSession> {
+    const [updated] = await db.update(liveGameSessions).set(updates).where(eq(liveGameSessions.id, id)).returning();
+    return updated;
+  }
+
+  // Live Game Events
+  async createLiveGameEvent(event: InsertLiveGameEvent): Promise<LiveGameEvent> {
+    const [newEvent] = await db.insert(liveGameEvents).values(event).returning();
+    return newEvent;
+  }
+
+  async getSessionEvents(sessionId: number): Promise<LiveGameEvent[]> {
+    return await db.select().from(liveGameEvents).where(eq(liveGameEvents.sessionId, sessionId)).orderBy(desc(liveGameEvents.createdAt));
+  }
+
+  // Share Assets
+  async createShareAsset(asset: InsertShareAsset): Promise<ShareAsset> {
+    const [newAsset] = await db.insert(shareAssets).values(asset).returning();
+    return newAsset;
+  }
+
+  async getPlayerShareAssets(playerId: number): Promise<ShareAsset[]> {
+    return await db.select().from(shareAssets).where(eq(shareAssets.playerId, playerId)).orderBy(desc(shareAssets.createdAt));
+  }
+
+  async incrementShareCount(id: number): Promise<void> {
+    await db.update(shareAssets).set({ sharedCount: sql`${shareAssets.sharedCount} + 1` }).where(eq(shareAssets.id, id));
   }
 }
 

@@ -755,5 +755,191 @@ export const PREDICTION_CATEGORIES = {
   passing: { name: "Dime Contest", description: "Who will dish more assists?" },
 } as const;
 
+// === PLAYER FOLLOWING SYSTEM ===
+export const follows = pgTable("follows", {
+  id: serial("id").primaryKey(),
+  followerPlayerId: integer("follower_player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  followeePlayerId: integer("followee_player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// === IN-APP NOTIFICATIONS ===
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  notificationType: text("notification_type").notNull(), // 'streak_reminder', 'badge_earned', 'goal_progress', 'new_follower', 'game_logged', 'challenge_update'
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  relatedId: integer("related_id"), // ID of related entity (game, badge, goal, etc.)
+  relatedType: text("related_type"), // 'game', 'badge', 'goal', 'challenge', 'player'
+  isRead: boolean("is_read").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// === HIGHLIGHT CLIPS ===
+export const highlightClips = pgTable("highlight_clips", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  gameId: integer("game_id").references(() => games.id, { onDelete: "set null" }),
+  title: text("title").notNull(),
+  description: text("description"),
+  videoUrl: text("video_url").notNull(),
+  thumbnailUrl: text("thumbnail_url"),
+  duration: integer("duration"), // seconds
+  viewCount: integer("view_count").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// === WORKOUT TRACKER ===
+export const workouts = pgTable("workouts", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  date: date("date").notNull(),
+  workoutType: text("workout_type").notNull(), // 'shooting', 'conditioning', 'weights', 'skills', 'recovery'
+  title: text("title").notNull(),
+  duration: integer("duration").notNull(), // minutes
+  intensity: integer("intensity"), // 1-10 scale
+  notes: text("notes"),
+  metrics: text("metrics"), // JSON string for type-specific metrics
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// === GOAL SHARING ===
+export const goalShares = pgTable("goal_shares", {
+  id: serial("id").primaryKey(),
+  goalId: integer("goal_id").notNull().references(() => goals.id, { onDelete: "cascade" }),
+  sharedWithPlayerId: integer("shared_with_player_id").references(() => players.id, { onDelete: "cascade" }),
+  sharedWithTeamId: integer("shared_with_team_id").references(() => teams.id, { onDelete: "cascade" }),
+  visibility: text("visibility").notNull().default("private"), // 'private', 'teammates', 'public'
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// === SCHEDULE EVENTS (Practices, Games, Workouts) ===
+export const scheduleEvents = pgTable("schedule_events", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").references(() => players.id, { onDelete: "cascade" }),
+  teamId: integer("team_id").references(() => teams.id, { onDelete: "cascade" }),
+  eventType: text("event_type").notNull(), // 'practice', 'game', 'workout', 'meeting'
+  title: text("title").notNull(),
+  description: text("description"),
+  location: text("location"),
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time"),
+  isRecurring: boolean("is_recurring").default(false).notNull(),
+  recurrenceRule: text("recurrence_rule"), // iCal RRULE format
+  createdBy: text("created_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// === LIVE GAME SESSIONS ===
+export const liveGameSessions = pgTable("live_game_sessions", {
+  id: serial("id").primaryKey(),
+  gameId: integer("game_id").references(() => games.id, { onDelete: "cascade" }),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  status: text("status").notNull().default("active"), // 'active', 'paused', 'completed'
+  startedAt: timestamp("started_at").defaultNow(),
+  endedAt: timestamp("ended_at"),
+});
+
+// === LIVE GAME EVENTS (Real-time stat entry) ===
+export const liveGameEvents = pgTable("live_game_events", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").notNull().references(() => liveGameSessions.id, { onDelete: "cascade" }),
+  eventType: text("event_type").notNull(), // 'point', 'rebound', 'assist', 'steal', 'block', 'turnover', 'foul', 'substitution'
+  value: integer("value").default(1).notNull(),
+  quarter: integer("quarter").notNull(),
+  gameTime: text("game_time"), // "10:30" format
+  x: integer("x"), // court position for shot charts
+  y: integer("y"),
+  metadata: text("metadata"), // JSON for additional data
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// === SHARE ASSETS (Social media graphics) ===
+export const shareAssets = pgTable("share_assets", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  gameId: integer("game_id").references(() => games.id, { onDelete: "set null" }),
+  badgeId: integer("badge_id").references(() => badges.id, { onDelete: "set null" }),
+  assetType: text("asset_type").notNull(), // 'game_card', 'badge_card', 'milestone', 'weekly_recap', 'season_stats'
+  imageUrl: text("image_url").notNull(),
+  sharedCount: integer("shared_count").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// === INSERT SCHEMAS FOR NEW TABLES ===
+export const insertFollowSchema = createInsertSchema(follows).omit({ id: true, createdAt: true });
+export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true });
+export const insertHighlightClipSchema = createInsertSchema(highlightClips).omit({ id: true, createdAt: true, viewCount: true });
+export const insertWorkoutSchema = createInsertSchema(workouts).omit({ id: true, createdAt: true });
+export const insertGoalShareSchema = createInsertSchema(goalShares).omit({ id: true, createdAt: true });
+export const insertScheduleEventSchema = createInsertSchema(scheduleEvents).omit({ id: true, createdAt: true });
+export const insertLiveGameSessionSchema = createInsertSchema(liveGameSessions).omit({ id: true, startedAt: true });
+export const insertLiveGameEventSchema = createInsertSchema(liveGameEvents).omit({ id: true, createdAt: true });
+export const insertShareAssetSchema = createInsertSchema(shareAssets).omit({ id: true, createdAt: true, sharedCount: true });
+
+// === TYPES FOR NEW TABLES ===
+export type Follow = typeof follows.$inferSelect;
+export type InsertFollow = z.infer<typeof insertFollowSchema>;
+
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+
+export type HighlightClip = typeof highlightClips.$inferSelect;
+export type InsertHighlightClip = z.infer<typeof insertHighlightClipSchema>;
+
+export type Workout = typeof workouts.$inferSelect;
+export type InsertWorkout = z.infer<typeof insertWorkoutSchema>;
+
+export type GoalShare = typeof goalShares.$inferSelect;
+export type InsertGoalShare = z.infer<typeof insertGoalShareSchema>;
+
+export type ScheduleEvent = typeof scheduleEvents.$inferSelect;
+export type InsertScheduleEvent = z.infer<typeof insertScheduleEventSchema>;
+
+export type LiveGameSession = typeof liveGameSessions.$inferSelect;
+export type InsertLiveGameSession = z.infer<typeof insertLiveGameSessionSchema>;
+
+export type LiveGameEvent = typeof liveGameEvents.$inferSelect;
+export type InsertLiveGameEvent = z.infer<typeof insertLiveGameEventSchema>;
+
+export type ShareAsset = typeof shareAssets.$inferSelect;
+export type InsertShareAsset = z.infer<typeof insertShareAssetSchema>;
+
+// === CONSTANTS FOR NEW FEATURES ===
+export const NOTIFICATION_TYPES = {
+  streak_reminder: { name: "Streak Reminder", description: "Reminder to maintain your streak" },
+  badge_earned: { name: "Badge Earned", description: "You earned a new badge" },
+  goal_progress: { name: "Goal Progress", description: "Update on your goal" },
+  new_follower: { name: "New Follower", description: "Someone started following you" },
+  game_logged: { name: "Game Logged", description: "A new game was logged" },
+  challenge_update: { name: "Challenge Update", description: "Challenge progress update" },
+} as const;
+
+export const WORKOUT_TYPES = {
+  shooting: { name: "Shooting", description: "Shooting drills and practice" },
+  conditioning: { name: "Conditioning", description: "Cardio and endurance training" },
+  weights: { name: "Weight Training", description: "Strength and resistance training" },
+  skills: { name: "Skills Training", description: "Ball handling and court skills" },
+  recovery: { name: "Recovery", description: "Stretching, massage, rest" },
+} as const;
+
+export const EVENT_TYPES = {
+  practice: { name: "Practice", description: "Team or individual practice" },
+  game: { name: "Game", description: "Scheduled game or scrimmage" },
+  workout: { name: "Workout", description: "Training session" },
+  meeting: { name: "Meeting", description: "Team meeting or film session" },
+} as const;
+
+export const LIVE_EVENT_TYPES = {
+  point: { name: "Points", values: [1, 2, 3] },
+  rebound: { name: "Rebound", values: [1] },
+  assist: { name: "Assist", values: [1] },
+  steal: { name: "Steal", values: [1] },
+  block: { name: "Block", values: [1] },
+  turnover: { name: "Turnover", values: [1] },
+  foul: { name: "Foul", values: [1] },
+} as const;
+
 // Export auth models
 export * from "./models/auth";

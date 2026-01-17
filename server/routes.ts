@@ -3,7 +3,7 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, type Game, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema } from "@shared/schema";
+import { players, games, type Game, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, insertWorkoutSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { GoogleGenAI } from "@google/genai";
 import multer from "multer";
@@ -383,6 +383,168 @@ function calculateHustleScore(stats: any, position: string): number {
   
   // Clamp to 0-100 range
   return Math.max(0, Math.min(100, Math.round(score)));
+}
+
+// --- Advanced Metrics Calculations (NBA-style) ---
+
+interface AdvancedMetrics {
+  trueShootingPct: number | null;
+  usageRate: number | null;
+  playerEfficiencyRating: number | null;
+  gameScore: number;
+  winShares: number;
+}
+
+function calculateAdvancedMetrics(stats: any): AdvancedMetrics {
+  const points = stats.points || 0;
+  const fgMade = stats.fgMade || 0;
+  const fgAttempted = stats.fgAttempted || 0;
+  const ftMade = stats.ftMade || 0;
+  const ftAttempted = stats.ftAttempted || 0;
+  const rebounds = stats.rebounds || 0;
+  const offensiveRebounds = stats.offensiveRebounds || 0;
+  const defensiveRebounds = stats.defensiveRebounds || 0;
+  const assists = stats.assists || 0;
+  const steals = stats.steals || 0;
+  const blocks = stats.blocks || 0;
+  const turnovers = stats.turnovers || 0;
+  const fouls = stats.fouls || 0;
+  const minutes = stats.minutes || 0;
+
+  // 1. True Shooting Percentage (TS%)
+  // TS% = Points / (2 * (FGA + 0.44 * FTA))
+  const tsaDenominator = 2 * (fgAttempted + 0.44 * ftAttempted);
+  const trueShootingPct = tsaDenominator > 0 ? (points / tsaDenominator) : null;
+
+  // 2. Usage Rate (USG%) - Simplified version
+  // USG% = ((FGA + 0.44 * FTA + TOV) / Minutes) normalized to per-36
+  // Estimate team possessions as ~100 per 48 minutes (75 per 36 minutes)
+  let usageRate: number | null = null;
+  if (minutes > 0) {
+    const possessionTerminators = fgAttempted + 0.44 * ftAttempted + turnovers;
+    const per36PossTerms = (possessionTerminators / minutes) * 36;
+    // Normalize against estimated 75 team possessions in 36 minutes (player's 1/5 share = 15)
+    usageRate = (per36PossTerms / 15) * 100;
+    usageRate = Math.min(usageRate, 100); // Cap at 100%
+  }
+
+  // 3. Player Efficiency Rating (PER) - Simplified version
+  // PER = (Points + Rebounds + Assists + Steals + Blocks - Turnovers - (FGA - FGM) - 0.5 * (FTA - FTM)) / Minutes * 36
+  let playerEfficiencyRating: number | null = null;
+  if (minutes > 0) {
+    const missedFG = fgAttempted - fgMade;
+    const missedFT = ftAttempted - ftMade;
+    const rawPER = points + rebounds + assists + steals + blocks - turnovers - missedFG - 0.5 * missedFT;
+    playerEfficiencyRating = (rawPER / minutes) * 36;
+  }
+
+  // 4. Game Score (John Hollinger's formula)
+  // GameScore = Points + 0.4*FGM - 0.7*FGA - 0.4*(FTA-FTM) + 0.7*ORB + 0.3*DRB + Steals + 0.7*Assists + 0.7*Blocks - 0.4*Fouls - Turnovers
+  const orb = offensiveRebounds || 0;
+  const drb = defensiveRebounds || (rebounds - orb);
+  const gameScore = points 
+    + 0.4 * fgMade 
+    - 0.7 * fgAttempted 
+    - 0.4 * (ftAttempted - ftMade) 
+    + 0.7 * orb 
+    + 0.3 * drb 
+    + steals 
+    + 0.7 * assists 
+    + 0.7 * blocks 
+    - 0.4 * fouls 
+    - turnovers;
+
+  // 5. Win Shares (simplified per-game estimate)
+  // Simplified: ((Points + Assists*2 + Rebounds + Steals*2 + Blocks*2 - Turnovers*2) / 48) * (Minutes / 48)
+  const contributionValue = points + assists * 2 + rebounds + steals * 2 + blocks * 2 - turnovers * 2;
+  const winShares = (contributionValue / 48) * (minutes / 48);
+
+  return {
+    trueShootingPct: trueShootingPct !== null ? Math.round(trueShootingPct * 1000) / 1000 : null,
+    usageRate: usageRate !== null ? Math.round(usageRate * 10) / 10 : null,
+    playerEfficiencyRating: playerEfficiencyRating !== null ? Math.round(playerEfficiencyRating * 10) / 10 : null,
+    gameScore: Math.round(gameScore * 10) / 10,
+    winShares: Math.round(winShares * 1000) / 1000,
+  };
+}
+
+function calculateAggregatedAdvancedMetrics(games: any[]): AdvancedMetrics & { gamesCount: number } {
+  if (games.length === 0) {
+    return {
+      trueShootingPct: null,
+      usageRate: null,
+      playerEfficiencyRating: null,
+      gameScore: 0,
+      winShares: 0,
+      gamesCount: 0,
+    };
+  }
+
+  // Aggregate totals for TS% calculation
+  let totalPoints = 0;
+  let totalFGA = 0;
+  let totalFTA = 0;
+  let totalMinutes = 0;
+  let totalFGM = 0;
+  let totalFTM = 0;
+  let totalRebounds = 0;
+  let totalORB = 0;
+  let totalDRB = 0;
+  let totalAssists = 0;
+  let totalSteals = 0;
+  let totalBlocks = 0;
+  let totalTurnovers = 0;
+  let totalFouls = 0;
+
+  for (const game of games) {
+    totalPoints += game.points || 0;
+    totalFGA += game.fgAttempted || 0;
+    totalFTA += game.ftAttempted || 0;
+    totalMinutes += game.minutes || 0;
+    totalFGM += game.fgMade || 0;
+    totalFTM += game.ftMade || 0;
+    totalRebounds += game.rebounds || 0;
+    totalORB += game.offensiveRebounds || 0;
+    totalDRB += game.defensiveRebounds || 0;
+    totalAssists += game.assists || 0;
+    totalSteals += game.steals || 0;
+    totalBlocks += game.blocks || 0;
+    totalTurnovers += game.turnovers || 0;
+    totalFouls += game.fouls || 0;
+  }
+
+  // Calculate aggregated metrics using totals
+  const aggregatedStats = {
+    points: totalPoints,
+    fgMade: totalFGM,
+    fgAttempted: totalFGA,
+    ftMade: totalFTM,
+    ftAttempted: totalFTA,
+    rebounds: totalRebounds,
+    offensiveRebounds: totalORB,
+    defensiveRebounds: totalDRB,
+    assists: totalAssists,
+    steals: totalSteals,
+    blocks: totalBlocks,
+    turnovers: totalTurnovers,
+    fouls: totalFouls,
+    minutes: totalMinutes,
+  };
+
+  const metrics = calculateAdvancedMetrics(aggregatedStats);
+
+  // Win shares should be sum of per-game win shares
+  let totalWinShares = 0;
+  for (const game of games) {
+    const gameMetrics = calculateAdvancedMetrics(game);
+    totalWinShares += gameMetrics.winShares;
+  }
+
+  return {
+    ...metrics,
+    winShares: Math.round(totalWinShares * 1000) / 1000,
+    gamesCount: games.length,
+  };
 }
 
 // --- Badge Award Logic ---
@@ -966,7 +1128,15 @@ export async function registerRoutes(
     if (!player) {
       return res.status(404).json({ message: 'Player not found' });
     }
-    res.json(player);
+    
+    // Get player's games and calculate aggregated advanced metrics
+    const playerGames = await storage.getGamesByPlayerId(player.id);
+    const aggregatedAdvancedMetrics = calculateAggregatedAdvancedMetrics(playerGames);
+    
+    res.json({
+      ...player,
+      advancedMetrics: aggregatedAdvancedMetrics,
+    });
   });
 
   // Create player - coaches only
@@ -1198,7 +1368,17 @@ export async function registerRoutes(
       // Check for performance alerts (drop detection)
       await checkPerformanceAlerts(input.playerId, game.id, input, grade);
       
-      res.status(201).json({ ...game, xpEarned, newTier, totalXp: updatedPlayer.totalXp, currentTier: updatedPlayer.currentTier });
+      // Calculate advanced metrics for the game
+      const advancedMetrics = calculateAdvancedMetrics(input);
+      
+      res.status(201).json({ 
+        ...game, 
+        xpEarned, 
+        newTier, 
+        totalXp: updatedPlayer.totalXp, 
+        currentTier: updatedPlayer.currentTier,
+        advancedMetrics 
+      });
     } catch (err) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({
@@ -3968,6 +4148,675 @@ Respond in this exact JSON format:
     } catch (err) {
       console.error('Admin get users error:', err);
       res.status(500).json({ error: 'Could not fetch users' });
+    }
+  });
+
+  // ========================================
+  // FOLLOWING SYSTEM ROUTES
+  // ========================================
+
+  // Follow a player
+  app.post('/api/players/:playerId/follow', isAuthenticated, async (req: any, res) => {
+    try {
+      const followeePlayerId = parseInt(req.params.playerId);
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user || !user.playerId) {
+        return res.status(400).json({ message: "You must have a player profile to follow others" });
+      }
+      if (user.playerId === followeePlayerId) {
+        return res.status(400).json({ message: "You cannot follow yourself" });
+      }
+      const alreadyFollowing = await storage.isFollowing(user.playerId, followeePlayerId);
+      if (alreadyFollowing) {
+        return res.status(400).json({ message: "Already following this player" });
+      }
+      const follow = await storage.createFollow(user.playerId, followeePlayerId);
+      await storage.createNotification({
+        playerId: followeePlayerId,
+        notificationType: 'new_follower',
+        title: 'New Follower',
+        message: `${user.email || 'Someone'} started following you`,
+        relatedId: user.playerId,
+        relatedType: 'player',
+      });
+      res.json(follow);
+    } catch (error) {
+      console.error('Error following player:', error);
+      res.status(500).json({ message: "Failed to follow player" });
+    }
+  });
+
+  // Unfollow a player
+  app.delete('/api/players/:playerId/follow', isAuthenticated, async (req: any, res) => {
+    try {
+      const followeePlayerId = parseInt(req.params.playerId);
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user || !user.playerId) {
+        return res.status(400).json({ message: "You must have a player profile" });
+      }
+      await storage.deleteFollow(user.playerId, followeePlayerId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error unfollowing player:', error);
+      res.status(500).json({ message: "Failed to unfollow player" });
+    }
+  });
+
+  // Get player's followers
+  app.get('/api/players/:playerId/followers', isAuthenticated, async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.playerId);
+      const followers = await storage.getFollowers(playerId);
+      res.json(followers);
+    } catch (error) {
+      console.error('Error getting followers:', error);
+      res.status(500).json({ message: "Failed to get followers" });
+    }
+  });
+
+  // Get who player is following
+  app.get('/api/players/:playerId/following', isAuthenticated, async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.playerId);
+      const following = await storage.getFollowing(playerId);
+      res.json(following);
+    } catch (error) {
+      console.error('Error getting following:', error);
+      res.status(500).json({ message: "Failed to get following" });
+    }
+  });
+
+  // Get follower/following counts
+  app.get('/api/players/:playerId/follow-stats', isAuthenticated, async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.playerId);
+      const [followerCount, followingCount] = await Promise.all([
+        storage.getFollowerCount(playerId),
+        storage.getFollowingCount(playerId)
+      ]);
+      res.json({ followerCount, followingCount });
+    } catch (error) {
+      console.error('Error getting follow stats:', error);
+      res.status(500).json({ message: "Failed to get follow stats" });
+    }
+  });
+
+  // ========================================
+  // NOTIFICATION ROUTES
+  // ========================================
+
+  // Get current user's notifications
+  app.get('/api/notifications', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user || !user.playerId) {
+        return res.status(400).json({ message: "You must have a player profile" });
+      }
+      const notifications = await storage.getPlayerNotifications(user.playerId);
+      res.json(notifications);
+    } catch (error) {
+      console.error('Error getting notifications:', error);
+      res.status(500).json({ message: "Failed to get notifications" });
+    }
+  });
+
+  // Get unread notification count
+  app.get('/api/notifications/unread-count', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user || !user.playerId) {
+        return res.status(400).json({ message: "You must have a player profile" });
+      }
+      const count = await storage.getUnreadNotificationCount(user.playerId);
+      res.json({ count });
+    } catch (error) {
+      console.error('Error getting unread count:', error);
+      res.status(500).json({ message: "Failed to get unread count" });
+    }
+  });
+
+  // Mark single notification as read
+  app.patch('/api/notifications/:id/read', isAuthenticated, async (req: any, res) => {
+    try {
+      const notificationId = parseInt(req.params.id);
+      await storage.markNotificationRead(notificationId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error marking notification read:', error);
+      res.status(500).json({ message: "Failed to mark notification as read" });
+    }
+  });
+
+  // Mark all notifications as read
+  app.post('/api/notifications/read-all', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user || !user.playerId) {
+        return res.status(400).json({ message: "You must have a player profile" });
+      }
+      await storage.markAllNotificationsRead(user.playerId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error marking all notifications read:', error);
+      res.status(500).json({ message: "Failed to mark all notifications as read" });
+    }
+  });
+
+  // ========================================
+  // HIGHLIGHT CLIPS ROUTES
+  // ========================================
+
+  // Create a highlight clip
+  app.post('/api/highlight-clips', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user || !user.playerId) {
+        return res.status(400).json({ message: "You must have a player profile" });
+      }
+      const validatedData = insertHighlightClipSchema.parse({
+        ...req.body,
+        playerId: user.playerId
+      });
+      const clip = await storage.createHighlightClip(validatedData);
+      res.json(clip);
+    } catch (error) {
+      console.error('Error creating highlight clip:', error);
+      res.status(500).json({ message: "Failed to create highlight clip" });
+    }
+  });
+
+  // Get player's highlight clips
+  app.get('/api/players/:playerId/highlight-clips', isAuthenticated, async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.playerId);
+      const clips = await storage.getPlayerHighlightClips(playerId);
+      res.json(clips);
+    } catch (error) {
+      console.error('Error getting highlight clips:', error);
+      res.status(500).json({ message: "Failed to get highlight clips" });
+    }
+  });
+
+  // Get single clip (increments view count)
+  app.get('/api/highlight-clips/:id', isAuthenticated, async (req, res) => {
+    try {
+      const clipId = parseInt(req.params.id);
+      const clip = await storage.getHighlightClip(clipId);
+      if (!clip) {
+        return res.status(404).json({ message: "Clip not found" });
+      }
+      await storage.incrementClipViewCount(clipId);
+      res.json(clip);
+    } catch (error) {
+      console.error('Error getting highlight clip:', error);
+      res.status(500).json({ message: "Failed to get highlight clip" });
+    }
+  });
+
+  // Delete a clip (owner only)
+  app.delete('/api/highlight-clips/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const clipId = parseInt(req.params.id);
+      const user = await authStorage.getUser(req.user.claims.sub);
+      const clip = await storage.getHighlightClip(clipId);
+      if (!clip) {
+        return res.status(404).json({ message: "Clip not found" });
+      }
+      if (!user || (user.role !== 'coach' && user.playerId !== clip.playerId)) {
+        return res.status(403).json({ message: "Not authorized to delete this clip" });
+      }
+      await storage.deleteHighlightClip(clipId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting highlight clip:', error);
+      res.status(500).json({ message: "Failed to delete highlight clip" });
+    }
+  });
+
+  // ========================================
+  // WORKOUT ROUTES
+  // ========================================
+
+  // Create a workout
+  app.post('/api/workouts', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user || !user.playerId) {
+        return res.status(400).json({ message: "You must have a player profile" });
+      }
+      const validatedData = insertWorkoutSchema.parse({
+        ...req.body,
+        playerId: user.playerId
+      });
+      const workout = await storage.createWorkout(validatedData);
+      res.json(workout);
+    } catch (error) {
+      console.error('Error creating workout:', error);
+      res.status(500).json({ message: "Failed to create workout" });
+    }
+  });
+
+  // Get player's workouts
+  app.get('/api/players/:playerId/workouts', isAuthenticated, async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.playerId);
+      const workouts = await storage.getPlayerWorkouts(playerId);
+      res.json(workouts);
+    } catch (error) {
+      console.error('Error getting workouts:', error);
+      res.status(500).json({ message: "Failed to get workouts" });
+    }
+  });
+
+  // Get single workout
+  app.get('/api/workouts/:id', isAuthenticated, async (req, res) => {
+    try {
+      const workoutId = parseInt(req.params.id);
+      const workout = await storage.getWorkout(workoutId);
+      if (!workout) {
+        return res.status(404).json({ message: "Workout not found" });
+      }
+      res.json(workout);
+    } catch (error) {
+      console.error('Error getting workout:', error);
+      res.status(500).json({ message: "Failed to get workout" });
+    }
+  });
+
+  // Update a workout
+  app.patch('/api/workouts/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const workoutId = parseInt(req.params.id);
+      const user = await authStorage.getUser(req.user.claims.sub);
+      const workout = await storage.getWorkout(workoutId);
+      if (!workout) {
+        return res.status(404).json({ message: "Workout not found" });
+      }
+      if (!user || (user.role !== 'coach' && user.playerId !== workout.playerId)) {
+        return res.status(403).json({ message: "Not authorized to update this workout" });
+      }
+      const updatedWorkout = await storage.updateWorkout(workoutId, req.body);
+      res.json(updatedWorkout);
+    } catch (error) {
+      console.error('Error updating workout:', error);
+      res.status(500).json({ message: "Failed to update workout" });
+    }
+  });
+
+  // Delete a workout
+  app.delete('/api/workouts/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const workoutId = parseInt(req.params.id);
+      const user = await authStorage.getUser(req.user.claims.sub);
+      const workout = await storage.getWorkout(workoutId);
+      if (!workout) {
+        return res.status(404).json({ message: "Workout not found" });
+      }
+      if (!user || (user.role !== 'coach' && user.playerId !== workout.playerId)) {
+        return res.status(403).json({ message: "Not authorized to delete this workout" });
+      }
+      await storage.deleteWorkout(workoutId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting workout:', error);
+      res.status(500).json({ message: "Failed to delete workout" });
+    }
+  });
+
+  // ========================================
+  // GOAL SHARING ROUTES
+  // ========================================
+
+  // Share a goal with teammate/team
+  app.post('/api/goals/:goalId/share', isAuthenticated, async (req: any, res) => {
+    try {
+      const goalId = parseInt(req.params.goalId);
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user || !user.playerId) {
+        return res.status(400).json({ message: "You must have a player profile" });
+      }
+      const validatedData = insertGoalShareSchema.parse({
+        ...req.body,
+        goalId,
+        sharedByPlayerId: user.playerId
+      });
+      const share = await storage.createGoalShare(validatedData);
+      if (validatedData.sharedWithPlayerId) {
+        await storage.createNotification({
+          playerId: validatedData.sharedWithPlayerId,
+          notificationType: 'goal_progress',
+          title: 'Goal Shared With You',
+          message: 'Someone shared a goal with you',
+          relatedId: goalId,
+          relatedType: 'goal',
+        });
+      }
+      res.json(share);
+    } catch (error) {
+      console.error('Error sharing goal:', error);
+      res.status(500).json({ message: "Failed to share goal" });
+    }
+  });
+
+  // Get shares for a goal
+  app.get('/api/goals/:goalId/shares', isAuthenticated, async (req, res) => {
+    try {
+      const goalId = parseInt(req.params.goalId);
+      const shares = await storage.getGoalShares(goalId);
+      res.json(shares);
+    } catch (error) {
+      console.error('Error getting goal shares:', error);
+      res.status(500).json({ message: "Failed to get goal shares" });
+    }
+  });
+
+  // Get goals shared with current player
+  app.get('/api/shared-goals', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user || !user.playerId) {
+        return res.status(400).json({ message: "You must have a player profile" });
+      }
+      const sharedGoals = await storage.getSharedGoalsWithPlayer(user.playerId);
+      res.json(sharedGoals);
+    } catch (error) {
+      console.error('Error getting shared goals:', error);
+      res.status(500).json({ message: "Failed to get shared goals" });
+    }
+  });
+
+  // Remove a share
+  app.delete('/api/goal-shares/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const shareId = parseInt(req.params.id);
+      await storage.deleteGoalShare(shareId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting goal share:', error);
+      res.status(500).json({ message: "Failed to delete goal share" });
+    }
+  });
+
+  // ========================================
+  // SCHEDULE EVENTS ROUTES
+  // ========================================
+
+  // Create schedule event
+  app.post('/api/schedule-events', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user || !user.playerId) {
+        return res.status(400).json({ message: "You must have a player profile" });
+      }
+      const validatedData = insertScheduleEventSchema.parse({
+        ...req.body,
+        playerId: user.playerId
+      });
+      const event = await storage.createScheduleEvent(validatedData);
+      res.json(event);
+    } catch (error) {
+      console.error('Error creating schedule event:', error);
+      res.status(500).json({ message: "Failed to create schedule event" });
+    }
+  });
+
+  // Get events for current user
+  app.get('/api/schedule-events', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user || !user.playerId) {
+        return res.status(400).json({ message: "You must have a player profile" });
+      }
+      const events = await storage.getPlayerScheduleEvents(user.playerId);
+      res.json(events);
+    } catch (error) {
+      console.error('Error getting schedule events:', error);
+      res.status(500).json({ message: "Failed to get schedule events" });
+    }
+  });
+
+  // Get single event
+  app.get('/api/schedule-events/:id', isAuthenticated, async (req, res) => {
+    try {
+      const eventId = parseInt(req.params.id);
+      const event = await storage.getScheduleEvent(eventId);
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      res.json(event);
+    } catch (error) {
+      console.error('Error getting schedule event:', error);
+      res.status(500).json({ message: "Failed to get schedule event" });
+    }
+  });
+
+  // Update event
+  app.patch('/api/schedule-events/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const eventId = parseInt(req.params.id);
+      const user = await authStorage.getUser(req.user.claims.sub);
+      const event = await storage.getScheduleEvent(eventId);
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      if (!user || (user.role !== 'coach' && user.playerId !== event.playerId)) {
+        return res.status(403).json({ message: "Not authorized to update this event" });
+      }
+      const updatedEvent = await storage.updateScheduleEvent(eventId, req.body);
+      res.json(updatedEvent);
+    } catch (error) {
+      console.error('Error updating schedule event:', error);
+      res.status(500).json({ message: "Failed to update schedule event" });
+    }
+  });
+
+  // Delete event
+  app.delete('/api/schedule-events/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const eventId = parseInt(req.params.id);
+      const user = await authStorage.getUser(req.user.claims.sub);
+      const event = await storage.getScheduleEvent(eventId);
+      if (!event) {
+        return res.status(404).json({ message: "Event not found" });
+      }
+      if (!user || (user.role !== 'coach' && user.playerId !== event.playerId)) {
+        return res.status(403).json({ message: "Not authorized to delete this event" });
+      }
+      await storage.deleteScheduleEvent(eventId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting schedule event:', error);
+      res.status(500).json({ message: "Failed to delete schedule event" });
+    }
+  });
+
+  // ========================================
+  // LIVE GAME MODE ROUTES
+  // ========================================
+
+  // Start a live game session
+  app.post('/api/live-game/start', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user || !user.playerId) {
+        return res.status(400).json({ message: "You must have a player profile" });
+      }
+      const existingSession = await storage.getActivePlayerSession(user.playerId);
+      if (existingSession) {
+        return res.status(400).json({ message: "You already have an active game session" });
+      }
+      const validatedData = insertLiveGameSessionSchema.parse({
+        ...req.body,
+        playerId: user.playerId,
+        status: 'active'
+      });
+      const session = await storage.createLiveGameSession(validatedData);
+      res.json(session);
+    } catch (error) {
+      console.error('Error starting live game session:', error);
+      res.status(500).json({ message: "Failed to start live game session" });
+    }
+  });
+
+  // Get current active session
+  app.get('/api/live-game/active', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user || !user.playerId) {
+        return res.status(400).json({ message: "You must have a player profile" });
+      }
+      const session = await storage.getActivePlayerSession(user.playerId);
+      res.json(session || null);
+    } catch (error) {
+      console.error('Error getting active session:', error);
+      res.status(500).json({ message: "Failed to get active session" });
+    }
+  });
+
+  // Log a live game event
+  app.post('/api/live-game/:sessionId/event', isAuthenticated, async (req: any, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      const session = await storage.getLiveGameSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ message: "Session not found" });
+      }
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user || (user.role !== 'coach' && user.playerId !== session.playerId)) {
+        return res.status(403).json({ message: "Not authorized to add events to this session" });
+      }
+      const validatedData = insertLiveGameEventSchema.parse({
+        ...req.body,
+        sessionId
+      });
+      const event = await storage.createLiveGameEvent(validatedData);
+      res.json(event);
+    } catch (error) {
+      console.error('Error logging live game event:', error);
+      res.status(500).json({ message: "Failed to log live game event" });
+    }
+  });
+
+  // Get session events
+  app.get('/api/live-game/:sessionId/events', isAuthenticated, async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      const events = await storage.getSessionEvents(sessionId);
+      res.json(events);
+    } catch (error) {
+      console.error('Error getting session events:', error);
+      res.status(500).json({ message: "Failed to get session events" });
+    }
+  });
+
+  // Complete session and create game
+  app.post('/api/live-game/:sessionId/complete', isAuthenticated, async (req: any, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      const session = await storage.getLiveGameSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ message: "Session not found" });
+      }
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user || (user.role !== 'coach' && user.playerId !== session.playerId)) {
+        return res.status(403).json({ message: "Not authorized to complete this session" });
+      }
+      const events = await storage.getSessionEvents(sessionId);
+      const stats = {
+        points: 0,
+        rebounds: 0,
+        assists: 0,
+        steals: 0,
+        blocks: 0,
+        turnovers: 0,
+        fouls: 0,
+        fgMade: 0,
+        fgAttempted: 0,
+        threeMade: 0,
+        threeAttempted: 0,
+        ftMade: 0,
+        ftAttempted: 0,
+      };
+      for (const event of events) {
+        switch (event.eventType) {
+          case 'made_2pt': stats.points += 2; stats.fgMade++; stats.fgAttempted++; break;
+          case 'missed_2pt': stats.fgAttempted++; break;
+          case 'made_3pt': stats.points += 3; stats.threeMade++; stats.threeAttempted++; stats.fgMade++; stats.fgAttempted++; break;
+          case 'missed_3pt': stats.threeAttempted++; stats.fgAttempted++; break;
+          case 'made_ft': stats.points += 1; stats.ftMade++; stats.ftAttempted++; break;
+          case 'missed_ft': stats.ftAttempted++; break;
+          case 'rebound': stats.rebounds++; break;
+          case 'assist': stats.assists++; break;
+          case 'steal': stats.steals++; break;
+          case 'block': stats.blocks++; break;
+          case 'turnover': stats.turnovers++; break;
+          case 'foul': stats.fouls++; break;
+        }
+      }
+      const game = await storage.createGame({
+        playerId: session.playerId,
+        date: new Date().toISOString().split('T')[0],
+        opponent: req.body.opponent || 'Unknown',
+        result: req.body.result || null,
+        minutes: req.body.minutes || 0,
+        ...stats
+      });
+      await storage.updateLiveGameSession(sessionId, {
+        status: 'completed',
+        endedAt: new Date(),
+        gameId: game.id
+      });
+      res.json({ session: await storage.getLiveGameSession(sessionId), game });
+    } catch (error) {
+      console.error('Error completing session:', error);
+      res.status(500).json({ message: "Failed to complete session" });
+    }
+  });
+
+  // ========================================
+  // SHARE ASSETS ROUTES
+  // ========================================
+
+  // Create share asset
+  app.post('/api/share-assets', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user || !user.playerId) {
+        return res.status(400).json({ message: "You must have a player profile" });
+      }
+      const validatedData = insertShareAssetSchema.parse({
+        ...req.body,
+        playerId: user.playerId
+      });
+      const asset = await storage.createShareAsset(validatedData);
+      res.json(asset);
+    } catch (error) {
+      console.error('Error creating share asset:', error);
+      res.status(500).json({ message: "Failed to create share asset" });
+    }
+  });
+
+  // Get player's share assets
+  app.get('/api/players/:playerId/share-assets', isAuthenticated, async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.playerId);
+      const assets = await storage.getPlayerShareAssets(playerId);
+      res.json(assets);
+    } catch (error) {
+      console.error('Error getting share assets:', error);
+      res.status(500).json({ message: "Failed to get share assets" });
+    }
+  });
+
+  // Increment share count
+  app.post('/api/share-assets/:id/shared', isAuthenticated, async (req, res) => {
+    try {
+      const assetId = parseInt(req.params.id);
+      await storage.incrementShareCount(assetId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error incrementing share count:', error);
+      res.status(500).json({ message: "Failed to increment share count" });
     }
   });
 
