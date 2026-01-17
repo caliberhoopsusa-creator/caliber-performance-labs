@@ -1446,3 +1446,76 @@ export function useDeleteCoachGoal() {
     },
   });
 }
+
+// ============================================
+// WORKOUT HOOKS
+// ============================================
+
+export type Workout = {
+  id: number;
+  playerId: number;
+  date: string;
+  workoutType: string;
+  title: string;
+  duration: number;
+  intensity: number | null;
+  notes: string | null;
+  metrics: string | null;
+  createdAt: string;
+};
+
+export type CreateWorkoutInput = {
+  playerId: number;
+  date: string;
+  workoutType: string;
+  title: string;
+  duration: number;
+  intensity?: number | null;
+  notes?: string | null;
+};
+
+export function usePlayerWorkouts(playerId: number) {
+  return useQuery<Workout[]>({
+    queryKey: ['/api/players', playerId, 'workouts'],
+    queryFn: async () => {
+      const res = await fetch(`/api/players/${playerId}/workouts`);
+      if (!res.ok) throw new Error("Failed to fetch workouts");
+      return res.json();
+    },
+    enabled: !!playerId,
+  });
+}
+
+export function useCreateWorkout() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: CreateWorkoutInput) => {
+      const res = await fetch('/api/workouts', {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to create workout");
+      }
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/players', variables.playerId, 'workouts'] });
+    },
+  });
+}
+
+export function useDeleteWorkout() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { id: number; playerId: number }) => {
+      const res = await fetch(`/api/workouts/${data.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete workout");
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/players', variables.playerId, 'workouts'] });
+    },
+  });
+}

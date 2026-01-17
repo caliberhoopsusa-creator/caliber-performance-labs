@@ -4,6 +4,7 @@ import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Sidebar, MobileNav } from "@/components/Sidebar";
+import { NotificationBell } from "@/components/NotificationBell";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 
@@ -32,6 +33,7 @@ import OpponentScouting from "./pages/OpponentScouting";
 import CoachAlertsPage from "./pages/CoachAlertsPage";
 import Pricing from "./pages/Pricing";
 import Admin from "./pages/Admin";
+import WorkoutTracker from "./pages/WorkoutTracker";
 import NotFound from "./pages/not-found";
 
 interface ExtendedUser {
@@ -94,8 +96,12 @@ function MainRouter() {
   return (
     <div className="flex min-h-screen bg-background text-foreground font-body selection:bg-primary/30">
       <Sidebar userRole={extendedUser.role} playerId={extendedUser.playerId} />
-      <main className="flex-1 p-4 pb-20 md:p-8 md:pb-8 w-full max-w-[1600px] mx-auto overflow-x-hidden">
-        <Switch>
+      <div className="flex-1 flex flex-col">
+        <header className="flex items-center justify-end gap-4 p-4 md:px-8 border-b border-white/5">
+          <NotificationBell />
+        </header>
+        <main className="flex-1 p-4 pb-20 md:px-8 md:pb-8 w-full max-w-[1600px] mx-auto overflow-x-hidden">
+          <Switch>
           <Route path="/" component={Dashboard} />
           <Route path="/players" component={PlayersList} />
           <Route path="/players/:id/card" component={PlayerCard} />
@@ -117,9 +123,11 @@ function MainRouter() {
           <Route path="/coach/scouting" component={OpponentScouting} />
           <Route path="/coach/alerts" component={CoachAlertsPage} />
           <Route path="/pricing" component={Pricing} />
+          <Route path="/workouts" component={WorkoutTracker} />
           <Route component={NotFound} />
         </Switch>
-      </main>
+        </main>
+      </div>
       <MobileNav userRole={extendedUser.role} />
     </div>
   );

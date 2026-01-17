@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock } from "lucide-react";
+import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AlertsBadge } from "@/components/AlertsCenter";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
       items: [
         { href: playerId ? `/players/${playerId}` : "/", label: "My Stats", icon: UserCircle },
         { href: "/analyze", label: "Log Game", icon: PlusCircle },
+        { href: "/workouts", label: "Workouts", icon: Dumbbell },
         { href: "/video", label: "Video Analysis", icon: Video },
       ],
     },
@@ -67,6 +68,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         { href: "/", label: "Dashboard", icon: LayoutDashboard },
         { href: "/players", label: "Players", icon: Users },
         { href: "/analyze", label: "New Analysis", icon: PlusCircle },
+        { href: "/workouts", label: "Workouts", icon: Dumbbell },
         { href: "/pricing", label: "Pricing", icon: CreditCard },
       ],
     },

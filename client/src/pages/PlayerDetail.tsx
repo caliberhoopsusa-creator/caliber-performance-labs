@@ -10,7 +10,13 @@ import { CoachGoals } from "@/components/CoachGoals";
 import { ImprovementReport } from "@/components/ImprovementReport";
 import { PreGameReport } from "@/components/PreGameReport";
 import { PlayerReportCard } from "@/components/PlayerReportCard";
+import { FollowButton } from "@/components/FollowButton";
+import { FollowStats } from "@/components/FollowStats";
+import { FollowersList } from "@/components/FollowersList";
+import { FollowingList } from "@/components/FollowingList";
+import { useAuth } from "@/hooks/use-auth";
 import { useRoute, Link, useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { StatCard } from "@/components/StatCard";
 import { GradeBadge } from "@/components/GradeBadge";
 import { PlayerArchetype } from "@/components/PlayerArchetype";
@@ -58,8 +64,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { AvatarImage } from "@/components/ui/avatar";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 const BADGE_ICONS: Record<string, any> = {
   twenty_piece: Target,
@@ -211,6 +218,12 @@ function CoachToolsSection({ playerId, games }: CoachToolsSectionProps) {
   );
 }
 
+interface FollowingPlayer {
+  id: number;
+  playerId: number;
+  name: string;
+}
+
 export default function PlayerDetail() {
   const [, params] = useRoute("/players/:id");
   const id = Number(params?.id);
@@ -219,11 +232,27 @@ export default function PlayerDetail() {
   const { mutate: deleteGame } = useDeleteGame();
   const { mutate: updatePlayer, isPending: isUpdating } = useUpdatePlayer();
   const { toast } = useToast();
+  const { user, isAuthenticated } = useAuth();
   const [location, navigate] = useLocation();
   const [showAllGames, setShowAllGames] = useState(false);
   const [expandedGameId, setExpandedGameId] = useState<number | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editForm, setEditForm] = useState<PlayerUpdate>({});
+  const [showFollowersSheet, setShowFollowersSheet] = useState(false);
+  const [showFollowingSheet, setShowFollowingSheet] = useState(false);
+
+  const { data: currentUserFollowing = [] } = useQuery<FollowingPlayer[]>({
+    queryKey: ["/api/players", user?.playerId, "following"],
+    enabled: isAuthenticated && !!user?.playerId,
+  });
+
+  const isOwnProfile = useMemo(() => {
+    return user?.playerId === id;
+  }, [user?.playerId, id]);
+
+  const isFollowingPlayer = useMemo(() => {
+    return currentUserFollowing.some(f => f.playerId === id);
+  }, [currentUserFollowing, id]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -495,6 +524,15 @@ export default function PlayerDetail() {
                 )}
                 <span>{games.length} Games Tracked</span>
               </div>
+              {isAuthenticated && (
+                <div className="mt-4">
+                  <FollowStats 
+                    playerId={id} 
+                    onFollowersClick={() => setShowFollowersSheet(true)}
+                    onFollowingClick={() => setShowFollowingSheet(true)}
+                  />
+                </div>
+              )}
             </div>
           </div>
 
@@ -505,14 +543,22 @@ export default function PlayerDetail() {
             </div>
             
             <div className="flex flex-wrap gap-3">
-              <Button 
-                onClick={() => setIsEditDialogOpen(true)} 
-                variant="outline" 
-                className="gap-2"
-                data-testid="button-edit-profile"
-              >
-                <Pencil className="w-4 h-4" /> Edit Profile
-              </Button>
+              {isAuthenticated && !isOwnProfile && (
+                <FollowButton 
+                  playerId={id} 
+                  initialIsFollowing={isFollowingPlayer}
+                />
+              )}
+              {isOwnProfile && (
+                <Button 
+                  onClick={() => setIsEditDialogOpen(true)} 
+                  variant="outline" 
+                  className="gap-2"
+                  data-testid="button-edit-profile"
+                >
+                  <Pencil className="w-4 h-4" /> Edit Profile
+                </Button>
+              )}
               <Button 
                 onClick={handleShareProfile} 
                 variant="outline" 
@@ -521,11 +567,13 @@ export default function PlayerDetail() {
               >
                 <Share2 className="w-4 h-4" /> Share Profile
               </Button>
-              <Link href={`/analyze?playerId=${player.id}`}>
-                <Button className="gap-2" data-testid="button-log-game">
-                  <Plus className="w-4 h-4" /> Log Game
-                </Button>
-              </Link>
+              {isOwnProfile && (
+                <Link href={`/analyze?playerId=${player.id}`}>
+                  <Button className="gap-2" data-testid="button-log-game">
+                    <Plus className="w-4 h-4" /> Log Game
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -1201,6 +1249,32 @@ export default function PlayerDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Sheet open={showFollowersSheet} onOpenChange={setShowFollowersSheet}>
+        <SheetContent className="bg-background border-l border-white/10">
+          <SheetHeader>
+            <SheetTitle className="font-display text-xl text-white uppercase tracking-wider">
+              Followers
+            </SheetTitle>
+          </SheetHeader>
+          <div className="mt-6">
+            <FollowersList playerId={id} />
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={showFollowingSheet} onOpenChange={setShowFollowingSheet}>
+        <SheetContent className="bg-background border-l border-white/10">
+          <SheetHeader>
+            <SheetTitle className="font-display text-xl text-white uppercase tracking-wider">
+              Following
+            </SheetTitle>
+          </SheetHeader>
+          <div className="mt-6">
+            <FollowingList playerId={id} showUnfollowButton={isOwnProfile} />
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
