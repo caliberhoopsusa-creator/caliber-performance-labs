@@ -276,6 +276,115 @@ function calculateGrade(stats: any, position: string): { grade: string; feedback
   return { grade, feedback };
 }
 
+// --- Defense & Hustle Calculations ---
+
+function calculateDefenseRating(stats: any, position: string): number {
+  let rating = 50; // Base rating
+  
+  const steals = stats.steals || 0;
+  const blocks = stats.blocks || 0;
+  const defensiveRebounds = stats.defensiveRebounds || 0;
+  const minutes = stats.minutes || 1;
+  
+  // Parse opponent score from result (e.g., "W 105-98" or "L 95-100")
+  let opponentScore = 0;
+  if (stats.result) {
+    const match = stats.result.match(/[WL]\s*(\d+)-(\d+)/i);
+    if (match) {
+      const isWin = stats.result.toUpperCase().startsWith('W');
+      opponentScore = isWin ? parseInt(match[2]) : parseInt(match[1]);
+    }
+  }
+  
+  // Steals per minute (scaled) - major defensive indicator
+  const stealsPerMin = (steals / minutes) * 36; // Per-36 minutes
+  rating += stealsPerMin * 8; // Each steal per 36 adds 8 points
+  
+  // Blocks per minute (scaled) - rim protection
+  const blocksPerMin = (blocks / minutes) * 36;
+  if (position === 'Big') {
+    rating += blocksPerMin * 6; // Bigs get more credit for blocks
+  } else {
+    rating += blocksPerMin * 4;
+  }
+  
+  // Defensive rebounds per minute - controlling the glass
+  const drebPerMin = (defensiveRebounds / minutes) * 36;
+  rating += drebPerMin * 1.5;
+  
+  // Points allowed per possession estimate (opponent efficiency)
+  if (opponentScore > 0 && minutes > 0) {
+    // Estimate possessions based on minutes played (rough estimate: ~100 possessions per 48 min game)
+    const playerPossessions = (minutes / 48) * 100;
+    // Estimate player's share of opponent's points (based on being 1 of 5 on court)
+    const playerShareOfOpponentPts = (opponentScore * (minutes / 48)) / 5;
+    const ptsAllowedPerPoss = playerShareOfOpponentPts / playerPossessions;
+    
+    // Lower is better - baseline is ~1.0 points per possession
+    if (ptsAllowedPerPoss < 0.9) rating += 10;
+    else if (ptsAllowedPerPoss < 1.0) rating += 5;
+    else if (ptsAllowedPerPoss > 1.2) rating -= 10;
+    else if (ptsAllowedPerPoss > 1.1) rating -= 5;
+  }
+  
+  // Position-based adjustments
+  if (position === 'Guard') {
+    rating += steals * 2; // Guards get extra credit for steals
+  } else if (position === 'Big') {
+    rating += blocks * 2; // Bigs get extra credit for blocks
+  }
+  
+  // Clamp to 0-100 range
+  return Math.max(0, Math.min(100, Math.round(rating)));
+}
+
+function calculateHustleScore(stats: any, position: string): number {
+  let score = 50; // Base score
+  
+  const steals = stats.steals || 0;
+  const offensiveRebounds = stats.offensiveRebounds || 0;
+  const defensiveRebounds = stats.defensiveRebounds || 0;
+  const assists = stats.assists || 0;
+  const blocks = stats.blocks || 0;
+  const minutes = stats.minutes || 1;
+  
+  // Steals are the #1 hustle indicator - shows effort and anticipation
+  const stealsPerMin = (steals / minutes) * 36;
+  score += stealsPerMin * 10;
+  
+  // Offensive rebounds show extra effort (going after missed shots)
+  const orebPerMin = (offensiveRebounds / minutes) * 36;
+  score += orebPerMin * 6;
+  
+  // Defensive rebounds show positioning and boxing out
+  const drebPerMin = (defensiveRebounds / minutes) * 36;
+  score += drebPerMin * 1.5;
+  
+  // Assists show willingness to create for teammates
+  const astPerMin = (assists / minutes) * 36;
+  score += astPerMin * 2;
+  
+  // Blocks show effort and timing
+  const blkPerMin = (blocks / minutes) * 36;
+  score += blkPerMin * 3;
+  
+  // Minutes bonus - playing more = more opportunity to show hustle
+  if (minutes >= 30) score += 5;
+  else if (minutes >= 20) score += 3;
+  
+  // Position adjustments
+  if (position === 'Guard') {
+    score += steals * 3; // Guards hustling for steals
+  } else if (position === 'Big') {
+    score += offensiveRebounds * 4; // Bigs hustling for offensive boards
+  } else if (position === 'Wing') {
+    score += (steals + offensiveRebounds) * 2; // Wings do both
+  }
+  
+  // Clamp to 0-100 range
+  return Math.max(0, Math.min(100, Math.round(score)));
+}
+
 // --- Badge Award Logic ---
 
 async function checkAndAwardBadges(playerId: number, gameId: number, stats: any, grade: string) {
@@ -939,7 +1048,13 @@ export async function registerRoutes(
       const player = await storage.getPlayer(input.playerId);
       if (!player) return res.status(404).json({ message: "Player not found" });
 
-      const { grade, feedback } = calculateGrade(input, player.position);
+      // Calculate defense rating and hustle score from stats
+      const defenseRating = calculateDefenseRating(input, player.position);
+      const hustleScore = calculateHustleScore(input, player.position);
+      
+      // Calculate grade with the new defense/hustle values included
+      const statsWithRatings = { ...input, defenseRating, hustleScore };
+      const { grade, feedback } = calculateGrade(statsWithRatings, player.position);
       
       // Calculate PER (Points + Rebounds + Assists)
       const per = (input.points || 0) + (input.rebounds || 0) + (input.assists || 0);
@@ -966,8 +1081,8 @@ export async function registerRoutes(
         ftAttempted: input.ftAttempted,
         offensiveRebounds: input.offensiveRebounds,
         defensiveRebounds: input.defensiveRebounds,
-        hustleScore: input.hustleScore,
-        defenseRating: input.defenseRating,
+        hustleScore,
+        defenseRating,
         notes: input.notes,
         grade,
         feedback,
