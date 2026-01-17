@@ -551,6 +551,11 @@ export default function PlayerDetail() {
               >
                 <Share2 className="w-4 h-4" /> Share Profile
               </Button>
+              <Link href={`/report-card?player=${player.id}`}>
+                <Button variant="outline" className="gap-2" data-testid="button-generate-report">
+                  <FileText className="w-4 h-4" /> Generate Report
+                </Button>
+              </Link>
               {isOwnProfile && (
                 <Link href={`/analyze?playerId=${player.id}`}>
                   <Button className="gap-2" data-testid="button-log-game">

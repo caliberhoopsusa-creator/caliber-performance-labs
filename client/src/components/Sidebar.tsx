@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, Gamepad2, CalendarDays, Crosshair } from "lucide-react";
+import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, Gamepad2, CalendarDays, Crosshair, Film, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AlertsBadge } from "@/components/AlertsCenter";
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         { href: "/schedule", label: "Schedule", icon: CalendarDays },
         { href: "/video", label: "Video Analysis", icon: Video },
         { href: "/shot-chart", label: "Shot Chart", icon: Crosshair },
+        { href: "/highlights", label: "Highlights", icon: Film },
       ],
     },
     {
@@ -84,6 +85,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         { href: "/compare", label: "Head-to-Head", icon: Activity },
         { href: "/video", label: "Video Analysis", icon: Video },
         { href: "/shot-chart", label: "Shot Chart", icon: Crosshair },
+        { href: "/highlights", label: "Highlights", icon: Film },
         { href: "/grading", label: "Grading System", icon: Calculator },
         { href: "/scout", label: "Scout Mode", icon: Binoculars, premium: "pro" },
       ],
@@ -106,6 +108,8 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         { href: "/coach/practices", label: "Practices", icon: CalendarCheck, premium: "coach_pro" },
         { href: "/coach/scouting", label: "Scouting", icon: Eye, premium: "coach_pro" },
         { href: "/coach/alerts", label: "Alerts", icon: Bell, premium: "coach_pro" },
+        { href: "/report-card", label: "Report Cards", icon: FileText },
+        { href: "/team-comparison", label: "Team Compare", icon: Users },
       ],
     },
   ];

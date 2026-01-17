@@ -37,6 +37,9 @@ import WorkoutTracker from "./pages/WorkoutTracker";
 import LiveGameMode from "./pages/LiveGameMode";
 import ScheduleCalendar from "./pages/ScheduleCalendar";
 import ShotChartPage from "./pages/ShotChartPage";
+import HighlightClipsPage from "./pages/HighlightClipsPage";
+import TeamComparison from "./pages/TeamComparison";
+import ReportCardPage from "./pages/ReportCardPage";
 import NotFound from "./pages/not-found";
 
 interface ExtendedUser {
@@ -130,6 +133,9 @@ function MainRouter() {
           <Route path="/live-game" component={LiveGameMode} />
           <Route path="/schedule" component={ScheduleCalendar} />
           <Route path="/shot-chart" component={ShotChartPage} />
+          <Route path="/highlights" component={HighlightClipsPage} />
+          <Route path="/team-comparison" component={TeamComparison} />
+          <Route path="/report-card" component={ReportCardPage} />
           <Route component={NotFound} />
         </Switch>
         </main>

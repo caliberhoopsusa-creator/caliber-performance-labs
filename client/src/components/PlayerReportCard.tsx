@@ -1,10 +1,12 @@
-import { usePlayerReportCard, usePlayer, type ReportCardSkillBadge, type ReportCardCoachGoal, type ReportCardCoachNote, type ReportCardTrends } from "@/hooks/use-basketball";
+import { usePlayerReportCard, usePlayer, type ReportCardSkillBadge, type ReportCardCoachGoal, type ReportCardCoachNote, type ReportCardTrends, type PlayerReportCardData } from "@/hooks/use-basketball";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ReportSummarySection, StatBox, ProgressRow } from "@/components/ReportSummarySection";
+import { PrintStyles } from "@/components/PrintStyles";
 import { 
   Printer, 
   Share2, 
@@ -22,14 +24,21 @@ import {
   Hand,
   Grab,
   Copy,
-  Check
+  Check,
+  BarChart3,
+  Activity,
+  Calendar,
+  Percent
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { BADGE_DEFINITIONS, SKILL_BADGE_TYPES } from "@shared/schema";
+import { format } from "date-fns";
 
 interface PlayerReportCardProps {
   playerId: number;
+  dateRange?: { start: Date; end: Date } | null;
+  showActions?: boolean;
 }
 
 const GRADE_ORDER = ['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D', 'F'];
@@ -45,6 +54,20 @@ const GRADE_COLORS: Record<string, string> = {
   'C-': 'bg-yellow-300',
   'D': 'bg-orange-500',
   'F': 'bg-red-500',
+};
+
+const GRADE_TEXT_COLORS: Record<string, string> = {
+  'A+': 'text-emerald-500',
+  'A': 'text-emerald-400',
+  'A-': 'text-emerald-300',
+  'B+': 'text-blue-500',
+  'B': 'text-blue-400',
+  'B-': 'text-blue-300',
+  'C+': 'text-yellow-500',
+  'C': 'text-yellow-400',
+  'C-': 'text-yellow-300',
+  'D': 'text-orange-500',
+  'F': 'text-red-500',
 };
 
 const SKILL_ICONS: Record<string, typeof Target> = {
@@ -85,8 +108,8 @@ function TrendIndicator({ value, label }: { value: number; label: string }) {
   const isNegative = value < -0.5;
   
   return (
-    <div className="flex items-center gap-1.5" data-testid={`trend-${label}`}>
-      <span className="text-xs text-muted-foreground">{label}</span>
+    <div className="flex items-center gap-1.5 print:text-black" data-testid={`trend-${label}`}>
+      <span className="text-xs text-muted-foreground print:text-gray-600">{label}</span>
       {isPositive && <TrendingUp className="w-4 h-4 text-emerald-500" />}
       {isNegative && <TrendingDown className="w-4 h-4 text-red-500" />}
       {!isPositive && !isNegative && <Minus className="w-4 h-4 text-muted-foreground" />}
@@ -118,14 +141,14 @@ function GradeDistributionChart({ distribution }: { distribution: Record<string,
         
         return (
           <div key={grade} className="flex items-center gap-2">
-            <span className="w-8 text-xs font-bold text-right">{grade}</span>
-            <div className="flex-1 h-5 bg-secondary/50 rounded overflow-hidden">
+            <span className="w-8 text-xs font-bold text-right print:text-black">{grade}</span>
+            <div className="flex-1 h-5 bg-secondary/50 rounded overflow-hidden print:bg-gray-200">
               <div 
-                className={cn("h-full transition-all", GRADE_COLORS[grade])}
+                className={cn("h-full transition-all print:opacity-100", GRADE_COLORS[grade])}
                 style={{ width: `${barPercent}%` }}
               />
             </div>
-            <span className="w-12 text-xs text-muted-foreground text-right">
+            <span className="w-16 text-xs text-muted-foreground text-right print:text-gray-600">
               {count} ({percent.toFixed(0)}%)
             </span>
           </div>
@@ -144,12 +167,12 @@ function SkillBadgeItem({ badge }: { badge: ReportCardSkillBadge }) {
 
   return (
     <div 
-      className={cn("flex items-center gap-2 px-3 py-2 rounded-lg", levelColor)}
+      className={cn("flex items-center gap-2 px-3 py-2 rounded-lg print:bg-gray-100 print:border print:border-gray-200", levelColor)}
       data-testid={`skill-badge-item-${badge.skillType}`}
     >
       <Icon className="w-4 h-4" />
-      <span className="text-sm font-medium">{config?.name || badge.skillType}</span>
-      <Badge variant="outline" className="ml-auto text-xs">
+      <span className="text-sm font-medium print:text-black">{config?.name || badge.skillType}</span>
+      <Badge variant="outline" className="ml-auto text-xs print:bg-white print:text-black print:border-gray-300">
         {LEVEL_NAMES[badge.currentLevel]}
       </Badge>
     </div>
@@ -163,7 +186,7 @@ function CoachGoalItem({ goal }: { goal: ReportCardCoachGoal }) {
   return (
     <div 
       className={cn(
-        "p-3 rounded-lg border",
+        "p-3 rounded-lg border print:bg-white print:border-gray-200",
         isCompleted && "bg-emerald-500/10 border-emerald-500/30",
         isActive && "bg-card border-border"
       )}
@@ -176,10 +199,10 @@ function CoachGoalItem({ goal }: { goal: ReportCardCoachGoal }) {
               "w-4 h-4",
               isCompleted ? "text-emerald-500" : "text-primary"
             )} />
-            <span className="font-medium text-sm">{goal.title}</span>
+            <span className="font-medium text-sm print:text-black">{goal.title}</span>
           </div>
           {goal.coachFeedback && (
-            <p className="text-xs text-muted-foreground mt-1 pl-6">{goal.coachFeedback}</p>
+            <p className="text-xs text-muted-foreground mt-1 pl-6 print:text-gray-600">{goal.coachFeedback}</p>
           )}
         </div>
         <Badge variant={isCompleted ? "default" : "secondary"} className="text-xs shrink-0">
@@ -200,18 +223,21 @@ function CoachNoteItem({ note }: { note: ReportCardCoachNote }) {
 
   return (
     <div 
-      className="p-3 rounded-lg bg-card/50 border border-border"
+      className="p-3 rounded-lg bg-card/50 border border-border print:bg-white print:border-gray-200"
       data-testid={`coach-note-item`}
     >
       <div className="flex items-start gap-2">
         <MessageSquare className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
         <div className="flex-1 min-w-0">
-          <p className="text-sm">{note.content}</p>
+          <p className="text-sm print:text-black">{note.content}</p>
           <div className="flex items-center gap-2 mt-2">
-            <Badge variant="outline" className={cn("text-xs", noteTypeColors[note.noteType])}>
+            <Badge variant="outline" className={cn("text-xs print:bg-gray-100 print:text-black", noteTypeColors[note.noteType])}>
               {note.noteType}
             </Badge>
-            <span className="text-xs text-muted-foreground">- {note.authorName}</span>
+            <span className="text-xs text-muted-foreground print:text-gray-600">- {note.authorName}</span>
+            <span className="text-xs text-muted-foreground print:text-gray-500">
+              {format(new Date(note.createdAt), 'MMM d, yyyy')}
+            </span>
           </div>
         </div>
       </div>
@@ -219,7 +245,76 @@ function CoachNoteItem({ note }: { note: ReportCardCoachNote }) {
   );
 }
 
-export function PlayerReportCard({ playerId }: PlayerReportCardProps) {
+function GradeTrendTable({ gradeDistribution }: { gradeDistribution: Record<string, number> }) {
+  const total = Object.values(gradeDistribution).reduce((a, b) => a + b, 0);
+  if (total === 0) return <p className="text-sm text-muted-foreground print:text-gray-600">No graded games yet</p>;
+
+  const getAverageGrade = () => {
+    let weightedSum = 0;
+    const gradeWeights: Record<string, number> = {
+      'A+': 4.3, 'A': 4.0, 'A-': 3.7,
+      'B+': 3.3, 'B': 3.0, 'B-': 2.7,
+      'C+': 2.3, 'C': 2.0, 'C-': 1.7,
+      'D': 1.0, 'F': 0.0
+    };
+    
+    Object.entries(gradeDistribution).forEach(([grade, count]) => {
+      weightedSum += (gradeWeights[grade] || 0) * count;
+    });
+    
+    const avg = weightedSum / total;
+    if (avg >= 4.15) return 'A+';
+    if (avg >= 3.85) return 'A';
+    if (avg >= 3.5) return 'A-';
+    if (avg >= 3.15) return 'B+';
+    if (avg >= 2.85) return 'B';
+    if (avg >= 2.5) return 'B-';
+    if (avg >= 2.15) return 'C+';
+    if (avg >= 1.85) return 'C';
+    if (avg >= 1.5) return 'C-';
+    if (avg >= 0.5) return 'D';
+    return 'F';
+  };
+
+  const avgGrade = getAverageGrade();
+
+  return (
+    <div className="space-y-3" data-testid="grade-trend-table">
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-muted-foreground print:text-gray-600">Average Grade:</span>
+        <span className={cn("text-2xl font-bold font-display", GRADE_TEXT_COLORS[avgGrade] || "text-foreground")}>
+          {avgGrade}
+        </span>
+      </div>
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-muted-foreground print:text-gray-600">Total Games Graded:</span>
+        <span className="text-lg font-semibold print:text-black">{total}</span>
+      </div>
+      <div className="grid grid-cols-3 gap-2 mt-4">
+        <div className="text-center p-2 rounded bg-emerald-500/10 print:bg-green-100">
+          <div className="text-lg font-bold text-emerald-500 print:text-green-700">
+            {(gradeDistribution['A+'] || 0) + (gradeDistribution['A'] || 0) + (gradeDistribution['A-'] || 0)}
+          </div>
+          <div className="text-xs text-muted-foreground print:text-gray-600">A Grades</div>
+        </div>
+        <div className="text-center p-2 rounded bg-blue-500/10 print:bg-blue-100">
+          <div className="text-lg font-bold text-blue-500 print:text-blue-700">
+            {(gradeDistribution['B+'] || 0) + (gradeDistribution['B'] || 0) + (gradeDistribution['B-'] || 0)}
+          </div>
+          <div className="text-xs text-muted-foreground print:text-gray-600">B Grades</div>
+        </div>
+        <div className="text-center p-2 rounded bg-yellow-500/10 print:bg-yellow-100">
+          <div className="text-lg font-bold text-yellow-500 print:text-yellow-700">
+            {(gradeDistribution['C+'] || 0) + (gradeDistribution['C'] || 0) + (gradeDistribution['C-'] || 0) + (gradeDistribution['D'] || 0) + (gradeDistribution['F'] || 0)}
+          </div>
+          <div className="text-xs text-muted-foreground print:text-gray-600">C or Below</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function PlayerReportCard({ playerId, dateRange, showActions = true }: PlayerReportCardProps) {
   const { data: reportCard, isLoading: reportLoading } = usePlayerReportCard(playerId);
   const { data: player, isLoading: playerLoading } = usePlayer(playerId);
   const [copied, setCopied] = useState(false);
@@ -251,6 +346,18 @@ export function PlayerReportCard({ playerId }: PlayerReportCardProps) {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const shootingStats = useMemo(() => {
+    if (!reportCard) return null;
+    return {
+      fgPct: "—",
+      threePct: "—", 
+      ftPct: "—",
+      tsPct: "—",
+      per: "—",
+      gameScore: "—"
+    };
+  }, [reportCard]);
 
   if (reportLoading || playerLoading) {
     return (
@@ -285,149 +392,124 @@ export function PlayerReportCard({ playerId }: PlayerReportCardProps) {
   const publicCoachNotes = recentCoachNotes;
 
   return (
-    <div className="space-y-6 print:space-y-4" data-testid="player-report-card">
-      <div className="flex items-center justify-between gap-4 print:hidden">
-        <h2 className="text-xl font-bold">Player Report Card</h2>
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleShare}
-            data-testid="button-share-report"
-          >
-            {copied ? <Check className="w-4 h-4 mr-1" /> : <Share2 className="w-4 h-4 mr-1" />}
-            {copied ? "Copied!" : "Share"}
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handlePrint}
-            data-testid="button-download-pdf"
-          >
-            <Printer className="w-4 h-4 mr-1" />
-            Download PDF
-          </Button>
+    <div className="space-y-6 print:space-y-4 print:bg-white" data-testid="player-report-card" id="report-card-container">
+      <PrintStyles />
+      
+      {showActions && (
+        <div className="flex items-center justify-between gap-4 print:hidden">
+          <h2 className="text-xl font-bold font-display">Player Report Card</h2>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleShare}
+              data-testid="button-share-report"
+            >
+              {copied ? <Check className="w-4 h-4 mr-1" /> : <Share2 className="w-4 h-4 mr-1" />}
+              {copied ? "Copied!" : "Share"}
+            </Button>
+            <Button 
+              variant="default" 
+              size="sm" 
+              onClick={handlePrint}
+              data-testid="button-download-pdf"
+            >
+              <Printer className="w-4 h-4 mr-1" />
+              Print / PDF
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
-      <Card className="print:shadow-none print:border-none">
-        <CardContent className="p-6">
-          <div className="flex items-start gap-4 pb-6 border-b border-border print:pb-4">
-            <Avatar className="w-20 h-20 border-2 border-primary/20">
-              <AvatarImage src={player.photoUrl || undefined} alt={player.name} />
-              <AvatarFallback className="text-2xl font-bold bg-primary/10">
-                {player.name.split(' ').map(n => n[0]).join('')}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <h3 className="text-2xl font-bold" data-testid="text-player-name">{player.name}</h3>
-              <div className="flex items-center gap-2 mt-1">
-                <Badge variant="secondary" data-testid="badge-position">{player.position}</Badge>
-                {player.team && <span className="text-sm text-muted-foreground">{player.team}</span>}
-                {player.jerseyNumber && <span className="text-sm text-muted-foreground">#{player.jerseyNumber}</span>}
+      <div data-testid="report-card-container" className="print:text-black">
+        <Card className="print:shadow-none print:border-gray-300 print:bg-white report-card-header">
+          <CardContent className="p-6 print:p-4">
+            <div className="flex items-start gap-4 pb-6 border-b border-border print:border-gray-300 print:pb-4">
+              <Avatar className="w-20 h-20 border-2 border-primary/20 print:border-gray-300">
+                <AvatarImage src={player.photoUrl || undefined} alt={player.name} />
+                <AvatarFallback className="text-2xl font-bold bg-primary/10 print:bg-gray-200 print:text-black">
+                  {player.name.split(' ').map(n => n[0]).join('')}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <h3 className="text-2xl font-bold font-display print:text-black" data-testid="text-player-name">{player.name}</h3>
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  <Badge variant="secondary" className="print:bg-gray-200 print:text-black" data-testid="badge-position">{player.position}</Badge>
+                  {player.team && <span className="text-sm text-muted-foreground print:text-gray-600">{player.team}</span>}
+                  {player.jerseyNumber && <span className="text-sm text-muted-foreground print:text-gray-600">#{player.jerseyNumber}</span>}
+                  {player.height && <span className="text-sm text-muted-foreground print:text-gray-600">{player.height}</span>}
+                </div>
+                <div className="flex items-center gap-3 mt-2 flex-wrap">
+                  <Badge variant="outline" className="gap-1 print:bg-gray-100 print:text-black print:border-gray-300">
+                    <Star className="w-3 h-3" />
+                    {reportCard.player.currentTier}
+                  </Badge>
+                  <span className="text-sm text-muted-foreground print:text-gray-600">{reportCard.player.totalXp.toLocaleString()} XP</span>
+                </div>
               </div>
-              <div className="flex items-center gap-3 mt-2">
-                <Badge variant="outline" className="gap-1">
-                  <Star className="w-3 h-3" />
-                  {reportCard.player.currentTier}
-                </Badge>
-                <span className="text-sm text-muted-foreground">{reportCard.player.totalXp.toLocaleString()} XP</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-6 border-b border-border print:py-4">
-            <div className="text-center" data-testid="stat-games-played">
-              <div className="text-3xl font-bold text-primary">{seasonStats.gamesPlayed}</div>
-              <div className="text-xs text-muted-foreground">Games Played</div>
-            </div>
-            <div className="text-center" data-testid="stat-avg-points">
-              <div className="text-3xl font-bold">{seasonStats.avgPoints}</div>
-              <div className="text-xs text-muted-foreground">PPG</div>
-            </div>
-            <div className="text-center" data-testid="stat-avg-rebounds">
-              <div className="text-3xl font-bold">{seasonStats.avgRebounds}</div>
-              <div className="text-xs text-muted-foreground">RPG</div>
-            </div>
-            <div className="text-center" data-testid="stat-avg-assists">
-              <div className="text-3xl font-bold">{seasonStats.avgAssists}</div>
-              <div className="text-xs text-muted-foreground">APG</div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 py-4 border-b border-border print:py-3">
-            <div className="text-center">
-              <div className="text-xl font-bold">{seasonStats.totalPoints}</div>
-              <div className="text-xs text-muted-foreground">Total PTS</div>
-            </div>
-            <div className="text-center">
-              <div className="text-xl font-bold">{seasonStats.totalRebounds}</div>
-              <div className="text-xs text-muted-foreground">Total REB</div>
-            </div>
-            <div className="text-center">
-              <div className="text-xl font-bold">{seasonStats.totalAssists}</div>
-              <div className="text-xs text-muted-foreground">Total AST</div>
-            </div>
-            <div className="text-center">
-              <div className="text-xl font-bold">{seasonStats.avgHustle}</div>
-              <div className="text-xs text-muted-foreground">Avg Hustle</div>
-            </div>
-            <div className="text-center">
-              <div className="text-xl font-bold">{seasonStats.avgDefense}</div>
-              <div className="text-xs text-muted-foreground">Avg Defense</div>
-            </div>
-          </div>
-
-          {trends && (
-            <div className="py-4 border-b border-border print:py-3" data-testid="trends-section">
-              <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                Trend Indicators
-              </h4>
-              <div className="flex flex-wrap gap-4">
-                <TrendIndicator value={trends.pointsTrend} label="Points" />
-                <TrendIndicator value={trends.reboundsTrend} label="Rebounds" />
-                <TrendIndicator value={trends.assistsTrend} label="Assists" />
-                <TrendIndicator value={trends.hustleTrend} label="Hustle" />
+              <div className="text-right hidden print:block">
+                <div className="text-xs text-gray-500">Generated on</div>
+                <div className="text-sm font-medium text-gray-700">{format(new Date(), 'MMMM d, yyyy')}</div>
               </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <div className="grid md:grid-cols-2 gap-6 print:gap-4 print:grid-cols-2">
-        <Card className="print:shadow-none print:border-none">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-              <Award className="w-4 h-4 text-primary" />
-              Grade Distribution
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {Object.keys(gradeDistribution).length > 0 ? (
-              <GradeDistributionChart distribution={gradeDistribution} />
-            ) : (
-              <p className="text-sm text-muted-foreground text-center py-4">No games graded yet</p>
-            )}
           </CardContent>
         </Card>
 
-        <Card className="print:shadow-none print:border-none">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-              <Trophy className="w-4 h-4 text-primary" />
-              Achievement Badges ({badges.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <ReportSummarySection title="Season Overview" icon={Activity}>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <StatBox label="Games Played" value={seasonStats.gamesPlayed} highlight />
+            <StatBox label="PPG" value={seasonStats.avgPoints} />
+            <StatBox label="RPG" value={seasonStats.avgRebounds} />
+            <StatBox label="APG" value={seasonStats.avgAssists} />
+          </div>
+        </ReportSummarySection>
+
+        <ReportSummarySection title="Season Totals" icon={BarChart3}>
+          <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
+            <StatBox label="Total Points" value={seasonStats.totalPoints} />
+            <StatBox label="Total Rebounds" value={seasonStats.totalRebounds} />
+            <StatBox label="Total Assists" value={seasonStats.totalAssists} />
+            <StatBox label="Avg Hustle" value={seasonStats.avgHustle} />
+            <StatBox label="Avg Defense" value={seasonStats.avgDefense} />
+          </div>
+        </ReportSummarySection>
+
+        <div className="grid md:grid-cols-2 gap-6 print:gap-4">
+          <ReportSummarySection title="Grade Summary" icon={Award}>
+            <GradeTrendTable gradeDistribution={gradeDistribution} />
+          </ReportSummarySection>
+
+          <ReportSummarySection title="Grade Distribution" icon={BarChart3}>
+            {Object.keys(gradeDistribution).length > 0 ? (
+              <GradeDistributionChart distribution={gradeDistribution} />
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4 print:text-gray-600">No games graded yet</p>
+            )}
+          </ReportSummarySection>
+        </div>
+
+        {trends && (
+          <ReportSummarySection title="Performance Trends" icon={TrendingUp}>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <TrendIndicator value={trends.pointsTrend} label="Points" />
+              <TrendIndicator value={trends.reboundsTrend} label="Rebounds" />
+              <TrendIndicator value={trends.assistsTrend} label="Assists" />
+              <TrendIndicator value={trends.hustleTrend} label="Hustle" />
+            </div>
+          </ReportSummarySection>
+        )}
+
+        <div className="grid md:grid-cols-2 gap-6 print:gap-4 print:break-inside-avoid">
+          <ReportSummarySection title={`Achievement Badges (${badges.length})`} icon={Trophy}>
             {badges.length > 0 ? (
               <div className="flex flex-wrap gap-2" data-testid="achievement-badges">
-                {badges.slice(0, 12).map((badge, idx) => {
+                {badges.slice(0, 15).map((badge, idx) => {
                   const badgeInfo = BADGE_DEFINITIONS[badge.badgeType as keyof typeof BADGE_DEFINITIONS];
                   return (
                     <Badge 
                       key={`${badge.badgeType}-${idx}`}
                       variant="secondary"
-                      className="gap-1"
+                      className="gap-1 print:bg-gray-200 print:text-black print:border-gray-300"
                       title={badgeInfo?.description}
                       data-testid={`badge-${badge.badgeType}`}
                     >
@@ -436,91 +518,51 @@ export function PlayerReportCard({ playerId }: PlayerReportCardProps) {
                     </Badge>
                   );
                 })}
-                {badges.length > 12 && (
-                  <Badge variant="outline">+{badges.length - 12} more</Badge>
+                {badges.length > 15 && (
+                  <Badge variant="outline" className="print:bg-white print:text-black">+{badges.length - 15} more</Badge>
                 )}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-4">No badges earned yet</p>
+              <p className="text-sm text-muted-foreground text-center py-4 print:text-gray-600">No badges earned yet</p>
             )}
-          </CardContent>
-        </Card>
-      </div>
+          </ReportSummarySection>
 
-      {unlockedSkillBadges.length > 0 && (
-        <Card className="print:shadow-none print:border-none">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-              <Target className="w-4 h-4 text-primary" />
-              Skill Badges
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3" data-testid="skill-badges-section">
-              {unlockedSkillBadges.map(badge => (
-                <SkillBadgeItem key={badge.skillType} badge={badge} />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+          {unlockedSkillBadges.length > 0 && (
+            <ReportSummarySection title="Skill Badges" icon={Target}>
+              <div className="space-y-2" data-testid="skill-badges-section">
+                {unlockedSkillBadges.slice(0, 6).map(badge => (
+                  <SkillBadgeItem key={badge.skillType} badge={badge} />
+                ))}
+              </div>
+            </ReportSummarySection>
+          )}
+        </div>
 
-      {coachGoals.length > 0 && (
-        <Card className="print:shadow-none print:border-none">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-              <Target className="w-4 h-4 text-primary" />
-              Coach-Assigned Goals
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        {coachGoals.length > 0 && (
+          <ReportSummarySection title="Goals Progress" icon={Target} breakBefore>
             <div className="space-y-3" data-testid="coach-goals-section">
               {coachGoals.map((goal, idx) => (
                 <CoachGoalItem key={idx} goal={goal} />
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </ReportSummarySection>
+        )}
 
-      {publicCoachNotes.length > 0 && (
-        <Card className="print:shadow-none print:border-none">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-              <MessageSquare className="w-4 h-4 text-primary" />
-              Recent Coach Notes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        {publicCoachNotes.length > 0 && (
+          <ReportSummarySection title="Recent Coach Notes" icon={MessageSquare}>
             <div className="space-y-3" data-testid="coach-notes-section">
-              {publicCoachNotes.map((note, idx) => (
+              {publicCoachNotes.slice(0, 5).map((note, idx) => (
                 <CoachNoteItem key={idx} note={note} />
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </ReportSummarySection>
+        )}
 
-      <style>{`
-        @media print {
-          body * {
-            visibility: hidden;
-          }
-          [data-testid="player-report-card"], 
-          [data-testid="player-report-card"] * {
-            visibility: visible;
-          }
-          [data-testid="player-report-card"] {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-          }
-          .print\\:hidden {
-            display: none !important;
-          }
-        }
-      `}</style>
+        <div className="hidden print:block mt-8 pt-4 border-t border-gray-300 text-center text-xs text-gray-500">
+          <p>Report generated by Caliber Basketball Analytics</p>
+          <p>{format(new Date(), 'MMMM d, yyyy \'at\' h:mm a')}</p>
+        </div>
+      </div>
     </div>
   );
 }

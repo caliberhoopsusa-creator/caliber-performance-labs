@@ -1913,6 +1913,125 @@ export async function registerRoutes(
     res.json({ player1: p1, player2: p2 });
   });
 
+  // Team Comparison - Get unique teams list
+  app.get('/api/teams/list', async (req, res) => {
+    try {
+      const allPlayers = await storage.getPlayers();
+      const uniqueTeams = [...new Set(allPlayers.map(p => p.team).filter(Boolean))];
+      res.json(uniqueTeams.sort());
+    } catch (err) {
+      console.error('Get teams list error:', err);
+      res.status(500).json({ message: 'Error fetching teams' });
+    }
+  });
+
+  // Team Comparison - Get team stats with players
+  app.get('/api/teams/:teamName/stats', async (req, res) => {
+    try {
+      const teamName = decodeURIComponent(req.params.teamName);
+      const allPlayers = await storage.getPlayers();
+      const teamPlayers = allPlayers.filter(p => p.team === teamName);
+      
+      if (teamPlayers.length === 0) {
+        return res.status(404).json({ message: 'Team not found' });
+      }
+
+      // Get detailed stats for each player
+      const playersWithStats = await Promise.all(teamPlayers.map(async (player) => {
+        const fullPlayer = await storage.getPlayer(player.id);
+        const games = fullPlayer?.games || [];
+        
+        const totalPoints = games.reduce((acc, g) => acc + g.points, 0);
+        const totalRebounds = games.reduce((acc, g) => acc + g.rebounds, 0);
+        const totalAssists = games.reduce((acc, g) => acc + g.assists, 0);
+        const totalFgMade = games.reduce((acc, g) => acc + g.fgMade, 0);
+        const totalFgAttempted = games.reduce((acc, g) => acc + g.fgAttempted, 0);
+        const totalThreeMade = games.reduce((acc, g) => acc + g.threeMade, 0);
+        const totalThreeAttempted = games.reduce((acc, g) => acc + g.threeAttempted, 0);
+        const gamesPlayed = games.length;
+
+        // Calculate average grade
+        const gradeScores: Record<string, number> = {
+          'A+': 97, 'A': 94, 'A-': 90,
+          'B+': 87, 'B': 84, 'B-': 80,
+          'C+': 77, 'C': 74, 'C-': 70,
+          'D': 65, 'F': 55
+        };
+        const avgGradeScore = gamesPlayed > 0
+          ? games.reduce((acc, g) => acc + (gradeScores[g.grade || 'C'] || 70), 0) / gamesPlayed
+          : 0;
+
+        let avgGrade = 'C';
+        if (avgGradeScore >= 90) avgGrade = 'A';
+        else if (avgGradeScore >= 80) avgGrade = 'B';
+        else if (avgGradeScore >= 70) avgGrade = 'C';
+        else if (avgGradeScore >= 60) avgGrade = 'D';
+        else avgGrade = 'F';
+
+        return {
+          id: player.id,
+          name: player.name,
+          position: player.position,
+          jerseyNumber: player.jerseyNumber,
+          gamesPlayed,
+          ppg: gamesPlayed > 0 ? Number((totalPoints / gamesPlayed).toFixed(1)) : 0,
+          rpg: gamesPlayed > 0 ? Number((totalRebounds / gamesPlayed).toFixed(1)) : 0,
+          apg: gamesPlayed > 0 ? Number((totalAssists / gamesPlayed).toFixed(1)) : 0,
+          totalPoints,
+          totalRebounds,
+          totalAssists,
+          totalFgMade,
+          totalFgAttempted,
+          totalThreeMade,
+          totalThreeAttempted,
+          avgGrade,
+          avgGradeScore
+        };
+      }));
+
+      // Calculate team aggregate stats
+      const totalGames = playersWithStats.reduce((acc, p) => acc + p.gamesPlayed, 0);
+      const teamStats = {
+        teamName,
+        playerCount: playersWithStats.length,
+        totalGames,
+        avgPPG: Number((playersWithStats.reduce((acc, p) => acc + p.ppg, 0) / playersWithStats.length).toFixed(1)),
+        avgRPG: Number((playersWithStats.reduce((acc, p) => acc + p.rpg, 0) / playersWithStats.length).toFixed(1)),
+        avgAPG: Number((playersWithStats.reduce((acc, p) => acc + p.apg, 0) / playersWithStats.length).toFixed(1)),
+        totalPoints: playersWithStats.reduce((acc, p) => acc + p.totalPoints, 0),
+        totalRebounds: playersWithStats.reduce((acc, p) => acc + p.totalRebounds, 0),
+        totalAssists: playersWithStats.reduce((acc, p) => acc + p.totalAssists, 0),
+        fgPct: (() => {
+          const made = playersWithStats.reduce((acc, p) => acc + p.totalFgMade, 0);
+          const attempted = playersWithStats.reduce((acc, p) => acc + p.totalFgAttempted, 0);
+          return attempted > 0 ? Number(((made / attempted) * 100).toFixed(1)) : 0;
+        })(),
+        threePct: (() => {
+          const made = playersWithStats.reduce((acc, p) => acc + p.totalThreeMade, 0);
+          const attempted = playersWithStats.reduce((acc, p) => acc + p.totalThreeAttempted, 0);
+          return attempted > 0 ? Number(((made / attempted) * 100).toFixed(1)) : 0;
+        })(),
+        avgGradeScore: playersWithStats.length > 0 
+          ? playersWithStats.reduce((acc, p) => acc + p.avgGradeScore, 0) / playersWithStats.length 
+          : 0,
+        players: playersWithStats.sort((a, b) => b.avgGradeScore - a.avgGradeScore)
+      };
+
+      // Calculate avg grade from score
+      let avgGrade = 'C';
+      if (teamStats.avgGradeScore >= 90) avgGrade = 'A';
+      else if (teamStats.avgGradeScore >= 80) avgGrade = 'B';
+      else if (teamStats.avgGradeScore >= 70) avgGrade = 'C';
+      else if (teamStats.avgGradeScore >= 60) avgGrade = 'D';
+      else avgGrade = 'F';
+
+      res.json({ ...teamStats, avgGrade });
+    } catch (err) {
+      console.error('Get team stats error:', err);
+      res.status(500).json({ message: 'Error fetching team stats' });
+    }
+  });
+
   // Video Analysis Endpoint
   app.post('/api/analyze-video', upload.single('video'), async (req, res) => {
     try {
