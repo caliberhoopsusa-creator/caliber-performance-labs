@@ -293,6 +293,7 @@ export interface IStorage {
   createScheduleEvent(event: InsertScheduleEvent): Promise<ScheduleEvent>;
   getPlayerScheduleEvents(playerId: number): Promise<ScheduleEvent[]>;
   getTeamScheduleEvents(teamId: number): Promise<ScheduleEvent[]>;
+  getAllScheduleEvents(): Promise<ScheduleEvent[]>;
   getScheduleEvent(id: number): Promise<ScheduleEvent | undefined>;
   updateScheduleEvent(id: number, updates: Partial<InsertScheduleEvent>): Promise<ScheduleEvent>;
   deleteScheduleEvent(id: number): Promise<void>;
@@ -1380,6 +1381,10 @@ export class DatabaseStorage implements IStorage {
 
   async getTeamScheduleEvents(teamId: number): Promise<ScheduleEvent[]> {
     return await db.select().from(scheduleEvents).where(eq(scheduleEvents.teamId, teamId)).orderBy(desc(scheduleEvents.startTime));
+  }
+
+  async getAllScheduleEvents(): Promise<ScheduleEvent[]> {
+    return await db.select().from(scheduleEvents).orderBy(desc(scheduleEvents.startTime));
   }
 
   async getScheduleEvent(id: number): Promise<ScheduleEvent | undefined> {

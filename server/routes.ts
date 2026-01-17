@@ -3,7 +3,7 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, type Game, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, insertWorkoutSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema } from "@shared/schema";
+import { players, games, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, insertWorkoutSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { GoogleGenAI } from "@google/genai";
 import multer from "multer";
@@ -4680,29 +4680,41 @@ Respond in this exact JSON format:
   app.post('/api/schedule-events', isAuthenticated, async (req: any, res) => {
     try {
       const user = await authStorage.getUser(req.user.claims.sub);
-      if (!user || !user.playerId) {
-        return res.status(400).json({ message: "You must have a player profile" });
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
       }
-      const validatedData = insertScheduleEventSchema.parse({
+      const eventData = {
         ...req.body,
-        playerId: user.playerId
-      });
+        playerId: user.playerId || req.body.playerId || null,
+        createdBy: req.user.claims.sub,
+        startTime: req.body.startTime ? new Date(req.body.startTime) : undefined,
+        endTime: req.body.endTime ? new Date(req.body.endTime) : null
+      };
+      const validatedData = insertScheduleEventSchema.parse(eventData);
       const event = await storage.createScheduleEvent(validatedData);
       res.json(event);
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors[0].message });
+      }
       console.error('Error creating schedule event:', error);
       res.status(500).json({ message: "Failed to create schedule event" });
     }
   });
 
-  // Get events for current user
+  // Get events for current user (coaches see all, players see their own)
   app.get('/api/schedule-events', isAuthenticated, async (req: any, res) => {
     try {
       const user = await authStorage.getUser(req.user.claims.sub);
-      if (!user || !user.playerId) {
-        return res.status(400).json({ message: "You must have a player profile" });
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
       }
-      const events = await storage.getPlayerScheduleEvents(user.playerId);
+      let events: ScheduleEvent[] = [];
+      if (user.role === 'coach') {
+        events = await storage.getAllScheduleEvents();
+      } else if (user.playerId) {
+        events = await storage.getPlayerScheduleEvents(user.playerId);
+      }
       res.json(events);
     } catch (error) {
       console.error('Error getting schedule events:', error);
