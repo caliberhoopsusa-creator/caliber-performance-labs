@@ -159,3 +159,49 @@ export function formatTimeAgo(timestamp: number): string {
   if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
   return `${Math.floor(seconds / 86400)} days ago`;
 }
+
+export interface SyncResult {
+  totalMutations: number;
+  successfulMutations: number;
+  failedMutations: number;
+  failedMutationIds: string[];
+}
+
+export async function syncQueuedMutations(): Promise<SyncResult> {
+  const queue = getMutationQueue();
+  
+  const result: SyncResult = {
+    totalMutations: queue.length,
+    successfulMutations: 0,
+    failedMutations: 0,
+    failedMutationIds: [],
+  };
+
+  if (queue.length === 0) {
+    return result;
+  }
+
+  for (const mutation of queue) {
+    try {
+      const response = await fetch(mutation.url, {
+        method: mutation.method,
+        headers: mutation.data ? { "Content-Type": "application/json" } : {},
+        body: mutation.data ? JSON.stringify(mutation.data) : undefined,
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error(`${response.status}: ${response.statusText}`);
+      }
+
+      removeMutationFromQueue(mutation.id);
+      result.successfulMutations++;
+    } catch (error) {
+      console.error(`Failed to sync mutation ${mutation.id}:`, error);
+      result.failedMutations++;
+      result.failedMutationIds.push(mutation.id);
+    }
+  }
+
+  return result;
+}

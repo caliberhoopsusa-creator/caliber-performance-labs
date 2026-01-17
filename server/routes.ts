@@ -2317,12 +2317,14 @@ Respond in this exact JSON format:
     return code;
   }
 
-  app.post('/api/teams', async (req, res) => {
+  app.post('/api/teams', isAuthenticated, async (req, res) => {
     try {
-      const { name, sessionId, displayName } = req.body;
-      if (!name || !sessionId || !displayName) {
-        return res.status(400).json({ message: 'Name, sessionId, and displayName are required' });
-      }
+      const createTeamSchema = z.object({
+        name: z.string().min(1),
+        sessionId: z.string().min(1),
+        displayName: z.string().min(1),
+      });
+      const input = createTeamSchema.parse(req.body);
 
       let code = generateTeamCode();
       let existingTeam = await storage.getTeamByCode(code);
@@ -2331,17 +2333,20 @@ Respond in this exact JSON format:
         existingTeam = await storage.getTeamByCode(code);
       }
 
-      const team = await storage.createTeam({ name, code, createdBy: sessionId });
+      const team = await storage.createTeam({ name: input.name, code, createdBy: input.sessionId });
       await storage.addTeamMember({
         teamId: team.id,
-        displayName,
-        sessionId,
+        displayName: input.displayName,
+        sessionId: input.sessionId,
         role: 'admin',
         playerId: null,
       });
 
       res.status(201).json(team);
     } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
       console.error('Create team error:', err);
       res.status(500).json({ message: 'Error creating team' });
     }
@@ -2361,35 +2366,38 @@ Respond in this exact JSON format:
     }
   });
 
-  app.post('/api/teams/:id/join', async (req, res) => {
+  app.post('/api/teams/:id/join', isAuthenticated, async (req, res) => {
     try {
-      const teamId = Number(req.params.id);
-      const { sessionId, displayName } = req.body;
+      const joinTeamSchema = z.object({
+        sessionId: z.string().min(1),
+        displayName: z.string().min(1),
+      });
+      const input = joinTeamSchema.parse(req.body);
       
-      if (!sessionId || !displayName) {
-        return res.status(400).json({ message: 'SessionId and displayName are required' });
-      }
-
+      const teamId = Number(req.params.id);
       const team = await storage.getTeam(teamId);
       if (!team) {
         return res.status(404).json({ message: 'Team not found' });
       }
 
-      const existingMember = await storage.getTeamMember(teamId, sessionId);
+      const existingMember = await storage.getTeamMember(teamId, input.sessionId);
       if (existingMember) {
         return res.status(400).json({ message: 'Already a member of this team' });
       }
 
       const member = await storage.addTeamMember({
         teamId,
-        displayName,
-        sessionId,
+        displayName: input.displayName,
+        sessionId: input.sessionId,
         role: 'member',
         playerId: null,
       });
 
       res.status(201).json(member);
     } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
       console.error('Join team error:', err);
       res.status(500).json({ message: 'Error joining team' });
     }
@@ -2425,21 +2433,21 @@ Respond in this exact JSON format:
     }
   });
 
-  app.post('/api/teams/:id/posts', async (req, res) => {
+  app.post('/api/teams/:id/posts', isAuthenticated, async (req, res) => {
     try {
+      const createPostSchema = z.object({
+        sessionId: z.string().min(1),
+        content: z.string().min(1),
+      });
+      const input = createPostSchema.parse(req.body);
+      
       const teamId = Number(req.params.id);
-      const { sessionId, content } = req.body;
-
-      if (!sessionId || !content) {
-        return res.status(400).json({ message: 'SessionId and content are required' });
-      }
-
       const team = await storage.getTeam(teamId);
       if (!team) {
         return res.status(404).json({ message: 'Team not found' });
       }
 
-      const member = await storage.getTeamMember(teamId, sessionId);
+      const member = await storage.getTeamMember(teamId, input.sessionId);
       if (!member) {
         return res.status(403).json({ message: 'You must be a member to post' });
       }
@@ -2447,17 +2455,20 @@ Respond in this exact JSON format:
       const post = await storage.createTeamPost({
         teamId,
         authorId: member.id,
-        content,
+        content: input.content,
       });
 
       res.status(201).json({ ...post, authorName: member.displayName });
     } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
       console.error('Create team post error:', err);
       res.status(500).json({ message: 'Error creating post' });
     }
   });
 
-  app.get('/api/my-teams', async (req, res) => {
+  app.get('/api/my-teams', isAuthenticated, async (req, res) => {
     try {
       const sessionId = req.query.sessionId as string;
       if (!sessionId) {
@@ -4554,9 +4565,14 @@ Respond in this exact JSON format:
       if (!user || (user.role !== 'coach' && user.playerId !== workout.playerId)) {
         return res.status(403).json({ message: "Not authorized to update this workout" });
       }
-      const updatedWorkout = await storage.updateWorkout(workoutId, req.body);
+      const updateSchema = insertWorkoutSchema.partial();
+      const input = updateSchema.parse(req.body);
+      const updatedWorkout = await storage.updateWorkout(workoutId, input);
       res.json(updatedWorkout);
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors[0].message });
+      }
       console.error('Error updating workout:', error);
       res.status(500).json({ message: "Failed to update workout" });
     }
@@ -4721,9 +4737,14 @@ Respond in this exact JSON format:
       if (!user || (user.role !== 'coach' && user.playerId !== event.playerId)) {
         return res.status(403).json({ message: "Not authorized to update this event" });
       }
-      const updatedEvent = await storage.updateScheduleEvent(eventId, req.body);
+      const updateSchema = insertScheduleEventSchema.partial();
+      const input = updateSchema.parse(req.body);
+      const updatedEvent = await storage.updateScheduleEvent(eventId, input);
       res.json(updatedEvent);
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors[0].message });
+      }
       console.error('Error updating schedule event:', error);
       res.status(500).json({ message: "Failed to update schedule event" });
     }
@@ -4861,6 +4882,15 @@ Respond in this exact JSON format:
       if (!user || (user.role !== 'coach' && user.playerId !== session.playerId)) {
         return res.status(403).json({ message: "Not authorized to complete this session" });
       }
+      
+      // Validate request body
+      const completeSessionSchema = z.object({
+        opponent: z.string().min(1),
+        result: z.string().optional().nullable(),
+        minutes: z.number().int().nonnegative().optional(),
+      });
+      const validatedData = completeSessionSchema.parse(req.body);
+      
       const events = await storage.getSessionEvents(sessionId);
       const stats = {
         points: 0,
@@ -4896,9 +4926,9 @@ Respond in this exact JSON format:
       const game = await storage.createGame({
         playerId: session.playerId,
         date: new Date().toISOString().split('T')[0],
-        opponent: req.body.opponent || 'Unknown',
-        result: req.body.result || null,
-        minutes: req.body.minutes || 0,
+        opponent: validatedData.opponent,
+        result: validatedData.result || null,
+        minutes: validatedData.minutes || 0,
         ...stats
       });
       await storage.updateLiveGameSession(sessionId, {
@@ -4908,6 +4938,9 @@ Respond in this exact JSON format:
       });
       res.json({ session: await storage.getLiveGameSession(sessionId), game });
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors[0].message });
+      }
       console.error('Error completing session:', error);
       res.status(500).json({ message: "Failed to complete session" });
     }

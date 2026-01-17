@@ -42,22 +42,12 @@ export default function TeamComparison() {
   });
 
   const { data: team1Stats, isLoading: team1Loading } = useQuery<TeamStats>({
-    queryKey: ['/api/teams', team1, 'stats'],
-    queryFn: async () => {
-      const res = await fetch(`/api/teams/${encodeURIComponent(team1)}/stats`);
-      if (!res.ok) throw new Error("Failed to fetch team stats");
-      return res.json();
-    },
+    queryKey: ['/api/teams', encodeURIComponent(team1), 'stats'],
     enabled: !!team1
   });
 
   const { data: team2Stats, isLoading: team2Loading } = useQuery<TeamStats>({
-    queryKey: ['/api/teams', team2, 'stats'],
-    queryFn: async () => {
-      const res = await fetch(`/api/teams/${encodeURIComponent(team2)}/stats`);
-      if (!res.ok) throw new Error("Failed to fetch team stats");
-      return res.json();
-    },
+    queryKey: ['/api/teams', encodeURIComponent(team2), 'stats'],
     enabled: !!team2
   });
 

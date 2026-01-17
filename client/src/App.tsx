@@ -7,7 +7,10 @@ import { Sidebar, MobileNav } from "@/components/Sidebar";
 import { NotificationBell } from "@/components/NotificationBell";
 import { OfflineBanner, OfflineIndicator } from "@/components/OfflineBanner";
 import { useAuth } from "@/hooks/use-auth";
+import { useOffline } from "@/hooks/use-offline";
+import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 // Pages
 import Landing from "./pages/Landing";
@@ -66,6 +69,24 @@ function useExtendedUser() {
   });
 }
 
+function SyncHandler() {
+  const { isSyncing } = useOffline();
+  const { toast } = useToast();
+  const prevSyncingRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    if (prevSyncingRef.current && !isSyncing) {
+      toast({
+        title: "Synced",
+        description: "Your offline changes have been synced.",
+      });
+    }
+    prevSyncingRef.current = isSyncing || false;
+  }, [isSyncing, toast]);
+
+  return null;
+}
+
 function MainRouter() {
   const { user: authUser, isLoading: authLoading } = useAuth();
   const { data: extendedUser, isLoading: userLoading } = useExtendedUser();
@@ -102,6 +123,7 @@ function MainRouter() {
   // Fully authenticated with role - show main app
   return (
     <>
+      <SyncHandler />
       <OfflineBanner />
       <div className="flex min-h-screen bg-background text-foreground font-body selection:bg-primary/30">
         <Sidebar userRole={extendedUser.role} playerId={extendedUser.playerId} />
