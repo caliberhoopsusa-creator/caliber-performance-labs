@@ -40,7 +40,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 pb-24 md:pb-0">
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-card via-card/80 to-card/50 border border-white/5 p-6 md:p-8">
         <div className="absolute inset-0 gradient-spotlight pointer-events-none" />
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />

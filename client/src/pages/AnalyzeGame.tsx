@@ -31,7 +31,7 @@ export default function AnalyzeGame() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-in slide-in-from-bottom-4 duration-500 pb-20">
+    <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 animate-in slide-in-from-bottom-4 duration-500 pb-24 md:pb-8">
       <div className="flex items-center gap-4 mb-4">
         <Link href="/players" className="text-muted-foreground hover:text-white transition-colors p-2 -ml-2">
           <ArrowLeft className="w-5 h-5" />
@@ -249,11 +249,13 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
 function NumberInput({ label, name, register }: any) {
   return (
     <div className="space-y-1 w-full">
-      <label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider block text-center">{label}</label>
+      <label className="text-[10px] md:text-xs uppercase font-bold text-muted-foreground tracking-wider block text-center">{label}</label>
       <Input 
         type="number" 
+        inputMode="numeric"
         {...register(name, { valueAsNumber: true })} 
-        className="bg-secondary/30 border-white/10 text-white text-center font-mono focus:border-primary/50" 
+        className="bg-secondary/30 border-white/10 text-white text-center font-mono focus:border-primary/50 h-12 md:h-10 text-base" 
+        data-testid={`input-${name}`}
       />
     </div>
   );

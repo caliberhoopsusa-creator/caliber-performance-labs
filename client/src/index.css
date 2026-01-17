@@ -197,6 +197,22 @@
   }
 }
 
+/* Safe area utilities for mobile devices */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Touch-friendly button sizes */
+@layer utilities {
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+}
+
 /* Scrollbar styling for a sleek look */
 ::-webkit-scrollbar {
   width: 8px;
@@ -209,4 +225,17 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-primary/50;
+}
+
+/* Mobile-specific styles */
+@media (max-width: 767px) {
+  /* Larger touch targets on mobile */
+  button, a, input, select, textarea {
+    min-height: 44px;
+  }
+  
+  /* Ensure inputs have proper padding for touch */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
 }

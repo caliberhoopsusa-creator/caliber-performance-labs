@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, Gamepad2, CalendarDays } from "lucide-react";
+import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, Gamepad2, CalendarDays, Crosshair } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AlertsBadge } from "@/components/AlertsCenter";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         { href: "/workouts", label: "Workouts", icon: Dumbbell },
         { href: "/schedule", label: "Schedule", icon: CalendarDays },
         { href: "/video", label: "Video Analysis", icon: Video },
+        { href: "/shot-chart", label: "Shot Chart", icon: Crosshair },
       ],
     },
     {
@@ -82,6 +83,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
         { href: "/compare", label: "Head-to-Head", icon: Activity },
         { href: "/video", label: "Video Analysis", icon: Video },
+        { href: "/shot-chart", label: "Shot Chart", icon: Crosshair },
         { href: "/grading", label: "Grading System", icon: Calculator },
         { href: "/scout", label: "Scout Mode", icon: Binoculars, premium: "pro" },
       ],
@@ -190,41 +192,80 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
 
 type MobileNavProps = {
   userRole: string;
+  playerId?: number | null;
 };
 
-export function MobileNav({ userRole }: MobileNavProps) {
+export function MobileNav({ userRole, playerId }: MobileNavProps) {
   const [location] = useLocation();
   const isPlayer = userRole === 'player';
   
+  const navItems = isPlayer ? [
+    { href: "/", icon: LayoutDashboard, label: "Home" },
+    { href: "/analyze", icon: PlusCircle, label: "Games" },
+    { href: "/live-game", icon: Gamepad2, label: "Live", featured: true },
+    { href: "/leaderboard", icon: Trophy, label: "Rank" },
+    { href: playerId ? `/players/${playerId}` : "/", icon: UserCircle, label: "Profile" },
+  ] : [
+    { href: "/", icon: LayoutDashboard, label: "Home" },
+    { href: "/players", icon: Users, label: "Players" },
+    { href: "/live-game", icon: Gamepad2, label: "Live", featured: true },
+    { href: "/leaderboard", icon: Trophy, label: "Rank" },
+    { href: "/coach/dashboard", icon: ClipboardList, label: "Coach" },
+  ];
+  
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50 pb-safe">
-      <div className="flex justify-around items-center h-16">
-        <Link href="/" className={cn("flex flex-col items-center gap-1 p-2", location === "/" ? "text-primary" : "text-muted-foreground")} data-testid="mobile-nav-home">
-          <LayoutDashboard className="w-6 h-6" />
-          <span className="text-[10px] font-medium uppercase">Home</span>
-        </Link>
-        {!isPlayer && (
-          <Link href="/players" className={cn("flex flex-col items-center gap-1 p-2", location === "/players" ? "text-primary" : "text-muted-foreground")} data-testid="mobile-nav-players">
-            <Users className="w-6 h-6" />
-            <span className="text-[10px] font-medium uppercase">Roster</span>
-          </Link>
-        )}
-        <Link href="/live-game" className={cn("flex flex-col items-center gap-1 p-2", location === "/live-game" ? "text-primary" : "text-muted-foreground")} data-testid="mobile-nav-live-game">
-          <div className={cn("bg-primary text-primary-foreground rounded-full p-2 -mt-6 shadow-lg border-4 border-background", location !== "/live-game" && "animate-pulse")}>
-            <Gamepad2 className="w-6 h-6" />
-          </div>
-          <span className="text-[10px] font-medium uppercase mt-1">Live</span>
-        </Link>
-        <Link href="/leaderboard" className={cn("flex flex-col items-center gap-1 p-2", location === "/leaderboard" ? "text-primary" : "text-muted-foreground")} data-testid="mobile-nav-leaderboard">
-          <Trophy className="w-6 h-6" />
-          <span className="text-[10px] font-medium uppercase">Rank</span>
-        </Link>
-        {!isPlayer && (
-          <Link href="/coach/dashboard" className={cn("flex flex-col items-center gap-1 p-2", location.startsWith("/coach") ? "text-primary" : "text-muted-foreground")} data-testid="mobile-nav-coach">
-            <ClipboardList className="w-6 h-6" />
-            <span className="text-[10px] font-medium uppercase">Coach</span>
-          </Link>
-        )}
+    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-lg border-t border-border z-50 safe-area-bottom">
+      <div className="flex justify-around items-center h-16 px-2">
+        {navItems.map((item) => {
+          const isActive = location === item.href || 
+            (item.href.includes('/players/') && location.includes('/players/') && location === item.href) ||
+            (item.href === "/coach/dashboard" && location.startsWith("/coach"));
+          const Icon = item.icon;
+          
+          if (item.featured) {
+            return (
+              <Link 
+                key={item.href} 
+                href={item.href} 
+                className="flex flex-col items-center gap-1 min-w-[56px] min-h-[44px] justify-center" 
+                data-testid={`mobile-nav-${item.label.toLowerCase()}`}
+              >
+                <div className={cn(
+                  "rounded-full p-2.5 -mt-6 shadow-lg border-4 border-background transition-all",
+                  isActive 
+                    ? "bg-primary text-primary-foreground" 
+                    : "bg-primary text-primary-foreground animate-pulse"
+                )}>
+                  <Icon className="w-6 h-6" />
+                </div>
+                <span className={cn(
+                  "text-[10px] font-bold uppercase mt-1 tracking-wide",
+                  isActive ? "text-primary" : "text-muted-foreground"
+                )}>{item.label}</span>
+              </Link>
+            );
+          }
+          
+          return (
+            <Link 
+              key={item.href} 
+              href={item.href} 
+              className={cn(
+                "flex flex-col items-center gap-1 min-w-[56px] min-h-[44px] justify-center p-2 rounded-lg transition-colors",
+                isActive 
+                  ? "text-primary bg-primary/10" 
+                  : "text-muted-foreground active:bg-white/5"
+              )} 
+              data-testid={`mobile-nav-${item.label.toLowerCase()}`}
+            >
+              <Icon className={cn("w-6 h-6", isActive && "stroke-[2.5px]")} />
+              <span className={cn(
+                "text-[10px] font-bold uppercase tracking-wide",
+                isActive ? "text-primary" : "text-muted-foreground"
+              )}>{item.label}</span>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

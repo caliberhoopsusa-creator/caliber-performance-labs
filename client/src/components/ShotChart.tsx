@@ -7,19 +7,25 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useShotsByGame, useShotsByPlayer, useCreateShot, type Shot } from "@/hooks/use-basketball";
 import { Target, Circle, Edit2, X, Check } from "lucide-react";
 
-interface ShotChartProps {
+export type ShotZone = "paint" | "midrange" | "corner_3_left" | "corner_3_right" | "wing_3_left" | "wing_3_right" | "top_key_3";
+
+export interface ShotChartProps {
   gameId?: number;
   playerId?: number;
   editMode?: boolean;
   onEditModeChange?: (editMode: boolean) => void;
+  shots?: Shot[];
+  onShotClick?: (x: number, y: number, zone: ShotZone) => void;
+  editable?: boolean;
+  compact?: boolean;
+  showStats?: boolean;
 }
 
-type ShotZone = "paint" | "midrange" | "three";
-
-function getShotZone(x: number, y: number): ShotZone {
+export function getShotZone(x: number, y: number): ShotZone {
   const centerX = 50;
   const paintWidth = 24;
-  const paintHeight = 25;
+  const cornerY = 78;
+  const cornerWidth = 12;
   const threePointRadius = 38;
 
   const inPaint = 
@@ -29,58 +35,201 @@ function getShotZone(x: number, y: number): ShotZone {
 
   if (inPaint) return "paint";
 
+  if (y >= cornerY) {
+    if (x <= cornerWidth) return "corner_3_left";
+    if (x >= 100 - cornerWidth) return "corner_3_right";
+  }
+
   const dx = x - centerX;
   const dy = y - 95;
   const distanceFromBasket = Math.sqrt(dx * dx + dy * dy);
 
   if (distanceFromBasket <= threePointRadius) return "midrange";
-  return "three";
+
+  if (y >= 70) {
+    if (x < centerX - 15) return "wing_3_left";
+    if (x > centerX + 15) return "wing_3_right";
+  }
+
+  return "top_key_3";
 }
 
-function determineShotType(x: number, y: number): string {
+export function determineShotType(x: number, y: number): string {
   const zone = getShotZone(x, y);
   if (zone === "paint") return "layup";
-  if (zone === "three") return "3pt";
+  if (zone.includes("3")) return "3pt";
   return "midrange";
 }
 
-export function ShotChart({ gameId, playerId, editMode = false, onEditModeChange }: ShotChartProps) {
+export function getZoneLabel(zone: ShotZone): string {
+  const labels: Record<ShotZone, string> = {
+    paint: "Paint",
+    midrange: "Mid-Range",
+    corner_3_left: "Left Corner 3",
+    corner_3_right: "Right Corner 3",
+    wing_3_left: "Left Wing 3",
+    wing_3_right: "Right Wing 3",
+    top_key_3: "Top of Key 3"
+  };
+  return labels[zone];
+}
+
+export type ZoneStatsData = {
+  [key in ShotZone]: { made: number; total: number };
+};
+
+export function calculateZoneStats(shots: Shot[]): ZoneStatsData {
+  const stats: ZoneStatsData = {
+    paint: { made: 0, total: 0 },
+    midrange: { made: 0, total: 0 },
+    corner_3_left: { made: 0, total: 0 },
+    corner_3_right: { made: 0, total: 0 },
+    wing_3_left: { made: 0, total: 0 },
+    wing_3_right: { made: 0, total: 0 },
+    top_key_3: { made: 0, total: 0 },
+  };
+
+  shots.forEach(shot => {
+    const zone = getShotZone(shot.x, shot.y);
+    stats[zone].total++;
+    if (shot.result === "made") stats[zone].made++;
+  });
+
+  return stats;
+}
+
+function BasketballCourt({ 
+  shots, 
+  pendingShot, 
+  pendingShotResult, 
+  editMode, 
+  onCourtClick,
+  compact = false
+}: { 
+  shots: Shot[]; 
+  pendingShot: { x: number; y: number } | null; 
+  pendingShotResult: "made" | "missed";
+  editMode: boolean;
+  onCourtClick: (e: React.MouseEvent<SVGSVGElement>) => void;
+  compact?: boolean;
+}) {
+  const courtColor = "#1a1a2e";
+  const lineColor = "#f97316";
+  const paintColor = "rgba(249, 115, 22, 0.1)";
+  const markerSize = compact ? 2.5 : 2;
+
+  return (
+    <svg
+      viewBox="0 0 100 100"
+      className={`w-full h-full ${editMode ? 'cursor-crosshair' : 'cursor-default'}`}
+      onClick={onCourtClick}
+      data-testid="shot-chart-court"
+    >
+      <rect x="0" y="0" width="100" height="100" fill={courtColor} />
+      
+      <rect x="0" y="50" width="100" height="50" fill="none" stroke={lineColor} strokeWidth="0.5" />
+      
+      <rect x="38" y="75" width="24" height="25" fill={paintColor} stroke={lineColor} strokeWidth="0.5" />
+      
+      <circle cx="50" cy="81" r="9" fill="none" stroke={lineColor} strokeWidth="0.5" />
+      
+      <rect x="47" y="96" width="6" height="4" fill={paintColor} stroke={lineColor} strokeWidth="0.5" />
+      <circle cx="50" cy="94" r="3" fill="none" stroke={lineColor} strokeWidth="0.5" />
+      
+      <path
+        d="M 12 100 L 12 78 A 38 38 0 0 1 88 78 L 88 100"
+        fill="none"
+        stroke={lineColor}
+        strokeWidth="0.5"
+      />
+      
+      <line x1="0" y1="78" x2="12" y2="78" stroke={lineColor} strokeWidth="0.3" strokeDasharray="2,2" opacity="0.5" />
+      <line x1="88" y1="78" x2="100" y2="78" stroke={lineColor} strokeWidth="0.3" strokeDasharray="2,2" opacity="0.5" />
+      
+      <line x1="38" y1="75" x2="38" y2="100" stroke={lineColor} strokeWidth="0.3" strokeDasharray="2,2" opacity="0.3" />
+      <line x1="62" y1="75" x2="62" y2="100" stroke={lineColor} strokeWidth="0.3" strokeDasharray="2,2" opacity="0.3" />
+      
+      {shots.map((shot) => (
+        <g key={shot.id}>
+          <circle
+            cx={shot.x}
+            cy={shot.y}
+            r={markerSize}
+            fill={shot.result === "made" ? "#22c55e" : "#ef4444"}
+            stroke={shot.result === "made" ? "#16a34a" : "#dc2626"}
+            strokeWidth="0.4"
+            opacity="0.9"
+            data-testid={`shot-marker-${shot.id}`}
+          />
+        </g>
+      ))}
+      
+      {pendingShot && (
+        <g>
+          <circle
+            cx={pendingShot.x}
+            cy={pendingShot.y}
+            r={markerSize + 1}
+            fill={pendingShotResult === "made" ? "#22c55e" : "#ef4444"}
+            stroke="#fff"
+            strokeWidth="0.6"
+            className="animate-pulse"
+            data-testid="pending-shot-marker"
+          />
+          <circle
+            cx={pendingShot.x}
+            cy={pendingShot.y}
+            r={markerSize + 3}
+            fill="none"
+            stroke={pendingShotResult === "made" ? "#22c55e" : "#ef4444"}
+            strokeWidth="0.3"
+            opacity="0.5"
+            className="animate-ping"
+          />
+        </g>
+      )}
+    </svg>
+  );
+}
+
+export function ShotChart({ 
+  gameId, 
+  playerId, 
+  editMode: externalEditMode, 
+  onEditModeChange, 
+  shots: externalShots,
+  onShotClick,
+  editable = false,
+  compact = false,
+  showStats = true
+}: ShotChartProps) {
+  const [internalEditMode, setInternalEditMode] = useState(false);
   const [selectedQuarter, setSelectedQuarter] = useState<string>("all");
   const [pendingShot, setPendingShot] = useState<{ x: number; y: number } | null>(null);
   const [pendingShotResult, setPendingShotResult] = useState<"made" | "missed">("made");
+  
+  const editMode = externalEditMode ?? internalEditMode;
+  const setEditMode = onEditModeChange ?? setInternalEditMode;
   
   const gameShots = useShotsByGame(gameId || 0);
   const playerShots = useShotsByPlayer(playerId || 0);
   const createShot = useCreateShot();
 
   const shots = useMemo(() => {
+    if (externalShots) return externalShots;
     if (gameId) return gameShots.data || [];
     if (playerId) return playerShots.data || [];
     return [];
-  }, [gameId, playerId, gameShots.data, playerShots.data]);
+  }, [externalShots, gameId, playerId, gameShots.data, playerShots.data]);
 
-  const isLoading = gameId ? gameShots.isLoading : playerShots.isLoading;
+  const isLoading = !externalShots && (gameId ? gameShots.isLoading : playerShots.isLoading);
 
   const filteredShots = useMemo(() => {
     if (selectedQuarter === "all") return shots;
     return shots.filter(shot => shot.quarter === parseInt(selectedQuarter));
   }, [shots, selectedQuarter]);
 
-  const zoneStats = useMemo(() => {
-    const stats = {
-      paint: { made: 0, total: 0 },
-      midrange: { made: 0, total: 0 },
-      three: { made: 0, total: 0 },
-    };
-
-    filteredShots.forEach(shot => {
-      const zone = getShotZone(shot.x, shot.y);
-      stats[zone].total++;
-      if (shot.result === "made") stats[zone].made++;
-    });
-
-    return stats;
-  }, [filteredShots]);
+  const zoneStats = useMemo(() => calculateZoneStats(filteredShots), [filteredShots]);
 
   const totalStats = useMemo(() => {
     const total = filteredShots.length;
@@ -88,8 +237,26 @@ export function ShotChart({ gameId, playerId, editMode = false, onEditModeChange
     return { made, total, percentage: total > 0 ? ((made / total) * 100).toFixed(1) : "0.0" };
   }, [filteredShots]);
 
+  const threePointStats = useMemo(() => {
+    const threeShots = filteredShots.filter(s => {
+      const zone = getShotZone(s.x, s.y);
+      return zone.includes("3");
+    });
+    const made = threeShots.filter(s => s.result === "made").length;
+    return { made, total: threeShots.length, percentage: threeShots.length > 0 ? ((made / threeShots.length) * 100).toFixed(1) : "0.0" };
+  }, [filteredShots]);
+
+  const twoPointStats = useMemo(() => {
+    const twoShots = filteredShots.filter(s => {
+      const zone = getShotZone(s.x, s.y);
+      return !zone.includes("3");
+    });
+    const made = twoShots.filter(s => s.result === "made").length;
+    return { made, total: twoShots.length, percentage: twoShots.length > 0 ? ((made / twoShots.length) * 100).toFixed(1) : "0.0" };
+  }, [filteredShots]);
+
   const handleCourtClick = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
-    if (!editMode || !gameId) return;
+    if (!editMode && !editable) return;
 
     const svg = e.currentTarget;
     const rect = svg.getBoundingClientRect();
@@ -98,8 +265,15 @@ export function ShotChart({ gameId, playerId, editMode = false, onEditModeChange
 
     if (y < 50) return;
 
+    const zone = getShotZone(x, y);
+
+    if (onShotClick) {
+      onShotClick(x, y, zone);
+      return;
+    }
+
     setPendingShot({ x, y });
-  }, [editMode, gameId]);
+  }, [editMode, editable, onShotClick]);
 
   const confirmShot = useCallback(() => {
     if (!pendingShot || !gameId) return;
@@ -141,9 +315,29 @@ export function ShotChart({ gameId, playerId, editMode = false, onEditModeChange
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Skeleton className="w-full aspect-[4/3]" />
+          <Skeleton className="w-full aspect-square" />
         </CardContent>
       </Card>
+    );
+  }
+
+  if (compact) {
+    return (
+      <div className="relative w-full aspect-square bg-background rounded-md overflow-hidden" data-testid="shot-chart-compact">
+        <BasketballCourt
+          shots={filteredShots}
+          pendingShot={pendingShot}
+          pendingShotResult={pendingShotResult}
+          editMode={editMode || editable}
+          onCourtClick={handleCourtClick}
+          compact={true}
+        />
+        {(editMode || editable) && (
+          <div className="absolute top-2 left-2 bg-background/90 px-2 py-1 rounded text-xs text-muted-foreground">
+            Tap to place shot
+          </div>
+        )}
+      </div>
     );
   }
 
@@ -151,7 +345,7 @@ export function ShotChart({ gameId, playerId, editMode = false, onEditModeChange
     <Card data-testid="shot-chart">
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
         <CardTitle className="flex items-center gap-2">
-          <Target className="h-5 w-5" />
+          <Target className="h-5 w-5 text-primary" />
           Shot Chart
         </CardTitle>
         <div className="flex items-center gap-2">
@@ -170,11 +364,11 @@ export function ShotChart({ gameId, playerId, editMode = false, onEditModeChange
               </SelectContent>
             </Select>
           )}
-          {gameId && onEditModeChange && (
+          {gameId && (
             <Button
               variant={editMode ? "default" : "outline"}
               size="sm"
-              onClick={() => onEditModeChange(!editMode)}
+              onClick={() => setEditMode(!editMode)}
               data-testid="button-toggle-edit"
             >
               <Edit2 className="h-4 w-4 mr-1" />
@@ -184,59 +378,14 @@ export function ShotChart({ gameId, playerId, editMode = false, onEditModeChange
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="relative w-full aspect-[4/3] bg-amber-100 dark:bg-amber-900/30 rounded-md overflow-hidden">
-          <svg
-            viewBox="0 0 100 100"
-            className="w-full h-full cursor-crosshair"
-            onClick={handleCourtClick}
-            data-testid="shot-chart-court"
-          >
-            <rect x="0" y="50" width="100" height="50" fill="none" stroke="#8B4513" strokeWidth="0.5" />
-            
-            <rect x="38" y="75" width="24" height="25" fill="none" stroke="#8B4513" strokeWidth="0.5" />
-            
-            <circle cx="50" cy="81" r="9" fill="none" stroke="#8B4513" strokeWidth="0.5" />
-            
-            <ellipse cx="50" cy="95" rx="3" ry="1" fill="none" stroke="#8B4513" strokeWidth="0.5" />
-            <rect x="48" y="96" width="4" height="4" fill="none" stroke="#8B4513" strokeWidth="0.5" />
-            
-            <path
-              d="M 12 100 L 12 78 A 38 38 0 0 1 88 78 L 88 100"
-              fill="none"
-              stroke="#8B4513"
-              strokeWidth="0.5"
-            />
-            
-            <line x1="0" y1="75" x2="38" y2="75" stroke="#8B4513" strokeWidth="0.3" strokeDasharray="1,1" />
-            <line x1="62" y1="75" x2="100" y2="75" stroke="#8B4513" strokeWidth="0.3" strokeDasharray="1,1" />
-            
-            {filteredShots.map((shot) => (
-              <circle
-                key={shot.id}
-                cx={shot.x}
-                cy={shot.y}
-                r="2"
-                fill={shot.result === "made" ? "#22c55e" : "#ef4444"}
-                stroke={shot.result === "made" ? "#16a34a" : "#dc2626"}
-                strokeWidth="0.3"
-                opacity="0.8"
-                data-testid={`shot-marker-${shot.id}`}
-              />
-            ))}
-            
-            {pendingShot && (
-              <circle
-                cx={pendingShot.x}
-                cy={pendingShot.y}
-                r="3"
-                fill={pendingShotResult === "made" ? "#22c55e" : "#ef4444"}
-                stroke="#fff"
-                strokeWidth="0.5"
-                className="animate-pulse"
-                data-testid="pending-shot-marker"
-              />
-            )}
-          </svg>
+        <div className="relative w-full aspect-square rounded-md overflow-hidden">
+          <BasketballCourt
+            shots={filteredShots}
+            pendingShot={pendingShot}
+            pendingShotResult={pendingShotResult}
+            editMode={editMode}
+            onCourtClick={handleCourtClick}
+          />
           
           {editMode && (
             <div className="absolute top-2 left-2 bg-background/90 px-2 py-1 rounded text-xs text-muted-foreground">
@@ -247,7 +396,7 @@ export function ShotChart({ gameId, playerId, editMode = false, onEditModeChange
 
         {pendingShot && (
           <div className="flex items-center justify-between p-3 bg-muted/50 rounded-md" data-testid="pending-shot-controls">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm font-medium">Shot result:</span>
               <Button
                 variant={pendingShotResult === "made" ? "default" : "outline"}
@@ -301,34 +450,32 @@ export function ShotChart({ gameId, playerId, editMode = false, onEditModeChange
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" data-testid="shot-chart-stats">
-          <div className="p-3 bg-muted/50 rounded-md text-center">
-            <div className="text-xs text-muted-foreground uppercase tracking-wide">Overall</div>
-            <div className="text-lg font-bold">{totalStats.made}/{totalStats.total}</div>
-            <Badge variant="secondary" className="mt-1">{totalStats.percentage}%</Badge>
+        {showStats && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" data-testid="shot-chart-stats">
+            <div className="p-3 bg-muted/50 rounded-md text-center">
+              <div className="text-xs text-muted-foreground uppercase tracking-wide">Overall</div>
+              <div className="text-lg font-bold">{totalStats.made}/{totalStats.total}</div>
+              <Badge variant="secondary" className="mt-1">{totalStats.percentage}%</Badge>
+            </div>
+            <div className="p-3 bg-muted/50 rounded-md text-center">
+              <div className="text-xs text-muted-foreground uppercase tracking-wide">2PT</div>
+              <div className="text-lg font-bold">{twoPointStats.made}/{twoPointStats.total}</div>
+              <Badge variant="secondary" className="mt-1">{twoPointStats.percentage}%</Badge>
+            </div>
+            <div className="p-3 bg-muted/50 rounded-md text-center">
+              <div className="text-xs text-muted-foreground uppercase tracking-wide">3PT</div>
+              <div className="text-lg font-bold">{threePointStats.made}/{threePointStats.total}</div>
+              <Badge variant="secondary" className="mt-1">{threePointStats.percentage}%</Badge>
+            </div>
+            <div className="p-3 bg-muted/50 rounded-md text-center" data-testid="stat-paint">
+              <div className="text-xs text-muted-foreground uppercase tracking-wide">Paint</div>
+              <div className="text-lg font-bold">{zoneStats.paint.made}/{zoneStats.paint.total}</div>
+              <Badge variant="secondary" className="mt-1">
+                {zoneStats.paint.total > 0 ? ((zoneStats.paint.made / zoneStats.paint.total) * 100).toFixed(1) : "0.0"}%
+              </Badge>
+            </div>
           </div>
-          <div className="p-3 bg-muted/50 rounded-md text-center" data-testid="stat-paint">
-            <div className="text-xs text-muted-foreground uppercase tracking-wide">Paint</div>
-            <div className="text-lg font-bold">{zoneStats.paint.made}/{zoneStats.paint.total}</div>
-            <Badge variant="secondary" className="mt-1">
-              {zoneStats.paint.total > 0 ? ((zoneStats.paint.made / zoneStats.paint.total) * 100).toFixed(1) : "0.0"}%
-            </Badge>
-          </div>
-          <div className="p-3 bg-muted/50 rounded-md text-center" data-testid="stat-midrange">
-            <div className="text-xs text-muted-foreground uppercase tracking-wide">Mid-Range</div>
-            <div className="text-lg font-bold">{zoneStats.midrange.made}/{zoneStats.midrange.total}</div>
-            <Badge variant="secondary" className="mt-1">
-              {zoneStats.midrange.total > 0 ? ((zoneStats.midrange.made / zoneStats.midrange.total) * 100).toFixed(1) : "0.0"}%
-            </Badge>
-          </div>
-          <div className="p-3 bg-muted/50 rounded-md text-center" data-testid="stat-three">
-            <div className="text-xs text-muted-foreground uppercase tracking-wide">3-Point</div>
-            <div className="text-lg font-bold">{zoneStats.three.made}/{zoneStats.three.total}</div>
-            <Badge variant="secondary" className="mt-1">
-              {zoneStats.three.total > 0 ? ((zoneStats.three.made / zoneStats.three.total) * 100).toFixed(1) : "0.0"}%
-            </Badge>
-          </div>
-        </div>
+        )}
 
         {shots.length === 0 && !editMode && (
           <div className="text-center py-6 text-muted-foreground" data-testid="shot-chart-empty">
@@ -343,3 +490,5 @@ export function ShotChart({ gameId, playerId, editMode = false, onEditModeChange
     </Card>
   );
 }
+
+export { type Shot };

@@ -1,4 +1,4 @@
-import { usePlayer, useDeleteGame, usePlayerBadges, useUpdatePlayer, type PlayerUpdate } from "@/hooks/use-basketball";
+import { usePlayer, useDeleteGame, usePlayerBadges, useUpdatePlayer, usePlayerProgression, usePlayerSkillBadges, type PlayerUpdate } from "@/hooks/use-basketball";
 import { GoalsPanel } from "@/components/GoalsPanel";
 import { SocialEngagement } from "@/components/SocialEngagement";
 import { PlayerProgression } from "@/components/PlayerProgression";
@@ -14,6 +14,10 @@ import { FollowButton } from "@/components/FollowButton";
 import { FollowStats } from "@/components/FollowStats";
 import { FollowersList } from "@/components/FollowersList";
 import { FollowingList } from "@/components/FollowingList";
+import { ShareModal } from "@/components/ShareModal";
+import { ShareablePlayerCard } from "@/components/ShareablePlayerCard";
+import { ShareableGameCard } from "@/components/ShareableGameCard";
+import { ShareableBadgeCard } from "@/components/ShareableBadgeCard";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoute, Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
@@ -240,6 +244,14 @@ export default function PlayerDetail() {
   const [editForm, setEditForm] = useState<PlayerUpdate>({});
   const [showFollowersSheet, setShowFollowersSheet] = useState(false);
   const [showFollowingSheet, setShowFollowingSheet] = useState(false);
+  const [showPlayerShareModal, setShowPlayerShareModal] = useState(false);
+  const [showGameShareModal, setShowGameShareModal] = useState(false);
+  const [showBadgeShareModal, setShowBadgeShareModal] = useState(false);
+  const [selectedShareGame, setSelectedShareGame] = useState<Game | null>(null);
+  const [selectedShareBadge, setSelectedShareBadge] = useState<string | null>(null);
+
+  const { data: progression } = usePlayerProgression(id);
+  const { data: skillBadges = [] } = usePlayerSkillBadges(id);
 
   const { data: currentUserFollowing = [] } = useQuery<FollowingPlayer[]>({
     queryKey: ["/api/players", user?.playerId, "following"],
@@ -335,46 +347,18 @@ export default function PlayerDetail() {
     }
   };
 
-  const handleShareProfile = async () => {
-    const shareUrl = `${window.location.origin}/players/${id}/card`;
-    const shareData = {
-      title: `${player?.name} - Caliber Player Card`,
-      text: `Check out my player card on Caliber!`,
-      url: shareUrl,
-    };
-
-    if (navigator.share && navigator.canShare?.(shareData)) {
-      try {
-        await navigator.share(shareData);
-      } catch (err) {
-        if ((err as Error).name !== "AbortError") {
-          copyToClipboard(shareUrl);
-        }
-      }
-    } else {
-      copyToClipboard(shareUrl);
-    }
+  const handleShareProfile = () => {
+    setShowPlayerShareModal(true);
   };
 
-  const handleShareGame = async (gameId: number, opponent: string, grade: string) => {
-    const shareUrl = `${window.location.origin}/players/${id}/card?gameId=${gameId}`;
-    const shareData = {
-      title: `${player?.name} vs ${opponent} - ${grade}`,
-      text: `Check out my game card on Caliber!`,
-      url: shareUrl,
-    };
+  const handleShareGame = (game: Game) => {
+    setSelectedShareGame(game);
+    setShowGameShareModal(true);
+  };
 
-    if (navigator.share && navigator.canShare?.(shareData)) {
-      try {
-        await navigator.share(shareData);
-      } catch (err) {
-        if ((err as Error).name !== "AbortError") {
-          copyToClipboard(shareUrl);
-        }
-      }
-    } else {
-      copyToClipboard(shareUrl);
-    }
+  const handleShareBadge = (badgeType: string) => {
+    setSelectedShareBadge(badgeType);
+    setShowBadgeShareModal(true);
   };
 
   const copyToClipboard = (url: string) => {
@@ -849,7 +833,7 @@ export default function PlayerDetail() {
                         <Button 
                           variant="ghost" 
                           size="sm"
-                          onClick={() => handleShareGame(game.id, game.opponent, game.grade || "")}
+                          onClick={() => handleShareGame(game)}
                           className="gap-1"
                           data-testid={`button-share-top-game-${game.id}`}
                         >
@@ -896,8 +880,15 @@ export default function PlayerDetail() {
                     <div
                       key={badge.id}
                       data-testid={`badge-${badge.badgeType}-${badge.id}`}
-                      className="group bg-secondary/20 hover:bg-secondary/40 border border-white/5 p-4 rounded-xl transition-colors flex flex-col items-center text-center"
+                      className="group bg-secondary/20 hover:bg-secondary/40 border border-white/5 p-4 rounded-xl transition-colors flex flex-col items-center text-center relative"
                     >
+                      <button
+                        onClick={() => handleShareBadge(badge.badgeType)}
+                        className="absolute top-2 right-2 text-muted-foreground hover:text-primary transition-colors opacity-0 group-hover:opacity-100 p-1"
+                        data-testid={`button-share-badge-${badge.id}`}
+                      >
+                        <Share2 className="w-3.5 h-3.5" />
+                      </button>
                       <div className="w-12 h-12 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                         <BadgeIcon className="w-6 h-6 text-primary" />
                       </div>
@@ -1049,7 +1040,7 @@ export default function PlayerDetail() {
                       
                       <div className="flex items-center gap-1">
                         <button 
-                          onClick={() => handleShareGame(game.id, game.opponent, game.grade || "")}
+                          onClick={() => handleShareGame(game)}
                           className="text-muted-foreground hover:text-primary transition-colors opacity-0 group-hover:opacity-100 p-1"
                           data-testid={`button-share-game-${game.id}`}
                         >
@@ -1275,6 +1266,69 @@ export default function PlayerDetail() {
           </div>
         </SheetContent>
       </Sheet>
+
+      <ShareModal
+        open={showPlayerShareModal}
+        onOpenChange={setShowPlayerShareModal}
+        title="Share Player Card"
+        shareUrl={`${window.location.origin}/players/${id}`}
+        shareText={`Check out ${player.name}'s player card on Caliber!`}
+        assetId={`player-${id}`}
+      >
+        <ShareablePlayerCard
+          player={player}
+          badges={badges}
+          skillBadges={skillBadges}
+          progression={progression ? {
+            totalXp: progression.totalXp,
+            currentTier: progression.currentTier,
+            progressPercent: progression.progressPercent,
+            nextTier: progression.nextTier,
+          } : undefined}
+          aspectRatio="1:1"
+        />
+      </ShareModal>
+
+      {selectedShareGame && (
+        <ShareModal
+          open={showGameShareModal}
+          onOpenChange={(open) => {
+            setShowGameShareModal(open);
+            if (!open) setSelectedShareGame(null);
+          }}
+          title="Share Game Card"
+          shareUrl={`${window.location.origin}/players/${id}?gameId=${selectedShareGame.id}`}
+          shareText={`Check out my game vs ${selectedShareGame.opponent} on Caliber!`}
+          assetId={`game-${selectedShareGame.id}`}
+        >
+          <ShareableGameCard
+            game={selectedShareGame}
+            playerName={player.name}
+            badges={badges.filter(b => b.gameId === selectedShareGame.id)}
+            aspectRatio="16:9"
+          />
+        </ShareModal>
+      )}
+
+      {selectedShareBadge && (
+        <ShareModal
+          open={showBadgeShareModal}
+          onOpenChange={(open) => {
+            setShowBadgeShareModal(open);
+            if (!open) setSelectedShareBadge(null);
+          }}
+          title="Share Badge"
+          shareUrl={`${window.location.origin}/players/${id}`}
+          shareText={`I just earned a new badge on Caliber!`}
+          assetId={`badge-${selectedShareBadge}`}
+        >
+          <ShareableBadgeCard
+            badgeType={selectedShareBadge}
+            playerName={player.name}
+            aspectRatio="1:1"
+          />
+        </ShareModal>
+      )}
     </div>
   );
 }
