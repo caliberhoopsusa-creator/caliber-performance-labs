@@ -1276,64 +1276,7 @@ export default function PlayerDetail() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1">
-          <GoalsPanel playerId={player.id} games={games} />
-        </div>
-        
-        <div className="lg:col-span-2">
-          <Card className="p-4 h-full">
-            <h3 className="text-sm font-bold font-display text-white mb-3 flex items-center gap-2">
-              <Trophy className="w-4 h-4 text-primary" /> Badges & Awards
-            </h3>
-            
-            {badgesLoading ? (
-              <div className="flex items-center justify-center py-4">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
-              </div>
-            ) : badges.length === 0 ? (
-              <div className="text-muted-foreground text-xs text-center py-4">
-                No badges earned yet. Keep playing to unlock achievements!
-              </div>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {badges.map((badge: Badge) => {
-                  const BadgeIcon = BADGE_ICONS[badge.badgeType] || Award;
-                  const badgeDef = BADGE_DEFINITIONS[badge.badgeType as keyof typeof BADGE_DEFINITIONS];
-                  const badgeName = badgeDef?.name || badge.badgeType;
-                  const badgeDesc = badgeDef?.description || "";
-                  
-                  return (
-                    <div
-                      key={badge.id}
-                      data-testid={`badge-${badge.badgeType}-${badge.id}`}
-                      className="group bg-secondary/20 hover:bg-secondary/40 border border-white/5 px-3 py-2 rounded-lg transition-colors flex items-center gap-2 relative"
-                      title={`${badgeName}: ${badgeDesc}`}
-                    >
-                      <div className="w-7 h-7 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-                        <BadgeIcon className="w-3.5 h-3.5 text-primary" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-xs font-semibold text-white truncate">{badgeName}</div>
-                        <div className="text-[10px] text-muted-foreground/70">
-                          {badge.earnedAt ? format(new Date(badge.earnedAt), 'MMM d') : ''}
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => handleShareBadge(badge.badgeType)}
-                        className="text-muted-foreground hover:text-primary transition-colors opacity-0 group-hover:opacity-100 p-0.5 flex-shrink-0"
-                        data-testid={`button-share-badge-${badge.id}`}
-                      >
-                        <Share2 className="w-3 h-3" />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </Card>
-        </div>
-      </div>
+      <GoalsPanel playerId={player.id} games={games} />
 
       <Tabs defaultValue="trend" className="w-full">
         <TabsList className="grid w-full grid-cols-3 mb-4">
