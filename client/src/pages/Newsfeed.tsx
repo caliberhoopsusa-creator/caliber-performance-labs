@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Target, Award, Repeat2, BarChart3, Users, Camera, Flame, Trophy, Zap, Rss } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Target, Award, Repeat2, BarChart3, Users, Camera, Flame, Trophy, Zap, Rss, UserCheck, UsersRound } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -145,9 +147,76 @@ function ActivityCard({ activity }: { activity: FeedActivity }) {
   );
 }
 
+interface FeedListProps {
+  activities: FeedActivity[] | undefined;
+  isLoading: boolean;
+  error: Error | null;
+  emptyMessage: string;
+  emptyDescription: string;
+  emptyIcon: typeof Rss;
+}
+
+function FeedList({ activities, isLoading, error, emptyMessage, emptyDescription, emptyIcon: EmptyIcon }: FeedListProps) {
+  if (isLoading) {
+    return (
+      <>
+        <ActivitySkeleton />
+        <ActivitySkeleton />
+        <ActivitySkeleton />
+        <ActivitySkeleton />
+        <ActivitySkeleton />
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="p-8 text-center" data-testid="error-container">
+        <p className="text-muted-foreground">Failed to load activity feed</p>
+      </Card>
+    );
+  }
+
+  if (activities && activities.length > 0) {
+    return (
+      <>
+        {activities.map((activity) => (
+          <ActivityCard key={activity.id} activity={activity} />
+        ))}
+      </>
+    );
+  }
+
+  return (
+    <Card className="p-8 text-center" data-testid="empty-container">
+      <div className="flex flex-col items-center gap-3">
+        <EmptyIcon className="w-12 h-12 text-muted-foreground/50" />
+        <div>
+          <p className="text-white font-medium mb-1">{emptyMessage}</p>
+          <p className="text-sm text-muted-foreground">
+            {emptyDescription}
+          </p>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 export default function Newsfeed() {
-  const { data: activities, isLoading, error } = useQuery<FeedActivity[]>({
+  const [activeTab, setActiveTab] = useState("all");
+
+  const { data: allActivities, isLoading: allLoading, error: allError } = useQuery<FeedActivity[]>({
     queryKey: ["/api/feed"],
+  });
+
+  const { data: followingActivities, isLoading: followingLoading, error: followingError } = useQuery<FeedActivity[]>({
+    queryKey: ["/api/feed/following"],
+    enabled: activeTab === "following",
+  });
+
+  const { data: teamActivities, isLoading: teamLoading, error: teamError } = useQuery<FeedActivity[]>({
+    queryKey: ["/api/feed/team"],
+    enabled: activeTab === "team",
   });
 
   return (
@@ -161,37 +230,73 @@ export default function Newsfeed() {
         </p>
       </div>
 
-      <div className="space-y-3" data-testid="container-activities">
-        {isLoading ? (
-          <>
-            <ActivitySkeleton />
-            <ActivitySkeleton />
-            <ActivitySkeleton />
-            <ActivitySkeleton />
-            <ActivitySkeleton />
-          </>
-        ) : error ? (
-          <Card className="p-8 text-center" data-testid="error-container">
-            <p className="text-muted-foreground">Failed to load activity feed</p>
-          </Card>
-        ) : activities && activities.length > 0 ? (
-          activities.map((activity) => (
-            <ActivityCard key={activity.id} activity={activity} />
-          ))
-        ) : (
-          <Card className="p-8 text-center" data-testid="empty-container">
-            <div className="flex flex-col items-center gap-3">
-              <Rss className="w-12 h-12 text-muted-foreground/50" />
-              <div>
-                <p className="text-white font-medium mb-1">No activity yet</p>
-                <p className="text-sm text-muted-foreground">
-                  Activities will appear here as players log games and earn badges
-                </p>
-              </div>
-            </div>
-          </Card>
-        )}
-      </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="w-full md:w-auto bg-card border border-white/10" data-testid="tabs-feed">
+          <TabsTrigger 
+            value="all" 
+            className="flex-1 md:flex-none gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            data-testid="tab-all"
+          >
+            <Rss className="w-4 h-4" />
+            All
+          </TabsTrigger>
+          <TabsTrigger 
+            value="following" 
+            className="flex-1 md:flex-none gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            data-testid="tab-following"
+          >
+            <UserCheck className="w-4 h-4" />
+            Following
+          </TabsTrigger>
+          <TabsTrigger 
+            value="team" 
+            className="flex-1 md:flex-none gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            data-testid="tab-team"
+          >
+            <UsersRound className="w-4 h-4" />
+            Team
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="all" className="mt-4">
+          <div className="space-y-3" data-testid="container-activities-all">
+            <FeedList
+              activities={allActivities}
+              isLoading={allLoading}
+              error={allError}
+              emptyMessage="No activity yet"
+              emptyDescription="Activities will appear here as players log games and earn badges"
+              emptyIcon={Rss}
+            />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="following" className="mt-4">
+          <div className="space-y-3" data-testid="container-activities-following">
+            <FeedList
+              activities={followingActivities}
+              isLoading={followingLoading}
+              error={followingError}
+              emptyMessage="No updates from followed players"
+              emptyDescription="Follow players to see their updates here"
+              emptyIcon={UserCheck}
+            />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="team" className="mt-4">
+          <div className="space-y-3" data-testid="container-activities-team">
+            <FeedList
+              activities={teamActivities}
+              isLoading={teamLoading}
+              error={teamError}
+              emptyMessage="No team activity"
+              emptyDescription="Team updates will appear here when teammates log games or earn badges"
+              emptyIcon={UsersRound}
+            />
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

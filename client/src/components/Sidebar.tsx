@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, Gamepad2, CalendarDays, Crosshair, Film, FileText, ArrowLeftRight } from "lucide-react";
+import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, Gamepad2, CalendarDays, Crosshair, Film, FileText, ArrowLeftRight, UserPlus } from "lucide-react";
 import caliberLogo from "@assets/Gemini_Generated_Image_3ld7js3ld7js3ld7_(1)_1768700977754.png";
 import { cn } from "@/lib/utils";
 import { AlertsBadge } from "@/components/AlertsCenter";
@@ -81,6 +81,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
       title: "Community",
       items: [
         { href: "/feed", label: "Newsfeed", icon: Rss },
+        { href: "/social", label: "Social Hub", icon: UserPlus },
         { href: "/stories", label: "Stories", icon: Camera },
         { href: "/teams", label: "Teams", icon: MessageSquare },
         { href: "/community", label: "Highlights", icon: BarChart3 },
@@ -118,6 +119,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
       title: "Community",
       items: [
         { href: "/feed", label: "Newsfeed", icon: Rss },
+        { href: "/social", label: "Social Hub", icon: UserPlus },
         { href: "/stories", label: "Stories", icon: Camera },
         { href: "/teams", label: "Teams", icon: MessageSquare },
         { href: "/community", label: "Highlights", icon: BarChart3 },

@@ -44,6 +44,7 @@ import ShotChartPage from "./pages/ShotChartPage";
 import HighlightClipsPage from "./pages/HighlightClipsPage";
 import TeamComparison from "./pages/TeamComparison";
 import ReportCardPage from "./pages/ReportCardPage";
+import SocialHub from "./pages/SocialHub";
 import NotFound from "./pages/not-found";
 
 interface ExtendedUser {
@@ -162,6 +163,7 @@ function MainRouter() {
               <Route path="/highlights" component={HighlightClipsPage} />
               <Route path="/team-comparison" component={TeamComparison} />
               <Route path="/report-card" component={ReportCardPage} />
+              <Route path="/social" component={SocialHub} />
               <Route component={NotFound} />
             </Switch>
           </main>
