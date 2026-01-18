@@ -3558,6 +3558,23 @@ Respond in this exact JSON format:
     try {
       const input = insertPracticeSchema.parse(req.body);
       const practice = await storage.createPractice(input);
+      
+      // Also create a corresponding schedule event for the calendar
+      const startTime = new Date(input.date);
+      startTime.setHours(9, 0, 0, 0); // Default to 9 AM
+      
+      const endTime = new Date(startTime);
+      endTime.setMinutes(endTime.getMinutes() + (input.duration || 60));
+      
+      await storage.createScheduleEvent({
+        eventType: 'practice',
+        title: input.title,
+        description: input.notes || undefined,
+        startTime,
+        endTime,
+        isRecurring: false,
+      });
+      
       res.status(201).json(practice);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -3609,7 +3626,25 @@ Respond in this exact JSON format:
 
   app.delete('/api/practices/:id', requiresCoachPro, async (req, res) => {
     try {
-      await storage.deletePractice(Number(req.params.id));
+      const practiceId = Number(req.params.id);
+      const practice = await storage.getPractice(practiceId);
+      
+      if (practice) {
+        // Delete associated schedule event by matching title and date
+        const allEvents = await storage.getAllScheduleEvents();
+        const practiceDate = new Date(practice.date);
+        const matchingEvent = allEvents.find((event: ScheduleEvent) => 
+          event.eventType === 'practice' &&
+          event.title === practice.title &&
+          new Date(event.startTime).toDateString() === practiceDate.toDateString()
+        );
+        
+        if (matchingEvent) {
+          await storage.deleteScheduleEvent(matchingEvent.id);
+        }
+      }
+      
+      await storage.deletePractice(practiceId);
       res.status(204).send();
     } catch (err) {
       console.error('Delete practice error:', err);
