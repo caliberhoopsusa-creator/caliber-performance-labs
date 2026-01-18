@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl, type PlayerInput, type GameInput } from "@shared/routes";
+import type { Accolade } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
 
 // ============================================
 // PLAYERS HOOKS
@@ -1465,6 +1467,7 @@ export type Workout = {
   duration: number;
   intensity: number | null;
   notes: string | null;
+  videoUrl: string | null;
   metrics: string | null;
   createdAt: string;
 };
@@ -1477,6 +1480,7 @@ export type CreateWorkoutInput = {
   duration: number;
   intensity?: number | null;
   notes?: string | null;
+  videoUrl?: string | null;
 };
 
 export function usePlayerWorkouts(playerId: number) {
@@ -1615,6 +1619,56 @@ export function useDeleteGoalShare() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/shared-goals'] });
+    },
+  });
+}
+
+// ============================================
+// ACCOLADES HOOKS
+// ============================================
+
+export function usePlayerAccolades(playerId: number | undefined) {
+  return useQuery<Accolade[]>({
+    queryKey: ['/api/players', playerId, 'accolades'],
+    enabled: !!playerId,
+  });
+}
+
+export function useCreateAccolade() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ playerId, ...data }: { playerId: number; type: string; title: string; description?: string; season?: string; dateEarned?: string }) => {
+      const res = await apiRequest("POST", `/api/players/${playerId}/accolades`, data);
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/players', variables.playerId, 'accolades'] });
+    },
+  });
+}
+
+export function useUpdateAccolade() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, playerId, ...data }: { id: number; playerId: number; type?: string; title?: string; description?: string; season?: string; dateEarned?: string }) => {
+      const res = await apiRequest("PATCH", `/api/accolades/${id}`, data);
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/players', variables.playerId, 'accolades'] });
+    },
+  });
+}
+
+export function useDeleteAccolade() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, playerId }: { id: number; playerId: number }) => {
+      await apiRequest("DELETE", `/api/accolades/${id}`);
+      return { playerId };
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/players', result.playerId, 'accolades'] });
     },
   });
 }

@@ -6,7 +6,7 @@ import {
   activityStreaks,
   shots, gameNotes, practices, practiceAttendance, drills, drillScores, lineups, lineupStats,
   opponents, alerts, coachGoals, drillRecommendations,
-  follows, notifications, highlightClips, workouts, goalShares, scheduleEvents, liveGameSessions, liveGameEvents, shareAssets,
+  follows, notifications, highlightClips, workouts, accolades, goalShares, scheduleEvents, liveGameSessions, liveGameEvents, shareAssets,
   type Player, type InsertPlayer,
   type Game, type InsertGame,
   type UpdateGameRequest,
@@ -46,6 +46,7 @@ import {
   type Notification, type InsertNotification,
   type HighlightClip, type InsertHighlightClip,
   type Workout, type InsertWorkout,
+  type Accolade, type InsertAccolade,
   type GoalShare, type InsertGoalShare,
   type ScheduleEvent, type InsertScheduleEvent,
   type LiveGameSession, type InsertLiveGameSession,
@@ -284,6 +285,13 @@ export interface IStorage {
   getWorkout(id: number): Promise<Workout | undefined>;
   updateWorkout(id: number, updates: Partial<InsertWorkout>): Promise<Workout>;
   deleteWorkout(id: number): Promise<void>;
+
+  // Accolades
+  getPlayerAccolades(playerId: number): Promise<Accolade[]>;
+  createAccolade(accolade: InsertAccolade): Promise<Accolade>;
+  getAccoladeById(id: number): Promise<Accolade | undefined>;
+  updateAccolade(id: number, updates: Partial<InsertAccolade>): Promise<Accolade>;
+  deleteAccolade(id: number): Promise<void>;
 
   // Goal Shares
   createGoalShare(share: InsertGoalShare): Promise<GoalShare>;
@@ -1440,6 +1448,30 @@ export class DatabaseStorage implements IStorage {
 
   async deleteWorkout(id: number): Promise<void> {
     await db.delete(workouts).where(eq(workouts.id, id));
+  }
+
+  // Accolades
+  async getPlayerAccolades(playerId: number): Promise<Accolade[]> {
+    return await db.select().from(accolades).where(eq(accolades.playerId, playerId)).orderBy(desc(accolades.createdAt));
+  }
+
+  async createAccolade(accolade: InsertAccolade): Promise<Accolade> {
+    const [newAccolade] = await db.insert(accolades).values(accolade).returning();
+    return newAccolade;
+  }
+
+  async getAccoladeById(id: number): Promise<Accolade | undefined> {
+    const [accolade] = await db.select().from(accolades).where(eq(accolades.id, id));
+    return accolade;
+  }
+
+  async updateAccolade(id: number, updates: Partial<InsertAccolade>): Promise<Accolade> {
+    const [updated] = await db.update(accolades).set(updates).where(eq(accolades.id, id)).returning();
+    return updated;
+  }
+
+  async deleteAccolade(id: number): Promise<void> {
+    await db.delete(accolades).where(eq(accolades.id, id));
   }
 
   // Goal Shares

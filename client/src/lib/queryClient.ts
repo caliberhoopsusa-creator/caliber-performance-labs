@@ -50,7 +50,7 @@ export const getQueryFn: <T>(options: {
       return data;
     } catch (error) {
       if (!navigator.onLine) {
-        const cached = getCachedData<T>(cacheKey);
+        const cached = getCachedData(cacheKey);
         if (cached) {
           return cached.data;
         }

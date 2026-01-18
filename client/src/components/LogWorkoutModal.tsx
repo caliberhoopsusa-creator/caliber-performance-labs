@@ -3,12 +3,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, Plus } from "lucide-react";
+import { Calendar as CalendarIcon, Plus, Video, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Calendar } from "@/components/ui/calendar";
+import { ObjectUploader } from "@/components/ObjectUploader";
 import {
   Dialog,
   DialogContent,
@@ -61,6 +62,7 @@ type LogWorkoutModalProps = {
 
 export function LogWorkoutModal({ playerId }: LogWorkoutModalProps) {
   const [open, setOpen] = useState(false);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const { toast } = useToast();
   const createWorkout = useCreateWorkout();
 
@@ -86,6 +88,7 @@ export function LogWorkoutModal({ playerId }: LogWorkoutModalProps) {
         duration: values.duration,
         intensity: values.intensity,
         notes: values.notes || null,
+        videoUrl: videoUrl,
       };
       
       await createWorkout.mutateAsync(data);
@@ -103,6 +106,7 @@ export function LogWorkoutModal({ playerId }: LogWorkoutModalProps) {
         intensity: 5,
         notes: "",
       });
+      setVideoUrl(null);
       setOpen(false);
     } catch (error) {
       toast({
@@ -272,6 +276,81 @@ export function LogWorkoutModal({ playerId }: LogWorkoutModalProps) {
                 </FormItem>
               )}
             />
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium leading-none">
+                Workout Video (optional)
+              </label>
+              {videoUrl ? (
+                <div className="flex items-center gap-2 p-3 bg-secondary/30 rounded-lg border border-white/10">
+                  <Video className="w-4 h-4 text-green-400" />
+                  <span className="text-sm text-green-400 flex-1">Video uploaded</span>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="text-muted-foreground"
+                    onClick={() => setVideoUrl(null)}
+                    data-testid="button-remove-video"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <ObjectUploader
+                  maxNumberOfFiles={1}
+                  maxFileSize={104857600}
+                  onGetUploadParameters={async (file) => {
+                    const allowedTypes = ['video/mp4', 'video/quicktime', 'video/webm'];
+                    if (!allowedTypes.includes(file.type)) {
+                      throw new Error('Only MP4, MOV, and WebM videos are allowed');
+                    }
+
+                    const res = await fetch("/api/uploads/request-url", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        name: file.name,
+                        size: file.size,
+                        contentType: file.type,
+                      }),
+                    });
+
+                    if (!res.ok) {
+                      throw new Error('Failed to get upload URL');
+                    }
+
+                    const { uploadURL, objectPath } = await res.json();
+                    (file as any).__objectPath = objectPath;
+
+                    return {
+                      method: "PUT" as const,
+                      url: uploadURL,
+                      headers: { "Content-Type": file.type },
+                    };
+                  }}
+                  onComplete={(result) => {
+                    if (result.successful && result.successful.length > 0) {
+                      const file = result.successful[0];
+                      let objectPath = (file as any).__objectPath || file.uploadURL;
+                      if (objectPath && !objectPath.startsWith('/objects/')) {
+                        objectPath = `/objects/${objectPath.replace(/^\/+/, '')}`;
+                      }
+                      setVideoUrl(objectPath);
+                    }
+                  }}
+                  buttonClassName="w-full bg-secondary/50 border border-dashed border-white/20 text-white"
+                >
+                  <span className="flex items-center gap-2">
+                    <Video className="w-4 h-4" />
+                    Upload Video
+                  </span>
+                </ObjectUploader>
+              )}
+              <p className="text-xs text-muted-foreground">
+                MP4, MOV, WebM • Max 100MB
+              </p>
+            </div>
 
             <DialogFooter className="pt-4">
               <Button 

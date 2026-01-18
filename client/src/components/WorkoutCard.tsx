@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Dumbbell, Target, Zap, Heart, Footprints, Clock, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { Dumbbell, Target, Zap, Heart, Footprints, Clock, Trash2, ChevronDown, ChevronUp, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,13 +42,14 @@ const workoutColors: Record<string, string> = {
 
 export function WorkoutCard({ workout, onDelete, isDeleting }: WorkoutCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showVideoModal, setShowVideoModal] = useState(false);
   
   const Icon = workoutIcons[workout.workoutType] || Dumbbell;
   const iconColor = workoutColors[workout.workoutType] || "text-primary";
   
   return (
     <div 
-      className="glass-card rounded-xl p-4 transition-all duration-200 hover:border-white/20"
+      className="glass-card rounded-xl p-4 transition-all duration-200"
       data-testid={`workout-card-${workout.id}`}
     >
       <div className="flex items-start justify-between gap-3">
@@ -90,6 +92,19 @@ export function WorkoutCard({ workout, onDelete, isDeleting }: WorkoutCardProps)
                 )}
               </div>
             )}
+            
+            {workout.videoUrl && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="mt-3 gap-2 border-primary/30 text-primary"
+                onClick={() => setShowVideoModal(true)}
+                data-testid={`workout-video-${workout.id}`}
+              >
+                <Play className="w-3 h-3" />
+                Watch Video
+              </Button>
+            )}
           </div>
         </div>
         
@@ -98,7 +113,7 @@ export function WorkoutCard({ workout, onDelete, isDeleting }: WorkoutCardProps)
             <Button
               size="icon"
               variant="ghost"
-              className="h-8 w-8 text-muted-foreground hover:text-white"
+              className="text-muted-foreground"
               onClick={() => setIsExpanded(!isExpanded)}
               data-testid={`workout-expand-${workout.id}`}
             >
@@ -111,7 +126,7 @@ export function WorkoutCard({ workout, onDelete, isDeleting }: WorkoutCardProps)
               <Button
                 size="icon"
                 variant="ghost"
-                className="h-8 w-8 text-muted-foreground hover:text-red-400 hover:bg-red-500/10"
+                className="text-muted-foreground"
                 data-testid={`workout-delete-${workout.id}`}
               >
                 <Trash2 className="w-4 h-4" />
@@ -128,7 +143,7 @@ export function WorkoutCard({ workout, onDelete, isDeleting }: WorkoutCardProps)
                 <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
                 <AlertDialogAction 
                   onClick={() => onDelete(workout.id)}
-                  className="bg-red-500 hover:bg-red-600"
+                  className="bg-destructive text-destructive-foreground"
                   disabled={isDeleting}
                   data-testid="button-confirm-delete"
                 >
@@ -139,6 +154,28 @@ export function WorkoutCard({ workout, onDelete, isDeleting }: WorkoutCardProps)
           </AlertDialog>
         </div>
       </div>
+      
+      {workout.videoUrl && (
+        <Dialog open={showVideoModal} onOpenChange={setShowVideoModal}>
+          <DialogContent className="max-w-4xl w-full p-0 gap-0 bg-black/95 border-white/10" data-testid={`dialog-workout-video-${workout.id}`}>
+            <div className="aspect-video bg-black">
+              <video
+                src={workout.videoUrl}
+                controls
+                autoPlay
+                className="w-full h-full"
+                data-testid={`video-player-${workout.id}`}
+              >
+                Your browser does not support the video tag.
+              </video>
+            </div>
+            <div className="p-4 bg-card border-t border-white/10">
+              <h3 className="font-display text-lg font-bold text-white">{workout.title}</h3>
+              <p className="text-sm text-muted-foreground capitalize">{workout.workoutType} • {workout.duration} min</p>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

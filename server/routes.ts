@@ -3,7 +3,7 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, insertWorkoutSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema } from "@shared/schema";
+import { players, games, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { GoogleGenAI } from "@google/genai";
 import multer from "multer";
@@ -4793,6 +4793,103 @@ Respond in this exact JSON format:
     } catch (error) {
       console.error('Error deleting workout:', error);
       res.status(500).json({ message: "Failed to delete workout" });
+    }
+  });
+
+  // ========================================
+  // ACCOLADE ROUTES
+  // ========================================
+
+  // Get all accolades for a player
+  app.get('/api/players/:playerId/accolades', async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.playerId);
+      const accolades = await storage.getPlayerAccolades(playerId);
+      res.json(accolades);
+    } catch (error) {
+      console.error('Error getting accolades:', error);
+      res.status(500).json({ message: "Failed to get accolades" });
+    }
+  });
+
+  // Create a new accolade (requires authentication, player must own profile)
+  app.post('/api/players/:playerId/accolades', isAuthenticated, async (req: any, res) => {
+    try {
+      const playerId = parseInt(req.params.playerId);
+      
+      if (!await canModifyPlayer(req, playerId)) {
+        return res.status(403).json({ message: "Not authorized to add accolades to this profile" });
+      }
+      
+      const createSchema = z.object({
+        type: z.enum(['championship', 'career_high', 'award', 'record']),
+        title: z.string().min(1),
+        description: z.string().optional(),
+        season: z.string().optional(),
+        dateEarned: z.string().optional(),
+      });
+      
+      const input = createSchema.parse(req.body);
+      const accolade = await storage.createAccolade({
+        ...input,
+        playerId,
+      });
+      res.json(accolade);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors[0].message });
+      }
+      console.error('Error creating accolade:', error);
+      res.status(500).json({ message: "Failed to create accolade" });
+    }
+  });
+
+  // Update an accolade (requires authentication, player must own the accolade)
+  app.patch('/api/accolades/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const accoladeId = parseInt(req.params.id);
+      const accolade = await storage.getAccoladeById(accoladeId);
+      
+      if (!accolade) {
+        return res.status(404).json({ message: "Accolade not found" });
+      }
+      
+      if (!await canModifyPlayer(req, accolade.playerId)) {
+        return res.status(403).json({ message: "Not authorized to update this accolade" });
+      }
+      
+      const updateSchema = insertAccoladeSchema.partial();
+      const input = updateSchema.parse(req.body);
+      const updatedAccolade = await storage.updateAccolade(accoladeId, input);
+      res.json(updatedAccolade);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors[0].message });
+      }
+      console.error('Error updating accolade:', error);
+      res.status(500).json({ message: "Failed to update accolade" });
+    }
+  });
+
+  // Delete an accolade (requires authentication, player must own the accolade)
+  app.delete('/api/accolades/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const accoladeId = parseInt(req.params.id);
+      const accolade = await storage.getAccoladeById(accoladeId);
+      
+      if (!accolade) {
+        return res.status(404).json({ message: "Accolade not found" });
+      }
+      
+      if (!await canModifyPlayer(req, accolade.playerId)) {
+        return res.status(403).json({ message: "Not authorized to delete this accolade" });
+      }
+      
+      await storage.deleteAccolade(accoladeId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting accolade:', error);
+      res.status(500).json({ message: "Failed to delete accolade" });
     }
   });
 

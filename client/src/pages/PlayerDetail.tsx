@@ -1,4 +1,4 @@
-import { usePlayer, useDeleteGame, usePlayerBadges, useUpdatePlayer, usePlayerProgression, usePlayerSkillBadges, type PlayerUpdate } from "@/hooks/use-basketball";
+import { usePlayer, useDeleteGame, usePlayerBadges, useUpdatePlayer, usePlayerProgression, usePlayerSkillBadges, usePlayerAccolades, useCreateAccolade, useUpdateAccolade, useDeleteAccolade, type PlayerUpdate } from "@/hooks/use-basketball";
 import { GoalsPanel } from "@/components/GoalsPanel";
 import { SocialEngagement } from "@/components/SocialEngagement";
 import { PlayerProgression } from "@/components/PlayerProgression";
@@ -67,10 +67,14 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
@@ -221,6 +225,412 @@ function CoachToolsSection({ playerId, games }: CoachToolsSectionProps) {
         {showReportCard && <PlayerReportCard playerId={playerId} />}
       </Card>
     </div>
+  );
+}
+
+const ACCOLADE_TYPES = {
+  championship: { name: "Championship", icon: Trophy, color: "text-amber-500", bgColor: "bg-amber-500/10", borderColor: "border-amber-500/20" },
+  career_high: { name: "Career High", icon: TrendingUp, color: "text-primary", bgColor: "bg-primary/10", borderColor: "border-primary/20" },
+  award: { name: "Award", icon: Medal, color: "text-purple-500", bgColor: "bg-purple-500/10", borderColor: "border-purple-500/20" },
+  record: { name: "Record", icon: Star, color: "text-orange-500", bgColor: "bg-orange-500/10", borderColor: "border-orange-500/20" },
+} as const;
+
+type AccoladeType = keyof typeof ACCOLADE_TYPES;
+
+const accoladeFormSchema = z.object({
+  type: z.enum(["championship", "career_high", "award", "record"]),
+  title: z.string().min(1, "Title is required").max(200),
+  description: z.string().max(500).optional(),
+  season: z.string().max(20).optional(),
+  dateEarned: z.string().optional(),
+});
+type AccoladeFormValues = z.infer<typeof accoladeFormSchema>;
+
+interface AccoladesSectionProps {
+  playerId: number;
+  isOwnProfile: boolean;
+}
+
+function AccoladesSection({ playerId, isOwnProfile }: AccoladesSectionProps) {
+  const { data: accolades = [], isLoading } = usePlayerAccolades(playerId);
+  const createAccolade = useCreateAccolade();
+  const updateAccolade = useUpdateAccolade();
+  const deleteAccolade = useDeleteAccolade();
+  const { toast } = useToast();
+  
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+
+  const accoladeForm = useForm<AccoladeFormValues>({
+    resolver: zodResolver(accoladeFormSchema),
+    defaultValues: {
+      type: "championship",
+      title: "",
+      description: "",
+      season: "",
+      dateEarned: "",
+    },
+  });
+
+  const openAddDialog = () => {
+    accoladeForm.reset({
+      type: "championship",
+      title: "",
+      description: "",
+      season: "",
+      dateEarned: "",
+    });
+    setEditingId(null);
+    setIsDialogOpen(true);
+  };
+
+  const openEditDialog = (accolade: any) => {
+    accoladeForm.reset({
+      type: accolade.type,
+      title: accolade.title,
+      description: accolade.description || "",
+      season: accolade.season || "",
+      dateEarned: accolade.dateEarned || "",
+    });
+    setEditingId(accolade.id);
+    setIsDialogOpen(true);
+  };
+
+  const onSubmit = (values: AccoladeFormValues) => {
+    const data = {
+      type: values.type,
+      title: values.title,
+      description: values.description || undefined,
+      season: values.season || undefined,
+      dateEarned: values.dateEarned || undefined,
+    };
+
+    if (editingId) {
+      updateAccolade.mutate(
+        { id: editingId, playerId, ...data },
+        {
+          onSuccess: () => {
+            toast({ title: "Accolade Updated", description: "Your accolade has been updated." });
+            setIsDialogOpen(false);
+          },
+          onError: () => {
+            toast({ title: "Error", description: "Failed to update accolade.", variant: "destructive" });
+          },
+        }
+      );
+    } else {
+      createAccolade.mutate(
+        { playerId, ...data },
+        {
+          onSuccess: () => {
+            toast({ title: "Accolade Added", description: "Your accolade has been added." });
+            setIsDialogOpen(false);
+          },
+          onError: () => {
+            toast({ title: "Error", description: "Failed to add accolade.", variant: "destructive" });
+          },
+        }
+      );
+    }
+  };
+
+  const handleDelete = (accoladeId: number) => {
+    deleteAccolade.mutate(
+      { id: accoladeId, playerId },
+      {
+        onSuccess: () => {
+          toast({ title: "Accolade Deleted", description: "Your accolade has been removed." });
+        },
+        onError: () => {
+          toast({ title: "Error", description: "Failed to delete accolade.", variant: "destructive" });
+        },
+      }
+    );
+  };
+
+  const groupedAccolades = useMemo(() => {
+    const groups: Record<string, typeof accolades> = {
+      championship: [],
+      career_high: [],
+      award: [],
+      record: [],
+    };
+    accolades.forEach((a) => {
+      if (groups[a.type]) {
+        groups[a.type].push(a);
+      }
+    });
+    return groups;
+  }, [accolades]);
+
+  if (isLoading) {
+    return (
+      <Card className="p-6" data-testid="accolades-section">
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="p-6" data-testid="accolades-section">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-lg font-bold font-display text-white flex items-center gap-2">
+          <Trophy className="w-5 h-5 text-primary" /> Achievements & Accolades
+        </h3>
+        {isOwnProfile && (
+          <Button onClick={openAddDialog} className="gap-2" data-testid="button-add-accolade">
+            <Plus className="w-4 h-4" /> Add Accolade
+          </Button>
+        )}
+      </div>
+
+      {accolades.length === 0 ? (
+        <div className="text-center py-12">
+          <Trophy className="w-12 h-12 mx-auto text-muted-foreground/30 mb-4" />
+          <p className="text-muted-foreground mb-2">No accolades yet.</p>
+          {isOwnProfile && (
+            <p className="text-sm text-muted-foreground">
+              Add your championships, career highs, awards, and records to showcase your achievements.
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {Object.entries(ACCOLADE_TYPES).map(([type, config]) => {
+            const typeAccolades = groupedAccolades[type] || [];
+            if (typeAccolades.length === 0) return null;
+
+            const IconComponent = config.icon;
+            return (
+              <div key={type}>
+                <h4 className={cn("text-sm font-bold uppercase tracking-wider mb-3 flex items-center gap-2", config.color)}>
+                  <IconComponent className="w-4 h-4" /> {config.name}s
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {typeAccolades.map((accolade) => (
+                    <div
+                      key={accolade.id}
+                      className={cn(
+                        "p-4 rounded-xl border transition-colors group",
+                        config.bgColor,
+                        config.borderColor
+                      )}
+                      data-testid={`accolade-card-${accolade.id}`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <h5 className="font-bold text-white truncate">{accolade.title}</h5>
+                          {(accolade.season || accolade.dateEarned) && (
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {accolade.season && <span>{accolade.season}</span>}
+                              {accolade.season && accolade.dateEarned && <span className="mx-1">•</span>}
+                              {accolade.dateEarned && (
+                                <span>{format(new Date(accolade.dateEarned), 'MMM d, yyyy')}</span>
+                              )}
+                            </p>
+                          )}
+                          {accolade.description && (
+                            <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                              {accolade.description}
+                            </p>
+                          )}
+                        </div>
+                        {isOwnProfile && (
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => openEditDialog(accolade)}
+                              data-testid={`button-edit-accolade-${accolade.id}`}
+                            >
+                              <Pencil className="w-3 h-3" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="text-destructive"
+                                  data-testid={`button-delete-accolade-${accolade.id}`}
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent className="bg-card border-white/10 text-white">
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Accolade?</AlertDialogTitle>
+                                  <AlertDialogDescription className="text-muted-foreground">
+                                    This will permanently remove this accolade from your profile.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel className="bg-secondary text-white border-transparent">
+                                    Cancel
+                                  </AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDelete(accolade.id)}
+                                    className="bg-destructive text-destructive-foreground"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[425px] bg-card border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-display uppercase tracking-wide">
+              {editingId ? "Edit Accolade" : "Add Accolade"}
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              {editingId
+                ? "Update your achievement details."
+                : "Add a new achievement to your profile."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <Form {...accoladeForm}>
+            <form onSubmit={accoladeForm.handleSubmit(onSubmit)} className="space-y-4 pt-4">
+              <FormField
+                control={accoladeForm.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Type</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="bg-secondary/30 border-white/10 text-white" data-testid="select-accolade-type">
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-card border-white/10 text-white">
+                        <SelectItem value="championship">Championship</SelectItem>
+                        <SelectItem value="career_high">Career High</SelectItem>
+                        <SelectItem value="award">Award</SelectItem>
+                        <SelectItem value="record">Record</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={accoladeForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs uppercase font-bold text-muted-foreground tracking-wider">
+                      Title <span className="text-red-400">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        placeholder="e.g., State Championship, Career High: 45 Points"
+                        className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20"
+                        data-testid="input-accolade-title"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={accoladeForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        placeholder="Add details about this achievement..."
+                        rows={3}
+                        className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20 resize-none"
+                        data-testid="textarea-accolade-description"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={accoladeForm.control}
+                  name="season"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Season</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="e.g., 2024-25"
+                          className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20"
+                          data-testid="input-accolade-season"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={accoladeForm.control}
+                  name="dateEarned"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Date Earned</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="date"
+                          {...field}
+                          className="bg-secondary/30 border-white/10 text-white"
+                          data-testid="input-accolade-date"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <DialogFooter className="pt-4">
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} data-testid="button-cancel-accolade">
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={createAccolade.isPending || updateAccolade.isPending}
+                  data-testid="button-save-accolade"
+                >
+                  {createAccolade.isPending || updateAccolade.isPending
+                    ? "Saving..."
+                    : editingId
+                    ? "Save Changes"
+                    : "Add Accolade"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+    </Card>
   );
 }
 
@@ -575,14 +985,26 @@ export default function PlayerDetail() {
         </div>
       </Card>
 
-      {games.length > 0 && (
-        <PlayerArchetype 
-          games={games} 
-          position={player.position as "Guard" | "Wing" | "Big"}
-        />
-      )}
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="w-full md:w-auto">
+          <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
+          <TabsTrigger value="highlights" data-testid="tab-highlights">
+            <Film className="w-4 h-4 mr-2" /> Highlights
+          </TabsTrigger>
+          <TabsTrigger value="accolades" data-testid="tab-accolades">
+            <Trophy className="w-4 h-4 mr-2" /> Accolades
+          </TabsTrigger>
+        </TabsList>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <TabsContent value="overview" className="space-y-6">
+          {games.length > 0 && (
+            <PlayerArchetype 
+              games={games} 
+              position={player.position as "Guard" | "Wing" | "Big"}
+            />
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <PlayerProgression playerId={player.id} />
         
         <Card className="p-4">
@@ -618,7 +1040,19 @@ export default function PlayerDetail() {
         </Card>
       </div>
 
-      <SkillBadges playerId={player.id} />
+          <Collapsible defaultOpen={false}>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" className="w-full justify-between p-4 h-auto">
+                <span className="flex items-center gap-2 font-bold">
+                  <Medal className="w-5 h-5 text-primary" /> Skill Badges
+                </span>
+                <ChevronDown className="w-4 h-4" />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <SkillBadges playerId={player.id} />
+            </CollapsibleContent>
+          </Collapsible>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
@@ -1075,8 +1509,8 @@ export default function PlayerDetail() {
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel className="bg-secondary text-white hover:bg-secondary/80 border-transparent">Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => deleteGame(game.id)} className="bg-red-500 hover:bg-red-600 text-white font-bold">Delete</AlertDialogAction>
+                              <AlertDialogCancel className="bg-secondary text-white border-transparent">Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deleteGame(game.id)} className="bg-destructive text-destructive-foreground">Delete</AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
@@ -1102,6 +1536,16 @@ export default function PlayerDetail() {
         
         <TabsContent value="coach">
           <CoachToolsSection playerId={player.id} games={games} />
+        </TabsContent>
+      </Tabs>
+        </TabsContent>
+
+        <TabsContent value="highlights">
+          <HighlightsGallery playerId={player.id} />
+        </TabsContent>
+
+        <TabsContent value="accolades">
+          <AccoladesSection playerId={player.id} isOwnProfile={isOwnProfile} />
         </TabsContent>
       </Tabs>
 
