@@ -3,7 +3,6 @@ import { GoalsPanel } from "@/components/GoalsPanel";
 import { SocialEngagement } from "@/components/SocialEngagement";
 import { PlayerProgression } from "@/components/PlayerProgression";
 import { SkillBadges } from "@/components/SkillBadges";
-import { ShotChart } from "@/components/ShotChart";
 import { GameNotes } from "@/components/GameNotes";
 import { DrillRecommendations } from "@/components/DrillRecommendations";
 import { CoachGoals } from "@/components/CoachGoals";
@@ -25,7 +24,7 @@ import { useQuery } from "@tanstack/react-query";
 import { StatCard } from "@/components/StatCard";
 import { GradeBadge } from "@/components/GradeBadge";
 import { PlayerArchetype } from "@/components/PlayerArchetype";
-import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Crosshair, Trophy, Share2, BarChart3, Medal, User, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Trophy, Share2, BarChart3, Medal, User, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
@@ -90,7 +89,7 @@ const BADGE_ICONS: Record<string, any> = {
   clean_sheet: CheckCircle,
   hot_streak_3: Flame,
   hot_streak_5: Flame,
-  sharpshooter: Crosshair,
+  sharpshooter: Target,
 };
 
 const GRADE_VALUES: Record<string, number> = {
@@ -149,59 +148,44 @@ function CoachToolsSection({ playerId, games }: CoachToolsSectionProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="p-6">
           <h3 className="text-lg font-bold font-display text-white mb-4 flex items-center gap-2">
-            <Crosshair className="w-5 h-5 text-primary" /> Shot Chart
-          </h3>
-          {games.length > 0 ? (
-            <div className="space-y-4">
-              <Select
-                value={selectedGameId?.toString() || ""}
-                onValueChange={(val) => setSelectedGameId(parseInt(val))}
-              >
-                <SelectTrigger className="bg-secondary/30 border-white/10" data-testid="select-game-for-shot-chart">
-                  <SelectValue placeholder="Select a game" />
-                </SelectTrigger>
-                <SelectContent className="bg-card border-white/10">
-                  {games.map(game => (
-                    <SelectItem key={game.id} value={game.id.toString()}>
-                      vs {game.opponent} - {format(new Date(game.date), 'MMM dd, yyyy')}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {selectedGameId && <ShotChart gameId={selectedGameId} playerId={playerId} />}
-            </div>
-          ) : (
-            <div className="text-muted-foreground text-sm text-center py-8">
-              No games logged yet. Log a game to see shot chart data.
-            </div>
-          )}
-        </Card>
-
-        <Card className="p-6">
-          <h3 className="text-lg font-bold font-display text-white mb-4 flex items-center gap-2">
             <Target className="w-5 h-5 text-primary" /> Coach Goals
           </h3>
           <CoachGoals playerId={playerId} />
         </Card>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="p-6">
           <h3 className="text-lg font-bold font-display text-white mb-4 flex items-center gap-2">
             <Dumbbell className="w-5 h-5 text-primary" /> Drill Recommendations
           </h3>
           <DrillRecommendations playerId={playerId} />
         </Card>
+      </div>
 
-        {selectedGameId && (
-          <Card className="p-6">
-            <h3 className="text-lg font-bold font-display text-white mb-4 flex items-center gap-2">
+      {games.length > 0 && selectedGameId && (
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold font-display text-white flex items-center gap-2">
               <ClipboardList className="w-5 h-5 text-primary" /> Game Notes
             </h3>
-            <GameNotes gameId={selectedGameId} playerId={playerId} />
-          </Card>
-        )}
-      </div>
+            <Select
+              value={selectedGameId?.toString() || ""}
+              onValueChange={(val) => setSelectedGameId(parseInt(val))}
+            >
+              <SelectTrigger className="w-auto bg-secondary/30 border-white/10" data-testid="select-game-for-notes">
+                <SelectValue placeholder="Select a game" />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-white/10">
+                {games.map(game => (
+                  <SelectItem key={game.id} value={game.id.toString()}>
+                    vs {game.opponent} - {format(new Date(game.date), 'MMM dd, yyyy')}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <GameNotes gameId={selectedGameId} playerId={playerId} />
+        </Card>
+      )}
 
       <ImprovementReport playerId={playerId} />
 
@@ -1355,7 +1339,7 @@ export default function PlayerDetail() {
       </div>
 
       <Tabs defaultValue="trend" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 mb-4">
+        <TabsList className="grid w-full grid-cols-3 mb-4">
           <TabsTrigger value="trend" className="gap-2" data-testid="tab-performance-trend">
             <Activity className="w-4 h-4" /> Performance Trend
           </TabsTrigger>
@@ -1364,9 +1348,6 @@ export default function PlayerDetail() {
           </TabsTrigger>
           <TabsTrigger value="highlights" className="gap-2" data-testid="tab-highlights">
             <Film className="w-4 h-4" /> Highlights
-          </TabsTrigger>
-          <TabsTrigger value="coach" className="gap-2" data-testid="tab-coach-tools">
-            <Dumbbell className="w-4 h-4" /> Coach Tools
           </TabsTrigger>
         </TabsList>
         
@@ -1536,10 +1517,9 @@ export default function PlayerDetail() {
           </Card>
         </TabsContent>
         
-        <TabsContent value="coach">
-          <CoachToolsSection playerId={player.id} games={games} />
-        </TabsContent>
       </Tabs>
+
+      <CoachToolsSection playerId={player.id} games={games} />
         </TabsContent>
 
         <TabsContent value="highlights">

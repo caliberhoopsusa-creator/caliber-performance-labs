@@ -44,7 +44,6 @@ import Admin from "./pages/Admin";
 import WorkoutTracker from "./pages/WorkoutTracker";
 import LiveGameMode from "./pages/LiveGameMode";
 import ScheduleCalendar from "./pages/ScheduleCalendar";
-import ShotChartPage from "./pages/ShotChartPage";
 import HighlightClipsPage from "./pages/HighlightClipsPage";
 import ReelPage from "./pages/ReelPage";
 import TeamComparison from "./pages/TeamComparison";
@@ -169,7 +168,6 @@ function MainRouter() {
               <Route path="/workouts" component={WorkoutTracker} />
               <Route path="/live-game" component={LiveGameMode} />
               <Route path="/schedule" component={ScheduleCalendar} />
-              <Route path="/shot-chart" component={ShotChartPage} />
               <Route path="/highlights" component={HighlightClipsPage} />
               <Route path="/reels/:playerId" component={ReelPage} />
               <Route path="/team-comparison" component={TeamComparison} />

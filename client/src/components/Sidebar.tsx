@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, Gamepad2, CalendarDays, Crosshair, Film, FileText, ArrowLeftRight, UserPlus } from "lucide-react";
+import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, Gamepad2, CalendarDays, Film, FileText, ArrowLeftRight, UserPlus } from "lucide-react";
 import caliberLogo from "@assets/Gemini_Generated_Image_3ld7js3ld7js3ld7_(1)_1768700977754.png";
 import { cn } from "@/lib/utils";
 import { AlertsBadge } from "@/components/AlertsCenter";
@@ -64,7 +64,6 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         { href: "/workouts", label: "Workouts", icon: Dumbbell },
         { href: "/schedule", label: "Schedule", icon: CalendarDays },
         { href: "/video", label: "Video Analysis", icon: Video },
-        { href: "/shot-chart", label: "Shot Chart", icon: Crosshair },
         { href: "/highlights", label: "Highlights", icon: Film },
       ],
     },
@@ -111,7 +110,6 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
         { href: "/compare", label: "Head-to-Head", icon: Activity },
         { href: "/video", label: "Video Analysis", icon: Video },
-        { href: "/shot-chart", label: "Shot Chart", icon: Crosshair },
         { href: "/highlights", label: "Highlights", icon: Film },
         { href: "/grading", label: "Grading System", icon: Calculator },
         { href: "/scout", label: "Scout Mode", icon: Eye, premium: "pro" },
