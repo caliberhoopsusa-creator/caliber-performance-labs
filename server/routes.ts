@@ -2615,6 +2615,10 @@ Respond in this exact JSON format:
       const createPostSchema = z.object({
         sessionId: z.string().min(1),
         content: z.string().min(1),
+        postType: z.enum(['announcement', 'practice', 'chat', 'general']).optional().default('general'),
+        practiceTime: z.string().optional(),
+        practiceLocation: z.string().optional(),
+        isPinned: z.boolean().optional().default(false),
       });
       const input = createPostSchema.parse(req.body);
       
@@ -2629,10 +2633,19 @@ Respond in this exact JSON format:
         return res.status(403).json({ message: 'You must be a member to post' });
       }
 
+      // Only coaches can pin posts or create announcements
+      if ((input.isPinned || input.postType === 'announcement') && member.role !== 'coach') {
+        return res.status(403).json({ message: 'Only coaches can pin posts or create announcements' });
+      }
+
       const post = await storage.createTeamPost({
         teamId,
         authorId: member.id,
         content: input.content,
+        postType: input.postType,
+        practiceTime: input.practiceTime ? new Date(input.practiceTime) : null,
+        practiceLocation: input.practiceLocation || null,
+        isPinned: input.isPinned,
       });
 
       res.status(201).json({ ...post, authorName: member.displayName });
@@ -2642,6 +2655,84 @@ Respond in this exact JSON format:
       }
       console.error('Create team post error:', err);
       res.status(500).json({ message: 'Error creating post' });
+    }
+  });
+
+  // Team post comments
+  app.get('/api/teams/:teamId/posts/:postId/comments', async (req, res) => {
+    try {
+      const postId = Number(req.params.postId);
+      const comments = await storage.getTeamPostComments(postId);
+      res.json(comments);
+    } catch (err) {
+      console.error('Get team post comments error:', err);
+      res.status(500).json({ message: 'Error fetching comments' });
+    }
+  });
+
+  app.post('/api/teams/:teamId/posts/:postId/comments', isAuthenticated, async (req, res) => {
+    try {
+      const createCommentSchema = z.object({
+        sessionId: z.string().min(1),
+        content: z.string().min(1),
+      });
+      const input = createCommentSchema.parse(req.body);
+      
+      const teamId = Number(req.params.teamId);
+      const postId = Number(req.params.postId);
+
+      const member = await storage.getTeamMember(teamId, input.sessionId);
+      if (!member) {
+        return res.status(403).json({ message: 'You must be a team member to comment' });
+      }
+
+      const comment = await storage.createTeamPostComment({
+        postId,
+        authorId: member.id,
+        content: input.content,
+      });
+
+      res.status(201).json({ ...comment, authorName: member.displayName });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      console.error('Create team post comment error:', err);
+      res.status(500).json({ message: 'Error creating comment' });
+    }
+  });
+
+  app.delete('/api/teams/:teamId/posts/:postId', isAuthenticated, async (req, res) => {
+    try {
+      const sessionId = req.query.sessionId as string;
+      if (!sessionId) {
+        return res.status(400).json({ message: 'SessionId is required' });
+      }
+
+      const teamId = Number(req.params.teamId);
+      const postId = Number(req.params.postId);
+
+      const member = await storage.getTeamMember(teamId, sessionId);
+      if (!member) {
+        return res.status(403).json({ message: 'You must be a team member' });
+      }
+
+      // Only coaches or post authors can delete posts
+      const posts = await storage.getTeamPosts(teamId);
+      const post = posts.find(p => p.id === postId);
+      if (!post) {
+        return res.status(404).json({ message: 'Post not found' });
+      }
+
+      if (post.authorId !== member.id && member.role !== 'coach') {
+        return res.status(403).json({ message: 'You can only delete your own posts' });
+      }
+
+      await storage.deleteTeamPost(postId);
+      res.status(204).send();
+    } catch (err) {
+      console.error('Delete team post error:', err);
+      res.status(500).json({ message: 'Error deleting post' });
     }
   });
 
