@@ -183,7 +183,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
                     isActive 
                       ? "bg-primary text-primary-foreground shadow-md shadow-primary/20" 
                       : isFeatured
-                      ? "text-primary bg-primary/10 border border-primary/30 hover:bg-primary/20 animate-pulse"
+                      ? "text-primary bg-primary/10 border border-primary/30 hover:bg-primary/20"
                       : needsUpgrade
                       ? "text-amber-400 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 hover:from-amber-500/20 hover:to-orange-500/20"
                       : "text-muted-foreground hover:bg-white/5 hover:text-white"
@@ -265,12 +265,7 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
                 className="flex flex-col items-center gap-0.5 min-w-[48px] min-h-[44px] justify-center" 
                 data-testid={`mobile-nav-${item.label.toLowerCase()}`}
               >
-                <div className={cn(
-                  "rounded-full p-2 -mt-5 shadow-lg border-2 border-background transition-all",
-                  isActive 
-                    ? "bg-primary text-primary-foreground" 
-                    : "bg-primary text-primary-foreground animate-pulse"
-                )}>
+                <div className="rounded-full p-2 -mt-5 shadow-lg border-2 border-background transition-all bg-primary text-primary-foreground">
                   <Icon className="w-5 h-5" />
                 </div>
                 <span className={cn(
