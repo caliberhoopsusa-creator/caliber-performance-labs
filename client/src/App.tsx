@@ -130,9 +130,9 @@ function MainRouter() {
       <OnboardingTour />
       <SyncHandler />
       <OfflineBanner />
-      <div className="flex min-h-screen bg-background text-foreground font-body selection:bg-primary/30">
+      <div className="flex min-h-screen w-full max-w-full overflow-x-hidden bg-background text-foreground font-body selection:bg-primary/30">
         <Sidebar userRole={extendedUser.role} playerId={extendedUser.playerId} />
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-w-0">
           <header className="flex items-center justify-between gap-4 p-4 md:px-8 border-b border-white/5">
             <MobileDrawer userRole={extendedUser.role} playerId={extendedUser.playerId} />
             <div className="flex items-center gap-3">
