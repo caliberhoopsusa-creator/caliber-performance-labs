@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, Gamepad2, CalendarDays, Crosshair, Film, FileText, ArrowLeftRight } from "lucide-react";
+import caliberLogo from "@assets/Gemini_Generated_Image_3ld7js3ld7js3ld7_(1)_1768700977754.png";
 import { cn } from "@/lib/utils";
 import { AlertsBadge } from "@/components/AlertsCenter";
 import { Button } from "@/components/ui/button";
@@ -142,9 +143,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
   return (
     <div className="hidden md:flex flex-col w-64 bg-card border-r border-border h-screen sticky top-0 overflow-y-auto">
       <div className="p-6 flex items-center gap-3 border-b border-border/50">
-        <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20">
-          <Activity className="w-6 h-6" />
-        </div>
+        <img src={caliberLogo} alt="Caliber Logo" className="h-10 w-10 rounded-xl shadow-lg shadow-primary/20 object-contain" />
         <div className="flex-1">
           <h1 className="text-2xl font-bold font-display text-white tracking-wider uppercase">CALIBER</h1>
           <button 

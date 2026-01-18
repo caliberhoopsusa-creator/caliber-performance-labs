@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Activity, Trophy, Video, BarChart3, Users, Target, Sparkles, Star, ArrowRight } from "lucide-react";
+import caliberLogo from "@assets/Gemini_Generated_Image_3ld7js3ld7js3ld7_(1)_1768700977754.png";
 
 export default function Landing() {
   return (
@@ -8,9 +9,7 @@ export default function Landing() {
       <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-background/70 border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-orange-600 flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/30">
-              <Activity className="w-6 h-6" />
-            </div>
+            <img src={caliberLogo} alt="Caliber Logo" className="h-10 w-10 rounded-xl shadow-lg shadow-primary/30 object-contain" />
             <div>
               <h1 className="text-2xl font-bold font-display text-white tracking-wider uppercase">CALIBER</h1>
             </div>
