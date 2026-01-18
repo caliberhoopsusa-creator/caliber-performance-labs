@@ -2,6 +2,7 @@ import { usePlayer, useDeleteGame, usePlayerBadges, useUpdatePlayer, usePlayerPr
 import { GoalsPanel } from "@/components/GoalsPanel";
 import { SocialEngagement } from "@/components/SocialEngagement";
 import { PlayerProgression } from "@/components/PlayerProgression";
+import { ProfileWidgets } from "@/components/ProfileWidgets";
 import { SkillBadges } from "@/components/SkillBadges";
 import { GameNotes } from "@/components/GameNotes";
 import { DrillRecommendations } from "@/components/DrillRecommendations";
@@ -712,6 +713,26 @@ export default function PlayerDetail() {
     );
   };
 
+  const handleWidgetsChange = (widgets: string[]) => {
+    updatePlayer(
+      { id, updates: { widgetPreferences: JSON.stringify(widgets) } },
+      {
+        onSuccess: () => {
+          toast({ title: "Widgets saved", description: "Your widget preferences have been updated." });
+        },
+      }
+    );
+  };
+
+  const widgetPreferences = useMemo(() => {
+    if (!player?.widgetPreferences) return null;
+    try {
+      return JSON.parse(player.widgetPreferences);
+    } catch {
+      return null;
+    }
+  }, [player?.widgetPreferences]);
+
   const handlePhotoUpload = async (file: { name: string; type: string }) => {
     const res = await fetch("/api/object-storage/put-presigned-url", {
       method: "POST",
@@ -991,6 +1012,13 @@ export default function PlayerDetail() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
+          <ProfileWidgets
+            games={games}
+            selectedWidgets={widgetPreferences}
+            onWidgetsChange={handleWidgetsChange}
+            isOwnProfile={isOwnProfile}
+          />
+
           {games.length > 0 && (
             <PlayerArchetype 
               games={games} 

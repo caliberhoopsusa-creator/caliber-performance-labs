@@ -27,16 +27,20 @@ const DEFAULT_WIDGETS = ["trends", "averages", "radar"];
 
 interface ProfileWidgetsProps {
   games: Game[];
-  selectedWidgets: string[];
+  selectedWidgets: string[] | null;
   onWidgetsChange: (widgets: string[]) => void;
   isOwnProfile: boolean;
 }
 
 export function ProfileWidgets({ games, selectedWidgets, onWidgetsChange, isOwnProfile }: ProfileWidgetsProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [tempWidgets, setTempWidgets] = useState<string[]>(selectedWidgets);
+  const [tempWidgets, setTempWidgets] = useState<string[]>([]);
 
-  const widgets = selectedWidgets.length > 0 ? selectedWidgets : DEFAULT_WIDGETS;
+  const sortedGames = useMemo(() => {
+    return [...games].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [games]);
+
+  const widgets = selectedWidgets === null ? DEFAULT_WIDGETS : selectedWidgets;
 
   const handleToggleWidget = (widgetId: string) => {
     setTempWidgets(prev => 
@@ -52,16 +56,61 @@ export function ProfileWidgets({ games, selectedWidgets, onWidgetsChange, isOwnP
   };
 
   const openSettings = () => {
-    setTempWidgets(widgets);
+    setTempWidgets([...widgets]);
     setIsSettingsOpen(true);
   };
 
-  if (games.length === 0) {
+  if (sortedGames.length === 0) {
     return (
       <Card className="p-6 text-center">
         <p className="text-muted-foreground">Log some games to see your performance widgets</p>
       </Card>
     );
+  }
+
+  const settingsDialog = (
+    <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Customize Your Widgets</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          {AVAILABLE_WIDGETS.map((widget) => (
+            <div key={widget.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30" data-testid={`widget-toggle-${widget.id}`}>
+              <div className="flex items-center gap-3">
+                <widget.icon className="w-5 h-5 text-primary" />
+                <div>
+                  <p className="font-medium text-white">{widget.label}</p>
+                  <p className="text-xs text-muted-foreground">{widget.description}</p>
+                </div>
+              </div>
+              <Switch
+                checked={tempWidgets.includes(widget.id)}
+                onCheckedChange={() => handleToggleWidget(widget.id)}
+                data-testid={`switch-widget-${widget.id}`}
+              />
+            </div>
+          ))}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setIsSettingsOpen(false)}>Cancel</Button>
+          <Button onClick={handleSave} data-testid="button-save-widgets">Save Changes</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+
+  if (widgets.length === 0) {
+    return isOwnProfile ? (
+      <>
+        <div className="flex justify-center">
+          <Button variant="outline" size="sm" onClick={openSettings} className="gap-2" data-testid="button-customize-widgets">
+            <Settings2 className="w-4 h-4" /> Add Widgets
+          </Button>
+        </div>
+        {settingsDialog}
+      </>
+    ) : null;
   }
 
   return (
@@ -75,42 +124,14 @@ export function ProfileWidgets({ games, selectedWidgets, onWidgetsChange, isOwnP
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {widgets.includes("trends") && <TrendsWidget games={games} />}
-        {widgets.includes("grades") && <GradesWidget games={games} />}
-        {widgets.includes("radar") && <RadarWidget games={games} />}
-        {widgets.includes("averages") && <AveragesWidget games={games} />}
-        {widgets.includes("shooting") && <ShootingWidget games={games} />}
+        {widgets.includes("trends") && <TrendsWidget games={sortedGames} />}
+        {widgets.includes("grades") && <GradesWidget games={sortedGames} />}
+        {widgets.includes("radar") && <RadarWidget games={sortedGames} />}
+        {widgets.includes("averages") && <AveragesWidget games={sortedGames} />}
+        {widgets.includes("shooting") && <ShootingWidget games={sortedGames} />}
       </div>
 
-      <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Customize Your Widgets</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            {AVAILABLE_WIDGETS.map((widget) => (
-              <div key={widget.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30" data-testid={`widget-toggle-${widget.id}`}>
-                <div className="flex items-center gap-3">
-                  <widget.icon className="w-5 h-5 text-primary" />
-                  <div>
-                    <p className="font-medium text-white">{widget.label}</p>
-                    <p className="text-xs text-muted-foreground">{widget.description}</p>
-                  </div>
-                </div>
-                <Switch
-                  checked={tempWidgets.includes(widget.id)}
-                  onCheckedChange={() => handleToggleWidget(widget.id)}
-                  data-testid={`switch-widget-${widget.id}`}
-                />
-              </div>
-            ))}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsSettingsOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave} data-testid="button-save-widgets">Save Changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {settingsDialog}
     </div>
   );
 }

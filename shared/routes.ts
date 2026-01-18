@@ -71,6 +71,7 @@ export const api = {
         state: z.string().optional(),
         school: z.string().optional(),
         graduationYear: z.number().optional(),
+        widgetPreferences: z.string().optional(),
       }),
       responses: {
         200: z.custom<typeof players.$inferSelect>(),

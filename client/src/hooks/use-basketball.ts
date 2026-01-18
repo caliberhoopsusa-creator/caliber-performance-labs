@@ -81,6 +81,7 @@ export type PlayerUpdate = {
   state?: string;
   school?: string;
   graduationYear?: number;
+  widgetPreferences?: string;
 };
 
 export function useUpdatePlayer() {
