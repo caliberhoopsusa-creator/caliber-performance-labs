@@ -7,6 +7,8 @@ import { Sidebar, MobileNav } from "@/components/Sidebar";
 import { MobileDrawer } from "@/components/MobileDrawer";
 import { NotificationBell } from "@/components/NotificationBell";
 import { OfflineBanner, OfflineIndicator } from "@/components/OfflineBanner";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { OnboardingTour } from "@/components/OnboardingTour";
 import { useAuth } from "@/hooks/use-auth";
 import { useOffline } from "@/hooks/use-offline";
 import { useToast } from "@/hooks/use-toast";
@@ -125,6 +127,7 @@ function MainRouter() {
   // Fully authenticated with role - show main app
   return (
     <>
+      <OnboardingTour />
       <SyncHandler />
       <OfflineBanner />
       <div className="flex min-h-screen bg-background text-foreground font-body selection:bg-primary/30">
@@ -180,17 +183,19 @@ function MainRouter() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Switch>
-          <Route path="/admin" component={Admin} />
-          <Route>
-            <MainRouter />
-          </Route>
-        </Switch>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Switch>
+            <Route path="/admin" component={Admin} />
+            <Route>
+              <MainRouter />
+            </Route>
+          </Switch>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
