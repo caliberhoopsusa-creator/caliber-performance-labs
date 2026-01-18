@@ -205,17 +205,17 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
   const isPlayer = userRole === 'player';
   
   const navItems = isPlayer ? [
-    { href: "/", icon: LayoutDashboard, label: "Home" },
+    { href: playerId ? `/players/${playerId}` : "/", icon: UserCircle, label: "Profile" },
     { href: "/analyze", icon: PlusCircle, label: "Log", featured: true },
-    { href: "/schedule", icon: CalendarDays, label: "Schedule" },
+    { href: "/social-hub", icon: UsersRound, label: "Social" },
+    { href: "/teams", icon: MessageSquare, label: "Teams" },
     { href: "/leaderboard", icon: Trophy, label: "Rank" },
-    { href: playerId ? `/players/${playerId}` : "/", icon: UserCircle, label: "Me" },
   ] : [
     { href: "/", icon: LayoutDashboard, label: "Home" },
-    { href: "/players", icon: Users, label: "Roster" },
     { href: "/analyze", icon: PlusCircle, label: "Log", featured: true },
-    { href: "/schedule", icon: CalendarDays, label: "Schedule" },
-    { href: "/leaderboard", icon: Trophy, label: "Rank" },
+    { href: "/coach/hub", icon: ClipboardList, label: "Hub" },
+    { href: "/social-hub", icon: UsersRound, label: "Social" },
+    { href: "/players", icon: Users, label: "Roster" },
   ];
   
   return (
