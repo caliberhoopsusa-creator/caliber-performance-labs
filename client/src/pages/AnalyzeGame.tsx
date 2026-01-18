@@ -17,6 +17,7 @@ import { GradeBadge } from "@/components/GradeBadge";
 import { Link } from "wouter";
 import { ShareModal } from "@/components/ShareModal";
 import { ShareableGameCard } from "@/components/ShareableCard";
+import { HighlightUploader } from "@/components/HighlightUploader";
 
 export default function AnalyzeGame() {
   const [location, setLocation] = useLocation();
@@ -540,6 +541,8 @@ function ReportCardView({ game, onReset }: { game: any, onReset: () => void }) {
             <Share2 className="w-4 h-4" />
             Share Your Achievement
           </Button>
+
+          <HighlightUploader gameId={game.id} playerId={game.playerId} />
 
           <div className="flex gap-4 pt-2">
             <Button onClick={onReset} variant="outline" className="flex-1 border-white/10 hover:bg-white/5 text-white">
