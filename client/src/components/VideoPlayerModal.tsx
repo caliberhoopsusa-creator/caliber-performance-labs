@@ -64,7 +64,7 @@ export function VideoPlayerModal({ clip, isOpen, onClose }: VideoPlayerModalProp
               controls
               autoPlay
               className="w-full h-full"
-              data-testid="video-player"
+              data-testid={`highlight-video-${clip.id}`}
             >
               Your browser does not support the video tag.
             </video>

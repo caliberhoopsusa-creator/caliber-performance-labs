@@ -18,13 +18,14 @@ import { ShareModal } from "@/components/ShareModal";
 import { ShareablePlayerCard } from "@/components/ShareablePlayerCard";
 import { ShareableGameCard } from "@/components/ShareableGameCard";
 import { ShareableBadgeCard } from "@/components/ShareableBadgeCard";
+import { HighlightsGallery } from "@/components/HighlightsGallery";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoute, Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { StatCard } from "@/components/StatCard";
 import { GradeBadge } from "@/components/GradeBadge";
 import { PlayerArchetype } from "@/components/PlayerArchetype";
-import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Crosshair, Trophy, Share2, BarChart3, Medal, User, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Crosshair, Trophy, Share2, BarChart3, Medal, User, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -912,12 +913,15 @@ export default function PlayerDetail() {
       </div>
 
       <Tabs defaultValue="trend" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-4">
+        <TabsList className="grid w-full grid-cols-4 mb-4">
           <TabsTrigger value="trend" className="gap-2" data-testid="tab-performance-trend">
             <Activity className="w-4 h-4" /> Performance Trend
           </TabsTrigger>
           <TabsTrigger value="history" className="gap-2" data-testid="tab-game-history">
             <ClipboardList className="w-4 h-4" /> Game History
+          </TabsTrigger>
+          <TabsTrigger value="highlights" className="gap-2" data-testid="tab-highlights">
+            <Film className="w-4 h-4" /> Highlights
           </TabsTrigger>
           <TabsTrigger value="coach" className="gap-2" data-testid="tab-coach-tools">
             <Dumbbell className="w-4 h-4" /> Coach Tools
@@ -1076,6 +1080,17 @@ export default function PlayerDetail() {
                 ))
               )}
             </div>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="highlights">
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold font-display text-white flex items-center gap-2">
+                <Film className="w-5 h-5 text-primary" /> Highlights
+              </h3>
+            </div>
+            <HighlightsGallery playerId={player.id} />
           </Card>
         </TabsContent>
         
@@ -1309,7 +1324,7 @@ export default function PlayerDetail() {
           <ShareableGameCard
             game={selectedShareGame}
             playerName={player.name}
-            badges={badges.filter(b => b.gameId === selectedShareGame.id)}
+            badges={badges.filter((b: Badge) => b.gameId === selectedShareGame.id)}
             aspectRatio="16:9"
           />
         </ShareModal>
