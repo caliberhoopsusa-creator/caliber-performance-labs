@@ -74,6 +74,11 @@ export type PlayerUpdate = {
   photoUrl?: string;
   bannerUrl?: string;
   bio?: string;
+  openToOpportunities?: boolean;
+  city?: string;
+  state?: string;
+  school?: string;
+  graduationYear?: number;
 };
 
 export function useUpdatePlayer() {

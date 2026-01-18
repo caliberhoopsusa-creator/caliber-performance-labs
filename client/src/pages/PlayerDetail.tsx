@@ -25,7 +25,8 @@ import { useQuery } from "@tanstack/react-query";
 import { StatCard } from "@/components/StatCard";
 import { GradeBadge } from "@/components/GradeBadge";
 import { PlayerArchetype } from "@/components/PlayerArchetype";
-import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Crosshair, Trophy, Share2, BarChart3, Medal, User, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Crosshair, Trophy, Share2, BarChart3, Medal, User, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -286,6 +287,11 @@ export default function PlayerDetail() {
         photoUrl: player.photoUrl || "",
         bannerUrl: player.bannerUrl || "",
         bio: player.bio || "",
+        openToOpportunities: player.openToOpportunities || false,
+        city: player.city || "",
+        state: player.state || "",
+        school: player.school || "",
+        graduationYear: player.graduationYear || undefined,
       });
     }
   }, [player, isEditDialogOpen]);
@@ -1216,6 +1222,88 @@ export default function PlayerDetail() {
                   className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20 resize-none"
                   data-testid="textarea-edit-bio"
                 />
+              </div>
+
+              <div className="pt-4 border-t border-white/10">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Eye className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-bold text-white">Recruiting Visibility</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">Open to Opportunities</span>
+                    <Switch
+                      checked={editForm.openToOpportunities || false}
+                      onCheckedChange={(checked) => setEditForm((prev) => ({ ...prev, openToOpportunities: checked }))}
+                      data-testid="switch-open-to-opportunities"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mb-4">
+                  When enabled, your profile will appear in the Discover directory where coaches and scouts can find you.
+                </p>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider flex items-center gap-1">
+                      <GraduationCap className="w-3 h-3" /> School
+                    </label>
+                    <Input
+                      value={editForm.school || ""}
+                      onChange={(e) => setEditForm((prev) => ({ ...prev, school: e.target.value }))}
+                      placeholder="Lincoln High"
+                      className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20"
+                      data-testid="input-edit-school"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Class Year</label>
+                    <Select
+                      value={editForm.graduationYear?.toString() || ""}
+                      onValueChange={(val) => setEditForm((prev) => ({ ...prev, graduationYear: val ? Number(val) : undefined }))}
+                    >
+                      <SelectTrigger className="bg-secondary/30 border-white/10 text-white" data-testid="select-edit-graduation-year">
+                        <SelectValue placeholder="Year" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card border-white/10 text-white">
+                        {[2024, 2025, 2026, 2027, 2028, 2029, 2030].map((year) => (
+                          <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider flex items-center gap-1">
+                      <MapPin className="w-3 h-3" /> City
+                    </label>
+                    <Input
+                      value={editForm.city || ""}
+                      onChange={(e) => setEditForm((prev) => ({ ...prev, city: e.target.value }))}
+                      placeholder="Los Angeles"
+                      className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20"
+                      data-testid="input-edit-city"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">State</label>
+                    <Select
+                      value={editForm.state || ""}
+                      onValueChange={(val) => setEditForm((prev) => ({ ...prev, state: val }))}
+                    >
+                      <SelectTrigger className="bg-secondary/30 border-white/10 text-white" data-testid="select-edit-state">
+                        <SelectValue placeholder="State" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card border-white/10 text-white max-h-60">
+                        {["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"].map((st) => (
+                          <SelectItem key={st} value={st}>{st}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-2">
