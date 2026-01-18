@@ -64,35 +64,21 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
 
   const playerSections: NavSection[] = [
     {
-      title: "My Profile",
+      title: "My Game",
       items: [
         { href: playerId ? `/players/${playerId}` : "/", label: "My Stats", icon: UserCircle },
         { href: "/analyze", label: "Log Game", icon: PlusCircle },
-        { href: "/workouts", label: "Workouts", icon: Dumbbell },
         { href: "/schedule", label: "Schedule", icon: CalendarDays },
-        { href: "/video", label: "Video Analysis", icon: Video },
-        { href: "/highlights", label: "Highlights", icon: Film },
+        { href: "/workouts", label: "Workouts", icon: Dumbbell },
       ],
     },
     {
-      title: "Discover",
+      title: "Explore",
       items: [
-        { href: "/discover", label: "Find Players", icon: Binoculars, featured: true },
+        { href: "/discover", label: "Find Players", icon: Binoculars },
         { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
-        { href: "/compare", label: "Head-to-Head", icon: Activity },
-        { href: "/grading", label: "Grading System", icon: Calculator },
-        { href: "/pricing", label: "Pricing", icon: CreditCard },
-      ],
-    },
-    {
-      title: "Community",
-      items: [
-        { href: "/feed", label: "Newsfeed", icon: Rss },
-        { href: "/social", label: "Social Hub", icon: UserPlus },
         { href: "/stories", label: "Stories", icon: Camera },
-        { href: "/teams", label: "Teams", icon: MessageSquare },
-        { href: "/community", label: "Highlights", icon: BarChart3 },
-        { href: "/challenges", label: "Challenges", icon: Target, premium: "pro" },
+        { href: "/teams", label: "Teams", icon: Users },
       ],
     },
   ];
@@ -103,45 +89,25 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
       items: [
         { href: "/", label: "Dashboard", icon: LayoutDashboard },
         { href: "/players", label: "Players", icon: Users },
-        { href: "/analyze", label: "New Analysis", icon: PlusCircle },
-        { href: "/workouts", label: "Workouts", icon: Dumbbell },
+        { href: "/analyze", label: "Log Game", icon: PlusCircle },
         { href: "/schedule", label: "Schedule", icon: CalendarDays },
-        { href: "/pricing", label: "Pricing", icon: CreditCard },
       ],
     },
     {
-      title: "Player Tools",
+      title: "Explore",
       items: [
-        { href: "/discover", label: "Find Players", icon: Binoculars, featured: true },
+        { href: "/discover", label: "Find Players", icon: Binoculars },
         { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
-        { href: "/compare", label: "Head-to-Head", icon: Activity },
-        { href: "/video", label: "Video Analysis", icon: Video },
-        { href: "/highlights", label: "Highlights", icon: Film },
-        { href: "/grading", label: "Grading System", icon: Calculator },
-      ],
-    },
-    {
-      title: "Community",
-      items: [
-        { href: "/feed", label: "Newsfeed", icon: Rss },
-        { href: "/social", label: "Social Hub", icon: UserPlus },
         { href: "/stories", label: "Stories", icon: Camera },
         { href: "/teams", label: "Teams", icon: MessageSquare },
-        { href: "/community", label: "Highlights", icon: BarChart3 },
-        { href: "/challenges", label: "Challenges", icon: Target, premium: "pro" },
       ],
     },
     {
       title: "Coach Tools",
       items: [
-        { href: "/coach/hub", label: "Team Hub", icon: CalendarDays, premium: "coach_pro" },
-        { href: "/coach/dashboard", label: "Team Dashboard", icon: ClipboardList, premium: "coach_pro" },
-        { href: "/coach/lineups", label: "Lineup Analysis", icon: UsersRound, premium: "coach_pro" },
-        { href: "/coach/practices", label: "Practice Tracker", icon: CalendarCheck, premium: "coach_pro" },
-        { href: "/coach/scouting", label: "Opponent Scouting", icon: Eye, premium: "coach_pro" },
-        { href: "/coach/alerts", label: "Trend Alerts", icon: Activity, premium: "coach_pro" },
-        { href: "/report-card", label: "Report Cards", icon: FileText, premium: "pro" },
-        { href: "/team-comparison", label: "Team Comparison", icon: ArrowLeftRight, premium: "coach_pro" },
+        { href: "/coach/hub", label: "Team Hub", icon: ClipboardList, premium: "coach_pro" },
+        { href: "/coach/practices", label: "Practices", icon: CalendarCheck, premium: "coach_pro" },
+        { href: "/report-card", label: "Report Cards", icon: FileText },
       ],
     },
   ];
