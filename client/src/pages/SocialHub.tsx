@@ -6,9 +6,14 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { FollowButton } from "@/components/FollowButton";
-import { Search, Users, UserPlus, Activity, Target, Award, Flame } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Search, Users, UserPlus, Activity, Target, Award, Flame, 
+  TrendingUp, Medal, Zap, Clock, BarChart2, Star, MessageCircle
+} from "lucide-react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
+import { formatDistanceToNow } from "date-fns";
 
 interface Player {
   id: number;
@@ -33,11 +38,33 @@ interface PlayerWithStats extends Player {
   };
 }
 
+interface FeedActivity {
+  id: number;
+  activityType: string;
+  playerId: number | null;
+  gameId: number | null;
+  badgeId: number | null;
+  relatedId: number | null;
+  headline: string;
+  subtext: string | null;
+  createdAt: string;
+  playerName?: string;
+}
+
 const ACTIVITY_ICONS: Record<string, typeof Target> = {
   game: Target,
   badge: Award,
   streak: Flame,
+  story: MessageCircle,
   default: Activity,
+};
+
+const ACTIVITY_COLORS: Record<string, string> = {
+  game: "from-green-500/20 to-transparent",
+  badge: "from-yellow-500/20 to-transparent",
+  streak: "from-orange-500/20 to-transparent",
+  story: "from-blue-500/20 to-transparent",
+  default: "from-primary/20 to-transparent",
 };
 
 function PlayerSkeleton() {
@@ -51,6 +78,100 @@ function PlayerSkeleton() {
           <Skeleton className="h-3 w-20" />
         </div>
         <Skeleton className="h-9 w-24" />
+      </div>
+    </Card>
+  );
+}
+
+function FeedSkeleton() {
+  return (
+    <Card className="p-4" data-testid="skeleton-feed">
+      <div className="flex gap-3">
+        <Skeleton className="w-10 h-10 rounded-full shrink-0" />
+        <div className="flex-1 space-y-2">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-5 w-full" />
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-3 w-16 mt-2" />
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function FeedActivityCard({ activity }: { activity: FeedActivity }) {
+  const Icon = ACTIVITY_ICONS[activity.activityType] || ACTIVITY_ICONS.default;
+  const gradientColor = ACTIVITY_COLORS[activity.activityType] || ACTIVITY_COLORS.default;
+  
+  const initials = activity.playerName
+    ?.split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2) || "?";
+
+  const getActivityLabel = (type: string) => {
+    switch (type) {
+      case 'game': return 'Game Stats';
+      case 'badge': return 'New Badge';
+      case 'streak': return 'Streak';
+      case 'story': return 'Story';
+      case 'goal': return 'Goal';
+      case 'challenge': return 'Challenge';
+      default: return 'Activity';
+    }
+  };
+
+  return (
+    <Card
+      className="p-4 relative overflow-hidden transition-all duration-300 hover-elevate group"
+      data-testid={`feed-activity-${activity.id}`}
+    >
+      <div className={cn("absolute inset-0 bg-gradient-to-br opacity-50", gradientColor)} />
+      
+      <div className="relative z-10 flex gap-3">
+        {activity.playerId && (
+          <Link href={`/players/${activity.playerId}`}>
+            <Avatar className="w-10 h-10 border-2 border-white/10 cursor-pointer hover:border-primary/50 transition-colors shrink-0">
+              <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary text-white font-display font-bold text-sm">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+          </Link>
+        )}
+        
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            {activity.playerName && activity.playerId && (
+              <Link href={`/players/${activity.playerId}`}>
+                <span className="text-sm font-semibold text-white hover:text-primary transition-colors cursor-pointer">
+                  {activity.playerName}
+                </span>
+              </Link>
+            )}
+            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+              <Icon className="w-3 h-3 mr-1" />
+              {getActivityLabel(activity.activityType)}
+            </Badge>
+          </div>
+          
+          <p className="text-white font-medium text-sm leading-snug mb-1">
+            {activity.headline}
+          </p>
+          
+          {activity.subtext && (
+            <p className="text-muted-foreground text-xs leading-relaxed">
+              {activity.subtext}
+            </p>
+          )}
+          
+          <div className="flex items-center gap-2 mt-2">
+            <Clock className="w-3 h-3 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">
+              {formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true })}
+            </span>
+          </div>
+        </div>
       </div>
     </Card>
   );
@@ -141,7 +262,56 @@ function PlayerCard({ player }: { player: PlayerWithStats }) {
   );
 }
 
-export default function SocialHub() {
+function FeedTab() {
+  const { data: feedActivities, isLoading, error } = useQuery<FeedActivity[]>({
+    queryKey: ["/api/feed/following"],
+  });
+
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        <FeedSkeleton />
+        <FeedSkeleton />
+        <FeedSkeleton />
+        <FeedSkeleton />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="p-8 text-center" data-testid="error-container">
+        <p className="text-muted-foreground">Failed to load feed</p>
+      </Card>
+    );
+  }
+
+  if (!feedActivities || feedActivities.length === 0) {
+    return (
+      <Card className="p-8 text-center" data-testid="empty-feed-container">
+        <div className="flex flex-col items-center gap-3">
+          <TrendingUp className="w-12 h-12 text-muted-foreground/50" />
+          <div>
+            <p className="text-white font-medium mb-1">No updates yet</p>
+            <p className="text-sm text-muted-foreground">
+              Follow players to see their game stats, badges, and stories here
+            </p>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-3" data-testid="container-feed">
+      {feedActivities.map((activity) => (
+        <FeedActivityCard key={activity.id} activity={activity} />
+      ))}
+    </div>
+  );
+}
+
+function DiscoverTab() {
   const [search, setSearch] = useState("");
 
   const { data: players, isLoading, error } = useQuery<Player[]>({
@@ -156,19 +326,7 @@ export default function SocialHub() {
   );
 
   return (
-    <div
-      className="space-y-6 animate-in fade-in duration-500"
-      data-testid="page-social-hub"
-    >
-      <div>
-        <h2 className="text-3xl md:text-4xl font-display font-bold text-white uppercase tracking-tight">
-          Discover Players
-        </h2>
-        <p className="text-muted-foreground font-medium mt-1">
-          Find and follow players to see their updates in your feed
-        </p>
-      </div>
-
+    <div className="space-y-4">
       <div className="relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
         <Input
@@ -214,6 +372,45 @@ export default function SocialHub() {
           </Card>
         )}
       </div>
+    </div>
+  );
+}
+
+export default function SocialHub() {
+  return (
+    <div
+      className="space-y-6 animate-in fade-in duration-500"
+      data-testid="page-social-hub"
+    >
+      <div>
+        <h2 className="text-3xl md:text-4xl font-display font-bold text-white uppercase tracking-tight">
+          Social Hub
+        </h2>
+        <p className="text-muted-foreground font-medium mt-1">
+          Stay updated with players you follow
+        </p>
+      </div>
+
+      <Tabs defaultValue="feed" className="w-full">
+        <TabsList className="w-full grid grid-cols-2 mb-4" data-testid="tabs-social">
+          <TabsTrigger value="feed" data-testid="tab-feed">
+            <TrendingUp className="w-4 h-4 mr-2" />
+            Feed
+          </TabsTrigger>
+          <TabsTrigger value="discover" data-testid="tab-discover">
+            <Search className="w-4 h-4 mr-2" />
+            Discover
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="feed">
+          <FeedTab />
+        </TabsContent>
+        
+        <TabsContent value="discover">
+          <DiscoverTab />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
