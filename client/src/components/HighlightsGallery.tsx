@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Play, Eye, Calendar, Film, Plus } from "lucide-react";
+import { Play, Eye, Calendar, Film, Plus, ExternalLink } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/EmptyState";
 import { VideoPlayerModal } from "@/components/VideoPlayerModal";
 import { UploadClipModal } from "@/components/UploadClipModal";
+import { Link } from "wouter";
 import type { HighlightClip, Game } from "@shared/schema";
 import { format } from "date-fns";
 
@@ -85,14 +86,20 @@ export function HighlightsGallery({ playerId, isOwner = false }: HighlightsGalle
 
   return (
     <div data-testid="highlights-gallery">
-      {isOwner && (
-        <div className="flex justify-end mb-4">
+      <div className="flex justify-between items-center mb-4">
+        <Link href={`/reels/${playerId}`}>
+          <Button variant="outline" className="gap-2" data-testid="button-view-reel">
+            <ExternalLink className="w-4 h-4" />
+            View Reel
+          </Button>
+        </Link>
+        {isOwner && (
           <Button onClick={() => setIsUploadModalOpen(true)} className="gap-2" data-testid="button-add-highlight">
             <Plus className="w-4 h-4" />
             Add Highlight
           </Button>
-        </div>
-      )}
+        )}
+      </div>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {highlights.map((clip) => {
           const gameInfo = getGameInfo(clip.gameId);

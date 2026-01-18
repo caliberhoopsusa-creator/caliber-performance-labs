@@ -1892,7 +1892,7 @@ export async function registerRoutes(
   // --- Player Discovery (Public) ---
   app.get('/api/discover', async (req, res) => {
     try {
-      const { position, state, school, graduationYear, search } = req.query;
+      const { position, state, school, graduationYear, search, openOnly } = req.query;
       
       const playersWithStats = await storage.getPlayersWithStats();
       
@@ -1905,9 +1905,15 @@ export async function registerRoutes(
       };
 
       // Calculate stats for each player
-      let results = playersWithStats.map((player) => {
+      let results = await Promise.all(playersWithStats.map(async (player) => {
         const games = player.games || [];
         const gamesPlayed = games.length;
+        
+        // Fetch highlight and badge counts in parallel
+        const [highlightCount, badgeCount] = await Promise.all([
+          storage.getPlayerHighlightCount(player.id),
+          storage.getPlayerBadgeCount(player.id),
+        ]);
         
         if (gamesPlayed === 0) {
           return {
@@ -1929,6 +1935,8 @@ export async function registerRoutes(
             avgGradeScore: 0,
             gamesPlayed: 0,
             openToOpportunities: player.openToOpportunities || false,
+            highlightCount,
+            badgeCount,
           };
         }
 
@@ -1965,8 +1973,10 @@ export async function registerRoutes(
           avgGradeScore,
           gamesPlayed,
           openToOpportunities: player.openToOpportunities || false,
+          highlightCount,
+          badgeCount,
         };
-      });
+      }));
 
       // Apply filters
       if (position && position !== 'All') {
@@ -1995,6 +2005,11 @@ export async function registerRoutes(
           p.school?.toLowerCase().includes(searchLower) ||
           p.team?.toLowerCase().includes(searchLower)
         );
+      }
+
+      // Filter for open to opportunities only
+      if (openOnly === 'true') {
+        results = results.filter(p => p.openToOpportunities);
       }
 
       // Sort by avgGradeScore by default (descending)

@@ -46,6 +46,7 @@ import LiveGameMode from "./pages/LiveGameMode";
 import ScheduleCalendar from "./pages/ScheduleCalendar";
 import ShotChartPage from "./pages/ShotChartPage";
 import HighlightClipsPage from "./pages/HighlightClipsPage";
+import ReelPage from "./pages/ReelPage";
 import TeamComparison from "./pages/TeamComparison";
 import ReportCardPage from "./pages/ReportCardPage";
 import SocialHub from "./pages/SocialHub";
@@ -170,6 +171,7 @@ function MainRouter() {
               <Route path="/schedule" component={ScheduleCalendar} />
               <Route path="/shot-chart" component={ShotChartPage} />
               <Route path="/highlights" component={HighlightClipsPage} />
+              <Route path="/reels/:playerId" component={ReelPage} />
               <Route path="/team-comparison" component={TeamComparison} />
               <Route path="/report-card" component={ReportCardPage} />
               <Route path="/social" component={SocialHub} />

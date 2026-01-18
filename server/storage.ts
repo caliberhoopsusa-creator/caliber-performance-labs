@@ -75,6 +75,7 @@ export interface IStorage {
   createBadge(badge: InsertBadge): Promise<Badge>;
   getPlayerBadges(playerId: number): Promise<Badge[]>;
   getBadgesByGame(gameId: number): Promise<Badge[]>;
+  getPlayerBadgeCount(playerId: number): Promise<number>;
 
   // Skill Badges (Progressive)
   getPlayerSkillBadges(playerId: number): Promise<SkillBadge[]>;
@@ -278,6 +279,7 @@ export interface IStorage {
   getHighlightClip(id: number): Promise<HighlightClip | undefined>;
   deleteHighlightClip(id: number): Promise<void>;
   incrementClipViewCount(id: number): Promise<void>;
+  getPlayerHighlightCount(playerId: number): Promise<number>;
 
   // Workouts
   createWorkout(workout: InsertWorkout): Promise<Workout>;
@@ -422,6 +424,11 @@ export class DatabaseStorage implements IStorage {
       .from(badges)
       .where(eq(badges.gameId, gameId))
       .orderBy(desc(badges.earnedAt));
+  }
+
+  async getPlayerBadgeCount(playerId: number): Promise<number> {
+    const [result] = await db.select({ count: count() }).from(badges).where(eq(badges.playerId, playerId));
+    return result?.count || 0;
   }
 
   async getPlayerSkillBadges(playerId: number): Promise<SkillBadge[]> {
@@ -1424,6 +1431,11 @@ export class DatabaseStorage implements IStorage {
 
   async incrementClipViewCount(id: number): Promise<void> {
     await db.update(highlightClips).set({ viewCount: sql`${highlightClips.viewCount} + 1` }).where(eq(highlightClips.id, id));
+  }
+
+  async getPlayerHighlightCount(playerId: number): Promise<number> {
+    const [result] = await db.select({ count: count() }).from(highlightClips).where(eq(highlightClips.playerId, playerId));
+    return result?.count || 0;
   }
 
   // Workouts

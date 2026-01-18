@@ -3,12 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Switch } from "@/components/ui/switch";
 import { GradeBadge } from "@/components/GradeBadge";
-import { Search, MapPin, GraduationCap, Users, ChevronRight, Sparkles } from "lucide-react";
+import { Search, MapPin, GraduationCap, Users, ChevronRight, Sparkles, Eye, CheckCircle, Target, Film, Trophy } from "lucide-react";
 
 interface DiscoverPlayer {
   id: number;
@@ -28,6 +30,26 @@ interface DiscoverPlayer {
   avgGrade: string | null;
   gamesPlayed: number;
   openToOpportunities: boolean;
+  highlightCount?: number;
+  badgeCount?: number;
+}
+
+function getProfileCompleteness(player: DiscoverPlayer): number {
+  let score = 0;
+  const maxScore = 10;
+  
+  if (player.name) score += 1;
+  if (player.position) score += 1;
+  if (player.height) score += 1;
+  if (player.photoUrl) score += 1;
+  if (player.school) score += 1;
+  if (player.city || player.state) score += 1;
+  if (player.graduationYear) score += 1;
+  if (player.team) score += 1;
+  if (player.gamesPlayed > 0) score += 1;
+  if (player.highlightCount && player.highlightCount > 0) score += 1;
+  
+  return Math.round((score / maxScore) * 100);
 }
 
 const US_STATES = [
@@ -51,22 +73,48 @@ const TIER_COLORS: Record<string, string> = {
 function PlayerDiscoverCard({ player }: { player: DiscoverPlayer }) {
   const tierClass = TIER_COLORS[player.currentTier] || TIER_COLORS["Rookie"];
   const initials = player.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+  const profileComplete = getProfileCompleteness(player);
+  const isRecruitReady = player.openToOpportunities && profileComplete >= 70;
 
   return (
     <Link href={`/players/${player.id}`}>
       <Card 
-        className="hover-elevate cursor-pointer transition-all border-border/50 bg-card/80 backdrop-blur-sm h-full"
+        className={`hover-elevate cursor-pointer transition-all h-full ${
+          isRecruitReady 
+            ? "border-green-500/50 bg-gradient-to-br from-green-500/5 to-card/80 backdrop-blur-sm" 
+            : "border-border/50 bg-card/80 backdrop-blur-sm"
+        }`}
         data-testid={`card-player-${player.id}`}
       >
         <CardContent className="p-4">
+          {isRecruitReady && (
+            <div className="flex items-center gap-2 mb-3 pb-3 border-b border-green-500/20">
+              <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
+                <Target className="w-3.5 h-3.5 text-green-400" />
+              </div>
+              <span className="text-xs font-bold text-green-400 uppercase tracking-wider">
+                Recruit Ready
+              </span>
+              <div className="ml-auto flex items-center gap-1 text-xs text-green-400/70">
+                <CheckCircle className="w-3 h-3" />
+                {profileComplete}% Complete
+              </div>
+            </div>
+          )}
+          
           <div className="flex gap-4">
-            <div className="flex-shrink-0">
-              <Avatar className="w-16 h-16 rounded-lg border border-border/50">
+            <div className="flex-shrink-0 relative">
+              <Avatar className={`w-16 h-16 rounded-lg border ${isRecruitReady ? 'border-green-500/50' : 'border-border/50'}`}>
                 <AvatarImage src={player.photoUrl || undefined} alt={player.name} className="object-cover" />
                 <AvatarFallback className="rounded-lg bg-gradient-to-br from-primary/30 to-primary/10 text-primary font-bold text-lg">
                   {initials}
                 </AvatarFallback>
               </Avatar>
+              {player.openToOpportunities && !isRecruitReady && (
+                <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-green-500 flex items-center justify-center border-2 border-card">
+                  <Sparkles className="w-2.5 h-2.5 text-white" />
+                </div>
+              )}
             </div>
 
             <div className="flex-1 min-w-0">
@@ -93,7 +141,7 @@ function PlayerDiscoverCard({ player }: { player: DiscoverPlayer }) {
                   <GraduationCap className="w-3.5 h-3.5" />
                   <span className="truncate">{player.school}</span>
                   {player.graduationYear && (
-                    <span className="text-xs">'{String(player.graduationYear).slice(-2)}</span>
+                    <span className="text-xs font-bold text-primary">'{String(player.graduationYear).slice(-2)}</span>
                   )}
                 </div>
               )}
@@ -138,13 +186,13 @@ function PlayerDiscoverCard({ player }: { player: DiscoverPlayer }) {
                 >
                   {player.currentTier}
                 </Badge>
-                {player.openToOpportunities && (
+                {player.openToOpportunities && !isRecruitReady && (
                   <Badge 
                     variant="secondary" 
                     className="text-[10px] px-2 py-0.5 bg-green-500/20 text-green-400 border-green-500/30"
                   >
                     <Sparkles className="w-3 h-3 mr-1" />
-                    Open to Opportunities
+                    Open
                   </Badge>
                 )}
                 <Badge 
@@ -153,6 +201,24 @@ function PlayerDiscoverCard({ player }: { player: DiscoverPlayer }) {
                 >
                   {player.gamesPlayed} GP
                 </Badge>
+                {player.highlightCount && player.highlightCount > 0 && (
+                  <Badge 
+                    variant="outline" 
+                    className="text-[10px] px-2 py-0.5 text-primary border-primary/30"
+                  >
+                    <Film className="w-3 h-3 mr-1" />
+                    {player.highlightCount}
+                  </Badge>
+                )}
+                {player.badgeCount && player.badgeCount > 0 && (
+                  <Badge 
+                    variant="outline" 
+                    className="text-[10px] px-2 py-0.5 text-amber-400 border-amber-500/30"
+                  >
+                    <Trophy className="w-3 h-3 mr-1" />
+                    {player.badgeCount}
+                  </Badge>
+                )}
               </div>
             </div>
           </div>
@@ -192,15 +258,17 @@ export default function Discover() {
   const [state, setState] = useState("All");
   const [graduationYear, setGraduationYear] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [openOnly, setOpenOnly] = useState(false);
 
   const queryParams = new URLSearchParams();
   if (position !== "All") queryParams.append("position", position);
   if (state !== "All") queryParams.append("state", state);
   if (graduationYear !== "All") queryParams.append("graduationYear", graduationYear);
   if (searchQuery.trim()) queryParams.append("search", searchQuery.trim());
+  if (openOnly) queryParams.append("openOnly", "true");
 
   const { data: players, isLoading } = useQuery<DiscoverPlayer[]>({
-    queryKey: ["/api/discover", position, state, graduationYear, searchQuery],
+    queryKey: ["/api/discover", position, state, graduationYear, searchQuery, openOnly],
     queryFn: async () => {
       const res = await fetch(`/api/discover?${queryParams.toString()}`);
       if (!res.ok) throw new Error("Failed to fetch players");
@@ -294,12 +362,27 @@ export default function Discover() {
         </CardContent>
       </Card>
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Users className="w-4 h-4" />
           <span>
             {isLoading ? "Loading..." : `${players?.length || 0} players found`}
           </span>
+        </div>
+        <div className="flex items-center gap-3">
+          <label 
+            htmlFor="open-only" 
+            className="text-sm text-muted-foreground cursor-pointer flex items-center gap-2"
+          >
+            <Sparkles className="w-4 h-4 text-green-400" />
+            Open to Opportunities Only
+          </label>
+          <Switch
+            id="open-only"
+            checked={openOnly}
+            onCheckedChange={setOpenOnly}
+            data-testid="switch-open-only"
+          />
         </div>
       </div>
 
