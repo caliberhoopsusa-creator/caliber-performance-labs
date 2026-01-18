@@ -21,8 +21,8 @@
   --popover: 220 35% 14%;
   --popover-foreground: 210 40% 98%;
 
-  /* Vibrant Orange Accent */
-  --primary: 24 100% 50%;
+  /* Clean White Accent */
+  --primary: 0 0% 100%;
   --primary-foreground: 222 47% 8%;
 
   /* Cool Grey for Secondary actions */
@@ -38,7 +38,7 @@
   --input: 215 30% 20%;
   
   /* Focus rings matching primary */
-  --ring: 24 100% 50%;
+  --ring: 0 0% 100%;
 
   /* Semantic Colors for Grades */
   --grade-a: 142 71% 45%;
@@ -109,13 +109,13 @@
 
   .gradient-radial-glow {
     background: radial-gradient(ellipse at 50% 0%, 
-      hsl(24 100% 50% / 0.15) 0%, 
+      hsl(0 0% 100% / 0.1) 0%, 
       transparent 60%);
   }
 
   .gradient-spotlight {
     background: radial-gradient(ellipse at 30% 20%, 
-      hsl(24 100% 50% / 0.08) 0%, 
+      hsl(0 0% 100% / 0.05) 0%, 
       transparent 50%),
     radial-gradient(ellipse at 70% 80%, 
       hsl(220 100% 50% / 0.05) 0%, 
@@ -124,11 +124,11 @@
 
   /* Premium text effects */
   .text-glow {
-    text-shadow: 0 0 40px hsl(24 100% 50% / 0.3);
+    text-shadow: 0 0 40px hsl(0 0% 100% / 0.3);
   }
 
   .text-gradient-primary {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-orange-400 to-primary;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-gray-300 to-primary;
   }
 
   /* Shimmer effect for premium elements */
@@ -170,8 +170,8 @@
     animation: pulseGlow 2s ease-in-out infinite;
   }
   @keyframes pulseGlow {
-    0%, 100% { box-shadow: 0 0 20px hsl(24 100% 50% / 0.3); }
-    50% { box-shadow: 0 0 40px hsl(24 100% 50% / 0.5); }
+    0%, 100% { box-shadow: 0 0 20px hsl(0 0% 100% / 0.2); }
+    50% { box-shadow: 0 0 40px hsl(0 0% 100% / 0.4); }
   }
 
   /* Card shine effect on hover */
