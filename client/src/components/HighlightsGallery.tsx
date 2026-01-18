@@ -16,11 +16,11 @@ export function HighlightsGallery({ playerId }: HighlightsGalleryProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { data: highlights = [], isLoading } = useQuery<HighlightClip[]>({
-    queryKey: ["/api/players", playerId, "highlight-clips"],
+    queryKey: [`/api/players/${playerId}/highlight-clips`],
   });
 
   const { data: games = [] } = useQuery<Game[]>({
-    queryKey: ["/api/players", playerId, "games"],
+    queryKey: [`/api/players/${playerId}/games`],
     enabled: highlights.some((h) => h.gameId !== null),
   });
 

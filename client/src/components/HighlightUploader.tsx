@@ -22,12 +22,7 @@ export function HighlightUploader({ gameId, playerId }: HighlightUploaderProps) 
   const [isSaving, setIsSaving] = useState(false);
 
   const { data: highlights = [], isLoading: isLoadingHighlights } = useQuery<HighlightClip[]>({
-    queryKey: ['/api/players', playerId, 'highlight-clips'],
-    queryFn: async () => {
-      const res = await fetch(`/api/players/${playerId}/highlight-clips`);
-      if (!res.ok) throw new Error("Failed to fetch highlights");
-      return res.json();
-    },
+    queryKey: [`/api/players/${playerId}/highlight-clips`],
   });
 
   const gameHighlights = highlights.filter(clip => clip.gameId === gameId);
@@ -37,7 +32,7 @@ export function HighlightUploader({ gameId, playerId }: HighlightUploaderProps) 
       await apiRequest("DELETE", `/api/highlight-clips/${clipId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/players', playerId, 'highlight-clips'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/players/${playerId}/highlight-clips`] });
       toast({
         title: "Highlight deleted",
         description: "The highlight clip has been removed.",
@@ -72,7 +67,7 @@ export function HighlightUploader({ gameId, playerId }: HighlightUploaderProps) 
         videoUrl: uploadedVideoUrl,
       });
 
-      queryClient.invalidateQueries({ queryKey: ['/api/players', playerId, 'highlight-clips'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/players/${playerId}/highlight-clips`] });
       setUploadedVideoUrl(null);
       setTitle("");
       setDescription("");
@@ -136,7 +131,7 @@ export function HighlightUploader({ gameId, playerId }: HighlightUploaderProps) 
                 <Button
                   onClick={handleSaveHighlight}
                   disabled={isSaving || !title.trim()}
-                  className="flex-1 bg-primary hover:bg-primary/90"
+                  className="flex-1"
                   data-testid="button-save-highlight"
                 >
                   {isSaving ? (
@@ -155,7 +150,7 @@ export function HighlightUploader({ gameId, playerId }: HighlightUploaderProps) 
                     setTitle("");
                     setDescription("");
                   }}
-                  className="border-white/10 hover:bg-white/5 text-white"
+                  className="border-white/10 text-white"
                 >
                   Cancel
                 </Button>
@@ -199,7 +194,10 @@ export function HighlightUploader({ gameId, playerId }: HighlightUploaderProps) 
               onComplete={(result) => {
                 if (result.successful && result.successful.length > 0) {
                   const file = result.successful[0];
-                  const objectPath = (file as any).__objectPath || file.uploadURL;
+                  let objectPath = (file as any).__objectPath || file.uploadURL;
+                  if (objectPath && !objectPath.startsWith('/objects/')) {
+                    objectPath = `/objects/${objectPath.replace(/^\/+/, '')}`;
+                  }
                   setUploadedVideoUrl(objectPath);
                 }
               }}
@@ -248,7 +246,7 @@ export function HighlightUploader({ gameId, playerId }: HighlightUploaderProps) 
                   variant="ghost"
                   onClick={() => deleteClipMutation.mutate(clip.id)}
                   disabled={deleteClipMutation.isPending}
-                  className="text-muted-foreground hover:text-red-400 shrink-0"
+                  className="text-muted-foreground shrink-0"
                   data-testid={`button-delete-highlight-${clip.id}`}
                 >
                   {deleteClipMutation.isPending ? (
