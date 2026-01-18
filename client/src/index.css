@@ -11,15 +11,15 @@
 
   /* Clean White Background */
   --background: 0 0% 100%;
-  --foreground: 222 47% 11%;
+  --foreground: 0 0% 10%;
 
   /* Crisp White Cards with subtle shadows */
   --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
+  --card-foreground: 0 0% 10%;
 
   /* Popover matches card */
   --popover: 0 0% 100%;
-  --popover-foreground: 222 47% 11%;
+  --popover-foreground: 0 0% 10%;
 
   /* Vibrant Orange Accent */
   --primary: 24 100% 50%;
@@ -27,7 +27,7 @@
 
   /* Light Grey for Secondary actions */
   --secondary: 220 14% 96%;
-  --secondary-foreground: 222 47% 11%;
+  --secondary-foreground: 0 0% 10%;
 
   /* Muted text */
   --muted: 220 14% 96%;
