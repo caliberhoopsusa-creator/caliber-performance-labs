@@ -27,10 +27,10 @@ interface TeamBoardProps {
 }
 
 const POST_TYPE_CONFIG = {
-  announcement: { icon: Megaphone, label: "Announcement", color: "text-red-600 bg-red-100 border border-red-200" },
-  practice: { icon: Calendar, label: "Practice", color: "text-blue-600 bg-blue-100 border border-blue-200" },
-  chat: { icon: MessageCircle, label: "Chat", color: "text-green-600 bg-green-100 border border-green-200" },
-  general: { icon: FileText, label: "General", color: "text-muted-foreground bg-muted border border-border" },
+  announcement: { icon: Megaphone, label: "Announcement", color: "text-red-400 bg-red-500/10" },
+  practice: { icon: Calendar, label: "Practice", color: "text-blue-400 bg-blue-500/10" },
+  chat: { icon: MessageCircle, label: "Chat", color: "text-green-400 bg-green-500/10" },
+  general: { icon: FileText, label: "General", color: "text-muted-foreground bg-muted/50" },
 };
 
 function PostComments({ postId, teamId, sessionId, currentMember }: { 
@@ -86,10 +86,10 @@ function PostComments({ postId, teamId, sessionId, currentMember }: {
   };
 
   return (
-    <div className="mt-2 pt-2 border-t border-border">
+    <div className="mt-2 pt-2 border-t border-white/5">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-white transition-colors"
         data-testid={`button-toggle-comments-${postId}`}
       >
         <MessageSquare className="w-3 h-3" />
@@ -240,22 +240,22 @@ export function TeamBoard({ team, sessionId, onBack }: TeamBoardProps) {
 
   return (
     <div className="space-y-6">
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 p-6 border border-primary/20 shadow-sm">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-6 border border-primary/20">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl" />
         <div className="flex items-center gap-4 relative">
-          <Button variant="outline" size="icon" onClick={onBack} data-testid="button-back" className="shrink-0 border-primary/20">
+          <Button variant="ghost" size="icon" onClick={onBack} data-testid="button-back" className="shrink-0">
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shrink-0 shadow-lg shadow-primary/30">
-            <Users className="w-7 h-7 text-primary-foreground" />
+          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shrink-0 shadow-lg shadow-primary/20">
+            <Users className="w-7 h-7 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold font-display tracking-wide truncate">{team.name}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold font-display text-white tracking-wide truncate">{team.name}</h1>
             <div className="flex items-center gap-3 mt-1 flex-wrap">
-              <code className="text-sm bg-primary/10 px-2 py-0.5 rounded font-mono tracking-widest text-primary border border-primary/20">{team.code}</code>
+              <code className="text-sm bg-black/30 backdrop-blur px-2 py-0.5 rounded font-mono tracking-widest text-primary">{team.code}</code>
               <span className="text-sm text-muted-foreground">{members.length} members</span>
               {isCoach && (
-                <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-700 border border-amber-200">
+                <Badge variant="secondary" className="text-xs bg-amber-500/20 text-amber-400 border-amber-500/30">
                   <Crown className="w-3 h-3 mr-1" /> Coach
                 </Badge>
               )}
@@ -276,7 +276,7 @@ export function TeamBoard({ team, sessionId, onBack }: TeamBoardProps) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-3 mb-6 p-4 rounded-xl bg-secondary/50 border border-border">
+              <form onSubmit={handleSubmit} className="space-y-3 mb-6 p-4 rounded-xl bg-gradient-to-br from-secondary/40 to-secondary/20 border border-white/5">
                 <div className="flex gap-2 items-center">
                   <Select value={postType} onValueChange={(v: any) => setPostType(v)}>
                     <SelectTrigger className="w-[140px]" data-testid="select-post-type">
@@ -416,16 +416,16 @@ export function TeamBoard({ team, sessionId, onBack }: TeamBoardProps) {
                               </div>
 
                               {post.postType === "practice" && post.practiceTime && (
-                                <div className="mt-3 p-3 rounded-lg bg-blue-50 border border-blue-200">
+                                <div className="mt-3 p-3 rounded-lg bg-gradient-to-r from-blue-500/15 to-blue-500/5 border border-blue-500/20">
                                   <div className="flex flex-wrap items-center gap-4 text-sm">
-                                    <div className="flex items-center gap-2 text-blue-600">
-                                      <div className="w-7 h-7 rounded bg-blue-100 flex items-center justify-center">
+                                    <div className="flex items-center gap-2 text-blue-400">
+                                      <div className="w-7 h-7 rounded bg-blue-500/20 flex items-center justify-center">
                                         <Calendar className="w-4 h-4" />
                                       </div>
                                       <span className="font-medium">{format(new Date(post.practiceTime), "EEE, MMM d 'at' h:mm a")}</span>
                                     </div>
                                     {post.practiceLocation && (
-                                      <div className="flex items-center gap-2 text-blue-500">
+                                      <div className="flex items-center gap-2 text-blue-300/80">
                                         <MapPin className="w-4 h-4" />
                                         <span>{post.practiceLocation}</span>
                                       </div>
@@ -503,11 +503,11 @@ export function TeamBoard({ team, sessionId, onBack }: TeamBoardProps) {
             </Collapsible>
           </Card>
 
-          <Card className="border-blue-200 bg-blue-50/50">
+          <Card className="border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-transparent">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <Calendar className="w-4 h-4 text-blue-600" />
+                <div className="w-7 h-7 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                  <Calendar className="w-4 h-4 text-blue-400" />
                 </div>
                 Upcoming Practices
               </CardTitle>
@@ -525,15 +525,15 @@ export function TeamBoard({ team, sessionId, onBack }: TeamBoardProps) {
                     .sort((a, b) => new Date(a.practiceTime!).getTime() - new Date(b.practiceTime!).getTime())
                     .slice(0, 3)
                     .map((practice) => (
-                      <div key={practice.id} className="p-3 rounded-lg bg-white border border-blue-200 shadow-sm">
-                        <div className="font-medium text-sm text-blue-600">
+                      <div key={practice.id} className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                        <div className="font-medium text-sm text-blue-400">
                           {format(new Date(practice.practiceTime!), "EEE, MMM d")}
                         </div>
-                        <div className="text-xs text-blue-500 mt-0.5">
+                        <div className="text-xs text-blue-300/80 mt-0.5">
                           {format(new Date(practice.practiceTime!), "h:mm a")}
                         </div>
                         {practice.practiceLocation && (
-                          <div className="text-xs text-muted-foreground flex items-center gap-1 mt-2 pt-2 border-t border-blue-100">
+                          <div className="text-xs text-muted-foreground flex items-center gap-1 mt-2 pt-2 border-t border-blue-500/10">
                             <MapPin className="w-3 h-3" />
                             {practice.practiceLocation}
                           </div>

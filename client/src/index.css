@@ -5,37 +5,37 @@
 @tailwind utilities;
 
 :root {
-  /* Futuristic Light Palette */
+  /* Athletic Tech Palette */
   --font-display: 'Teko', sans-serif;
   --font-body: 'Inter', sans-serif;
 
-  /* Clean White Background */
-  --background: 0 0% 100%;
-  --foreground: 0 0% 10%;
+  /* Deep Rich Navy Backgrounds */
+  --background: 222 47% 8%;
+  --foreground: 210 40% 98%;
 
-  /* Crisp White Cards with subtle shadows */
-  --card: 0 0% 100%;
-  --card-foreground: 0 0% 10%;
+  /* Elevated navy for cards with subtle warmth */
+  --card: 220 35% 14%;
+  --card-foreground: 210 40% 98%;
 
   /* Popover matches card */
-  --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 10%;
+  --popover: 220 35% 14%;
+  --popover-foreground: 210 40% 98%;
 
   /* Vibrant Orange Accent */
   --primary: 24 100% 50%;
-  --primary-foreground: 0 0% 100%;
+  --primary-foreground: 222 47% 8%;
 
-  /* Light Grey for Secondary actions */
-  --secondary: 220 14% 96%;
-  --secondary-foreground: 0 0% 10%;
+  /* Cool Grey for Secondary actions */
+  --secondary: 215 25% 22%;
+  --secondary-foreground: 210 40% 98%;
 
-  /* Muted text */
-  --muted: 220 14% 96%;
-  --muted-foreground: 220 9% 46%;
+  /* Muted text - higher contrast */
+  --muted: 215 25% 22%;
+  --muted-foreground: 215 20% 60%;
 
-  /* Clean defined borders */
-  --border: 220 13% 91%;
-  --input: 220 13% 91%;
+  /* Borders - more subtle */
+  --border: 215 30% 20%;
+  --input: 215 30% 20%;
   
   /* Focus rings matching primary */
   --ring: 24 100% 50%;
@@ -51,7 +51,7 @@
   --gold: 45 93% 58%;
   --platinum: 210 20% 80%;
 
-  --radius: 0.5rem;
+  --radius: 0.75rem;
 }
 
 @layer base {
@@ -80,14 +80,14 @@
   .bg-grade-d { background-color: hsl(var(--grade-d)); }
   .bg-grade-f { background-color: hsl(var(--grade-f)); }
 
-  /* Premium clean card with border */
+  /* Premium glassmorphic card */
   .glass-card {
-    @apply bg-card backdrop-blur-xl border border-border shadow-sm;
+    @apply bg-card/80 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/20;
   }
   
-  /* Enhanced card with subtle glow */
+  /* Enhanced glass with glow */
   .glass-card-glow {
-    @apply bg-card backdrop-blur-xl border border-border shadow-lg shadow-primary/5;
+    @apply bg-card/80 backdrop-blur-xl border border-white/10 shadow-2xl shadow-primary/10;
   }
   
   /* Stat display styles */
@@ -99,32 +99,32 @@
     @apply text-xs uppercase tracking-wider text-muted-foreground font-medium;
   }
 
-  /* Premium gradient backgrounds - Light theme */
+  /* Premium gradient backgrounds */
   .gradient-hero {
     background: linear-gradient(135deg, 
-      hsl(0 0% 100%) 0%, 
-      hsl(220 14% 98%) 50%, 
-      hsl(0 0% 100%) 100%);
+      hsl(222 47% 8%) 0%, 
+      hsl(220 35% 12%) 50%, 
+      hsl(222 47% 8%) 100%);
   }
 
   .gradient-radial-glow {
     background: radial-gradient(ellipse at 50% 0%, 
-      hsl(24 100% 50% / 0.08) 0%, 
+      hsl(24 100% 50% / 0.15) 0%, 
       transparent 60%);
   }
 
   .gradient-spotlight {
     background: radial-gradient(ellipse at 30% 20%, 
-      hsl(24 100% 50% / 0.05) 0%, 
+      hsl(24 100% 50% / 0.08) 0%, 
       transparent 50%),
     radial-gradient(ellipse at 70% 80%, 
-      hsl(220 100% 50% / 0.03) 0%, 
+      hsl(220 100% 50% / 0.05) 0%, 
       transparent 50%);
   }
 
   /* Premium text effects */
   .text-glow {
-    text-shadow: 0 0 40px hsl(24 100% 50% / 0.2);
+    text-shadow: 0 0 40px hsl(24 100% 50% / 0.3);
   }
 
   .text-gradient-primary {

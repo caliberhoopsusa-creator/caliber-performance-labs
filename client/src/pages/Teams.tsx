@@ -134,7 +134,7 @@ export default function Teams() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-display tracking-wide">Teams</h1>
+          <h1 className="text-3xl font-bold font-display text-white tracking-wide">Teams</h1>
           <p className="text-muted-foreground mt-1">Join or create teams to discuss with teammates</p>
         </div>
         <div className="flex gap-2">
