@@ -1,9 +1,11 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, Gamepad2, CalendarDays, Crosshair, Film, FileText } from "lucide-react";
+import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, Gamepad2, CalendarDays, Crosshair, Film, FileText, ArrowLeftRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AlertsBadge } from "@/components/AlertsCenter";
 import { Button } from "@/components/ui/button";
 import { useSubscription, type SubscriptionTier } from "@/hooks/use-subscription";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 
 type NavSection = {
   title: string;
@@ -24,11 +26,32 @@ type SidebarProps = {
 export function Sidebar({ userRole, playerId }: SidebarProps) {
   const [location] = useLocation();
   const { hasAccess, isPro } = useSubscription();
+  const { switchRole, isSwitchingRole } = useAuth();
+  const { toast } = useToast();
 
   // For players: show their profile and limited options
   // For coaches: show full navigation with all coach tools
   const isPlayer = userRole === 'player';
   const isCoach = userRole === 'coach';
+
+  const handleRoleSwitch = () => {
+    const newRole = isPlayer ? 'coach' : 'player';
+    switchRole(newRole, {
+      onSuccess: () => {
+        toast({ 
+          title: `Switched to ${newRole === 'coach' ? 'Coach' : 'Player'} Mode`,
+          description: `You're now viewing the app as a ${newRole}.`
+        });
+      },
+      onError: (error: Error) => {
+        toast({ 
+          title: 'Error', 
+          description: error.message || 'Failed to switch mode',
+          variant: 'destructive'
+        });
+      }
+    });
+  };
 
   const playerSections: NavSection[] = [
     {
@@ -124,9 +147,15 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         </div>
         <div className="flex-1">
           <h1 className="text-2xl font-bold font-display text-white tracking-wider uppercase">CALIBER</h1>
-          <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium">
+          <button 
+            onClick={handleRoleSwitch}
+            disabled={isSwitchingRole}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground uppercase tracking-widest font-medium hover:text-primary transition-colors cursor-pointer"
+            data-testid="button-switch-role"
+          >
             {isPlayer ? "Player" : "Coach"} Mode
-          </p>
+            <ArrowLeftRight className="w-3 h-3" />
+          </button>
         </div>
         {isCoach && (
           <Link href="/coach/alerts" className="text-muted-foreground hover:text-white transition-colors" data-testid="header-alerts-badge">
