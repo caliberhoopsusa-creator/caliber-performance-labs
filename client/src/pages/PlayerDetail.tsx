@@ -858,113 +858,123 @@ export default function PlayerDetail() {
   const weaknesses = [...radarData].sort((a, b) => a.value - b.value).slice(0, 2);
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500 pb-20">
+    <div className="space-y-6 animate-in fade-in duration-500 pb-20 w-full">
       <Link href="/players" className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-white transition-colors uppercase tracking-wider">
         <ArrowLeft className="w-4 h-4" /> Back to Roster
       </Link>
       
-      <Card className="p-6 md:p-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 -mb-16 -ml-16 w-48 h-48 bg-primary/3 rounded-full blur-2xl" />
-
-        <div className="flex flex-col lg:flex-row gap-6 relative z-10">
-          <div className="flex items-start gap-5">
-            <div className="relative group/avatar">
-              <Avatar className="w-20 h-20 md:w-28 md:h-28 border-4 border-primary/20">
+      <Card className="p-4 md:p-8 relative overflow-hidden">
+        <div className="flex flex-col gap-6 relative z-10">
+          {/* Player Info Row */}
+          <div className="flex items-start gap-4">
+            <div className="relative group/avatar shrink-0">
+              <Avatar className="w-16 h-16 md:w-24 md:h-24 border-2 border-primary/20">
                 {player.photoUrl && <AvatarImage src={player.photoUrl} alt={player.name} />}
-                <AvatarFallback className="bg-gradient-to-br from-primary/30 to-primary/10 text-2xl md:text-4xl font-display font-bold text-white">
+                <AvatarFallback className="bg-gradient-to-br from-primary/30 to-primary/10 text-xl md:text-3xl font-display font-bold text-white">
                   {getInitials(player.name)}
                 </AvatarFallback>
               </Avatar>
               <Button
                 size="icon"
                 onClick={() => setIsEditDialogOpen(true)}
-                className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full opacity-0 group-hover/avatar:opacity-100 transition-opacity"
+                className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full opacity-0 group-hover/avatar:opacity-100 transition-opacity"
                 data-testid="button-edit-profile-avatar"
               >
                 <Pencil className="w-3 h-3" />
               </Button>
             </div>
             
-            <div className="flex-1">
-              <div className="flex flex-wrap items-center gap-2 mb-2">
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-2 mb-1">
                 {player.jerseyNumber && (
-                  <span className="text-3xl md:text-4xl font-display font-bold text-primary/80">#{player.jerseyNumber}</span>
+                  <span className="text-xl md:text-3xl font-display font-bold text-primary/80">#{player.jerseyNumber}</span>
                 )}
-                <span className="bg-primary/20 text-primary px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider border border-primary/20">
+                <span className="bg-primary/20 text-primary px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border border-primary/20">
                   {player.position}
                 </span>
               </div>
-              <h1 className="text-3xl md:text-5xl font-display font-bold text-white uppercase tracking-tight leading-none mb-3">
+              <h1 className="text-xl md:text-4xl font-display font-bold text-white uppercase tracking-tight leading-tight mb-2 break-words">
                 {player.name}
               </h1>
-              <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-2 text-xs md:text-sm text-muted-foreground">
                 {player.height && (
                   <span className="flex items-center gap-1">
-                    <User className="w-4 h-4" /> {player.height}
+                    <User className="w-3 h-3 md:w-4 md:h-4" /> {player.height}
                   </span>
                 )}
                 {player.team && (
                   <span className="font-medium">{player.team}</span>
                 )}
-                <span>{games.length} Games Tracked</span>
+                <span>{games.length} Games</span>
               </div>
-              {isAuthenticated && (
-                <div className="mt-4">
-                  <FollowStats 
-                    playerId={id} 
-                    onFollowersClick={() => setShowFollowersSheet(true)}
-                    onFollowingClick={() => setShowFollowingSheet(true)}
-                  />
-                </div>
-              )}
+            </div>
+
+            {/* Grade Badge - Desktop */}
+            <div className="hidden md:flex flex-col items-center gap-1 shrink-0">
+              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Grade</span>
+              <GradeBadge grade={averageGrade} size="xl" />
             </div>
           </div>
 
-          <div className="flex flex-col items-center lg:items-end gap-4 lg:ml-auto">
+          {/* Grade Badge - Mobile */}
+          <div className="flex md:hidden justify-center">
             <div className="flex flex-col items-center gap-1">
               <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Overall Grade</span>
-              <GradeBadge grade={averageGrade} size="xl" />
+              <GradeBadge grade={averageGrade} size="lg" />
             </div>
-            
-            <div className="flex flex-wrap gap-3">
-              {isAuthenticated && !isOwnProfile && (
-                <FollowButton 
-                  playerId={id} 
-                  initialIsFollowing={isFollowingPlayer}
-                />
-              )}
-              {isOwnProfile && (
-                <Button 
-                  onClick={() => setIsEditDialogOpen(true)} 
-                  variant="outline" 
-                  className="gap-2"
-                  data-testid="button-edit-profile"
-                >
-                  <Pencil className="w-4 h-4" /> Edit Profile
-                </Button>
-              )}
+          </div>
+
+          {/* Follow Stats */}
+          {isAuthenticated && (
+            <div className="flex justify-center md:justify-start">
+              <FollowStats 
+                playerId={id} 
+                onFollowersClick={() => setShowFollowersSheet(true)}
+                onFollowingClick={() => setShowFollowingSheet(true)}
+              />
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex flex-wrap justify-center md:justify-start gap-2">
+            {isAuthenticated && !isOwnProfile && (
+              <FollowButton 
+                playerId={id} 
+                initialIsFollowing={isFollowingPlayer}
+              />
+            )}
+            {isOwnProfile && (
               <Button 
-                onClick={handleShareProfile} 
+                onClick={() => setIsEditDialogOpen(true)} 
                 variant="outline" 
-                className="gap-2"
-                data-testid="button-share-profile"
+                size="sm"
+                className="gap-1.5"
+                data-testid="button-edit-profile"
               >
-                <Share2 className="w-4 h-4" /> Share Profile
+                <Pencil className="w-3.5 h-3.5" /> Edit
               </Button>
-              <Link href={`/report-card?player=${player.id}`}>
-                <Button variant="outline" className="gap-2" data-testid="button-generate-report">
-                  <FileText className="w-4 h-4" /> Generate Report
+            )}
+            <Button 
+              onClick={handleShareProfile} 
+              variant="outline" 
+              size="sm"
+              className="gap-1.5"
+              data-testid="button-share-profile"
+            >
+              <Share2 className="w-3.5 h-3.5" /> Share
+            </Button>
+            <Link href={`/report-card?player=${player.id}`}>
+              <Button variant="outline" size="sm" className="gap-1.5" data-testid="button-generate-report">
+                <FileText className="w-3.5 h-3.5" /> Report
+              </Button>
+            </Link>
+            {isOwnProfile && (
+              <Link href={`/analyze?playerId=${player.id}`}>
+                <Button size="sm" className="gap-1.5" data-testid="button-log-game">
+                  <Plus className="w-3.5 h-3.5" /> Log Game
                 </Button>
               </Link>
-              {isOwnProfile && (
-                <Link href={`/analyze?playerId=${player.id}`}>
-                  <Button className="gap-2" data-testid="button-log-game">
-                    <Plus className="w-4 h-4" /> Log Game
-                  </Button>
-                </Link>
-              )}
-            </div>
+            )}
           </div>
         </div>
       </Card>
