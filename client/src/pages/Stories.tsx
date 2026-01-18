@@ -703,9 +703,18 @@ export default function Stories() {
     setViewedStories(prev => {
       const next = new Set(prev);
       next.add(storyId);
-      localStorage.setItem("caliber_viewed_stories", JSON.stringify([...next]));
+      localStorage.setItem("caliber_viewed_stories", JSON.stringify(Array.from(next)));
       return next;
     });
+  };
+
+  const openViewerById = (storyId: number) => {
+    const index = stories.findIndex(s => s.id === storyId);
+    if (index >= 0) {
+      setViewerStartIndex(index);
+      setViewerOpen(true);
+      markAsViewed(storyId);
+    }
   };
 
   const openViewer = (index: number) => {
@@ -771,11 +780,11 @@ export default function Stories() {
           </Card>
         ) : (
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-primary/20" data-testid="stories-scroll">
-            {groupedStories.map((story, idx) => (
+            {groupedStories.map((story) => (
               <StoryRing
                 key={story.id}
                 story={story}
-                onClick={() => openViewer(stories.findIndex(s => s.id === story.id))}
+                onClick={() => openViewerById(story.id)}
                 isViewed={viewedStories.has(story.id)}
               />
             ))}

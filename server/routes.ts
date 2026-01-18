@@ -3190,12 +3190,25 @@ Respond in this exact JSON format:
     }
   });
 
+  const VALID_MEDIA_TYPES = ['text', 'image', 'video'];
+  
   app.post('/api/stories', async (req, res) => {
     try {
       const { playerId, templateId, headline, stats, sessionId, isPublic, imageUrl, videoUrl, mediaType, caption, expiresIn24h } = req.body;
 
       if (!playerId || !headline) {
         return res.status(400).json({ message: 'PlayerId and headline are required' });
+      }
+
+      // Validate mediaType
+      const validatedMediaType = mediaType && VALID_MEDIA_TYPES.includes(mediaType) ? mediaType : 'text';
+
+      // Validate that media URLs are provided when mediaType requires them
+      if (validatedMediaType === 'image' && !imageUrl) {
+        return res.status(400).json({ message: 'Image URL is required for image stories' });
+      }
+      if (validatedMediaType === 'video' && !videoUrl) {
+        return res.status(400).json({ message: 'Video URL is required for video stories' });
       }
 
       const player = await storage.getPlayer(playerId);
@@ -3213,7 +3226,7 @@ Respond in this exact JSON format:
         stats: stats ? (typeof stats === 'string' ? stats : JSON.stringify(stats)) : null,
         imageUrl: imageUrl || null,
         videoUrl: videoUrl || null,
-        mediaType: mediaType || 'text',
+        mediaType: validatedMediaType,
         caption: caption || null,
         sessionId: sessionId || null,
         isPublic: isPublic !== false,
@@ -3227,7 +3240,7 @@ Respond in this exact JSON format:
           playerId,
           relatedId: story.id,
           headline: `${player.name} posted a story: ${headline}`,
-          subtext: mediaType === 'image' ? 'Check out their photo!' : mediaType === 'video' ? 'Watch the video!' : stats ? `Check out their stats!` : undefined,
+          subtext: validatedMediaType === 'image' ? 'Check out their photo!' : validatedMediaType === 'video' ? 'Watch the video!' : stats ? `Check out their stats!` : undefined,
           sessionId,
         });
       }
@@ -3239,10 +3252,24 @@ Respond in this exact JSON format:
     }
   });
 
-  // Delete story
-  app.delete('/api/stories/:id', async (req, res) => {
+  // Delete story (requires authentication)
+  app.delete('/api/stories/:id', isAuthenticated, async (req: any, res) => {
     try {
-      await storage.deleteStory(Number(req.params.id));
+      const storyId = Number(req.params.id);
+      const story = await storage.getStory(storyId);
+      if (!story) {
+        return res.status(404).json({ message: 'Story not found' });
+      }
+      
+      // Check ownership - get player linked to current user
+      const userId = req.user?.claims?.sub;
+      const userPlayer = userId ? await storage.getPlayerByUserId(userId) : null;
+      
+      if (!userPlayer || userPlayer.id !== story.playerId) {
+        return res.status(403).json({ message: 'Not authorized to delete this story' });
+      }
+      
+      await storage.deleteStory(storyId);
       res.status(204).send();
     } catch (err) {
       console.error('Delete story error:', err);
@@ -3287,6 +3314,8 @@ Respond in this exact JSON format:
   });
 
   // Story Reactions - add a reaction
+  const VALID_REACTIONS = ['fire', 'heart', 'clap', 'trophy', 'star', 'goat', 'muscle', '100'];
+  
   app.post('/api/stories/:id/reactions', async (req, res) => {
     try {
       const storyId = Number(req.params.id);
@@ -3294,6 +3323,11 @@ Respond in this exact JSON format:
 
       if (!sessionId || !reaction) {
         return res.status(400).json({ message: 'SessionId and reaction are required' });
+      }
+
+      // Validate reaction type
+      if (!VALID_REACTIONS.includes(reaction)) {
+        return res.status(400).json({ message: 'Invalid reaction type' });
       }
 
       // Remove existing reaction from this user first
@@ -3374,9 +3408,23 @@ Respond in this exact JSON format:
     }
   });
 
-  app.delete('/api/highlights/:id', async (req, res) => {
+  app.delete('/api/highlights/:id', isAuthenticated, async (req: any, res) => {
     try {
-      await storage.deleteStoryHighlight(Number(req.params.id));
+      const highlightId = Number(req.params.id);
+      const highlight = await storage.getStoryHighlight(highlightId);
+      if (!highlight) {
+        return res.status(404).json({ message: 'Highlight not found' });
+      }
+      
+      // Check ownership - get player linked to current user
+      const userId = req.user?.claims?.sub;
+      const userPlayer = userId ? await storage.getPlayerByUserId(userId) : null;
+      
+      if (!userPlayer || userPlayer.id !== highlight.playerId) {
+        return res.status(403).json({ message: 'Not authorized to delete this highlight' });
+      }
+      
+      await storage.deleteStoryHighlight(highlightId);
       res.status(204).send();
     } catch (err) {
       console.error('Delete highlight error:', err);
