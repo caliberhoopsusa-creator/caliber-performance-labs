@@ -34,6 +34,7 @@ import Newsfeed from "./pages/Newsfeed";
 import CommunityContent from "./pages/CommunityContent";
 import Stories from "./pages/Stories";
 import TeamDashboard from "./pages/TeamDashboard";
+import TeamHub from "./pages/TeamHub";
 import LineupAnalysis from "./pages/LineupAnalysis";
 import PracticeTracker from "./pages/PracticeTracker";
 import OpponentScouting from "./pages/OpponentScouting";
@@ -158,6 +159,7 @@ function MainRouter() {
               <Route path="/discover" component={Discover} />
               <Route path="/analyze" component={AnalyzeGame} />
               <Route path="/coach/dashboard" component={TeamDashboard} />
+              <Route path="/coach/hub" component={TeamHub} />
               <Route path="/coach/lineups" component={LineupAnalysis} />
               <Route path="/coach/practices" component={PracticeTracker} />
               <Route path="/coach/scouting" component={OpponentScouting} />

@@ -134,6 +134,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
     {
       title: "Coach Tools",
       items: [
+        { href: "/coach/hub", label: "Team Hub", icon: CalendarDays, premium: "coach_pro" },
         { href: "/coach/dashboard", label: "Team Dashboard", icon: ClipboardList, premium: "coach_pro" },
         { href: "/coach/lineups", label: "Lineup Analysis", icon: UsersRound, premium: "coach_pro" },
         { href: "/coach/practices", label: "Practice Tracker", icon: CalendarCheck, premium: "coach_pro" },

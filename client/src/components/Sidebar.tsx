@@ -128,6 +128,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
     {
       title: "Coach Tools",
       items: [
+        { href: "/coach/hub", label: "Team Hub", icon: CalendarDays, premium: "coach_pro" },
         { href: "/coach/dashboard", label: "Team Overview", icon: ClipboardList, premium: "coach_pro" },
         { href: "/coach/lineups", label: "Lineups", icon: UsersRound, premium: "coach_pro" },
         { href: "/coach/practices", label: "Practices", icon: CalendarCheck, premium: "coach_pro" },

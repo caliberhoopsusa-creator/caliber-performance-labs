@@ -7,6 +7,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -29,16 +30,17 @@ type AddEventModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultDate?: Date;
+  defaultEventType?: 'practice' | 'game' | 'workout' | 'meeting' | 'other';
   playerId?: number;
 };
 
-export function AddEventModal({ open, onOpenChange, defaultDate, playerId }: AddEventModalProps) {
+export function AddEventModal({ open, onOpenChange, defaultDate, defaultEventType, playerId }: AddEventModalProps) {
   const { toast } = useToast();
   
   const form = useForm<AddEventFormValues>({
     resolver: zodResolver(addEventSchema),
     defaultValues: {
-      eventType: "practice",
+      eventType: defaultEventType || "practice",
       title: "",
       date: defaultDate ? format(defaultDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
       startTime: "09:00",
@@ -47,6 +49,20 @@ export function AddEventModal({ open, onOpenChange, defaultDate, playerId }: Add
       description: "",
     },
   });
+
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        eventType: defaultEventType || "practice",
+        title: "",
+        date: defaultDate ? format(defaultDate, "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
+        startTime: "09:00",
+        endTime: "",
+        location: "",
+        description: "",
+      });
+    }
+  }, [open, defaultEventType, defaultDate, form]);
 
   const createEventMutation = useMutation({
     mutationFn: async (values: AddEventFormValues) => {
