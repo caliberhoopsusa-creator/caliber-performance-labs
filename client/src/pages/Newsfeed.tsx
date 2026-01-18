@@ -9,6 +9,16 @@ import { Target, Award, Repeat2, BarChart3, Users, Camera, Flame, Trophy, Zap, R
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 
+function getSessionId(): string {
+  const key = "caliber_session_id";
+  let sessionId = localStorage.getItem(key);
+  if (!sessionId) {
+    sessionId = crypto.randomUUID();
+    localStorage.setItem(key, sessionId);
+  }
+  return sessionId;
+}
+
 interface FeedActivity {
   id: number;
   activityType: string;
@@ -214,8 +224,14 @@ export default function Newsfeed() {
     enabled: activeTab === "following",
   });
 
+  const sessionId = getSessionId();
   const { data: teamActivities, isLoading: teamLoading, error: teamError } = useQuery<FeedActivity[]>({
-    queryKey: ["/api/feed/team"],
+    queryKey: ["/api/feed/team", sessionId],
+    queryFn: async () => {
+      const res = await fetch(`/api/feed/team?sessionId=${sessionId}`);
+      if (!res.ok) throw new Error("Failed to fetch team feed");
+      return res.json();
+    },
     enabled: activeTab === "team",
   });
 

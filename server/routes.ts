@@ -1948,7 +1948,7 @@ export async function registerRoutes(
   app.get('/api/teams/list', async (req, res) => {
     try {
       const allPlayers = await storage.getPlayers();
-      const uniqueTeams = [...new Set(allPlayers.map(p => p.team).filter(Boolean))];
+      const uniqueTeams = Array.from(new Set(allPlayers.map(p => p.team).filter(Boolean))) as string[];
       res.json(uniqueTeams.sort());
     } catch (err) {
       console.error('Get teams list error:', err);
