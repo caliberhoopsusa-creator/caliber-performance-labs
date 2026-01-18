@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, Gamepad2, CalendarDays, Film, FileText, ArrowLeftRight, UserPlus } from "lucide-react";
+import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, CalendarDays, Film, FileText, ArrowLeftRight, UserPlus } from "lucide-react";
 import caliberLogo from "@assets/Gemini_Generated_Image_3ld7js3ld7js3ld7_(1)_1768700977754.png";
 import { cn } from "@/lib/utils";
 import { AlertsBadge } from "@/components/AlertsCenter";
@@ -59,7 +59,6 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
       title: "My Profile",
       items: [
         { href: playerId ? `/players/${playerId}` : "/", label: "My Stats", icon: UserCircle },
-        { href: "/live-game", label: "Live Game", icon: Gamepad2, featured: true },
         { href: "/analyze", label: "Log Game", icon: PlusCircle },
         { href: "/workouts", label: "Workouts", icon: Dumbbell },
         { href: "/schedule", label: "Schedule", icon: CalendarDays },
@@ -96,7 +95,6 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
       items: [
         { href: "/", label: "Dashboard", icon: LayoutDashboard },
         { href: "/players", label: "Players", icon: Users },
-        { href: "/live-game", label: "Live Game", icon: Gamepad2, featured: true },
         { href: "/analyze", label: "New Analysis", icon: PlusCircle },
         { href: "/workouts", label: "Workouts", icon: Dumbbell },
         { href: "/schedule", label: "Schedule", icon: CalendarDays },
@@ -235,15 +233,15 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
   
   const navItems = isPlayer ? [
     { href: "/", icon: LayoutDashboard, label: "Home" },
-    { href: "/analyze", icon: PlusCircle, label: "Log" },
-    { href: "/live-game", icon: Gamepad2, label: "Live", featured: true },
+    { href: "/analyze", icon: PlusCircle, label: "Log", featured: true },
+    { href: "/schedule", icon: CalendarDays, label: "Schedule" },
     { href: "/leaderboard", icon: Trophy, label: "Rank" },
     { href: playerId ? `/players/${playerId}` : "/", icon: UserCircle, label: "Me" },
   ] : [
     { href: "/", icon: LayoutDashboard, label: "Home" },
     { href: "/players", icon: Users, label: "Roster" },
-    { href: "/live-game", icon: Gamepad2, label: "Live", featured: true },
-    { href: "/analyze", icon: PlusCircle, label: "Log" },
+    { href: "/analyze", icon: PlusCircle, label: "Log", featured: true },
+    { href: "/schedule", icon: CalendarDays, label: "Schedule" },
     { href: "/leaderboard", icon: Trophy, label: "Rank" },
   ];
   

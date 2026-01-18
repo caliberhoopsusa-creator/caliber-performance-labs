@@ -7,7 +7,7 @@ import {
   Menu, LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, 
   Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, 
   UsersRound, CalendarCheck, Eye, UserCircle, LogOut, CreditCard, Lock, Dumbbell, 
-  Gamepad2, CalendarDays, Crosshair, Film, FileText, ArrowLeftRight, UserPlus
+  CalendarDays, Film, FileText, ArrowLeftRight, UserPlus
 } from "lucide-react";
 import caliberLogo from "@assets/Gemini_Generated_Image_3ld7js3ld7js3ld7_(1)_1768700977754.png";
 import { cn } from "@/lib/utils";
@@ -67,7 +67,6 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
       title: "My Profile",
       items: [
         { href: playerId ? `/players/${playerId}` : "/", label: "My Stats", icon: UserCircle },
-        { href: "/live-game", label: "Live Game", icon: Gamepad2, featured: true },
         { href: "/analyze", label: "Log Game", icon: PlusCircle },
         { href: "/workouts", label: "Workouts", icon: Dumbbell },
         { href: "/schedule", label: "Schedule", icon: CalendarDays },
@@ -78,6 +77,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
     {
       title: "Discover",
       items: [
+        { href: "/discover", label: "Find Players", icon: Binoculars, featured: true },
         { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
         { href: "/compare", label: "Head-to-Head", icon: Activity },
         { href: "/grading", label: "Grading System", icon: Calculator },
@@ -103,7 +103,6 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
       items: [
         { href: "/", label: "Dashboard", icon: LayoutDashboard },
         { href: "/players", label: "Players", icon: Users },
-        { href: "/live-game", label: "Live Game", icon: Gamepad2, featured: true },
         { href: "/analyze", label: "New Analysis", icon: PlusCircle },
         { href: "/workouts", label: "Workouts", icon: Dumbbell },
         { href: "/schedule", label: "Schedule", icon: CalendarDays },
@@ -113,6 +112,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
     {
       title: "Player Tools",
       items: [
+        { href: "/discover", label: "Find Players", icon: Binoculars, featured: true },
         { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
         { href: "/compare", label: "Head-to-Head", icon: Activity },
         { href: "/video", label: "Video Analysis", icon: Video },

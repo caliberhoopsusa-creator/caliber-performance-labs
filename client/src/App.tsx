@@ -42,7 +42,6 @@ import CoachAlertsPage from "./pages/CoachAlertsPage";
 import Pricing from "./pages/Pricing";
 import Admin from "./pages/Admin";
 import WorkoutTracker from "./pages/WorkoutTracker";
-import LiveGameMode from "./pages/LiveGameMode";
 import ScheduleCalendar from "./pages/ScheduleCalendar";
 import HighlightClipsPage from "./pages/HighlightClipsPage";
 import ReelPage from "./pages/ReelPage";
@@ -166,7 +165,6 @@ function MainRouter() {
               <Route path="/coach/alerts" component={CoachAlertsPage} />
               <Route path="/pricing" component={Pricing} />
               <Route path="/workouts" component={WorkoutTracker} />
-              <Route path="/live-game" component={LiveGameMode} />
               <Route path="/schedule" component={ScheduleCalendar} />
               <Route path="/highlights" component={HighlightClipsPage} />
               <Route path="/reels/:playerId" component={ReelPage} />
