@@ -1,15 +1,24 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trophy, Clock, Crown, Flame, Target, Calendar, CheckCircle2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Trophy, Clock, Crown, Flame, Target, Calendar, CheckCircle2, Plus } from "lucide-react";
 import type { Challenge, Player } from "@shared/schema";
 import { ChallengeCard } from "@/components/ChallengesPanel";
 import { Paywall } from "@/components/Paywall";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { format, addDays, addMonths } from "date-fns";
 
 function getTimeRemaining(endDate: string): string {
   const end = new Date(endDate);
@@ -52,9 +61,39 @@ interface ChallengeWithLeaderboard {
   leaderboard: { playerId: number; playerName: string; currentValue: number; completed: boolean }[];
 }
 
+const TARGET_TYPES = [
+  { value: 'hustle_avg', label: 'Hustle Average', description: 'Average hustle score across games' },
+  { value: 'points_total', label: 'Total Points', description: 'Total points scored' },
+  { value: 'games_played', label: 'Games Played', description: 'Number of games played' },
+  { value: 'grade_count', label: 'Grade Count', description: 'Games with B+ or better' },
+];
+
+const CHALLENGE_TYPES = [
+  { value: 'weekly', label: 'Weekly' },
+  { value: 'monthly', label: 'Monthly' },
+  { value: 'seasonal', label: 'Seasonal' },
+];
+
 export default function Challenges() {
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState("active");
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  
+  // Create challenge form state
+  const [newChallenge, setNewChallenge] = useState({
+    title: '',
+    description: '',
+    challengeType: 'weekly',
+    targetType: 'points_total',
+    targetValue: 100,
+    startDate: format(new Date(), 'yyyy-MM-dd'),
+    endDate: format(addDays(new Date(), 7), 'yyyy-MM-dd'),
+    badgeReward: '',
+  });
+
+  const isCoach = user?.role === 'coach';
 
   const { data: activeChallenges, isLoading: loadingActive } = useQuery<Challenge[]>({
     queryKey: ['/api/challenges'],
@@ -72,6 +111,74 @@ export default function Challenges() {
     queryKey: ['/api/players', selectedPlayerId, 'challenges'],
     enabled: !!selectedPlayerId,
   });
+
+  const createChallengeMutation = useMutation({
+    mutationFn: (data: typeof newChallenge) => 
+      apiRequest('POST', '/api/challenges', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/challenges/all'] });
+      toast({ title: 'Challenge Created!', description: 'Your new challenge is now active.' });
+      setIsCreateDialogOpen(false);
+      setNewChallenge({
+        title: '',
+        description: '',
+        challengeType: 'weekly',
+        targetType: 'points_total',
+        targetValue: 100,
+        startDate: format(new Date(), 'yyyy-MM-dd'),
+        endDate: format(addDays(new Date(), 7), 'yyyy-MM-dd'),
+        badgeReward: '',
+      });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: 'Error', 
+        description: error.message || 'Failed to create challenge', 
+        variant: 'destructive' 
+      });
+    },
+  });
+
+  const handleCreateChallenge = () => {
+    // Validate required fields
+    if (!newChallenge.title.trim()) {
+      toast({ title: 'Error', description: 'Please enter a challenge title', variant: 'destructive' });
+      return;
+    }
+    if (!newChallenge.description.trim()) {
+      toast({ title: 'Error', description: 'Please enter a description', variant: 'destructive' });
+      return;
+    }
+    if (newChallenge.targetValue < 1) {
+      toast({ title: 'Error', description: 'Target value must be at least 1', variant: 'destructive' });
+      return;
+    }
+    // Validate date order
+    const start = new Date(newChallenge.startDate);
+    const end = new Date(newChallenge.endDate);
+    if (end <= start) {
+      toast({ title: 'Error', description: 'End date must be after start date', variant: 'destructive' });
+      return;
+    }
+    createChallengeMutation.mutate(newChallenge);
+  };
+
+  const handleChallengeTypeChange = (type: string) => {
+    let endDate = new Date();
+    if (type === 'weekly') {
+      endDate = addDays(new Date(), 7);
+    } else if (type === 'monthly') {
+      endDate = addMonths(new Date(), 1);
+    } else if (type === 'seasonal') {
+      endDate = addMonths(new Date(), 3);
+    }
+    setNewChallenge(prev => ({
+      ...prev,
+      challengeType: type,
+      endDate: format(endDate, 'yyyy-MM-dd'),
+    }));
+  };
 
   const isLoading = loadingActive || loadingAll;
 
@@ -97,21 +204,170 @@ export default function Challenges() {
             </p>
           </div>
           
-          <Select
-            value={selectedPlayerId?.toString() || ""}
-            onValueChange={(val) => setSelectedPlayerId(val ? Number(val) : null)}
-          >
-            <SelectTrigger className="w-[200px]" data-testid="select-player-challenges">
-              <SelectValue placeholder="Track your progress" />
-            </SelectTrigger>
-            <SelectContent>
-              {players?.map((player) => (
-                <SelectItem key={player.id} value={player.id.toString()}>
-                  {player.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-3">
+            {isCoach && (
+              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button data-testid="button-create-challenge">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Challenge
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Trophy className="w-5 h-5 text-primary" />
+                      Create New Challenge
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="title">Challenge Title</Label>
+                      <Input 
+                        id="title"
+                        placeholder="e.g., Weekly Scoring Champion"
+                        value={newChallenge.title}
+                        onChange={(e) => setNewChallenge(prev => ({ ...prev, title: e.target.value }))}
+                        data-testid="input-challenge-title"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="description">Description</Label>
+                      <Textarea 
+                        id="description"
+                        placeholder="Describe the challenge..."
+                        value={newChallenge.description}
+                        onChange={(e) => setNewChallenge(prev => ({ ...prev, description: e.target.value }))}
+                        data-testid="input-challenge-description"
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Challenge Type</Label>
+                        <Select
+                          value={newChallenge.challengeType}
+                          onValueChange={handleChallengeTypeChange}
+                        >
+                          <SelectTrigger data-testid="select-challenge-type">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {CHALLENGE_TYPES.map((type) => (
+                              <SelectItem key={type.value} value={type.value}>
+                                {type.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label>Target Type</Label>
+                        <Select
+                          value={newChallenge.targetType}
+                          onValueChange={(val) => setNewChallenge(prev => ({ ...prev, targetType: val }))}
+                        >
+                          <SelectTrigger data-testid="select-target-type">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {TARGET_TYPES.map((type) => (
+                              <SelectItem key={type.value} value={type.value}>
+                                {type.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="targetValue">Target Value</Label>
+                      <Input 
+                        id="targetValue"
+                        type="number"
+                        min={1}
+                        value={newChallenge.targetValue}
+                        onChange={(e) => setNewChallenge(prev => ({ ...prev, targetValue: parseInt(e.target.value) || 0 }))}
+                        data-testid="input-target-value"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {TARGET_TYPES.find(t => t.value === newChallenge.targetType)?.description}
+                      </p>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="startDate">Start Date</Label>
+                        <Input 
+                          id="startDate"
+                          type="date"
+                          value={newChallenge.startDate}
+                          onChange={(e) => setNewChallenge(prev => ({ ...prev, startDate: e.target.value }))}
+                          data-testid="input-start-date"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="endDate">End Date</Label>
+                        <Input 
+                          id="endDate"
+                          type="date"
+                          value={newChallenge.endDate}
+                          onChange={(e) => setNewChallenge(prev => ({ ...prev, endDate: e.target.value }))}
+                          data-testid="input-end-date"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="badgeReward">Badge Reward (Optional)</Label>
+                      <Input 
+                        id="badgeReward"
+                        placeholder="e.g., scoring_champion"
+                        value={newChallenge.badgeReward}
+                        onChange={(e) => setNewChallenge(prev => ({ ...prev, badgeReward: e.target.value }))}
+                        data-testid="input-badge-reward"
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setIsCreateDialogOpen(false)}
+                      data-testid="button-cancel-challenge"
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={handleCreateChallenge}
+                      disabled={createChallengeMutation.isPending}
+                      data-testid="button-save-challenge"
+                    >
+                      {createChallengeMutation.isPending ? 'Creating...' : 'Create Challenge'}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
+            
+            <Select
+              value={selectedPlayerId?.toString() || ""}
+              onValueChange={(val) => setSelectedPlayerId(val ? Number(val) : null)}
+            >
+              <SelectTrigger className="w-[200px]" data-testid="select-player-challenges">
+                <SelectValue placeholder="Track your progress" />
+              </SelectTrigger>
+              <SelectContent>
+                {players?.map((player) => (
+                  <SelectItem key={player.id} value={player.id.toString()}>
+                    {player.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">

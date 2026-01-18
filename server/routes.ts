@@ -129,6 +129,36 @@ const requiresSubscription: RequestHandler = async (req: any, res, next) => {
   }
 };
 
+// Middleware for coach role only (no subscription required)
+const requiresCoach: RequestHandler = async (req: any, res, next) => {
+  try {
+    if (!req.isAuthenticated() || !req.user?.claims?.sub) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    // App owner bypasses all role requirements
+    if (isAppOwner(req.user.claims.sub)) {
+      return next();
+    }
+    
+    const user = await authStorage.getUser(req.user.claims.sub);
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+    
+    // Check if user is a coach
+    if (user.role !== 'coach') {
+      return res.status(403).json({ message: "Coach access required" });
+    }
+    
+    (req as any).caliberUser = user;
+    next();
+  } catch (error) {
+    console.error('Error in requiresCoach middleware:', error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 // Combined middleware for coach + subscription
 const requiresCoachPro: RequestHandler = async (req: any, res, next) => {
   try {
@@ -2290,9 +2320,15 @@ Respond in this exact JSON format:
     }
   });
 
-  app.post('/api/challenges', async (req, res) => {
+  app.post('/api/challenges', requiresCoach, async (req, res) => {
     try {
-      const input = insertChallengeSchema.parse(req.body);
+      // Convert date strings to Date objects for validation
+      const body = {
+        ...req.body,
+        startDate: req.body.startDate ? new Date(req.body.startDate) : undefined,
+        endDate: req.body.endDate ? new Date(req.body.endDate) : undefined,
+      };
+      const input = insertChallengeSchema.parse(body);
       const challenge = await storage.createChallenge(input);
       res.status(201).json(challenge);
     } catch (err) {
