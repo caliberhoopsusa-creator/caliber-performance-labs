@@ -118,7 +118,6 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
         { href: "/video", label: "Video Analysis", icon: Video },
         { href: "/highlights", label: "Highlights", icon: Film },
         { href: "/grading", label: "Grading System", icon: Calculator },
-        { href: "/scout", label: "Scout Mode", icon: Binoculars, premium: "pro" },
       ],
     },
     {
