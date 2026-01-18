@@ -1884,6 +1884,126 @@ export async function registerRoutes(
     }
   });
 
+  // --- Player Discovery (Public) ---
+  app.get('/api/discover', async (req, res) => {
+    try {
+      const { position, state, school, graduationYear, search } = req.query;
+      
+      const playersWithStats = await storage.getPlayersWithStats();
+      
+      // Grade score mapping for filtering and sorting
+      const gradeScores: Record<string, number> = {
+        'A+': 100, 'A': 95, 'A-': 90,
+        'B+': 85, 'B': 80, 'B-': 75,
+        'C+': 70, 'C': 65, 'C-': 60,
+        'D': 50, 'F': 30
+      };
+
+      // Calculate stats for each player
+      let results = playersWithStats.map((player) => {
+        const games = player.games || [];
+        const gamesPlayed = games.length;
+        
+        if (gamesPlayed === 0) {
+          return {
+            id: player.id,
+            name: player.name,
+            position: player.position,
+            height: player.height,
+            team: player.team,
+            photoUrl: player.photoUrl,
+            city: player.city,
+            state: player.state,
+            school: player.school,
+            graduationYear: player.graduationYear,
+            currentTier: player.currentTier || 'Rookie',
+            ppg: 0,
+            rpg: 0,
+            apg: 0,
+            avgGrade: null,
+            avgGradeScore: 0,
+            gamesPlayed: 0,
+            openToOpportunities: player.openToOpportunities || false,
+          };
+        }
+
+        const ppg = games.reduce((acc, g) => acc + g.points, 0) / gamesPlayed;
+        const rpg = games.reduce((acc, g) => acc + g.rebounds, 0) / gamesPlayed;
+        const apg = games.reduce((acc, g) => acc + g.assists, 0) / gamesPlayed;
+        
+        const avgGradeScore = games.reduce((acc, g) => acc + (gradeScores[g.grade || 'C'] || 65), 0) / gamesPlayed;
+        
+        // Map score back to grade label
+        let avgGrade = 'C';
+        if (avgGradeScore >= 95) avgGrade = 'A';
+        else if (avgGradeScore >= 85) avgGrade = 'B+';
+        else if (avgGradeScore >= 75) avgGrade = 'B';
+        else if (avgGradeScore >= 65) avgGrade = 'C';
+        else avgGrade = 'D';
+
+        return {
+          id: player.id,
+          name: player.name,
+          position: player.position,
+          height: player.height,
+          team: player.team,
+          photoUrl: player.photoUrl,
+          city: player.city,
+          state: player.state,
+          school: player.school,
+          graduationYear: player.graduationYear,
+          currentTier: player.currentTier || 'Rookie',
+          ppg: Number(ppg.toFixed(1)),
+          rpg: Number(rpg.toFixed(1)),
+          apg: Number(apg.toFixed(1)),
+          avgGrade,
+          avgGradeScore,
+          gamesPlayed,
+          openToOpportunities: player.openToOpportunities || false,
+        };
+      });
+
+      // Apply filters
+      if (position && position !== 'All') {
+        results = results.filter(p => p.position === position);
+      }
+
+      if (state && state !== 'All') {
+        results = results.filter(p => p.state === state);
+      }
+
+      if (school && school !== 'All') {
+        results = results.filter(p => p.school?.toLowerCase().includes((school as string).toLowerCase()));
+      }
+
+      if (graduationYear && graduationYear !== 'All') {
+        const year = parseInt(graduationYear as string, 10);
+        if (!isNaN(year)) {
+          results = results.filter(p => p.graduationYear === year);
+        }
+      }
+
+      if (search && typeof search === 'string' && search.trim()) {
+        const searchLower = search.toLowerCase().trim();
+        results = results.filter(p => 
+          p.name.toLowerCase().includes(searchLower) ||
+          p.school?.toLowerCase().includes(searchLower) ||
+          p.team?.toLowerCase().includes(searchLower)
+        );
+      }
+
+      // Sort by avgGradeScore by default (descending)
+      results.sort((a, b) => b.avgGradeScore - a.avgGradeScore);
+
+      // Remove internal fields before sending
+      const response = results.map(({ avgGradeScore, ...rest }) => rest);
+      res.json(response);
+    } catch (err) {
+      console.error('Discover players error:', err);
+      res.status(500).json({ message: 'Error fetching discover data' });
+    }
+  });
+
   app.get(api.analytics.leaderboard.path, async (req, res) => {
     const playersList = await storage.getPlayers();
     const leaderboard = await Promise.all(playersList.map(async (p) => {

@@ -18,6 +18,12 @@ export const players = pgTable("players", {
   bio: text("bio"), // Player biography/description
   totalXp: integer("total_xp").notNull().default(0), // Total XP earned
   currentTier: text("current_tier").notNull().default("Rookie"), // Rookie, Starter, All-Star, MVP, Hall of Fame
+  // Recruiting/Discovery fields
+  openToOpportunities: boolean("open_to_opportunities").default(false), // Show in player directory
+  city: text("city"), // Player's city
+  state: text("state"), // Player's state/region
+  school: text("school"), // School or organization
+  graduationYear: integer("graduation_year"), // Class year (e.g., 2025)
   createdAt: timestamp("created_at").defaultNow(),
 });
 
