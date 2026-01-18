@@ -263,13 +263,32 @@ export default function Teams() {
       </div>
 
       {isLoading ? (
-        <div className="text-center py-12 text-muted-foreground">Loading teams...</div>
+        <div className="flex items-center justify-center py-16">
+          <div className="animate-pulse flex flex-col items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-primary/20" />
+            <div className="h-4 w-32 bg-muted rounded" />
+          </div>
+        </div>
       ) : myTeams.length === 0 ? (
-        <Card className="text-center py-12">
-          <CardContent>
-            <Users className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-semibold mb-2">No Teams Yet</h3>
-            <p className="text-muted-foreground mb-4">Create a team or join one with a team code</p>
+        <Card className="border-dashed border-2 bg-gradient-to-br from-card to-card/50">
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-6">
+              <Users className="w-10 h-10 text-primary" />
+            </div>
+            <h3 className="text-xl font-bold mb-2">No Teams Yet</h3>
+            <p className="text-muted-foreground text-center max-w-sm mb-6">
+              Create your own team or join an existing one with a team code to start collaborating
+            </p>
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => setJoinDialogOpen(true)}>
+                <LogIn className="w-4 h-4 mr-2" />
+                Join Team
+              </Button>
+              <Button onClick={() => setCreateDialogOpen(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Create Team
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ) : (
@@ -277,27 +296,39 @@ export default function Teams() {
           {myTeams.map((team) => (
             <Card 
               key={team.id} 
-              className="cursor-pointer hover-elevate transition-all"
+              className="cursor-pointer hover-elevate transition-all group relative overflow-visible border-primary/10 hover:border-primary/30"
               onClick={() => setSelectedTeam(team)}
               data-testid={`card-team-${team.id}`}
             >
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="w-5 h-5 text-primary" />
-                  {team.name}
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity" />
+              <CardHeader className="pb-2 relative">
+                <CardTitle className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                    <Users className="w-5 h-5 text-primary" />
+                  </div>
+                  <span className="group-hover:text-primary transition-colors">{team.name}</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="relative">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">
-                    {team.memberCount} {team.memberCount === 1 ? "member" : "members"}
-                  </span>
                   <div className="flex items-center gap-2">
-                    <code className="text-xs bg-secondary px-2 py-1 rounded">{team.code}</code>
+                    <div className="flex -space-x-2">
+                      {[...Array(Math.min(team.memberCount, 3))].map((_, i) => (
+                        <div key={i} className="w-6 h-6 rounded-full bg-muted border-2 border-card flex items-center justify-center">
+                          <span className="text-[10px] text-muted-foreground">{i + 1}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {team.memberCount} {team.memberCount === 1 ? "member" : "members"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <code className="text-xs bg-secondary/50 px-2 py-1 rounded font-mono tracking-wider">{team.code}</code>
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="h-6 w-6"
+                      className="h-7 w-7"
                       onClick={(e) => {
                         e.stopPropagation();
                         copyCode(team.code);
@@ -305,9 +336,9 @@ export default function Teams() {
                       data-testid={`button-copy-code-${team.id}`}
                     >
                       {copiedCode === team.code ? (
-                        <Check className="w-3 h-3 text-green-500" />
+                        <Check className="w-4 h-4 text-green-500" />
                       ) : (
-                        <Copy className="w-3 h-3" />
+                        <Copy className="w-4 h-4" />
                       )}
                     </Button>
                   </div>

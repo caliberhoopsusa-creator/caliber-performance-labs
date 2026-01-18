@@ -240,27 +240,43 @@ export function TeamBoard({ team, sessionId, onBack }: TeamBoardProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={onBack} data-testid="button-back">
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold font-display text-white tracking-wide">{team.name}</h1>
-          <p className="text-muted-foreground mt-1">Team Code: {team.code}</p>
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-6 border border-primary/20">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl" />
+        <div className="flex items-center gap-4 relative">
+          <Button variant="ghost" size="icon" onClick={onBack} data-testid="button-back" className="shrink-0">
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shrink-0 shadow-lg shadow-primary/20">
+            <Users className="w-7 h-7 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold font-display text-white tracking-wide truncate">{team.name}</h1>
+            <div className="flex items-center gap-3 mt-1">
+              <code className="text-sm bg-black/30 backdrop-blur px-2 py-0.5 rounded font-mono tracking-widest text-primary">{team.code}</code>
+              <span className="text-sm text-muted-foreground">{members.length} members</span>
+              {isCoach && (
+                <Badge variant="secondary" className="text-xs bg-amber-500/20 text-amber-400 border-amber-500/30">
+                  <Crown className="w-3 h-3 mr-1" /> Coach
+                </Badge>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr,300px]">
         <div className="space-y-4">
-          <Card>
-            <CardHeader className="pb-2">
+          <Card className="border-primary/10">
+            <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
-                <MessageCircle className="w-5 h-5 text-primary" />
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <MessageCircle className="w-4 h-4 text-primary" />
+                </div>
                 Team Feed
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-3 mb-4 p-3 rounded-lg bg-secondary/30">
+              <form onSubmit={handleSubmit} className="space-y-3 mb-6 p-4 rounded-xl bg-gradient-to-br from-secondary/40 to-secondary/20 border border-white/5">
                 <div className="flex gap-2 items-center">
                   <Select value={postType} onValueChange={(v: any) => setPostType(v)}>
                     <SelectTrigger className="w-[140px]" data-testid="select-post-type">
@@ -338,13 +354,22 @@ export function TeamBoard({ team, sessionId, onBack }: TeamBoardProps) {
 
               <ScrollArea className="h-[500px] pr-4">
                 {postsLoading ? (
-                  <div className="text-center py-8 text-muted-foreground">Loading messages...</div>
+                  <div className="flex items-center justify-center py-12">
+                    <div className="animate-pulse flex flex-col items-center gap-3">
+                      <div className="w-12 h-12 rounded-full bg-primary/20" />
+                      <div className="h-3 w-24 bg-muted rounded" />
+                    </div>
+                  </div>
                 ) : sortedPosts.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No messages yet. Start the conversation!
+                  <div className="text-center py-12 border-2 border-dashed border-muted rounded-xl">
+                    <div className="w-14 h-14 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4">
+                      <MessageCircle className="w-7 h-7 text-muted-foreground" />
+                    </div>
+                    <h3 className="font-medium mb-1">No messages yet</h3>
+                    <p className="text-sm text-muted-foreground">Start the conversation!</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {sortedPosts.map((post) => {
                       const config = POST_TYPE_CONFIG[post.postType as keyof typeof POST_TYPE_CONFIG] || POST_TYPE_CONFIG.general;
                       const Icon = config.icon;
@@ -353,7 +378,7 @@ export function TeamBoard({ team, sessionId, onBack }: TeamBoardProps) {
                       return (
                         <Card
                           key={post.id}
-                          className={`p-4 ${post.isPinned ? "border-primary/50 bg-primary/5" : ""}`}
+                          className={`p-4 transition-all ${post.isPinned ? "border-primary/40 bg-gradient-to-br from-primary/10 to-primary/5 shadow-lg shadow-primary/5" : "hover:border-primary/20"}`}
                           data-testid={`post-${post.id}`}
                         >
                           <div className="flex gap-3">
@@ -391,17 +416,21 @@ export function TeamBoard({ team, sessionId, onBack }: TeamBoardProps) {
                               </div>
 
                               {post.postType === "practice" && post.practiceTime && (
-                                <div className="flex items-center gap-4 mt-2 p-2 rounded bg-blue-500/10 text-sm">
-                                  <div className="flex items-center gap-1 text-blue-400">
-                                    <Calendar className="w-4 h-4" />
-                                    {format(new Date(post.practiceTime), "MMM d, yyyy 'at' h:mm a")}
-                                  </div>
-                                  {post.practiceLocation && (
-                                    <div className="flex items-center gap-1 text-blue-400">
-                                      <MapPin className="w-4 h-4" />
-                                      {post.practiceLocation}
+                                <div className="mt-3 p-3 rounded-lg bg-gradient-to-r from-blue-500/15 to-blue-500/5 border border-blue-500/20">
+                                  <div className="flex flex-wrap items-center gap-4 text-sm">
+                                    <div className="flex items-center gap-2 text-blue-400">
+                                      <div className="w-7 h-7 rounded bg-blue-500/20 flex items-center justify-center">
+                                        <Calendar className="w-4 h-4" />
+                                      </div>
+                                      <span className="font-medium">{format(new Date(post.practiceTime), "EEE, MMM d 'at' h:mm a")}</span>
                                     </div>
-                                  )}
+                                    {post.practiceLocation && (
+                                      <div className="flex items-center gap-2 text-blue-300/80">
+                                        <MapPin className="w-4 h-4" />
+                                        <span>{post.practiceLocation}</span>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               )}
 
@@ -425,38 +454,46 @@ export function TeamBoard({ team, sessionId, onBack }: TeamBoardProps) {
           </Card>
         </div>
 
-        <div className="lg:block">
-          <Card>
+        <div className="lg:block space-y-4">
+          <Card className="border-primary/10">
             <Collapsible open={membersOpen} onOpenChange={setMembersOpen}>
               <CollapsibleTrigger asChild>
-                <CardHeader className="cursor-pointer hover-elevate rounded-t-lg">
-                  <CardTitle className="text-lg flex items-center justify-between">
+                <CardHeader className="cursor-pointer hover-elevate rounded-t-lg pb-3">
+                  <CardTitle className="text-base flex items-center justify-between">
                     <span className="flex items-center gap-2">
-                      <Users className="w-4 h-4" />
-                      Members ({members.length})
+                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Users className="w-4 h-4 text-primary" />
+                      </div>
+                      Team ({members.length})
                     </span>
-                    <ChevronDown className={`w-4 h-4 transition-transform ${membersOpen ? "rotate-180" : ""}`} />
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${membersOpen ? "rotate-180" : ""}`} />
                   </CardTitle>
                 </CardHeader>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <CardContent>
-                  <div className="space-y-3">
+                <CardContent className="pt-0">
+                  <div className="space-y-2">
                     {members.map((member) => (
-                      <div key={member.id} className="flex items-center gap-3" data-testid={`member-${member.id}`}>
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback className="text-xs">
+                      <div 
+                        key={member.id} 
+                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-secondary/50 transition-colors" 
+                        data-testid={`member-${member.id}`}
+                      >
+                        <Avatar className="h-9 w-9 border-2 border-background">
+                          <AvatarFallback className="text-xs bg-gradient-to-br from-primary/20 to-primary/5">
                             {getInitials(member.displayName)}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
                           <span className="text-sm font-medium truncate block">{member.displayName}</span>
-                          {member.role === "coach" && (
-                            <span className="text-xs text-primary">Coach</span>
-                          )}
+                          <span className="text-xs text-muted-foreground">
+                            {member.role === "admin" ? "Admin" : member.role === "coach" ? "Coach" : "Player"}
+                          </span>
                         </div>
                         {(member.role === "admin" || member.role === "coach") && (
-                          <Crown className="w-4 h-4 text-amber-500" />
+                          <div className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center">
+                            <Crown className="w-3 h-3 text-amber-500" />
+                          </div>
                         )}
                       </div>
                     ))}
@@ -466,16 +503,21 @@ export function TeamBoard({ team, sessionId, onBack }: TeamBoardProps) {
             </Collapsible>
           </Card>
 
-          <Card className="mt-4">
+          <Card className="border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-transparent">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-blue-400" />
+                <div className="w-7 h-7 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                  <Calendar className="w-4 h-4 text-blue-400" />
+                </div>
                 Upcoming Practices
               </CardTitle>
             </CardHeader>
             <CardContent>
               {posts.filter(p => p.postType === "practice" && p.practiceTime && new Date(p.practiceTime) > new Date()).length === 0 ? (
-                <p className="text-xs text-muted-foreground">No upcoming practices scheduled</p>
+                <div className="text-center py-4">
+                  <Calendar className="w-8 h-8 mx-auto text-muted-foreground/50 mb-2" />
+                  <p className="text-xs text-muted-foreground">No upcoming practices</p>
+                </div>
               ) : (
                 <div className="space-y-2">
                   {posts
@@ -483,12 +525,15 @@ export function TeamBoard({ team, sessionId, onBack }: TeamBoardProps) {
                     .sort((a, b) => new Date(a.practiceTime!).getTime() - new Date(b.practiceTime!).getTime())
                     .slice(0, 3)
                     .map((practice) => (
-                      <div key={practice.id} className="p-2 rounded bg-blue-500/10 text-xs">
-                        <div className="font-medium text-blue-400">
-                          {format(new Date(practice.practiceTime!), "EEE, MMM d 'at' h:mm a")}
+                      <div key={practice.id} className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                        <div className="font-medium text-sm text-blue-400">
+                          {format(new Date(practice.practiceTime!), "EEE, MMM d")}
+                        </div>
+                        <div className="text-xs text-blue-300/80 mt-0.5">
+                          {format(new Date(practice.practiceTime!), "h:mm a")}
                         </div>
                         {practice.practiceLocation && (
-                          <div className="text-muted-foreground flex items-center gap-1 mt-1">
+                          <div className="text-xs text-muted-foreground flex items-center gap-1 mt-2 pt-2 border-t border-blue-500/10">
                             <MapPin className="w-3 h-3" />
                             {practice.practiceLocation}
                           </div>
