@@ -53,6 +53,8 @@ export default function AnalyzeGame() {
 }
 
 function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
+  const [autoCalcPoints, setAutoCalcPoints] = useState(true);
+  
   const form = useForm<z.infer<typeof insertGameSchema>>({
     resolver: zodResolver(insertGameSchema),
     defaultValues: {
@@ -81,6 +83,31 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
       notes: ""
     }
   });
+
+  // Watch shooting stats for live calculations
+  const fgMade = form.watch('fgMade') || 0;
+  const fgAttempted = form.watch('fgAttempted') || 0;
+  const threeMade = form.watch('threeMade') || 0;
+  const threeAttempted = form.watch('threeAttempted') || 0;
+  const ftMade = form.watch('ftMade') || 0;
+  const ftAttempted = form.watch('ftAttempted') || 0;
+
+  // Calculate percentages
+  const fgPercent = fgAttempted > 0 ? ((fgMade / fgAttempted) * 100).toFixed(1) : '—';
+  const threePercent = threeAttempted > 0 ? ((threeMade / threeAttempted) * 100).toFixed(1) : '—';
+  const ftPercent = ftAttempted > 0 ? ((ftMade / ftAttempted) * 100).toFixed(1) : '—';
+  
+  // Calculate True Shooting % = PTS / (2 * (FGA + 0.44 * FTA))
+  const calculatedPoints = ((fgMade - threeMade) * 2) + (threeMade * 3) + ftMade;
+  const tsa = fgAttempted + (0.44 * ftAttempted); // True Shooting Attempts
+  const tsPercent = tsa > 0 ? ((calculatedPoints / (2 * tsa)) * 100).toFixed(1) : '—';
+
+  // Auto-update points when shooting stats change (if enabled)
+  useEffect(() => {
+    if (autoCalcPoints) {
+      form.setValue('points', calculatedPoints);
+    }
+  }, [fgMade, threeMade, ftMade, autoCalcPoints]);
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -156,25 +183,84 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="bg-secondary/10 p-4 rounded-xl space-y-4">
-            <h4 className="text-sm font-bold text-white text-center">Field Goals</h4>
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-bold text-white">Field Goals</h4>
+              <span className={cn(
+                "text-lg font-mono font-bold",
+                fgPercent !== '—' && parseFloat(fgPercent) >= 50 ? "text-green-400" : 
+                fgPercent !== '—' && parseFloat(fgPercent) < 40 ? "text-red-400" : "text-primary"
+              )}>
+                {fgPercent !== '—' ? `${fgPercent}%` : '—'}
+              </span>
+            </div>
             <div className="flex gap-4">
               <NumberInput label="Made" name="fgMade" register={form.register} />
               <NumberInput label="Attempted" name="fgAttempted" register={form.register} />
             </div>
           </div>
           <div className="bg-secondary/10 p-4 rounded-xl space-y-4">
-            <h4 className="text-sm font-bold text-white text-center">3-Pointers</h4>
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-bold text-white">3-Pointers</h4>
+              <span className={cn(
+                "text-lg font-mono font-bold",
+                threePercent !== '—' && parseFloat(threePercent) >= 40 ? "text-green-400" : 
+                threePercent !== '—' && parseFloat(threePercent) < 30 ? "text-red-400" : "text-primary"
+              )}>
+                {threePercent !== '—' ? `${threePercent}%` : '—'}
+              </span>
+            </div>
             <div className="flex gap-4">
               <NumberInput label="Made" name="threeMade" register={form.register} />
               <NumberInput label="Attempted" name="threeAttempted" register={form.register} />
             </div>
           </div>
           <div className="bg-secondary/10 p-4 rounded-xl space-y-4">
-            <h4 className="text-sm font-bold text-white text-center">Free Throws</h4>
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-bold text-white">Free Throws</h4>
+              <span className={cn(
+                "text-lg font-mono font-bold",
+                ftPercent !== '—' && parseFloat(ftPercent) >= 80 ? "text-green-400" : 
+                ftPercent !== '—' && parseFloat(ftPercent) < 70 ? "text-red-400" : "text-primary"
+              )}>
+                {ftPercent !== '—' ? `${ftPercent}%` : '—'}
+              </span>
+            </div>
             <div className="flex gap-4">
               <NumberInput label="Made" name="ftMade" register={form.register} />
               <NumberInput label="Attempted" name="ftAttempted" register={form.register} />
             </div>
+          </div>
+        </div>
+
+        {/* Auto-calculated metrics */}
+        <div className="mt-6 p-4 bg-primary/10 rounded-xl border border-primary/20">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-6">
+              <div className="text-center">
+                <p className="text-xs text-muted-foreground uppercase font-bold">True Shooting</p>
+                <p className={cn(
+                  "text-2xl font-mono font-bold",
+                  tsPercent !== '—' && parseFloat(tsPercent) >= 60 ? "text-green-400" : 
+                  tsPercent !== '—' && parseFloat(tsPercent) < 50 ? "text-red-400" : "text-primary"
+                )}>
+                  {tsPercent !== '—' ? `${tsPercent}%` : '—'}
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-xs text-muted-foreground uppercase font-bold">Calc. Points</p>
+                <p className="text-2xl font-mono font-bold text-white">{calculatedPoints}</p>
+              </div>
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input 
+                type="checkbox" 
+                checked={autoCalcPoints}
+                onChange={(e) => setAutoCalcPoints(e.target.checked)}
+                className="w-4 h-4 rounded border-white/20 bg-secondary/30 text-primary focus:ring-primary"
+                data-testid="checkbox-auto-calc-points"
+              />
+              <span className="text-sm text-muted-foreground">Auto-fill points from shooting</span>
+            </label>
           </div>
         </div>
       </section>
