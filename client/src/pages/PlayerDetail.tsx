@@ -1062,19 +1062,12 @@ export default function PlayerDetail() {
         </Card>
       </div>
 
-          <Collapsible defaultOpen={false}>
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" className="w-full justify-between p-4 h-auto">
-                <span className="flex items-center gap-2 font-bold">
-                  <Medal className="w-5 h-5 text-primary" /> Skill Badges
-                </span>
-                <ChevronDown className="w-4 h-4" />
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <SkillBadges playerId={player.id} />
-            </CollapsibleContent>
-          </Collapsible>
+          <div className="mb-6">
+            <h3 className="text-lg font-bold font-display text-white mb-4 flex items-center gap-2">
+              <Medal className="w-5 h-5 text-primary" /> Skill Badges
+            </h3>
+            <SkillBadges playerId={player.id} />
+          </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
