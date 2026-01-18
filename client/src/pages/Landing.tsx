@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Activity, Trophy, Video, BarChart3, Users, Target, Sparkles, Star, ArrowRight } from "lucide-react";
+import { Activity, Trophy, Video, BarChart3, Users, Target, Sparkles, Star, ArrowRight, Search } from "lucide-react";
+import { Link } from "wouter";
 import caliberLogo from "@assets/Gemini_Generated_Image_3ld7js3ld7js3ld7_(1)_1768700977754.png";
 
 export default function Landing() {
@@ -48,6 +49,12 @@ export default function Landing() {
                     Get Started Free
                     <ArrowRight className="w-5 h-5" />
                   </a>
+                </Button>
+                <Button size="lg" variant="outline" asChild className="text-lg px-8 border-white/20 text-white" data-testid="button-discover-players">
+                  <Link href="/discover" className="flex items-center gap-2">
+                    <Search className="w-5 h-5" />
+                    Find Players
+                  </Link>
                 </Button>
               </div>
               

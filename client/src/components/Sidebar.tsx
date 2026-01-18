@@ -71,6 +71,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
     {
       title: "Discover",
       items: [
+        { href: "/discover", label: "Find Players", icon: Binoculars, featured: true },
         { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
         { href: "/compare", label: "Head-to-Head", icon: Activity },
         { href: "/grading", label: "Grading System", icon: Calculator },
@@ -106,13 +107,14 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
     {
       title: "Player Tools",
       items: [
+        { href: "/discover", label: "Find Players", icon: Binoculars, featured: true },
         { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
         { href: "/compare", label: "Head-to-Head", icon: Activity },
         { href: "/video", label: "Video Analysis", icon: Video },
         { href: "/shot-chart", label: "Shot Chart", icon: Crosshair },
         { href: "/highlights", label: "Highlights", icon: Film },
         { href: "/grading", label: "Grading System", icon: Calculator },
-        { href: "/scout", label: "Scout Mode", icon: Binoculars, premium: "pro" },
+        { href: "/scout", label: "Scout Mode", icon: Eye, premium: "pro" },
       ],
     },
     {

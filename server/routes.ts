@@ -1216,6 +1216,11 @@ export async function registerRoutes(
         photoUrl: z.string().optional(),
         bannerUrl: z.string().optional(),
         bio: z.string().optional(),
+        openToOpportunities: z.boolean().optional(),
+        city: z.string().optional(),
+        state: z.string().optional(),
+        school: z.string().optional(),
+        graduationYear: z.number().optional(),
       });
       
       const input = updateSchema.parse(req.body);
