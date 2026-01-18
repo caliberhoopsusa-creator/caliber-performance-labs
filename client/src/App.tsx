@@ -170,7 +170,7 @@ function MainRouter() {
               <Route path="/reels/:playerId" component={ReelPage} />
               <Route path="/team-comparison" component={TeamComparison} />
               <Route path="/report-card" component={ReportCardPage} />
-              <Route path="/social" component={SocialHub} />
+              <Route path="/social-hub" component={SocialHub} />
               <Route component={NotFound} />
             </Switch>
           </main>
