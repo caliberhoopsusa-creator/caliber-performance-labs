@@ -975,9 +975,6 @@ export default function PlayerDetail() {
           <TabsTrigger value="highlights" data-testid="tab-highlights">
             <Film className="w-4 h-4 mr-2" /> Highlights
           </TabsTrigger>
-          <TabsTrigger value="accolades" data-testid="tab-accolades">
-            <Trophy className="w-4 h-4 mr-2" /> Accolades
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -1526,9 +1523,6 @@ export default function PlayerDetail() {
           <HighlightsGallery playerId={player.id} isOwner={isOwnProfile} />
         </TabsContent>
 
-        <TabsContent value="accolades">
-          <AccoladesSection playerId={player.id} isOwnProfile={isOwnProfile} />
-        </TabsContent>
       </Tabs>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
