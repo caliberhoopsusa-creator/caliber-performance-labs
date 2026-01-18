@@ -2548,6 +2548,7 @@ Respond in this exact JSON format:
       const joinTeamSchema = z.object({
         sessionId: z.string().min(1),
         displayName: z.string().min(1),
+        role: z.enum(['member', 'coach']).optional().default('member'),
       });
       const input = joinTeamSchema.parse(req.body);
       
@@ -2566,7 +2567,7 @@ Respond in this exact JSON format:
         teamId,
         displayName: input.displayName,
         sessionId: input.sessionId,
-        role: 'member',
+        role: input.role,
         playerId: null,
       });
 

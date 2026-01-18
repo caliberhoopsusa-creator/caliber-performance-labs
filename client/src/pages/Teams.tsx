@@ -6,8 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Plus, LogIn, Copy, Check } from "lucide-react";
+import { Users, Plus, LogIn, Copy, Check, Crown } from "lucide-react";
 import { TeamBoard } from "@/components/TeamBoard";
 import type { Team } from "@shared/schema";
 
@@ -38,6 +39,7 @@ export default function Teams() {
   const [teamName, setTeamName] = useState("");
   const [displayName, setDisplayNameInput] = useState(getDisplayName());
   const [joinCode, setJoinCode] = useState("");
+  const [joinRole, setJoinRole] = useState<"member" | "coach">("member");
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   const sessionId = getSessionId();
@@ -80,7 +82,7 @@ export default function Teams() {
   });
 
   const joinTeamMutation = useMutation({
-    mutationFn: async ({ code, displayName }: { code: string; displayName: string }) => {
+    mutationFn: async ({ code, displayName, role }: { code: string; displayName: string; role: "member" | "coach" }) => {
       setDisplayName(displayName);
       const teamRes = await fetch(`/api/teams/${code}`);
       if (!teamRes.ok) throw new Error("Team not found");
@@ -89,16 +91,18 @@ export default function Teams() {
       const res = await apiRequest("POST", `/api/teams/${team.id}/join`, {
         sessionId,
         displayName,
+        role,
       });
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/my-teams"] });
       setJoinDialogOpen(false);
       setJoinCode("");
+      setJoinRole("member");
       toast({
         title: "Joined Team",
-        description: "You are now a team member!",
+        description: variables.role === "coach" ? "You joined as a coach!" : "You are now a team member!",
       });
     },
     onError: (err: Error) => {
@@ -148,7 +152,7 @@ export default function Teams() {
               <form onSubmit={(e) => {
                 e.preventDefault();
                 if (joinCode && displayName) {
-                  joinTeamMutation.mutate({ code: joinCode.toUpperCase(), displayName });
+                  joinTeamMutation.mutate({ code: joinCode.toUpperCase(), displayName, role: joinRole });
                 }
               }} className="space-y-4">
                 <div className="space-y-2">
@@ -171,6 +175,29 @@ export default function Teams() {
                     maxLength={6}
                     data-testid="input-join-code"
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="joinRole">Your Role</Label>
+                  <Select value={joinRole} onValueChange={(v: "member" | "coach") => setJoinRole(v)}>
+                    <SelectTrigger data-testid="select-join-role">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="member">
+                        <span className="flex items-center gap-2">
+                          <Users className="w-4 h-4" /> Player
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="coach">
+                        <span className="flex items-center gap-2">
+                          <Crown className="w-4 h-4 text-amber-500" /> Coach
+                        </span>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Coaches can post announcements and practice schedules
+                  </p>
                 </div>
                 <Button 
                   type="submit" 
