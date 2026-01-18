@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Award, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Crosshair, Share2, Copy } from "lucide-react";
@@ -5,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { BADGE_DEFINITIONS, type Game, type Badge } from "@shared/schema";
 import { LikeCount } from "@/components/SocialEngagement";
+import { ShareModal } from "@/components/ShareModal";
+import { ShareableGameCard } from "@/components/ShareableCard";
 
 const BADGE_ICONS: Record<string, any> = {
   twenty_piece: Target,
@@ -63,7 +66,12 @@ function getGradeColor(grade: string) {
   };
 }
 
-export function GameCard({ game, playerName, badges = [], showShareButton = true, className }: GameCardProps) {
+interface GameCardPropsExtended extends GameCardProps {
+  playerPhoto?: string;
+}
+
+export function GameCard({ game, playerName, badges = [], showShareButton = true, className, playerPhoto }: GameCardPropsExtended) {
+  const [shareOpen, setShareOpen] = useState(false);
   const { toast } = useToast();
   const gradeColors = getGradeColor(game.grade || "");
 
@@ -72,35 +80,6 @@ export function GameCard({ game, playerName, badges = [], showShareButton = true
   const ftPct = game.ftAttempted ? ((game.ftMade / game.ftAttempted) * 100).toFixed(0) : "—";
 
   const gameBadges = badges.filter(b => b.gameId === game.id);
-
-  const handleShare = async () => {
-    const shareUrl = `${window.location.origin}/players/${game.playerId}/card?gameId=${game.id}`;
-    const shareData = {
-      title: `${playerName} Game Report - ${game.grade}`,
-      text: `Check out my ${game.points} PTS, ${game.rebounds} REB, ${game.assists} AST game vs ${game.opponent}! Grade: ${game.grade}`,
-      url: shareUrl,
-    };
-
-    if (navigator.share && navigator.canShare?.(shareData)) {
-      try {
-        await navigator.share(shareData);
-      } catch (err) {
-        if ((err as Error).name !== "AbortError") {
-          copyToClipboard(shareUrl);
-        }
-      }
-    } else {
-      copyToClipboard(shareUrl);
-    }
-  };
-
-  const copyToClipboard = (url: string) => {
-    navigator.clipboard.writeText(url);
-    toast({
-      title: "Link Copied!",
-      description: "Share link copied to clipboard",
-    });
-  };
 
   return (
     <div
@@ -222,7 +201,7 @@ export function GameCard({ game, playerName, badges = [], showShareButton = true
 
         {showShareButton && (
           <Button
-            onClick={handleShare}
+            onClick={() => setShareOpen(true)}
             variant="outline"
             size="sm"
             className="w-full bg-gradient-to-r from-primary/10 to-orange-500/10 border border-primary/30 hover:border-primary/50 text-primary font-bold gap-2 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20"
@@ -233,6 +212,21 @@ export function GameCard({ game, playerName, badges = [], showShareButton = true
           </Button>
         )}
       </div>
+
+      <ShareModal
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        title="Share Game Performance"
+        shareUrl={`${window.location.origin}/players/${game.playerId}/card?gameId=${game.id}`}
+        shareText={`Check out my ${game.points} PTS, ${game.rebounds} REB, ${game.assists} AST game vs ${game.opponent}! Grade: ${game.grade} on @CaliberApp`}
+      >
+        <ShareableGameCard 
+          game={game} 
+          playerName={playerName} 
+          playerPhoto={playerPhoto}
+          badges={badges}
+        />
+      </ShareModal>
     </div>
   );
 }

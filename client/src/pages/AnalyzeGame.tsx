@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useCreateGame, usePlayers } from "@/hooks/use-basketball";
+import { useCreateGame, usePlayers, usePlayer } from "@/hooks/use-basketball";
 import { insertGameSchema } from "@shared/schema";
 import { useLocation, useRoute } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -11,10 +11,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
-import { ArrowLeft, Save, Loader2, Trophy } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Trophy, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GradeBadge } from "@/components/GradeBadge";
 import { Link } from "wouter";
+import { ShareModal } from "@/components/ShareModal";
+import { ShareableGameCard } from "@/components/ShareableCard";
 
 export default function AnalyzeGame() {
   const [location, setLocation] = useLocation();
@@ -470,6 +472,11 @@ function NumberInput({ label, name, register }: any) {
 }
 
 function ReportCardView({ game, onReset }: { game: any, onReset: () => void }) {
+  const [shareOpen, setShareOpen] = useState(false);
+  const { data: player } = usePlayer(game.playerId);
+  const playerName = player?.name || "Player";
+  const playerPhoto = player?.photoUrl || undefined;
+
   return (
     <div className="max-w-2xl mx-auto py-8 animate-in zoom-in-95 duration-500">
       <div className="bg-card border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
@@ -525,7 +532,16 @@ function ReportCardView({ game, onReset }: { game: any, onReset: () => void }) {
             </div>
           </div>
 
-          <div className="flex gap-4 pt-4">
+          <Button 
+            onClick={() => setShareOpen(true)} 
+            className="w-full gap-2 bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-500/90"
+            data-testid="button-share-achievement"
+          >
+            <Share2 className="w-4 h-4" />
+            Share Your Achievement
+          </Button>
+
+          <div className="flex gap-4 pt-2">
             <Button onClick={onReset} variant="outline" className="flex-1 border-white/10 hover:bg-white/5 text-white">
               Close Report
             </Button>
@@ -537,6 +553,20 @@ function ReportCardView({ game, onReset }: { game: any, onReset: () => void }) {
           </div>
         </div>
       </div>
+
+      <ShareModal
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        title="Share Game Performance"
+        shareUrl={`${window.location.origin}/players/${game.playerId}/card?gameId=${game.id}`}
+        shareText={`Check out my ${game.points} PTS, ${game.rebounds} REB, ${game.assists} AST game vs ${game.opponent}! Grade: ${game.grade} on @CaliberApp`}
+      >
+        <ShareableGameCard 
+          game={game} 
+          playerName={playerName} 
+          playerPhoto={playerPhoto}
+        />
+      </ShareModal>
     </div>
   );
 }
