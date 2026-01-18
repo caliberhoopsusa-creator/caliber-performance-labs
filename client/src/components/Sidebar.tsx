@@ -235,25 +235,24 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
   
   const navItems = isPlayer ? [
     { href: "/", icon: LayoutDashboard, label: "Home" },
-    { href: "/analyze", icon: PlusCircle, label: "Games" },
+    { href: "/analyze", icon: PlusCircle, label: "Log" },
     { href: "/live-game", icon: Gamepad2, label: "Live", featured: true },
     { href: "/leaderboard", icon: Trophy, label: "Rank" },
-    { href: playerId ? `/players/${playerId}` : "/", icon: UserCircle, label: "Profile" },
+    { href: playerId ? `/players/${playerId}` : "/", icon: UserCircle, label: "Me" },
   ] : [
     { href: "/", icon: LayoutDashboard, label: "Home" },
-    { href: "/players", icon: Users, label: "Players" },
+    { href: "/players", icon: Users, label: "Roster" },
     { href: "/live-game", icon: Gamepad2, label: "Live", featured: true },
+    { href: "/analyze", icon: PlusCircle, label: "Log" },
     { href: "/leaderboard", icon: Trophy, label: "Rank" },
-    { href: "/coach/dashboard", icon: ClipboardList, label: "Coach" },
   ];
   
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-lg border-t border-border z-50 safe-area-bottom">
-      <div className="flex justify-around items-center h-16 px-2">
+      <div className="flex justify-around items-center h-16 px-1">
         {navItems.map((item) => {
           const isActive = location === item.href || 
-            (item.href.includes('/players/') && location.includes('/players/') && location === item.href) ||
-            (item.href === "/coach/dashboard" && location.startsWith("/coach"));
+            (item.href.includes('/players/') && location.includes('/players/') && location === item.href);
           const Icon = item.icon;
           
           if (item.featured) {
@@ -261,19 +260,19 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
               <Link 
                 key={item.href} 
                 href={item.href} 
-                className="flex flex-col items-center gap-1 min-w-[56px] min-h-[44px] justify-center" 
+                className="flex flex-col items-center gap-0.5 min-w-[48px] min-h-[44px] justify-center" 
                 data-testid={`mobile-nav-${item.label.toLowerCase()}`}
               >
                 <div className={cn(
-                  "rounded-full p-2.5 -mt-6 shadow-lg border-4 border-background transition-all",
+                  "rounded-full p-2 -mt-5 shadow-lg border-2 border-background transition-all",
                   isActive 
                     ? "bg-primary text-primary-foreground" 
                     : "bg-primary text-primary-foreground animate-pulse"
                 )}>
-                  <Icon className="w-6 h-6" />
+                  <Icon className="w-5 h-5" />
                 </div>
                 <span className={cn(
-                  "text-[10px] font-bold uppercase mt-1 tracking-wide",
+                  "text-[9px] font-bold uppercase tracking-wide",
                   isActive ? "text-primary" : "text-muted-foreground"
                 )}>{item.label}</span>
               </Link>
@@ -285,16 +284,16 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
               key={item.href} 
               href={item.href} 
               className={cn(
-                "flex flex-col items-center gap-1 min-w-[56px] min-h-[44px] justify-center p-2 rounded-lg transition-colors",
+                "flex flex-col items-center gap-0.5 min-w-[48px] min-h-[44px] justify-center p-1.5 rounded-lg transition-colors",
                 isActive 
                   ? "text-primary bg-primary/10" 
                   : "text-muted-foreground active:bg-white/5"
               )} 
               data-testid={`mobile-nav-${item.label.toLowerCase()}`}
             >
-              <Icon className={cn("w-6 h-6", isActive && "stroke-[2.5px]")} />
+              <Icon className={cn("w-5 h-5", isActive && "stroke-[2.5px]")} />
               <span className={cn(
-                "text-[10px] font-bold uppercase tracking-wide",
+                "text-[9px] font-bold uppercase tracking-wide",
                 isActive ? "text-primary" : "text-muted-foreground"
               )}>{item.label}</span>
             </Link>

@@ -4,6 +4,7 @@ import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Sidebar, MobileNav } from "@/components/Sidebar";
+import { MobileDrawer } from "@/components/MobileDrawer";
 import { NotificationBell } from "@/components/NotificationBell";
 import { OfflineBanner, OfflineIndicator } from "@/components/OfflineBanner";
 import { useAuth } from "@/hooks/use-auth";
@@ -129,9 +130,12 @@ function MainRouter() {
       <div className="flex min-h-screen bg-background text-foreground font-body selection:bg-primary/30">
         <Sidebar userRole={extendedUser.role} playerId={extendedUser.playerId} />
         <div className="flex-1 flex flex-col">
-          <header className="flex items-center justify-end gap-4 p-4 md:px-8 border-b border-white/5">
-            <OfflineIndicator />
-            <NotificationBell />
+          <header className="flex items-center justify-between gap-4 p-4 md:px-8 border-b border-white/5">
+            <MobileDrawer userRole={extendedUser.role} playerId={extendedUser.playerId} />
+            <div className="flex items-center gap-3">
+              <OfflineIndicator />
+              <NotificationBell />
+            </div>
           </header>
           <main className="flex-1 p-4 pb-20 md:px-8 md:pb-8 w-full max-w-[1600px] mx-auto overflow-x-hidden">
             <Switch>
