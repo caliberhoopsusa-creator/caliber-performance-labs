@@ -3153,6 +3153,32 @@ Respond in this exact JSON format:
     }
   });
 
+  // Get active stories (non-expired)
+  app.get('/api/stories/active', async (req, res) => {
+    try {
+      const limit = Number(req.query.limit) || 20;
+      const stories = await storage.getActiveStories(limit);
+      res.json(stories);
+    } catch (err) {
+      console.error('Get active stories error:', err);
+      res.status(500).json({ message: 'Error fetching active stories' });
+    }
+  });
+
+  // Get single story
+  app.get('/api/stories/:id', async (req, res) => {
+    try {
+      const story = await storage.getStory(Number(req.params.id));
+      if (!story) {
+        return res.status(404).json({ message: 'Story not found' });
+      }
+      res.json(story);
+    } catch (err) {
+      console.error('Get story error:', err);
+      res.status(500).json({ message: 'Error fetching story' });
+    }
+  });
+
   app.get('/api/players/:id/stories', async (req, res) => {
     try {
       const playerId = Number(req.params.id);
@@ -3166,7 +3192,7 @@ Respond in this exact JSON format:
 
   app.post('/api/stories', async (req, res) => {
     try {
-      const { playerId, templateId, headline, stats, sessionId, isPublic } = req.body;
+      const { playerId, templateId, headline, stats, sessionId, isPublic, imageUrl, videoUrl, mediaType, caption, expiresIn24h } = req.body;
 
       if (!playerId || !headline) {
         return res.status(400).json({ message: 'PlayerId and headline are required' });
@@ -3177,13 +3203,21 @@ Respond in this exact JSON format:
         return res.status(404).json({ message: 'Player not found' });
       }
 
+      // Calculate expiry time (24 hours from now if expiresIn24h is true)
+      const expiresAt = expiresIn24h ? new Date(Date.now() + 24 * 60 * 60 * 1000) : null;
+
       const story = await storage.createPlayerStory({
         playerId,
         templateId: templateId || null,
         headline,
-        stats: stats ? JSON.stringify(stats) : null,
+        stats: stats ? (typeof stats === 'string' ? stats : JSON.stringify(stats)) : null,
+        imageUrl: imageUrl || null,
+        videoUrl: videoUrl || null,
+        mediaType: mediaType || 'text',
+        caption: caption || null,
         sessionId: sessionId || null,
         isPublic: isPublic !== false,
+        expiresAt,
       });
 
       // Create feed activity for public stories
@@ -3193,7 +3227,7 @@ Respond in this exact JSON format:
           playerId,
           relatedId: story.id,
           headline: `${player.name} posted a story: ${headline}`,
-          subtext: stats ? `Check out their stats!` : undefined,
+          subtext: mediaType === 'image' ? 'Check out their photo!' : mediaType === 'video' ? 'Watch the video!' : stats ? `Check out their stats!` : undefined,
           sessionId,
         });
       }
@@ -3202,6 +3236,151 @@ Respond in this exact JSON format:
     } catch (err) {
       console.error('Create story error:', err);
       res.status(500).json({ message: 'Error creating story' });
+    }
+  });
+
+  // Delete story
+  app.delete('/api/stories/:id', async (req, res) => {
+    try {
+      await storage.deleteStory(Number(req.params.id));
+      res.status(204).send();
+    } catch (err) {
+      console.error('Delete story error:', err);
+      res.status(500).json({ message: 'Error deleting story' });
+    }
+  });
+
+  // Story Views - record a view
+  app.post('/api/stories/:id/view', async (req, res) => {
+    try {
+      const storyId = Number(req.params.id);
+      const { sessionId, viewerId } = req.body;
+
+      if (!sessionId) {
+        return res.status(400).json({ message: 'SessionId is required' });
+      }
+
+      // Check if already viewed
+      const hasViewed = await storage.hasViewedStory(storyId, sessionId);
+      if (!hasViewed) {
+        await storage.createStoryView({ storyId, sessionId, viewerId: viewerId || null });
+        await storage.incrementStoryViewCount(storyId);
+      }
+
+      res.json({ success: true, alreadyViewed: hasViewed });
+    } catch (err) {
+      console.error('Record story view error:', err);
+      res.status(500).json({ message: 'Error recording view' });
+    }
+  });
+
+  // Get story views
+  app.get('/api/stories/:id/views', async (req, res) => {
+    try {
+      const storyId = Number(req.params.id);
+      const views = await storage.getStoryViews(storyId);
+      res.json(views);
+    } catch (err) {
+      console.error('Get story views error:', err);
+      res.status(500).json({ message: 'Error fetching views' });
+    }
+  });
+
+  // Story Reactions - add a reaction
+  app.post('/api/stories/:id/reactions', async (req, res) => {
+    try {
+      const storyId = Number(req.params.id);
+      const { sessionId, reactorId, reaction } = req.body;
+
+      if (!sessionId || !reaction) {
+        return res.status(400).json({ message: 'SessionId and reaction are required' });
+      }
+
+      // Remove existing reaction from this user first
+      await storage.removeStoryReaction(storyId, sessionId);
+
+      // Add new reaction
+      const newReaction = await storage.createStoryReaction({ storyId, sessionId, reactorId: reactorId || null, reaction });
+      res.status(201).json(newReaction);
+    } catch (err) {
+      console.error('Add story reaction error:', err);
+      res.status(500).json({ message: 'Error adding reaction' });
+    }
+  });
+
+  // Get story reactions with counts
+  app.get('/api/stories/:id/reactions', async (req, res) => {
+    try {
+      const storyId = Number(req.params.id);
+      const reactions = await storage.getStoryReactions(storyId);
+      const counts = await storage.getReactionCounts(storyId);
+      res.json({ reactions, counts });
+    } catch (err) {
+      console.error('Get story reactions error:', err);
+      res.status(500).json({ message: 'Error fetching reactions' });
+    }
+  });
+
+  // Remove reaction
+  app.delete('/api/stories/:id/reactions', async (req, res) => {
+    try {
+      const storyId = Number(req.params.id);
+      const { sessionId } = req.body;
+
+      if (!sessionId) {
+        return res.status(400).json({ message: 'SessionId is required' });
+      }
+
+      await storage.removeStoryReaction(storyId, sessionId);
+      res.status(204).send();
+    } catch (err) {
+      console.error('Remove story reaction error:', err);
+      res.status(500).json({ message: 'Error removing reaction' });
+    }
+  });
+
+  // Story Highlights
+  app.get('/api/players/:id/highlights', async (req, res) => {
+    try {
+      const playerId = Number(req.params.id);
+      const highlights = await storage.getPlayerHighlights(playerId);
+      res.json(highlights);
+    } catch (err) {
+      console.error('Get player highlights error:', err);
+      res.status(500).json({ message: 'Error fetching highlights' });
+    }
+  });
+
+  app.post('/api/players/:id/highlights', async (req, res) => {
+    try {
+      const playerId = Number(req.params.id);
+      const { title, coverImageUrl, storyIds } = req.body;
+
+      if (!title || !storyIds || !Array.isArray(storyIds)) {
+        return res.status(400).json({ message: 'Title and storyIds array are required' });
+      }
+
+      const highlight = await storage.createStoryHighlight({
+        playerId,
+        title,
+        coverImageUrl: coverImageUrl || null,
+        storyIds: JSON.stringify(storyIds),
+      });
+
+      res.status(201).json(highlight);
+    } catch (err) {
+      console.error('Create highlight error:', err);
+      res.status(500).json({ message: 'Error creating highlight' });
+    }
+  });
+
+  app.delete('/api/highlights/:id', async (req, res) => {
+    try {
+      await storage.deleteStoryHighlight(Number(req.params.id));
+      res.status(204).send();
+    } catch (err) {
+      console.error('Delete highlight error:', err);
+      res.status(500).json({ message: 'Error deleting highlight' });
     }
   });
 
