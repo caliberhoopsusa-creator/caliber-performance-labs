@@ -7,7 +7,7 @@ import {
   Menu, LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, 
   Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, 
   UsersRound, CalendarCheck, Eye, UserCircle, LogOut, CreditCard, Lock, Dumbbell, 
-  CalendarDays, Film, FileText, ArrowLeftRight, UserPlus
+  CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, Bell
 } from "lucide-react";
 import caliberLogo from "@assets/Gemini_Generated_Image_3ld7js3ld7js3ld7_(1)_1768700977754.png";
 import { cn } from "@/lib/utils";
@@ -109,7 +109,12 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
       items: [
         { href: "/coach/hub", label: "Team Hub", icon: ClipboardList, premium: "coach_pro" },
         { href: "/coach/practices", label: "Practices", icon: CalendarCheck, premium: "coach_pro" },
+        { href: "/coach/lineups", label: "Lineups", icon: UsersRound, premium: "coach_pro" },
+        { href: "/coach/scouting", label: "Scouting", icon: Eye, premium: "coach_pro" },
+        { href: "/coach/alerts", label: "Alerts", icon: Bell, premium: "coach_pro" },
         { href: "/report-card", label: "Report Cards", icon: FileText },
+        { href: "/video-analysis", label: "Video Analysis", icon: Video, premium: "pro" },
+        { href: "/team-comparison", label: "Team Compare", icon: BarChart3, premium: "coach_pro" },
       ],
     },
   ];

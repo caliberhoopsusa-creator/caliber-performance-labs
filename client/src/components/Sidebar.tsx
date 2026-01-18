@@ -101,7 +101,12 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
       items: [
         { href: "/coach/hub", label: "Team Hub", icon: ClipboardList, premium: "coach_pro" },
         { href: "/coach/practices", label: "Practices", icon: CalendarCheck, premium: "coach_pro" },
+        { href: "/coach/lineups", label: "Lineups", icon: UsersRound, premium: "coach_pro" },
+        { href: "/coach/scouting", label: "Scouting", icon: Eye, premium: "coach_pro" },
+        { href: "/coach/alerts", label: "Alerts", icon: Bell, premium: "coach_pro" },
         { href: "/report-card", label: "Report Cards", icon: FileText },
+        { href: "/video-analysis", label: "Video Analysis", icon: Video, premium: "pro" },
+        { href: "/team-comparison", label: "Team Compare", icon: BarChart3, premium: "coach_pro" },
       ],
     },
   ];
