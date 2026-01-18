@@ -11,7 +11,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
 import { ArrowLeft, Save, Loader2, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GradeBadge } from "@/components/GradeBadge";
@@ -92,6 +91,19 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
   const ftMade = form.watch('ftMade') || 0;
   const ftAttempted = form.watch('ftAttempted') || 0;
 
+  // Watch defensive stats for auto-calculation
+  const steals = form.watch('steals') || 0;
+  const blocks = form.watch('blocks') || 0;
+  const defensiveRebounds = form.watch('defensiveRebounds') || 0;
+  const offensiveRebounds = form.watch('offensiveRebounds') || 0;
+  const assists = form.watch('assists') || 0;
+  const minutes = form.watch('minutes') || 1;
+  const playerId = form.watch('playerId');
+  
+  // Get selected player's position for position-based calculations
+  const selectedPlayer = players.find((p: any) => p.id === playerId);
+  const position = selectedPlayer?.position || 'Wing';
+
   // Calculate percentages
   const fgPercent = fgAttempted > 0 ? ((fgMade / fgAttempted) * 100).toFixed(1) : '—';
   const threePercent = threeAttempted > 0 ? ((threeMade / threeAttempted) * 100).toFixed(1) : '—';
@@ -102,12 +114,93 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
   const tsa = fgAttempted + (0.44 * ftAttempted); // True Shooting Attempts
   const tsPercent = tsa > 0 ? ((calculatedPoints / (2 * tsa)) * 100).toFixed(1) : '—';
 
+  // Calculate Defense Rating (same formula as backend)
+  const calcDefenseRating = () => {
+    let rating = 50;
+    const mins = minutes || 1;
+    
+    // Steals per 36 minutes
+    const stealsPerMin = (steals / mins) * 36;
+    rating += stealsPerMin * 8;
+    
+    // Blocks per 36 minutes (position weighted)
+    const blocksPerMin = (blocks / mins) * 36;
+    if (position === 'Big') {
+      rating += blocksPerMin * 6;
+    } else {
+      rating += blocksPerMin * 4;
+    }
+    
+    // Defensive rebounds per 36 minutes
+    const drebPerMin = (defensiveRebounds / mins) * 36;
+    rating += drebPerMin * 1.5;
+    
+    // Position-based bonuses
+    if (position === 'Guard') {
+      rating += steals * 2;
+    } else if (position === 'Big') {
+      rating += blocks * 2;
+    }
+    
+    return Math.max(0, Math.min(100, Math.round(rating)));
+  };
+
+  // Calculate Hustle Score (same formula as backend)
+  const calcHustleScore = () => {
+    let score = 50;
+    const mins = minutes || 1;
+    
+    // Steals per 36 minutes
+    const stealsPerMin = (steals / mins) * 36;
+    score += stealsPerMin * 10;
+    
+    // Offensive rebounds per 36 minutes
+    const orebPerMin = (offensiveRebounds / mins) * 36;
+    score += orebPerMin * 6;
+    
+    // Defensive rebounds per 36 minutes
+    const drebPerMin = (defensiveRebounds / mins) * 36;
+    score += drebPerMin * 1.5;
+    
+    // Assists per 36 minutes
+    const astPerMin = (assists / mins) * 36;
+    score += astPerMin * 2;
+    
+    // Blocks per 36 minutes
+    const blkPerMin = (blocks / mins) * 36;
+    score += blkPerMin * 3;
+    
+    // Minutes bonus
+    if (minutes >= 30) score += 5;
+    else if (minutes >= 20) score += 3;
+    
+    // Position bonuses
+    if (position === 'Guard') {
+      score += steals * 3;
+    } else if (position === 'Big') {
+      score += offensiveRebounds * 4;
+    } else if (position === 'Wing') {
+      score += (steals + offensiveRebounds) * 2;
+    }
+    
+    return Math.max(0, Math.min(100, Math.round(score)));
+  };
+
+  const calculatedDefenseRating = calcDefenseRating();
+  const calculatedHustleScore = calcHustleScore();
+
   // Auto-update points when shooting stats change (if enabled)
   useEffect(() => {
     if (autoCalcPoints) {
       form.setValue('points', calculatedPoints);
     }
   }, [fgMade, threeMade, ftMade, autoCalcPoints]);
+
+  // Auto-update defense rating and hustle score
+  useEffect(() => {
+    form.setValue('defenseRating', calculatedDefenseRating);
+    form.setValue('hustleScore', calculatedHustleScore);
+  }, [steals, blocks, defensiveRebounds, offensiveRebounds, assists, minutes, position]);
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -272,33 +365,62 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
           Intangibles & Notes
         </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
-          <div className="space-y-4">
-            <div className="flex justify-between">
-              <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Defensive Rating (0-100)</label>
-              <span className="text-xs font-mono text-primary font-bold">{form.watch('defenseRating')}</span>
+        {/* Auto-calculated Defense & Hustle */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
+            <div className="flex items-center justify-between mb-3">
+              <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Defense Rating</label>
+              <span className={cn(
+                "text-2xl font-mono font-bold",
+                calculatedDefenseRating >= 75 ? "text-green-400" :
+                calculatedDefenseRating >= 60 ? "text-primary" :
+                calculatedDefenseRating < 40 ? "text-red-400" : "text-muted-foreground"
+              )} data-testid="text-defense-rating">
+                {calculatedDefenseRating}
+              </span>
             </div>
-            <Slider 
-              defaultValue={[50]} 
-              max={100} 
-              step={1} 
-              onValueChange={(vals) => form.setValue('defenseRating', vals[0])}
-              className="py-2"
-            />
+            <div className="h-2 bg-secondary/30 rounded-full overflow-hidden">
+              <div 
+                className={cn(
+                  "h-full rounded-full transition-all duration-300",
+                  calculatedDefenseRating >= 75 ? "bg-green-500" :
+                  calculatedDefenseRating >= 60 ? "bg-primary" :
+                  calculatedDefenseRating < 40 ? "bg-red-500" : "bg-muted-foreground"
+                )}
+                style={{ width: `${calculatedDefenseRating}%` }}
+              />
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-2">
+              Based on steals, blocks, def. rebounds & position
+            </p>
           </div>
           
-          <div className="space-y-4">
-            <div className="flex justify-between">
-              <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Hustle Score (0-100)</label>
-              <span className="text-xs font-mono text-primary font-bold">{form.watch('hustleScore')}</span>
+          <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
+            <div className="flex items-center justify-between mb-3">
+              <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Hustle Score</label>
+              <span className={cn(
+                "text-2xl font-mono font-bold",
+                calculatedHustleScore >= 75 ? "text-green-400" :
+                calculatedHustleScore >= 60 ? "text-primary" :
+                calculatedHustleScore < 40 ? "text-red-400" : "text-muted-foreground"
+              )} data-testid="text-hustle-score">
+                {calculatedHustleScore}
+              </span>
             </div>
-            <Slider 
-              defaultValue={[50]} 
-              max={100} 
-              step={1} 
-              onValueChange={(vals) => form.setValue('hustleScore', vals[0])}
-              className="py-2"
-            />
+            <div className="h-2 bg-secondary/30 rounded-full overflow-hidden">
+              <div 
+                className={cn(
+                  "h-full rounded-full transition-all duration-300",
+                  calculatedHustleScore >= 75 ? "bg-green-500" :
+                  calculatedHustleScore >= 60 ? "bg-primary" :
+                  calculatedHustleScore < 40 ? "bg-red-500" : "bg-muted-foreground"
+                )}
+                style={{ width: `${calculatedHustleScore}%` }}
+              />
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-2">
+              Based on steals, off. rebounds, assists & effort
+            </p>
           </div>
         </div>
 
