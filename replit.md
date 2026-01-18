@@ -34,6 +34,7 @@ Preferred communication style: Simple, everyday language.
 - **AI Integration**: Gemini AI for video analysis to extract game statistics from uploaded footage.
 - **Authentication**: Replit Auth with session management and role-based access control (Player/Coach).
 - **Social & Engagement**: Player following, in-app notifications, goal sharing, highlight clips gallery, and shareable achievement graphics.
+- **Player Discovery**: Public player directory (/discover) with search and filters. Players can toggle "Open to Opportunities" in their profile settings and add location (city, state), school, and graduation year to be found by coaches and scouts.
 - **Performance Tools**: Live game mode for real-time stat entry, interactive shot charts, off-court workout tracker, and advanced metric calculations (True Shooting %, PER, etc.).
 - **Scheduling**: Practice scheduler and calendar for managing events.
 - **Coach Features**: Team dashboard, shot charts, game notes, lineup analysis, practice tracking, AI-generated drill recommendations, and comprehensive player report cards.
