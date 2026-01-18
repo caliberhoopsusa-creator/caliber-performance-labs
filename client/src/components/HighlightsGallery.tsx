@@ -1,19 +1,23 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Play, Eye, Calendar, Film } from "lucide-react";
+import { Play, Eye, Calendar, Film, Plus } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/EmptyState";
 import { VideoPlayerModal } from "@/components/VideoPlayerModal";
+import { UploadClipModal } from "@/components/UploadClipModal";
 import type { HighlightClip, Game } from "@shared/schema";
 import { format } from "date-fns";
 
 interface HighlightsGalleryProps {
   playerId: number;
+  isOwner?: boolean;
 }
 
-export function HighlightsGallery({ playerId }: HighlightsGalleryProps) {
+export function HighlightsGallery({ playerId, isOwner = false }: HighlightsGalleryProps) {
   const [selectedClip, setSelectedClip] = useState<HighlightClip | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   const { data: highlights = [], isLoading } = useQuery<HighlightClip[]>({
     queryKey: [`/api/players/${playerId}/highlight-clips`],
@@ -21,7 +25,6 @@ export function HighlightsGallery({ playerId }: HighlightsGalleryProps) {
 
   const { data: games = [] } = useQuery<Game[]>({
     queryKey: [`/api/players/${playerId}/games`],
-    enabled: highlights.some((h) => h.gameId !== null),
   });
 
   const getGameInfo = (gameId: number | null) => {
@@ -60,12 +63,36 @@ export function HighlightsGallery({ playerId }: HighlightsGalleryProps) {
           title="No highlights yet"
           description="Upload your best plays and moments to showcase your skills."
         />
+        {isOwner && (
+          <>
+            <div className="flex justify-center mt-4">
+              <Button onClick={() => setIsUploadModalOpen(true)} className="gap-2" data-testid="button-add-highlight-empty">
+                <Plus className="w-4 h-4" />
+                Add Highlight
+              </Button>
+            </div>
+            <UploadClipModal
+              isOpen={isUploadModalOpen}
+              onClose={() => setIsUploadModalOpen(false)}
+              playerId={playerId}
+              games={games}
+            />
+          </>
+        )}
       </div>
     );
   }
 
   return (
     <div data-testid="highlights-gallery">
+      {isOwner && (
+        <div className="flex justify-end mb-4">
+          <Button onClick={() => setIsUploadModalOpen(true)} className="gap-2" data-testid="button-add-highlight">
+            <Plus className="w-4 h-4" />
+            Add Highlight
+          </Button>
+        </div>
+      )}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {highlights.map((clip) => {
           const gameInfo = getGameInfo(clip.gameId);
@@ -144,6 +171,13 @@ export function HighlightsGallery({ playerId }: HighlightsGalleryProps) {
         clip={selectedClip}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
+      />
+
+      <UploadClipModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        playerId={playerId}
+        games={games}
       />
     </div>
   );

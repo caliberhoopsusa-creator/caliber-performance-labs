@@ -109,7 +109,7 @@ export function UploadClipModal({
         description: "Your highlight clip has been uploaded successfully",
       });
 
-      queryClient.invalidateQueries({ queryKey: ["/api/players", playerId, "highlight-clips"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/players/${playerId}/highlight-clips`] });
 
       handleClose();
     } catch (err) {

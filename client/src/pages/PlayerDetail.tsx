@@ -1530,7 +1530,7 @@ export default function PlayerDetail() {
                 <Film className="w-5 h-5 text-primary" /> Highlights
               </h3>
             </div>
-            <HighlightsGallery playerId={player.id} />
+            <HighlightsGallery playerId={player.id} isOwner={isOwnProfile} />
           </Card>
         </TabsContent>
         
@@ -1541,7 +1541,7 @@ export default function PlayerDetail() {
         </TabsContent>
 
         <TabsContent value="highlights">
-          <HighlightsGallery playerId={player.id} />
+          <HighlightsGallery playerId={player.id} isOwner={isOwnProfile} />
         </TabsContent>
 
         <TabsContent value="accolades">
