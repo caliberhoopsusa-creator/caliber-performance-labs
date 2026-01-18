@@ -2,7 +2,7 @@ import { db } from "./db";
 import {
   players, games, badges, goals, streaks, likes, comments, challenges, challengeProgress,
   teams, teamMembers, teamPosts, teamPostComments,
-  feedActivities, reposts, polls, pollVotes, predictions, predictionVotes, storyTemplates, playerStories,
+  feedActivities, reposts, polls, pollVotes, predictions, predictionVotes, storyTemplates, playerStories, storyViews, storyReactions, storyHighlights,
   activityStreaks,
   shots, gameNotes, practices, practiceAttendance, drills, drillScores, lineups, lineupStats,
   opponents, alerts, coachGoals, drillRecommendations,
@@ -29,6 +29,9 @@ import {
   type PredictionVote, type InsertPredictionVote,
   type StoryTemplate, type InsertStoryTemplate,
   type PlayerStory, type InsertPlayerStory,
+  type StoryView, type InsertStoryView,
+  type StoryReaction, type InsertStoryReaction,
+  type StoryHighlight, type InsertStoryHighlight,
   type ActivityStreak, type InsertActivityStreak,
   type SkillBadge, type InsertSkillBadge, skillBadges,
   type Shot, type InsertShot,
@@ -180,6 +183,29 @@ export interface IStorage {
   createPlayerStory(story: InsertPlayerStory): Promise<PlayerStory>;
   getPlayerStories(playerId: number): Promise<PlayerStory[]>;
   getPublicStories(limit?: number): Promise<(PlayerStory & { playerName: string })[]>;
+  getActiveStories(limit?: number): Promise<(PlayerStory & { playerName: string })[]>;
+  getStory(id: number): Promise<PlayerStory | undefined>;
+  updateStory(id: number, data: Partial<InsertPlayerStory>): Promise<PlayerStory | undefined>;
+  deleteStory(id: number): Promise<void>;
+  incrementStoryViewCount(id: number): Promise<void>;
+
+  // Story Views
+  createStoryView(view: InsertStoryView): Promise<StoryView>;
+  getStoryViews(storyId: number): Promise<StoryView[]>;
+  hasViewedStory(storyId: number, sessionId: string): Promise<boolean>;
+
+  // Story Reactions
+  createStoryReaction(reaction: InsertStoryReaction): Promise<StoryReaction>;
+  getStoryReactions(storyId: number): Promise<StoryReaction[]>;
+  removeStoryReaction(storyId: number, sessionId: string): Promise<void>;
+  getReactionCounts(storyId: number): Promise<{ reaction: string; count: number }[]>;
+
+  // Story Highlights
+  createStoryHighlight(highlight: InsertStoryHighlight): Promise<StoryHighlight>;
+  getPlayerHighlights(playerId: number): Promise<StoryHighlight[]>;
+  getStoryHighlight(id: number): Promise<StoryHighlight | undefined>;
+  updateStoryHighlight(id: number, data: Partial<InsertStoryHighlight>): Promise<StoryHighlight | undefined>;
+  deleteStoryHighlight(id: number): Promise<void>;
 
   // Activity Streaks (for XP/gamification)
   getPlayerActivityStreaks(playerId: number): Promise<ActivityStreak[]>;
@@ -1074,8 +1100,13 @@ export class DatabaseStorage implements IStorage {
         headline: playerStories.headline,
         stats: playerStories.stats,
         imageUrl: playerStories.imageUrl,
+        videoUrl: playerStories.videoUrl,
+        mediaType: playerStories.mediaType,
+        caption: playerStories.caption,
         sessionId: playerStories.sessionId,
         isPublic: playerStories.isPublic,
+        expiresAt: playerStories.expiresAt,
+        viewCount: playerStories.viewCount,
         createdAt: playerStories.createdAt,
         playerName: players.name,
       })
@@ -1086,6 +1117,125 @@ export class DatabaseStorage implements IStorage {
       .limit(limit);
     
     return results;
+  }
+
+  async getActiveStories(limit: number = 20): Promise<(PlayerStory & { playerName: string })[]> {
+    const now = new Date();
+    const results = await db
+      .select({
+        id: playerStories.id,
+        playerId: playerStories.playerId,
+        templateId: playerStories.templateId,
+        headline: playerStories.headline,
+        stats: playerStories.stats,
+        imageUrl: playerStories.imageUrl,
+        videoUrl: playerStories.videoUrl,
+        mediaType: playerStories.mediaType,
+        caption: playerStories.caption,
+        sessionId: playerStories.sessionId,
+        isPublic: playerStories.isPublic,
+        expiresAt: playerStories.expiresAt,
+        viewCount: playerStories.viewCount,
+        createdAt: playerStories.createdAt,
+        playerName: players.name,
+      })
+      .from(playerStories)
+      .innerJoin(players, eq(playerStories.playerId, players.id))
+      .where(and(
+        eq(playerStories.isPublic, true),
+        or(
+          sql`${playerStories.expiresAt} IS NULL`,
+          gte(playerStories.expiresAt, now)
+        )
+      ))
+      .orderBy(desc(playerStories.createdAt))
+      .limit(limit);
+    
+    return results;
+  }
+
+  async getStory(id: number): Promise<PlayerStory | undefined> {
+    const [story] = await db.select().from(playerStories).where(eq(playerStories.id, id));
+    return story;
+  }
+
+  async updateStory(id: number, data: Partial<InsertPlayerStory>): Promise<PlayerStory | undefined> {
+    const [updated] = await db.update(playerStories).set(data).where(eq(playerStories.id, id)).returning();
+    return updated;
+  }
+
+  async deleteStory(id: number): Promise<void> {
+    await db.delete(playerStories).where(eq(playerStories.id, id));
+  }
+
+  async incrementStoryViewCount(id: number): Promise<void> {
+    await db.update(playerStories).set({ viewCount: sql`${playerStories.viewCount} + 1` }).where(eq(playerStories.id, id));
+  }
+
+  // Story Views
+  async createStoryView(view: InsertStoryView): Promise<StoryView> {
+    const [newView] = await db.insert(storyViews).values(view).returning();
+    return newView;
+  }
+
+  async getStoryViews(storyId: number): Promise<StoryView[]> {
+    return await db.select().from(storyViews).where(eq(storyViews.storyId, storyId)).orderBy(desc(storyViews.viewedAt));
+  }
+
+  async hasViewedStory(storyId: number, sessionId: string): Promise<boolean> {
+    const [existing] = await db.select().from(storyViews).where(and(eq(storyViews.storyId, storyId), eq(storyViews.sessionId, sessionId)));
+    return !!existing;
+  }
+
+  // Story Reactions
+  async createStoryReaction(reaction: InsertStoryReaction): Promise<StoryReaction> {
+    const [newReaction] = await db.insert(storyReactions).values(reaction).returning();
+    return newReaction;
+  }
+
+  async getStoryReactions(storyId: number): Promise<StoryReaction[]> {
+    return await db.select().from(storyReactions).where(eq(storyReactions.storyId, storyId)).orderBy(desc(storyReactions.createdAt));
+  }
+
+  async removeStoryReaction(storyId: number, sessionId: string): Promise<void> {
+    await db.delete(storyReactions).where(and(eq(storyReactions.storyId, storyId), eq(storyReactions.sessionId, sessionId)));
+  }
+
+  async getReactionCounts(storyId: number): Promise<{ reaction: string; count: number }[]> {
+    const results = await db
+      .select({
+        reaction: storyReactions.reaction,
+        count: count(),
+      })
+      .from(storyReactions)
+      .where(eq(storyReactions.storyId, storyId))
+      .groupBy(storyReactions.reaction);
+    
+    return results.map(r => ({ reaction: r.reaction, count: Number(r.count) }));
+  }
+
+  // Story Highlights
+  async createStoryHighlight(highlight: InsertStoryHighlight): Promise<StoryHighlight> {
+    const [newHighlight] = await db.insert(storyHighlights).values(highlight).returning();
+    return newHighlight;
+  }
+
+  async getPlayerHighlights(playerId: number): Promise<StoryHighlight[]> {
+    return await db.select().from(storyHighlights).where(eq(storyHighlights.playerId, playerId)).orderBy(desc(storyHighlights.createdAt));
+  }
+
+  async getStoryHighlight(id: number): Promise<StoryHighlight | undefined> {
+    const [highlight] = await db.select().from(storyHighlights).where(eq(storyHighlights.id, id));
+    return highlight;
+  }
+
+  async updateStoryHighlight(id: number, data: Partial<InsertStoryHighlight>): Promise<StoryHighlight | undefined> {
+    const [updated] = await db.update(storyHighlights).set(data).where(eq(storyHighlights.id, id)).returning();
+    return updated;
+  }
+
+  async deleteStoryHighlight(id: number): Promise<void> {
+    await db.delete(storyHighlights).where(eq(storyHighlights.id, id));
   }
 
   // Activity Streaks
