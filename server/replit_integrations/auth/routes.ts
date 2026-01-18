@@ -26,10 +26,10 @@ export function registerAuthRoutes(app: Express): void {
         return res.status(400).json({ message: "Invalid role. Must be 'player' or 'coach'" });
       }
       
-      // When switching to coach, we don't need a playerId
-      // When switching to player, keep existing playerId if they have one
+      // Always preserve the playerId when switching roles
+      // This allows users to switch between player/coach without losing their player profile
       const currentUser = await authStorage.getUser(userId);
-      const playerId = role === 'player' ? currentUser?.playerId : null;
+      const playerId = currentUser?.playerId ?? null;
       
       const user = await authStorage.updateUserRole(userId, role, playerId);
       if (!user) {
