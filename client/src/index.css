@@ -55,9 +55,11 @@
 }
 
 @layer base {
-  body {
+  html, body {
     @apply bg-background text-foreground antialiased selection:bg-primary/30;
     font-family: var(--font-body);
+    overflow-x: hidden;
+    overscroll-behavior-x: none;
   }
 
   h1, h2, h3, h4, h5, h6 {
