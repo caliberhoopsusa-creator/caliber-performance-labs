@@ -806,7 +806,21 @@ export const workouts = pgTable("workouts", {
   duration: integer("duration").notNull(), // minutes
   intensity: integer("intensity"), // 1-10 scale
   notes: text("notes"),
+  videoUrl: text("video_url"),
   metrics: text("metrics"), // JSON string for type-specific metrics
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// === PLAYER ACCOLADES ===
+export const accolades = pgTable("accolades", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  type: text("type").notNull(), // 'championship', 'career_high', 'award', 'record'
+  title: text("title").notNull(), // e.g., "State Championship", "Career High: 45 Points"
+  description: text("description"),
+  season: text("season"), // e.g., "2024-25"
+  dateEarned: date("date_earned"),
+  verified: boolean("verified").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -878,6 +892,7 @@ export const insertFollowSchema = createInsertSchema(follows).omit({ id: true, c
 export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true });
 export const insertHighlightClipSchema = createInsertSchema(highlightClips).omit({ id: true, createdAt: true, viewCount: true });
 export const insertWorkoutSchema = createInsertSchema(workouts).omit({ id: true, createdAt: true });
+export const insertAccoladeSchema = createInsertSchema(accolades).omit({ id: true, createdAt: true });
 export const insertGoalShareSchema = createInsertSchema(goalShares).omit({ id: true, createdAt: true });
 export const insertScheduleEventSchema = createInsertSchema(scheduleEvents).omit({ id: true, createdAt: true });
 export const insertLiveGameSessionSchema = createInsertSchema(liveGameSessions).omit({ id: true, startedAt: true });
@@ -896,6 +911,9 @@ export type InsertHighlightClip = z.infer<typeof insertHighlightClipSchema>;
 
 export type Workout = typeof workouts.$inferSelect;
 export type InsertWorkout = z.infer<typeof insertWorkoutSchema>;
+
+export type Accolade = typeof accolades.$inferSelect;
+export type InsertAccolade = z.infer<typeof insertAccoladeSchema>;
 
 export type GoalShare = typeof goalShares.$inferSelect;
 export type InsertGoalShare = z.infer<typeof insertGoalShareSchema>;
