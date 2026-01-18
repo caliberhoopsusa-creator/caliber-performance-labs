@@ -134,6 +134,8 @@ export interface IStorage {
   createFeedActivity(activity: InsertFeedActivity): Promise<FeedActivity>;
   getFeedActivities(limit?: number): Promise<(FeedActivity & { playerName?: string })[]>;
   getPlayerFeedActivities(playerId: number): Promise<FeedActivity[]>;
+  getFollowingFeedActivities(playerId: number, limit?: number): Promise<(FeedActivity & { playerName?: string })[]>;
+  getTeamFeedActivities(sessionId: string, limit?: number): Promise<(FeedActivity & { playerName?: string })[]>;
 
   // Reposts
   createRepost(repost: InsertRepost): Promise<Repost>;
@@ -758,6 +760,95 @@ export class DatabaseStorage implements IStorage {
       .from(feedActivities)
       .where(eq(feedActivities.playerId, playerId))
       .orderBy(desc(feedActivities.createdAt));
+  }
+
+  async getFollowingFeedActivities(playerId: number, limit: number = 50): Promise<(FeedActivity & { playerName?: string })[]> {
+    const followedPlayers = await db
+      .select({ followeePlayerId: follows.followeePlayerId })
+      .from(follows)
+      .where(eq(follows.followerPlayerId, playerId));
+    
+    const followedPlayerIds = followedPlayers.map(f => f.followeePlayerId);
+    
+    if (followedPlayerIds.length === 0) {
+      return [];
+    }
+
+    const results = await db
+      .select({
+        id: feedActivities.id,
+        activityType: feedActivities.activityType,
+        playerId: feedActivities.playerId,
+        gameId: feedActivities.gameId,
+        badgeId: feedActivities.badgeId,
+        relatedId: feedActivities.relatedId,
+        headline: feedActivities.headline,
+        subtext: feedActivities.subtext,
+        sessionId: feedActivities.sessionId,
+        createdAt: feedActivities.createdAt,
+        playerName: players.name,
+      })
+      .from(feedActivities)
+      .leftJoin(players, eq(feedActivities.playerId, players.id))
+      .where(sql`${feedActivities.playerId} IN (${sql.join(followedPlayerIds, sql`, `)})`)
+      .orderBy(desc(feedActivities.createdAt))
+      .limit(limit);
+    
+    return results.map(r => ({
+      ...r,
+      playerName: r.playerName || undefined,
+    }));
+  }
+
+  async getTeamFeedActivities(sessionId: string, limit: number = 50): Promise<(FeedActivity & { playerName?: string })[]> {
+    const userTeamMemberships = await db
+      .select({ teamId: teamMembers.teamId })
+      .from(teamMembers)
+      .where(eq(teamMembers.sessionId, sessionId));
+    
+    const teamIds = userTeamMemberships.map(m => m.teamId);
+    
+    if (teamIds.length === 0) {
+      return [];
+    }
+
+    const teammateRecords = await db
+      .select({ playerId: teamMembers.playerId })
+      .from(teamMembers)
+      .where(sql`${teamMembers.teamId} IN (${sql.join(teamIds, sql`, `)}) AND ${teamMembers.playerId} IS NOT NULL`);
+    
+    const teammatePlayerIds = teammateRecords
+      .map(m => m.playerId)
+      .filter((id): id is number => id !== null);
+    
+    if (teammatePlayerIds.length === 0) {
+      return [];
+    }
+
+    const results = await db
+      .select({
+        id: feedActivities.id,
+        activityType: feedActivities.activityType,
+        playerId: feedActivities.playerId,
+        gameId: feedActivities.gameId,
+        badgeId: feedActivities.badgeId,
+        relatedId: feedActivities.relatedId,
+        headline: feedActivities.headline,
+        subtext: feedActivities.subtext,
+        sessionId: feedActivities.sessionId,
+        createdAt: feedActivities.createdAt,
+        playerName: players.name,
+      })
+      .from(feedActivities)
+      .leftJoin(players, eq(feedActivities.playerId, players.id))
+      .where(sql`${feedActivities.playerId} IN (${sql.join(teammatePlayerIds, sql`, `)})`)
+      .orderBy(desc(feedActivities.createdAt))
+      .limit(limit);
+    
+    return results.map(r => ({
+      ...r,
+      playerName: r.playerName || undefined,
+    }));
   }
 
   // Reposts

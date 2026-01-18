@@ -2542,6 +2542,42 @@ Respond in this exact JSON format:
     }
   });
 
+  app.get('/api/feed/following', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(401).json({ message: 'User not found' });
+      }
+      
+      if (!user.playerId) {
+        return res.status(400).json({ message: 'User does not have a linked player profile' });
+      }
+      
+      const limit = Number(req.query.limit) || 50;
+      const activities = await storage.getFollowingFeedActivities(user.playerId, limit);
+      res.json(activities);
+    } catch (err) {
+      console.error('Get following feed error:', err);
+      res.status(500).json({ message: 'Error fetching following feed' });
+    }
+  });
+
+  app.get('/api/feed/team', isAuthenticated, async (req: any, res) => {
+    try {
+      const sessionId = req.query.sessionId as string;
+      if (!sessionId) {
+        return res.status(400).json({ message: 'SessionId is required' });
+      }
+      
+      const limit = Number(req.query.limit) || 50;
+      const activities = await storage.getTeamFeedActivities(sessionId, limit);
+      res.json(activities);
+    } catch (err) {
+      console.error('Get team feed error:', err);
+      res.status(500).json({ message: 'Error fetching team feed' });
+    }
+  });
+
   // === REPOSTS ===
   app.post('/api/games/:id/repost', async (req, res) => {
     try {
