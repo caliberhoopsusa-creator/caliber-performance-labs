@@ -550,8 +550,42 @@ export const playerStories = pgTable("player_stories", {
   headline: text("headline").notNull(),
   stats: text("stats"), // JSON string of relevant stats
   imageUrl: text("image_url"),
+  videoUrl: text("video_url"), // For video content
+  mediaType: text("media_type"), // 'image', 'video', 'text'
+  caption: text("caption"), // Optional caption for media
   sessionId: text("session_id"),
   isPublic: boolean("is_public").default(true).notNull(),
+  expiresAt: timestamp("expires_at"), // 24-hour story expiry
+  viewCount: integer("view_count").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Story views tracking
+export const storyViews = pgTable("story_views", {
+  id: serial("id").primaryKey(),
+  storyId: integer("story_id").notNull().references(() => playerStories.id, { onDelete: "cascade" }),
+  viewerId: integer("viewer_id").references(() => players.id, { onDelete: "set null" }),
+  sessionId: text("session_id"),
+  viewedAt: timestamp("viewed_at").defaultNow(),
+});
+
+// Story reactions (emoji reactions like Instagram)
+export const storyReactions = pgTable("story_reactions", {
+  id: serial("id").primaryKey(),
+  storyId: integer("story_id").notNull().references(() => playerStories.id, { onDelete: "cascade" }),
+  reactorId: integer("reactor_id").references(() => players.id, { onDelete: "set null" }),
+  sessionId: text("session_id"),
+  reaction: text("reaction").notNull(), // emoji code: 'fire', 'heart', 'clap', '100', 'goat', 'muscle'
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Story highlights - saved stories that don't expire
+export const storyHighlights = pgTable("story_highlights", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  coverImageUrl: text("cover_image_url"),
+  storyIds: text("story_ids").notNull(), // JSON array of story IDs
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -763,9 +797,21 @@ export type StoryTemplate = typeof storyTemplates.$inferSelect;
 export const insertStoryTemplateSchema = createInsertSchema(storyTemplates).omit({ id: true, createdAt: true });
 export type InsertStoryTemplate = z.infer<typeof insertStoryTemplateSchema>;
 
-export type PlayerStory = typeof playerStories.$inferSelect;
-export const insertPlayerStorySchema = createInsertSchema(playerStories).omit({ id: true, createdAt: true });
+export const insertPlayerStorySchema = createInsertSchema(playerStories).omit({ id: true, createdAt: true, viewCount: true });
 export type InsertPlayerStory = z.infer<typeof insertPlayerStorySchema>;
+export type PlayerStory = typeof playerStories.$inferSelect;
+
+export const insertStoryViewSchema = createInsertSchema(storyViews).omit({ id: true, viewedAt: true });
+export type InsertStoryView = z.infer<typeof insertStoryViewSchema>;
+export type StoryView = typeof storyViews.$inferSelect;
+
+export const insertStoryReactionSchema = createInsertSchema(storyReactions).omit({ id: true, createdAt: true });
+export type InsertStoryReaction = z.infer<typeof insertStoryReactionSchema>;
+export type StoryReaction = typeof storyReactions.$inferSelect;
+
+export const insertStoryHighlightSchema = createInsertSchema(storyHighlights).omit({ id: true, createdAt: true });
+export type InsertStoryHighlight = z.infer<typeof insertStoryHighlightSchema>;
+export type StoryHighlight = typeof storyHighlights.$inferSelect;
 
 // Story template presets
 export const STORY_TEMPLATE_PRESETS = {
