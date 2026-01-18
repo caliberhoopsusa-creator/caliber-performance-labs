@@ -431,6 +431,18 @@ export const teamPosts = pgTable("team_posts", {
   teamId: integer("team_id").notNull().references(() => teams.id, { onDelete: "cascade" }),
   authorId: integer("author_id").notNull().references(() => teamMembers.id, { onDelete: "cascade" }),
   content: text("content").notNull(),
+  postType: text("post_type").notNull().default("general"), // 'announcement', 'practice', 'chat', 'general'
+  practiceTime: timestamp("practice_time"), // For practice notifications
+  practiceLocation: text("practice_location"), // Location for practice
+  isPinned: boolean("is_pinned").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const teamPostComments = pgTable("team_post_comments", {
+  id: serial("id").primaryKey(),
+  postId: integer("post_id").notNull().references(() => teamPosts.id, { onDelete: "cascade" }),
+  authorId: integer("author_id").notNull().references(() => teamMembers.id, { onDelete: "cascade" }),
+  content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -445,6 +457,17 @@ export type InsertTeamMember = z.infer<typeof insertTeamMemberSchema>;
 export type TeamPost = typeof teamPosts.$inferSelect;
 export const insertTeamPostSchema = createInsertSchema(teamPosts).omit({ id: true, createdAt: true });
 export type InsertTeamPost = z.infer<typeof insertTeamPostSchema>;
+
+export type TeamPostComment = typeof teamPostComments.$inferSelect;
+export const insertTeamPostCommentSchema = createInsertSchema(teamPostComments).omit({ id: true, createdAt: true });
+export type InsertTeamPostComment = z.infer<typeof insertTeamPostCommentSchema>;
+
+export const TEAM_POST_TYPES = {
+  announcement: { name: "Announcement", description: "Important team announcement", icon: "megaphone" },
+  practice: { name: "Practice", description: "Practice schedule notification", icon: "calendar" },
+  chat: { name: "Chat", description: "General team discussion", icon: "message-circle" },
+  general: { name: "General", description: "General post", icon: "file-text" },
+} as const;
 
 // === NEWSFEED / ACTIVITY STREAM ===
 export const feedActivities = pgTable("feed_activities", {

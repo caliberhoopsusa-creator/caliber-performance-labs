@@ -1,7 +1,7 @@
 import { db } from "./db";
 import {
   players, games, badges, goals, streaks, likes, comments, challenges, challengeProgress,
-  teams, teamMembers, teamPosts,
+  teams, teamMembers, teamPosts, teamPostComments,
   feedActivities, reposts, polls, pollVotes, predictions, predictionVotes, storyTemplates, playerStories,
   activityStreaks,
   shots, gameNotes, practices, practiceAttendance, drills, drillScores, lineups, lineupStats,
@@ -20,6 +20,7 @@ import {
   type Team, type InsertTeam,
   type TeamMember, type InsertTeamMember,
   type TeamPost, type InsertTeamPost,
+  type TeamPostComment, type InsertTeamPostComment,
   type FeedActivity, type InsertFeedActivity,
   type Repost, type InsertRepost,
   type Poll, type InsertPoll,
@@ -131,6 +132,13 @@ export interface IStorage {
   // Team Posts
   createTeamPost(post: InsertTeamPost): Promise<TeamPost>;
   getTeamPosts(teamId: number): Promise<(TeamPost & { authorName: string })[]>;
+  updateTeamPost(id: number, updates: Partial<InsertTeamPost>): Promise<TeamPost | undefined>;
+  deleteTeamPost(id: number): Promise<void>;
+
+  // Team Post Comments
+  createTeamPostComment(comment: InsertTeamPostComment): Promise<TeamPostComment>;
+  getTeamPostComments(postId: number): Promise<(TeamPostComment & { authorName: string })[]>;
+  deleteTeamPostComment(id: number): Promise<void>;
 
   // Feed Activities
   createFeedActivity(activity: InsertFeedActivity): Promise<FeedActivity>;
@@ -726,15 +734,56 @@ export class DatabaseStorage implements IStorage {
         teamId: teamPosts.teamId,
         authorId: teamPosts.authorId,
         content: teamPosts.content,
+        postType: teamPosts.postType,
+        practiceTime: teamPosts.practiceTime,
+        practiceLocation: teamPosts.practiceLocation,
+        isPinned: teamPosts.isPinned,
         createdAt: teamPosts.createdAt,
         authorName: teamMembers.displayName,
       })
       .from(teamPosts)
       .innerJoin(teamMembers, eq(teamPosts.authorId, teamMembers.id))
       .where(eq(teamPosts.teamId, teamId))
-      .orderBy(desc(teamPosts.createdAt));
+      .orderBy(desc(teamPosts.isPinned), desc(teamPosts.createdAt));
     
     return posts;
+  }
+
+  async updateTeamPost(id: number, updates: Partial<InsertTeamPost>): Promise<TeamPost | undefined> {
+    const [updated] = await db.update(teamPosts).set(updates).where(eq(teamPosts.id, id)).returning();
+    return updated;
+  }
+
+  async deleteTeamPost(id: number): Promise<void> {
+    await db.delete(teamPosts).where(eq(teamPosts.id, id));
+  }
+
+  // Team Post Comments
+  async createTeamPostComment(comment: InsertTeamPostComment): Promise<TeamPostComment> {
+    const [newComment] = await db.insert(teamPostComments).values(comment).returning();
+    return newComment;
+  }
+
+  async getTeamPostComments(postId: number): Promise<(TeamPostComment & { authorName: string })[]> {
+    const commentsList = await db
+      .select({
+        id: teamPostComments.id,
+        postId: teamPostComments.postId,
+        authorId: teamPostComments.authorId,
+        content: teamPostComments.content,
+        createdAt: teamPostComments.createdAt,
+        authorName: teamMembers.displayName,
+      })
+      .from(teamPostComments)
+      .innerJoin(teamMembers, eq(teamPostComments.authorId, teamMembers.id))
+      .where(eq(teamPostComments.postId, postId))
+      .orderBy(teamPostComments.createdAt);
+    
+    return commentsList;
+  }
+
+  async deleteTeamPostComment(id: number): Promise<void> {
+    await db.delete(teamPostComments).where(eq(teamPostComments.id, id));
   }
 
   // Feed Activities
