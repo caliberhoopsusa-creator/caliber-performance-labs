@@ -20,7 +20,7 @@ import {
   Loader2
 } from "lucide-react";
 import { format, isToday, isTomorrow, addDays, startOfDay, isSameDay } from "date-fns";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import type { ScheduleEvent } from "@shared/schema";
 
 type TeamWithCount = {
@@ -79,6 +79,7 @@ function formatEventDate(date: Date): string {
 export default function TeamHub() {
   const [addEventOpen, setAddEventOpen] = useState(false);
   const [defaultEventType, setDefaultEventType] = useState<'practice' | 'game' | 'workout' | 'meeting'>('practice');
+  const [, navigate] = useLocation();
   const sessionId = getSessionId();
 
   const { data: myTeams = [], isLoading: teamsLoading } = useQuery<TeamWithCount[]>({
@@ -129,6 +130,32 @@ export default function TeamHub() {
     setDefaultEventType(type);
     setAddEventOpen(true);
   };
+
+  if (!teamsLoading && myTeams.length === 0) {
+    return (
+      <Paywall requiredTier="coach_pro" featureName="Team Hub">
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4" data-testid="team-hub-no-team">
+          <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
+            <Users className="w-10 h-10 text-primary" />
+          </div>
+          <h2 className="text-2xl font-display uppercase tracking-wide text-white mb-2">
+            No Team Yet
+          </h2>
+          <p className="text-muted-foreground max-w-md mb-6">
+            Create or join a team to access the Team Hub. Schedule practices, games, and manage your roster all in one place.
+          </p>
+          <Button 
+            onClick={() => navigate('/teams')} 
+            className="gap-2"
+            data-testid="button-create-team"
+          >
+            <Plus className="w-4 h-4" />
+            Create or Join a Team
+          </Button>
+        </div>
+      </Paywall>
+    );
+  }
 
   return (
     <Paywall requiredTier="coach_pro" featureName="Team Hub">

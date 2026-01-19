@@ -21,6 +21,7 @@ export default function RoleSelection() {
     height: '',
     team: '',
     jerseyNumber: '',
+    teamCode: '',
   });
   const [teamForm, setTeamForm] = useState({
     name: '',
@@ -49,22 +50,55 @@ export default function RoleSelection() {
 
   const createPlayerMutation = useMutation({
     mutationFn: async (data: typeof playerForm) => {
-      return await apiRequest('POST', '/api/users/create-player-profile', {
+      const result = await apiRequest('POST', '/api/users/create-player-profile', {
         name: data.name,
         position: data.position,
         height: data.height || undefined,
         team: data.team || undefined,
         jerseyNumber: data.jerseyNumber ? parseInt(data.jerseyNumber) : undefined,
       });
+      
+      let teamJoined = false;
+      let teamJoinError = '';
+      
+      if (data.teamCode) {
+        try {
+          await apiRequest('POST', '/api/teams/join', { 
+            code: data.teamCode, 
+            displayName: data.name 
+          });
+          teamJoined = true;
+        } catch (error: any) {
+          teamJoinError = error.message || 'Invalid team code';
+        }
+      }
+      
+      return { ...result, teamJoined, teamJoinError, hadTeamCode: !!data.teamCode };
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       queryClient.invalidateQueries({ queryKey: ['/api/users/me'] });
       queryClient.invalidateQueries({ queryKey: ['/api/players'] });
-      toast({
-        title: "Profile Created",
-        description: "Your player profile has been created!",
-      });
+      queryClient.invalidateQueries({ queryKey: ['/api/my-teams'] });
+      
+      if (data.hadTeamCode) {
+        if (data.teamJoined) {
+          toast({
+            title: "Profile Created",
+            description: "Your player profile has been created and you've joined the team!",
+          });
+        } else {
+          toast({
+            title: "Profile Created",
+            description: "Your profile was created, but couldn't join team: " + data.teamJoinError + ". You can try again from the Teams page.",
+          });
+        }
+      } else {
+        toast({
+          title: "Profile Created",
+          description: "Your player profile has been created!",
+        });
+      }
     },
     onError: (error) => {
       toast({
@@ -77,10 +111,12 @@ export default function RoleSelection() {
 
   const createTeamMutation = useMutation({
     mutationFn: async (data: { name: string }) => {
+      await setRoleMutation.mutateAsync('coach');
       return await apiRequest('POST', '/api/teams', { name: data.name });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/teams'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/my-teams'] });
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       queryClient.invalidateQueries({ queryKey: ['/api/users/me'] });
       toast({
@@ -99,10 +135,12 @@ export default function RoleSelection() {
 
   const joinTeamMutation = useMutation({
     mutationFn: async (data: { code: string }) => {
+      await setRoleMutation.mutateAsync('coach');
       return await apiRequest('POST', '/api/teams/join', { code: data.code, displayName: 'Coach' });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/teams'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/my-teams'] });
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       queryClient.invalidateQueries({ queryKey: ['/api/users/me'] });
       toast({
@@ -120,7 +158,6 @@ export default function RoleSelection() {
   });
 
   const handleCoachSelect = async () => {
-    await setRoleMutation.mutateAsync('coach');
     setSelectedRole('coach');
     setCoachStep('select-team-action');
   };
@@ -249,15 +286,33 @@ export default function RoleSelection() {
               </div>
 
               <div>
-                <Label htmlFor="team">Team</Label>
+                <Label htmlFor="team">Team Name</Label>
                 <Input
                   id="team"
-                  placeholder="Your team name"
+                  placeholder="Your team name (optional)"
                   value={playerForm.team}
                   onChange={(e) => setPlayerForm(prev => ({ ...prev, team: e.target.value }))}
                   className="mt-1"
                   data-testid="input-team"
                 />
+              </div>
+
+              <div className="border-t border-border pt-4 mt-4">
+                <Label htmlFor="teamCode" className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-amber-500" />
+                  Have a Team Invite Code?
+                </Label>
+                <Input
+                  id="teamCode"
+                  placeholder="Enter your team code (optional)"
+                  value={playerForm.teamCode}
+                  onChange={(e) => setPlayerForm(prev => ({ ...prev, teamCode: e.target.value.toUpperCase() }))}
+                  className="mt-1 uppercase"
+                  data-testid="input-team-code"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  If your coach sent you a team code, enter it here to join your team
+                </p>
               </div>
 
               <Button 
