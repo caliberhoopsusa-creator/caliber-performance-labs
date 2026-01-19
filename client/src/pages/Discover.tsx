@@ -188,12 +188,14 @@ function PlayerDiscoverCard({ player }: { player: DiscoverPlayer }) {
                 </div>
               </div>
 
-              {player.gpa !== null && (
-                <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-3">
-                  <BookOpen className="w-3.5 h-3.5 text-blue-400" />
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-3">
+                <BookOpen className="w-3.5 h-3.5 text-blue-400" />
+                {player.gpa !== null ? (
                   <span className="text-blue-400 font-medium">{player.gpa.toFixed(2)} GPA</span>
-                </div>
-              )}
+                ) : (
+                  <span className="text-muted-foreground italic">No GPA listed</span>
+                )}
+              </div>
 
               <div className="flex items-center gap-2 flex-wrap">
                 <Badge 

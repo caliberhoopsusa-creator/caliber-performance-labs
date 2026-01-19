@@ -2118,11 +2118,11 @@ export async function registerRoutes(
         results = results.filter(p => p.openToOpportunities);
       }
 
-      // Filter by minimum GPA
+      // Filter by minimum GPA - players without GPA are NOT filtered out
       if (minGpa && typeof minGpa === 'string') {
         const gpaThreshold = parseFloat(minGpa);
         if (!isNaN(gpaThreshold)) {
-          results = results.filter(p => p.gpa !== null && p.gpa >= gpaThreshold);
+          results = results.filter(p => p.gpa === null || p.gpa >= gpaThreshold);
         }
       }
 
