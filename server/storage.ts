@@ -1621,9 +1621,20 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(notifications).where(eq(notifications.playerId, playerId)).orderBy(desc(notifications.createdAt));
   }
 
+  async getUserNotifications(userId: string): Promise<Notification[]> {
+    return await db.select().from(notifications).where(eq(notifications.userId, userId)).orderBy(desc(notifications.createdAt));
+  }
+
   async getUnreadNotificationCount(playerId: number): Promise<number> {
     const [result] = await db.select({ count: count() }).from(notifications).where(
       and(eq(notifications.playerId, playerId), eq(notifications.isRead, false))
+    );
+    return result?.count || 0;
+  }
+
+  async getUnreadNotificationCountByUserId(userId: string): Promise<number> {
+    const [result] = await db.select({ count: count() }).from(notifications).where(
+      and(eq(notifications.userId, userId), eq(notifications.isRead, false))
     );
     return result?.count || 0;
   }
@@ -1635,6 +1646,12 @@ export class DatabaseStorage implements IStorage {
   async markAllNotificationsRead(playerId: number): Promise<void> {
     await db.update(notifications).set({ isRead: true }).where(
       and(eq(notifications.playerId, playerId), eq(notifications.isRead, false))
+    );
+  }
+
+  async markAllNotificationsReadByUserId(userId: string): Promise<void> {
+    await db.update(notifications).set({ isRead: true }).where(
+      and(eq(notifications.userId, userId), eq(notifications.isRead, false))
     );
   }
 

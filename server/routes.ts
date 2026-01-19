@@ -4982,30 +4982,49 @@ Respond in this exact JSON format:
   // NOTIFICATION ROUTES
   // ========================================
 
-  // Get current user's notifications
+  // Get current user's notifications (supports both players and coaches)
   app.get('/api/notifications', isAuthenticated, async (req: any, res) => {
     try {
       const user = await authStorage.getUser(req.user.claims.sub);
-      if (!user || !user.playerId) {
+      if (!user) {
         return res.json([]);
       }
-      const notifications = await storage.getPlayerNotifications(user.playerId);
-      res.json(notifications);
+      
+      // Get notifications based on user type (player or coach)
+      let allNotifications: any[] = [];
+      if (user.playerId) {
+        allNotifications = await storage.getPlayerNotifications(user.playerId);
+      }
+      // Also get user-level notifications (for coaches or shared notifications)
+      const userNotifications = await storage.getUserNotifications(user.id);
+      
+      // Combine and sort by date
+      const combined = [...allNotifications, ...userNotifications];
+      combined.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      res.json(combined);
     } catch (error) {
       console.error('Error getting notifications:', error);
       res.status(500).json({ message: "Failed to get notifications" });
     }
   });
 
-  // Get unread notification count
+  // Get unread notification count (supports both players and coaches)
   app.get('/api/notifications/unread-count', isAuthenticated, async (req: any, res) => {
     try {
       const user = await authStorage.getUser(req.user.claims.sub);
-      if (!user || !user.playerId) {
+      if (!user) {
         return res.json({ count: 0 });
       }
-      const count = await storage.getUnreadNotificationCount(user.playerId);
-      res.json({ count });
+      
+      let totalCount = 0;
+      if (user.playerId) {
+        totalCount += await storage.getUnreadNotificationCount(user.playerId);
+      }
+      // Also count user-level notifications
+      totalCount += await storage.getUnreadNotificationCountByUserId(user.id);
+      
+      res.json({ count: totalCount });
     } catch (error) {
       console.error('Error getting unread count:', error);
       res.status(500).json({ message: "Failed to get unread count" });
@@ -5024,14 +5043,20 @@ Respond in this exact JSON format:
     }
   });
 
-  // Mark all notifications as read
+  // Mark all notifications as read (supports both players and coaches)
   app.post('/api/notifications/read-all', isAuthenticated, async (req: any, res) => {
     try {
       const user = await authStorage.getUser(req.user.claims.sub);
-      if (!user || !user.playerId) {
+      if (!user) {
         return res.json({ success: true });
       }
-      await storage.markAllNotificationsRead(user.playerId);
+      
+      if (user.playerId) {
+        await storage.markAllNotificationsRead(user.playerId);
+      }
+      // Also mark user-level notifications as read
+      await storage.markAllNotificationsReadByUserId(user.id);
+      
       res.json({ success: true });
     } catch (error) {
       console.error('Error marking all notifications read:', error);
