@@ -111,12 +111,20 @@ export const api = {
     leaderboard: {
       method: 'GET' as const,
       path: '/api/analytics/leaderboard',
+      input: z.object({
+        state: z.string().optional(),
+        position: z.string().optional(),
+        level: z.string().optional(),
+      }).optional(),
       responses: {
         200: z.array(z.object({
           playerId: z.number(),
           name: z.string(),
           team: z.string().nullable(),
           jerseyNumber: z.number().nullable(),
+          position: z.string().nullable(),
+          state: z.string().nullable(),
+          level: z.string().nullable(),
           avgPoints: z.number(),
           avgGrade: z.string(),
           gamesPlayed: z.number(),

@@ -2115,7 +2115,21 @@ export async function registerRoutes(
   });
 
   app.get(api.analytics.leaderboard.path, async (req, res) => {
-    const playersList = await storage.getPlayers();
+    const { state, position, level } = req.query as { state?: string; position?: string; level?: string };
+    
+    let playersList = await storage.getPlayers();
+    
+    // Apply filters
+    if (state) {
+      playersList = playersList.filter(p => p.state === state);
+    }
+    if (position) {
+      playersList = playersList.filter(p => p.position === position);
+    }
+    if (level) {
+      playersList = playersList.filter(p => p.level === level);
+    }
+    
     const leaderboard = await Promise.all(playersList.map(async (p) => {
       const fullPlayer = await storage.getPlayer(p.id);
       const playerGames = fullPlayer?.games || [];
@@ -2148,6 +2162,9 @@ export async function registerRoutes(
         name: p.name,
         team: p.team,
         jerseyNumber: p.jerseyNumber,
+        position: p.position,
+        state: p.state,
+        level: p.level,
         avgPoints: Number(avgPoints.toFixed(1)),
         avgGrade,
         avgGradeScore,
