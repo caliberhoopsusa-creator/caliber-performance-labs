@@ -133,7 +133,7 @@ export function UploadClipModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-display text-xl uppercase tracking-wide">
             <Film className="w-5 h-5 text-primary" />

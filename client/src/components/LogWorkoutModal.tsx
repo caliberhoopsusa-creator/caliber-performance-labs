@@ -125,7 +125,7 @@ export function LogWorkoutModal({ playerId }: LogWorkoutModalProps) {
           Log Workout
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]" data-testid="dialog-log-workout">
+      <DialogContent className="sm:max-w-[500px] max-h-[85vh] overflow-y-auto" data-testid="dialog-log-workout">
         <DialogHeader>
           <DialogTitle>Log Workout</DialogTitle>
           <DialogDescription>

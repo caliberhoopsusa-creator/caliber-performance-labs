@@ -151,7 +151,7 @@ export default function LineupAnalysis() {
               Create Lineup
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create New Lineup</DialogTitle>
             </DialogHeader>

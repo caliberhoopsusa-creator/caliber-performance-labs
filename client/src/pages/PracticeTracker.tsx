@@ -282,7 +282,7 @@ export default function PracticeTracker() {
               New Practice
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]" data-testid="dialog-create-practice">
+          <DialogContent className="sm:max-w-[500px] max-h-[85vh] overflow-y-auto" data-testid="dialog-create-practice">
             <DialogHeader>
               <DialogTitle>Create Practice Session</DialogTitle>
               <DialogDescription>
