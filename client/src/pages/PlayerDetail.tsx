@@ -126,6 +126,40 @@ function getAverageGrade(games: Game[]): string {
   return "F";
 }
 
+function getGradeColor(grade: string) {
+  const normalizedGrade = grade?.trim().toUpperCase() || "";
+  if (["A+", "A", "A-"].includes(normalizedGrade)) {
+    return {
+      bg: "from-amber-500/20 to-yellow-600/20",
+      border: "border-amber-500/50",
+      text: "text-amber-400",
+      glow: "shadow-amber-500/30",
+    };
+  }
+  if (["B+", "B", "B-"].includes(normalizedGrade)) {
+    return {
+      bg: "from-slate-400/20 to-gray-500/20",
+      border: "border-slate-400/50",
+      text: "text-slate-300",
+      glow: "shadow-slate-400/30",
+    };
+  }
+  if (["C+", "C", "C-"].includes(normalizedGrade)) {
+    return {
+      bg: "from-orange-500/20 to-amber-600/20",
+      border: "border-orange-500/50",
+      text: "text-orange-400",
+      glow: "shadow-orange-500/30",
+    };
+  }
+  return {
+    bg: "from-red-500/20 to-rose-600/20",
+    border: "border-red-500/50",
+    text: "text-red-400",
+    glow: "shadow-red-500/30",
+  };
+}
+
 function getInitials(name: string): string {
   return name
     .split(' ')
@@ -1279,6 +1313,35 @@ export default function PlayerDetail() {
                         </div>
                       </div>
                       
+                      {(game.defensiveGrade || game.shootingGrade || game.reboundingGrade || game.passingGrade) && (
+                        <div className="mt-4 pt-4 border-t border-white/5">
+                          <div className="text-xs text-muted-foreground mb-3 uppercase tracking-wider font-medium">Category Grades</div>
+                          <div className="grid grid-cols-4 gap-2">
+                            {[
+                              { label: "DEF", value: game.defensiveGrade, icon: Shield, color: "from-green-500/10 to-emerald-600/5 border-green-500/20", testId: "grade-defense" },
+                              { label: "SHOT", value: game.shootingGrade, icon: Target, color: "from-red-500/10 to-rose-600/5 border-red-500/20", testId: "grade-shooting" },
+                              { label: "REB", value: game.reboundingGrade, icon: Zap, color: "from-blue-500/10 to-sky-600/5 border-blue-500/20", testId: "grade-rebounding" },
+                              { label: "PASS", value: game.passingGrade, icon: Activity, color: "from-purple-500/10 to-violet-600/5 border-purple-500/20", testId: "grade-passing" },
+                            ].map((cat) => (
+                              <div 
+                                key={cat.label} 
+                                data-testid={`${cat.testId}-${game.id}`}
+                                className={cn(
+                                  "text-center p-2 rounded-lg bg-gradient-to-br border transition-all duration-300 hover:scale-105",
+                                  cat.color
+                                )}
+                              >
+                                <cat.icon className="w-3 h-3 mx-auto mb-1 text-muted-foreground" />
+                                <div className={cn("text-lg font-bold", getGradeColor(cat.value || "").text)}>
+                                  {cat.value || "—"}
+                                </div>
+                                <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">{cat.label}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
                       {game.feedback && (
                         <div className="mt-4 pt-4 border-t border-white/5">
                           <div className="text-xs text-muted-foreground mb-2">Coach Notes</div>
@@ -1432,6 +1495,28 @@ export default function PlayerDetail() {
                       </div>
                       <GradeBadge grade={game.grade || "-"} size="sm" />
                     </div>
+                    
+                    {(game.defensiveGrade || game.shootingGrade || game.reboundingGrade || game.passingGrade) && (
+                      <div className="flex gap-1.5 mb-2">
+                        {[
+                          { label: "DEF", value: game.defensiveGrade, icon: Shield, testId: "grade-defense" },
+                          { label: "SHOT", value: game.shootingGrade, icon: Target, testId: "grade-shooting" },
+                          { label: "REB", value: game.reboundingGrade, icon: Zap, testId: "grade-rebounding" },
+                          { label: "PASS", value: game.passingGrade, icon: Activity, testId: "grade-passing" },
+                        ].map((cat) => (
+                          <div 
+                            key={cat.label}
+                            data-testid={`${cat.testId}-history-${game.id}`}
+                            className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/5 border border-white/10"
+                          >
+                            <cat.icon className="w-2.5 h-2.5 text-muted-foreground" />
+                            <span className={cn("text-[10px] font-bold", getGradeColor(cat.value || "").text)}>
+                              {cat.value || "—"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     
                     <div className="flex justify-between items-end border-t border-white/5 pt-3 mt-1">
                       <div className="flex items-center gap-4">

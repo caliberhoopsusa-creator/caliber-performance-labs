@@ -1351,6 +1351,7 @@ export async function registerRoutes(
     
     res.json({
       ...player,
+      games: playerGames,
       advancedMetrics: aggregatedAdvancedMetrics,
     });
   });
