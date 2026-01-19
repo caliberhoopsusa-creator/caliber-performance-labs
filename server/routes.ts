@@ -1222,10 +1222,16 @@ export async function registerRoutes(
         school: z.string().optional(),
         graduationYear: z.number().optional(),
         level: z.enum(['middle_school', 'high_school', 'college']).optional(),
+        gpa: z.number().min(0).max(4).optional(),
       });
       
       const input = updateSchema.parse(req.body);
-      const updated = await storage.updatePlayer(playerId, input);
+      // Convert GPA to string for database storage (decimal type)
+      const updateData: any = { ...input };
+      if (input.gpa !== undefined) {
+        updateData.gpa = input.gpa.toFixed(2);
+      }
+      const updated = await storage.updatePlayer(playerId, updateData);
       res.json(updated);
     } catch (err) {
       if (err instanceof z.ZodError) {

@@ -25,6 +25,7 @@ export const players = pgTable("players", {
   school: text("school"), // School or organization
   graduationYear: integer("graduation_year"), // Class year (e.g., 2025)
   level: text("level"), // 'middle_school', 'high_school', 'college'
+  gpa: decimal("gpa", { precision: 3, scale: 2 }), // Academic GPA (0.00 - 4.00) for high school players
   // Widget preferences (JSON array of widget IDs to show)
   widgetPreferences: text("widget_preferences"), // JSON: ["trends", "grades", "radar", "averages"]
   createdAt: timestamp("created_at").defaultNow(),
