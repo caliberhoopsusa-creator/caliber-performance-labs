@@ -3,6 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { InstallPrompt } from "@/components/InstallPrompt";
 import { Sidebar, MobileNav } from "@/components/Sidebar";
 import { MobileDrawer } from "@/components/MobileDrawer";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -190,6 +191,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
+          <InstallPrompt />
           <Switch>
             <Route path="/admin" component={Admin} />
             <Route>
