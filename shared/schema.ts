@@ -1200,6 +1200,10 @@ export const NOTIFICATION_TYPES = {
   game_logged: { name: "Game Logged", description: "A new game was logged" },
   challenge_update: { name: "Challenge Update", description: "Challenge progress update" },
   endorsement_received: { name: "Endorsement", description: "You received a new endorsement from a coach" },
+  story_tag: { name: "Story Tag", description: "You were tagged in a story" },
+  mentorship_request: { name: "Mentorship Request", description: "You received a mentorship request" },
+  mentorship_accepted: { name: "Mentorship Accepted", description: "Your mentorship request was accepted" },
+  mentorship_declined: { name: "Mentorship Declined", description: "Your mentorship request was declined" },
 } as const;
 
 export const WORKOUT_TYPES = {

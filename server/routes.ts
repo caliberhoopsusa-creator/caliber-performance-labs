@@ -3,7 +3,7 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, headToHeadChallenges, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema } from "@shared/schema";
+import { players, games, headToHeadChallenges, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { GoogleGenAI } from "@google/genai";
 import multer from "multer";
@@ -3868,6 +3868,109 @@ Respond in this exact JSON format:
     }
   });
 
+  // Story Tags - add tag to story
+  app.post('/api/stories/:id/tags', async (req, res) => {
+    try {
+      const storyId = Number(req.params.id);
+      const { taggedPlayerId, taggedPlayerName } = req.body;
+
+      if (!taggedPlayerId) {
+        return res.status(400).json({ message: 'taggedPlayerId is required' });
+      }
+
+      // Create the tag
+      const tag = await storage.addStoryTag({ storyId, taggedPlayerId });
+
+      // Get the story to notify the tagged player
+      const story = await storage.getStory(storyId);
+      if (story) {
+        const storyAuthor = await storage.getPlayer(story.playerId);
+        const storyAuthorName = storyAuthor?.name || 'A player';
+        
+        // Create notification for the tagged player
+        await storage.createNotification({
+          playerId: taggedPlayerId,
+          notificationType: 'story_tag',
+          title: 'Tagged in Story',
+          message: `${storyAuthorName} tagged you in their story`,
+          relatedId: storyId,
+          relatedType: 'story',
+        });
+      }
+
+      res.status(201).json(tag);
+    } catch (err) {
+      console.error('Add story tag error:', err);
+      res.status(500).json({ message: 'Error adding tag' });
+    }
+  });
+
+  // Get tags for a story
+  app.get('/api/stories/:id/tags', async (req, res) => {
+    try {
+      const storyId = Number(req.params.id);
+      const tags = await storage.getStoryTags(storyId);
+      
+      // Enrich with player data
+      const enrichedTags = await Promise.all(
+        tags.map(async (tag) => {
+          const player = await storage.getPlayer(tag.taggedPlayerId);
+          return {
+            ...tag,
+            taggedPlayerName: player?.name || 'Unknown Player',
+            taggedPlayerPhotoUrl: player?.photoUrl || null,
+          };
+        })
+      );
+      
+      res.json(enrichedTags);
+    } catch (err) {
+      console.error('Get story tags error:', err);
+      res.status(500).json({ message: 'Error fetching tags' });
+    }
+  });
+
+  // Get stories a player is tagged in
+  app.get('/api/players/:playerId/tagged-stories', async (req, res) => {
+    try {
+      const playerId = Number(req.params.playerId);
+      const tags = await storage.getTaggedStories(playerId);
+      
+      // Enrich with story and author data
+      const enrichedTags = await Promise.all(
+        tags.map(async (tag) => {
+          const story = await storage.getStory(tag.storyId);
+          const author = story ? await storage.getPlayer(story.playerId) : null;
+          return {
+            ...tag,
+            story,
+            authorName: author?.name || 'Unknown Player',
+            authorPhotoUrl: author?.photoUrl || null,
+          };
+        })
+      );
+      
+      res.json(enrichedTags);
+    } catch (err) {
+      console.error('Get tagged stories error:', err);
+      res.status(500).json({ message: 'Error fetching tagged stories' });
+    }
+  });
+
+  // Remove tag from story
+  app.delete('/api/stories/:id/tags/:taggedPlayerId', async (req, res) => {
+    try {
+      const storyId = Number(req.params.id);
+      const taggedPlayerId = Number(req.params.taggedPlayerId);
+
+      await storage.removeStoryTag(storyId, taggedPlayerId);
+      res.status(204).send();
+    } catch (err) {
+      console.error('Remove story tag error:', err);
+      res.status(500).json({ message: 'Error removing tag' });
+    }
+  });
+
   // Story Highlights
   app.get('/api/players/:id/highlights', async (req, res) => {
     try {
@@ -6326,6 +6429,458 @@ Respond in this exact JSON format:
     } catch (error) {
       console.error('Error marking messages as read:', error);
       res.status(500).json({ message: "Failed to mark messages as read" });
+    }
+  });
+
+  // === Training Groups Routes ===
+  
+  // POST /api/training-groups - Create a new training group
+  app.post('/api/training-groups', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = (req as any).caliberUser;
+      const { name, description, isPublic, maxMembers } = req.body;
+
+      if (!name || typeof name !== 'string' || name.trim().length === 0) {
+        return res.status(400).json({ message: "Group name is required" });
+      }
+
+      const group = await storage.createTrainingGroup({
+        name: name.trim(),
+        description: description || null,
+        ownerUserId: user.userId,
+        ownerPlayerId: user.playerId || null,
+        isPublic: isPublic === true,
+        maxMembers: maxMembers || 20
+      });
+
+      // Add creator as owner member
+      if (user.playerId) {
+        await storage.addGroupMember({
+          groupId: group.id,
+          playerId: user.playerId,
+          role: 'owner'
+        });
+      }
+
+      res.json(group);
+    } catch (error) {
+      console.error('Error creating training group:', error);
+      res.status(500).json({ message: "Failed to create training group" });
+    }
+  });
+
+  // GET /api/training-groups - Get user's training groups
+  app.get('/api/training-groups', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = (req as any).caliberUser;
+      const groups = await storage.getUserTrainingGroups(user.userId, user.playerId || null);
+      res.json(groups);
+    } catch (error) {
+      console.error('Error fetching training groups:', error);
+      res.status(500).json({ message: "Failed to fetch training groups" });
+    }
+  });
+
+  // GET /api/training-groups/public - Get public training groups
+  app.get('/api/training-groups/public', async (req, res) => {
+    try {
+      const groups = await storage.getPublicTrainingGroups();
+      res.json(groups);
+    } catch (error) {
+      console.error('Error fetching public training groups:', error);
+      res.status(500).json({ message: "Failed to fetch public training groups" });
+    }
+  });
+
+  // GET /api/training-groups/:id - Get group details
+  app.get('/api/training-groups/:id', async (req, res) => {
+    try {
+      const groupId = parseInt(req.params.id);
+      const group = await storage.getTrainingGroup(groupId);
+
+      if (!group) {
+        return res.status(404).json({ message: "Training group not found" });
+      }
+
+      res.json(group);
+    } catch (error) {
+      console.error('Error fetching training group:', error);
+      res.status(500).json({ message: "Failed to fetch training group" });
+    }
+  });
+
+  // PUT /api/training-groups/:id - Update group
+  app.put('/api/training-groups/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = (req as any).caliberUser;
+      const groupId = parseInt(req.params.id);
+      const { name, description, isPublic, maxMembers } = req.body;
+
+      const group = await storage.getTrainingGroup(groupId);
+      if (!group) {
+        return res.status(404).json({ message: "Training group not found" });
+      }
+
+      // Check if user is the owner
+      if (group.ownerUserId !== user.userId && group.ownerPlayerId !== user.playerId) {
+        return res.status(403).json({ message: "Only the group owner can update this group" });
+      }
+
+      const updates: Partial<InsertTrainingGroup> = {};
+      if (name !== undefined && typeof name === 'string' && name.trim().length > 0) {
+        updates.name = name.trim();
+      }
+      if (description !== undefined) {
+        updates.description = description;
+      }
+      if (isPublic !== undefined) {
+        updates.isPublic = isPublic;
+      }
+      if (maxMembers !== undefined && typeof maxMembers === 'number') {
+        updates.maxMembers = maxMembers;
+      }
+
+      const updated = await storage.updateTrainingGroup(groupId, updates);
+      res.json(updated);
+    } catch (error) {
+      console.error('Error updating training group:', error);
+      res.status(500).json({ message: "Failed to update training group" });
+    }
+  });
+
+  // DELETE /api/training-groups/:id - Delete group
+  app.delete('/api/training-groups/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = (req as any).caliberUser;
+      const groupId = parseInt(req.params.id);
+
+      const group = await storage.getTrainingGroup(groupId);
+      if (!group) {
+        return res.status(404).json({ message: "Training group not found" });
+      }
+
+      // Check if user is the owner
+      if (group.ownerUserId !== user.userId && group.ownerPlayerId !== user.playerId) {
+        return res.status(403).json({ message: "Only the group owner can delete this group" });
+      }
+
+      await storage.deleteTrainingGroup(groupId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting training group:', error);
+      res.status(500).json({ message: "Failed to delete training group" });
+    }
+  });
+
+  // POST /api/training-groups/:id/join - Join a training group
+  app.post('/api/training-groups/:id/join', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = (req as any).caliberUser;
+      const groupId = parseInt(req.params.id);
+
+      if (!user.playerId) {
+        return res.status(400).json({ message: "Player profile required to join a group" });
+      }
+
+      const group = await storage.getTrainingGroup(groupId);
+      if (!group) {
+        return res.status(404).json({ message: "Training group not found" });
+      }
+
+      // Check if user is already a member
+      const members = await storage.getGroupMembers(groupId);
+      if (members.some(m => m.playerId === user.playerId)) {
+        return res.status(400).json({ message: "Already a member of this group" });
+      }
+
+      // Check if group is at max capacity
+      if (group.maxMembers && members.length >= group.maxMembers) {
+        return res.status(400).json({ message: "Group is at max capacity" });
+      }
+
+      const member = await storage.addGroupMember({
+        groupId,
+        playerId: user.playerId,
+        role: 'member'
+      });
+
+      res.json(member);
+    } catch (error) {
+      console.error('Error joining training group:', error);
+      res.status(500).json({ message: "Failed to join training group" });
+    }
+  });
+
+  // DELETE /api/training-groups/:id/leave - Leave a training group
+  app.delete('/api/training-groups/:id/leave', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = (req as any).caliberUser;
+      const groupId = parseInt(req.params.id);
+
+      if (!user.playerId) {
+        return res.status(400).json({ message: "Player profile required to leave a group" });
+      }
+
+      const group = await storage.getTrainingGroup(groupId);
+      if (!group) {
+        return res.status(404).json({ message: "Training group not found" });
+      }
+
+      // Check if user is the owner - prevent owner from leaving
+      const members = await storage.getGroupMembers(groupId);
+      const ownerMember = members.find(m => m.role === 'owner' && m.playerId === user.playerId);
+      if (ownerMember) {
+        return res.status(400).json({ message: "Group owner cannot leave the group" });
+      }
+
+      await storage.removeGroupMember(groupId, user.playerId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error leaving training group:', error);
+      res.status(500).json({ message: "Failed to leave training group" });
+    }
+  });
+
+  // GET /api/training-groups/:id/members - Get group members
+  app.get('/api/training-groups/:id/members', async (req, res) => {
+    try {
+      const groupId = parseInt(req.params.id);
+
+      const group = await storage.getTrainingGroup(groupId);
+      if (!group) {
+        return res.status(404).json({ message: "Training group not found" });
+      }
+
+      const members = await storage.getGroupMembers(groupId);
+      res.json(members);
+    } catch (error) {
+      console.error('Error fetching group members:', error);
+      res.status(500).json({ message: "Failed to fetch group members" });
+    }
+  });
+
+  // ===== MENTORSHIP ROUTES =====
+  
+  // POST /api/mentorship/profile - Create/update mentorship profile
+  app.post('/api/mentorship/profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user || !user.playerId) {
+        return res.status(401).json({ message: "Player profile required" });
+      }
+
+      const validated = insertMentorshipProfileSchema.parse(req.body);
+      
+      const existing = await storage.getMentorshipProfile(user.playerId);
+      if (existing) {
+        const updated = await storage.updateMentorshipProfile(user.playerId, validated);
+        return res.json(updated);
+      }
+
+      const created = await storage.createMentorshipProfile({
+        ...validated,
+        playerId: user.playerId,
+      });
+      res.status(201).json(created);
+    } catch (error: any) {
+      console.error('Error creating mentorship profile:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Invalid profile data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create mentorship profile" });
+    }
+  });
+
+  // GET /api/mentorship/profile - Get my mentorship profile
+  app.get('/api/mentorship/profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user || !user.playerId) {
+        return res.status(401).json({ message: "Player profile required" });
+      }
+
+      const profile = await storage.getMentorshipProfile(user.playerId);
+      if (!profile) {
+        return res.status(404).json({ message: "Mentorship profile not found" });
+      }
+
+      res.json(profile);
+    } catch (error) {
+      console.error('Error fetching mentorship profile:', error);
+      res.status(500).json({ message: "Failed to fetch mentorship profile" });
+    }
+  });
+
+  // GET /api/mentorship/mentors - Get list of active mentors
+  app.get('/api/mentorship/mentors', async (req, res) => {
+    try {
+      const mentors = await storage.getActiveMentors();
+      res.json(mentors);
+    } catch (error) {
+      console.error('Error fetching mentors:', error);
+      res.status(500).json({ message: "Failed to fetch mentors" });
+    }
+  });
+
+  // POST /api/mentorship/request - Request mentorship
+  app.post('/api/mentorship/request', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user || !user.playerId) {
+        return res.status(401).json({ message: "Player profile required" });
+      }
+
+      const { mentorPlayerId, message } = req.body;
+      if (!mentorPlayerId) {
+        return res.status(400).json({ message: "Mentor player ID required" });
+      }
+
+      if (mentorPlayerId === user.playerId) {
+        return res.status(400).json({ message: "Cannot request mentorship from yourself" });
+      }
+
+      const mentorProfile = await storage.getMentorshipProfile(mentorPlayerId);
+      if (!mentorProfile) {
+        return res.status(404).json({ message: "Mentor profile not found" });
+      }
+
+      const request = await storage.createMentorshipRequest({
+        requesterPlayerId: user.playerId,
+        mentorPlayerId,
+        message,
+        status: 'pending',
+      });
+
+      // Create notification for mentor
+      const mentorPlayer = await storage.getPlayer(mentorPlayerId);
+      const requesterPlayer = await storage.getPlayer(user.playerId);
+      
+      if (mentorPlayer && requesterPlayer) {
+        await storage.createNotification({
+          playerId: mentorPlayerId,
+          type: 'mentorship_request',
+          title: `Mentorship Request from ${requesterPlayer.name}`,
+          message: `${requesterPlayer.name} has requested mentorship from you`,
+          relatedId: request.id,
+        });
+      }
+
+      res.status(201).json(request);
+    } catch (error: any) {
+      console.error('Error creating mentorship request:', error);
+      res.status(500).json({ message: "Failed to create mentorship request" });
+    }
+  });
+
+  // GET /api/mentorship/requests - Get my outgoing requests
+  app.get('/api/mentorship/requests', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user || !user.playerId) {
+        return res.status(401).json({ message: "Player profile required" });
+      }
+
+      const requests = await storage.getMentorshipRequests(user.playerId);
+      res.json(requests);
+    } catch (error) {
+      console.error('Error fetching mentorship requests:', error);
+      res.status(500).json({ message: "Failed to fetch mentorship requests" });
+    }
+  });
+
+  // GET /api/mentorship/requests/incoming - Get incoming requests (for mentors)
+  app.get('/api/mentorship/requests/incoming', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user || !user.playerId) {
+        return res.status(401).json({ message: "Player profile required" });
+      }
+
+      const requests = await storage.getIncomingMentorshipRequests(user.playerId);
+      res.json(requests);
+    } catch (error) {
+      console.error('Error fetching incoming mentorship requests:', error);
+      res.status(500).json({ message: "Failed to fetch incoming mentorship requests" });
+    }
+  });
+
+  // POST /api/mentorship/requests/:id/accept - Accept request
+  app.post('/api/mentorship/requests/:id/accept', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user || !user.playerId) {
+        return res.status(401).json({ message: "Player profile required" });
+      }
+
+      const requestId = parseInt(req.params.id);
+      const mentorshipRequest = await storage.updateMentorshipRequestStatus(requestId, 'accepted');
+
+      // Create notification for requester
+      const requesterPlayer = await storage.getPlayer(mentorshipRequest.requesterPlayerId);
+      const mentorPlayer = await storage.getPlayer(mentorshipRequest.mentorPlayerId);
+
+      if (requesterPlayer && mentorPlayer) {
+        await storage.createNotification({
+          playerId: mentorshipRequest.requesterPlayerId,
+          type: 'mentorship_accepted',
+          title: `Mentorship Request Accepted`,
+          message: `${mentorPlayer.name} has accepted your mentorship request`,
+          relatedId: requestId,
+        });
+      }
+
+      res.json(mentorshipRequest);
+    } catch (error) {
+      console.error('Error accepting mentorship request:', error);
+      res.status(500).json({ message: "Failed to accept mentorship request" });
+    }
+  });
+
+  // POST /api/mentorship/requests/:id/decline - Decline request
+  app.post('/api/mentorship/requests/:id/decline', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user || !user.playerId) {
+        return res.status(401).json({ message: "Player profile required" });
+      }
+
+      const requestId = parseInt(req.params.id);
+      const mentorshipRequest = await storage.updateMentorshipRequestStatus(requestId, 'declined');
+
+      // Create notification for requester
+      const requesterPlayer = await storage.getPlayer(mentorshipRequest.requesterPlayerId);
+      const mentorPlayer = await storage.getPlayer(mentorshipRequest.mentorPlayerId);
+
+      if (requesterPlayer && mentorPlayer) {
+        await storage.createNotification({
+          playerId: mentorshipRequest.requesterPlayerId,
+          type: 'mentorship_declined',
+          title: `Mentorship Request Declined`,
+          message: `${mentorPlayer.name} has declined your mentorship request`,
+          relatedId: requestId,
+        });
+      }
+
+      res.json(mentorshipRequest);
+    } catch (error) {
+      console.error('Error declining mentorship request:', error);
+      res.status(500).json({ message: "Failed to decline mentorship request" });
+    }
+  });
+
+  // GET /api/mentorship/connections - Get accepted mentorship connections
+  app.get('/api/mentorship/connections', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user || !user.playerId) {
+        return res.status(401).json({ message: "Player profile required" });
+      }
+
+      const connections = await storage.getAcceptedMentorships(user.playerId);
+      res.json(connections);
+    } catch (error) {
+      console.error('Error fetching mentorship connections:', error);
+      res.status(500).json({ message: "Failed to fetch mentorship connections" });
     }
   });
 

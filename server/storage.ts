@@ -2,12 +2,13 @@ import { db } from "./db";
 import {
   players, games, badges, goals, streaks, likes, comments, challenges, challengeProgress,
   teams, teamMembers, teamPosts, teamPostComments,
-  feedActivities, reposts, polls, pollVotes, predictions, predictionVotes, storyTemplates, playerStories, storyViews, storyReactions, storyHighlights,
+  feedActivities, reposts, polls, pollVotes, predictions, predictionVotes, storyTemplates, playerStories, storyViews, storyReactions, storyHighlights, storyTags,
   activityStreaks,
   shots, gameNotes, practices, practiceAttendance, drills, drillScores, lineups, lineupStats,
   opponents, alerts, coachGoals, drillRecommendations,
-  follows, notifications, highlightClips, workouts, accolades, goalShares, scheduleEvents, liveGameSessions, liveGameEvents, shareAssets, endorsements, headToHeadChallenges,
+  follows, notifications, highlightClips, workouts, accolades, goalShares, scheduleEvents, liveGameSessions, liveGameEvents, shareAssets, endorsements, headToHeadChallenges, trainingGroups, trainingGroupMembers,
   dmThreads, dmParticipants, dmMessages,
+  mentorshipProfiles, mentorshipRequests,
   type Player, type InsertPlayer,
   type Game, type InsertGame,
   type UpdateGameRequest,
@@ -33,6 +34,7 @@ import {
   type StoryView, type InsertStoryView,
   type StoryReaction, type InsertStoryReaction,
   type StoryHighlight, type InsertStoryHighlight,
+  type StoryTag, type InsertStoryTag,
   type ActivityStreak, type InsertActivityStreak,
   type SkillBadge, type InsertSkillBadge, skillBadges,
   type Shot, type InsertShot,
@@ -59,9 +61,13 @@ import {
   type ShareAsset, type InsertShareAsset,
   type Endorsement, type InsertEndorsement,
   type HeadToHeadChallenge, type InsertHeadToHeadChallenge,
+  type TrainingGroup, type InsertTrainingGroup,
+  type TrainingGroupMember, type InsertTrainingGroupMember,
   type DmThread, type InsertDmThread,
   type DmParticipant, type InsertDmParticipant,
-  type DmMessage, type InsertDmMessage
+  type DmMessage, type InsertDmMessage,
+  type MentorshipProfile, type InsertMentorshipProfile,
+  type MentorshipRequest, type InsertMentorshipRequest
 } from "@shared/schema";
 import { eq, desc, and, count, gte, lte, sql, or } from "drizzle-orm";
 
@@ -226,6 +232,12 @@ export interface IStorage {
   updateStoryHighlight(id: number, data: Partial<InsertStoryHighlight>): Promise<StoryHighlight | undefined>;
   deleteStoryHighlight(id: number): Promise<void>;
 
+  // Story Tags
+  addStoryTag(tag: InsertStoryTag): Promise<StoryTag>;
+  getStoryTags(storyId: number): Promise<StoryTag[]>;
+  getTaggedStories(playerId: number): Promise<StoryTag[]>;
+  removeStoryTag(storyId: number, taggedPlayerId: number): Promise<void>;
+
   // Activity Streaks (for XP/gamification)
   getPlayerActivityStreaks(playerId: number): Promise<ActivityStreak[]>;
   getOrCreateActivityStreak(playerId: number, streakType: string): Promise<ActivityStreak>;
@@ -381,6 +393,17 @@ export interface IStorage {
   getPlayerShareAssets(playerId: number): Promise<ShareAsset[]>;
   incrementShareCount(id: number): Promise<void>;
 
+  // Training Groups
+  createTrainingGroup(group: InsertTrainingGroup): Promise<TrainingGroup>;
+  getTrainingGroup(id: number): Promise<TrainingGroup | undefined>;
+  getUserTrainingGroups(userId: string | null, playerId: number | null): Promise<TrainingGroup[]>;
+  addGroupMember(member: InsertTrainingGroupMember): Promise<TrainingGroupMember>;
+  getGroupMembers(groupId: number): Promise<TrainingGroupMember[]>;
+  removeGroupMember(groupId: number, playerId: number): Promise<void>;
+  updateTrainingGroup(id: number, updates: Partial<InsertTrainingGroup>): Promise<TrainingGroup>;
+  deleteTrainingGroup(id: number): Promise<void>;
+  getPublicTrainingGroups(): Promise<TrainingGroup[]>;
+
   // Direct Messages
   createDmThread(): Promise<DmThread>;
   addDmParticipant(participant: InsertDmParticipant): Promise<DmParticipant>;
@@ -390,6 +413,17 @@ export interface IStorage {
   getOrCreateThread(userId1: string, playerId1: number | null, userId2: string, playerId2: number | null): Promise<DmThread>;
   markMessagesAsRead(threadId: number, userId: string): Promise<void>;
   getThreadParticipants(threadId: number): Promise<DmParticipant[]>;
+
+  // Mentorship
+  createMentorshipProfile(profile: InsertMentorshipProfile): Promise<MentorshipProfile>;
+  getMentorshipProfile(playerId: number): Promise<MentorshipProfile | undefined>;
+  updateMentorshipProfile(playerId: number, updates: Partial<InsertMentorshipProfile>): Promise<MentorshipProfile>;
+  getActiveMentors(): Promise<MentorshipProfile[]>;
+  createMentorshipRequest(request: InsertMentorshipRequest): Promise<MentorshipRequest>;
+  getMentorshipRequests(playerId: number): Promise<MentorshipRequest[]>;
+  getIncomingMentorshipRequests(mentorPlayerId: number): Promise<MentorshipRequest[]>;
+  updateMentorshipRequestStatus(id: number, status: string): Promise<MentorshipRequest>;
+  getAcceptedMentorships(playerId: number): Promise<MentorshipRequest[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1335,6 +1369,24 @@ export class DatabaseStorage implements IStorage {
     await db.delete(storyHighlights).where(eq(storyHighlights.id, id));
   }
 
+  // Story Tags
+  async addStoryTag(tag: InsertStoryTag): Promise<StoryTag> {
+    const [newTag] = await db.insert(storyTags).values(tag).returning();
+    return newTag;
+  }
+
+  async getStoryTags(storyId: number): Promise<StoryTag[]> {
+    return await db.select().from(storyTags).where(eq(storyTags.storyId, storyId)).orderBy(desc(storyTags.createdAt));
+  }
+
+  async getTaggedStories(playerId: number): Promise<StoryTag[]> {
+    return await db.select().from(storyTags).where(eq(storyTags.taggedPlayerId, playerId)).orderBy(desc(storyTags.createdAt));
+  }
+
+  async removeStoryTag(storyId: number, taggedPlayerId: number): Promise<void> {
+    await db.delete(storyTags).where(and(eq(storyTags.storyId, storyId), eq(storyTags.taggedPlayerId, taggedPlayerId)));
+  }
+
   // Activity Streaks
   async getPlayerActivityStreaks(playerId: number): Promise<ActivityStreak[]> {
     return await db
@@ -1927,6 +1979,84 @@ export class DatabaseStorage implements IStorage {
     await db.update(shareAssets).set({ sharedCount: sql`${shareAssets.sharedCount} + 1` }).where(eq(shareAssets.id, id));
   }
 
+  // Training Groups
+  async createTrainingGroup(group: InsertTrainingGroup): Promise<TrainingGroup> {
+    const [newGroup] = await db.insert(trainingGroups).values(group).returning();
+    return newGroup;
+  }
+
+  async getTrainingGroup(id: number): Promise<TrainingGroup | undefined> {
+    const [group] = await db.select().from(trainingGroups).where(eq(trainingGroups.id, id));
+    return group;
+  }
+
+  async getUserTrainingGroups(userId: string | null, playerId: number | null): Promise<TrainingGroup[]> {
+    if (!userId && !playerId) return [];
+
+    // Get groups owned by user or groups where user's player is a member
+    const ownedGroups = userId ? await db.select().from(trainingGroups).where(eq(trainingGroups.ownerUserId, userId)) : [];
+    
+    let memberGroups: TrainingGroup[] = [];
+    if (playerId) {
+      const memberGroupIds = await db.select({ groupId: trainingGroupMembers.groupId })
+        .from(trainingGroupMembers)
+        .where(eq(trainingGroupMembers.playerId, playerId));
+      
+      if (memberGroupIds.length > 0) {
+        memberGroups = await db.select().from(trainingGroups)
+          .where(or(
+            ...memberGroupIds.map(m => eq(trainingGroups.id, m.groupId))
+          ));
+      }
+    }
+
+    // Combine and deduplicate
+    const allGroups = [...ownedGroups, ...memberGroups];
+    const seen = new Set<number>();
+    return allGroups.filter(g => {
+      if (seen.has(g.id)) return false;
+      seen.add(g.id);
+      return true;
+    });
+  }
+
+  async addGroupMember(member: InsertTrainingGroupMember): Promise<TrainingGroupMember> {
+    const [newMember] = await db.insert(trainingGroupMembers).values(member).returning();
+    return newMember;
+  }
+
+  async getGroupMembers(groupId: number): Promise<TrainingGroupMember[]> {
+    return await db.select().from(trainingGroupMembers)
+      .where(eq(trainingGroupMembers.groupId, groupId))
+      .orderBy(desc(trainingGroupMembers.joinedAt));
+  }
+
+  async removeGroupMember(groupId: number, playerId: number): Promise<void> {
+    await db.delete(trainingGroupMembers)
+      .where(and(
+        eq(trainingGroupMembers.groupId, groupId),
+        eq(trainingGroupMembers.playerId, playerId)
+      ));
+  }
+
+  async updateTrainingGroup(id: number, updates: Partial<InsertTrainingGroup>): Promise<TrainingGroup> {
+    const [updated] = await db.update(trainingGroups)
+      .set(updates)
+      .where(eq(trainingGroups.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteTrainingGroup(id: number): Promise<void> {
+    await db.delete(trainingGroups).where(eq(trainingGroups.id, id));
+  }
+
+  async getPublicTrainingGroups(): Promise<TrainingGroup[]> {
+    return await db.select().from(trainingGroups)
+      .where(eq(trainingGroups.isPublic, true))
+      .orderBy(desc(trainingGroups.createdAt));
+  }
+
   // Direct Messages
   async createDmThread(): Promise<DmThread> {
     const [newThread] = await db.insert(dmThreads).values({}).returning();
@@ -1994,6 +2124,75 @@ export class DatabaseStorage implements IStorage {
   async getThreadParticipants(threadId: number): Promise<DmParticipant[]> {
     return await db.select().from(dmParticipants)
       .where(eq(dmParticipants.threadId, threadId));
+  }
+
+  // Mentorship
+  async createMentorshipProfile(profile: InsertMentorshipProfile): Promise<MentorshipProfile> {
+    const [result] = await db.insert(mentorshipProfiles).values(profile).returning();
+    return result;
+  }
+
+  async getMentorshipProfile(playerId: number): Promise<MentorshipProfile | undefined> {
+    const [profile] = await db.select().from(mentorshipProfiles)
+      .where(eq(mentorshipProfiles.playerId, playerId));
+    return profile;
+  }
+
+  async updateMentorshipProfile(playerId: number, updates: Partial<InsertMentorshipProfile>): Promise<MentorshipProfile> {
+    const [result] = await db.update(mentorshipProfiles)
+      .set(updates)
+      .where(eq(mentorshipProfiles.playerId, playerId))
+      .returning();
+    return result;
+  }
+
+  async getActiveMentors(): Promise<MentorshipProfile[]> {
+    return await db.select().from(mentorshipProfiles)
+      .where(and(
+        eq(mentorshipProfiles.isActive, true),
+        or(
+          eq(mentorshipProfiles.role, 'mentor'),
+          eq(mentorshipProfiles.role, 'both')
+        )
+      ))
+      .orderBy(desc(mentorshipProfiles.createdAt));
+  }
+
+  async createMentorshipRequest(request: InsertMentorshipRequest): Promise<MentorshipRequest> {
+    const [result] = await db.insert(mentorshipRequests).values(request).returning();
+    return result;
+  }
+
+  async getMentorshipRequests(playerId: number): Promise<MentorshipRequest[]> {
+    return await db.select().from(mentorshipRequests)
+      .where(eq(mentorshipRequests.requesterPlayerId, playerId))
+      .orderBy(desc(mentorshipRequests.createdAt));
+  }
+
+  async getIncomingMentorshipRequests(mentorPlayerId: number): Promise<MentorshipRequest[]> {
+    return await db.select().from(mentorshipRequests)
+      .where(eq(mentorshipRequests.mentorPlayerId, mentorPlayerId))
+      .orderBy(desc(mentorshipRequests.createdAt));
+  }
+
+  async updateMentorshipRequestStatus(id: number, status: string): Promise<MentorshipRequest> {
+    const [result] = await db.update(mentorshipRequests)
+      .set({ status, respondedAt: new Date() })
+      .where(eq(mentorshipRequests.id, id))
+      .returning();
+    return result;
+  }
+
+  async getAcceptedMentorships(playerId: number): Promise<MentorshipRequest[]> {
+    return await db.select().from(mentorshipRequests)
+      .where(and(
+        or(
+          eq(mentorshipRequests.requesterPlayerId, playerId),
+          eq(mentorshipRequests.mentorPlayerId, playerId)
+        ),
+        eq(mentorshipRequests.status, 'accepted')
+      ))
+      .orderBy(desc(mentorshipRequests.createdAt));
   }
 }
 
