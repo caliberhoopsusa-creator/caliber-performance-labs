@@ -39,10 +39,10 @@ export default function Landing() {
       </div>
       
       <div className="absolute top-[30%] right-[15%] hidden lg:flex items-center gap-2">
-        <div className="w-2 h-2 rounded-full bg-orange-400 shadow-lg shadow-orange-400/50" />
+        <div className="w-2 h-2 rounded-full bg-white shadow-lg shadow-white/50" />
         <div className="text-left">
           <div className="text-sm font-medium text-white/90">Coaches</div>
-          <div className="text-xs text-orange-400">524</div>
+          <div className="text-xs text-white">524</div>
         </div>
       </div>
       

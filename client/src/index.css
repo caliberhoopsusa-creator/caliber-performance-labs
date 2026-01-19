@@ -21,9 +21,9 @@
   --popover: 220 20% 10%;
   --popover-foreground: 210 40% 98%;
 
-  /* Primary - vibrant orange accent */
-  --primary: 25 95% 55%;
-  --primary-foreground: 0 0% 100%;
+  /* Primary - clean white accent */
+  --primary: 0 0% 100%;
+  --primary-foreground: 220 20% 10%;
 
   /* Cool Grey for Secondary actions */
   --secondary: 220 15% 15%;
@@ -38,7 +38,7 @@
   --input: 220 15% 15%;
   
   /* Focus rings matching primary */
-  --ring: 25 95% 55%;
+  --ring: 0 0% 100%;
 
   /* Sidebar - slightly elevated */
   --sidebar-background: 220 20% 8%;
@@ -146,7 +146,7 @@
   }
 
   .text-gradient-primary {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-orange-300 to-primary;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-300 to-white;
   }
 
   /* Shimmer effect for premium elements */
