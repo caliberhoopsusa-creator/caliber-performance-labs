@@ -38,7 +38,13 @@ Preferred communication style: Simple, everyday language.
 - **Performance Tools**: Live game mode for real-time stat entry, interactive shot charts, off-court workout tracker, and advanced metric calculations (True Shooting %, PER, etc.).
 - **Scheduling**: Practice scheduler and calendar for managing events.
 - **Coach Features**: Team dashboard, shot charts, game notes, lineup analysis, practice tracking, AI-generated drill recommendations, and comprehensive player report cards.
-- **UI/UX**: Dark theme with glassmorphic design elements, vibrant orange accents, gradient effects, and premium utility classes for visual flair. Mobile-optimized with PWA support and offline capabilities.
+- **UI/UX**: Minimal dark theme with glassmorphic design elements, vibrant orange primary accent (#FF6B2C), dot-grid background pattern (40px grid), and subtle glow effects. Features include:
+  - Glassmorphic cards: `glass-card` utility class (bg-card/60, backdrop-blur-xl, border-white/5)
+  - Sidebar: Dark elevated background with subtle borders, minimal nav items with orange accent for active states
+  - Mobile nav: Clean bottom navigation with floating action button
+  - Typography: Teko font for headings, Inter for body text
+  - Premium utility classes for visual flair including gradient effects and animations
+  - Mobile-optimized with PWA support and offline capabilities
 
 ### Subscription & Monetization
 - **Stripe Integration**: Subscription-based monetization with Stripe payment processing

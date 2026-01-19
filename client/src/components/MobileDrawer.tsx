@@ -133,28 +133,28 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
           <Menu className="w-5 h-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-[280px] p-0 bg-card border-r border-white/10">
+      <SheetContent side="left" className="w-[280px] p-0 bg-[hsl(var(--sidebar-background))] border-r border-white/5">
         <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
         <SheetDescription className="sr-only">Access all app features from this menu</SheetDescription>
         
         <div className="flex flex-col h-full">
-          <div className="p-4 border-b border-white/10">
+          <div className="p-4 border-b border-white/5">
             <div className="flex items-center gap-3">
-              <img src={caliberLogo} alt="Caliber" className="w-10 h-10 rounded-lg" />
+              <img src={caliberLogo} alt="Caliber" className="w-9 h-9 rounded-lg shadow-lg shadow-black/20" />
               <div>
-                <h2 className="font-display font-bold text-white text-lg">Caliber</h2>
-                <p className="text-xs text-muted-foreground capitalize">{userRole} Mode</p>
+                <h2 className="font-display font-bold text-white text-lg uppercase tracking-wide">Caliber</h2>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{userRole} Mode</p>
               </div>
             </div>
           </div>
 
-          <div className="p-3 border-b border-white/10">
+          <div className="p-3 border-b border-white/5">
             <Button
               variant="outline"
               size="sm"
               onClick={handleRoleSwitch}
               disabled={isSwitchingRole}
-              className="w-full text-xs border-white/20 bg-white/5"
+              className="w-full text-xs border-white/10 bg-white/5"
               data-testid="button-mobile-role-switch"
             >
               <ArrowLeftRight className="w-3.5 h-3.5 mr-2" />
@@ -163,10 +163,10 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
           </div>
 
           <ScrollArea className="flex-1">
-            <nav className="p-3 space-y-4">
+            <nav className="p-3 space-y-5">
               {sections.map((section) => (
                 <div key={section.title}>
-                  <h3 className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider px-2 mb-2">
+                  <h3 className="text-[10px] uppercase font-semibold text-muted-foreground/70 tracking-widest px-3 mb-1.5">
                     {section.title}
                   </h3>
                   <div className="space-y-0.5">
@@ -181,26 +181,26 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
                           href={item.href}
                           onClick={() => setOpen(false)}
                           className={cn(
-                            "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm font-medium",
+                            "flex items-center gap-3 px-3 py-2 rounded-md transition-all text-sm font-medium",
                             isActive 
-                              ? "bg-primary text-primary-foreground" 
+                              ? "bg-primary/15 text-primary" 
                               : isFeatured
-                              ? "text-primary bg-primary/10 border border-primary/30"
+                              ? "text-primary bg-primary/5"
                               : needsUpgrade
-                              ? "text-amber-400 bg-gradient-to-r from-amber-500/10 to-orange-500/10"
-                              : "text-muted-foreground active:bg-white/10"
+                              ? "text-muted-foreground"
+                              : "text-muted-foreground"
                           )}
                           data-testid={`mobile-drawer-${item.href.replace(/\//g, '-').replace(/^-/, '') || 'home'}`}
                         >
-                          <item.icon className={cn("w-4 h-4", isActive && "stroke-[2.5px]")} />
+                          <item.icon className={cn("w-4 h-4", isActive && "text-primary")} />
                           <span className="flex-1">{item.label}</span>
                           {isFeatured && (
-                            <span className="text-[9px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded font-bold uppercase">
+                            <span className="text-[9px] bg-primary text-white px-1.5 py-0.5 rounded font-bold uppercase">
                               LIVE
                             </span>
                           )}
                           {needsUpgrade && (
-                            <Lock className="w-3 h-3 text-amber-400" />
+                            <Lock className="w-3 h-3 text-muted-foreground/70" />
                           )}
                         </Link>
                       );
@@ -211,7 +211,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
             </nav>
           </ScrollArea>
 
-          <div className="p-3 border-t border-white/10">
+          <div className="p-3 border-t border-white/5">
             <Button 
               variant="ghost" 
               className="w-full justify-start text-muted-foreground"

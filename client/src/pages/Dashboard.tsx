@@ -27,7 +27,7 @@ export default function Dashboard() {
           <p className="text-muted-foreground text-sm">Track and analyze performance</p>
         </div>
         <Link href="/analyze">
-          <Button data-testid="button-new-analysis" className="bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20">
+          <Button data-testid="button-new-analysis" className="shadow-lg shadow-primary/20">
             <Plus className="w-4 h-4 mr-2" />
             Log Game
           </Button>
@@ -36,36 +36,40 @@ export default function Dashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="glass-card rounded-xl p-5" data-testid="card-roster-size">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/20">
-              <Users className="w-5 h-5 text-blue-400" />
+        <Card className="glass-card" data-testid="card-roster-size">
+          <CardContent className="pt-5 pb-5">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                <Users className="w-5 h-5 text-blue-400" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-white">{players?.length || 0}</p>
+                <p className="text-xs text-muted-foreground">Players</p>
+              </div>
             </div>
-            <div>
-              <p className="text-2xl font-bold text-white">{players?.length || 0}</p>
-              <p className="text-xs text-muted-foreground">Players</p>
-            </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        <div className="glass-card rounded-xl p-5" data-testid="card-team-grade">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-green-500/10 border border-green-500/20">
-              <TrendingUp className="w-5 h-5 text-green-400" />
+        <Card className="glass-card" data-testid="card-team-grade">
+          <CardContent className="pt-5 pb-5">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-lg bg-green-500/10 border border-green-500/20">
+                <TrendingUp className="w-5 h-5 text-green-400" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-white">{avgTeamGrade}</p>
+                <p className="text-xs text-muted-foreground">Team Grade</p>
+              </div>
             </div>
-            <div>
-              <p className="text-2xl font-bold text-white">{avgTeamGrade}</p>
-              <p className="text-xs text-muted-foreground">Team Grade</p>
-            </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Roster */}
-      <div className="glass-card rounded-xl overflow-hidden">
+      <Card className="glass-card overflow-hidden">
         <div className="p-4 border-b border-white/5 flex items-center justify-between gap-2">
           <h2 className="font-display font-bold text-white">Your Roster</h2>
-          <Link href="/players" className="text-sm text-primary hover:text-primary/80 flex items-center gap-1 transition-colors" data-testid="link-view-all-players">
+          <Link href="/players" className="text-sm text-primary flex items-center gap-1 transition-colors" data-testid="link-view-all-players">
             View All <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
@@ -76,7 +80,7 @@ export default function Dashboard() {
               <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3 opacity-50" />
               <p className="text-muted-foreground text-sm mb-3">No players added yet</p>
               <Link href="/players">
-                <Button size="sm" className="bg-primary hover:bg-primary/90 text-white">Add Player</Button>
+                <Button size="sm">Add Player</Button>
               </Link>
             </div>
           ) : (
@@ -98,7 +102,7 @@ export default function Dashboard() {
             ))
           )}
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

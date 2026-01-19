@@ -122,7 +122,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
           <button 
             onClick={handleRoleSwitch}
             disabled={isSwitchingRole}
-            className="flex items-center gap-1.5 text-[10px] text-muted-foreground uppercase tracking-widest font-medium hover:text-primary transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 text-[10px] text-muted-foreground uppercase tracking-widest font-medium transition-colors cursor-pointer"
             data-testid="button-switch-role"
           >
             {isPlayer ? "Player" : "Coach"} Mode
@@ -130,7 +130,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
           </button>
         </div>
         {isCoach && (
-          <Link href="/coach/alerts" className="text-muted-foreground hover:text-primary transition-colors" data-testid="header-alerts-badge">
+          <Link href="/coach/alerts" className="text-muted-foreground transition-colors" data-testid="header-alerts-badge">
             <AlertsBadge />
           </Link>
         )}
@@ -150,12 +150,12 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
                   <Link key={item.href} href={item.href} className={cn(
                     "flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-150 group font-medium text-sm",
                     isActive 
-                      ? "bg-primary/15 text-primary border-l-2 border-primary" 
+                      ? "bg-primary/15 text-primary" 
                       : isFeatured
-                      ? "text-primary bg-primary/5 hover:bg-primary/10"
+                      ? "text-primary bg-primary/5"
                       : needsUpgrade
-                      ? "text-muted-foreground hover:bg-white/5 hover:text-white"
-                      : "text-muted-foreground hover:bg-white/5 hover:text-white"
+                      ? "text-muted-foreground"
+                      : "text-muted-foreground"
                   )} data-testid={`nav-${item.href.replace(/\//g, '-').replace(/^-/, '') || 'home'}`}>
                     <item.icon className={cn("w-4 h-4", isActive && "text-primary")} />
                     {item.label}
@@ -180,7 +180,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
       <div className="p-3 border-t border-white/5">
         <Button 
           variant="ghost" 
-          className="w-full justify-start text-muted-foreground hover:text-white"
+          className="w-full justify-start text-muted-foreground"
           asChild
           data-testid="button-logout"
         >
@@ -252,7 +252,7 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
                 "flex flex-col items-center gap-0.5 min-w-[48px] min-h-[44px] justify-center p-1.5 transition-colors",
                 isActive 
                   ? "text-primary" 
-                  : "text-muted-foreground active:text-white"
+                  : "text-muted-foreground"
               )} 
               data-testid={`mobile-nav-${item.label.toLowerCase()}`}
             >
