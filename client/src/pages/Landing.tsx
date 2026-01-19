@@ -116,13 +116,11 @@ export default function Landing() {
             <Button 
               size="lg" 
               variant="outline" 
-              asChild 
               className="min-w-[160px] border-white/20 text-white bg-white/5 hover:bg-white/10"
               data-testid="button-discover"
+              onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
             >
-              <Link href="/discover">
-                Discover More
-              </Link>
+              Discover More
             </Button>
           </div>
         </div>
@@ -137,7 +135,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="py-16 px-4 border-t border-white/5 bg-card/20 relative z-10">
+      <section id="features" className="py-16 px-4 border-t border-white/5 bg-card/20 relative z-10">
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-12 opacity-60">
             <div className="flex items-center gap-2 text-muted-foreground">
