@@ -627,9 +627,15 @@ export const gameNotes = pgTable("game_notes", {
 
 export const practices = pgTable("practices", {
   id: serial("id").primaryKey(),
+  teamId: integer("team_id").references(() => teams.id, { onDelete: "set null" }),
   date: date("date").notNull(),
   title: text("title").notNull(),
-  duration: integer("duration").notNull(), // minutes
+  duration: integer("duration").notNull(), // planned duration in minutes
+  actualDuration: integer("actual_duration"), // actual duration when completed
+  status: text("status").notNull().default("completed"), // 'planned', 'active', 'completed'
+  startedAt: timestamp("started_at"),
+  endedAt: timestamp("ended_at"),
+  currentDrillId: integer("current_drill_id").references(() => drills.id, { onDelete: "set null" }),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -639,6 +645,7 @@ export const practiceAttendance = pgTable("practice_attendance", {
   practiceId: integer("practice_id").notNull().references(() => practices.id, { onDelete: "cascade" }),
   playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
   attended: boolean("attended").default(true).notNull(),
+  checkedInAt: timestamp("checked_in_at"), // live check-in timestamp
   effortRating: integer("effort_rating"), // 1-10 scale
   notes: text("notes"),
 });

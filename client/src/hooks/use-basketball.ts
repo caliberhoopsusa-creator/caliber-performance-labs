@@ -705,9 +705,15 @@ export function useDeleteLineup() {
 
 export type Practice = {
   id: number;
+  teamId: number | null;
   date: string;
   title: string;
   duration: number;
+  actualDuration: number | null;
+  status: string;
+  startedAt: string | null;
+  endedAt: string | null;
+  currentDrillId: number | null;
   notes: string | null;
   createdAt: string;
   attendance?: PracticeAttendance[];
@@ -718,6 +724,7 @@ export type PracticeAttendance = {
   practiceId: number;
   playerId: number;
   attended: boolean;
+  checkedInAt: string | null;
   effortRating: number | null;
   notes: string | null;
 };
@@ -915,6 +922,83 @@ export function useCreateDrillScore() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['/api/practices', variables.practiceId, 'drill-scores'] });
+    },
+  });
+}
+
+// ============================================
+// ACTIVE PRACTICE (LIVE MODE) HOOKS
+// ============================================
+
+export function useActivePractices() {
+  return useQuery<Practice[]>({
+    queryKey: ['/api/practices/active'],
+    queryFn: async () => {
+      const res = await fetch('/api/practices/active');
+      if (!res.ok) throw new Error("Failed to fetch active practices");
+      return res.json();
+    },
+    refetchInterval: 5000, // Poll every 5 seconds for live updates
+  });
+}
+
+export function useStartPractice() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { teamId?: number; title: string; duration: number; notes?: string }) => {
+      const res = await apiRequest("POST", '/api/practices/start', data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/practices'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/practices/active'] });
+    },
+  });
+}
+
+export function useCheckInPlayer() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { practiceId: number; playerId: number; attended: boolean }) => {
+      const res = await apiRequest("POST", `/api/practices/${data.practiceId}/checkin`, { 
+        playerId: data.playerId, 
+        attended: data.attended 
+      });
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/practices', variables.practiceId, 'attendance'] });
+    },
+  });
+}
+
+export function useSetCurrentDrill() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { practiceId: number; drillId: number | null }) => {
+      const res = await apiRequest("PATCH", `/api/practices/${data.practiceId}/current-drill`, { 
+        drillId: data.drillId 
+      });
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/practices', variables.practiceId] });
+    },
+  });
+}
+
+export function useEndPractice() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { practiceId: number; notes?: string }) => {
+      const res = await apiRequest("POST", `/api/practices/${data.practiceId}/end`, { 
+        notes: data.notes 
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/practices'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/practices/active'] });
     },
   });
 }

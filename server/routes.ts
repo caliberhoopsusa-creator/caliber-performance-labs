@@ -4701,6 +4701,181 @@ Respond in this exact JSON format:
     }
   });
 
+  // --- Active Practice (Live Mode) ---
+  
+  // Start a new active practice session
+  app.post('/api/practices/start', requiresCoachPro, async (req, res) => {
+    try {
+      const startPracticeSchema = z.object({
+        teamId: z.number().optional(),
+        title: z.string().min(1),
+        duration: z.number().min(1).default(60),
+        notes: z.string().optional(),
+      });
+      const input = startPracticeSchema.parse(req.body);
+      
+      const now = new Date();
+      const practice = await storage.createPractice({
+        teamId: input.teamId || null,
+        date: now.toISOString().split('T')[0],
+        title: input.title,
+        duration: input.duration,
+        status: 'active',
+        startedAt: now,
+        notes: input.notes || null,
+      });
+      
+      res.status(201).json(practice);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ error: err.errors[0].message });
+      }
+      console.error('Start practice error:', err);
+      res.status(500).json({ error: 'Error starting practice' });
+    }
+  });
+
+  // Get active practices
+  app.get('/api/practices/active', requiresCoachPro, async (req, res) => {
+    try {
+      const allPractices = await storage.getPractices();
+      const activePractices = allPractices.filter(p => p.status === 'active');
+      res.json(activePractices);
+    } catch (err) {
+      console.error('Get active practices error:', err);
+      res.status(500).json({ error: 'Error fetching active practices' });
+    }
+  });
+
+  // Check in a player to active practice
+  app.post('/api/practices/:practiceId/checkin', requiresCoachPro, async (req, res) => {
+    try {
+      const practiceId = Number(req.params.practiceId);
+      const practice = await storage.getPractice(practiceId);
+      if (!practice) {
+        return res.status(404).json({ error: 'Practice not found' });
+      }
+      if (practice.status !== 'active') {
+        return res.status(400).json({ error: 'Practice is not active' });
+      }
+      
+      const checkinSchema = z.object({
+        playerId: z.number(),
+        attended: z.boolean().default(true),
+      });
+      const input = checkinSchema.parse(req.body);
+      
+      // Check if attendance record exists
+      const existingAttendance = await storage.getPracticeAttendance(practiceId);
+      const existing = existingAttendance.find(a => a.playerId === input.playerId);
+      
+      if (existing) {
+        const updated = await storage.updatePracticeAttendance(existing.id, {
+          attended: input.attended,
+          checkedInAt: input.attended ? new Date() : null,
+        });
+        return res.json(updated);
+      }
+      
+      const attendance = await storage.createPracticeAttendance({
+        practiceId,
+        playerId: input.playerId,
+        attended: input.attended,
+        checkedInAt: input.attended ? new Date() : null,
+      });
+      res.status(201).json(attendance);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ error: err.errors[0].message });
+      }
+      console.error('Check-in error:', err);
+      res.status(500).json({ error: 'Error checking in player' });
+    }
+  });
+
+  // Set current drill for active practice
+  app.patch('/api/practices/:practiceId/current-drill', requiresCoachPro, async (req, res) => {
+    try {
+      const practiceId = Number(req.params.practiceId);
+      const practice = await storage.getPractice(practiceId);
+      if (!practice) {
+        return res.status(404).json({ error: 'Practice not found' });
+      }
+      if (practice.status !== 'active') {
+        return res.status(400).json({ error: 'Practice is not active' });
+      }
+      
+      const drillSchema = z.object({
+        drillId: z.number().nullable(),
+      });
+      const input = drillSchema.parse(req.body);
+      
+      const updated = await storage.updatePractice(practiceId, {
+        currentDrillId: input.drillId,
+      });
+      res.json(updated);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ error: err.errors[0].message });
+      }
+      console.error('Set current drill error:', err);
+      res.status(500).json({ error: 'Error setting current drill' });
+    }
+  });
+
+  // End active practice
+  app.post('/api/practices/:practiceId/end', requiresCoachPro, async (req, res) => {
+    try {
+      const practiceId = Number(req.params.practiceId);
+      const practice = await storage.getPractice(practiceId);
+      if (!practice) {
+        return res.status(404).json({ error: 'Practice not found' });
+      }
+      if (practice.status !== 'active') {
+        return res.status(400).json({ error: 'Practice is not active' });
+      }
+      
+      const now = new Date();
+      const startedAt = practice.startedAt ? new Date(practice.startedAt) : now;
+      const actualDuration = Math.round((now.getTime() - startedAt.getTime()) / 60000); // minutes
+      
+      const endSchema = z.object({
+        notes: z.string().optional(),
+      });
+      const input = endSchema.parse(req.body || {});
+      
+      const updated = await storage.updatePractice(practiceId, {
+        status: 'completed',
+        endedAt: now,
+        actualDuration,
+        currentDrillId: null,
+        notes: input.notes || practice.notes,
+      });
+      
+      // Get final attendance and drill scores for summary
+      const attendance = await storage.getPracticeAttendance(practiceId);
+      const drillScores = await storage.getDrillScoresByPractice(practiceId);
+      
+      res.json({ 
+        ...updated, 
+        attendance,
+        drillScores,
+        summary: {
+          playersAttended: attendance.filter(a => a.attended).length,
+          totalPlayers: attendance.length,
+          drillsCompleted: new Set(drillScores.map(s => s.drillId)).size,
+          actualDuration,
+        }
+      });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ error: err.errors[0].message });
+      }
+      console.error('End practice error:', err);
+      res.status(500).json({ error: 'Error ending practice' });
+    }
+  });
+
   // --- Lineups ---
   app.post('/api/lineups', requiresCoachPro, async (req, res) => {
     try {

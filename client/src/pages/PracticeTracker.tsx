@@ -9,14 +9,17 @@ import {
   useDrills,
   useCreateDrillScore,
   usePlayers,
+  useActivePractices,
+  useStartPractice,
   type Practice,
   type PracticeAttendance,
   type Drill
 } from "@/hooks/use-basketball";
+import { LivePractice } from "@/components/LivePractice";
 import { 
   Calendar, Clock, Plus, ChevronDown, ChevronUp, 
   Users, CheckCircle2, XCircle, ClipboardList, Target,
-  Trash2
+  Trash2, Play, Zap
 } from "lucide-react";
 import { Paywall } from "@/components/Paywall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -66,17 +69,20 @@ type AttendanceRecord = {
 
 export default function PracticeTracker() {
   const { toast } = useToast();
-  const { data: practices, isLoading: practicesLoading } = usePractices();
+  const { data: practices, isLoading: practicesLoading, refetch: refetchPractices } = usePractices();
   const { data: players, isLoading: playersLoading } = usePlayers();
   const { data: drills } = useDrills();
+  const { data: activePractices = [] } = useActivePractices();
   
   const createPractice = useCreatePractice();
   const deletePractice = useDeletePractice();
   const createAttendance = useCreatePracticeAttendance();
   const updateAttendance = useUpdatePracticeAttendance();
   const createDrillScore = useCreateDrillScore();
+  const startPractice = useStartPractice();
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [startDialogOpen, setStartDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [practiceTitle, setPracticeTitle] = useState("");
   const [practiceDuration, setPracticeDuration] = useState("60");
@@ -86,6 +92,38 @@ export default function PracticeTracker() {
   const [drillScoresOpen, setDrillScoresOpen] = useState(false);
   const [selectedDrill, setSelectedDrill] = useState<string>("");
   const [drillPlayerScores, setDrillPlayerScores] = useState<Map<number, { score: number; notes: string }>>(new Map());
+  const [activePracticeView, setActivePracticeView] = useState<Practice | null>(null);
+  const [liveTitle, setLiveTitle] = useState("");
+  const [liveDuration, setLiveDuration] = useState("60");
+  const [liveNotes, setLiveNotes] = useState("");
+
+  const handleStartLivePractice = async () => {
+    if (!liveTitle.trim()) {
+      toast({ title: "Missing Title", description: "Please enter a practice title", variant: "destructive" });
+      return;
+    }
+
+    try {
+      const newPractice = await startPractice.mutateAsync({
+        title: liveTitle.trim(),
+        duration: parseInt(liveDuration) || 60,
+        notes: liveNotes || undefined,
+      });
+      setStartDialogOpen(false);
+      setActivePracticeView(newPractice);
+      setLiveTitle("");
+      setLiveDuration("60");
+      setLiveNotes("");
+      toast({ title: "Practice Started", description: "Live practice session has begun" });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to start practice", variant: "destructive" });
+    }
+  };
+
+  const handleEndPractice = () => {
+    setActivePracticeView(null);
+    refetchPractices();
+  };
 
   const sortedPractices = useMemo(() => {
     if (!practices) return [];
@@ -266,22 +304,119 @@ export default function PracticeTracker() {
     );
   }
 
+  if (activePracticeView) {
+    return (
+      <Paywall requiredTier="coach_pro" featureName="Practice Tracker">
+        <LivePractice 
+          practice={activePracticeView} 
+          onEnd={handleEndPractice} 
+          onBack={() => setActivePracticeView(null)}
+        />
+      </Paywall>
+    );
+  }
+
   return (
     <Paywall requiredTier="coach_pro" featureName="Practice Tracker">
       <div className="space-y-8 animate-in fade-in duration-500">
+      
+      {activePractices.length > 0 && (
+        <Card className="glass-card border-green-500/30 bg-green-500/5">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-green-400">
+              <Zap className="w-5 h-5" />
+              Active Practice Session
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div>
+                <div className="font-medium text-lg">{activePractices[0].title}</div>
+                <div className="text-sm text-muted-foreground">
+                  Started {activePractices[0].startedAt ? new Date(activePractices[0].startedAt).toLocaleTimeString() : 'recently'}
+                </div>
+              </div>
+              <Button onClick={() => setActivePracticeView(activePractices[0])} data-testid="button-continue-practice">
+                <Play className="w-4 h-4 mr-2" />
+                Continue Practice
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl md:text-4xl font-display font-bold text-white uppercase tracking-tight">Practice Tracker</h2>
           <p className="text-muted-foreground font-medium">Log practice sessions and track player attendance</p>
         </div>
         
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button data-testid="button-create-practice" className="gap-2">
-              <Plus className="w-4 h-4" />
-              New Practice
-            </Button>
-          </DialogTrigger>
+        <div className="flex items-center gap-3 flex-wrap">
+          <Dialog open={startDialogOpen} onOpenChange={setStartDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="default" className="gap-2 bg-green-600" data-testid="button-start-live-practice">
+                <Play className="w-4 h-4" />
+                Start Live Practice
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[450px]" data-testid="dialog-start-live-practice">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-green-400" />
+                  Start Live Practice
+                </DialogTitle>
+                <DialogDescription>
+                  Begin a live practice session to track attendance, run drills, and score players in real-time.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Practice Title</label>
+                  <Input
+                    placeholder="e.g., Morning Drills, Team Scrimmage"
+                    value={liveTitle}
+                    onChange={(e) => setLiveTitle(e.target.value)}
+                    data-testid="input-live-title"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Planned Duration (minutes)</label>
+                  <Input
+                    type="number"
+                    placeholder="60"
+                    value={liveDuration}
+                    onChange={(e) => setLiveDuration(e.target.value)}
+                    data-testid="input-live-duration"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Notes (optional)</label>
+                  <Textarea
+                    placeholder="Focus areas, objectives..."
+                    value={liveNotes}
+                    onChange={(e) => setLiveNotes(e.target.value)}
+                    className="min-h-[60px]"
+                    data-testid="input-live-notes"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setStartDialogOpen(false)}>Cancel</Button>
+                <Button onClick={handleStartLivePractice} disabled={startPractice.isPending} data-testid="button-confirm-start">
+                  <Play className="w-4 h-4 mr-2" />
+                  Start Practice
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" data-testid="button-create-practice" className="gap-2">
+                <Plus className="w-4 h-4" />
+                Log Past Practice
+              </Button>
+            </DialogTrigger>
           <DialogContent className="sm:max-w-[500px] max-h-[85vh] overflow-y-auto" data-testid="dialog-create-practice">
             <DialogHeader>
               <DialogTitle>Create Practice Session</DialogTitle>
@@ -355,6 +490,7 @@ export default function PracticeTracker() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
