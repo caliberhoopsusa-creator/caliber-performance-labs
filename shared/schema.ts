@@ -844,12 +844,13 @@ export const follows = pgTable("follows", {
 // === IN-APP NOTIFICATIONS ===
 export const notifications = pgTable("notifications", {
   id: serial("id").primaryKey(),
-  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
-  notificationType: text("notification_type").notNull(), // 'streak_reminder', 'badge_earned', 'goal_progress', 'new_follower', 'game_logged', 'challenge_update'
+  playerId: integer("player_id").references(() => players.id, { onDelete: "cascade" }),
+  userId: text("user_id"),
+  notificationType: text("notification_type").notNull(), // 'streak_reminder', 'badge_earned', 'goal_progress', 'new_follower', 'game_logged', 'challenge_update', 'story_reaction', 'story_view'
   title: text("title").notNull(),
   message: text("message").notNull(),
   relatedId: integer("related_id"), // ID of related entity (game, badge, goal, etc.)
-  relatedType: text("related_type"), // 'game', 'badge', 'goal', 'challenge', 'player'
+  relatedType: text("related_type"), // 'game', 'badge', 'goal', 'challenge', 'player', 'story'
   isRead: boolean("is_read").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
