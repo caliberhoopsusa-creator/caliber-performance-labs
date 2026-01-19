@@ -191,7 +191,8 @@ export default function PlayerCard() {
           "border-2",
           gradeColors.border,
           "shadow-2xl",
-          gradeColors.glow
+          gradeColors.glow,
+          "animate-fade-up"
         )}
       >
         <div className={cn(

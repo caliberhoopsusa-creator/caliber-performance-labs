@@ -12,8 +12,8 @@ interface StatCardProps {
 export function StatCard({ label, value, subValue, trend, className, highlight }: StatCardProps) {
   return (
     <div className={cn(
-      "elite-card rounded-xl p-5 flex flex-col justify-between relative overflow-hidden group",
-      "hover-lift transition-all duration-300",
+      "elite-card rounded-xl p-5 flex flex-col justify-between relative group",
+      "transition-all duration-300",
       highlight && "border-white/20 glow-white-sm",
       className
     )}>

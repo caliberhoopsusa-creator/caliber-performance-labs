@@ -19,9 +19,9 @@ export default function Dashboard() {
   const avgTeamGrade = "B+";
 
   return (
-    <div className="py-6 space-y-6 pb-24 md:pb-6">
+    <div className="py-6 space-y-6 pb-24 md:pb-6 animate-fade-in">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-up delay-100">
         <div>
           <h1 className="text-2xl font-display font-bold text-white" data-testid="text-dashboard-title">Dashboard</h1>
           <p className="text-muted-foreground text-sm">Track and analyze performance</p>
@@ -35,8 +35,8 @@ export default function Dashboard() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-4">
-        <Card className="glass-card" data-testid="card-roster-size">
+      <div className="grid grid-cols-2 gap-4 animate-fade-up delay-150">
+        <Card className="elite-card" data-testid="card-roster-size">
           <CardContent className="pt-5 pb-5">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/20">
@@ -50,7 +50,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="glass-card" data-testid="card-team-grade">
+        <Card className="elite-card" data-testid="card-team-grade">
           <CardContent className="pt-5 pb-5">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-lg bg-green-500/10 border border-green-500/20">
@@ -66,10 +66,10 @@ export default function Dashboard() {
       </div>
 
       {/* Roster */}
-      <Card className="glass-card overflow-hidden">
+      <Card className="elite-card animate-fade-up delay-200">
         <div className="p-4 border-b border-white/5 flex items-center justify-between gap-2">
           <h2 className="font-display font-bold text-white">Your Roster</h2>
-          <Link href="/players" className="text-sm text-primary flex items-center gap-1 transition-colors" data-testid="link-view-all-players">
+          <Link href="/players" className="text-sm text-primary flex items-center gap-1 transition-colors duration-200 hover:text-white" data-testid="link-view-all-players">
             View All <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
@@ -84,9 +84,9 @@ export default function Dashboard() {
               </Link>
             </div>
           ) : (
-            recentPlayers.map((player) => (
-              <Link key={player.id} href={`/players/${player.id}`} className="block hover:bg-white/5 transition-colors" data-testid={`link-player-${player.id}`}>
-                <div className="p-4 flex items-center justify-between">
+            recentPlayers.map((player, index) => (
+              <Link key={player.id} href={`/players/${player.id}`} className="block hover:bg-white/5 transition-colors duration-200" data-testid={`link-player-${player.id}`}>
+                <div className="p-4 flex items-center justify-between animate-fade-up" style={{ animationDelay: `${200 + index * 50}ms` }}>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-sm font-bold text-white/80">
                       {player.jerseyNumber || "#"}

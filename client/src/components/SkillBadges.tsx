@@ -106,9 +106,15 @@ const LEVEL_NAMES: Record<string, string> = {
   goat: "GOAT",
 };
 
-function SkillBadgeCard({ badge }: { badge: SkillBadge }) {
+interface SkillBadgeCardProps {
+  badge: SkillBadge;
+  index: number;
+}
+
+function SkillBadgeCard({ badge, index }: SkillBadgeCardProps) {
   const Icon = SKILL_ICONS[badge.skillType] || Target;
   const colors = LEVEL_COLORS[badge.currentLevel] || LEVEL_COLORS.none;
+  const isPremium = ['hall_of_fame', 'legend', 'goat'].includes(badge.currentLevel);
   
   const getNextThreshold = () => {
     if (badge.currentLevel === 'goat') return badge.thresholds.goat;
@@ -142,9 +148,12 @@ function SkillBadgeCard({ badge }: { badge: SkillBadge }) {
     ? 100 
     : Math.min(100, Math.round((progressValue / progressRange) * 100));
 
+  const delayOptions = ['delay-100', 'delay-200', 'delay-300', 'delay-400', 'delay-500'];
+  const delayClass = delayOptions[Math.min(index, delayOptions.length - 1)];
+
   return (
     <div 
-      className={`p-4 rounded-lg border backdrop-blur-sm transition-all duration-300 card-shine overflow-hidden hover:scale-[1.02] ${colors.bg} ${colors.border} ${colors.glow}`}
+      className={`p-4 rounded-lg border backdrop-blur-sm transition-all duration-300 animate-fade-up ${delayClass} ${isPremium ? 'sparkle' : ''} ${colors.bg} ${colors.border} ${colors.glow}`}
       data-testid={`skill-badge-${badge.skillType}`}
     >
       <div className="flex items-center gap-3 mb-3 relative z-10">
@@ -233,8 +242,8 @@ export function SkillBadges({ playerId }: SkillBadgesProps) {
         
         {unlockedBadges.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
-            {unlockedBadges.map((badge) => (
-              <SkillBadgeCard key={badge.skillType} badge={badge} />
+            {unlockedBadges.map((badge, index) => (
+              <SkillBadgeCard key={badge.skillType} badge={badge} index={index} />
             ))}
           </div>
         )}
@@ -247,8 +256,8 @@ export function SkillBadges({ playerId }: SkillBadgesProps) {
               </div>
             )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 opacity-50">
-              {lockedBadges.map((badge) => (
-                <SkillBadgeCard key={badge.skillType} badge={badge} />
+              {lockedBadges.map((badge, index) => (
+                <SkillBadgeCard key={badge.skillType} badge={badge} index={unlockedBadges.length + index} />
               ))}
             </div>
           </>

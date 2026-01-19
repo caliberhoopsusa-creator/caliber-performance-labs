@@ -242,14 +242,14 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
               <Link 
                 key={item.href} 
                 href={item.href} 
-                className="flex flex-col items-center gap-0.5 min-w-[48px] min-h-[44px] justify-center" 
+                className="flex flex-col items-center gap-0.5 min-w-[48px] min-h-[44px] justify-center transition-colors duration-200" 
                 data-testid={`mobile-nav-${item.label.toLowerCase()}`}
               >
-                <div className="rounded-full p-2.5 -mt-6 shadow-xl shadow-primary/30 border border-primary/20 transition-all bg-primary text-white">
+                <div className="rounded-full p-2.5 -mt-6 shadow-xl shadow-primary/30 border border-primary/20 transition-all duration-200 bg-primary text-white">
                   <Icon className="w-5 h-5" />
                 </div>
                 <span className={cn(
-                  "text-[9px] font-medium uppercase tracking-wide mt-0.5",
+                  "text-[9px] font-medium uppercase tracking-wide mt-0.5 transition-colors duration-200",
                   isActive ? "text-primary" : "text-muted-foreground"
                 )}>{item.label}</span>
               </Link>
@@ -261,10 +261,10 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
               key={item.href} 
               href={item.href} 
               className={cn(
-                "flex flex-col items-center gap-0.5 min-w-[48px] min-h-[44px] justify-center p-1.5 transition-colors",
+                "flex flex-col items-center gap-0.5 min-w-[48px] min-h-[44px] justify-center p-1.5 transition-colors duration-200",
                 isActive 
                   ? "text-primary" 
-                  : "text-muted-foreground"
+                  : "text-muted-foreground hover:text-white"
               )} 
               data-testid={`mobile-nav-${item.label.toLowerCase()}`}
             >

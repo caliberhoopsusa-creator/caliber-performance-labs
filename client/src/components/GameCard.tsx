@@ -139,7 +139,7 @@ export function GameCard({ game, playerName, badges = [], showShareButton = true
               gradeColors.border,
               "shadow-2xl",
               gradeColors.glow,
-              "transition-all duration-300 hover:shadow-2xl hover:scale-105 relative overflow-hidden"
+              "transition-all duration-300 hover:shadow-2xl relative overflow-hidden"
             )}
           >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300" />
@@ -191,7 +191,7 @@ export function GameCard({ game, playerName, badges = [], showShareButton = true
                 key={cat.label} 
                 data-testid={`${cat.testId}-${game.id}`}
                 className={cn(
-                  "text-center p-2 rounded-lg bg-gradient-to-br border transition-all duration-300 hover:scale-105",
+                  "text-center p-2 rounded-lg bg-gradient-to-br border transition-colors duration-300",
                   cat.color
                 )}
               >
@@ -207,15 +207,25 @@ export function GameCard({ game, playerName, badges = [], showShareButton = true
 
         {gameBadges.length > 0 && (
           <div className="flex flex-wrap gap-2 justify-center mb-4">
-            {gameBadges.slice(0, 4).map((badge) => {
+            {gameBadges.slice(0, 4).map((badge, index) => {
               const BadgeIcon = BADGE_ICONS[badge.badgeType] || Award;
               const badgeDef = BADGE_DEFINITIONS[badge.badgeType as keyof typeof BADGE_DEFINITIONS];
+              const isPremiumBadge = ['triple_double', 'thirty_bomb', 'efficiency_master', 'lockdown'].includes(badge.badgeType);
               return (
                 <div
                   key={badge.id}
-                  className="flex items-center gap-1.5 bg-gradient-to-r from-primary/20 to-orange-500/20 border border-primary/40 rounded-full px-2.5 py-1 transition-all duration-300 hover:border-primary/60 hover:from-primary/30 hover:to-orange-500/30 hover:shadow-lg hover:shadow-primary/20"
+                  className={cn(
+                    "badge-elite flex items-center gap-1.5 rounded-full px-2.5 py-1 transition-all duration-300 border",
+                    isPremiumBadge 
+                      ? "bg-gradient-to-r from-primary/30 to-primary/20 border-primary/50 hover:border-primary/70 hover:shadow-lg hover:shadow-primary/30"
+                      : "bg-gradient-to-r from-primary/20 to-orange-500/20 border-primary/40 hover:border-primary/60 hover:shadow-lg hover:shadow-primary/20"
+                  )}
+                  data-testid={`badge-${badge.badgeType}-${badge.id}`}
                 >
-                  <BadgeIcon className="w-3.5 h-3.5 text-primary transition-transform duration-300 hover:scale-110" />
+                  <BadgeIcon className={cn(
+                    "w-3.5 h-3.5",
+                    isPremiumBadge ? "text-primary" : "text-primary"
+                  )} />
                   <span className="text-[10px] font-bold text-primary uppercase tracking-wider">
                     {badgeDef?.name || badge.badgeType}
                   </span>

@@ -913,12 +913,12 @@ export default function PlayerDetail() {
   const weaknesses = [...radarData].sort((a, b) => a.value - b.value).slice(0, 2);
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500 pb-20 w-full">
-      <Link href="/players" className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-white transition-colors uppercase tracking-wider">
+    <div className="space-y-6 animate-fade-in pb-20 w-full">
+      <Link href="/players" className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-white transition-colors duration-200 uppercase tracking-wider animate-fade-up delay-100">
         <ArrowLeft className="w-4 h-4" /> Back to Roster
       </Link>
       
-      <Card className="p-4 md:p-8 relative overflow-hidden">
+      <Card className="p-4 md:p-8 relative overflow-hidden animate-fade-up delay-150">
         <div className="flex flex-col gap-6 relative z-10">
           {/* Player Info Row */}
           <div className="flex items-start gap-4">
@@ -1034,7 +1034,7 @@ export default function PlayerDetail() {
         </div>
       </Card>
 
-      <Tabs defaultValue="overview" className="w-full">
+      <Tabs defaultValue="overview" className="w-full animate-fade-up delay-200">
         <TabsList className="w-full md:w-auto">
           <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
           <TabsTrigger value="highlights" data-testid="tab-highlights">
@@ -1045,7 +1045,7 @@ export default function PlayerDetail() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-6">
+        <TabsContent value="overview" className="space-y-6 animate-fade-in">
           <ProfileWidgets
             games={games}
             selectedWidgets={widgetPreferences}
@@ -1327,7 +1327,7 @@ export default function PlayerDetail() {
                                 key={cat.label} 
                                 data-testid={`${cat.testId}-${game.id}`}
                                 className={cn(
-                                  "text-center p-2 rounded-lg bg-gradient-to-br border transition-all duration-300 hover:scale-105",
+                                  "text-center p-2 rounded-lg bg-gradient-to-br border transition-colors duration-300",
                                   cat.color
                                 )}
                               >

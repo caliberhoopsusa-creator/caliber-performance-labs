@@ -298,7 +298,7 @@ function StoryViewer({
               <button
                 key={key}
                 onClick={() => handleReaction(key)}
-                className="p-2 hover:scale-125 transition-transform"
+                className="p-2 hover:bg-white/20 rounded-full transition-colors"
                 title={label}
                 data-testid={`reaction-${key}`}
               >

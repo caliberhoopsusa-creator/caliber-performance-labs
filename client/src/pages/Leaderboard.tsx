@@ -135,7 +135,7 @@ export default function Leaderboard() {
         </div>
       </div>
 
-      <div className="bg-card border border-white/5 rounded-xl md:rounded-2xl overflow-hidden shadow-xl">
+      <div className="elite-card overflow-hidden animate-fade-up delay-300">
         <div className="overflow-x-auto -mx-4 md:mx-0">
           <div className="min-w-[600px] md:min-w-0">
             <table className="w-full text-left border-collapse">
@@ -170,7 +170,7 @@ export default function Leaderboard() {
                   </tr>
                 ) : (
                   leaderboard?.map((entry: any, index: number) => (
-                    <tr key={entry.playerId} className="hover:bg-white/5 transition-colors group active:bg-white/10" data-testid={`row-leaderboard-${index}`}>
+                    <tr key={entry.playerId} className="transition-colors group hover:bg-white/10" data-testid={`row-leaderboard-${index}`}>
                       <td className="px-3 md:px-6 py-4 md:py-6">
                         <div className="flex items-center gap-2 md:gap-3">
                           {index === 0 && <Trophy className="w-4 h-4 md:w-5 md:h-5 text-yellow-500" />}
