@@ -154,6 +154,7 @@ export interface IStorage {
   getTeam(id: number): Promise<Team | undefined>;
   getTeamByCode(code: string): Promise<Team | undefined>;
   getTeamsBySessionId(sessionId: string): Promise<(Team & { memberCount: number })[]>;
+  updateTeam(id: number, updates: Partial<InsertTeam>): Promise<Team | undefined>;
 
   // Team Members
   addTeamMember(member: InsertTeamMember): Promise<TeamMember>;
@@ -880,6 +881,11 @@ export class DatabaseStorage implements IStorage {
       }
     }
     return results;
+  }
+
+  async updateTeam(id: number, updates: Partial<InsertTeam>): Promise<Team | undefined> {
+    const [updatedTeam] = await db.update(teams).set(updates).where(eq(teams.id, id)).returning();
+    return updatedTeam;
   }
 
   // Team Members

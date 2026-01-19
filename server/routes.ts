@@ -3009,6 +3009,38 @@ Respond in this exact JSON format:
     }
   });
 
+  app.patch('/api/teams/:id/profile-picture', isAuthenticated, async (req, res) => {
+    try {
+      const teamId = Number(req.params.id);
+      const updateSchema = z.object({
+        sessionId: z.string().min(1),
+        profilePicture: z.string().nullable(),
+      });
+      const input = updateSchema.parse(req.body);
+
+      const team = await storage.getTeam(teamId);
+      if (!team) {
+        return res.status(404).json({ message: 'Team not found' });
+      }
+
+      if (team.createdBy !== input.sessionId) {
+        const member = await storage.getTeamMember(teamId, input.sessionId);
+        if (!member || member.role !== 'admin') {
+          return res.status(403).json({ message: 'Only the team leader can update the profile picture' });
+        }
+      }
+
+      const updatedTeam = await storage.updateTeam(teamId, { profilePicture: input.profilePicture });
+      res.json(updatedTeam);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      console.error('Update team profile picture error:', err);
+      res.status(500).json({ message: 'Error updating team profile picture' });
+    }
+  });
+
   app.get('/api/teams/:code', async (req, res) => {
     try {
       const team = await storage.getTeamByCode(req.params.code);
