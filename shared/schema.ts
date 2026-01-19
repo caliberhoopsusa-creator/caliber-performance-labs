@@ -415,6 +415,7 @@ export const teams = pgTable("teams", {
   name: text("name").notNull(),
   code: text("code").notNull().unique(),
   createdBy: text("created_by").notNull(),
+  profilePicture: text("profile_picture"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
