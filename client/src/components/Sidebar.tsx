@@ -114,15 +114,15 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
   const navSections = isPlayer ? playerSections : coachSections;
 
   return (
-    <div className="hidden md:flex flex-col w-64 bg-card border-r border-border h-screen sticky top-0 overflow-y-auto">
-      <div className="p-6 flex items-center gap-3 border-b border-border/50">
-        <img src={caliberLogo} alt="Caliber Logo" className="h-10 w-10 rounded-xl shadow-lg shadow-primary/20 object-contain" />
+    <div className="hidden md:flex flex-col w-64 bg-[hsl(var(--sidebar-background))] border-r border-white/5 h-screen sticky top-0 overflow-y-auto">
+      <div className="p-5 flex items-center gap-3 border-b border-white/5">
+        <img src={caliberLogo} alt="Caliber Logo" className="h-9 w-9 rounded-lg shadow-lg shadow-black/20 object-contain" />
         <div className="flex-1">
-          <h1 className="text-2xl font-bold font-display text-white tracking-wider uppercase">CALIBER</h1>
+          <h1 className="text-xl font-bold font-display text-white tracking-wider uppercase">CALIBER</h1>
           <button 
             onClick={handleRoleSwitch}
             disabled={isSwitchingRole}
-            className="flex items-center gap-1.5 text-xs text-muted-foreground uppercase tracking-widest font-medium hover:text-primary transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 text-[10px] text-muted-foreground uppercase tracking-widest font-medium hover:text-primary transition-colors cursor-pointer"
             data-testid="button-switch-role"
           >
             {isPlayer ? "Player" : "Coach"} Mode
@@ -130,17 +130,17 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
           </button>
         </div>
         {isCoach && (
-          <Link href="/coach/alerts" className="text-muted-foreground hover:text-white transition-colors" data-testid="header-alerts-badge">
+          <Link href="/coach/alerts" className="text-muted-foreground hover:text-primary transition-colors" data-testid="header-alerts-badge">
             <AlertsBadge />
           </Link>
         )}
       </div>
 
-      <nav className="flex-1 p-4 space-y-6">
+      <nav className="flex-1 p-3 space-y-5">
         {navSections.map((section) => (
           <div key={section.title}>
-            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 px-4">{section.title}</h3>
-            <div className="space-y-1">
+            <h3 className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest mb-1.5 px-3">{section.title}</h3>
+            <div className="space-y-0.5">
               {section.items.map((item) => {
                 const isActive = location === item.href || (item.href.includes('/players/') && location.includes('/players/') && location === item.href);
                 const needsUpgrade = item.premium && !hasAccess(item.premium);
@@ -148,26 +148,25 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
                 const isFeatured = item.featured && !isActive;
                 return (
                   <Link key={item.href} href={item.href} className={cn(
-                    "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 group font-medium text-sm",
+                    "flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-150 group font-medium text-sm",
                     isActive 
-                      ? "bg-primary text-primary-foreground shadow-md shadow-primary/20" 
+                      ? "bg-primary/15 text-primary border-l-2 border-primary" 
                       : isFeatured
-                      ? "text-primary bg-primary/10 border border-primary/30 hover:bg-primary/20"
+                      ? "text-primary bg-primary/5 hover:bg-primary/10"
                       : needsUpgrade
-                      ? "text-amber-400 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 hover:from-amber-500/20 hover:to-orange-500/20"
+                      ? "text-muted-foreground hover:bg-white/5 hover:text-white"
                       : "text-muted-foreground hover:bg-white/5 hover:text-white"
                   )} data-testid={`nav-${item.href.replace(/\//g, '-').replace(/^-/, '') || 'home'}`}>
-                    <item.icon className={cn("w-4 h-4", isActive ? "stroke-[2.5px]" : "stroke-2", isFeatured && "text-primary")} />
+                    <item.icon className={cn("w-4 h-4", isActive && "text-primary")} />
                     {item.label}
                     {isFeatured && (
-                      <span className="ml-auto text-[10px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">
+                      <span className="ml-auto text-[9px] bg-primary text-white px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">
                         LIVE
                       </span>
                     )}
                     {needsUpgrade && !isActive && (
-                      <span className="ml-auto inline-flex items-center gap-1 text-[10px] bg-gradient-to-r from-primary to-orange-500 text-white px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">
-                        <Lock className="w-2.5 h-2.5" />
-                        {isCoachPro ? "PRO" : "PRO"}
+                      <span className="ml-auto inline-flex items-center gap-1 text-[9px] text-muted-foreground/70">
+                        <Lock className="w-3 h-3" />
                       </span>
                     )}
                   </Link>
@@ -178,7 +177,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         ))}
       </nav>
 
-      <div className="p-4 border-t border-border/50">
+      <div className="p-3 border-t border-white/5">
         <Button 
           variant="ghost" 
           className="w-full justify-start text-muted-foreground hover:text-white"
@@ -219,8 +218,8 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
   ];
   
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-lg border-t border-border z-50 safe-area-bottom">
-      <div className="flex justify-around items-center h-16 px-1">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[hsl(var(--sidebar-background))]/95 backdrop-blur-xl border-t border-white/5 z-50 safe-area-bottom">
+      <div className="flex justify-around items-center h-14 px-1">
         {navItems.map((item) => {
           const isActive = location === item.href || 
             (item.href.includes('/players/') && location.includes('/players/') && location === item.href);
@@ -234,11 +233,11 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
                 className="flex flex-col items-center gap-0.5 min-w-[48px] min-h-[44px] justify-center" 
                 data-testid={`mobile-nav-${item.label.toLowerCase()}`}
               >
-                <div className="rounded-full p-2 -mt-5 shadow-lg border-2 border-background transition-all bg-primary text-primary-foreground">
+                <div className="rounded-full p-2.5 -mt-6 shadow-xl shadow-primary/30 border border-primary/20 transition-all bg-primary text-white">
                   <Icon className="w-5 h-5" />
                 </div>
                 <span className={cn(
-                  "text-[9px] font-bold uppercase tracking-wide",
+                  "text-[9px] font-medium uppercase tracking-wide mt-0.5",
                   isActive ? "text-primary" : "text-muted-foreground"
                 )}>{item.label}</span>
               </Link>
@@ -250,18 +249,15 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
               key={item.href} 
               href={item.href} 
               className={cn(
-                "flex flex-col items-center gap-0.5 min-w-[48px] min-h-[44px] justify-center p-1.5 rounded-lg transition-colors",
+                "flex flex-col items-center gap-0.5 min-w-[48px] min-h-[44px] justify-center p-1.5 transition-colors",
                 isActive 
-                  ? "text-primary bg-primary/10" 
-                  : "text-muted-foreground active:bg-white/5"
+                  ? "text-primary" 
+                  : "text-muted-foreground active:text-white"
               )} 
               data-testid={`mobile-nav-${item.label.toLowerCase()}`}
             >
-              <Icon className={cn("w-5 h-5", isActive && "stroke-[2.5px]")} />
-              <span className={cn(
-                "text-[9px] font-bold uppercase tracking-wide",
-                isActive ? "text-primary" : "text-muted-foreground"
-              )}>{item.label}</span>
+              <Icon className="w-5 h-5" />
+              <span className="text-[9px] font-medium uppercase tracking-wide">{item.label}</span>
             </Link>
           );
         })}
