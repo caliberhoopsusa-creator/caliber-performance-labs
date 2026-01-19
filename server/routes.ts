@@ -1221,6 +1221,7 @@ export async function registerRoutes(
         state: z.string().optional(),
         school: z.string().optional(),
         graduationYear: z.number().optional(),
+        level: z.enum(['middle_school', 'high_school', 'college']).optional(),
       });
       
       const input = updateSchema.parse(req.body);
