@@ -5717,6 +5717,63 @@ Respond in this exact JSON format:
     }
   });
 
+  // Migrate existing games to add category grades (one-time admin endpoint)
+  app.post('/api/admin/migrate-category-grades', isAdmin, async (req, res) => {
+    try {
+      // Get all games that don't have category grades
+      const gamesResult = await db.execute(sql`
+        SELECT g.id, g.points, g.rebounds, g.assists, g.steals, g.blocks, g.turnovers, 
+               g.fouls, g.fg_made, g.fg_attempted, g.three_made, g.three_attempted,
+               g.ft_made, g.ft_attempted, g.offensive_rebounds, g.defensive_rebounds,
+               g.minutes, g.hustle_score, g.defense_rating, p.position
+        FROM games g
+        JOIN players p ON g.player_id = p.id
+        WHERE g.defensive_grade IS NULL OR g.shooting_grade IS NULL
+      `);
+      
+      let updatedCount = 0;
+      for (const game of gamesResult.rows as any[]) {
+        const stats = {
+          points: game.points || 0,
+          rebounds: game.rebounds || 0,
+          assists: game.assists || 0,
+          steals: game.steals || 0,
+          blocks: game.blocks || 0,
+          turnovers: game.turnovers || 0,
+          fouls: game.fouls || 0,
+          fgMade: game.fg_made || 0,
+          fgAttempted: game.fg_attempted || 0,
+          threePtMade: game.three_made || 0,
+          threePtAttempted: game.three_attempted || 0,
+          ftMade: game.ft_made || 0,
+          ftAttempted: game.ft_attempted || 0,
+          offensiveRebounds: game.offensive_rebounds || 0,
+          defensiveRebounds: game.defensive_rebounds || 0,
+          minutes: game.minutes || 0,
+          hustleScore: game.hustle_score || 0,
+          defenseRating: game.defense_rating || 0,
+        };
+        
+        const categoryGrades = calculateCategoryGrades(stats, game.position || 'Guard');
+        
+        await db.execute(sql`
+          UPDATE games 
+          SET defensive_grade = ${categoryGrades.defensiveGrade},
+              shooting_grade = ${categoryGrades.shootingGrade},
+              rebounding_grade = ${categoryGrades.reboundingGrade},
+              passing_grade = ${categoryGrades.passingGrade}
+          WHERE id = ${game.id}
+        `);
+        updatedCount++;
+      }
+      
+      res.json({ success: true, updatedCount, message: `Updated ${updatedCount} games with category grades` });
+    } catch (err: any) {
+      console.error('Admin migrate category grades error:', err);
+      res.status(500).json({ error: err.message || 'Could not migrate category grades' });
+    }
+  });
+
   // ========================================
   // FOLLOWING SYSTEM ROUTES
   // ========================================
