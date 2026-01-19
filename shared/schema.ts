@@ -835,7 +835,8 @@ export const PREDICTION_CATEGORIES = {
 // === PLAYER FOLLOWING SYSTEM ===
 export const follows = pgTable("follows", {
   id: serial("id").primaryKey(),
-  followerPlayerId: integer("follower_player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  followerPlayerId: integer("follower_player_id").references(() => players.id, { onDelete: "cascade" }),
+  followerUserId: text("follower_user_id"),
   followeePlayerId: integer("followee_player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").defaultNow(),
 });

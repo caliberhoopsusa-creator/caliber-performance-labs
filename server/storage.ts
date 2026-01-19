@@ -292,13 +292,15 @@ export interface IStorage {
   deleteDrillRecommendation(id: number): Promise<void>;
 
   // Follows
-  createFollow(followerPlayerId: number, followeePlayerId: number): Promise<Follow>;
-  deleteFollow(followerPlayerId: number, followeePlayerId: number): Promise<void>;
+  createFollow(followerPlayerId: number | null, followerUserId: string | null, followeePlayerId: number): Promise<Follow>;
+  deleteFollow(followerPlayerId: number | null, followerUserId: string | null, followeePlayerId: number): Promise<void>;
   getFollowers(playerId: number): Promise<Follow[]>;
   getFollowing(playerId: number): Promise<Follow[]>;
-  isFollowing(followerPlayerId: number, followeePlayerId: number): Promise<boolean>;
+  getFollowingByUserId(userId: string): Promise<Follow[]>;
+  isFollowing(followerPlayerId: number | null, followerUserId: string | null, followeePlayerId: number): Promise<boolean>;
   getFollowerCount(playerId: number): Promise<number>;
   getFollowingCount(playerId: number): Promise<number>;
+  getFollowingCountByUserId(userId: string): Promise<number>;
 
   // Notifications
   createNotification(notification: InsertNotification): Promise<Notification>;
@@ -1546,15 +1548,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Follows
-  async createFollow(followerPlayerId: number, followeePlayerId: number): Promise<Follow> {
-    const [newFollow] = await db.insert(follows).values({ followerPlayerId, followeePlayerId }).returning();
+  async createFollow(followerPlayerId: number | null, followerUserId: string | null, followeePlayerId: number): Promise<Follow> {
+    const [newFollow] = await db.insert(follows).values({ 
+      followerPlayerId, 
+      followerUserId,
+      followeePlayerId 
+    }).returning();
     return newFollow;
   }
 
-  async deleteFollow(followerPlayerId: number, followeePlayerId: number): Promise<void> {
-    await db.delete(follows).where(
-      and(eq(follows.followerPlayerId, followerPlayerId), eq(follows.followeePlayerId, followeePlayerId))
-    );
+  async deleteFollow(followerPlayerId: number | null, followerUserId: string | null, followeePlayerId: number): Promise<void> {
+    if (followerPlayerId) {
+      await db.delete(follows).where(
+        and(eq(follows.followerPlayerId, followerPlayerId), eq(follows.followeePlayerId, followeePlayerId))
+      );
+    } else if (followerUserId) {
+      await db.delete(follows).where(
+        and(eq(follows.followerUserId, followerUserId), eq(follows.followeePlayerId, followeePlayerId))
+      );
+    }
   }
 
   async getFollowers(playerId: number): Promise<Follow[]> {
@@ -1565,11 +1577,23 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(follows).where(eq(follows.followerPlayerId, playerId)).orderBy(desc(follows.createdAt));
   }
 
-  async isFollowing(followerPlayerId: number, followeePlayerId: number): Promise<boolean> {
-    const [existing] = await db.select().from(follows).where(
-      and(eq(follows.followerPlayerId, followerPlayerId), eq(follows.followeePlayerId, followeePlayerId))
-    );
-    return !!existing;
+  async getFollowingByUserId(userId: string): Promise<Follow[]> {
+    return await db.select().from(follows).where(eq(follows.followerUserId, userId)).orderBy(desc(follows.createdAt));
+  }
+
+  async isFollowing(followerPlayerId: number | null, followerUserId: string | null, followeePlayerId: number): Promise<boolean> {
+    if (followerPlayerId) {
+      const [existing] = await db.select().from(follows).where(
+        and(eq(follows.followerPlayerId, followerPlayerId), eq(follows.followeePlayerId, followeePlayerId))
+      );
+      return !!existing;
+    } else if (followerUserId) {
+      const [existing] = await db.select().from(follows).where(
+        and(eq(follows.followerUserId, followerUserId), eq(follows.followeePlayerId, followeePlayerId))
+      );
+      return !!existing;
+    }
+    return false;
   }
 
   async getFollowerCount(playerId: number): Promise<number> {
@@ -1579,6 +1603,11 @@ export class DatabaseStorage implements IStorage {
 
   async getFollowingCount(playerId: number): Promise<number> {
     const [result] = await db.select({ count: count() }).from(follows).where(eq(follows.followerPlayerId, playerId));
+    return result?.count || 0;
+  }
+
+  async getFollowingCountByUserId(userId: string): Promise<number> {
+    const [result] = await db.select({ count: count() }).from(follows).where(eq(follows.followerUserId, userId));
     return result?.count || 0;
   }
 

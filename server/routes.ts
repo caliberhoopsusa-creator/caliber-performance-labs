@@ -4857,23 +4857,29 @@ Respond in this exact JSON format:
     try {
       const followeePlayerId = parseInt(req.params.playerId);
       const user = await authStorage.getUser(req.user.claims.sub);
-      if (!user || !user.playerId) {
-        return res.status(400).json({ message: "You must have a player profile to follow others" });
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
       }
+      
+      const followerPlayerId = user.playerId || null;
+      const followerUserId = user.playerId ? null : user.id;
+      
       if (user.playerId === followeePlayerId) {
         return res.status(400).json({ message: "You cannot follow yourself" });
       }
-      const alreadyFollowing = await storage.isFollowing(user.playerId, followeePlayerId);
+      const alreadyFollowing = await storage.isFollowing(followerPlayerId, followerUserId, followeePlayerId);
       if (alreadyFollowing) {
         return res.status(400).json({ message: "Already following this player" });
       }
-      const follow = await storage.createFollow(user.playerId, followeePlayerId);
+      const follow = await storage.createFollow(followerPlayerId, followerUserId, followeePlayerId);
+      
+      const followerName = user.firstName || user.email || 'Someone';
       await storage.createNotification({
         playerId: followeePlayerId,
         notificationType: 'new_follower',
         title: 'New Follower',
-        message: `${user.email || 'Someone'} started following you`,
-        relatedId: user.playerId,
+        message: `${followerName} started following you`,
+        relatedId: user.playerId || null,
         relatedType: 'player',
       });
       res.json(follow);
@@ -4888,10 +4894,14 @@ Respond in this exact JSON format:
     try {
       const followeePlayerId = parseInt(req.params.playerId);
       const user = await authStorage.getUser(req.user.claims.sub);
-      if (!user || !user.playerId) {
-        return res.status(400).json({ message: "You must have a player profile" });
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
       }
-      await storage.deleteFollow(user.playerId, followeePlayerId);
+      
+      const followerPlayerId = user.playerId || null;
+      const followerUserId = user.playerId ? null : user.id;
+      
+      await storage.deleteFollow(followerPlayerId, followerUserId, followeePlayerId);
       res.json({ success: true });
     } catch (error) {
       console.error('Error unfollowing player:', error);
@@ -4924,17 +4934,47 @@ Respond in this exact JSON format:
   });
 
   // Get follower/following counts
-  app.get('/api/players/:playerId/follow-stats', isAuthenticated, async (req, res) => {
+  app.get('/api/players/:playerId/follow-stats', isAuthenticated, async (req: any, res) => {
     try {
       const playerId = parseInt(req.params.playerId);
+      const user = await authStorage.getUser(req.user.claims.sub);
+      
       const [followerCount, followingCount] = await Promise.all([
         storage.getFollowerCount(playerId),
         storage.getFollowingCount(playerId)
       ]);
-      res.json({ followerCount, followingCount });
+      
+      let isFollowing = false;
+      if (user) {
+        const followerPlayerId = user.playerId || null;
+        const followerUserId = user.playerId ? null : user.id;
+        isFollowing = await storage.isFollowing(followerPlayerId, followerUserId, playerId);
+      }
+      
+      res.json({ followerCount, followingCount, followersCount: followerCount, isFollowing });
     } catch (error) {
       console.error('Error getting follow stats:', error);
       res.status(500).json({ message: "Failed to get follow stats" });
+    }
+  });
+
+  // Check if current user is following a player
+  app.get('/api/players/:playerId/is-following', isAuthenticated, async (req: any, res) => {
+    try {
+      const targetPlayerId = parseInt(req.params.playerId);
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const followerPlayerId = user.playerId || null;
+      const followerUserId = user.playerId ? null : user.id;
+      
+      const isFollowing = await storage.isFollowing(followerPlayerId, followerUserId, targetPlayerId);
+      res.json({ isFollowing });
+    } catch (error) {
+      console.error('Error checking follow status:', error);
+      res.status(500).json({ message: "Failed to check follow status" });
     }
   });
 
