@@ -4,21 +4,27 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Activity, UserCircle, ClipboardList, ChevronRight, Loader2 } from "lucide-react";
+import { Activity, UserCircle, ClipboardList, ChevronRight, Loader2, Users, Plus, ArrowLeft } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 type RoleType = 'player' | 'coach' | null;
+type CoachStep = 'select-team-action' | 'create-team' | 'join-team' | null;
 
 export default function RoleSelection() {
   const [selectedRole, setSelectedRole] = useState<RoleType>(null);
+  const [coachStep, setCoachStep] = useState<CoachStep>(null);
   const [playerForm, setPlayerForm] = useState({
     name: '',
     position: '' as '' | 'Guard' | 'Wing' | 'Big',
     height: '',
     team: '',
     jerseyNumber: '',
+  });
+  const [teamForm, setTeamForm] = useState({
+    name: '',
+    code: '',
   });
   
   const { toast } = useToast();
@@ -69,8 +75,54 @@ export default function RoleSelection() {
     },
   });
 
+  const createTeamMutation = useMutation({
+    mutationFn: async (data: { name: string }) => {
+      return await apiRequest('POST', '/api/teams', { name: data.name });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/teams'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users/me'] });
+      toast({
+        title: "Team Created",
+        description: "Your team has been created! You can now invite players.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create team",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const joinTeamMutation = useMutation({
+    mutationFn: async (data: { code: string }) => {
+      return await apiRequest('POST', '/api/teams/join', { code: data.code, displayName: 'Coach' });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/teams'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users/me'] });
+      toast({
+        title: "Joined Team",
+        description: "You have joined the team successfully!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to join team. Check the team code.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCoachSelect = async () => {
     await setRoleMutation.mutateAsync('coach');
+    setSelectedRole('coach');
+    setCoachStep('select-team-action');
   };
 
   const handlePlayerSelect = async () => {
@@ -91,7 +143,41 @@ export default function RoleSelection() {
     await createPlayerMutation.mutateAsync(playerForm);
   };
 
-  const isLoading = setRoleMutation.isPending || createPlayerMutation.isPending;
+  const handleCreateTeamSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!teamForm.name) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter a team name",
+        variant: "destructive",
+      });
+      return;
+    }
+    await createTeamMutation.mutateAsync({ name: teamForm.name });
+  };
+
+  const handleJoinTeamSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!teamForm.code) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter a team code",
+        variant: "destructive",
+      });
+      return;
+    }
+    await joinTeamMutation.mutateAsync({ code: teamForm.code });
+  };
+
+  const isLoading = setRoleMutation.isPending || createPlayerMutation.isPending || createTeamMutation.isPending || joinTeamMutation.isPending;
+
+  const getSubtitle = () => {
+    if (selectedRole === 'player') return "Let's set up your player profile";
+    if (coachStep === 'select-team-action') return "Do you have an existing team or want to create one?";
+    if (coachStep === 'create-team') return "Create your team and start building your roster";
+    if (coachStep === 'join-team') return "Enter the team code to join an existing team";
+    return "How will you be using Caliber?";
+  };
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -101,11 +187,7 @@ export default function RoleSelection() {
             <Activity className="w-8 h-8" />
           </div>
           <h1 className="text-3xl font-bold font-display text-white tracking-wider uppercase">Welcome to Caliber</h1>
-          <p className="text-muted-foreground mt-2">
-            {selectedRole === 'player' 
-              ? "Let's set up your player profile" 
-              : "How will you be using Caliber?"}
-          </p>
+          <p className="text-muted-foreground mt-2">{getSubtitle()}</p>
         </div>
 
         {selectedRole === 'player' ? (
@@ -190,6 +272,154 @@ export default function RoleSelection() {
                   <ChevronRight className="w-4 h-4 mr-2" />
                 )}
                 Create My Profile
+              </Button>
+            </form>
+          </Card>
+        ) : coachStep === 'select-team-action' ? (
+          <div className="space-y-4">
+            <div className="grid sm:grid-cols-2 gap-4">
+              <Card 
+                className="p-6 bg-card border-border hover-elevate cursor-pointer group"
+                onClick={() => setCoachStep('create-team')}
+                data-testid="card-create-team"
+              >
+                <div className="text-center space-y-4">
+                  <div className="mx-auto w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                    <Plus className="w-8 h-8 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white">Create a Team</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Start fresh and invite your players
+                    </p>
+                  </div>
+                  <Button variant="outline" className="w-full" disabled={isLoading}>
+                    Create Team
+                  </Button>
+                </div>
+              </Card>
+
+              <Card 
+                className="p-6 bg-card border-border hover-elevate cursor-pointer group"
+                onClick={() => setCoachStep('join-team')}
+                data-testid="card-join-team"
+              >
+                <div className="text-center space-y-4">
+                  <div className="mx-auto w-16 h-16 rounded-2xl bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
+                    <Users className="w-8 h-8 text-amber-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-white">Join Existing Team</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Have a team code? Join your team
+                    </p>
+                  </div>
+                  <Button variant="outline" className="w-full" disabled={isLoading}>
+                    Join Team
+                  </Button>
+                </div>
+              </Card>
+            </div>
+            <Button 
+              variant="ghost" 
+              className="w-full text-muted-foreground"
+              onClick={() => {
+                setSelectedRole(null);
+                setCoachStep(null);
+              }}
+              data-testid="button-back-role"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to role selection
+            </Button>
+          </div>
+        ) : coachStep === 'create-team' ? (
+          <Card className="p-6 bg-card border-border">
+            <form onSubmit={handleCreateTeamSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="teamName">Team Name *</Label>
+                <Input
+                  id="teamName"
+                  placeholder="e.g., Eagles Basketball"
+                  value={teamForm.name}
+                  onChange={(e) => setTeamForm(prev => ({ ...prev, name: e.target.value }))}
+                  className="mt-1"
+                  data-testid="input-team-name"
+                />
+              </div>
+
+              <p className="text-sm text-muted-foreground">
+                After creating your team, you'll get a unique team code to share with your players.
+              </p>
+
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={isLoading}
+                data-testid="button-create-team"
+              >
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Plus className="w-4 h-4 mr-2" />
+                )}
+                Create Team
+              </Button>
+
+              <Button 
+                type="button"
+                variant="ghost" 
+                className="w-full text-muted-foreground"
+                onClick={() => setCoachStep('select-team-action')}
+                data-testid="button-back-team-action"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back
+              </Button>
+            </form>
+          </Card>
+        ) : coachStep === 'join-team' ? (
+          <Card className="p-6 bg-card border-border">
+            <form onSubmit={handleJoinTeamSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="teamCode">Team Code *</Label>
+                <Input
+                  id="teamCode"
+                  placeholder="Enter team code"
+                  value={teamForm.code}
+                  onChange={(e) => setTeamForm(prev => ({ ...prev, code: e.target.value.toUpperCase() }))}
+                  className="mt-1 uppercase"
+                  data-testid="input-team-code"
+                />
+              </div>
+
+              <p className="text-sm text-muted-foreground">
+                Ask your team admin for the team code to join.
+              </p>
+
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={isLoading}
+                data-testid="button-join-team"
+              >
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Users className="w-4 h-4 mr-2" />
+                )}
+                Join Team
+              </Button>
+
+              <Button 
+                type="button"
+                variant="ghost" 
+                className="w-full text-muted-foreground"
+                onClick={() => setCoachStep('select-team-action')}
+                data-testid="button-back-team-action-2"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back
               </Button>
             </form>
           </Card>
