@@ -3319,7 +3319,7 @@ Respond in this exact JSON format:
   app.post('/api/stories/:id/reactions', async (req, res) => {
     try {
       const storyId = Number(req.params.id);
-      const { sessionId, reactorId, reaction } = req.body;
+      const { sessionId, reactorId, reaction, reactorName } = req.body;
 
       if (!sessionId || !reaction) {
         return res.status(400).json({ message: 'SessionId and reaction are required' });
@@ -3335,6 +3335,21 @@ Respond in this exact JSON format:
 
       // Add new reaction
       const newReaction = await storage.createStoryReaction({ storyId, sessionId, reactorId: reactorId || null, reaction });
+      
+      // Create notification for story owner
+      const story = await storage.getStory(storyId);
+      if (story && story.playerId) {
+        const name = reactorName || 'Someone';
+        await storage.createNotification({
+          playerId: story.playerId,
+          notificationType: 'story_reaction',
+          title: 'Story Reaction',
+          message: `${name} reacted to your story`,
+          relatedId: storyId,
+          relatedType: 'story',
+        });
+      }
+      
       res.status(201).json(newReaction);
     } catch (err) {
       console.error('Add story reaction error:', err);

@@ -12,6 +12,9 @@ import {
   Bell,
   CheckCheck,
   Loader2,
+  Heart,
+  Eye,
+  UserPlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -22,10 +25,12 @@ interface NotificationsPanelProps {
 const notificationIcons: Record<string, typeof Trophy> = {
   badge_earned: Trophy,
   goal_progress: Target,
-  new_follower: Users,
+  new_follower: UserPlus,
   streak_reminder: Flame,
   game_logged: Gamepad2,
   challenge_update: Target,
+  story_reaction: Heart,
+  story_view: Eye,
 };
 
 export function NotificationsPanel({ onClose }: NotificationsPanelProps) {
