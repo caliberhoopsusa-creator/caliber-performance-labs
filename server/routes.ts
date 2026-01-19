@@ -1989,7 +1989,7 @@ export async function registerRoutes(
   // --- Player Discovery (Public) ---
   app.get('/api/discover', async (req, res) => {
     try {
-      const { position, state, school, graduationYear, search, openOnly } = req.query;
+      const { position, state, school, graduationYear, search, openOnly, minGpa, minThreePct } = req.query;
       
       const playersWithStats = await storage.getPlayersWithStats();
       
@@ -2034,12 +2034,19 @@ export async function registerRoutes(
             openToOpportunities: player.openToOpportunities || false,
             highlightCount,
             badgeCount,
+            gpa: player.gpa ? parseFloat(player.gpa) : null,
+            threePtPct: null,
           };
         }
 
         const ppg = games.reduce((acc, g) => acc + g.points, 0) / gamesPlayed;
         const rpg = games.reduce((acc, g) => acc + g.rebounds, 0) / gamesPlayed;
         const apg = games.reduce((acc, g) => acc + g.assists, 0) / gamesPlayed;
+        
+        // Calculate 3PT%
+        const totalThreeMade = games.reduce((acc, g) => acc + (g.threeMade || 0), 0);
+        const totalThreeAttempted = games.reduce((acc, g) => acc + (g.threeAttempted || 0), 0);
+        const threePtPct = totalThreeAttempted > 0 ? (totalThreeMade / totalThreeAttempted) * 100 : null;
         
         const avgGradeScore = games.reduce((acc, g) => acc + (gradeScores[g.grade || 'C'] || 65), 0) / gamesPlayed;
         
@@ -2072,6 +2079,8 @@ export async function registerRoutes(
           openToOpportunities: player.openToOpportunities || false,
           highlightCount,
           badgeCount,
+          gpa: player.gpa ? parseFloat(player.gpa) : null,
+          threePtPct: threePtPct !== null ? Number(threePtPct.toFixed(1)) : null,
         };
       }));
 
@@ -2107,6 +2116,22 @@ export async function registerRoutes(
       // Filter for open to opportunities only
       if (openOnly === 'true') {
         results = results.filter(p => p.openToOpportunities);
+      }
+
+      // Filter by minimum GPA
+      if (minGpa && typeof minGpa === 'string') {
+        const gpaThreshold = parseFloat(minGpa);
+        if (!isNaN(gpaThreshold)) {
+          results = results.filter(p => p.gpa !== null && p.gpa >= gpaThreshold);
+        }
+      }
+
+      // Filter by minimum 3PT%
+      if (minThreePct && typeof minThreePct === 'string') {
+        const threePctThreshold = parseFloat(minThreePct);
+        if (!isNaN(threePctThreshold)) {
+          results = results.filter(p => p.threePtPct !== null && p.threePtPct >= threePctThreshold);
+        }
       }
 
       // Sort by avgGradeScore by default (descending)

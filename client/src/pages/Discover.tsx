@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { GradeBadge } from "@/components/GradeBadge";
-import { Search, MapPin, GraduationCap, Users, ChevronRight, Sparkles, Eye, CheckCircle, Target, Film, Trophy } from "lucide-react";
+import { Search, MapPin, GraduationCap, Users, ChevronRight, Sparkles, Eye, CheckCircle, Target, Film, Trophy, BookOpen, Crosshair } from "lucide-react";
 
 interface DiscoverPlayer {
   id: number;
@@ -32,11 +32,13 @@ interface DiscoverPlayer {
   openToOpportunities: boolean;
   highlightCount?: number;
   badgeCount?: number;
+  gpa: number | null;
+  threePtPct: number | null;
 }
 
 function getProfileCompleteness(player: DiscoverPlayer): number {
   let score = 0;
-  const maxScore = 10;
+  const maxScore = 11;
   
   if (player.name) score += 1;
   if (player.position) score += 1;
@@ -48,6 +50,7 @@ function getProfileCompleteness(player: DiscoverPlayer): number {
   if (player.team) score += 1;
   if (player.gamesPlayed > 0) score += 1;
   if (player.highlightCount && player.highlightCount > 0) score += 1;
+  if (player.gpa !== null) score += 1;
   
   return Math.round((score / maxScore) * 100);
 }
@@ -168,6 +171,12 @@ function PlayerDiscoverCard({ player }: { player: DiscoverPlayer }) {
                   <div className="font-bold text-white text-base">{player.apg}</div>
                   <div className="text-[10px] uppercase text-muted-foreground tracking-wide">APG</div>
                 </div>
+                {player.threePtPct !== null && (
+                  <div className="text-center">
+                    <div className="font-bold text-white text-base">{player.threePtPct}%</div>
+                    <div className="text-[10px] uppercase text-muted-foreground tracking-wide">3PT</div>
+                  </div>
+                )}
                 <div className="ml-auto">
                   {player.avgGrade ? (
                     <GradeBadge grade={player.avgGrade} size="sm" />
@@ -178,6 +187,13 @@ function PlayerDiscoverCard({ player }: { player: DiscoverPlayer }) {
                   )}
                 </div>
               </div>
+
+              {player.gpa !== null && (
+                <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-3">
+                  <BookOpen className="w-3.5 h-3.5 text-blue-400" />
+                  <span className="text-blue-400 font-medium">{player.gpa.toFixed(2)} GPA</span>
+                </div>
+              )}
 
               <div className="flex items-center gap-2 flex-wrap">
                 <Badge 
@@ -253,12 +269,17 @@ function PlayerCardSkeleton() {
   );
 }
 
+const GPA_OPTIONS = ["All", "2.0", "2.5", "3.0", "3.5"];
+const THREE_PT_OPTIONS = ["All", "30", "35", "40", "45"];
+
 export default function Discover() {
   const [position, setPosition] = useState("All");
   const [state, setState] = useState("All");
   const [graduationYear, setGraduationYear] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [openOnly, setOpenOnly] = useState(false);
+  const [minGpa, setMinGpa] = useState("All");
+  const [minThreePct, setMinThreePct] = useState("All");
 
   const queryParams = new URLSearchParams();
   if (position !== "All") queryParams.append("position", position);
@@ -266,9 +287,11 @@ export default function Discover() {
   if (graduationYear !== "All") queryParams.append("graduationYear", graduationYear);
   if (searchQuery.trim()) queryParams.append("search", searchQuery.trim());
   if (openOnly) queryParams.append("openOnly", "true");
+  if (minGpa !== "All") queryParams.append("minGpa", minGpa);
+  if (minThreePct !== "All") queryParams.append("minThreePct", minThreePct);
 
   const { data: players, isLoading } = useQuery<DiscoverPlayer[]>({
-    queryKey: ["/api/discover", position, state, graduationYear, searchQuery, openOnly],
+    queryKey: ["/api/discover", position, state, graduationYear, searchQuery, openOnly, minGpa, minThreePct],
     queryFn: async () => {
       const res = await fetch(`/api/discover?${queryParams.toString()}`);
       if (!res.ok) throw new Error("Failed to fetch players");
@@ -357,6 +380,50 @@ export default function Discover() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          <div className="border-t border-border/50 mt-4 pt-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Target className="w-4 h-4 text-primary" />
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Scout Filters</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div>
+                <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
+                  <BookOpen className="w-3 h-3" />
+                  Min GPA
+                </label>
+                <Select value={minGpa} onValueChange={setMinGpa}>
+                  <SelectTrigger className="h-9" data-testid="select-min-gpa">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">Any GPA</SelectItem>
+                    {GPA_OPTIONS.filter(g => g !== "All").map((g) => (
+                      <SelectItem key={g} value={g}>{g}+</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
+                  <Crosshair className="w-3 h-3" />
+                  Min 3PT%
+                </label>
+                <Select value={minThreePct} onValueChange={setMinThreePct}>
+                  <SelectTrigger className="h-9" data-testid="select-min-three-pct">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">Any 3PT%</SelectItem>
+                    {THREE_PT_OPTIONS.filter(t => t !== "All").map((t) => (
+                      <SelectItem key={t} value={t}>{t}%+</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
         </CardContent>
