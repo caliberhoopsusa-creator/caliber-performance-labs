@@ -2782,7 +2782,7 @@ Respond in this exact JSON format:
       }
       
       if (!user.playerId) {
-        return res.status(400).json({ message: 'User does not have a linked player profile' });
+        return res.json([]);
       }
       
       const limit = Number(req.query.limit) || 50;
@@ -4947,7 +4947,7 @@ Respond in this exact JSON format:
     try {
       const user = await authStorage.getUser(req.user.claims.sub);
       if (!user || !user.playerId) {
-        return res.status(400).json({ message: "You must have a player profile" });
+        return res.json([]);
       }
       const notifications = await storage.getPlayerNotifications(user.playerId);
       res.json(notifications);
@@ -4962,7 +4962,7 @@ Respond in this exact JSON format:
     try {
       const user = await authStorage.getUser(req.user.claims.sub);
       if (!user || !user.playerId) {
-        return res.status(400).json({ message: "You must have a player profile" });
+        return res.json({ count: 0 });
       }
       const count = await storage.getUnreadNotificationCount(user.playerId);
       res.json({ count });
@@ -4989,7 +4989,7 @@ Respond in this exact JSON format:
     try {
       const user = await authStorage.getUser(req.user.claims.sub);
       if (!user || !user.playerId) {
-        return res.status(400).json({ message: "You must have a player profile" });
+        return res.json({ success: true });
       }
       await storage.markAllNotificationsRead(user.playerId);
       res.json({ success: true });
