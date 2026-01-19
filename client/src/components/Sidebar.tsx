@@ -74,6 +74,12 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         { href: "/teams", label: "Teams", icon: Users },
       ],
     },
+    {
+      title: "Account",
+      items: [
+        { href: "/pricing", label: "Pricing", icon: CreditCard },
+      ],
+    },
   ];
 
   const coachSections: NavSection[] = [
@@ -107,6 +113,12 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         { href: "/report-card", label: "Report Cards", icon: FileText },
         { href: "/video-analysis", label: "Video Analysis", icon: Video, premium: "pro" },
         { href: "/team-comparison", label: "Team Compare", icon: BarChart3, premium: "coach_pro" },
+      ],
+    },
+    {
+      title: "Account",
+      items: [
+        { href: "/pricing", label: "Pricing", icon: CreditCard },
       ],
     },
   ];
