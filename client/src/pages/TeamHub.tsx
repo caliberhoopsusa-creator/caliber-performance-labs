@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,8 +17,19 @@ import {
   Dumbbell,
   Target,
   ChevronRight,
-  Loader2
+  Loader2,
+  Play,
+  Radio,
+  Timer,
+  UserCheck
 } from "lucide-react";
+import { useActivePractices, useStartPractice } from "@/hooks/use-basketball";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { LivePractice } from "@/components/LivePractice";
+import type { Practice } from "@/hooks/use-basketball";
 import { format, isToday, isTomorrow, addDays, startOfDay, isSameDay } from "date-fns";
 import { Link, useLocation } from "wouter";
 import type { ScheduleEvent } from "@shared/schema";
@@ -81,6 +92,44 @@ export default function TeamHub() {
   const [defaultEventType, setDefaultEventType] = useState<'practice' | 'game' | 'workout' | 'meeting'>('practice');
   const [, navigate] = useLocation();
   const sessionId = getSessionId();
+  const { toast } = useToast();
+  
+  // Live Practice state
+  const [startDialogOpen, setStartDialogOpen] = useState(false);
+  const [liveTitle, setLiveTitle] = useState("");
+  const [liveDuration, setLiveDuration] = useState(90);
+  const [activePractice, setActivePractice] = useState<Practice | null>(null);
+  const { data: activePractices = [] } = useActivePractices();
+  const startPractice = useStartPractice();
+  
+  // Check for active practice - only update if we don't have a local practice set
+  useEffect(() => {
+    if (activePractices.length > 0 && !activePractice) {
+      setActivePractice(activePractices[0]);
+    } else if (activePractices.length === 0 && activePractice) {
+      // Only clear if the practice was actually ended (API confirms no active)
+      // Don't clear immediately after starting
+    }
+  }, [activePractices]);
+  
+  const handleStartPractice = async () => {
+    if (!liveTitle.trim()) {
+      toast({ title: "Please enter a practice title", variant: "destructive" });
+      return;
+    }
+    try {
+      const newPractice = await startPractice.mutateAsync({
+        title: liveTitle,
+        duration: liveDuration,
+      });
+      setActivePractice(newPractice);
+      setStartDialogOpen(false);
+      setLiveTitle("");
+      toast({ title: "Practice started!", description: "Players can now be checked in." });
+    } catch (err: any) {
+      toast({ title: "Failed to start practice", description: err.message, variant: "destructive" });
+    }
+  };
 
   const { data: myTeams = [], isLoading: teamsLoading } = useQuery<TeamWithCount[]>({
     queryKey: ["/api/my-teams", sessionId],
@@ -234,6 +283,88 @@ export default function TeamHub() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Live Practice Section */}
+        {activePractice ? (
+          <LivePractice 
+            practice={activePractice} 
+            onBack={() => setActivePractice(null)} 
+            onEnd={() => setActivePractice(null)}
+          />
+        ) : (
+          <Card className="glass-card border-white/10 border-l-4 border-l-green-500" data-testid="card-live-practice">
+            <CardHeader className="pb-4 flex flex-row items-center justify-between gap-2">
+              <CardTitle className="text-lg font-display uppercase tracking-wide flex items-center gap-2">
+                <Radio className="w-5 h-5 text-green-400" />
+                Live Practice
+              </CardTitle>
+              <Dialog open={startDialogOpen} onOpenChange={setStartDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="gap-2 bg-green-600" data-testid="button-hub-start-practice">
+                    <Play className="w-4 h-4" />
+                    Start Practice
+                  </Button>
+                </DialogTrigger>
+                <DialogContent data-testid="dialog-hub-start-practice">
+                  <DialogHeader>
+                    <DialogTitle className="font-display uppercase tracking-wide">Start Live Practice</DialogTitle>
+                    <DialogDescription>
+                      Begin a live practice session to track attendance and run drills in real-time.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 pt-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="hub-practice-title">Practice Title</Label>
+                      <Input
+                        id="hub-practice-title"
+                        placeholder="e.g., Morning Shooting Drills"
+                        value={liveTitle}
+                        onChange={(e) => setLiveTitle(e.target.value)}
+                        data-testid="input-hub-live-title"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="hub-practice-duration">Planned Duration (minutes)</Label>
+                      <Input
+                        id="hub-practice-duration"
+                        type="number"
+                        min={15}
+                        max={240}
+                        value={liveDuration}
+                        onChange={(e) => setLiveDuration(Number(e.target.value))}
+                        data-testid="input-hub-live-duration"
+                      />
+                    </div>
+                    <Button 
+                      className="w-full gap-2" 
+                      onClick={handleStartPractice}
+                      disabled={startPractice.isPending}
+                      data-testid="button-hub-confirm-start"
+                    >
+                      {startPractice.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Play className="w-4 h-4" />
+                      )}
+                      Start Practice
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-4 p-4 rounded-lg bg-white/5">
+                <div className="w-12 h-12 rounded-lg bg-green-500/20 flex items-center justify-center">
+                  <Timer className="w-6 h-6 text-green-400" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">No active practice</p>
+                  <p className="text-xs text-muted-foreground/60">Start a practice to check in players and run drills</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Weekly Overview */}

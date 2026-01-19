@@ -37,7 +37,7 @@ Preferred communication style: Simple, everyday language.
 - **Player Discovery**: Public player directory (/discover) with search and filters. Players can toggle "Open to Opportunities" in their profile settings and add location (city, state), school, and graduation year to be found by coaches and scouts.
 - **Performance Tools**: Live game mode for real-time stat entry, interactive shot charts, off-court workout tracker, and advanced metric calculations (True Shooting %, PER, etc.).
 - **Scheduling**: Practice scheduler and calendar for managing events.
-- **Coach Features**: Team dashboard, shot charts, game notes, lineup analysis, practice tracking, AI-generated drill recommendations, and comprehensive player report cards.
+- **Coach Features**: Team dashboard, shot charts, game notes, lineup analysis, practice tracking with live practice mode (real-time attendance check-in, drill scoring, timer), AI-generated drill recommendations, and comprehensive player report cards. Live Practice is accessible from both Practice Tracker and Team Hub.
 - **UI/UX**: Minimal dark theme with glassmorphic design elements, clean white primary accent, dot-grid background pattern (40px grid), and subtle glow effects. Features include:
   - Glassmorphic cards: `glass-card` utility class (bg-card/60, backdrop-blur-xl, border-white/5)
   - Sidebar: Dark elevated background with subtle borders, minimal nav items with white accent for active states

@@ -933,11 +933,6 @@ export function useCreateDrillScore() {
 export function useActivePractices() {
   return useQuery<Practice[]>({
     queryKey: ['/api/practices/active'],
-    queryFn: async () => {
-      const res = await fetch('/api/practices/active');
-      if (!res.ok) throw new Error("Failed to fetch active practices");
-      return res.json();
-    },
     refetchInterval: 5000, // Poll every 5 seconds for live updates
   });
 }
