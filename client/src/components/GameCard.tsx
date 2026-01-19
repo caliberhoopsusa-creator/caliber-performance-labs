@@ -179,6 +179,31 @@ export function GameCard({ game, playerName, badges = [], showShareButton = true
           </div>
         </div>
 
+        {(game.defensiveGrade || game.shootingGrade || game.reboundingGrade || game.passingGrade) && (
+          <div className="grid grid-cols-4 gap-2 mb-4">
+            {[
+              { label: "DEF", value: game.defensiveGrade, icon: Shield, color: "from-green-500/10 to-emerald-600/5 border-green-500/20" },
+              { label: "SHOT", value: game.shootingGrade, icon: Target, color: "from-red-500/10 to-rose-600/5 border-red-500/20" },
+              { label: "REB", value: game.reboundingGrade, icon: Zap, color: "from-blue-500/10 to-sky-600/5 border-blue-500/20" },
+              { label: "PASS", value: game.passingGrade, icon: Activity, color: "from-purple-500/10 to-violet-600/5 border-purple-500/20" },
+            ].map((cat) => (
+              <div 
+                key={cat.label} 
+                className={cn(
+                  "text-center p-2 rounded-lg bg-gradient-to-br border transition-all duration-300 hover:scale-105",
+                  cat.color
+                )}
+              >
+                <cat.icon className="w-3 h-3 mx-auto mb-1 text-muted-foreground" />
+                <div className={cn("text-lg font-bold", getGradeColor(cat.value || "").text)}>
+                  {cat.value || "—"}
+                </div>
+                <div className="stat-label text-[9px]">{cat.label}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {gameBadges.length > 0 && (
           <div className="flex flex-wrap gap-2 justify-center mb-4">
             {gameBadges.slice(0, 4).map((badge) => {

@@ -222,6 +222,192 @@ const upload = multer({
 
 // --- Analysis Logic ---
 
+// Grade score to letter mapping
+function scoreToGrade(score: number): string {
+  if (score >= 90) return 'A+';
+  if (score >= 80) return 'A';
+  if (score >= 70) return 'A-';
+  if (score >= 65) return 'B+';
+  if (score >= 60) return 'B';
+  if (score >= 55) return 'B-';
+  if (score >= 50) return 'C+';
+  if (score >= 45) return 'C';
+  if (score >= 40) return 'C-';
+  if (score >= 35) return 'D';
+  return 'F';
+}
+
+// Category Grade: Defensive (steals, blocks, defensive rebounds)
+function calculateDefensiveGrade(stats: any, position: string): string {
+  let score = 50; // Base score
+  
+  const steals = stats.steals || 0;
+  const blocks = stats.blocks || 0;
+  const defensiveRebounds = stats.defensiveRebounds || 0;
+  const minutes = stats.minutes || 1;
+  
+  // Per-36 minute scaling
+  const stealsPerMin = (steals / minutes) * 36;
+  const blocksPerMin = (blocks / minutes) * 36;
+  const drebPerMin = (defensiveRebounds / minutes) * 36;
+  
+  // Position-weighted scoring
+  if (position === 'Guard') {
+    // Guards: prioritize steals, less emphasis on blocks
+    score += stealsPerMin * 12;
+    score += blocksPerMin * 4;
+    score += drebPerMin * 2;
+  } else if (position === 'Big') {
+    // Bigs: prioritize blocks and defensive rebounds
+    score += stealsPerMin * 6;
+    score += blocksPerMin * 10;
+    score += drebPerMin * 4;
+  } else { // Wing
+    // Wings: balanced defensive contribution
+    score += stealsPerMin * 10;
+    score += blocksPerMin * 6;
+    score += drebPerMin * 3;
+  }
+  
+  return scoreToGrade(score);
+}
+
+// Category Grade: Shooting (FG%, 3PT%, FT%)
+function calculateShootingGrade(stats: any, position: string): string {
+  let score = 50; // Base score
+  
+  const fgMade = stats.fgMade || 0;
+  const fgAttempted = stats.fgAttempted || 0;
+  const threeMade = stats.threeMade || 0;
+  const threeAttempted = stats.threeAttempted || 0;
+  const ftMade = stats.ftMade || 0;
+  const ftAttempted = stats.ftAttempted || 0;
+  
+  // Calculate percentages (handle division by zero)
+  const fgPct = fgAttempted > 0 ? (fgMade / fgAttempted) * 100 : 0;
+  const threePct = threeAttempted > 0 ? (threeMade / threeAttempted) * 100 : 0;
+  const ftPct = ftAttempted > 0 ? (ftMade / ftAttempted) * 100 : 0;
+  
+  // Position-weighted scoring
+  if (position === 'Guard') {
+    // Guards: emphasis on 3PT and FT shooting
+    score += (fgPct - 40) * 0.5;  // Baseline 40% FG
+    score += (threePct - 33) * 0.8;  // Baseline 33% 3PT (important for guards)
+    score += (ftPct - 70) * 0.3;  // Baseline 70% FT
+    // Volume bonus for guards
+    if (threeAttempted >= 5) score += 5;
+  } else if (position === 'Big') {
+    // Bigs: emphasis on FG% (inside scoring), less 3PT
+    score += (fgPct - 45) * 0.8;  // Higher FG% baseline for bigs
+    score += (threePct - 30) * 0.3;  // Less 3PT emphasis
+    score += (ftPct - 60) * 0.4;  // FT matters for bigs (and-1s, fouls)
+  } else { // Wing
+    // Wings: balanced shooting
+    score += (fgPct - 42) * 0.6;
+    score += (threePct - 35) * 0.6;
+    score += (ftPct - 75) * 0.3;
+  }
+  
+  // Penalty for no shot attempts (didn't contribute offensively)
+  if (fgAttempted === 0) score -= 10;
+  
+  return scoreToGrade(score);
+}
+
+// Category Grade: Rebounding (total rebounds, offensive/defensive)
+function calculateReboundingGrade(stats: any, position: string): string {
+  let score = 50; // Base score
+  
+  const rebounds = stats.rebounds || 0;
+  const offensiveRebounds = stats.offensiveRebounds || 0;
+  const defensiveRebounds = stats.defensiveRebounds || 0;
+  const minutes = stats.minutes || 1;
+  
+  // Per-36 minute scaling
+  const rebPerMin = (rebounds / minutes) * 36;
+  const orebPerMin = (offensiveRebounds / minutes) * 36;
+  const drebPerMin = (defensiveRebounds / minutes) * 36;
+  
+  // Position-weighted scoring
+  if (position === 'Guard') {
+    // Guards: any rebounding is a bonus (baseline expectation is low)
+    score += rebPerMin * 4;
+    score += orebPerMin * 6; // Offensive rebounds are extra hustle for guards
+  } else if (position === 'Big') {
+    // Bigs: expected to dominate boards
+    // Baseline: 10 rebounds per 36 min for average
+    score += (rebPerMin - 8) * 3;
+    score += orebPerMin * 4;
+    score += drebPerMin * 2;
+    // Bonus for double-digit rebounding
+    if (rebounds >= 10) score += 10;
+  } else { // Wing
+    // Wings: moderate rebounding expectations
+    score += (rebPerMin - 4) * 3;
+    score += orebPerMin * 5;
+  }
+  
+  return scoreToGrade(score);
+}
+
+// Category Grade: Passing (assist-to-turnover ratio)
+function calculatePassingGrade(stats: any, position: string): string {
+  let score = 50; // Base score
+  
+  const assists = stats.assists || 0;
+  const turnovers = stats.turnovers || 0;
+  const minutes = stats.minutes || 1;
+  
+  // Assist to turnover ratio (avoid division by zero)
+  const astToRatio = turnovers > 0 ? assists / turnovers : (assists > 0 ? assists * 2 : 1);
+  
+  // Per-36 minute assists
+  const astPerMin = (assists / minutes) * 36;
+  
+  // Position-weighted scoring
+  if (position === 'Guard') {
+    // Guards: primary ball handlers, highest expectations
+    // Baseline: 2:1 A/TO ratio is average, 3:1 is good, 4:1 is elite
+    score += (astToRatio - 1.5) * 12;
+    // Volume matters for guards
+    score += (astPerMin - 4) * 3;
+    // Turnover penalty is higher for guards
+    if (turnovers >= 5) score -= 10;
+  } else if (position === 'Big') {
+    // Bigs: less playmaking expectations
+    // Any assists are bonus, turnovers less penalized
+    score += (astToRatio - 1) * 8;
+    score += astPerMin * 4;
+    // Turnovers hurt less for bigs
+    if (turnovers >= 4) score -= 5;
+  } else { // Wing
+    // Wings: moderate playmaking
+    score += (astToRatio - 1.2) * 10;
+    score += (astPerMin - 2) * 3;
+    if (turnovers >= 4) score -= 8;
+  }
+  
+  // Bonus for clean games (0 turnovers with decent playtime)
+  if (turnovers === 0 && minutes >= 15) score += 10;
+  
+  return scoreToGrade(score);
+}
+
+// Calculate all category grades at once
+function calculateCategoryGrades(stats: any, position: string): {
+  defensiveGrade: string;
+  shootingGrade: string;
+  reboundingGrade: string;
+  passingGrade: string;
+} {
+  return {
+    defensiveGrade: calculateDefensiveGrade(stats, position),
+    shootingGrade: calculateShootingGrade(stats, position),
+    reboundingGrade: calculateReboundingGrade(stats, position),
+    passingGrade: calculatePassingGrade(stats, position),
+  };
+}
+
 function calculateGrade(stats: any, position: string): { grade: string; feedback: string } {
   let score = 50; // Base score
   
@@ -1268,6 +1454,9 @@ export async function registerRoutes(
       const statsWithRatings = { ...input, defenseRating, hustleScore };
       const { grade, feedback } = calculateGrade(statsWithRatings, player.position);
       
+      // Calculate category grades (position-weighted)
+      const categoryGrades = calculateCategoryGrades(input, player.position);
+      
       // Calculate PER (Points + Rebounds + Assists)
       const per = (input.points || 0) + (input.rebounds || 0) + (input.assists || 0);
       
@@ -1298,7 +1487,11 @@ export async function registerRoutes(
         notes: input.notes,
         grade,
         feedback,
-        per: per.toString()
+        per: per.toString(),
+        defensiveGrade: categoryGrades.defensiveGrade,
+        shootingGrade: categoryGrades.shootingGrade,
+        reboundingGrade: categoryGrades.reboundingGrade,
+        passingGrade: categoryGrades.passingGrade,
       };
 
       const game = await storage.createGame(gameData);

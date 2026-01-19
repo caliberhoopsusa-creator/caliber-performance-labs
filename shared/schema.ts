@@ -117,8 +117,14 @@ export const games = pgTable("games", {
   notes: text("notes"), // Video notes or observations
   
   // Calculated / Generated Fields (Stored for easy querying)
-  grade: text("grade"), // A+, B, C-, etc.
+  grade: text("grade"), // A+, B, C-, etc. (overall)
   feedback: text("feedback"), // Generated coaching feedback
+  
+  // Category Grades (position-weighted)
+  defensiveGrade: text("defensive_grade"), // A+, B, C-, etc.
+  shootingGrade: text("shooting_grade"), // A+, B, C-, etc.
+  reboundingGrade: text("rebounding_grade"), // A+, B, C-, etc.
+  passingGrade: text("passing_grade"), // A+, B, C-, etc. (assist-to-turnover ratio)
   
   createdAt: timestamp("created_at").defaultNow(),
 });
