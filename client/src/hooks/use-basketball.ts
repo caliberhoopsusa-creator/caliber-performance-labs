@@ -926,6 +926,30 @@ export function useCreateDrillScore() {
   });
 }
 
+export type CreateDrillInput = {
+  name: string;
+  category: string;
+  description?: string;
+  targetStat?: string;
+};
+
+export function useCreateDrill() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: CreateDrillInput) => {
+      const res = await apiRequest("POST", '/api/drills', data);
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to create drill");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/drills'] });
+    },
+  });
+}
+
 // ============================================
 // ACTIVE PRACTICE (LIVE MODE) HOOKS
 // ============================================

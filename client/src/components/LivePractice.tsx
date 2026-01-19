@@ -7,6 +7,7 @@ import {
   useSetCurrentDrill,
   useEndPractice,
   useCreateDrillScore,
+  useCreateDrill,
   type Practice,
   type Drill,
   type PracticeAttendance,
@@ -49,6 +50,7 @@ import {
   Trophy,
   Zap,
   ArrowLeft,
+  Plus,
 } from "lucide-react";
 
 interface LivePracticeProps {
@@ -74,6 +76,7 @@ export function LivePractice({ practice, onEnd, onBack }: LivePracticeProps) {
   const setCurrentDrill = useSetCurrentDrill();
   const endPractice = useEndPractice();
   const createDrillScore = useCreateDrillScore();
+  const createDrill = useCreateDrill();
 
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [selectedDrill, setSelectedDrill] = useState<string>("");
@@ -81,6 +84,12 @@ export function LivePractice({ practice, onEnd, onBack }: LivePracticeProps) {
   const [endDialogOpen, setEndDialogOpen] = useState(false);
   const [endNotes, setEndNotes] = useState(practice.notes || "");
   const [activeTab, setActiveTab] = useState("attendance");
+  
+  // Custom drill creation state
+  const [createDrillDialogOpen, setCreateDrillDialogOpen] = useState(false);
+  const [newDrillName, setNewDrillName] = useState("");
+  const [newDrillCategory, setNewDrillCategory] = useState("shooting");
+  const [newDrillDescription, setNewDrillDescription] = useState("");
 
   useEffect(() => {
     const startTime = practice.startedAt ? new Date(practice.startedAt).getTime() : Date.now();
@@ -205,6 +214,49 @@ export function LivePractice({ practice, onEnd, onBack }: LivePracticeProps) {
       });
     }
   };
+
+  const handleCreateDrill = async () => {
+    if (!newDrillName.trim()) {
+      toast({
+        title: "Drill name required",
+        description: "Please enter a name for the drill",
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      const newDrill = await createDrill.mutateAsync({
+        name: newDrillName.trim(),
+        category: newDrillCategory,
+        description: newDrillDescription.trim() || undefined,
+      });
+      toast({
+        title: "Drill created",
+        description: `"${newDrill.name}" added to your drill library`,
+      });
+      setCreateDrillDialogOpen(false);
+      setNewDrillName("");
+      setNewDrillDescription("");
+      setSelectedDrill(newDrill.id.toString());
+    } catch (error: any) {
+      toast({
+        title: "Error creating drill",
+        description: error.message || "Failed to create drill",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const DRILL_CATEGORIES = [
+    { value: "shooting", label: "Shooting" },
+    { value: "dribbling", label: "Dribbling" },
+    { value: "passing", label: "Passing" },
+    { value: "defense", label: "Defense" },
+    { value: "rebounding", label: "Rebounding" },
+    { value: "conditioning", label: "Conditioning" },
+    { value: "footwork", label: "Footwork" },
+    { value: "team", label: "Team Play" },
+  ];
 
   const drillCategories = useMemo(() => {
     const cats = new Set(drills.map((d) => d.category));
@@ -384,10 +436,20 @@ export function LivePractice({ practice, onEnd, onBack }: LivePracticeProps) {
         <TabsContent value="drills" className="space-y-4">
           <Card className="glass-card">
             <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2">
-                <Target className="w-5 h-5" />
-                Run Drill
-              </CardTitle>
+              <div className="flex items-center justify-between gap-2">
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="w-5 h-5" />
+                  Run Drill
+                </CardTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCreateDrillDialogOpen(true)}
+                  data-testid="button-create-custom-drill"
+                >
+                  <Plus className="w-4 h-4 mr-1" /> Custom Drill
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex flex-col sm:flex-row gap-4">
@@ -396,20 +458,26 @@ export function LivePractice({ practice, onEnd, onBack }: LivePracticeProps) {
                     <SelectValue placeholder="Select a drill to run..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {drillCategories.map((category) => (
-                      <div key={category}>
-                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase">
-                          {category}
-                        </div>
-                        {drills
-                          .filter((d) => d.category === category)
-                          .map((drill) => (
-                            <SelectItem key={drill.id} value={drill.id.toString()}>
-                              {drill.name}
-                            </SelectItem>
-                          ))}
+                    {drillCategories.length === 0 ? (
+                      <div className="px-2 py-4 text-center text-sm text-muted-foreground">
+                        No drills yet. Create a custom drill to get started.
                       </div>
-                    ))}
+                    ) : (
+                      drillCategories.map((category) => (
+                        <div key={category}>
+                          <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase">
+                            {category}
+                          </div>
+                          {drills
+                            .filter((d) => d.category === category)
+                            .map((drill) => (
+                              <SelectItem key={drill.id} value={drill.id.toString()}>
+                                {drill.name}
+                              </SelectItem>
+                            ))}
+                        </div>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
 
@@ -559,6 +627,73 @@ export function LivePractice({ practice, onEnd, onBack }: LivePracticeProps) {
             </Button>
             <Button onClick={handleEndPractice} disabled={endPractice.isPending} data-testid="button-confirm-end">
               End Practice
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={createDrillDialogOpen} onOpenChange={setCreateDrillDialogOpen}>
+        <DialogContent data-testid="dialog-create-drill">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="w-5 h-5" />
+              Create Custom Drill
+            </DialogTitle>
+            <DialogDescription>
+              Add a new drill to your library. It will be available for this and future practices.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Drill Name</label>
+              <Input
+                value={newDrillName}
+                onChange={(e) => setNewDrillName(e.target.value)}
+                placeholder="e.g., 3-Point Shooting Contest"
+                data-testid="input-drill-name"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Category</label>
+              <Select value={newDrillCategory} onValueChange={setNewDrillCategory}>
+                <SelectTrigger data-testid="select-drill-category">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {DRILL_CATEGORIES.map((cat) => (
+                    <SelectItem key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Description (optional)</label>
+              <Textarea
+                value={newDrillDescription}
+                onChange={(e) => setNewDrillDescription(e.target.value)}
+                placeholder="Describe the drill objectives and how to run it..."
+                className="min-h-[80px]"
+                data-testid="textarea-drill-description"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setCreateDrillDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleCreateDrill} 
+              disabled={createDrill.isPending || !newDrillName.trim()}
+              data-testid="button-confirm-create-drill"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Drill
             </Button>
           </DialogFooter>
         </DialogContent>
