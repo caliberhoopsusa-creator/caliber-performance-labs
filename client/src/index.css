@@ -5,40 +5,45 @@
 @tailwind utilities;
 
 :root {
-  /* Athletic Tech Palette */
+  /* Athletic Tech Palette - Minimal Dark Theme */
   --font-display: 'Teko', sans-serif;
   --font-body: 'Inter', sans-serif;
 
-  /* Deep Rich Navy Backgrounds */
-  --background: 222 47% 8%;
+  /* Deep dark backgrounds */
+  --background: 220 20% 6%;
   --foreground: 210 40% 98%;
 
-  /* Elevated navy for cards with subtle warmth */
-  --card: 220 35% 14%;
+  /* Cards - more transparent, glassmorphic */
+  --card: 220 20% 10%;
   --card-foreground: 210 40% 98%;
 
   /* Popover matches card */
-  --popover: 220 35% 14%;
+  --popover: 220 20% 10%;
   --popover-foreground: 210 40% 98%;
 
-  /* Clean White Accent */
-  --primary: 0 0% 100%;
-  --primary-foreground: 222 47% 8%;
+  /* Primary - vibrant orange accent */
+  --primary: 25 95% 55%;
+  --primary-foreground: 0 0% 100%;
 
   /* Cool Grey for Secondary actions */
-  --secondary: 215 25% 22%;
+  --secondary: 220 15% 15%;
   --secondary-foreground: 210 40% 98%;
 
-  /* Muted text - higher contrast */
-  --muted: 215 25% 22%;
-  --muted-foreground: 215 20% 60%;
+  /* Muted text */
+  --muted: 220 15% 15%;
+  --muted-foreground: 220 10% 50%;
 
-  /* Borders - more subtle */
-  --border: 215 30% 20%;
-  --input: 215 30% 20%;
+  /* Borders - very subtle */
+  --border: 220 15% 15%;
+  --input: 220 15% 15%;
   
   /* Focus rings matching primary */
-  --ring: 0 0% 100%;
+  --ring: 25 95% 55%;
+
+  /* Sidebar - slightly elevated */
+  --sidebar-background: 220 20% 8%;
+  --sidebar-foreground: 210 40% 98%;
+  --sidebar-border: 220 15% 12%;
 
   /* Semantic Colors for Grades */
   --grade-a: 142 71% 45%;
@@ -51,7 +56,7 @@
   --gold: 45 93% 58%;
   --platinum: 210 20% 80%;
 
-  --radius: 0.75rem;
+  --radius: 0.625rem;
 }
 
 @layer base {
@@ -82,14 +87,25 @@
   .bg-grade-d { background-color: hsl(var(--grade-d)); }
   .bg-grade-f { background-color: hsl(var(--grade-f)); }
 
-  /* Premium glassmorphic card */
+  /* Dot grid background pattern */
+  .dot-grid {
+    background-image: radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* Premium glassmorphic card - more minimal */
   .glass-card {
-    @apply bg-card/80 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/20;
+    @apply bg-card/60 backdrop-blur-xl border border-white/5 shadow-xl shadow-black/10;
   }
   
   /* Enhanced glass with glow */
   .glass-card-glow {
-    @apply bg-card/80 backdrop-blur-xl border border-white/10 shadow-2xl shadow-primary/10;
+    @apply bg-card/70 backdrop-blur-xl border border-white/10 shadow-xl shadow-primary/5;
+  }
+  
+  /* Minimal card style */
+  .minimal-card {
+    @apply bg-white/[0.02] border border-white/5 rounded-xl;
   }
   
   /* Stat display styles */
@@ -130,7 +146,7 @@
   }
 
   .text-gradient-primary {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-gray-300 to-primary;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-orange-300 to-primary;
   }
 
   /* Shimmer effect for premium elements */
