@@ -35,8 +35,8 @@ export default function Landing() {
                   AI-Powered Analytics
                 </div>
                 <h2 className="text-5xl sm:text-6xl lg:text-7xl font-display font-bold tracking-tight text-white leading-[1.1]">
-                  Every Player<br />
-                  <span className="text-gradient-primary text-glow">Deserves Fame</span>
+                  Pro Features,<br />
+                  <span className="text-gradient-primary text-glow">For All Players</span>
                 </h2>
                 <p className="text-xl text-muted-foreground max-w-xl leading-relaxed">
                   Track your basketball performance, earn badges, and get professional-grade analytics that make you feel like a pro.
