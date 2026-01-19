@@ -3368,7 +3368,7 @@ Respond in this exact JSON format:
       const createPostSchema = z.object({
         sessionId: z.string().min(1),
         content: z.string().min(1),
-        postType: z.enum(['announcement', 'practice', 'chat', 'general']).optional().default('general'),
+        postType: z.enum(['announcement', 'practice', 'chat', 'general', 'workout']).optional().default('general'),
         practiceTime: z.string().optional(),
         practiceLocation: z.string().optional(),
         isPinned: z.boolean().optional().default(false),
@@ -3386,8 +3386,9 @@ Respond in this exact JSON format:
         return res.status(403).json({ message: 'You must be a member to post' });
       }
 
-      // Only coaches can pin posts or create announcements
-      if ((input.isPinned || input.postType === 'announcement') && member.role !== 'coach') {
+      // Only coaches or admins can pin posts or create announcements
+      const isCoachOrAdmin = member.role === 'coach' || member.role === 'admin';
+      if ((input.isPinned || input.postType === 'announcement') && !isCoachOrAdmin) {
         return res.status(403).json({ message: 'Only coaches can pin posts or create announcements' });
       }
 
@@ -3400,6 +3401,37 @@ Respond in this exact JSON format:
         practiceLocation: input.practiceLocation || null,
         isPinned: input.isPinned,
       });
+
+      // If it's a practice or workout post with a time, also create a schedule event for team members
+      if ((input.postType === 'practice' || input.postType === 'workout') && input.practiceTime) {
+        try {
+          const eventDate = new Date(input.practiceTime);
+          const eventType = input.postType;
+          const eventTitle = eventType === 'practice' 
+            ? `Team Practice: ${team.name}` 
+            : `Team Workout: ${team.name}`;
+          const duration = eventType === 'practice' ? 90 : 60; // Practice 90 min, workout 60 min
+          
+          // Create schedule event for all team members
+          const teamMembers = await storage.getTeamMembers(teamId);
+          for (const teamMember of teamMembers) {
+            if (teamMember.playerId) {
+              await storage.createScheduleEvent({
+                playerId: teamMember.playerId,
+                title: eventTitle,
+                description: input.content,
+                startTime: eventDate,
+                endTime: new Date(eventDate.getTime() + duration * 60 * 1000),
+                eventType: eventType,
+                location: input.practiceLocation || null,
+              });
+            }
+          }
+        } catch (scheduleErr) {
+          console.error('Error creating schedule events:', scheduleErr);
+          // Don't fail the post creation if schedule event fails
+        }
+      }
 
       res.status(201).json({ ...post, authorName: member.displayName });
     } catch (err) {

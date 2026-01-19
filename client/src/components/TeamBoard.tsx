@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Users, Send, ChevronDown, Crown, Megaphone, Calendar, MessageCircle, FileText, Pin, MapPin, Clock, MessageSquare, ChevronUp, Trash2 } from "lucide-react";
+import { ArrowLeft, Users, Send, ChevronDown, Crown, Megaphone, Calendar, MessageCircle, FileText, Pin, MapPin, Clock, MessageSquare, ChevronUp, Trash2, Target } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import type { Team, TeamMember, TeamPost, TeamPostComment } from "@shared/schema";
 
@@ -31,6 +31,7 @@ const POST_TYPE_CONFIG = {
   practice: { icon: Calendar, label: "Practice", color: "text-blue-400 bg-blue-500/10" },
   chat: { icon: MessageCircle, label: "Chat", color: "text-green-400 bg-green-500/10" },
   general: { icon: FileText, label: "General", color: "text-muted-foreground bg-muted/50" },
+  workout: { icon: Target, label: "Workout", color: "text-purple-400 bg-purple-500/10" },
 };
 
 function PostComments({ postId, teamId, sessionId, currentMember }: { 
@@ -145,7 +146,7 @@ function PostComments({ postId, teamId, sessionId, currentMember }: {
 export function TeamBoard({ team, sessionId, onBack }: TeamBoardProps) {
   const { toast } = useToast();
   const [postContent, setPostContent] = useState("");
-  const [postType, setPostType] = useState<"announcement" | "practice" | "chat" | "general">("chat");
+  const [postType, setPostType] = useState<"announcement" | "practice" | "chat" | "general" | "workout">("chat");
   const [practiceTime, setPracticeTime] = useState("");
   const [practiceLocation, setPracticeLocation] = useState("");
   const [isPinned, setIsPinned] = useState(false);
@@ -218,11 +219,12 @@ export function TeamBoard({ team, sessionId, onBack }: TeamBoardProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (postContent.trim()) {
+      const hasTimeFields = postType === "practice" || postType === "workout";
       createPostMutation.mutate({
         content: postContent.trim(),
         postType,
-        practiceTime: postType === "practice" && practiceTime ? practiceTime : undefined,
-        practiceLocation: postType === "practice" && practiceLocation ? practiceLocation : undefined,
+        practiceTime: hasTimeFields && practiceTime ? practiceTime : undefined,
+        practiceLocation: hasTimeFields && practiceLocation ? practiceLocation : undefined,
         isPinned,
       });
     }
@@ -287,6 +289,7 @@ export function TeamBoard({ team, sessionId, onBack }: TeamBoardProps) {
                       <SelectItem value="general">General</SelectItem>
                       {isCoach && <SelectItem value="announcement">Announcement</SelectItem>}
                       {isCoach && <SelectItem value="practice">Practice</SelectItem>}
+                      {isCoach && <SelectItem value="workout">Workout</SelectItem>}
                     </SelectContent>
                   </Select>
                   
@@ -308,7 +311,7 @@ export function TeamBoard({ team, sessionId, onBack }: TeamBoardProps) {
                   )}
                 </div>
 
-                {postType === "practice" && (
+                {(postType === "practice" || postType === "workout") && (
                   <div className="grid grid-cols-2 gap-2">
                     <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4 text-muted-foreground" />
@@ -415,17 +418,17 @@ export function TeamBoard({ team, sessionId, onBack }: TeamBoardProps) {
                                 )}
                               </div>
 
-                              {post.postType === "practice" && post.practiceTime && (
-                                <div className="mt-3 p-3 rounded-lg bg-gradient-to-r from-blue-500/15 to-blue-500/5 border border-blue-500/20">
+                              {(post.postType === "practice" || post.postType === "workout") && post.practiceTime && (
+                                <div className={`mt-3 p-3 rounded-lg ${post.postType === "workout" ? "bg-gradient-to-r from-purple-500/15 to-purple-500/5 border border-purple-500/20" : "bg-gradient-to-r from-blue-500/15 to-blue-500/5 border border-blue-500/20"}`}>
                                   <div className="flex flex-wrap items-center gap-4 text-sm">
-                                    <div className="flex items-center gap-2 text-blue-400">
-                                      <div className="w-7 h-7 rounded bg-blue-500/20 flex items-center justify-center">
+                                    <div className={`flex items-center gap-2 ${post.postType === "workout" ? "text-purple-400" : "text-blue-400"}`}>
+                                      <div className={`w-7 h-7 rounded flex items-center justify-center ${post.postType === "workout" ? "bg-purple-500/20" : "bg-blue-500/20"}`}>
                                         <Calendar className="w-4 h-4" />
                                       </div>
                                       <span className="font-medium">{format(new Date(post.practiceTime), "EEE, MMM d 'at' h:mm a")}</span>
                                     </div>
                                     {post.practiceLocation && (
-                                      <div className="flex items-center gap-2 text-blue-300/80">
+                                      <div className={`flex items-center gap-2 ${post.postType === "workout" ? "text-purple-300/80" : "text-blue-300/80"}`}>
                                         <MapPin className="w-4 h-4" />
                                         <span>{post.practiceLocation}</span>
                                       </div>
