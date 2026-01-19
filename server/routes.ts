@@ -3024,10 +3024,7 @@ Respond in this exact JSON format:
       }
 
       if (team.createdBy !== input.sessionId) {
-        const member = await storage.getTeamMember(teamId, input.sessionId);
-        if (!member || member.role !== 'admin') {
-          return res.status(403).json({ message: 'Only the team leader can update the profile picture' });
-        }
+        return res.status(403).json({ message: 'Only the team leader can update the profile picture' });
       }
 
       const updatedTeam = await storage.updateTeam(teamId, { profilePicture: input.profilePicture });

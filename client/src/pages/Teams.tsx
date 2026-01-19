@@ -7,10 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Plus, LogIn, Copy, Check, Crown } from "lucide-react";
+import { Users, Plus, LogIn, Copy, Check, Crown, Camera } from "lucide-react";
 import { TeamBoard } from "@/components/TeamBoard";
 import type { Team } from "@shared/schema";
+import { useUpload } from "@/hooks/use-upload";
 
 function getSessionId(): string {
   let sessionId = localStorage.getItem("caliber_session_id");
@@ -118,6 +120,46 @@ export default function Teams() {
     navigator.clipboard.writeText(code);
     setCopiedCode(code);
     setTimeout(() => setCopiedCode(null), 2000);
+  };
+
+  const { uploadFile, isUploading } = useUpload({
+    onSuccess: async (response) => {
+      if (uploadingTeamId && response.objectPath) {
+        try {
+          await apiRequest("PATCH", `/api/teams/${uploadingTeamId}/profile-picture`, {
+            sessionId,
+            profilePicture: response.objectPath,
+          });
+          queryClient.invalidateQueries({ queryKey: ["/api/my-teams"] });
+          toast({
+            title: "Profile Picture Updated",
+            description: "Team profile picture has been changed",
+          });
+        } catch (err) {
+          toast({
+            title: "Error",
+            description: "Failed to save profile picture",
+            variant: "destructive",
+          });
+        }
+        setUploadingTeamId(null);
+      }
+    },
+    onError: () => {
+      toast({
+        title: "Upload Failed",
+        description: "Failed to upload image",
+        variant: "destructive",
+      });
+      setUploadingTeamId(null);
+    },
+  });
+
+  const [uploadingTeamId, setUploadingTeamId] = useState<number | null>(null);
+
+  const handleTeamPictureUpload = (teamId: number, file: File) => {
+    setUploadingTeamId(teamId);
+    uploadFile(file);
   };
 
   if (selectedTeam) {
@@ -293,22 +335,71 @@ export default function Teams() {
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {myTeams.map((team) => (
-            <Card 
-              key={team.id} 
-              className="cursor-pointer hover-elevate transition-all group relative overflow-visible border-primary/10 hover:border-primary/30"
-              onClick={() => setSelectedTeam(team)}
-              data-testid={`card-team-${team.id}`}
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity" />
-              <CardHeader className="pb-2 relative">
-                <CardTitle className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                    <Users className="w-5 h-5 text-primary" />
-                  </div>
-                  <span className="group-hover:text-primary transition-colors">{team.name}</span>
-                </CardTitle>
-              </CardHeader>
+          {myTeams.map((team) => {
+            const isTeamLeader = team.createdBy === sessionId;
+            return (
+              <Card 
+                key={team.id} 
+                className="cursor-pointer hover-elevate transition-all group relative overflow-visible border-primary/10 hover:border-primary/30"
+                onClick={() => setSelectedTeam(team)}
+                data-testid={`card-team-${team.id}`}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity" />
+                <CardHeader className="pb-2 relative">
+                  <CardTitle className="flex items-center gap-3">
+                    <div className="relative">
+                      <Avatar className="w-10 h-10 rounded-lg border border-primary/20">
+                        {team.profilePicture ? (
+                          <AvatarImage 
+                            src={team.profilePicture.startsWith('http') 
+                              ? team.profilePicture 
+                              : team.profilePicture.startsWith('/objects') 
+                                ? team.profilePicture 
+                                : `/objects${team.profilePicture.startsWith('/') ? '' : '/'}${team.profilePicture}`} 
+                            alt={team.name} 
+                          />
+                        ) : null}
+                        <AvatarFallback className="rounded-lg bg-gradient-to-br from-primary/20 to-primary/5">
+                          <Users className="w-5 h-5 text-primary" />
+                        </AvatarFallback>
+                      </Avatar>
+                      {isTeamLeader && (
+                        <label 
+                          className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center cursor-pointer hover-elevate"
+                          onClick={(e) => e.stopPropagation()}
+                          data-testid={`label-upload-team-picture-${team.id}`}
+                        >
+                          <Camera className="w-3 h-3 text-white" />
+                          <input
+                            type="file"
+                            accept="image/png,image/jpeg,image/gif,image/webp"
+                            className="hidden"
+                            data-testid={`input-upload-team-picture-${team.id}`}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                if (file.size > 5 * 1024 * 1024) {
+                                  toast({
+                                    title: "File Too Large",
+                                    description: "Please choose an image under 5MB",
+                                    variant: "destructive",
+                                  });
+                                  return;
+                                }
+                                handleTeamPictureUpload(team.id, file);
+                              }
+                            }}
+                            disabled={isUploading && uploadingTeamId === team.id}
+                          />
+                        </label>
+                      )}
+                    </div>
+                    <span className="group-hover:text-primary transition-colors">{team.name}</span>
+                    {isTeamLeader && (
+                      <Crown className="w-4 h-4 text-amber-500" />
+                    )}
+                  </CardTitle>
+                </CardHeader>
               <CardContent className="relative">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -345,7 +436,8 @@ export default function Teams() {
                 </div>
               </CardContent>
             </Card>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
