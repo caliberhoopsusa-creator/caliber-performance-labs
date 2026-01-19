@@ -6,7 +6,8 @@ import {
   activityStreaks,
   shots, gameNotes, practices, practiceAttendance, drills, drillScores, lineups, lineupStats,
   opponents, alerts, coachGoals, drillRecommendations,
-  follows, notifications, highlightClips, workouts, accolades, goalShares, scheduleEvents, liveGameSessions, liveGameEvents, shareAssets,
+  follows, notifications, highlightClips, workouts, accolades, goalShares, scheduleEvents, liveGameSessions, liveGameEvents, shareAssets, endorsements, headToHeadChallenges,
+  dmThreads, dmParticipants, dmMessages,
   type Player, type InsertPlayer,
   type Game, type InsertGame,
   type UpdateGameRequest,
@@ -55,7 +56,12 @@ import {
   type ScheduleEvent, type InsertScheduleEvent,
   type LiveGameSession, type InsertLiveGameSession,
   type LiveGameEvent, type InsertLiveGameEvent,
-  type ShareAsset, type InsertShareAsset
+  type ShareAsset, type InsertShareAsset,
+  type Endorsement, type InsertEndorsement,
+  type HeadToHeadChallenge, type InsertHeadToHeadChallenge,
+  type DmThread, type InsertDmThread,
+  type DmParticipant, type InsertDmParticipant,
+  type DmMessage, type InsertDmMessage
 } from "@shared/schema";
 import { eq, desc, and, count, gte, lte, sql, or } from "drizzle-orm";
 
@@ -108,6 +114,19 @@ export interface IStorage {
   getGameComments(gameId: number): Promise<Comment[]>;
   deleteComment(id: number): Promise<void>;
   getComment(id: number): Promise<Comment | undefined>;
+
+  // Endorsements
+  createEndorsement(endorsement: InsertEndorsement): Promise<Endorsement>;
+  getPlayerEndorsements(playerId: number): Promise<Endorsement[]>;
+  getEndorsement(id: number): Promise<Endorsement | undefined>;
+  deleteEndorsement(id: number): Promise<void>;
+
+  // Head-to-Head Challenges
+  createHeadToHeadChallenge(challenge: InsertHeadToHeadChallenge): Promise<HeadToHeadChallenge>;
+  getPlayerChallenges(playerId: number): Promise<HeadToHeadChallenge[]>;
+  getPendingChallenges(playerId: number): Promise<HeadToHeadChallenge[]>;
+  updateChallengeStatus(id: number, status: string, winnerId?: number): Promise<HeadToHeadChallenge>;
+  getHeadToHeadChallenge(id: number): Promise<HeadToHeadChallenge | undefined>;
 
   // Challenges
   createChallenge(challenge: InsertChallenge): Promise<Challenge>;
@@ -361,6 +380,16 @@ export interface IStorage {
   createShareAsset(asset: InsertShareAsset): Promise<ShareAsset>;
   getPlayerShareAssets(playerId: number): Promise<ShareAsset[]>;
   incrementShareCount(id: number): Promise<void>;
+
+  // Direct Messages
+  createDmThread(): Promise<DmThread>;
+  addDmParticipant(participant: InsertDmParticipant): Promise<DmParticipant>;
+  createDmMessage(message: InsertDmMessage): Promise<DmMessage>;
+  getUserDmThreads(userId: string): Promise<DmThread[]>;
+  getThreadMessages(threadId: number): Promise<DmMessage[]>;
+  getOrCreateThread(userId1: string, playerId1: number | null, userId2: string, playerId2: number | null): Promise<DmThread>;
+  markMessagesAsRead(threadId: number, userId: string): Promise<void>;
+  getThreadParticipants(threadId: number): Promise<DmParticipant[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -591,6 +620,72 @@ export class DatabaseStorage implements IStorage {
   async getComment(id: number): Promise<Comment | undefined> {
     const [comment] = await db.select().from(comments).where(eq(comments.id, id));
     return comment;
+  }
+
+  async createEndorsement(endorsement: InsertEndorsement): Promise<Endorsement> {
+    const [newEndorsement] = await db.insert(endorsements).values(endorsement).returning();
+    return newEndorsement;
+  }
+
+  async getPlayerEndorsements(playerId: number): Promise<Endorsement[]> {
+    return await db.select().from(endorsements).where(eq(endorsements.playerId, playerId)).orderBy(desc(endorsements.createdAt));
+  }
+
+  async getEndorsement(id: number): Promise<Endorsement | undefined> {
+    const [endorsement] = await db.select().from(endorsements).where(eq(endorsements.id, id));
+    return endorsement;
+  }
+
+  async deleteEndorsement(id: number): Promise<void> {
+    await db.delete(endorsements).where(eq(endorsements.id, id));
+  }
+
+  async createHeadToHeadChallenge(challenge: InsertHeadToHeadChallenge): Promise<HeadToHeadChallenge> {
+    const [newChallenge] = await db.insert(headToHeadChallenges).values(challenge).returning();
+    return newChallenge;
+  }
+
+  async getPlayerChallenges(playerId: number): Promise<HeadToHeadChallenge[]> {
+    return await db
+      .select()
+      .from(headToHeadChallenges)
+      .where(or(
+        eq(headToHeadChallenges.challengerPlayerId, playerId),
+        eq(headToHeadChallenges.opponentPlayerId, playerId)
+      ))
+      .orderBy(desc(headToHeadChallenges.createdAt));
+  }
+
+  async getPendingChallenges(playerId: number): Promise<HeadToHeadChallenge[]> {
+    return await db
+      .select()
+      .from(headToHeadChallenges)
+      .where(and(
+        eq(headToHeadChallenges.opponentPlayerId, playerId),
+        eq(headToHeadChallenges.status, 'pending')
+      ))
+      .orderBy(desc(headToHeadChallenges.createdAt));
+  }
+
+  async updateChallengeStatus(id: number, status: string, winnerId?: number): Promise<HeadToHeadChallenge> {
+    const updateData: any = {
+      status,
+      resolvedAt: new Date(),
+    };
+    if (winnerId !== undefined) {
+      updateData.winnerId = winnerId;
+    }
+    const [updated] = await db
+      .update(headToHeadChallenges)
+      .set(updateData)
+      .where(eq(headToHeadChallenges.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getHeadToHeadChallenge(id: number): Promise<HeadToHeadChallenge | undefined> {
+    const [challenge] = await db.select().from(headToHeadChallenges).where(eq(headToHeadChallenges.id, id));
+    return challenge;
   }
 
   async createChallenge(challenge: InsertChallenge): Promise<Challenge> {
@@ -1830,6 +1925,75 @@ export class DatabaseStorage implements IStorage {
 
   async incrementShareCount(id: number): Promise<void> {
     await db.update(shareAssets).set({ sharedCount: sql`${shareAssets.sharedCount} + 1` }).where(eq(shareAssets.id, id));
+  }
+
+  // Direct Messages
+  async createDmThread(): Promise<DmThread> {
+    const [newThread] = await db.insert(dmThreads).values({}).returning();
+    return newThread;
+  }
+
+  async addDmParticipant(participant: InsertDmParticipant): Promise<DmParticipant> {
+    const [newParticipant] = await db.insert(dmParticipants).values(participant).returning();
+    return newParticipant;
+  }
+
+  async createDmMessage(message: InsertDmMessage): Promise<DmMessage> {
+    const [newMessage] = await db.insert(dmMessages).values(message).returning();
+    return newMessage;
+  }
+
+  async getUserDmThreads(userId: string): Promise<DmThread[]> {
+    const threads = await db.select({ thread: dmThreads }).from(dmThreads)
+      .innerJoin(dmParticipants, eq(dmParticipants.threadId, dmThreads.id))
+      .where(eq(dmParticipants.userId, userId))
+      .orderBy(desc(dmThreads.updatedAt));
+    
+    return threads.map(t => t.thread);
+  }
+
+  async getThreadMessages(threadId: number): Promise<DmMessage[]> {
+    return await db.select().from(dmMessages)
+      .where(eq(dmMessages.threadId, threadId))
+      .orderBy(desc(dmMessages.createdAt));
+  }
+
+  async getOrCreateThread(userId1: string, playerId1: number | null, userId2: string, playerId2: number | null): Promise<DmThread> {
+    // Find existing thread
+    const existingThreads = await db.select({ threadId: dmParticipants.threadId }).from(dmParticipants)
+      .where(eq(dmParticipants.userId, userId1));
+    
+    for (const { threadId } of existingThreads) {
+      const otherParticipant = await db.select().from(dmParticipants)
+        .where(and(eq(dmParticipants.threadId, threadId), eq(dmParticipants.userId, userId2)));
+      
+      if (otherParticipant.length > 0) {
+        const [thread] = await db.select().from(dmThreads).where(eq(dmThreads.id, threadId));
+        return thread;
+      }
+    }
+
+    // Create new thread
+    const thread = await this.createDmThread();
+    await this.addDmParticipant({ threadId: thread.id, userId: userId1, playerId: playerId1 });
+    await this.addDmParticipant({ threadId: thread.id, userId: userId2, playerId: playerId2 });
+    
+    return thread;
+  }
+
+  async markMessagesAsRead(threadId: number, userId: string): Promise<void> {
+    await db.update(dmMessages)
+      .set({ isRead: true })
+      .where(and(eq(dmMessages.threadId, threadId), eq(dmMessages.senderUserId, userId)));
+    
+    await db.update(dmParticipants)
+      .set({ lastReadAt: new Date() })
+      .where(and(eq(dmParticipants.threadId, threadId), eq(dmParticipants.userId, userId)));
+  }
+
+  async getThreadParticipants(threadId: number): Promise<DmParticipant[]> {
+    return await db.select().from(dmParticipants)
+      .where(eq(dmParticipants.threadId, threadId));
   }
 }
 

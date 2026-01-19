@@ -960,8 +960,157 @@ export const shareAssets = pgTable("share_assets", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// === PLAYER ENDORSEMENTS (Coach endorses players) ===
+export const endorsements = pgTable("endorsements", {
+  id: serial("id").primaryKey(),
+  coachUserId: text("coach_user_id").notNull(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  skills: text("skills"), // JSON array of skills endorsed
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// === STORY TAGS (Tag players in stories) ===
+export const storyTags = pgTable("story_tags", {
+  id: serial("id").primaryKey(),
+  storyId: integer("story_id").notNull().references(() => playerStories.id, { onDelete: "cascade" }),
+  taggedPlayerId: integer("tagged_player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// === HEAD-TO-HEAD CHALLENGES ===
+export const headToHeadChallenges = pgTable("head_to_head_challenges", {
+  id: serial("id").primaryKey(),
+  challengerPlayerId: integer("challenger_player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  opponentPlayerId: integer("opponent_player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  metric: text("metric").notNull(), // 'points', 'assists', 'rebounds', 'steals', 'blocks', '3pm'
+  targetValue: integer("target_value"), // Optional target to beat
+  challengerGameId: integer("challenger_game_id").references(() => games.id, { onDelete: "set null" }),
+  opponentGameId: integer("opponent_game_id").references(() => games.id, { onDelete: "set null" }),
+  status: text("status").notNull().default("pending"), // 'pending', 'accepted', 'completed', 'declined', 'expired'
+  winnerId: integer("winner_id").references(() => players.id, { onDelete: "set null" }),
+  expiresAt: timestamp("expires_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  resolvedAt: timestamp("resolved_at"),
+});
+
+// === TRAINING GROUPS ===
+export const trainingGroups = pgTable("training_groups", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  ownerPlayerId: integer("owner_player_id").references(() => players.id, { onDelete: "cascade" }),
+  ownerUserId: text("owner_user_id"),
+  isPublic: boolean("is_public").default(false).notNull(),
+  maxMembers: integer("max_members").default(20),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const trainingGroupMembers = pgTable("training_group_members", {
+  id: serial("id").primaryKey(),
+  groupId: integer("group_id").notNull().references(() => trainingGroups.id, { onDelete: "cascade" }),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  role: text("role").notNull().default("member"), // 'owner', 'admin', 'member'
+  joinedAt: timestamp("joined_at").defaultNow(),
+});
+
+// === DIRECT MESSAGES ===
+export const dmThreads = pgTable("dm_threads", {
+  id: serial("id").primaryKey(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const dmParticipants = pgTable("dm_participants", {
+  id: serial("id").primaryKey(),
+  threadId: integer("thread_id").notNull().references(() => dmThreads.id, { onDelete: "cascade" }),
+  userId: text("user_id"),
+  playerId: integer("player_id").references(() => players.id, { onDelete: "cascade" }),
+  lastReadAt: timestamp("last_read_at"),
+  joinedAt: timestamp("joined_at").defaultNow(),
+});
+
+export const dmMessages = pgTable("dm_messages", {
+  id: serial("id").primaryKey(),
+  threadId: integer("thread_id").notNull().references(() => dmThreads.id, { onDelete: "cascade" }),
+  senderUserId: text("sender_user_id"),
+  senderPlayerId: integer("sender_player_id").references(() => players.id, { onDelete: "set null" }),
+  content: text("content").notNull(),
+  isRead: boolean("is_read").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// === MENTORSHIP ===
+export const mentorshipProfiles = pgTable("mentorship_profiles", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  role: text("role").notNull(), // 'mentor', 'mentee', 'both'
+  bio: text("bio"),
+  focusAreas: text("focus_areas"), // JSON array: 'shooting', 'defense', 'leadership', etc.
+  yearsExperience: integer("years_experience"),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const mentorshipRequests = pgTable("mentorship_requests", {
+  id: serial("id").primaryKey(),
+  requesterPlayerId: integer("requester_player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  mentorPlayerId: integer("mentor_player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  message: text("message"),
+  status: text("status").notNull().default("pending"), // 'pending', 'accepted', 'declined'
+  createdAt: timestamp("created_at").defaultNow(),
+  respondedAt: timestamp("responded_at"),
+});
+
+// === LIVE GAME SPECTATORS ===
+export const liveGameSpectators = pgTable("live_game_spectators", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").notNull().references(() => liveGameSessions.id, { onDelete: "cascade" }),
+  viewerUserId: text("viewer_user_id"),
+  viewerPlayerId: integer("viewer_player_id").references(() => players.id, { onDelete: "cascade" }),
+  joinedAt: timestamp("joined_at").defaultNow(),
+  leftAt: timestamp("left_at"),
+});
+
+// === RECRUIT BOARD (Coach scouting) ===
+export const recruitPosts = pgTable("recruit_posts", {
+  id: serial("id").primaryKey(),
+  coachUserId: text("coach_user_id").notNull(),
+  playerId: integer("player_id").references(() => players.id, { onDelete: "set null" }),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  positionNeeds: text("position_needs"), // JSON array: 'Guard', 'Wing', 'Big'
+  level: text("level"), // 'high_school', 'college', 'pro'
+  location: text("location"),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const recruitInterests = pgTable("recruit_interests", {
+  id: serial("id").primaryKey(),
+  postId: integer("post_id").notNull().references(() => recruitPosts.id, { onDelete: "cascade" }),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  message: text("message"),
+  status: text("status").notNull().default("pending"), // 'pending', 'viewed', 'contacted'
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // === INSERT SCHEMAS FOR NEW TABLES ===
 export const insertFollowSchema = createInsertSchema(follows).omit({ id: true, createdAt: true });
+export const insertEndorsementSchema = createInsertSchema(endorsements).omit({ id: true, createdAt: true });
+export const insertStoryTagSchema = createInsertSchema(storyTags).omit({ id: true, createdAt: true });
+export const insertHeadToHeadChallengeSchema = createInsertSchema(headToHeadChallenges).omit({ id: true, createdAt: true });
+export const insertTrainingGroupSchema = createInsertSchema(trainingGroups).omit({ id: true, createdAt: true });
+export const insertTrainingGroupMemberSchema = createInsertSchema(trainingGroupMembers).omit({ id: true, joinedAt: true });
+export const insertDmThreadSchema = createInsertSchema(dmThreads).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertDmParticipantSchema = createInsertSchema(dmParticipants).omit({ id: true, joinedAt: true });
+export const insertDmMessageSchema = createInsertSchema(dmMessages).omit({ id: true, createdAt: true });
+export const insertMentorshipProfileSchema = createInsertSchema(mentorshipProfiles).omit({ id: true, createdAt: true });
+export const insertMentorshipRequestSchema = createInsertSchema(mentorshipRequests).omit({ id: true, createdAt: true });
+export const insertLiveGameSpectatorSchema = createInsertSchema(liveGameSpectators).omit({ id: true, joinedAt: true });
+export const insertRecruitPostSchema = createInsertSchema(recruitPosts).omit({ id: true, createdAt: true });
+export const insertRecruitInterestSchema = createInsertSchema(recruitInterests).omit({ id: true, createdAt: true });
 export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true });
 export const insertHighlightClipSchema = createInsertSchema(highlightClips).omit({ id: true, createdAt: true, viewCount: true });
 export const insertWorkoutSchema = createInsertSchema(workouts).omit({ id: true, createdAt: true });
@@ -1003,6 +1152,45 @@ export type InsertLiveGameEvent = z.infer<typeof insertLiveGameEventSchema>;
 export type ShareAsset = typeof shareAssets.$inferSelect;
 export type InsertShareAsset = z.infer<typeof insertShareAssetSchema>;
 
+export type Endorsement = typeof endorsements.$inferSelect;
+export type InsertEndorsement = z.infer<typeof insertEndorsementSchema>;
+
+export type StoryTag = typeof storyTags.$inferSelect;
+export type InsertStoryTag = z.infer<typeof insertStoryTagSchema>;
+
+export type HeadToHeadChallenge = typeof headToHeadChallenges.$inferSelect;
+export type InsertHeadToHeadChallenge = z.infer<typeof insertHeadToHeadChallengeSchema>;
+
+export type TrainingGroup = typeof trainingGroups.$inferSelect;
+export type InsertTrainingGroup = z.infer<typeof insertTrainingGroupSchema>;
+
+export type TrainingGroupMember = typeof trainingGroupMembers.$inferSelect;
+export type InsertTrainingGroupMember = z.infer<typeof insertTrainingGroupMemberSchema>;
+
+export type DmThread = typeof dmThreads.$inferSelect;
+export type InsertDmThread = z.infer<typeof insertDmThreadSchema>;
+
+export type DmParticipant = typeof dmParticipants.$inferSelect;
+export type InsertDmParticipant = z.infer<typeof insertDmParticipantSchema>;
+
+export type DmMessage = typeof dmMessages.$inferSelect;
+export type InsertDmMessage = z.infer<typeof insertDmMessageSchema>;
+
+export type MentorshipProfile = typeof mentorshipProfiles.$inferSelect;
+export type InsertMentorshipProfile = z.infer<typeof insertMentorshipProfileSchema>;
+
+export type MentorshipRequest = typeof mentorshipRequests.$inferSelect;
+export type InsertMentorshipRequest = z.infer<typeof insertMentorshipRequestSchema>;
+
+export type LiveGameSpectator = typeof liveGameSpectators.$inferSelect;
+export type InsertLiveGameSpectator = z.infer<typeof insertLiveGameSpectatorSchema>;
+
+export type RecruitPost = typeof recruitPosts.$inferSelect;
+export type InsertRecruitPost = z.infer<typeof insertRecruitPostSchema>;
+
+export type RecruitInterest = typeof recruitInterests.$inferSelect;
+export type InsertRecruitInterest = z.infer<typeof insertRecruitInterestSchema>;
+
 // === CONSTANTS FOR NEW FEATURES ===
 export const NOTIFICATION_TYPES = {
   streak_reminder: { name: "Streak Reminder", description: "Reminder to maintain your streak" },
@@ -1011,6 +1199,7 @@ export const NOTIFICATION_TYPES = {
   new_follower: { name: "New Follower", description: "Someone started following you" },
   game_logged: { name: "Game Logged", description: "A new game was logged" },
   challenge_update: { name: "Challenge Update", description: "Challenge progress update" },
+  endorsement_received: { name: "Endorsement", description: "You received a new endorsement from a coach" },
 } as const;
 
 export const WORKOUT_TYPES = {

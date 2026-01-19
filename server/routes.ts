@@ -3,7 +3,7 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema } from "@shared/schema";
+import { players, games, headToHeadChallenges, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { GoogleGenAI } from "@google/genai";
 import multer from "multer";
@@ -1729,6 +1729,96 @@ export async function registerRoutes(
     res.status(204).send();
   });
 
+  // --- Endorsements ---
+
+  app.post('/api/endorsements', requiresCoach, async (req: any, res) => {
+    try {
+      const coachUserId = req.user.claims.sub;
+      const { playerId, title, message, skills } = req.body;
+
+      if (!playerId || !title || !message) {
+        return res.status(400).json({ message: 'playerId, title, and message are required' });
+      }
+
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: 'Player not found' });
+      }
+
+      const endorsement = await storage.createEndorsement({
+        coachUserId,
+        playerId,
+        title,
+        message,
+        skills: skills ? JSON.stringify(skills) : null,
+      });
+
+      // Create notification for player
+      if (player.userId) {
+        const coachName = req.caliberUser?.displayName || 'A Coach';
+        await storage.createNotification({
+          userId: player.userId,
+          notificationType: 'endorsement_received',
+          title: 'New Endorsement',
+          message: `${coachName} endorsed you: ${title}`,
+          relatedId: endorsement.id,
+          isRead: false,
+        });
+      }
+
+      res.status(201).json(endorsement);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      console.error('Error creating endorsement:', err);
+      res.status(500).json({ message: 'Failed to create endorsement' });
+    }
+  });
+
+  app.get('/api/players/:playerId/endorsements', async (req, res) => {
+    try {
+      const playerId = Number(req.params.playerId);
+
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: 'Player not found' });
+      }
+
+      const endorsements = await storage.getPlayerEndorsements(playerId);
+      res.json(endorsements);
+    } catch (err) {
+      console.error('Error fetching endorsements:', err);
+      res.status(500).json({ message: 'Failed to fetch endorsements' });
+    }
+  });
+
+  app.delete('/api/endorsements/:id', requiresCoach, async (req: any, res) => {
+    try {
+      const endorsementId = Number(req.params.id);
+      const coachUserId = req.user.claims.sub;
+
+      const endorsement = await storage.getEndorsement(endorsementId);
+
+      if (!endorsement) {
+        return res.status(404).json({ message: 'Endorsement not found' });
+      }
+
+      if (endorsement.coachUserId !== coachUserId) {
+        return res.status(403).json({ message: 'You can only delete your own endorsements' });
+      }
+
+      await storage.deleteEndorsement(endorsementId);
+      res.status(204).send();
+    } catch (err) {
+      console.error('Error deleting endorsement:', err);
+      res.status(500).json({ message: 'Failed to delete endorsement' });
+    }
+  });
+
   app.get(api.games.get.path, async (req, res) => {
     const game = await storage.getGame(Number(req.params.id));
     if (!game) return res.status(404).json({ message: "Game not found" });
@@ -2480,6 +2570,396 @@ Respond in this exact JSON format:
       }
       console.error('Create challenge error:', err);
       res.status(500).json({ message: 'Error creating challenge' });
+    }
+  });
+
+  // --- Head-to-Head Challenges ---
+
+  app.post('/api/challenges/head-to-head', isAuthenticated, async (req: any, res) => {
+    try {
+      const createH2HSchema = z.object({
+        challengerPlayerId: z.number().min(1),
+        opponentPlayerId: z.number().min(1),
+        metric: z.string().min(1),
+        targetValue: z.number().optional(),
+      });
+      
+      const input = createH2HSchema.parse(req.body);
+      
+      // Validate both players exist
+      const challenger = await storage.getPlayer(input.challengerPlayerId);
+      const opponent = await storage.getPlayer(input.opponentPlayerId);
+      
+      if (!challenger || !opponent) {
+        return res.status(404).json({ message: 'One or both players not found' });
+      }
+      
+      if (input.challengerPlayerId === input.opponentPlayerId) {
+        return res.status(400).json({ message: 'Cannot challenge yourself' });
+      }
+      
+      // Set expiration to 30 days from now
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 30);
+      
+      const challenge = await storage.createHeadToHeadChallenge({
+        challengerPlayerId: input.challengerPlayerId,
+        opponentPlayerId: input.opponentPlayerId,
+        metric: input.metric,
+        targetValue: input.targetValue,
+        status: 'pending',
+        expiresAt,
+      });
+      
+      // Create notification for opponent
+      await storage.createNotification({
+        playerId: input.opponentPlayerId,
+        notificationType: 'challenge_invite',
+        title: `${challenger.name} challenged you!`,
+        message: `${challenger.name} challenged you to beat their ${input.metric} stat. Accept to compete!`,
+        relatedId: challenge.id,
+        isRead: false,
+      });
+      
+      res.status(201).json(challenge);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      console.error('Create head-to-head challenge error:', err);
+      res.status(500).json({ message: 'Error creating challenge' });
+    }
+  });
+
+  app.get('/api/challenges/head-to-head', isAuthenticated, async (req: any, res) => {
+    try {
+      const playerId = Number(req.query.playerId);
+      if (!playerId) {
+        return res.status(400).json({ message: 'playerId query parameter required' });
+      }
+      
+      const challenges = await storage.getPlayerChallenges(playerId);
+      res.json(challenges);
+    } catch (err) {
+      console.error('Get player head-to-head challenges error:', err);
+      res.status(500).json({ message: 'Error fetching challenges' });
+    }
+  });
+
+  app.get('/api/challenges/head-to-head/pending', isAuthenticated, async (req: any, res) => {
+    try {
+      const playerId = Number(req.query.playerId);
+      if (!playerId) {
+        return res.status(400).json({ message: 'playerId query parameter required' });
+      }
+      
+      const challenges = await storage.getPendingChallenges(playerId);
+      res.json(challenges);
+    } catch (err) {
+      console.error('Get pending challenges error:', err);
+      res.status(500).json({ message: 'Error fetching pending challenges' });
+    }
+  });
+
+  app.post('/api/challenges/head-to-head/:id/accept', isAuthenticated, async (req: any, res) => {
+    try {
+      const challengeId = Number(req.params.id);
+      const challenge = await storage.getHeadToHeadChallenge(challengeId);
+      
+      if (!challenge) {
+        return res.status(404).json({ message: 'Challenge not found' });
+      }
+      
+      if (challenge.status !== 'pending') {
+        return res.status(400).json({ message: 'Challenge is no longer pending' });
+      }
+      
+      const updated = await storage.updateChallengeStatus(challengeId, 'accepted');
+      
+      // Notify challenger
+      const opponent = await storage.getPlayer(challenge.opponentPlayerId);
+      const challenger = await storage.getPlayer(challenge.challengerPlayerId);
+      if (opponent && challenger) {
+        await storage.createNotification({
+          playerId: challenge.challengerPlayerId,
+          notificationType: 'challenge_accept',
+          title: `${opponent.name} accepted your challenge!`,
+          message: `${opponent.name} accepted your ${challenge.metric} challenge. The competition is on!`,
+          relatedId: challengeId,
+          isRead: false,
+        });
+      }
+      
+      res.json(updated);
+    } catch (err) {
+      console.error('Accept challenge error:', err);
+      res.status(500).json({ message: 'Error accepting challenge' });
+    }
+  });
+
+  app.post('/api/challenges/head-to-head/:id/decline', isAuthenticated, async (req: any, res) => {
+    try {
+      const challengeId = Number(req.params.id);
+      const challenge = await storage.getHeadToHeadChallenge(challengeId);
+      
+      if (!challenge) {
+        return res.status(404).json({ message: 'Challenge not found' });
+      }
+      
+      if (challenge.status !== 'pending') {
+        return res.status(400).json({ message: 'Challenge is no longer pending' });
+      }
+      
+      const updated = await storage.updateChallengeStatus(challengeId, 'declined');
+      
+      // Notify challenger
+      const opponent = await storage.getPlayer(challenge.opponentPlayerId);
+      if (opponent) {
+        await storage.createNotification({
+          playerId: challenge.challengerPlayerId,
+          notificationType: 'challenge_decline',
+          title: `${opponent.name} declined your challenge`,
+          message: `${opponent.name} has declined your challenge.`,
+          relatedId: challengeId,
+          isRead: false,
+        });
+      }
+      
+      res.json(updated);
+    } catch (err) {
+      console.error('Decline challenge error:', err);
+      res.status(500).json({ message: 'Error declining challenge' });
+    }
+  });
+
+  app.post('/api/challenges/head-to-head/:id/submit', isAuthenticated, async (req: any, res) => {
+    try {
+      const challengeId = Number(req.params.id);
+      const submitSchema = z.object({
+        playerId: z.number().min(1),
+        gameId: z.number().min(1),
+      });
+      
+      const input = submitSchema.parse(req.body);
+      const challenge = await storage.getHeadToHeadChallenge(challengeId);
+      
+      if (!challenge) {
+        return res.status(404).json({ message: 'Challenge not found' });
+      }
+      
+      if (challenge.status !== 'accepted') {
+        return res.status(400).json({ message: 'Challenge must be accepted to submit results' });
+      }
+      
+      // Get the game to verify it exists
+      const game = await storage.getGame(input.gameId);
+      if (!game) {
+        return res.status(404).json({ message: 'Game not found' });
+      }
+      
+      // Determine which player submitted and where to store the game ID
+      let updatedChallenge;
+      if (input.playerId === challenge.challengerPlayerId) {
+        // Update challenger's game ID
+        const [updated] = await db
+          .update(headToHeadChallenges)
+          .set({ challengerGameId: input.gameId })
+          .where(eq(headToHeadChallenges.id, challengeId))
+          .returning();
+        updatedChallenge = updated;
+        
+        // If opponent also submitted, determine winner
+        if (challenge.opponentGameId) {
+          const opponentGame = await storage.getGame(challenge.opponentGameId);
+          if (!opponentGame) {
+            return res.status(404).json({ message: 'Opponent game not found' });
+          }
+          
+          const metricValue = game[challenge.metric as keyof typeof game] as number | null;
+          const opponentMetricValue = opponentGame[challenge.metric as keyof typeof opponentGame] as number | null;
+          
+          if (metricValue === null || metricValue === undefined || opponentMetricValue === null || opponentMetricValue === undefined) {
+            return res.status(400).json({ message: `Metric ${challenge.metric} not found in one or both games` });
+          }
+          
+          let winnerId = undefined;
+          if (metricValue > opponentMetricValue) {
+            winnerId = challenge.challengerPlayerId;
+          } else if (opponentMetricValue > metricValue) {
+            winnerId = challenge.opponentPlayerId;
+          }
+          
+          const completed = await storage.updateChallengeStatus(challengeId, 'completed', winnerId);
+          
+          // Notify both players about result
+          const challenger = await storage.getPlayer(challenge.challengerPlayerId);
+          const opponent = await storage.getPlayer(challenge.opponentPlayerId);
+          
+          if (winnerId === challenge.challengerPlayerId && challenger && opponent) {
+            await storage.createNotification({
+              playerId: challenge.challengerPlayerId,
+              notificationType: 'challenge_result',
+              title: 'You won the challenge!',
+              message: `You defeated ${opponent.name} in the ${challenge.metric} challenge!`,
+              relatedId: challengeId,
+              isRead: false,
+            });
+            await storage.createNotification({
+              playerId: challenge.opponentPlayerId,
+              notificationType: 'challenge_result',
+              title: `${challenger.name} won the challenge`,
+              message: `${challenger.name} beat you ${metricValue} to ${opponentMetricValue} in ${challenge.metric}`,
+              relatedId: challengeId,
+              isRead: false,
+            });
+          } else if (winnerId === challenge.opponentPlayerId && challenger && opponent) {
+            await storage.createNotification({
+              playerId: challenge.opponentPlayerId,
+              notificationType: 'challenge_result',
+              title: 'You won the challenge!',
+              message: `You defeated ${challenger.name} in the ${challenge.metric} challenge!`,
+              relatedId: challengeId,
+              isRead: false,
+            });
+            await storage.createNotification({
+              playerId: challenge.challengerPlayerId,
+              notificationType: 'challenge_result',
+              title: `${opponent.name} won the challenge`,
+              message: `${opponent.name} beat you ${opponentMetricValue} to ${metricValue} in ${challenge.metric}`,
+              relatedId: challengeId,
+              isRead: false,
+            });
+          } else if (!winnerId && challenger && opponent) {
+            // Tie
+            await storage.createNotification({
+              playerId: challenge.challengerPlayerId,
+              notificationType: 'challenge_result',
+              title: 'Challenge ended in a tie!',
+              message: `You tied with ${opponent.name} at ${metricValue} ${challenge.metric}!`,
+              relatedId: challengeId,
+              isRead: false,
+            });
+            await storage.createNotification({
+              playerId: challenge.opponentPlayerId,
+              notificationType: 'challenge_result',
+              title: 'Challenge ended in a tie!',
+              message: `You tied with ${challenger.name} at ${metricValue} ${challenge.metric}!`,
+              relatedId: challengeId,
+              isRead: false,
+            });
+          }
+          
+          return res.json(completed);
+        }
+      } else if (input.playerId === challenge.opponentPlayerId) {
+        // Update opponent's game ID
+        const [updated] = await db
+          .update(headToHeadChallenges)
+          .set({ opponentGameId: input.gameId })
+          .where(eq(headToHeadChallenges.id, challengeId))
+          .returning();
+        updatedChallenge = updated;
+        
+        // If challenger also submitted, determine winner
+        if (challenge.challengerGameId) {
+          const challengerGame = await storage.getGame(challenge.challengerGameId);
+          if (!challengerGame) {
+            return res.status(404).json({ message: 'Challenger game not found' });
+          }
+          
+          const metricValue = game[challenge.metric as keyof typeof game] as number | null;
+          const challengerMetricValue = challengerGame[challenge.metric as keyof typeof challengerGame] as number | null;
+          
+          if (metricValue === null || metricValue === undefined || challengerMetricValue === null || challengerMetricValue === undefined) {
+            return res.status(400).json({ message: `Metric ${challenge.metric} not found in one or both games` });
+          }
+          
+          let winnerId = undefined;
+          if (metricValue > challengerMetricValue) {
+            winnerId = challenge.opponentPlayerId;
+          } else if (challengerMetricValue > metricValue) {
+            winnerId = challenge.challengerPlayerId;
+          }
+          
+          const completed = await storage.updateChallengeStatus(challengeId, 'completed', winnerId);
+          
+          // Notify both players about result
+          const challenger = await storage.getPlayer(challenge.challengerPlayerId);
+          const opponent = await storage.getPlayer(challenge.opponentPlayerId);
+          
+          if (winnerId === challenge.opponentPlayerId && challenger && opponent) {
+            await storage.createNotification({
+              playerId: challenge.opponentPlayerId,
+              notificationType: 'challenge_result',
+              title: 'You won the challenge!',
+              message: `You defeated ${challenger.name} in the ${challenge.metric} challenge!`,
+              relatedId: challengeId,
+              isRead: false,
+            });
+            await storage.createNotification({
+              playerId: challenge.challengerPlayerId,
+              notificationType: 'challenge_result',
+              title: `${opponent.name} won the challenge`,
+              message: `${opponent.name} beat you ${metricValue} to ${challengerMetricValue} in ${challenge.metric}`,
+              relatedId: challengeId,
+              isRead: false,
+            });
+          } else if (winnerId === challenge.challengerPlayerId && challenger && opponent) {
+            await storage.createNotification({
+              playerId: challenge.challengerPlayerId,
+              notificationType: 'challenge_result',
+              title: 'You won the challenge!',
+              message: `You defeated ${opponent.name} in the ${challenge.metric} challenge!`,
+              relatedId: challengeId,
+              isRead: false,
+            });
+            await storage.createNotification({
+              playerId: challenge.opponentPlayerId,
+              notificationType: 'challenge_result',
+              title: `${challenger.name} won the challenge`,
+              message: `${challenger.name} beat you ${challengerMetricValue} to ${metricValue} in ${challenge.metric}`,
+              relatedId: challengeId,
+              isRead: false,
+            });
+          } else if (!winnerId && challenger && opponent) {
+            // Tie
+            await storage.createNotification({
+              playerId: challenge.opponentPlayerId,
+              notificationType: 'challenge_result',
+              title: 'Challenge ended in a tie!',
+              message: `You tied with ${challenger.name} at ${metricValue} ${challenge.metric}!`,
+              relatedId: challengeId,
+              isRead: false,
+            });
+            await storage.createNotification({
+              playerId: challenge.challengerPlayerId,
+              notificationType: 'challenge_result',
+              title: 'Challenge ended in a tie!',
+              message: `You tied with ${opponent.name} at ${metricValue} ${challenge.metric}!`,
+              relatedId: challengeId,
+              isRead: false,
+            });
+          }
+          
+          return res.json(completed);
+        }
+      } else {
+        return res.status(403).json({ message: 'You are not part of this challenge' });
+      }
+      
+      res.json(updatedChallenge);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      console.error('Submit challenge result error:', err);
+      res.status(500).json({ message: 'Error submitting challenge result' });
     }
   });
 
@@ -5746,6 +6226,106 @@ Respond in this exact JSON format:
     } catch (error) {
       console.error('Error incrementing share count:', error);
       res.status(500).json({ message: "Failed to increment share count" });
+    }
+  });
+
+  // Direct Messages Routes
+  app.post('/api/messages/thread', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = (req as any).caliberUser;
+      const { recipientUserId, recipientPlayerId } = req.body;
+
+      if (!recipientUserId) {
+        return res.status(400).json({ message: "Recipient user ID is required" });
+      }
+
+      const thread = await storage.getOrCreateThread(
+        user.userId,
+        user.playerId || null,
+        recipientUserId,
+        recipientPlayerId || null
+      );
+
+      res.json(thread);
+    } catch (error) {
+      console.error('Error creating/getting thread:', error);
+      res.status(500).json({ message: "Failed to create or get thread" });
+    }
+  });
+
+  app.get('/api/messages/threads', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = (req as any).caliberUser;
+      const threads = await storage.getUserDmThreads(user.userId);
+      res.json(threads);
+    } catch (error) {
+      console.error('Error getting user threads:', error);
+      res.status(500).json({ message: "Failed to get message threads" });
+    }
+  });
+
+  app.get('/api/messages/threads/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const threadId = parseInt(req.params.id);
+      const messages = await storage.getThreadMessages(threadId);
+      res.json(messages);
+    } catch (error) {
+      console.error('Error getting thread messages:', error);
+      res.status(500).json({ message: "Failed to get thread messages" });
+    }
+  });
+
+  app.post('/api/messages/threads/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = (req as any).caliberUser;
+      const threadId = parseInt(req.params.id);
+      const { content } = req.body;
+
+      if (!content || content.trim() === '') {
+        return res.status(400).json({ message: "Message content is required" });
+      }
+
+      const message = await storage.createDmMessage({
+        threadId,
+        senderUserId: user.userId,
+        senderPlayerId: user.playerId || null,
+        content: content.trim(),
+        isRead: false
+      });
+
+      // Create notification for the recipient
+      const threadParticipants = await storage.getThreadParticipants(threadId);
+
+      for (const participant of threadParticipants) {
+        if (participant.userId !== user.userId && participant.playerId) {
+          await storage.createNotification({
+            playerId: participant.playerId,
+            notificationType: 'message',
+            title: 'New Message',
+            message: `You have a new message`,
+            relatedId: user.playerId || undefined,
+            isRead: false
+          });
+        }
+      }
+
+      res.json(message);
+    } catch (error) {
+      console.error('Error creating message:', error);
+      res.status(500).json({ message: "Failed to send message" });
+    }
+  });
+
+  app.post('/api/messages/threads/:id/read', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = (req as any).caliberUser;
+      const threadId = parseInt(req.params.id);
+
+      await storage.markMessagesAsRead(threadId, user.userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error marking messages as read:', error);
+      res.status(500).json({ message: "Failed to mark messages as read" });
     }
   });
 
