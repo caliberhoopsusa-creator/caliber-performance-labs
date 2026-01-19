@@ -3,7 +3,7 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, headToHeadChallenges, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema } from "@shared/schema";
+import { players, games, headToHeadChallenges, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { GoogleGenAI } from "@google/genai";
 import multer from "multer";
@@ -6286,6 +6286,124 @@ Respond in this exact JSON format:
   });
 
   // ========================================
+  // LIVE GAME SPECTATORS ROUTES
+  // ========================================
+
+  // Join as spectator - POST /api/live-games/:sessionId/spectate
+  app.post('/api/live-games/:sessionId/spectate', isAuthenticated, async (req: any, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      const session = await storage.getLiveGameSession(sessionId);
+      if (!session) {
+        return res.status(404).json({ message: "Game session not found" });
+      }
+
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      // Add spectator
+      const spectator = await storage.addLiveGameSpectator({
+        sessionId,
+        viewerUserId: user.userId,
+        viewerPlayerId: user.playerId || null,
+        leftAt: null,
+      });
+
+      // Create notification for the player being spectated
+      const player = await storage.getPlayer(session.playerId);
+      if (player && user.playerId !== session.playerId) {
+        const spectatorName = user.playerId ? (await storage.getPlayer(user.playerId))?.name || "Someone" : "A visitor";
+        await storage.createNotification({
+          playerId: session.playerId,
+          type: "game_spectating",
+          title: `${spectatorName} is watching your game!`,
+          message: `${spectatorName} joined to watch your live game`,
+          actionUrl: `/live-game/${sessionId}`,
+          isRead: false,
+        });
+      }
+
+      res.json(spectator);
+    } catch (error) {
+      console.error('Error joining spectator session:', error);
+      res.status(500).json({ message: "Failed to join spectator session" });
+    }
+  });
+
+  // Leave spectating - DELETE /api/live-games/:sessionId/spectate
+  app.delete('/api/live-games/:sessionId/spectate', isAuthenticated, async (req: any, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      await storage.removeLiveGameSpectator(sessionId, user.userId, user.playerId || null);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error leaving spectator session:', error);
+      res.status(500).json({ message: "Failed to leave spectator session" });
+    }
+  });
+
+  // Get spectators - GET /api/live-games/:sessionId/spectators
+  app.get('/api/live-games/:sessionId/spectators', async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      const spectators = await storage.getLiveGameSpectators(sessionId);
+      res.json(spectators);
+    } catch (error) {
+      console.error('Error getting spectators:', error);
+      res.status(500).json({ message: "Failed to get spectators" });
+    }
+  });
+
+  // Get spectator count - GET /api/live-games/:sessionId/spectator-count
+  app.get('/api/live-games/:sessionId/spectator-count', async (req, res) => {
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      const count = await storage.getSpectatorCount(sessionId);
+      res.json({ count });
+    } catch (error) {
+      console.error('Error getting spectator count:', error);
+      res.status(500).json({ message: "Failed to get spectator count" });
+    }
+  });
+
+  // Get sessions I'm spectating - GET /api/my-spectating
+  app.get('/api/my-spectating', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      const spectatorSessions = await storage.getActiveSpectatorSessions(user.userId, user.playerId || null);
+      
+      // Get the full session and game details for each spectating session
+      const sessionsWithDetails = await Promise.all(
+        spectatorSessions.map(async (spectator) => {
+          const session = await storage.getLiveGameSession(spectator.sessionId);
+          const player = session ? await storage.getPlayer(session.playerId) : null;
+          return {
+            spectator,
+            session,
+            player,
+          };
+        })
+      );
+
+      res.json(sessionsWithDetails);
+    } catch (error) {
+      console.error('Error getting spectating sessions:', error);
+      res.status(500).json({ message: "Failed to get spectating sessions" });
+    }
+  });
+
+  // ========================================
   // SHARE ASSETS ROUTES
   // ========================================
 
@@ -6881,6 +6999,247 @@ Respond in this exact JSON format:
     } catch (error) {
       console.error('Error fetching mentorship connections:', error);
       res.status(500).json({ message: "Failed to fetch mentorship connections" });
+    }
+  });
+
+  // === RECRUIT BOARD ROUTES ===
+
+  // POST /api/recruit-posts - Create post (coach only)
+  app.post('/api/recruit-posts', requiresCoach, async (req: any, res) => {
+    try {
+      const coachUserId = req.user.claims.sub;
+      const body = insertRecruitPostSchema.parse(req.body);
+      
+      const post = await storage.createRecruitPost({
+        ...body,
+        coachUserId
+      });
+      
+      res.json(post);
+    } catch (error: any) {
+      console.error('Error creating recruit post:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create recruit post" });
+    }
+  });
+
+  // GET /api/recruit-posts - Get all active posts with optional filters
+  app.get('/api/recruit-posts', async (req: any, res) => {
+    try {
+      const { level, location } = req.query;
+      const posts = await storage.getRecruitPosts({
+        level: level as string | undefined,
+        location: location as string | undefined
+      });
+      
+      res.json(posts);
+    } catch (error) {
+      console.error('Error fetching recruit posts:', error);
+      res.status(500).json({ message: "Failed to fetch recruit posts" });
+    }
+  });
+
+  // GET /api/recruit-posts/:id - Get specific post
+  app.get('/api/recruit-posts/:id', async (req: any, res) => {
+    try {
+      const postId = parseInt(req.params.id);
+      const post = await storage.getRecruitPost(postId);
+      
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      res.json(post);
+    } catch (error) {
+      console.error('Error fetching recruit post:', error);
+      res.status(500).json({ message: "Failed to fetch recruit post" });
+    }
+  });
+
+  // PUT /api/recruit-posts/:id - Update post (owner only)
+  app.put('/api/recruit-posts/:id', requiresCoach, async (req: any, res) => {
+    try {
+      const coachUserId = req.user.claims.sub;
+      const postId = parseInt(req.params.id);
+      const post = await storage.getRecruitPost(postId);
+      
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      if (post.coachUserId !== coachUserId) {
+        return res.status(403).json({ message: "Can only update your own posts" });
+      }
+      
+      const body = insertRecruitPostSchema.partial().parse(req.body);
+      const updated = await storage.updateRecruitPost(postId, body);
+      
+      res.json(updated);
+    } catch (error: any) {
+      console.error('Error updating recruit post:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update recruit post" });
+    }
+  });
+
+  // DELETE /api/recruit-posts/:id - Delete post (owner only)
+  app.delete('/api/recruit-posts/:id', requiresCoach, async (req: any, res) => {
+    try {
+      const coachUserId = req.user.claims.sub;
+      const postId = parseInt(req.params.id);
+      const post = await storage.getRecruitPost(postId);
+      
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      if (post.coachUserId !== coachUserId) {
+        return res.status(403).json({ message: "Can only delete your own posts" });
+      }
+      
+      await storage.deleteRecruitPost(postId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting recruit post:', error);
+      res.status(500).json({ message: "Failed to delete recruit post" });
+    }
+  });
+
+  // GET /api/my-recruit-posts - Get coach's own posts
+  app.get('/api/my-recruit-posts', requiresCoach, async (req: any, res) => {
+    try {
+      const coachUserId = req.user.claims.sub;
+      const posts = await storage.getCoachRecruitPosts(coachUserId);
+      
+      res.json(posts);
+    } catch (error) {
+      console.error('Error fetching coach recruit posts:', error);
+      res.status(500).json({ message: "Failed to fetch your recruit posts" });
+    }
+  });
+
+  // POST /api/recruit-posts/:id/interest - Express interest (player only)
+  app.post('/api/recruit-posts/:id/interest', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user || !user.playerId) {
+        return res.status(401).json({ message: "Player profile required" });
+      }
+      
+      const postId = parseInt(req.params.id);
+      const post = await storage.getRecruitPost(postId);
+      
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      const body = insertRecruitInterestSchema.parse({
+        ...req.body,
+        postId,
+        playerId: user.playerId
+      });
+      
+      const interest = await storage.createRecruitInterest(body);
+      
+      // Create notification for the coach
+      const coachPlayer = await storage.getPlayerByUserId(post.coachUserId);
+      const player = await storage.getPlayer(user.playerId);
+      
+      if (coachPlayer && player) {
+        await storage.createNotification({
+          playerId: coachPlayer.id,
+          type: 'recruit_interest',
+          title: 'New Recruit Interest',
+          message: `${player.name} is interested in your ${post.title} recruitment post`,
+          relatedId: postId
+        });
+      }
+      
+      res.json(interest);
+    } catch (error: any) {
+      console.error('Error creating recruit interest:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create recruit interest" });
+    }
+  });
+
+  // GET /api/recruit-posts/:id/interests - Get interests for post (post owner only)
+  app.get('/api/recruit-posts/:id/interests', requiresCoach, async (req: any, res) => {
+    try {
+      const coachUserId = req.user.claims.sub;
+      const postId = parseInt(req.params.id);
+      const post = await storage.getRecruitPost(postId);
+      
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      if (post.coachUserId !== coachUserId) {
+        return res.status(403).json({ message: "Can only view interests for your own posts" });
+      }
+      
+      const interests = await storage.getPostInterests(postId);
+      res.json(interests);
+    } catch (error) {
+      console.error('Error fetching post interests:', error);
+      res.status(500).json({ message: "Failed to fetch post interests" });
+    }
+  });
+
+  // GET /api/my-recruit-interests - Get player's expressed interests
+  app.get('/api/my-recruit-interests', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user || !user.playerId) {
+        return res.status(401).json({ message: "Player profile required" });
+      }
+      
+      const interests = await storage.getPlayerInterests(user.playerId);
+      res.json(interests);
+    } catch (error) {
+      console.error('Error fetching player interests:', error);
+      res.status(500).json({ message: "Failed to fetch your recruit interests" });
+    }
+  });
+
+  // PUT /api/recruit-interests/:id/status - Update interest status (coach only)
+  app.put('/api/recruit-interests/:id/status', requiresCoach, async (req: any, res) => {
+    try {
+      const interestId = parseInt(req.params.id);
+      const { status } = req.body;
+      
+      if (!status || !['pending', 'viewed', 'contacted'].includes(status)) {
+        return res.status(400).json({ message: "Invalid status. Must be 'pending', 'viewed', or 'contacted'" });
+      }
+      
+      const interest = await storage.updateInterestStatus(interestId, status);
+      
+      // Create notification for the player if status changed to contacted
+      if (status === 'contacted') {
+        const player = await storage.getPlayer(interest.playerId);
+        const post = await storage.getRecruitPost(interest.postId);
+        
+        if (player && post) {
+          await storage.createNotification({
+            playerId: interest.playerId,
+            type: 'recruit_contacted',
+            title: 'Coach Contacted',
+            message: `A coach has contacted you about their ${post.title} recruitment post`,
+            relatedId: interest.postId
+          });
+        }
+      }
+      
+      res.json(interest);
+    } catch (error) {
+      console.error('Error updating interest status:', error);
+      res.status(500).json({ message: "Failed to update interest status" });
     }
   });
 

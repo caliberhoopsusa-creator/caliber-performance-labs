@@ -6,9 +6,10 @@ import {
   activityStreaks,
   shots, gameNotes, practices, practiceAttendance, drills, drillScores, lineups, lineupStats,
   opponents, alerts, coachGoals, drillRecommendations,
-  follows, notifications, highlightClips, workouts, accolades, goalShares, scheduleEvents, liveGameSessions, liveGameEvents, shareAssets, endorsements, headToHeadChallenges, trainingGroups, trainingGroupMembers,
+  follows, notifications, highlightClips, workouts, accolades, goalShares, scheduleEvents, liveGameSessions, liveGameEvents, liveGameSpectators, shareAssets, endorsements, headToHeadChallenges, trainingGroups, trainingGroupMembers,
   dmThreads, dmParticipants, dmMessages,
   mentorshipProfiles, mentorshipRequests,
+  recruitPosts, recruitInterests,
   type Player, type InsertPlayer,
   type Game, type InsertGame,
   type UpdateGameRequest,
@@ -58,6 +59,7 @@ import {
   type ScheduleEvent, type InsertScheduleEvent,
   type LiveGameSession, type InsertLiveGameSession,
   type LiveGameEvent, type InsertLiveGameEvent,
+  type LiveGameSpectator, type InsertLiveGameSpectator,
   type ShareAsset, type InsertShareAsset,
   type Endorsement, type InsertEndorsement,
   type HeadToHeadChallenge, type InsertHeadToHeadChallenge,
@@ -67,9 +69,11 @@ import {
   type DmParticipant, type InsertDmParticipant,
   type DmMessage, type InsertDmMessage,
   type MentorshipProfile, type InsertMentorshipProfile,
-  type MentorshipRequest, type InsertMentorshipRequest
+  type MentorshipRequest, type InsertMentorshipRequest,
+  type RecruitPost, type InsertRecruitPost,
+  type RecruitInterest, type InsertRecruitInterest
 } from "@shared/schema";
-import { eq, desc, and, count, gte, lte, sql, or } from "drizzle-orm";
+import { eq, desc, and, count, gte, lte, sql, or, isNull } from "drizzle-orm";
 
 export interface IStorage {
   // Players
@@ -388,6 +392,13 @@ export interface IStorage {
   getSessionEvents(sessionId: number): Promise<LiveGameEvent[]>;
   deleteLiveGameEvent(eventId: number): Promise<void>;
 
+  // Live Game Spectators
+  addLiveGameSpectator(spectator: InsertLiveGameSpectator): Promise<LiveGameSpectator>;
+  getLiveGameSpectators(sessionId: number): Promise<LiveGameSpectator[]>;
+  removeLiveGameSpectator(sessionId: number, viewerUserId: string | null, viewerPlayerId: number | null): Promise<void>;
+  getActiveSpectatorSessions(viewerUserId: string | null, viewerPlayerId: number | null): Promise<LiveGameSpectator[]>;
+  getSpectatorCount(sessionId: number): Promise<number>;
+
   // Share Assets
   createShareAsset(asset: InsertShareAsset): Promise<ShareAsset>;
   getPlayerShareAssets(playerId: number): Promise<ShareAsset[]>;
@@ -424,6 +435,18 @@ export interface IStorage {
   getIncomingMentorshipRequests(mentorPlayerId: number): Promise<MentorshipRequest[]>;
   updateMentorshipRequestStatus(id: number, status: string): Promise<MentorshipRequest>;
   getAcceptedMentorships(playerId: number): Promise<MentorshipRequest[]>;
+
+  // Recruit Board
+  createRecruitPost(post: InsertRecruitPost): Promise<RecruitPost>;
+  getRecruitPosts(filters?: { level?: string; location?: string }): Promise<RecruitPost[]>;
+  getRecruitPost(id: number): Promise<RecruitPost | undefined>;
+  updateRecruitPost(id: number, updates: Partial<InsertRecruitPost>): Promise<RecruitPost>;
+  deleteRecruitPost(id: number): Promise<void>;
+  getCoachRecruitPosts(coachUserId: string): Promise<RecruitPost[]>;
+  createRecruitInterest(interest: InsertRecruitInterest): Promise<RecruitInterest>;
+  getPostInterests(postId: number): Promise<RecruitInterest[]>;
+  getPlayerInterests(playerId: number): Promise<RecruitInterest[]>;
+  updateInterestStatus(id: number, status: string): Promise<RecruitInterest>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1965,6 +1988,53 @@ export class DatabaseStorage implements IStorage {
     await db.delete(liveGameEvents).where(eq(liveGameEvents.id, eventId));
   }
 
+  // Live Game Spectators
+  async addLiveGameSpectator(spectator: InsertLiveGameSpectator): Promise<LiveGameSpectator> {
+    const [newSpectator] = await db.insert(liveGameSpectators).values(spectator).returning();
+    return newSpectator;
+  }
+
+  async getLiveGameSpectators(sessionId: number): Promise<LiveGameSpectator[]> {
+    return await db.select().from(liveGameSpectators).where(
+      and(eq(liveGameSpectators.sessionId, sessionId), isNull(liveGameSpectators.leftAt))
+    ).orderBy(desc(liveGameSpectators.joinedAt));
+  }
+
+  async removeLiveGameSpectator(sessionId: number, viewerUserId: string | null, viewerPlayerId: number | null): Promise<void> {
+    const conditions = [eq(liveGameSpectators.sessionId, sessionId)];
+    
+    if (viewerUserId) {
+      conditions.push(eq(liveGameSpectators.viewerUserId, viewerUserId));
+    } else if (viewerPlayerId) {
+      conditions.push(eq(liveGameSpectators.viewerPlayerId, viewerPlayerId));
+    } else {
+      return; // Neither userId nor playerId provided
+    }
+
+    await db.update(liveGameSpectators).set({ leftAt: new Date() }).where(and(...conditions));
+  }
+
+  async getActiveSpectatorSessions(viewerUserId: string | null, viewerPlayerId: number | null): Promise<LiveGameSpectator[]> {
+    const conditions = [isNull(liveGameSpectators.leftAt)];
+    
+    if (viewerUserId) {
+      conditions.push(eq(liveGameSpectators.viewerUserId, viewerUserId));
+    } else if (viewerPlayerId) {
+      conditions.push(eq(liveGameSpectators.viewerPlayerId, viewerPlayerId));
+    } else {
+      return []; // Neither userId nor playerId provided
+    }
+
+    return await db.select().from(liveGameSpectators).where(and(...conditions)).orderBy(desc(liveGameSpectators.joinedAt));
+  }
+
+  async getSpectatorCount(sessionId: number): Promise<number> {
+    const result = await db.select({ count: count() }).from(liveGameSpectators).where(
+      and(eq(liveGameSpectators.sessionId, sessionId), isNull(liveGameSpectators.leftAt))
+    );
+    return result[0]?.count || 0;
+  }
+
   // Share Assets
   async createShareAsset(asset: InsertShareAsset): Promise<ShareAsset> {
     const [newAsset] = await db.insert(shareAssets).values(asset).returning();
@@ -2193,6 +2263,71 @@ export class DatabaseStorage implements IStorage {
         eq(mentorshipRequests.status, 'accepted')
       ))
       .orderBy(desc(mentorshipRequests.createdAt));
+  }
+
+  // Recruit Board Methods
+  async createRecruitPost(post: InsertRecruitPost): Promise<RecruitPost> {
+    const [result] = await db.insert(recruitPosts).values(post).returning();
+    return result;
+  }
+
+  async getRecruitPosts(filters?: { level?: string; location?: string }): Promise<RecruitPost[]> {
+    let query = db.select().from(recruitPosts).where(eq(recruitPosts.isActive, true));
+    
+    if (filters?.level) {
+      query = query.where(eq(recruitPosts.level, filters.level));
+    }
+    
+    if (filters?.location) {
+      query = query.where(eq(recruitPosts.location, filters.location));
+    }
+    
+    return await query.orderBy(desc(recruitPosts.createdAt));
+  }
+
+  async getRecruitPost(id: number): Promise<RecruitPost | undefined> {
+    const [post] = await db.select().from(recruitPosts).where(eq(recruitPosts.id, id));
+    return post;
+  }
+
+  async updateRecruitPost(id: number, updates: Partial<InsertRecruitPost>): Promise<RecruitPost> {
+    const [result] = await db.update(recruitPosts).set(updates).where(eq(recruitPosts.id, id)).returning();
+    return result;
+  }
+
+  async deleteRecruitPost(id: number): Promise<void> {
+    await db.delete(recruitPosts).where(eq(recruitPosts.id, id));
+  }
+
+  async getCoachRecruitPosts(coachUserId: string): Promise<RecruitPost[]> {
+    return await db.select().from(recruitPosts)
+      .where(eq(recruitPosts.coachUserId, coachUserId))
+      .orderBy(desc(recruitPosts.createdAt));
+  }
+
+  async createRecruitInterest(interest: InsertRecruitInterest): Promise<RecruitInterest> {
+    const [result] = await db.insert(recruitInterests).values(interest).returning();
+    return result;
+  }
+
+  async getPostInterests(postId: number): Promise<RecruitInterest[]> {
+    return await db.select().from(recruitInterests)
+      .where(eq(recruitInterests.postId, postId))
+      .orderBy(desc(recruitInterests.createdAt));
+  }
+
+  async getPlayerInterests(playerId: number): Promise<RecruitInterest[]> {
+    return await db.select().from(recruitInterests)
+      .where(eq(recruitInterests.playerId, playerId))
+      .orderBy(desc(recruitInterests.createdAt));
+  }
+
+  async updateInterestStatus(id: number, status: string): Promise<RecruitInterest> {
+    const [result] = await db.update(recruitInterests)
+      .set({ status })
+      .where(eq(recruitInterests.id, id))
+      .returning();
+    return result;
   }
 }
 

@@ -1204,6 +1204,7 @@ export const NOTIFICATION_TYPES = {
   mentorship_request: { name: "Mentorship Request", description: "You received a mentorship request" },
   mentorship_accepted: { name: "Mentorship Accepted", description: "Your mentorship request was accepted" },
   mentorship_declined: { name: "Mentorship Declined", description: "Your mentorship request was declined" },
+  game_spectating: { name: "Game Spectating", description: "Someone is watching your live game" },
 } as const;
 
 export const WORKOUT_TYPES = {
