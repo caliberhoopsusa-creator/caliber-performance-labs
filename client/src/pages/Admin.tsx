@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Lock, Users, Package, Tag, UserCog, Pencil, Trash2, Plus, Loader2 } from "lucide-react";
+import { Lock, Users, Package, Tag, UserCog, Pencil, Trash2, Plus, Loader2, Award, Crown, Star, Shield, Sparkles } from "lucide-react";
 
 const ADMIN_PASSWORD_KEY = "admin_password";
 
@@ -880,6 +880,283 @@ function UsersTab() {
   );
 }
 
+interface CaliberBadge {
+  id: number;
+  playerId: number;
+  category: string;
+  reason: string | null;
+  awardedAt: string;
+  player?: {
+    id: number;
+    name: string;
+    position: string;
+  };
+}
+
+const CALIBER_CATEGORIES = [
+  { value: "excellence", label: "Excellence", icon: Crown, color: "text-yellow-500" },
+  { value: "dedication", label: "Dedication", icon: Star, color: "text-blue-500" },
+  { value: "leadership", label: "Leadership", icon: Shield, color: "text-purple-500" },
+  { value: "potential", label: "Potential", icon: Sparkles, color: "text-green-500" },
+];
+
+function CaliberBadgesTab() {
+  const { toast } = useToast();
+  const [awardOpen, setAwardOpen] = useState(false);
+  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+  const [form, setForm] = useState({ category: "excellence", reason: "" });
+
+  const { data: playersData, isLoading: playersLoading } = useQuery<{ players: Player[] }>({
+    queryKey: ["/api/admin/players"],
+    queryFn: async () => {
+      const res = await adminFetch("/api/admin/players");
+      return res.json();
+    },
+  });
+
+  const { data: badgesData, isLoading: badgesLoading, refetch: refetchBadges } = useQuery<CaliberBadge[]>({
+    queryKey: ["/api/caliber-badges"],
+    queryFn: async () => {
+      const res = await fetch("/api/caliber-badges");
+      return res.json();
+    },
+  });
+
+  const awardMutation = useMutation({
+    mutationFn: async ({ playerId, category, reason }: { playerId: number; category: string; reason?: string }) => {
+      const res = await fetch(`/api/players/${playerId}/caliber-badge`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ category, reason }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to award badge");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Caliber badge awarded!" });
+      setAwardOpen(false);
+      setSelectedPlayer(null);
+      setForm({ category: "excellence", reason: "" });
+      refetchBadges();
+    },
+    onError: (err: any) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const revokeMutation = useMutation({
+    mutationFn: async (playerId: number) => {
+      const res = await fetch(`/api/players/${playerId}/caliber-badge`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to revoke badge");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Caliber badge revoked" });
+      refetchBadges();
+    },
+    onError: (err: any) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const openAwardDialog = (player: Player) => {
+    setSelectedPlayer(player);
+    setForm({ category: "excellence", reason: "" });
+    setAwardOpen(true);
+  };
+
+  const handleAward = () => {
+    if (!selectedPlayer) return;
+    awardMutation.mutate({
+      playerId: selectedPlayer.id,
+      category: form.category,
+      reason: form.reason || undefined,
+    });
+  };
+
+  if (playersLoading || badgesLoading) {
+    return (
+      <div className="flex justify-center py-8">
+        <Loader2 className="w-6 h-6 animate-spin" />
+      </div>
+    );
+  }
+
+  const players = playersData?.players || [];
+  const badges = badgesData || [];
+  const badgeMap = new Map(badges.map(b => [b.playerId, b]));
+
+  const getCategoryInfo = (category: string) => {
+    return CALIBER_CATEGORIES.find(c => c.value === category) || CALIBER_CATEGORIES[0];
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          Award special Caliber badges to recognize outstanding players. Only you (the app owner) can award these badges.
+        </p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {CALIBER_CATEGORIES.map((cat) => {
+          const Icon = cat.icon;
+          const count = badges.filter(b => b.category === cat.value).length;
+          return (
+            <Card key={cat.value} className="bg-card/50">
+              <CardContent className="flex items-center gap-3 p-4">
+                <div className={`p-2 rounded-lg bg-background ${cat.color}`}>
+                  <Icon className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="font-medium">{cat.label}</p>
+                  <p className="text-sm text-muted-foreground">{count} awarded</p>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Player</TableHead>
+            <TableHead>Position</TableHead>
+            <TableHead>Current Badge</TableHead>
+            <TableHead>Reason</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {players.map((player) => {
+            const badge = badgeMap.get(player.id);
+            const catInfo = badge ? getCategoryInfo(badge.category) : null;
+            const CatIcon = catInfo?.icon;
+
+            return (
+              <TableRow key={player.id} data-testid={`row-caliber-player-${player.id}`}>
+                <TableCell className="font-medium">{player.name}</TableCell>
+                <TableCell>{player.position}</TableCell>
+                <TableCell>
+                  {badge && CatIcon ? (
+                    <div className="flex items-center gap-2">
+                      <CatIcon className={`w-4 h-4 ${catInfo?.color}`} />
+                      <span className="capitalize">{badge.category}</span>
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground">None</span>
+                  )}
+                </TableCell>
+                <TableCell className="max-w-xs truncate">
+                  {badge?.reason || "-"}
+                </TableCell>
+                <TableCell className="text-right space-x-2">
+                  {badge ? (
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => {
+                        if (confirm(`Revoke Caliber badge from ${player.name}?`)) {
+                          revokeMutation.mutate(player.id);
+                        }
+                      }}
+                      disabled={revokeMutation.isPending}
+                      data-testid={`button-revoke-badge-${player.id}`}
+                    >
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      Revoke
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      onClick={() => openAwardDialog(player)}
+                      data-testid={`button-award-badge-${player.id}`}
+                    >
+                      <Award className="w-4 h-4 mr-1" />
+                      Award Badge
+                    </Button>
+                  )}
+                </TableCell>
+              </TableRow>
+            );
+          })}
+          {players.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                No players found
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+
+      <Dialog open={awardOpen} onOpenChange={(open) => !open && setAwardOpen(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Award Caliber Badge</DialogTitle>
+            <DialogDescription>
+              Award a special recognition badge to {selectedPlayer?.name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="badge-category">Badge Category</Label>
+              <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
+                <SelectTrigger data-testid="select-badge-category">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CALIBER_CATEGORIES.map((cat) => {
+                    const Icon = cat.icon;
+                    return (
+                      <SelectItem key={cat.value} value={cat.value}>
+                        <div className="flex items-center gap-2">
+                          <Icon className={`w-4 h-4 ${cat.color}`} />
+                          <span>{cat.label}</span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="badge-reason">Reason (optional)</Label>
+              <Input
+                id="badge-reason"
+                value={form.reason}
+                onChange={(e) => setForm({ ...form, reason: e.target.value })}
+                placeholder="e.g., Outstanding leadership this season"
+                data-testid="input-badge-reason"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAwardOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAward} disabled={awardMutation.isPending} data-testid="button-confirm-award">
+              {awardMutation.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+              Award Badge
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
 function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   return (
     <div className="min-h-screen bg-background">
@@ -893,10 +1170,14 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
       </div>
       <div className="max-w-7xl mx-auto px-4 py-8">
         <Tabs defaultValue="roster" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 max-w-xl">
+          <TabsList className="grid w-full grid-cols-5 max-w-2xl">
             <TabsTrigger value="roster" data-testid="tab-roster">
               <UserCog className="w-4 h-4 mr-2" />
               Roster
+            </TabsTrigger>
+            <TabsTrigger value="badges" data-testid="tab-badges">
+              <Award className="w-4 h-4 mr-2" />
+              Badges
             </TabsTrigger>
             <TabsTrigger value="products" data-testid="tab-products">
               <Package className="w-4 h-4 mr-2" />
@@ -920,6 +1201,18 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               </CardHeader>
               <CardContent>
                 <RosterTab />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="badges">
+            <Card>
+              <CardHeader>
+                <CardTitle>Caliber Badges</CardTitle>
+                <CardDescription>Award special recognition badges to outstanding players</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <CaliberBadgesTab />
               </CardContent>
             </Card>
           </TabsContent>
