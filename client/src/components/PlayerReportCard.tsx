@@ -471,6 +471,9 @@ export function PlayerReportCard({ playerId, dateRange, showActions = true }: Pl
               {player.position && (
                 <span> as a <span className="text-foreground font-semibold">{player.position}</span></span>
               )}
+              {player.gpa && (
+                <span> with a <span className="text-foreground font-semibold">{parseFloat(player.gpa).toFixed(2)} GPA</span></span>
+              )}
               .
             </p>
             
