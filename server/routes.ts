@@ -1410,6 +1410,7 @@ export async function registerRoutes(
         graduationYear: z.number().optional(),
         level: z.enum(['middle_school', 'high_school', 'college']).optional(),
         gpa: z.number().min(0).max(4).optional(),
+        widgetPreferences: z.string().optional(),
       });
       
       const input = updateSchema.parse(req.body);
