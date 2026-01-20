@@ -259,6 +259,7 @@ export interface IStorage {
 
   // Game Notes
   createGameNote(data: InsertGameNote): Promise<GameNote>;
+  getGameNote(id: number): Promise<GameNote | undefined>;
   getGameNotes(gameId: number): Promise<GameNote[]>;
   getPlayerGameNotes(playerId: number): Promise<GameNote[]>;
   updateGameNote(id: number, data: Partial<InsertGameNote>): Promise<GameNote>;
@@ -1500,6 +1501,11 @@ export class DatabaseStorage implements IStorage {
   async createGameNote(data: InsertGameNote): Promise<GameNote> {
     const [newNote] = await db.insert(gameNotes).values(data).returning();
     return newNote;
+  }
+
+  async getGameNote(id: number): Promise<GameNote | undefined> {
+    const [note] = await db.select().from(gameNotes).where(eq(gameNotes.id, id));
+    return note;
   }
 
   async getGameNotes(gameId: number): Promise<GameNote[]> {

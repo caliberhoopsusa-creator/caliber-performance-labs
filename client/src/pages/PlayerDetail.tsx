@@ -1381,11 +1381,8 @@ export default function PlayerDetail() {
 
       <GoalsPanel playerId={player.id} games={games} />
 
-      <Tabs defaultValue="trend" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-4">
-          <TabsTrigger value="trend" className="gap-2" data-testid="tab-performance-trend">
-            <Activity className="w-4 h-4" /> Performance Trend
-          </TabsTrigger>
+      <Tabs defaultValue="history" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-4">
           <TabsTrigger value="history" className="gap-2" data-testid="tab-game-history">
             <ClipboardList className="w-4 h-4" /> Game History
           </TabsTrigger>
@@ -1393,76 +1390,6 @@ export default function PlayerDetail() {
             <Film className="w-4 h-4" /> Highlights
           </TabsTrigger>
         </TabsList>
-        
-        <TabsContent value="trend">
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold font-display text-white flex items-center gap-2">
-                <Activity className="w-5 h-5 text-primary" /> Performance Trend
-              </h3>
-              <div className="flex items-center gap-4 text-xs font-medium">
-                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-primary" /> Points</div>
-                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-white/20" /> Grade Score</div>
-              </div>
-            </div>
-            
-            <div className="h-[300px] w-full">
-              {trendData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={trendData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                    <XAxis 
-                      dataKey="date" 
-                      stroke="rgba(255,255,255,0.3)" 
-                      tick={{fill: 'rgba(255,255,255,0.3)', fontSize: 12}} 
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <YAxis 
-                      yAxisId="left"
-                      stroke="rgba(255,255,255,0.3)" 
-                      tick={{fill: 'rgba(255,255,255,0.3)', fontSize: 12}} 
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <YAxis 
-                      yAxisId="right" 
-                      orientation="right" 
-                      domain={[0, 100]} 
-                      hide 
-                    />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: '#1e293b', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff' }}
-                      itemStyle={{ color: '#fff' }}
-                    />
-                    <Line 
-                      yAxisId="left"
-                      type="monotone" 
-                      dataKey="points" 
-                      stroke="hsl(var(--primary))" 
-                      strokeWidth={3}
-                      dot={{fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4}}
-                      activeDot={{r: 6, fill: '#fff'}}
-                    />
-                    <Line 
-                      yAxisId="right"
-                      type="monotone" 
-                      dataKey="gradeVal" 
-                      stroke="rgba(255,255,255,0.2)" 
-                      strokeWidth={2}
-                      strokeDasharray="5 5"
-                      dot={false}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
-                  No game data available for trends.
-                </div>
-              )}
-            </div>
-          </Card>
-        </TabsContent>
         
         <TabsContent value="history">
           <Card className="p-6">

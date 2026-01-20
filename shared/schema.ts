@@ -619,6 +619,7 @@ export const gameNotes = pgTable("game_notes", {
   gameId: integer("game_id").notNull().references(() => games.id, { onDelete: "cascade" }),
   playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
   authorName: text("author_name").notNull(), // coach name
+  createdBy: text("created_by"), // userId of the coach who created this note
   content: text("content").notNull(),
   noteType: text("note_type").notNull(), // 'observation', 'improvement', 'praise', 'strategy'
   isPrivate: boolean("is_private").default(true).notNull(),

@@ -4389,14 +4389,21 @@ Respond in this exact JSON format:
   });
 
   // --- Game Notes ---
-  app.post('/api/games/:gameId/notes', async (req, res) => {
+  // Notes are only visible to the player and the coach who created them
+  app.post('/api/games/:gameId/notes', isAuthenticated, async (req: any, res) => {
     try {
       const gameId = Number(req.params.gameId);
       const game = await storage.getGame(gameId);
       if (!game) {
         return res.status(404).json({ error: 'Game not found' });
       }
-      const input = insertGameNoteSchema.parse({ ...req.body, gameId, playerId: game.playerId });
+      // Include the createdBy field with the current user's ID
+      const input = insertGameNoteSchema.parse({ 
+        ...req.body, 
+        gameId, 
+        playerId: game.playerId,
+        createdBy: req.user.claims.sub 
+      });
       const note = await storage.createGameNote(input);
       res.status(201).json(note);
     } catch (err) {
@@ -4408,33 +4415,75 @@ Respond in this exact JSON format:
     }
   });
 
-  app.get('/api/games/:gameId/notes', async (req, res) => {
+  app.get('/api/games/:gameId/notes', isAuthenticated, async (req: any, res) => {
     try {
       const gameId = Number(req.params.gameId);
+      const userId = req.user.claims.sub;
       const notes = await storage.getGameNotes(gameId);
-      res.json(notes);
+      
+      // Get the game to find the player
+      const game = await storage.getGame(gameId);
+      if (!game) {
+        return res.status(404).json({ error: 'Game not found' });
+      }
+      
+      // Get the player to check ownership
+      const player = await storage.getPlayer(game.playerId);
+      const isPlayerOwner = player?.userId === userId;
+      
+      // Filter notes: show only notes created by the current user OR if they own the player
+      const filteredNotes = notes.filter(note => 
+        note.createdBy === userId || isPlayerOwner
+      );
+      
+      res.json(filteredNotes);
     } catch (err) {
       console.error('Get game notes error:', err);
       res.status(500).json({ error: 'Error fetching notes' });
     }
   });
 
-  app.get('/api/players/:playerId/notes', async (req, res) => {
+  app.get('/api/players/:playerId/notes', isAuthenticated, async (req: any, res) => {
     try {
       const playerId = Number(req.params.playerId);
+      const userId = req.user.claims.sub;
       const notes = await storage.getPlayerGameNotes(playerId);
-      res.json(notes);
+      
+      // Get the player to check ownership
+      const player = await storage.getPlayer(playerId);
+      const isPlayerOwner = player?.userId === userId;
+      
+      // Filter notes: show only notes created by the current user OR if they own the player
+      const filteredNotes = notes.filter(note => 
+        note.createdBy === userId || isPlayerOwner
+      );
+      
+      res.json(filteredNotes);
     } catch (err) {
       console.error('Get player notes error:', err);
       res.status(500).json({ error: 'Error fetching notes' });
     }
   });
 
-  app.patch('/api/notes/:id', async (req, res) => {
+  app.patch('/api/notes/:id', isAuthenticated, async (req: any, res) => {
     try {
+      const noteId = Number(req.params.id);
+      const userId = req.user.claims.sub;
+      
+      // Get existing note to check ownership
+      const existingNote = await storage.getGameNote(noteId);
+      if (!existingNote) {
+        return res.status(404).json({ error: 'Note not found' });
+      }
+      
+      // Only the note creator can edit
+      if (existingNote.createdBy !== userId) {
+        return res.status(403).json({ error: 'You can only edit your own notes' });
+      }
+      
       const updateSchema = insertGameNoteSchema.partial();
       const input = updateSchema.parse(req.body);
-      const note = await storage.updateGameNote(Number(req.params.id), input);
+      const note = await storage.updateGameNote(noteId, input);
       res.json(note);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -4445,9 +4494,23 @@ Respond in this exact JSON format:
     }
   });
 
-  app.delete('/api/notes/:id', async (req, res) => {
+  app.delete('/api/notes/:id', isAuthenticated, async (req: any, res) => {
     try {
-      await storage.deleteGameNote(Number(req.params.id));
+      const noteId = Number(req.params.id);
+      const userId = req.user.claims.sub;
+      
+      // Get existing note to check ownership
+      const existingNote = await storage.getGameNote(noteId);
+      if (!existingNote) {
+        return res.status(404).json({ error: 'Note not found' });
+      }
+      
+      // Only the note creator can delete
+      if (existingNote.createdBy !== userId) {
+        return res.status(403).json({ error: 'You can only delete your own notes' });
+      }
+      
+      await storage.deleteGameNote(noteId);
       res.status(204).send();
     } catch (err) {
       console.error('Delete note error:', err);
