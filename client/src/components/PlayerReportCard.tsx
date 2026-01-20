@@ -391,6 +391,70 @@ export function PlayerReportCard({ playerId, dateRange, showActions = true }: Pl
   const unlockedSkillBadges = skillBadges.filter(b => b.currentLevel !== 'none');
   const publicCoachNotes = recentCoachNotes;
 
+  // Calculate best attribute and area needing work
+  const playerSummary = useMemo(() => {
+    // Only include stats that have trend data available
+    const statCategories = [
+      { key: "points", label: "Scoring", value: Number(seasonStats.avgPoints) || 0, trend: trends?.pointsTrend || 0 },
+      { key: "rebounds", label: "Rebounding", value: Number(seasonStats.avgRebounds) || 0, trend: trends?.reboundsTrend || 0 },
+      { key: "assists", label: "Playmaking", value: Number(seasonStats.avgAssists) || 0, trend: trends?.assistsTrend || 0 },
+      { key: "hustle", label: "Hustle", value: Number(seasonStats.avgHustle) || 0, trend: trends?.hustleTrend || 0 },
+    ];
+
+    // Find best attribute (highest value among stats with actual data)
+    const statsWithData = statCategories.filter(s => s.value > 0);
+    const bestStat = statsWithData.length > 0 
+      ? statsWithData.reduce((a, b) => (a.value > b.value ? a : b))
+      : null;
+    
+    // Find area needing work (worst declining trend)
+    const decliningStats = statCategories.filter(s => s.trend < -0.5);
+    const worstTrend = decliningStats.length > 0 
+      ? decliningStats.reduce((a, b) => (a.trend < b.trend ? a : b))
+      : null;
+    
+    // If no declining trends, find lowest non-zero stat that could improve (excluding best stat)
+    const candidatesForImprovement = statsWithData.filter(s => bestStat && s.key !== bestStat.key);
+    const lowestStat = candidatesForImprovement.length > 0
+      ? candidatesForImprovement.reduce((a, b) => (a.value < b.value ? a : b))
+      : null;
+
+    // Calculate average grade
+    const total = Object.values(gradeDistribution).reduce((a, b) => a + b, 0);
+    let avgGrade = "—";
+    if (total > 0) {
+      const gradeWeights: Record<string, number> = {
+        'A+': 4.3, 'A': 4.0, 'A-': 3.7,
+        'B+': 3.3, 'B': 3.0, 'B-': 2.7,
+        'C+': 2.3, 'C': 2.0, 'C-': 1.7,
+        'D': 1.0, 'F': 0.0
+      };
+      let weightedSum = 0;
+      Object.entries(gradeDistribution).forEach(([grade, count]) => {
+        weightedSum += (gradeWeights[grade] || 0) * count;
+      });
+      const avg = weightedSum / total;
+      if (avg >= 4.15) avgGrade = 'A+';
+      else if (avg >= 3.85) avgGrade = 'A';
+      else if (avg >= 3.5) avgGrade = 'A-';
+      else if (avg >= 3.15) avgGrade = 'B+';
+      else if (avg >= 2.85) avgGrade = 'B';
+      else if (avg >= 2.5) avgGrade = 'B-';
+      else if (avg >= 2.15) avgGrade = 'C+';
+      else if (avg >= 1.85) avgGrade = 'C';
+      else if (avg >= 1.5) avgGrade = 'C-';
+      else if (avg >= 0.5) avgGrade = 'D';
+      else avgGrade = 'F';
+    }
+
+    return {
+      bestAttribute: bestStat && bestStat.value > 0 ? bestStat : null,
+      needsWork: worstTrend || (lowestStat && lowestStat.value > 0 ? lowestStat : null),
+      avgGrade,
+      gamesPlayed: seasonStats.gamesPlayed,
+    };
+  }, [seasonStats, trends, gradeDistribution]);
+
   return (
     <div className="space-y-6 print:space-y-4 print:bg-white" data-testid="player-report-card" id="report-card-container">
       <PrintStyles />
@@ -454,6 +518,62 @@ export function PlayerReportCard({ playerId, dateRange, showActions = true }: Pl
             </div>
           </CardContent>
         </Card>
+
+        <ReportSummarySection title="Player Summary" icon={Star}>
+          <div className="space-y-3 text-sm" data-testid="player-summary-section">
+            <p className="text-muted-foreground">
+              <span className="text-foreground font-semibold">{player.name}</span>
+              {player.team && (
+                <span> plays for <span className="text-foreground font-semibold">{player.team}</span></span>
+              )}
+              {player.position && (
+                <span> as a <span className="text-foreground font-semibold">{player.position}</span></span>
+              )}
+              .
+            </p>
+            
+            {playerSummary.gamesPlayed > 0 ? (
+              <>
+                <p className="text-muted-foreground">
+                  Over <span className="text-foreground font-semibold">{playerSummary.gamesPlayed} game{playerSummary.gamesPlayed !== 1 ? "s" : ""}</span> this season, 
+                  they've averaged{" "}
+                  <span className="text-foreground font-semibold">{seasonStats.avgPoints} PPG</span>,{" "}
+                  <span className="text-foreground font-semibold">{seasonStats.avgRebounds} RPG</span>, and{" "}
+                  <span className="text-foreground font-semibold">{seasonStats.avgAssists} APG</span>{" "}
+                  with an average grade of <span className="text-foreground font-semibold">{playerSummary.avgGrade}</span>.
+                </p>
+                
+                {playerSummary.bestAttribute && playerSummary.bestAttribute.value > 0 && (
+                  <p>
+                    <span className="text-emerald-500 font-semibold">Best attribute:</span>{" "}
+                    <span className="text-foreground">{playerSummary.bestAttribute.label}</span>
+                    <span className="text-muted-foreground">
+                      {" "}— averaging {playerSummary.bestAttribute.value.toFixed(1)} per game
+                      {playerSummary.bestAttribute.trend > 0.5 && (
+                        <span className="text-emerald-500"> (trending up +{playerSummary.bestAttribute.trend.toFixed(1)})</span>
+                      )}
+                    </span>
+                  </p>
+                )}
+                
+                {playerSummary.needsWork && (
+                  <p>
+                    <span className="text-amber-500 font-semibold">Needs work:</span>{" "}
+                    <span className="text-foreground">{playerSummary.needsWork.label}</span>
+                    <span className="text-muted-foreground">
+                      {playerSummary.needsWork.trend < -0.5 
+                        ? ` — declined by ${Math.abs(playerSummary.needsWork.trend).toFixed(1)} compared to recent games`
+                        : ` — currently averaging ${playerSummary.needsWork.value.toFixed(1)} per game`
+                      }
+                    </span>
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="text-muted-foreground">No games logged yet this season.</p>
+            )}
+          </div>
+        </ReportSummarySection>
 
         <ReportSummarySection title="Season Overview" icon={Activity}>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
