@@ -721,6 +721,7 @@ export default function PlayerDetail() {
         state: player.state || "",
         school: player.school || "",
         graduationYear: player.graduationYear || undefined,
+        gpa: player.gpa ? parseFloat(player.gpa) : undefined,
       });
     }
   }, [player, isEditDialogOpen]);
@@ -1728,7 +1729,7 @@ export default function PlayerDetail() {
                   When enabled, your profile will appear in the Discover directory where coaches and scouts can find you.
                 </p>
                 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider flex items-center gap-1">
                       <GraduationCap className="w-3 h-3" /> School
@@ -1756,6 +1757,30 @@ export default function PlayerDetail() {
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">GPA</label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="4"
+                      value={editForm.gpa?.toString() || ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === "") {
+                          setEditForm((prev) => ({ ...prev, gpa: undefined }));
+                        } else {
+                          const num = parseFloat(val);
+                          if (!isNaN(num) && num >= 0 && num <= 4) {
+                            setEditForm((prev) => ({ ...prev, gpa: num }));
+                          }
+                        }
+                      }}
+                      placeholder="3.50"
+                      className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20"
+                      data-testid="input-edit-gpa"
+                    />
                   </div>
                 </div>
 
