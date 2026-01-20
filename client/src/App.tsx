@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -146,7 +146,13 @@ function MainRouter() {
           </header>
           <main className="relative z-10 flex-1 p-4 pb-20 md:px-8 md:pb-8 w-full max-w-[1600px] mx-auto overflow-x-hidden">
             <Switch>
-              <Route path="/" component={Dashboard} />
+              <Route path="/">
+                {extendedUser.role === 'player' && extendedUser.playerId ? (
+                  <Redirect to={`/players/${extendedUser.playerId}`} />
+                ) : (
+                  <Dashboard />
+                )}
+              </Route>
               <Route path="/players" component={PlayersList} />
               <Route path="/players/:id/card" component={PlayerCard} />
               <Route path="/players/:id" component={PlayerDetail} />
