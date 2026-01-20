@@ -66,6 +66,7 @@ export const caliberBadges = pgTable("caliber_badges", {
   playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
   awardedBy: text("awarded_by").notNull(), // userId of the owner who awarded it
   reason: text("reason"), // Optional reason/note for the award
+  category: text("category").notNull().default("excellence"), // 'excellence', 'dedication', 'leadership', 'potential'
   awardedAt: timestamp("awarded_at").defaultNow(),
 });
 
