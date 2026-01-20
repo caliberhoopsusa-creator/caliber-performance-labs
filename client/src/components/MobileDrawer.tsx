@@ -119,7 +119,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
         { href: "/coach/scouting", label: "Scouting", icon: Eye, premium: "coach_pro" },
         { href: "/coach/alerts", label: "Alerts", icon: Bell, premium: "coach_pro" },
         { href: "/report-card", label: "Report Cards", icon: FileText },
-        { href: "/video-analysis", label: "Video Analysis", icon: Video, premium: "pro" },
+        { href: "/video", label: "Video Analysis", icon: Video, premium: "pro" },
         { href: "/team-comparison", label: "Team Compare", icon: BarChart3, premium: "coach_pro" },
       ],
     },
