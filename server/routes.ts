@@ -2406,37 +2406,50 @@ export async function registerRoutes(
   });
 
   // Get player's state ranking
+  // Requirements to qualify:
+  // - Minimum 5 games played
+  // - Minimum C average (65+ grade score)
+  // - Must have state set
   app.get('/api/players/:id/state-ranking', async (req, res) => {
     try {
       const playerId = Number(req.params.id);
       const player = await storage.getPlayer(playerId);
+      
+      const MIN_GAMES_REQUIRED = 5;
+      const MIN_GRADE_SCORE = 65; // C average
       
       if (!player) {
         return res.status(404).json({ message: 'Player not found' });
       }
       
       if (!player.state) {
-        return res.json({ rank: null, totalInState: 0, state: null });
+        return res.json({ rank: null, totalInState: 0, state: null, qualified: false, reason: 'no_state' });
       }
       
-      // Get all players in the same state
+      const gradeScores: Record<string, number> = {
+        'A+': 100, 'A': 95, 'A-': 90,
+        'B+': 85, 'B': 80, 'B-': 75,
+        'C+': 70, 'C': 65, 'C-': 60,
+        'D+': 55, 'D': 50, 'D-': 45,
+        'F': 30
+      };
+      
+      // Get all players in the same state who meet the minimum requirements
       const allPlayers = await storage.getPlayers();
       const statePlayersWithGames = await Promise.all(
         allPlayers
           .filter(p => p.state === player.state)
           .map(async (p) => {
             const games = await storage.getGamesByPlayerId(p.id);
-            if (games.length === 0) return null;
             
-            const gradeScores: Record<string, number> = {
-              'A+': 100, 'A': 95, 'A-': 90,
-              'B+': 85, 'B': 80, 'B-': 75,
-              'C+': 70, 'C': 65, 'C-': 60,
-              'D+': 55, 'D': 50, 'D-': 45,
-              'F': 30
-            };
+            // Must have minimum games
+            if (games.length < MIN_GAMES_REQUIRED) return null;
             
             const avgGradeScore = games.reduce((acc, g) => acc + (gradeScores[g.grade || 'C'] || 65), 0) / games.length;
+            
+            // Must have minimum grade average
+            if (avgGradeScore < MIN_GRADE_SCORE) return null;
+            
             const avgPoints = games.reduce((acc, g) => acc + g.points, 0) / games.length;
             
             return {
@@ -2448,7 +2461,7 @@ export async function registerRoutes(
           })
       );
       
-      // Filter out players with no games and sort by grade score
+      // Filter out players who don't qualify and sort by grade score
       const rankedPlayers = statePlayersWithGames
         .filter(Boolean)
         .sort((a, b) => {
@@ -2458,13 +2471,40 @@ export async function registerRoutes(
           return b!.avgPoints - a!.avgPoints;
         });
       
+      // Check if this player qualifies
+      const playerGames = await storage.getGamesByPlayerId(playerId);
+      const playerAvgGrade = playerGames.length > 0 
+        ? playerGames.reduce((acc, g) => acc + (gradeScores[g.grade || 'C'] || 65), 0) / playerGames.length
+        : 0;
+      
+      const playerQualifies = playerGames.length >= MIN_GAMES_REQUIRED && playerAvgGrade >= MIN_GRADE_SCORE;
+      
+      if (!playerQualifies) {
+        const reason = playerGames.length < MIN_GAMES_REQUIRED 
+          ? `Need ${MIN_GAMES_REQUIRED - playerGames.length} more games`
+          : 'Need C average or higher';
+        return res.json({ 
+          rank: null, 
+          totalInState: rankedPlayers.length, 
+          state: player.state, 
+          qualified: false,
+          reason,
+          gamesPlayed: playerGames.length,
+          gamesRequired: MIN_GAMES_REQUIRED,
+          avgGrade: playerAvgGrade
+        });
+      }
+      
       const rank = rankedPlayers.findIndex(p => p!.playerId === playerId) + 1;
       
       res.json({
         rank: rank > 0 ? rank : null,
         totalInState: rankedPlayers.length,
         state: player.state,
-        isTop100: rank > 0 && rank <= 100
+        isTop100: rank > 0 && rank <= 100,
+        qualified: true,
+        gamesPlayed: playerGames.length,
+        gamesRequired: MIN_GAMES_REQUIRED
       });
     } catch (err) {
       console.error('Get state ranking error:', err);
