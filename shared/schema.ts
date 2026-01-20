@@ -60,6 +60,19 @@ export const skillBadges = pgTable("skill_badges", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// === CALIBER BADGE (Special owner-awarded badge) ===
+export const caliberBadges = pgTable("caliber_badges", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  awardedBy: text("awarded_by").notNull(), // userId of the owner who awarded it
+  reason: text("reason"), // Optional reason/note for the award
+  awardedAt: timestamp("awarded_at").defaultNow(),
+});
+
+export const insertCaliberBadgeSchema = createInsertSchema(caliberBadges).omit({ id: true, awardedAt: true });
+export type InsertCaliberBadge = z.infer<typeof insertCaliberBadgeSchema>;
+export type CaliberBadge = typeof caliberBadges.$inferSelect;
+
 export const goals = pgTable("goals", {
   id: serial("id").primaryKey(),
   playerId: integer("player_id").notNull(),

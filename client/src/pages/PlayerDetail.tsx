@@ -27,6 +27,7 @@ import { GradeBadge } from "@/components/GradeBadge";
 import { PlayerArchetype } from "@/components/PlayerArchetype";
 import { EliteAchievements } from "@/components/EliteAchievements";
 import { StateRankingBadge } from "@/components/StateRankingBadge";
+import { CaliberBadge } from "@/components/CaliberBadge";
 import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Trophy, Share2, BarChart3, Medal, User, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye, BookOpen } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -951,9 +952,17 @@ export default function PlayerDetail() {
                   {player.position}
                 </span>
               </div>
-              <h1 className="text-xl md:text-4xl font-display font-bold text-white uppercase tracking-tight leading-tight mb-2 break-words">
-                {player.name}
-              </h1>
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                <h1 className="text-xl md:text-4xl font-display font-bold text-white uppercase tracking-tight leading-tight break-words">
+                  {player.name}
+                </h1>
+                <CaliberBadge 
+                  playerId={id} 
+                  isOwner={(user as any)?.isOwner} 
+                  showControls={isAuthenticated}
+                  size="md" 
+                />
+              </div>
               <div className="flex flex-wrap items-center gap-2 text-xs md:text-sm text-muted-foreground">
                 {player.height && (
                   <span className="flex items-center gap-1">

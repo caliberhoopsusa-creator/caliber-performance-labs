@@ -71,7 +71,8 @@ import {
   type MentorshipProfile, type InsertMentorshipProfile,
   type MentorshipRequest, type InsertMentorshipRequest,
   type RecruitPost, type InsertRecruitPost,
-  type RecruitInterest, type InsertRecruitInterest
+  type RecruitInterest, type InsertRecruitInterest,
+  type CaliberBadge, type InsertCaliberBadge, caliberBadges
 } from "@shared/schema";
 import { eq, desc, and, count, gte, lte, sql, or, isNull } from "drizzle-orm";
 
@@ -101,6 +102,12 @@ export interface IStorage {
   getPlayerSkillBadges(playerId: number): Promise<SkillBadge[]>;
   getOrCreateSkillBadge(playerId: number, skillType: string): Promise<SkillBadge>;
   updateSkillBadge(id: number, updates: Partial<SkillBadge>): Promise<SkillBadge | undefined>;
+
+  // Caliber Badges (Owner-awarded special badge)
+  getCaliberBadge(playerId: number): Promise<CaliberBadge | undefined>;
+  awardCaliberBadge(data: InsertCaliberBadge): Promise<CaliberBadge>;
+  revokeCaliberBadge(playerId: number): Promise<void>;
+  getAllCaliberBadges(): Promise<CaliberBadge[]>;
 
   // Goals
   createGoal(goal: InsertGoal): Promise<Goal>;
@@ -584,6 +591,39 @@ export class DatabaseStorage implements IStorage {
       .where(eq(skillBadges.id, id))
       .returning();
     return updated;
+  }
+
+  // Caliber Badges (Owner-awarded special badge)
+  async getCaliberBadge(playerId: number): Promise<CaliberBadge | undefined> {
+    const [badge] = await db
+      .select()
+      .from(caliberBadges)
+      .where(eq(caliberBadges.playerId, playerId));
+    return badge;
+  }
+
+  async awardCaliberBadge(data: InsertCaliberBadge): Promise<CaliberBadge> {
+    // First check if player already has a Caliber badge
+    const existing = await this.getCaliberBadge(data.playerId);
+    if (existing) {
+      // Update the existing badge
+      const [updated] = await db
+        .update(caliberBadges)
+        .set({ ...data, awardedAt: new Date() })
+        .where(eq(caliberBadges.playerId, data.playerId))
+        .returning();
+      return updated;
+    }
+    const [newBadge] = await db.insert(caliberBadges).values(data).returning();
+    return newBadge;
+  }
+
+  async revokeCaliberBadge(playerId: number): Promise<void> {
+    await db.delete(caliberBadges).where(eq(caliberBadges.playerId, playerId));
+  }
+
+  async getAllCaliberBadges(): Promise<CaliberBadge[]> {
+    return await db.select().from(caliberBadges).orderBy(desc(caliberBadges.awardedAt));
   }
 
   async createGoal(goal: InsertGoal): Promise<Goal> {

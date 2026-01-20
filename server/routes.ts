@@ -5938,6 +5938,77 @@ Respond in this exact JSON format:
     }
   });
 
+  // ========== CALIBER BADGES (Owner-awarded special recognition) ==========
+  
+  // Get a player's Caliber badge
+  app.get('/api/players/:id/caliber-badge', async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      const badge = await storage.getCaliberBadge(playerId);
+      res.json({ badge: badge || null });
+    } catch (err) {
+      console.error('Get caliber badge error:', err);
+      res.status(500).json({ error: 'Could not fetch caliber badge' });
+    }
+  });
+
+  // Award a Caliber badge (owner only)
+  app.post('/api/players/:id/caliber-badge', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!isAppOwner(userId)) {
+        return res.status(403).json({ error: 'Only the app owner can award Caliber badges' });
+      }
+      
+      const playerId = parseInt(req.params.id);
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ error: 'Player not found' });
+      }
+      
+      const { reason, category } = req.body;
+      const badge = await storage.awardCaliberBadge({
+        playerId,
+        awardedBy: userId,
+        reason: reason || null,
+        category: category || 'excellence',
+      });
+      
+      res.status(201).json({ badge });
+    } catch (err) {
+      console.error('Award caliber badge error:', err);
+      res.status(500).json({ error: 'Could not award caliber badge' });
+    }
+  });
+
+  // Revoke a Caliber badge (owner only)
+  app.delete('/api/players/:id/caliber-badge', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!isAppOwner(userId)) {
+        return res.status(403).json({ error: 'Only the app owner can revoke Caliber badges' });
+      }
+      
+      const playerId = parseInt(req.params.id);
+      await storage.revokeCaliberBadge(playerId);
+      res.json({ success: true });
+    } catch (err) {
+      console.error('Revoke caliber badge error:', err);
+      res.status(500).json({ error: 'Could not revoke caliber badge' });
+    }
+  });
+
+  // Get all Caliber badge holders
+  app.get('/api/caliber-badges', async (req, res) => {
+    try {
+      const badges = await storage.getAllCaliberBadges();
+      res.json({ badges });
+    } catch (err) {
+      console.error('Get all caliber badges error:', err);
+      res.status(500).json({ error: 'Could not fetch caliber badges' });
+    }
+  });
+
   // Get all products with prices (fetch directly from Stripe)
   app.get('/api/admin/products', isAdmin, async (req, res) => {
     try {
