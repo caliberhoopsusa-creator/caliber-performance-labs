@@ -517,65 +517,7 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
             </CardContent>
           </Card>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card data-testid="trend-chart-card">
-              <CardHeader>
-                <CardTitle>Performance Trends</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={trendData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis
-                        dataKey="date"
-                        tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                        tickLine={false}
-                      />
-                      <YAxis
-                        tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                        tickLine={false}
-                        axisLine={false}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "hsl(var(--card))",
-                          borderColor: "hsl(var(--border))",
-                          borderRadius: "8px",
-                        }}
-                        labelStyle={{ color: "hsl(var(--foreground))" }}
-                      />
-                      <Legend />
-                      <Line
-                        type="monotone"
-                        dataKey="points"
-                        stroke="#3b82f6"
-                        strokeWidth={2}
-                        dot={{ r: 3 }}
-                        name="Points"
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="rebounds"
-                        stroke="#22c55e"
-                        strokeWidth={2}
-                        dot={{ r: 3 }}
-                        name="Rebounds"
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="assists"
-                        stroke="#f59e0b"
-                        strokeWidth={2}
-                        dot={{ r: 3 }}
-                        name="Assists"
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-
+          <div className="grid md:grid-cols-1 gap-6">
             <Card data-testid="grade-distribution-card">
               <CardHeader>
                 <CardTitle>Grade Distribution</CardTitle>
