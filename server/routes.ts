@@ -3,7 +3,7 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, headToHeadChallenges, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema } from "@shared/schema";
+import { players, games, headToHeadChallenges, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { GoogleGenAI } from "@google/genai";
 import multer from "multer";
@@ -6842,7 +6842,7 @@ Respond in this exact JSON format:
       // Add spectator
       const spectator = await storage.addLiveGameSpectator({
         sessionId,
-        viewerUserId: user.userId,
+        viewerUserId: user.id,
         viewerPlayerId: user.playerId || null,
         leftAt: null,
       });
@@ -6853,10 +6853,9 @@ Respond in this exact JSON format:
         const spectatorName = user.playerId ? (await storage.getPlayer(user.playerId))?.name || "Someone" : "A visitor";
         await storage.createNotification({
           playerId: session.playerId,
-          type: "game_spectating",
+          notificationType: "game_spectating",
           title: `${spectatorName} is watching your game!`,
           message: `${spectatorName} joined to watch your live game`,
-          actionUrl: `/live-game/${sessionId}`,
           isRead: false,
         });
       }
@@ -6877,7 +6876,7 @@ Respond in this exact JSON format:
         return res.status(401).json({ message: "User not found" });
       }
 
-      await storage.removeLiveGameSpectator(sessionId, user.userId, user.playerId || null);
+      await storage.removeLiveGameSpectator(sessionId, user.id, user.playerId || null);
       res.json({ success: true });
     } catch (error) {
       console.error('Error leaving spectator session:', error);
@@ -6917,7 +6916,7 @@ Respond in this exact JSON format:
         return res.status(401).json({ message: "User not found" });
       }
 
-      const spectatorSessions = await storage.getActiveSpectatorSessions(user.userId, user.playerId || null);
+      const spectatorSessions = await storage.getActiveSpectatorSessions(user.id, user.playerId || null);
       
       // Get the full session and game details for each spectating session
       const sessionsWithDetails = await Promise.all(
@@ -7412,7 +7411,7 @@ Respond in this exact JSON format:
       if (mentorPlayer && requesterPlayer) {
         await storage.createNotification({
           playerId: mentorPlayerId,
-          type: 'mentorship_request',
+          notificationType: 'mentorship_request',
           title: `Mentorship Request from ${requesterPlayer.name}`,
           message: `${requesterPlayer.name} has requested mentorship from you`,
           relatedId: request.id,
@@ -7476,7 +7475,7 @@ Respond in this exact JSON format:
       if (requesterPlayer && mentorPlayer) {
         await storage.createNotification({
           playerId: mentorshipRequest.requesterPlayerId,
-          type: 'mentorship_accepted',
+          notificationType: 'mentorship_accepted',
           title: `Mentorship Request Accepted`,
           message: `${mentorPlayer.name} has accepted your mentorship request`,
           relatedId: requestId,
@@ -7508,7 +7507,7 @@ Respond in this exact JSON format:
       if (requesterPlayer && mentorPlayer) {
         await storage.createNotification({
           playerId: mentorshipRequest.requesterPlayerId,
-          type: 'mentorship_declined',
+          notificationType: 'mentorship_declined',
           title: `Mentorship Request Declined`,
           message: `${mentorPlayer.name} has declined your mentorship request`,
           relatedId: requestId,
@@ -7688,7 +7687,7 @@ Respond in this exact JSON format:
       if (coachPlayer && player) {
         await storage.createNotification({
           playerId: coachPlayer.id,
-          type: 'recruit_interest',
+          notificationType: 'recruit_interest',
           title: 'New Recruit Interest',
           message: `${player.name} is interested in your ${post.title} recruitment post`,
           relatedId: postId
@@ -7764,7 +7763,7 @@ Respond in this exact JSON format:
         if (player && post) {
           await storage.createNotification({
             playerId: interest.playerId,
-            type: 'recruit_contacted',
+            notificationType: 'recruit_contacted',
             title: 'Coach Contacted',
             message: `A coach has contacted you about their ${post.title} recruitment post`,
             relatedId: interest.postId
