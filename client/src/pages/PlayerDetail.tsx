@@ -971,6 +971,23 @@ export default function PlayerDetail() {
               </div>
               
               {games.length > 0 && (
+                <div className="flex flex-wrap items-center gap-3 mt-3" data-testid="player-averages-header">
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/20">
+                    <span className="text-xs text-muted-foreground uppercase">PPG</span>
+                    <span className="text-sm font-bold text-primary">{avgPoints}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-green-500/10 border border-green-500/20">
+                    <span className="text-xs text-muted-foreground uppercase">RPG</span>
+                    <span className="text-sm font-bold text-green-400">{avgReb}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                    <span className="text-xs text-muted-foreground uppercase">APG</span>
+                    <span className="text-sm font-bold text-amber-400">{avgAst}</span>
+                  </div>
+                </div>
+              )}
+              
+              {games.length > 0 && (
                 <div className="mt-2">
                   <EliteAchievements 
                     ppg={parseFloat(avgPoints) || 0}
