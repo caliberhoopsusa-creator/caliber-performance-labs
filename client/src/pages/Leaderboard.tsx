@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { api } from "@shared/routes";
 import { GradeBadge } from "@/components/GradeBadge";
 import { Trophy, Medal, Filter, X } from "lucide-react";
@@ -185,15 +186,17 @@ export default function Leaderboard() {
                         </div>
                       </td>
                       <td className="px-3 md:px-6 py-4 md:py-6">
-                        <div className="flex items-center gap-2 md:gap-4">
-                          <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-secondary flex items-center justify-center font-bold text-xs md:text-sm shrink-0">
-                            {entry.jerseyNumber || "#"}
+                        <Link href={`/players/${entry.playerId}`} data-testid={`link-player-profile-${entry.playerId}`}>
+                          <div className="flex items-center gap-2 md:gap-4 cursor-pointer">
+                            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-secondary flex items-center justify-center font-bold text-xs md:text-sm shrink-0">
+                              {entry.jerseyNumber || "#"}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-bold text-sm md:text-base text-white group-hover:text-primary transition-colors truncate">{entry.name}</div>
+                              <div className="text-[10px] md:text-xs text-muted-foreground truncate">{entry.team || "No Team"}</div>
+                            </div>
                           </div>
-                          <div className="min-w-0">
-                            <div className="font-bold text-sm md:text-base text-white group-hover:text-primary transition-colors truncate">{entry.name}</div>
-                            <div className="text-[10px] md:text-xs text-muted-foreground truncate">{entry.team || "No Team"}</div>
-                          </div>
-                        </div>
+                        </Link>
                       </td>
                       <td className="px-3 md:px-6 py-4 md:py-6">
                         <GradeBadge grade={entry.avgGrade} size="sm" />
