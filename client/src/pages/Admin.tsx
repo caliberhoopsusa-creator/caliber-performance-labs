@@ -915,7 +915,7 @@ function CaliberBadgesTab() {
     },
   });
 
-  const { data: badgesData, isLoading: badgesLoading, refetch: refetchBadges } = useQuery<CaliberBadge[]>({
+  const { data: badgesData, isLoading: badgesLoading, refetch: refetchBadges } = useQuery<{ badges: CaliberBadge[] }>({
     queryKey: ["/api/caliber-badges"],
     queryFn: async () => {
       const res = await fetch("/api/caliber-badges");
@@ -994,7 +994,7 @@ function CaliberBadgesTab() {
   }
 
   const players = playersData?.players || [];
-  const badges = badgesData || [];
+  const badges = badgesData?.badges || [];
   const badgeMap = new Map(badges.map(b => [b.playerId, b]));
 
   const getCategoryInfo = (category: string) => {
