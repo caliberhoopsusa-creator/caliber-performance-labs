@@ -1,4 +1,4 @@
-import { usePlayerReportCard, usePlayer, type ReportCardSkillBadge, type ReportCardCoachGoal, type ReportCardCoachNote, type ReportCardTrends, type PlayerReportCardData } from "@/hooks/use-basketball";
+import { usePlayerReportCard, usePlayer, type ReportCardCoachGoal, type ReportCardCoachNote, type ReportCardTrends, type PlayerReportCardData } from "@/hooks/use-basketball";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,11 +18,6 @@ import {
   Star, 
   MessageSquare, 
   Award,
-  Crosshair,
-  Zap,
-  Shield,
-  Hand,
-  Grab,
   Copy,
   Check,
   BarChart3,
@@ -32,7 +27,7 @@ import {
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
-import { BADGE_DEFINITIONS, SKILL_BADGE_TYPES } from "@shared/schema";
+import { BADGE_DEFINITIONS } from "@shared/schema";
 import { format } from "date-fns";
 
 interface PlayerReportCardProps {
@@ -70,38 +65,6 @@ const GRADE_TEXT_COLORS: Record<string, string> = {
   'F': 'text-red-500',
 };
 
-const SKILL_ICONS: Record<string, typeof Target> = {
-  sharpshooter: Crosshair,
-  pure_passer: Zap,
-  bucket_getter: Target,
-  glass_cleaner: Shield,
-  rim_protector: Hand,
-  pickpocket: Grab,
-};
-
-const LEVEL_COLORS: Record<string, string> = {
-  none: "bg-muted text-muted-foreground",
-  brick: "bg-red-900/50 text-red-400",
-  bronze: "bg-amber-700/50 text-amber-500",
-  silver: "bg-slate-400/30 text-slate-300",
-  gold: "bg-yellow-500/30 text-yellow-400",
-  platinum: "bg-cyan-500/30 text-cyan-300",
-  hall_of_fame: "bg-purple-500/30 text-purple-400",
-  legend: "bg-orange-500/30 text-orange-400",
-  goat: "bg-gradient-to-r from-yellow-500/30 to-purple-500/30 text-yellow-300",
-};
-
-const LEVEL_NAMES: Record<string, string> = {
-  none: "Locked",
-  brick: "Brick",
-  bronze: "Bronze",
-  silver: "Silver",
-  gold: "Gold",
-  platinum: "Platinum",
-  hall_of_fame: "HOF",
-  legend: "Legend",
-  goat: "GOAT",
-};
 
 function TrendIndicator({ value, label }: { value: number; label: string }) {
   const isPositive = value > 0.5;
@@ -158,26 +121,6 @@ function GradeDistributionChart({ distribution }: { distribution: Record<string,
   );
 }
 
-function SkillBadgeItem({ badge }: { badge: ReportCardSkillBadge }) {
-  const Icon = SKILL_ICONS[badge.skillType] || Target;
-  const config = SKILL_BADGE_TYPES[badge.skillType as keyof typeof SKILL_BADGE_TYPES];
-  const levelColor = LEVEL_COLORS[badge.currentLevel] || LEVEL_COLORS.none;
-  
-  if (badge.currentLevel === 'none') return null;
-
-  return (
-    <div 
-      className={cn("flex items-center gap-2 px-3 py-2 rounded-lg print:bg-gray-100 print:border print:border-gray-200", levelColor)}
-      data-testid={`skill-badge-item-${badge.skillType}`}
-    >
-      <Icon className="w-4 h-4" />
-      <span className="text-sm font-medium print:text-black">{config?.name || badge.skillType}</span>
-      <Badge variant="outline" className="ml-auto text-xs print:bg-white print:text-black print:border-gray-300">
-        {LEVEL_NAMES[badge.currentLevel]}
-      </Badge>
-    </div>
-  );
-}
 
 function CoachGoalItem({ goal }: { goal: ReportCardCoachGoal }) {
   const isCompleted = goal.status === 'completed';
@@ -387,8 +330,7 @@ export function PlayerReportCard({ playerId, dateRange, showActions = true }: Pl
     );
   }
 
-  const { seasonStats, gradeDistribution, trends, badges, skillBadges, coachGoals, recentCoachNotes } = reportCard;
-  const unlockedSkillBadges = skillBadges.filter(b => b.currentLevel !== 'none');
+  const { seasonStats, gradeDistribution, trends, coachGoals, recentCoachNotes } = reportCard;
   const publicCoachNotes = recentCoachNotes;
 
   // Calculate best attribute and area needing work
@@ -619,44 +561,6 @@ export function PlayerReportCard({ playerId, dateRange, showActions = true }: Pl
           </ReportSummarySection>
         )}
 
-        <div className="grid md:grid-cols-2 gap-6 print:gap-4 print:break-inside-avoid">
-          <ReportSummarySection title={`Achievement Badges (${badges.length})`} icon={Trophy}>
-            {badges.length > 0 ? (
-              <div className="flex flex-wrap gap-2" data-testid="achievement-badges">
-                {badges.slice(0, 15).map((badge, idx) => {
-                  const badgeInfo = BADGE_DEFINITIONS[badge.badgeType as keyof typeof BADGE_DEFINITIONS];
-                  return (
-                    <Badge 
-                      key={`${badge.badgeType}-${idx}`}
-                      variant="secondary"
-                      className="gap-1 print:bg-gray-200 print:text-black print:border-gray-300"
-                      title={badgeInfo?.description}
-                      data-testid={`badge-${badge.badgeType}`}
-                    >
-                      <Trophy className="w-3 h-3" />
-                      {badgeInfo?.name || badge.badgeType}
-                    </Badge>
-                  );
-                })}
-                {badges.length > 15 && (
-                  <Badge variant="outline" className="print:bg-white print:text-black">+{badges.length - 15} more</Badge>
-                )}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground text-center py-4 print:text-gray-600">No badges earned yet</p>
-            )}
-          </ReportSummarySection>
-
-          {unlockedSkillBadges.length > 0 && (
-            <ReportSummarySection title="Skill Badges" icon={Target}>
-              <div className="space-y-2" data-testid="skill-badges-section">
-                {unlockedSkillBadges.slice(0, 6).map(badge => (
-                  <SkillBadgeItem key={badge.skillType} badge={badge} />
-                ))}
-              </div>
-            </ReportSummarySection>
-          )}
-        </div>
 
         {coachGoals.length > 0 && (
           <ReportSummarySection title="Goals Progress" icon={Target} breakBefore>
