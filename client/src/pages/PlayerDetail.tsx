@@ -25,7 +25,7 @@ import { useQuery } from "@tanstack/react-query";
 import { StatCard } from "@/components/StatCard";
 import { GradeBadge } from "@/components/GradeBadge";
 import { PlayerArchetype } from "@/components/PlayerArchetype";
-import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Trophy, Share2, BarChart3, Medal, User, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Trophy, Share2, BarChart3, Medal, User, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye, BookOpen } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
@@ -960,6 +960,11 @@ export default function PlayerDetail() {
                 )}
                 {player.team && (
                   <span className="font-medium">{player.team}</span>
+                )}
+                {player.gpa && (
+                  <span className="flex items-center gap-1 text-blue-400">
+                    <BookOpen className="w-3 h-3 md:w-4 md:h-4" /> {parseFloat(player.gpa).toFixed(2)} GPA
+                  </span>
                 )}
                 <span>{games.length} Games</span>
               </div>
