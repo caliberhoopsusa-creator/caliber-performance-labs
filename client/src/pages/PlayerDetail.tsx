@@ -25,6 +25,7 @@ import { useQuery } from "@tanstack/react-query";
 import { StatCard } from "@/components/StatCard";
 import { GradeBadge } from "@/components/GradeBadge";
 import { PlayerArchetype } from "@/components/PlayerArchetype";
+import { EliteAchievements } from "@/components/EliteAchievements";
 import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Trophy, Share2, BarChart3, Medal, User, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye, BookOpen } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -968,6 +969,16 @@ export default function PlayerDetail() {
                 )}
                 <span>{games.length} Games</span>
               </div>
+              
+              {games.length > 0 && (
+                <div className="mt-2">
+                  <EliteAchievements 
+                    ppg={parseFloat(avgPoints) || 0}
+                    rpg={parseFloat(avgReb) || 0}
+                    apg={parseFloat(avgAst) || 0}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Grade Badge - Desktop */}
