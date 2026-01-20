@@ -12,7 +12,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Lock, Users, Package, Tag, UserCog, Pencil, Trash2, Plus, Loader2, Award, Crown, Star, Shield, Sparkles } from "lucide-react";
+import { Lock, Users, Package, Tag, UserCog, Pencil, Trash2, Plus, Loader2, Award, Crown, Star, Shield, Sparkles, MapPin, Trophy } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
 const ADMIN_PASSWORD_KEY = "admin_password";
 
@@ -1157,6 +1158,194 @@ function CaliberBadgesTab() {
   );
 }
 
+interface Accolade {
+  id: number;
+  playerId: number;
+  type: string;
+  title: string;
+  description: string | null;
+  season: string | null;
+  dateEarned: string | null;
+  verified: boolean;
+  createdAt: string;
+}
+
+function StateAwardsTab() {
+  const { toast } = useToast();
+  const [awardOpen, setAwardOpen] = useState(false);
+  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+  const [form, setForm] = useState({ title: "", description: "", season: "" });
+
+  const { data: playersData, isLoading: playersLoading } = useQuery<{ players: Player[] }>({
+    queryKey: ["/api/admin/players"],
+    queryFn: async () => {
+      const res = await adminFetch("/api/admin/players");
+      return res.json();
+    },
+  });
+
+  const awardMutation = useMutation({
+    mutationFn: async ({ playerId, title, description, season }: { playerId: number; title: string; description?: string; season?: string }) => {
+      const res = await fetch(`/api/players/${playerId}/accolades`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ 
+          type: "state_award",
+          title, 
+          description: description || undefined,
+          season: season || undefined,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || "Failed to award state recognition");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "State award given!" });
+      setAwardOpen(false);
+      setSelectedPlayer(null);
+      setForm({ title: "", description: "", season: "" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/players"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const openAwardDialog = (player: Player) => {
+    setSelectedPlayer(player);
+    setForm({ title: "", description: "", season: "" });
+    setAwardOpen(true);
+  };
+
+  const handleAward = () => {
+    if (!selectedPlayer || !form.title) {
+      toast({ title: "Error", description: "Title is required", variant: "destructive" });
+      return;
+    }
+    awardMutation.mutate({
+      playerId: selectedPlayer.id,
+      title: form.title,
+      description: form.description || undefined,
+      season: form.season || undefined,
+    });
+  };
+
+  if (playersLoading) {
+    return (
+      <div className="flex justify-center py-8">
+        <Loader2 className="w-6 h-6 animate-spin" />
+      </div>
+    );
+  }
+
+  const players = playersData?.players || [];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          Award official state recognitions to players. Only you (the app owner) can give these awards.
+        </p>
+      </div>
+
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Player</TableHead>
+            <TableHead>Position</TableHead>
+            <TableHead>State</TableHead>
+            <TableHead>Team</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {players.map((player) => (
+            <TableRow key={player.id} data-testid={`row-state-player-${player.id}`}>
+              <TableCell className="font-medium">{player.name}</TableCell>
+              <TableCell>{player.position}</TableCell>
+              <TableCell>{(player as any).state || "-"}</TableCell>
+              <TableCell>{player.team || "-"}</TableCell>
+              <TableCell className="text-right">
+                <Button
+                  size="sm"
+                  onClick={() => openAwardDialog(player)}
+                  data-testid={`button-state-award-${player.id}`}
+                >
+                  <Trophy className="w-4 h-4 mr-1" />
+                  Give State Award
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+          {players.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                No players found
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+
+      <Dialog open={awardOpen} onOpenChange={(open) => !open && setAwardOpen(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Give State Award</DialogTitle>
+            <DialogDescription>
+              Award an official state recognition to {selectedPlayer?.name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="award-title">Award Title</Label>
+              <Input
+                id="award-title"
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                placeholder="e.g., All-State First Team, State Player of the Year"
+                data-testid="input-state-award-title"
+              />
+            </div>
+            <div>
+              <Label htmlFor="award-description">Description (optional)</Label>
+              <Textarea
+                id="award-description"
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                placeholder="Additional details about the award..."
+                data-testid="input-state-award-description"
+              />
+            </div>
+            <div>
+              <Label htmlFor="award-season">Season (optional)</Label>
+              <Input
+                id="award-season"
+                value={form.season}
+                onChange={(e) => setForm({ ...form, season: e.target.value })}
+                placeholder="e.g., 2025-26"
+                data-testid="input-state-award-season"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAwardOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAward} disabled={awardMutation.isPending || !form.title} data-testid="button-confirm-state-award">
+              {awardMutation.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+              Give Award
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
 function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   return (
     <div className="min-h-screen bg-background">
@@ -1170,7 +1359,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
       </div>
       <div className="max-w-7xl mx-auto px-4 py-8">
         <Tabs defaultValue="roster" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 max-w-2xl">
+          <TabsList className="grid w-full grid-cols-6 max-w-3xl">
             <TabsTrigger value="roster" data-testid="tab-roster">
               <UserCog className="w-4 h-4 mr-2" />
               Roster
@@ -1178,6 +1367,10 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
             <TabsTrigger value="badges" data-testid="tab-badges">
               <Award className="w-4 h-4 mr-2" />
               Badges
+            </TabsTrigger>
+            <TabsTrigger value="state" data-testid="tab-state">
+              <Trophy className="w-4 h-4 mr-2" />
+              State Awards
             </TabsTrigger>
             <TabsTrigger value="products" data-testid="tab-products">
               <Package className="w-4 h-4 mr-2" />
@@ -1213,6 +1406,18 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               </CardHeader>
               <CardContent>
                 <CaliberBadgesTab />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="state">
+            <Card>
+              <CardHeader>
+                <CardTitle>State Awards</CardTitle>
+                <CardDescription>Give official state recognitions like All-State, Player of the Year, etc.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <StateAwardsTab />
               </CardContent>
             </Card>
           </TabsContent>

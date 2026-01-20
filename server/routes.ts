@@ -6627,12 +6627,8 @@ Respond in this exact JSON format:
     try {
       const playerId = parseInt(req.params.playerId);
       
-      if (!await canModifyPlayer(req, playerId)) {
-        return res.status(403).json({ message: "Not authorized to add accolades to this profile" });
-      }
-      
       const createSchema = z.object({
-        type: z.enum(['championship', 'career_high', 'award', 'record']),
+        type: z.enum(['championship', 'career_high', 'award', 'record', 'state_award']),
         title: z.string().min(1),
         description: z.string().optional(),
         season: z.string().optional(),
@@ -6640,6 +6636,20 @@ Respond in this exact JSON format:
       });
       
       const input = createSchema.parse(req.body);
+      
+      // State awards can only be given by the app owner
+      if (input.type === 'state_award') {
+        const OWNER_USER_ID = "53178287";
+        if (req.user?.id !== OWNER_USER_ID) {
+          return res.status(403).json({ message: "Only the app owner can award state recognitions" });
+        }
+      } else {
+        // For other accolade types, check if user can modify the player
+        if (!await canModifyPlayer(req, playerId)) {
+          return res.status(403).json({ message: "Not authorized to add accolades to this profile" });
+        }
+      }
+      
       const accolade = await storage.createAccolade({
         ...input,
         playerId,
