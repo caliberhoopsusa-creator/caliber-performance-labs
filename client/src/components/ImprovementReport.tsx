@@ -730,27 +730,103 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
               <CardTitle>Summary</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="prose prose-sm dark:prose-invert max-w-none">
+              <div className="space-y-3 text-sm text-muted-foreground">
                 <p>
-                  Over the <strong>{periodLabel.toLowerCase()}</strong>, {player.name} played{" "}
-                  <strong>{currentStats.gamesPlayed} game{currentStats.gamesPlayed !== 1 ? "s" : ""}</strong>{" "}
-                  with an average grade of <strong>{valueToGrade(currentStats.avgGrade)}</strong>.
+                  <span className="text-foreground font-semibold">{player.name}</span>
+                  {player.team && (
+                    <span> plays for <span className="text-foreground font-semibold">{player.team}</span></span>
+                  )}
+                  {player.position && (
+                    <span> as a <span className="text-foreground font-semibold">{player.position}</span></span>
+                  )}
+                  .
                 </p>
                 <p>
-                  Stat averages: <strong>{currentStats.points.toFixed(1)} PPG</strong>,{" "}
-                  <strong>{currentStats.rebounds.toFixed(1)} RPG</strong>,{" "}
-                  <strong>{currentStats.assists.toFixed(1)} APG</strong>.
+                  Over the <span className="text-foreground font-semibold">{periodLabel.toLowerCase()}</span>, they played{" "}
+                  <span className="text-foreground font-semibold">{currentStats.gamesPlayed} game{currentStats.gamesPlayed !== 1 ? "s" : ""}</span>{" "}
+                  with an average grade of <span className="text-foreground font-semibold">{valueToGrade(currentStats.avgGrade)}</span>.
                 </p>
+                <p>
+                  Stat averages:{" "}
+                  <span className="text-foreground font-semibold">{currentStats.points.toFixed(1)} PPG</span>,{" "}
+                  <span className="text-foreground font-semibold">{currentStats.rebounds.toFixed(1)} RPG</span>,{" "}
+                  <span className="text-foreground font-semibold">{currentStats.assists.toFixed(1)} APG</span>,{" "}
+                  <span className="text-foreground font-semibold">{currentStats.steals.toFixed(1)} SPG</span>,{" "}
+                  <span className="text-foreground font-semibold">{currentStats.blocks.toFixed(1)} BPG</span>.
+                </p>
+                {(() => {
+                  const bestImprovement = improvements.find((i) => i.type === "improvement");
+                  const worstDecline = improvements.find((i) => i.type === "decline");
+                  
+                  const statCategories = [
+                    { key: "points", label: "Scoring", value: currentStats.points },
+                    { key: "rebounds", label: "Rebounding", value: currentStats.rebounds },
+                    { key: "assists", label: "Playmaking", value: currentStats.assists },
+                    { key: "steals", label: "Steals", value: currentStats.steals },
+                    { key: "blocks", label: "Shot blocking", value: currentStats.blocks },
+                    { key: "fgPercent", label: "Field goal shooting", value: currentStats.fgPercent },
+                    { key: "threePercent", label: "Three-point shooting", value: currentStats.threePercent },
+                  ];
+                  
+                  const bestStat = statCategories.reduce((a, b) => {
+                    if (a.key === "fgPercent" || a.key === "threePercent") {
+                      return a.value > b.value ? a : b;
+                    }
+                    if (b.key === "fgPercent" || b.key === "threePercent") {
+                      return b.value > 50 && b.value > a.value ? b : a;
+                    }
+                    return a.value > b.value ? a : b;
+                  });
+                  
+                  return (
+                    <>
+                      {bestStat && bestStat.value > 0 && (
+                        <p>
+                          <span className="text-green-500 font-semibold">Best attribute:</span>{" "}
+                          <span className="text-foreground">{bestStat.label}</span>
+                          {bestImprovement && (
+                            <span className="text-muted-foreground"> - {bestImprovement.label} improved by {Math.abs(bestImprovement.change).toFixed(1)}</span>
+                          )}
+                        </p>
+                      )}
+                      {worstDecline && (
+                        <p>
+                          <span className="text-amber-500 font-semibold">Needs work:</span>{" "}
+                          <span className="text-foreground">{worstDecline.label}</span>
+                          <span className="text-muted-foreground"> - declined by {Math.abs(worstDecline.change).toFixed(1)} compared to previous period</span>
+                        </p>
+                      )}
+                      {currentStats.turnovers > 3 && (
+                        <p>
+                          <span className="text-amber-500 font-semibold">Focus area:</span>{" "}
+                          <span className="text-foreground">Ball security</span>
+                          <span className="text-muted-foreground"> - averaging {currentStats.turnovers.toFixed(1)} turnovers per game</span>
+                        </p>
+                      )}
+                      {!worstDecline && currentStats.turnovers <= 3 && (
+                        <p>
+                          <span className="text-green-500 font-semibold">Overall:</span>{" "}
+                          <span className="text-foreground">Solid all-around performance with no major areas of concern.</span>
+                        </p>
+                      )}
+                    </>
+                  );
+                })()}
                 {previousStats.gamesPlayed > 0 && (
                   <p>
                     Compared to the previous period ({previousStats.gamesPlayed} games),{" "}
-                    {currentStats.avgGrade > previousStats.avgGrade
-                      ? "grade improved"
-                      : currentStats.avgGrade < previousStats.avgGrade
-                      ? "grade declined"
-                      : "grade remained stable"}{" "}
-                    from {valueToGrade(previousStats.avgGrade)} to{" "}
-                    {valueToGrade(currentStats.avgGrade)}.
+                    <span className={cn(
+                      "font-semibold",
+                      currentStats.avgGrade > previousStats.avgGrade ? "text-green-500" : 
+                      currentStats.avgGrade < previousStats.avgGrade ? "text-amber-500" : "text-foreground"
+                    )}>
+                      {currentStats.avgGrade > previousStats.avgGrade
+                        ? "grade improved"
+                        : currentStats.avgGrade < previousStats.avgGrade
+                        ? "grade declined"
+                        : "grade remained stable"}
+                    </span>{" "}
+                    from {valueToGrade(previousStats.avgGrade)} to {valueToGrade(currentStats.avgGrade)}.
                   </p>
                 )}
               </div>
