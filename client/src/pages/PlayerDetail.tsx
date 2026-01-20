@@ -26,6 +26,7 @@ import { StatCard } from "@/components/StatCard";
 import { GradeBadge } from "@/components/GradeBadge";
 import { PlayerArchetype } from "@/components/PlayerArchetype";
 import { EliteAchievements } from "@/components/EliteAchievements";
+import { StateRankingBadge } from "@/components/StateRankingBadge";
 import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Trophy, Share2, BarChart3, Medal, User, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye, BookOpen } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -988,7 +989,8 @@ export default function PlayerDetail() {
               )}
               
               {games.length > 0 && (
-                <div className="mt-2">
+                <div className="flex flex-wrap items-center gap-2 mt-2">
+                  <StateRankingBadge playerId={id} />
                   <EliteAchievements 
                     ppg={parseFloat(avgPoints) || 0}
                     rpg={parseFloat(avgReb) || 0}

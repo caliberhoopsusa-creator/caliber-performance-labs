@@ -2405,6 +2405,73 @@ export async function registerRoutes(
     res.json(leaderboard.map(({ avgGradeScore, ...rest }) => rest));
   });
 
+  // Get player's state ranking
+  app.get('/api/players/:id/state-ranking', async (req, res) => {
+    try {
+      const playerId = Number(req.params.id);
+      const player = await storage.getPlayer(playerId);
+      
+      if (!player) {
+        return res.status(404).json({ message: 'Player not found' });
+      }
+      
+      if (!player.state) {
+        return res.json({ rank: null, totalInState: 0, state: null });
+      }
+      
+      // Get all players in the same state
+      const allPlayers = await storage.getPlayers();
+      const statePlayersWithGames = await Promise.all(
+        allPlayers
+          .filter(p => p.state === player.state)
+          .map(async (p) => {
+            const games = await storage.getGamesByPlayerId(p.id);
+            if (games.length === 0) return null;
+            
+            const gradeScores: Record<string, number> = {
+              'A+': 100, 'A': 95, 'A-': 90,
+              'B+': 85, 'B': 80, 'B-': 75,
+              'C+': 70, 'C': 65, 'C-': 60,
+              'D+': 55, 'D': 50, 'D-': 45,
+              'F': 30
+            };
+            
+            const avgGradeScore = games.reduce((acc, g) => acc + (gradeScores[g.grade || 'C'] || 65), 0) / games.length;
+            const avgPoints = games.reduce((acc, g) => acc + g.points, 0) / games.length;
+            
+            return {
+              playerId: p.id,
+              avgGradeScore,
+              avgPoints,
+              gamesPlayed: games.length
+            };
+          })
+      );
+      
+      // Filter out players with no games and sort by grade score
+      const rankedPlayers = statePlayersWithGames
+        .filter(Boolean)
+        .sort((a, b) => {
+          if (b!.avgGradeScore !== a!.avgGradeScore) {
+            return b!.avgGradeScore - a!.avgGradeScore;
+          }
+          return b!.avgPoints - a!.avgPoints;
+        });
+      
+      const rank = rankedPlayers.findIndex(p => p!.playerId === playerId) + 1;
+      
+      res.json({
+        rank: rank > 0 ? rank : null,
+        totalInState: rankedPlayers.length,
+        state: player.state,
+        isTop100: rank > 0 && rank <= 100
+      });
+    } catch (err) {
+      console.error('Get state ranking error:', err);
+      res.status(500).json({ message: 'Error fetching state ranking' });
+    }
+  });
+
   // Head-to-Head Comparison (Premium Feature)
   app.get(api.analytics.compare.path, requiresSubscription, async (req: any, res) => {
     const { player1Id, player2Id } = api.analytics.compare.input.parse(req.query);
