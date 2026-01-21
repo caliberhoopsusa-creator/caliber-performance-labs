@@ -347,8 +347,8 @@ export default function PracticeTracker() {
       
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl md:text-4xl font-display font-bold text-white uppercase tracking-tight">Practice Tracker</h2>
-          <p className="text-muted-foreground font-medium">Log practice sessions and track player attendance</p>
+          <h2 className="text-3xl md:text-4xl font-display font-bold uppercase tracking-wide bg-gradient-to-b from-white to-cyan-100/80 bg-clip-text text-transparent">Practice Tracker</h2>
+          <p className="text-cyan-200/50 font-medium">Log practice sessions and track player attendance</p>
         </div>
         
         <div className="flex items-center gap-3 flex-wrap">

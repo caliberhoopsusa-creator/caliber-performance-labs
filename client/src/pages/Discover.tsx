@@ -472,10 +472,10 @@ export default function Discover() {
               <Search className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-display font-bold text-white tracking-tight">
+              <h1 className="text-2xl md:text-3xl font-display font-bold bg-gradient-to-b from-white to-cyan-100/80 bg-clip-text text-transparent tracking-wide">
                 Discover Players
               </h1>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-cyan-200/50">
                 Find and connect with talented basketball players
               </p>
             </div>

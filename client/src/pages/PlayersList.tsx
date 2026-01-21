@@ -153,7 +153,7 @@ export default function PlayersList() {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl md:text-4xl font-display font-bold bg-gradient-to-r from-white via-cyan-100 to-white bg-clip-text text-transparent uppercase tracking-tight">
+          <h2 className="text-3xl md:text-4xl font-display font-bold bg-gradient-to-b from-white to-cyan-100/80 bg-clip-text text-transparent tracking-wide">
             {hasTeam ? primaryTeam?.name || "Roster" : "Roster"}
           </h2>
           <p className="text-cyan-200/50 font-medium">

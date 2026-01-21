@@ -75,7 +75,7 @@ export default function Leaderboard() {
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 pb-24 md:pb-8">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl md:text-4xl font-display font-bold bg-gradient-to-r from-white via-cyan-100 to-white bg-clip-text text-transparent uppercase tracking-tight" data-testid="text-leaderboard-title">Player Leaderboard</h2>
+          <h2 className="text-2xl md:text-4xl font-display font-bold bg-gradient-to-b from-white to-cyan-100/80 bg-clip-text text-transparent tracking-wide" data-testid="text-leaderboard-title">Player Leaderboard</h2>
           <p className="text-sm md:text-base text-cyan-200/50 font-medium">Top performers based on average game grade</p>
         </div>
       </div>

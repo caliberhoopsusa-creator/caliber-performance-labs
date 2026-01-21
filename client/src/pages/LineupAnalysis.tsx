@@ -141,8 +141,8 @@ export default function LineupAnalysis() {
       <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-display" data-testid="text-page-title">Lineup Analysis</h1>
-          <p className="text-muted-foreground">Manage lineups and analyze position depth</p>
+          <h1 className="text-3xl font-bold font-display tracking-wide bg-gradient-to-b from-white to-cyan-100/80 bg-clip-text text-transparent" data-testid="text-page-title">Lineup Analysis</h1>
+          <p className="text-cyan-200/50">Manage lineups and analyze position depth</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>

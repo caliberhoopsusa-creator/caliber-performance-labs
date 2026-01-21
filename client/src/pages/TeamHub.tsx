@@ -211,10 +211,10 @@ export default function TeamHub() {
       <div className="space-y-6" data-testid="team-hub-page">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-display uppercase tracking-wide bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-display uppercase tracking-wide bg-gradient-to-b from-white to-cyan-100/80 bg-clip-text text-transparent">
               Team Hub
             </h1>
-            <p className="text-muted-foreground mt-1">
+            <p className="text-cyan-200/50 mt-1">
               Manage your team schedule and events
             </p>
           </div>

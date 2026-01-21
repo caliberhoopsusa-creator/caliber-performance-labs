@@ -737,11 +737,11 @@ export default function Stories() {
     <div className="space-y-6 animate-in fade-in duration-500" data-testid="page-stories">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl md:text-4xl font-display font-bold text-white uppercase tracking-tight flex items-center gap-3">
+          <h1 className="text-3xl md:text-4xl font-display font-bold bg-gradient-to-b from-white to-cyan-100/80 bg-clip-text text-transparent tracking-wide flex items-center gap-3">
             <Camera className="w-8 h-8 text-primary" />
             Stories
           </h1>
-          <p className="text-muted-foreground font-medium mt-1">
+          <p className="text-cyan-200/50 font-medium mt-1">
             Share your highlights with photos and videos
           </p>
         </div>

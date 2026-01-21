@@ -176,8 +176,8 @@ export default function Teams() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-display text-white tracking-wide">Teams</h1>
-          <p className="text-muted-foreground mt-1">Join or create teams to discuss with teammates</p>
+          <h1 className="text-3xl font-bold font-display bg-gradient-to-b from-white to-cyan-100/80 bg-clip-text text-transparent tracking-wide">Teams</h1>
+          <p className="text-cyan-200/50 mt-1">Join or create teams to discuss with teammates</p>
         </div>
         <div className="flex gap-2">
           <Dialog open={joinDialogOpen} onOpenChange={setJoinDialogOpen}>

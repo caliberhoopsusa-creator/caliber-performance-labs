@@ -80,10 +80,10 @@ export default function OpponentScouting() {
       <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold font-display tracking-tight" data-testid="page-title">
+          <h1 className="text-3xl font-bold font-display tracking-wide bg-gradient-to-b from-white to-cyan-100/80 bg-clip-text text-transparent" data-testid="page-title">
             Opponent Scouting
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-cyan-200/50 mt-1">
             Track and analyze opposing teams and players
           </p>
         </div>
