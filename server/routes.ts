@@ -6150,12 +6150,56 @@ Respond in this exact JSON format:
     }
   });
 
-  // Get all players with state rankings
+  // Set country ranking for a player (owner only)
+  app.post('/api/players/:id/country-rank', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!isAppOwner(userId)) {
+        return res.status(403).json({ error: 'Only the app owner can set country rankings' });
+      }
+      
+      const playerId = parseInt(req.params.id);
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ error: 'Player not found' });
+      }
+      
+      const { rank } = req.body;
+      if (!rank || typeof rank !== 'number' || rank < 1 || rank > 500) {
+        return res.status(400).json({ error: 'Invalid rank. Must be a number between 1 and 500.' });
+      }
+      
+      await storage.updatePlayer(playerId, { countryRank: rank });
+      res.json({ success: true, countryRank: rank });
+    } catch (err) {
+      console.error('Set country rank error:', err);
+      res.status(500).json({ error: 'Could not set country ranking' });
+    }
+  });
+
+  // Remove country ranking from a player (owner only)
+  app.delete('/api/players/:id/country-rank', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!isAppOwner(userId)) {
+        return res.status(403).json({ error: 'Only the app owner can remove country rankings' });
+      }
+      
+      const playerId = parseInt(req.params.id);
+      await storage.updatePlayer(playerId, { countryRank: null });
+      res.json({ success: true });
+    } catch (err) {
+      console.error('Remove country rank error:', err);
+      res.status(500).json({ error: 'Could not remove country ranking' });
+    }
+  });
+
+  // Get all players with rankings (state or country)
   app.get('/api/state-rankings', async (req, res) => {
     try {
       const players = await storage.getPlayers();
       const rankedPlayers = players
-        .filter((p: any) => p.stateRank !== null)
+        .filter((p: any) => p.stateRank !== null || p.countryRank !== null)
         .map((p: any) => ({
           id: p.id,
           name: p.name,
@@ -6163,6 +6207,7 @@ Respond in this exact JSON format:
           state: p.state,
           team: p.team,
           stateRank: p.stateRank,
+          countryRank: p.countryRank,
         }));
       res.json({ players: rankedPlayers });
     } catch (err) {

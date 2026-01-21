@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Lock, Users, Package, Tag, UserCog, Pencil, Trash2, Plus, Loader2, Award, Crown, Star, Shield, Sparkles, MapPin, Trophy } from "lucide-react";
+import { Lock, Users, Package, Tag, UserCog, Pencil, Trash2, Plus, Loader2, Award, Crown, Star, Shield, Sparkles, MapPin, Trophy, Globe } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 
 const ADMIN_PASSWORD_KEY = "admin_password";
@@ -1192,7 +1192,8 @@ function StateRankingsTab() {
   const { toast } = useToast();
   const [rankOpen, setRankOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
-  const [rank, setRank] = useState("");
+  const [stateRank, setStateRank] = useState("");
+  const [countryRank, setCountryRank] = useState("");
 
   const { data: playersData, isLoading: playersLoading, refetch: refetchPlayers } = useQuery<{ players: Player[] }>({
     queryKey: ["/api/admin/players", "rankings-tab"],
@@ -1202,7 +1203,7 @@ function StateRankingsTab() {
     },
   });
 
-  const { data: rankingsData, refetch: refetchRankings } = useQuery<{ players: Array<{ id: number; name: string; position: string; state: string; team: string; stateRank: number }> }>({
+  const { data: rankingsData, refetch: refetchRankings } = useQuery<{ players: Array<{ id: number; name: string; position: string; state: string; team: string; stateRank: number | null; countryRank: number | null }> }>({
     queryKey: ["/api/state-rankings"],
     queryFn: async () => {
       const res = await fetch("/api/state-rankings");
@@ -1210,7 +1211,7 @@ function StateRankingsTab() {
     },
   });
 
-  const setRankMutation = useMutation({
+  const setStateRankMutation = useMutation({
     mutationFn: async ({ playerId, rankValue }: { playerId: number; rankValue: number }) => {
       const res = await fetch(`/api/players/${playerId}/state-rank`, {
         method: "POST",
@@ -1226,9 +1227,6 @@ function StateRankingsTab() {
     },
     onSuccess: () => {
       toast({ title: "Success", description: "State ranking set!" });
-      setRankOpen(false);
-      setSelectedPlayer(null);
-      setRank("");
       refetchPlayers();
       refetchRankings();
     },
@@ -1237,7 +1235,31 @@ function StateRankingsTab() {
     },
   });
 
-  const removeRankMutation = useMutation({
+  const setCountryRankMutation = useMutation({
+    mutationFn: async ({ playerId, rankValue }: { playerId: number; rankValue: number }) => {
+      const res = await fetch(`/api/players/${playerId}/country-rank`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ rank: rankValue }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to set country ranking");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Country ranking set!" });
+      refetchPlayers();
+      refetchRankings();
+    },
+    onError: (err: any) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const removeStateRankMutation = useMutation({
     mutationFn: async (playerId: number) => {
       const res = await fetch(`/api/players/${playerId}/state-rank`, {
         method: "DELETE",
@@ -1259,23 +1281,71 @@ function StateRankingsTab() {
     },
   });
 
+  const removeCountryRankMutation = useMutation({
+    mutationFn: async (playerId: number) => {
+      const res = await fetch(`/api/players/${playerId}/country-rank`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to remove country ranking");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Country ranking removed!" });
+      refetchPlayers();
+      refetchRankings();
+    },
+    onError: (err: any) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
   const openRankDialog = (player: Player) => {
     setSelectedPlayer(player);
-    setRank("");
+    const currentRanking = rankingsData?.players.find(r => r.id === player.id);
+    setStateRank(currentRanking?.stateRank?.toString() || "");
+    setCountryRank(currentRanking?.countryRank?.toString() || "");
     setRankOpen(true);
   };
 
-  const handleSetRank = () => {
-    if (!selectedPlayer || !rank) {
-      toast({ title: "Error", description: "Please enter a rank", variant: "destructive" });
+  const handleSaveRanks = () => {
+    if (!selectedPlayer) return;
+    
+    const stateRankValue = stateRank ? parseInt(stateRank) : null;
+    const countryRankValue = countryRank ? parseInt(countryRank) : null;
+    
+    if (stateRankValue !== null && (isNaN(stateRankValue) || stateRankValue < 1 || stateRankValue > 100)) {
+      toast({ title: "Error", description: "State rank must be a number between 1 and 100", variant: "destructive" });
       return;
     }
-    const rankValue = parseInt(rank);
-    if (isNaN(rankValue) || rankValue < 1 || rankValue > 100) {
-      toast({ title: "Error", description: "Rank must be a number between 1 and 100", variant: "destructive" });
+    if (countryRankValue !== null && (isNaN(countryRankValue) || countryRankValue < 1 || countryRankValue > 500)) {
+      toast({ title: "Error", description: "Country rank must be a number between 1 and 500", variant: "destructive" });
       return;
     }
-    setRankMutation.mutate({ playerId: selectedPlayer.id, rankValue });
+    
+    const currentRanking = rankingsData?.players.find(r => r.id === selectedPlayer.id);
+    
+    // Handle state rank
+    if (stateRankValue !== null) {
+      setStateRankMutation.mutate({ playerId: selectedPlayer.id, rankValue: stateRankValue });
+    } else if (currentRanking?.stateRank) {
+      removeStateRankMutation.mutate(selectedPlayer.id);
+    }
+    
+    // Handle country rank
+    if (countryRankValue !== null) {
+      setCountryRankMutation.mutate({ playerId: selectedPlayer.id, rankValue: countryRankValue });
+    } else if (currentRanking?.countryRank) {
+      removeCountryRankMutation.mutate(selectedPlayer.id);
+    }
+    
+    setRankOpen(false);
+    setSelectedPlayer(null);
+    setStateRank("");
+    setCountryRank("");
   };
 
   if (playersLoading) {
@@ -1288,13 +1358,12 @@ function StateRankingsTab() {
 
   const players = playersData?.players || [];
   const rankedPlayers = rankingsData?.players || [];
-  const playersWithState = players.filter(p => p.state);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Assign state rankings to players. Only players with a state set can be ranked.
+          Assign state and country rankings to players.
         </p>
       </div>
 
@@ -1314,29 +1383,57 @@ function StateRankingsTab() {
                   borderColor: 'rgba(212,175,55,0.3)'
                 }}
               >
-                <div className="flex items-center gap-3">
-                  <div 
-                    className="px-3 py-1 rounded-full text-sm font-bold"
-                    style={{ 
-                      background: '#0a0a0a', 
-                      color: '#D4AF37',
-                      border: '1px solid #D4AF37'
-                    }}
-                  >
-                    #{p.stateRank} IN {p.state}
-                  </div>
+                <div className="flex items-center gap-3 flex-wrap">
+                  {p.stateRank && (
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="px-3 py-1 rounded-full text-sm font-bold"
+                        style={{ 
+                          background: '#0a0a0a', 
+                          color: '#D4AF37',
+                          border: '1px solid #D4AF37'
+                        }}
+                      >
+                        #{p.stateRank} IN {p.state}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={() => removeStateRankMutation.mutate(p.id)}
+                        disabled={removeStateRankMutation.isPending}
+                      >
+                        <Trash2 className="w-3 h-3 text-destructive" />
+                      </Button>
+                    </div>
+                  )}
+                  {p.countryRank && (
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="px-3 py-1 rounded-full text-sm font-bold"
+                        style={{ 
+                          background: '#0a0a0a', 
+                          color: '#3B82F6',
+                          border: '1px solid #3B82F6'
+                        }}
+                      >
+                        #{p.countryRank} IN USA
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={() => removeCountryRankMutation.mutate(p.id)}
+                        disabled={removeCountryRankMutation.isPending}
+                      >
+                        <Trash2 className="w-3 h-3 text-destructive" />
+                      </Button>
+                    </div>
+                  )}
                   <span className="font-medium">{p.name}</span>
                   <Badge variant="outline">{p.position}</Badge>
                   {p.team && <span className="text-sm text-muted-foreground">{p.team}</span>}
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeRankMutation.mutate(p.id)}
-                  disabled={removeRankMutation.isPending}
-                >
-                  <Trash2 className="w-4 h-4 text-destructive" />
-                </Button>
               </div>
             ))}
           </div>
@@ -1350,28 +1447,29 @@ function StateRankingsTab() {
             <TableHead>Position</TableHead>
             <TableHead>State</TableHead>
             <TableHead>Team</TableHead>
-            <TableHead>Current Rank</TableHead>
+            <TableHead>State Rank</TableHead>
+            <TableHead>Country Rank</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {playersWithState.length === 0 ? (
+          {players.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                No players with state information found
+              <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                No players found
               </TableCell>
             </TableRow>
           ) : (
-            playersWithState.map((player) => {
+            players.map((player) => {
               const currentRanking = rankedPlayers.find(r => r.id === player.id);
               return (
                 <TableRow key={player.id}>
                   <TableCell className="font-medium">{player.name}</TableCell>
                   <TableCell>{player.position}</TableCell>
-                  <TableCell>{player.state}</TableCell>
+                  <TableCell>{player.state || "-"}</TableCell>
                   <TableCell>{player.team || "-"}</TableCell>
                   <TableCell>
-                    {currentRanking ? (
+                    {currentRanking?.stateRank ? (
                       <Badge 
                         variant="outline"
                         className="border-0"
@@ -1388,6 +1486,24 @@ function StateRankingsTab() {
                       <span className="text-muted-foreground">-</span>
                     )}
                   </TableCell>
+                  <TableCell>
+                    {currentRanking?.countryRank ? (
+                      <Badge 
+                        variant="outline"
+                        className="border-0"
+                        style={{ 
+                          background: '#0a0a0a', 
+                          color: '#3B82F6',
+                          border: '1px solid rgba(59,130,246,0.5)'
+                        }}
+                      >
+                        <Globe className="w-3 h-3 mr-1" style={{ color: '#3B82F6' }} />
+                        #{currentRanking.countryRank}
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-right">
                     <Button
                       variant="outline"
@@ -1396,7 +1512,7 @@ function StateRankingsTab() {
                       className="gap-2"
                     >
                       <Crown className="w-4 h-4" />
-                      {currentRanking ? "Update Rank" : "Set Rank"}
+                      Set Rankings
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -1409,38 +1525,65 @@ function StateRankingsTab() {
       <Dialog open={rankOpen} onOpenChange={setRankOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Set State Ranking</DialogTitle>
+            <DialogTitle>Set Rankings</DialogTitle>
             <DialogDescription>
-              Set the state ranking for {selectedPlayer?.name}
-              {selectedPlayer?.state && ` in ${selectedPlayer.state}`}
+              Set the state and/or country ranking for {selectedPlayer?.name}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <Label>Rank (1-100)</Label>
+              <Label className="flex items-center gap-2">
+                <Crown className="w-4 h-4" style={{ color: '#D4AF37' }} />
+                State Rank (1-100)
+              </Label>
               <Input
                 type="number"
                 min={1}
                 max={100}
-                value={rank}
-                onChange={(e) => setRank(e.target.value)}
+                value={stateRank}
+                onChange={(e) => setStateRank(e.target.value)}
                 placeholder="e.g., 1 for #1 in state"
                 className="mt-1"
               />
+              {selectedPlayer?.state && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Displays as "#{stateRank || "X"} IN {selectedPlayer.state}" on the profile
+                </p>
+              )}
+              {!selectedPlayer?.state && (
+                <p className="text-xs text-amber-500 mt-1">
+                  Player has no state set - state rank won't display
+                </p>
+              )}
+            </div>
+            <div>
+              <Label className="flex items-center gap-2">
+                <Globe className="w-4 h-4" style={{ color: '#3B82F6' }} />
+                Country Rank (1-500)
+              </Label>
+              <Input
+                type="number"
+                min={1}
+                max={500}
+                value={countryRank}
+                onChange={(e) => setCountryRank(e.target.value)}
+                placeholder="e.g., 5 for #5 in USA"
+                className="mt-1"
+              />
               <p className="text-xs text-muted-foreground mt-1">
-                This will display as "#{rank} IN {selectedPlayer?.state}" on the player's profile
+                Displays as "#{countryRank || "X"} IN USA" on the profile
               </p>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRankOpen(false)}>Cancel</Button>
             <Button 
-              onClick={handleSetRank} 
-              disabled={setRankMutation.isPending}
+              onClick={handleSaveRanks} 
+              disabled={setStateRankMutation.isPending || setCountryRankMutation.isPending}
               className="gap-2"
             >
-              {setRankMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-              Set Ranking
+              {(setStateRankMutation.isPending || setCountryRankMutation.isPending) && <Loader2 className="w-4 h-4 animate-spin" />}
+              Save Rankings
             </Button>
           </DialogFooter>
         </DialogContent>
