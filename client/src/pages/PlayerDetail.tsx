@@ -683,7 +683,7 @@ function CoachContactSection({ player, isOwnProfile }: CoachContactSectionProps)
       
       if (!response.ok) throw new Error("Failed to save");
       
-      queryClient.invalidateQueries({ queryKey: ["/api/players", player.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/players/:id", player.id] });
       toast({ title: "Coach contact saved!" });
       setIsEditing(false);
     } catch (error) {
