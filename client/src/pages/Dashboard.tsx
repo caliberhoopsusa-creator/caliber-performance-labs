@@ -23,8 +23,8 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-up delay-100">
         <div>
-          <h1 className="text-2xl font-display font-bold text-white" data-testid="text-dashboard-title">Dashboard</h1>
-          <p className="text-muted-foreground text-sm">Track and analyze performance</p>
+          <h1 className="text-2xl font-display font-bold bg-gradient-to-b from-white to-cyan-100/80 bg-clip-text text-transparent tracking-wide" data-testid="text-dashboard-title">Dashboard</h1>
+          <p className="text-cyan-200/50 text-sm tracking-wide">Track and analyze performance</p>
         </div>
         <Link href="/analyze">
           <Button data-testid="button-new-analysis" className="shadow-lg shadow-primary/20">

@@ -14,12 +14,12 @@ export function StatCard({ label, value, subValue, trend, className, highlight }
   return (
     <div className={cn(
       "relative rounded-xl p-5 flex flex-col justify-between group overflow-hidden",
-      "bg-gradient-to-br from-cyan-500/[0.04] via-white/[0.02] to-transparent",
+      "bg-gradient-to-br from-[hsl(220,25%,8%)] via-[hsl(220,20%,6%)] to-[hsl(220,25%,5%)]",
       "border border-cyan-500/[0.08] backdrop-blur-xl",
-      "shadow-[0_4px_24px_rgba(0,0,0,0.3),0_0_40px_rgba(100,200,255,0.02)]",
+      "shadow-[0_4px_24px_rgba(0,0,0,0.4),0_0_50px_rgba(0,212,255,0.02)]",
       "transition-all duration-400",
-      "hover:border-cyan-400/[0.15] hover:shadow-[0_8px_32px_rgba(0,0,0,0.35),0_0_50px_rgba(100,200,255,0.05)]",
-      highlight && "border-cyan-400/20 shadow-[0_0_30px_rgba(100,200,255,0.08)]",
+      "hover:border-cyan-400/[0.15] hover:shadow-[0_8px_32px_rgba(0,0,0,0.5),0_0_60px_rgba(0,212,255,0.04)]",
+      highlight && "border-cyan-400/20 shadow-[0_0_40px_rgba(0,212,255,0.08)]",
       className
     )}>
       <div className="absolute inset-x-[20%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />

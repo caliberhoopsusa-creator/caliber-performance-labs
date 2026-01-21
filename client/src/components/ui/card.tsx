@@ -9,10 +9,12 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "shadcn-card relative rounded-xl border border-cyan-500/[0.06] bg-gradient-to-br from-white/[0.04] via-white/[0.02] to-cyan-500/[0.02] text-card-foreground backdrop-blur-xl transition-all duration-400",
-      "shadow-[0_4px_30px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.05)_inset,0_0_40px_rgba(100,200,255,0.02)]",
-      "hover:border-cyan-400/[0.12] hover:shadow-[0_8px_40px_rgba(0,0,0,0.35),0_1px_0_rgba(255,255,255,0.08)_inset,0_0_50px_rgba(100,200,255,0.04)]",
-      "before:absolute before:inset-x-[15%] before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-cyan-400/30 before:to-transparent",
+      "shadcn-card relative rounded-xl border border-cyan-500/[0.08] text-card-foreground backdrop-blur-xl transition-all duration-400",
+      "bg-gradient-to-br from-[hsl(220,25%,8%)] via-[hsl(220,20%,6%)] to-[hsl(220,25%,5%)]",
+      "shadow-[0_4px_30px_rgba(0,0,0,0.4),0_1px_0_rgba(255,255,255,0.03)_inset,0_0_60px_rgba(0,212,255,0.02)]",
+      "hover:border-cyan-400/[0.15] hover:shadow-[0_8px_50px_rgba(0,0,0,0.5),0_1px_0_rgba(255,255,255,0.05)_inset,0_0_80px_rgba(0,212,255,0.04)]",
+      "before:absolute before:inset-x-[10%] before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-cyan-400/40 before:to-transparent",
+      "after:absolute after:inset-0 after:rounded-xl after:pointer-events-none after:bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] after:bg-[size:30px_30px] after:opacity-30",
       className
     )}
     {...props}
@@ -26,7 +28,11 @@ const CardHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex flex-col space-y-1.5 p-6", className)}
+    className={cn(
+      "flex flex-col space-y-1.5 p-6 relative",
+      "border-b border-cyan-500/[0.08] bg-gradient-to-r from-cyan-500/[0.03] to-transparent",
+      className
+    )}
     {...props}
   />
 ));
@@ -39,7 +45,8 @@ const CardTitle = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "text-2xl font-semibold leading-none tracking-tight",
+      "text-2xl font-semibold leading-none tracking-tight font-display",
+      "bg-gradient-to-b from-white to-cyan-100/90 bg-clip-text text-transparent",
       className
     )}
     {...props}

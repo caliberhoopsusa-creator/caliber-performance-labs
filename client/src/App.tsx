@@ -133,13 +133,14 @@ function MainRouter() {
       <OfflineBanner />
       <div className="flex min-h-screen w-full max-w-full overflow-x-hidden bg-background text-foreground font-body selection:bg-primary/30">
         <Sidebar userRole={extendedUser.role} playerId={extendedUser.playerId} />
-        <div className="flex-1 flex flex-col min-w-0 relative">
-          <div className="absolute inset-0 cyber-grid pointer-events-none opacity-40" />
-          <div className="absolute inset-0 scan-lines pointer-events-none opacity-30" />
-          <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-gradient-radial from-cyan-500/[0.03] to-transparent rounded-full blur-[150px] pointer-events-none" />
-          <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-gradient-radial from-blue-500/[0.025] to-transparent rounded-full blur-[120px] pointer-events-none" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-gradient-radial from-white/[0.015] to-transparent rounded-full pointer-events-none" />
-          <header className="relative z-10 flex items-center justify-between gap-4 p-4 md:px-8 border-b border-white/[0.08] backdrop-blur-2xl bg-gradient-to-r from-background/50 via-background/30 to-background/50">
+        <div className="flex-1 flex flex-col min-w-0 relative bg-gradient-to-b from-[hsl(220,25%,6%)] via-[hsl(220,20%,5%)] to-[hsl(220,25%,4%)]">
+          <div className="absolute inset-0 cyber-grid pointer-events-none opacity-50" />
+          <div className="absolute inset-0 scan-lines pointer-events-none opacity-20" />
+          <div className="absolute top-0 left-1/4 w-[800px] h-[800px] bg-gradient-radial from-cyan-500/[0.04] to-transparent rounded-full blur-[180px] pointer-events-none" />
+          <div className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-gradient-radial from-blue-500/[0.03] to-transparent rounded-full blur-[150px] pointer-events-none" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-gradient-radial from-cyan-500/[0.02] to-transparent rounded-full pointer-events-none" />
+          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent pointer-events-none" />
+          <header className="relative z-10 flex items-center justify-between gap-4 p-4 md:px-8 border-b border-cyan-500/[0.08] backdrop-blur-2xl bg-gradient-to-r from-[hsl(220,25%,8%)]/80 via-[hsl(220,20%,6%)]/60 to-[hsl(220,25%,8%)]/80">
             <MobileDrawer userRole={extendedUser.role} playerId={extendedUser.playerId} />
             <div className="flex items-center gap-3">
               <OfflineIndicator />
