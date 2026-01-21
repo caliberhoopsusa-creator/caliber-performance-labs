@@ -2,15 +2,30 @@ import { cn } from "@/lib/utils";
 
 export function GradeBadge({ grade, size = "md", className }: { grade: string, size?: "sm" | "md" | "lg" | "xl", className?: string }) {
   const normalizedGrade = grade.trim().toUpperCase();
-  const letter = normalizedGrade.charAt(0);
   
   let gradeDisplayClass = "grade-display";
+  let glowColor = "rgba(100,200,255,0.3)";
   
-  if (["A", "A+", "A-"].includes(normalizedGrade)) { gradeDisplayClass = "grade-display-a"; }
-  else if (["B", "B+", "B-"].includes(normalizedGrade)) { gradeDisplayClass = "grade-display-b"; }
-  else if (["C", "C+", "C-"].includes(normalizedGrade)) { gradeDisplayClass = "grade-display-c"; }
-  else if (["D", "D+", "D-"].includes(normalizedGrade)) { gradeDisplayClass = "grade-display-d"; }
-  else if (["F"].includes(normalizedGrade)) { gradeDisplayClass = "grade-display-f"; }
+  if (["A", "A+", "A-"].includes(normalizedGrade)) { 
+    gradeDisplayClass = "grade-display-a"; 
+    glowColor = "rgba(16,185,129,0.4)";
+  }
+  else if (["B", "B+", "B-"].includes(normalizedGrade)) { 
+    gradeDisplayClass = "grade-display-b"; 
+    glowColor = "rgba(16,185,129,0.3)";
+  }
+  else if (["C", "C+", "C-"].includes(normalizedGrade)) { 
+    gradeDisplayClass = "grade-display-c"; 
+    glowColor = "rgba(234,179,8,0.4)";
+  }
+  else if (["D", "D+", "D-"].includes(normalizedGrade)) { 
+    gradeDisplayClass = "grade-display-d"; 
+    glowColor = "rgba(249,115,22,0.4)";
+  }
+  else if (["F"].includes(normalizedGrade)) { 
+    gradeDisplayClass = "grade-display-f"; 
+    glowColor = "rgba(239,68,68,0.4)";
+  }
 
   const sizeClasses = {
     sm: "w-8 h-8 text-sm rounded-lg",
@@ -20,14 +35,18 @@ export function GradeBadge({ grade, size = "md", className }: { grade: string, s
   };
 
   return (
-    <div className={cn(
-      "font-display font-bold flex items-center justify-center shrink-0 transition-transform duration-300 hover:scale-105",
-      "shadow-[0_4px_20px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.1)_inset]",
-      gradeDisplayClass,
-      sizeClasses[size],
-      className
-    )}>
-      {grade}
+    <div 
+      className={cn(
+        "font-display font-bold flex items-center justify-center shrink-0 transition-all duration-300 hover:scale-105 relative",
+        gradeDisplayClass,
+        sizeClasses[size],
+        className
+      )}
+      style={{
+        boxShadow: `0 4px 20px ${glowColor}, 0 1px 0 rgba(255,255,255,0.15) inset, 0 0 30px ${glowColor.replace(')', ',0.2)')}`,
+      }}
+    >
+      <span className="relative z-10 drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">{grade}</span>
     </div>
   );
 }

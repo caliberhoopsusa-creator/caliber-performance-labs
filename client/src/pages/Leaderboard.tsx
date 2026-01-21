@@ -75,21 +75,22 @@ export default function Leaderboard() {
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 pb-24 md:pb-8">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl md:text-4xl font-display font-bold text-white uppercase tracking-tight" data-testid="text-leaderboard-title">Player Leaderboard</h2>
-          <p className="text-sm md:text-base text-muted-foreground font-medium">Top performers based on average game grade</p>
+          <h2 className="text-2xl md:text-4xl font-display font-bold bg-gradient-to-r from-white via-cyan-100 to-white bg-clip-text text-transparent uppercase tracking-tight" data-testid="text-leaderboard-title">Player Leaderboard</h2>
+          <p className="text-sm md:text-base text-cyan-200/50 font-medium">Top performers based on average game grade</p>
         </div>
       </div>
 
-      <div className="glass-card p-4 rounded-xl">
+      <div className="relative rounded-xl p-4 bg-gradient-to-br from-cyan-500/[0.04] to-transparent border border-cyan-500/[0.08] backdrop-blur-xl overflow-hidden">
+        <div className="absolute inset-x-[20%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
         <div className="flex items-center gap-2 mb-3">
-          <Filter className="w-4 h-4 text-primary" />
+          <Filter className="w-4 h-4 text-cyan-400" />
           <span className="text-sm font-medium text-white">Filters</span>
           {hasFilters && (
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={clearFilters}
-              className="ml-auto text-xs"
+              className="ml-auto text-xs text-cyan-400 hover:text-cyan-300"
               data-testid="button-clear-filters"
             >
               <X className="w-3 h-3 mr-1" />
@@ -136,31 +137,32 @@ export default function Leaderboard() {
         </div>
       </div>
 
-      <div className="elite-card overflow-hidden animate-fade-up delay-300">
+      <div className="relative rounded-xl overflow-hidden bg-gradient-to-br from-cyan-500/[0.03] to-transparent border border-cyan-500/[0.08] backdrop-blur-xl animate-fade-up delay-300">
+        <div className="absolute inset-x-[15%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
         <div className="overflow-x-auto -mx-4 md:mx-0">
           <div className="min-w-[600px] md:min-w-0">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-white/5 border-b border-white/5">
-                  <th className="px-3 md:px-6 py-3 md:py-4 text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground">Rank</th>
-                  <th className="px-3 md:px-6 py-3 md:py-4 text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground">Player</th>
-                  <th className="px-3 md:px-6 py-3 md:py-4 text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground">Grade</th>
-                  <th className="px-3 md:px-6 py-3 md:py-4 text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground">PPG</th>
-                  <th className="px-3 md:px-6 py-3 md:py-4 text-[10px] md:text-xs font-bold uppercase tracking-wider text-muted-foreground">Games</th>
+                <tr className="bg-gradient-to-r from-cyan-500/[0.05] to-transparent border-b border-cyan-500/[0.08]">
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-[10px] md:text-xs font-bold uppercase tracking-wider text-cyan-300/60">Rank</th>
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-[10px] md:text-xs font-bold uppercase tracking-wider text-cyan-300/60">Player</th>
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-[10px] md:text-xs font-bold uppercase tracking-wider text-cyan-300/60">Grade</th>
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-[10px] md:text-xs font-bold uppercase tracking-wider text-cyan-300/60">PPG</th>
+                  <th className="px-3 md:px-6 py-3 md:py-4 text-[10px] md:text-xs font-bold uppercase tracking-wider text-cyan-300/60">Games</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-cyan-500/[0.06]">
                 {leaderboard?.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-3 md:px-6 py-12 text-center">
-                      <div className="text-muted-foreground">
-                        <Trophy className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <div className="text-cyan-200/40">
+                        <Trophy className="w-8 h-8 mx-auto mb-2 text-cyan-400/30" />
                         <p className="text-sm">No players found matching your filters</p>
                         {hasFilters && (
                           <Button 
                             variant="ghost" 
                             onClick={clearFilters} 
-                            className="text-primary mt-2"
+                            className="text-cyan-400 mt-2 hover:text-cyan-300"
                             data-testid="button-clear-filters-empty"
                           >
                             Clear filters
@@ -171,15 +173,15 @@ export default function Leaderboard() {
                   </tr>
                 ) : (
                   leaderboard?.map((entry: any, index: number) => (
-                    <tr key={entry.playerId} className="transition-colors group hover:bg-white/10" data-testid={`row-leaderboard-${index}`}>
+                    <tr key={entry.playerId} className="transition-all duration-300 group hover:bg-gradient-to-r hover:from-cyan-500/[0.06] hover:to-transparent" data-testid={`row-leaderboard-${index}`}>
                       <td className="px-3 md:px-6 py-4 md:py-6">
                         <div className="flex items-center gap-2 md:gap-3">
-                          {index === 0 && <Trophy className="w-4 h-4 md:w-5 md:h-5 text-yellow-500" />}
-                          {index === 1 && <Medal className="w-4 h-4 md:w-5 md:h-5 text-gray-400" />}
-                          {index === 2 && <Medal className="w-4 h-4 md:w-5 md:h-5 text-amber-600" />}
+                          {index === 0 && <Trophy className="w-4 h-4 md:w-5 md:h-5 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]" />}
+                          {index === 1 && <Medal className="w-4 h-4 md:w-5 md:h-5 text-slate-300 drop-shadow-[0_0_6px_rgba(148,163,184,0.4)]" />}
+                          {index === 2 && <Medal className="w-4 h-4 md:w-5 md:h-5 text-amber-500 drop-shadow-[0_0_6px_rgba(245,158,11,0.4)]" />}
                           <span className={cn(
                             "font-display font-bold text-base md:text-lg",
-                            index < 3 ? "text-white" : "text-muted-foreground"
+                            index < 3 ? "bg-gradient-to-b from-white to-cyan-100/80 bg-clip-text text-transparent" : "text-cyan-200/50"
                           )}>
                             #{index + 1}
                           </span>
@@ -188,12 +190,12 @@ export default function Leaderboard() {
                       <td className="px-3 md:px-6 py-4 md:py-6">
                         <Link href={`/players/${entry.playerId}`} data-testid={`link-player-profile-${entry.playerId}`}>
                           <div className="flex items-center gap-2 md:gap-4 cursor-pointer">
-                            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-secondary flex items-center justify-center font-bold text-xs md:text-sm shrink-0">
+                            <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-cyan-500/20 to-transparent border border-cyan-400/20 flex items-center justify-center font-bold text-xs md:text-sm shrink-0 text-cyan-300 shadow-[0_0_15px_rgba(100,200,255,0.1)]">
                               {entry.jerseyNumber || "#"}
                             </div>
                             <div className="min-w-0">
-                              <div className="font-bold text-sm md:text-base text-white group-hover:text-primary transition-colors truncate">{entry.name}</div>
-                              <div className="text-[10px] md:text-xs text-muted-foreground truncate">{entry.team || "No Team"}</div>
+                              <div className="font-bold text-sm md:text-base text-white group-hover:text-cyan-300 transition-colors truncate">{entry.name}</div>
+                              <div className="text-[10px] md:text-xs text-cyan-200/40 truncate">{entry.team || "No Team"}</div>
                             </div>
                           </div>
                         </Link>
@@ -201,10 +203,10 @@ export default function Leaderboard() {
                       <td className="px-3 md:px-6 py-4 md:py-6">
                         <GradeBadge grade={entry.avgGrade} size="sm" />
                       </td>
-                      <td className="px-3 md:px-6 py-4 md:py-6 font-mono font-bold text-sm md:text-base text-white">
+                      <td className="px-3 md:px-6 py-4 md:py-6 font-mono font-bold text-sm md:text-base bg-gradient-to-b from-white to-cyan-100/80 bg-clip-text text-transparent">
                         {entry.avgPoints}
                       </td>
-                      <td className="px-3 md:px-6 py-4 md:py-6 text-sm md:text-base text-muted-foreground">
+                      <td className="px-3 md:px-6 py-4 md:py-6 text-sm md:text-base text-cyan-200/50">
                         {entry.gamesPlayed}
                       </td>
                     </tr>

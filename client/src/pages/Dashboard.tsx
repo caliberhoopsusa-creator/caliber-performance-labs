@@ -36,29 +36,31 @@ export default function Dashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4 animate-fade-up delay-150">
-        <Card className="elite-card" data-testid="card-roster-size">
+        <Card className="relative overflow-hidden group" data-testid="card-roster-size">
+          <div className="absolute inset-x-[20%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
           <CardContent className="pt-5 pb-5">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                <Users className="w-5 h-5 text-blue-400" />
+              <div className="p-2.5 rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-500/10 border border-cyan-400/20 shadow-[0_0_20px_rgba(100,200,255,0.1)]">
+                <Users className="w-5 h-5 text-cyan-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{players?.length || 0}</p>
-                <p className="text-xs text-muted-foreground">Players</p>
+                <p className="text-2xl font-bold bg-gradient-to-b from-white to-cyan-100/80 bg-clip-text text-transparent">{players?.length || 0}</p>
+                <p className="text-xs text-cyan-200/50 uppercase tracking-wider">Players</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="elite-card" data-testid="card-team-grade">
+        <Card className="relative overflow-hidden group" data-testid="card-team-grade">
+          <div className="absolute inset-x-[20%] top-0 h-px bg-gradient-to-r from-transparent via-emerald-400/30 to-transparent" />
           <CardContent className="pt-5 pb-5">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-lg bg-green-500/10 border border-green-500/20">
-                <TrendingUp className="w-5 h-5 text-green-400" />
+              <div className="p-2.5 rounded-lg bg-gradient-to-br from-emerald-500/20 to-green-500/10 border border-emerald-400/20 shadow-[0_0_20px_rgba(16,185,129,0.1)]">
+                <TrendingUp className="w-5 h-5 text-emerald-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{avgTeamGrade}</p>
-                <p className="text-xs text-muted-foreground">Team Grade</p>
+                <p className="text-2xl font-bold bg-gradient-to-b from-white to-emerald-100/80 bg-clip-text text-transparent">{avgTeamGrade}</p>
+                <p className="text-xs text-emerald-200/50 uppercase tracking-wider">Team Grade</p>
               </div>
             </div>
           </CardContent>
@@ -66,37 +68,38 @@ export default function Dashboard() {
       </div>
 
       {/* Roster */}
-      <Card className="elite-card animate-fade-up delay-200">
-        <div className="p-4 border-b border-white/5 flex items-center justify-between gap-2">
-          <h2 className="font-display font-bold text-white">Your Roster</h2>
-          <Link href="/players" className="text-sm text-primary flex items-center gap-1 transition-colors duration-200 hover:text-white" data-testid="link-view-all-players">
+      <Card className="relative overflow-hidden animate-fade-up delay-200">
+        <div className="absolute inset-x-[15%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
+        <div className="p-4 border-b border-cyan-500/[0.08] flex items-center justify-between gap-2 bg-gradient-to-r from-cyan-500/[0.02] to-transparent">
+          <h2 className="font-display font-bold text-white tracking-wide">Your Roster</h2>
+          <Link href="/players" className="text-sm text-cyan-400 flex items-center gap-1 transition-all duration-300 hover:text-cyan-300 hover:gap-2" data-testid="link-view-all-players">
             View All <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
         
-        <div className="divide-y divide-white/5">
+        <div className="divide-y divide-cyan-500/[0.06]">
           {recentPlayers.length === 0 ? (
             <div className="p-8 text-center">
-              <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3 opacity-50" />
-              <p className="text-muted-foreground text-sm mb-3">No players added yet</p>
+              <Users className="w-10 h-10 text-cyan-400/30 mx-auto mb-3" />
+              <p className="text-cyan-200/50 text-sm mb-3">No players added yet</p>
               <Link href="/players">
                 <Button size="sm">Add Player</Button>
               </Link>
             </div>
           ) : (
             recentPlayers.map((player, index) => (
-              <Link key={player.id} href={`/players/${player.id}`} className="block hover:bg-white/5 transition-colors duration-200" data-testid={`link-player-${player.id}`}>
+              <Link key={player.id} href={`/players/${player.id}`} className="block hover:bg-gradient-to-r hover:from-cyan-500/[0.05] hover:to-transparent transition-all duration-300" data-testid={`link-player-${player.id}`}>
                 <div className="p-4 flex items-center justify-between animate-fade-up" style={{ animationDelay: `${200 + index * 50}ms` }}>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-sm font-bold text-white/80">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500/10 to-transparent border border-cyan-400/20 flex items-center justify-center text-sm font-bold text-cyan-300 shadow-[0_0_15px_rgba(100,200,255,0.1)]">
                       {player.jerseyNumber || "#"}
                     </div>
                     <div>
                       <p className="font-medium text-white">{player.name}</p>
-                      <p className="text-xs text-muted-foreground">{player.position} • {player.team || "Team"}</p>
+                      <p className="text-xs text-cyan-200/40">{player.position} • {player.team || "Team"}</p>
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  <ChevronRight className="w-4 h-4 text-cyan-400/50" />
                 </div>
               </Link>
             ))

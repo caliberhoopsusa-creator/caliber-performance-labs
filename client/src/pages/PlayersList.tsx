@@ -153,17 +153,17 @@ export default function PlayersList() {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl md:text-4xl font-display font-bold text-white uppercase tracking-tight">
+          <h2 className="text-3xl md:text-4xl font-display font-bold bg-gradient-to-r from-white via-cyan-100 to-white bg-clip-text text-transparent uppercase tracking-tight">
             {hasTeam ? primaryTeam?.name || "Roster" : "Roster"}
           </h2>
-          <p className="text-muted-foreground font-medium">
+          <p className="text-cyan-200/50 font-medium">
             {hasTeam ? "Manage your team roster" : "Search and manage players"}
           </p>
         </div>
         
         {hasTeam && (
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={copyTeamCode} className="gap-2" data-testid="button-copy-code">
+            <Button variant="outline" onClick={copyTeamCode} className="gap-2 border-cyan-500/20 text-cyan-300 hover:bg-cyan-500/10 hover:text-cyan-200" data-testid="button-copy-code">
               {copiedCode ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               {copiedCode ? "Copied!" : `Code: ${primaryTeam?.code}`}
             </Button>
@@ -371,9 +371,10 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
         
         return (
           <div key={player.id} className="group relative h-full">
-            <div className="h-full bg-card border border-white/5 rounded-2xl p-6 shadow-lg transition-all duration-300 hover:border-primary/50 hover:shadow-primary/5 overflow-hidden">
+            <div className="h-full relative bg-gradient-to-br from-cyan-500/[0.04] via-white/[0.02] to-transparent border border-cyan-500/[0.08] rounded-2xl p-6 shadow-[0_4px_30px_rgba(0,0,0,0.3),0_0_40px_rgba(100,200,255,0.02)] backdrop-blur-xl transition-all duration-400 hover:border-cyan-400/20 hover:shadow-[0_8px_40px_rgba(0,0,0,0.35),0_0_50px_rgba(100,200,255,0.05)] overflow-hidden">
+              <div className="absolute inset-x-[20%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
               {isOnRoster && showInvite && (
-                <Badge className="absolute top-3 left-3 bg-green-500/20 text-green-400 border-green-500/30">
+                <Badge className="absolute top-3 left-3 bg-emerald-500/20 text-emerald-400 border-emerald-400/30 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
                   On Roster
                 </Badge>
               )}
@@ -432,19 +433,19 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
               
               <Link href={`/players/${player.id}`} className="block">
                 <div className="flex items-start justify-between mb-6 pr-8">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-secondary to-background border-2 border-white/10 flex items-center justify-center text-2xl font-display font-bold text-white shadow-inner">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-500/20 to-transparent border-2 border-cyan-400/20 flex items-center justify-center text-2xl font-display font-bold text-cyan-300 shadow-[0_0_25px_rgba(100,200,255,0.15)]">
                     {player.jerseyNumber || "#"}
                   </div>
-                  <div className="bg-secondary/30 px-3 py-1 rounded-full border border-white/5">
-                    <span className="text-xs font-bold uppercase tracking-wider text-primary">{player.position}</span>
+                  <div className="bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-400/20">
+                    <span className="text-xs font-bold uppercase tracking-wider text-cyan-300">{player.position}</span>
                   </div>
                 </div>
                 
-                <h3 className="text-xl font-bold font-display text-white mb-1 group-hover:text-primary transition-colors truncate">{player.name}</h3>
-                <p className="text-sm text-muted-foreground mb-4 font-medium">{player.team || "No Team"} • {player.height || "N/A"}</p>
+                <h3 className="text-xl font-bold font-display text-white mb-1 group-hover:text-cyan-300 transition-colors truncate">{player.name}</h3>
+                <p className="text-sm text-cyan-200/40 mb-4 font-medium">{player.team || "No Team"} • {player.height || "N/A"}</p>
               </Link>
               
-              <div className="pt-4 border-t border-white/5 flex items-center gap-2">
+              <div className="pt-4 border-t border-cyan-500/[0.08] flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"

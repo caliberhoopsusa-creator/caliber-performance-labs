@@ -38,12 +38,13 @@ Preferred communication style: Simple, everyday language.
 - **Performance Tools**: Live game mode for real-time stat entry, interactive shot charts, off-court workout tracker, and advanced metric calculations (True Shooting %, PER, etc.).
 - **Scheduling**: Practice scheduler and calendar for managing events.
 - **Coach Features**: Team dashboard, shot charts, game notes, lineup analysis, practice tracking with live practice mode (real-time attendance check-in, drill scoring, timer), AI-generated drill recommendations, and comprehensive player report cards. Live Practice is accessible from both Practice Tracker and Team Hub.
-- **UI/UX**: Minimal dark theme with glassmorphic design elements, clean white primary accent, dot-grid background pattern (40px grid), and subtle glow effects. Features include:
-  - Glassmorphic cards: `glass-card` utility class (bg-card/60, backdrop-blur-xl, border-white/5)
-  - Sidebar: Dark elevated background with subtle borders, minimal nav items with white accent for active states
-  - Mobile nav: Clean bottom navigation with floating action button
+- **UI/UX**: Sleek futuristic dark theme with sci-fi inspired aesthetics, cyan accent color, cyber grid background pattern, and advanced glow effects. Features include:
+  - Futuristic cards: Gradient backgrounds with cyan-tinted borders, top accent lines, multi-layer shadows
+  - Sidebar: Deep gradient background with cyber grid overlay, cyan glow on active items, left border indicators
+  - Mobile nav: Floating bottom navigation with deep shadows and cyan accent glow
   - Typography: Teko font for headings, Inter for body text
-  - Premium utility classes for visual flair including gradient effects and animations
+  - Premium utility classes: `cyber-grid`, `scan-lines`, `holo-shimmer`, `neon-border`, `tech-panel`, `hud-container`, `card-angular`, `data-stream`, `orbital-glow`
+  - Color scheme: Cyan (#00D4FF) accent with gradient text, glowing badges, and ambient lighting effects
   - Mobile-optimized with PWA support and offline capabilities
 
 ### Subscription & Monetization
