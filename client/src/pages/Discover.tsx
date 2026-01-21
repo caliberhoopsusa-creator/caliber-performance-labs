@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { GradeBadge } from "@/components/GradeBadge";
-import { Search, MapPin, GraduationCap, Users, ChevronRight, Sparkles, Eye, CheckCircle, Target, Film, Trophy, BookOpen, Crosshair, Award, Shield, Zap } from "lucide-react";
+import { Search, MapPin, GraduationCap, Users, ChevronRight, Sparkles, Eye, CheckCircle, Target, Film, Trophy, BookOpen, Crosshair, Award, Shield, Zap, UserPlus, UserCheck, Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface DiscoverPlayer {
   id: number;
@@ -76,11 +79,40 @@ const TIER_COLORS: Record<string, string> = {
   "Hall of Fame": "bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border-amber-500/30",
 };
 
-function PlayerDiscoverCard({ player }: { player: DiscoverPlayer }) {
+interface PlayerDiscoverCardProps {
+  player: DiscoverPlayer;
+  isAuthenticated: boolean;
+  isFollowing: boolean;
+  isFollowPending: boolean;
+  onFollow: () => void;
+  onUnfollow: () => void;
+  currentUserPlayerId?: number | null;
+}
+
+function PlayerDiscoverCard({ 
+  player, 
+  isAuthenticated, 
+  isFollowing, 
+  isFollowPending,
+  onFollow, 
+  onUnfollow,
+  currentUserPlayerId 
+}: PlayerDiscoverCardProps) {
   const tierClass = TIER_COLORS[player.currentTier] || TIER_COLORS["Rookie"];
   const initials = player.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
   const profileComplete = getProfileCompleteness(player);
   const isRecruitReady = player.openToOpportunities && profileComplete >= 70;
+  const isOwnProfile = currentUserPlayerId === player.id;
+
+  const handleFollowClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isFollowing) {
+      onUnfollow();
+    } else {
+      onFollow();
+    }
+  };
 
   return (
     <Link href={`/players/${player.id}`}>
@@ -139,7 +171,33 @@ function PlayerDiscoverCard({ player }: { player: DiscoverPlayer }) {
                     )}
                   </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0 mt-1" />
+                <div className="flex items-center gap-1 shrink-0">
+                  {isAuthenticated && !isOwnProfile && (
+                    <Button
+                      size="sm"
+                      variant={isFollowing ? "secondary" : "default"}
+                      onClick={handleFollowClick}
+                      disabled={isFollowPending}
+                      className="h-7 text-xs px-2"
+                      data-testid={`button-follow-${player.id}`}
+                    >
+                      {isFollowPending ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : isFollowing ? (
+                        <>
+                          <UserCheck className="w-3 h-3 mr-1" />
+                          Following
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="w-3 h-3 mr-1" />
+                          Follow
+                        </>
+                      )}
+                    </Button>
+                  )}
+                  <ChevronRight className="w-5 h-5 text-muted-foreground mt-1" />
+                </div>
               </div>
 
               {player.school && (
@@ -297,6 +355,8 @@ const SPG_OPTIONS = ["All", "1", "2", "3"];
 const BPG_OPTIONS = ["All", "1", "2", "3"];
 
 export default function Discover() {
+  const { user, isAuthenticated } = useAuth();
+  const { toast } = useToast();
   const [position, setPosition] = useState("All");
   const [state, setState] = useState("All");
   const [graduationYear, setGraduationYear] = useState("All");
@@ -310,6 +370,8 @@ export default function Discover() {
   const [minApg, setMinApg] = useState("All");
   const [minSpg, setMinSpg] = useState("All");
   const [minBpg, setMinBpg] = useState("All");
+  const [followingMap, setFollowingMap] = useState<Record<number, boolean>>({});
+  const [pendingFollows, setPendingFollows] = useState<Set<number>>(new Set());
 
   const queryParams = new URLSearchParams();
   if (position !== "All") queryParams.append("position", position);
@@ -334,6 +396,71 @@ export default function Discover() {
       return res.json();
     }
   });
+
+  // Fetch follow status for all displayed players
+  useQuery({
+    queryKey: ["/api/discover/follow-status", players?.map(p => p.id)],
+    queryFn: async () => {
+      if (!players || players.length === 0 || !isAuthenticated) return {};
+      const newFollowingMap: Record<number, boolean> = {};
+      await Promise.all(
+        players.map(async (player) => {
+          try {
+            const res = await fetch(`/api/players/${player.id}/is-following`);
+            if (res.ok) {
+              const data = await res.json();
+              newFollowingMap[player.id] = data.isFollowing;
+            }
+          } catch {
+            newFollowingMap[player.id] = false;
+          }
+        })
+      );
+      setFollowingMap(newFollowingMap);
+      return newFollowingMap;
+    },
+    enabled: isAuthenticated && !!players && players.length > 0
+  });
+
+  const handleFollow = async (playerId: number) => {
+    if (!isAuthenticated) {
+      toast({ title: "Sign in required", description: "Please sign in to follow players", variant: "destructive" });
+      return;
+    }
+    setPendingFollows(prev => new Set(prev).add(playerId));
+    try {
+      await apiRequest("POST", `/api/players/${playerId}/follow`);
+      setFollowingMap(prev => ({ ...prev, [playerId]: true }));
+      toast({ title: "Following", description: "You are now following this player" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to follow player", variant: "destructive" });
+    } finally {
+      setPendingFollows(prev => {
+        const next = new Set(prev);
+        next.delete(playerId);
+        return next;
+      });
+    }
+  };
+
+  const handleUnfollow = async (playerId: number) => {
+    setPendingFollows(prev => new Set(prev).add(playerId));
+    try {
+      await apiRequest("DELETE", `/api/players/${playerId}/follow`);
+      setFollowingMap(prev => ({ ...prev, [playerId]: false }));
+      toast({ title: "Unfollowed", description: "You are no longer following this player" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to unfollow player", variant: "destructive" });
+    } finally {
+      setPendingFollows(prev => {
+        const next = new Set(prev);
+        next.delete(playerId);
+        return next;
+      });
+    }
+  };
+
+  const currentUserPlayerId = (user as any)?.playerId || null;
 
   return (
     <div className="space-y-6" data-testid="page-discover">
@@ -608,7 +735,16 @@ export default function Discover() {
           </>
         ) : players && players.length > 0 ? (
           players.map((player) => (
-            <PlayerDiscoverCard key={player.id} player={player} />
+            <PlayerDiscoverCard 
+              key={player.id} 
+              player={player}
+              isAuthenticated={isAuthenticated}
+              isFollowing={followingMap[player.id] || false}
+              isFollowPending={pendingFollows.has(player.id)}
+              onFollow={() => handleFollow(player.id)}
+              onUnfollow={() => handleUnfollow(player.id)}
+              currentUserPlayerId={currentUserPlayerId}
+            />
           ))
         ) : (
           <div className="col-span-full text-center py-16">
