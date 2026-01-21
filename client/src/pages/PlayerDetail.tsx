@@ -257,6 +257,7 @@ const ACCOLADE_TYPES = {
   career_high: { name: "Career High", icon: TrendingUp, color: "text-primary", bgColor: "bg-primary/10", borderColor: "border-primary/20" },
   award: { name: "Award", icon: Medal, color: "text-purple-500", bgColor: "bg-purple-500/10", borderColor: "border-purple-500/20" },
   record: { name: "Record", icon: Star, color: "text-orange-500", bgColor: "bg-orange-500/10", borderColor: "border-orange-500/20" },
+  state_award: { name: "State Award", icon: Award, color: "text-emerald-500", bgColor: "bg-emerald-500/10", borderColor: "border-emerald-500/20" },
 } as const;
 
 type AccoladeType = keyof typeof ACCOLADE_TYPES;
@@ -378,6 +379,7 @@ function AccoladesSection({ playerId, isOwnProfile }: AccoladesSectionProps) {
       career_high: [],
       award: [],
       record: [],
+      state_award: [],
     };
     accolades.forEach((a) => {
       if (groups[a.type]) {
