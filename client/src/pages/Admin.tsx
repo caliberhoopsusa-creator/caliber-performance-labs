@@ -907,42 +907,21 @@ function CaliberBadgesTabWrapper() {
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [form, setForm] = useState({ category: "excellence", reason: "" });
 
-  const { data: playersData, isLoading: playersLoading, isError: playersError, error: playersErrorData } = useQuery<{ players: Player[] }>({
+  const { data: playersData, isLoading: playersLoading, isError: playersError } = useQuery<{ players: Player[] }>({
     queryKey: ["/api/admin/players", "caliber-badges-tab"],
     queryFn: async () => {
-      try {
-        const res = await adminFetch("/api/admin/players");
-        return res.json();
-      } catch (err) {
-        console.error("Error fetching players for badges tab:", err);
-        throw err;
-      }
+      const res = await adminFetch("/api/admin/players");
+      return res.json();
     },
   });
 
-  const { data: badgesData, isLoading: badgesLoading, isError: badgesError, error: badgesErrorData, refetch: refetchBadges } = useQuery<{ badges: CaliberBadge[] }>({
+  const { data: badgesData, isLoading: badgesLoading, isError: badgesError, refetch: refetchBadges } = useQuery<{ badges: CaliberBadge[] }>({
     queryKey: ["/api/caliber-badges"],
     queryFn: async () => {
-      try {
-        const res = await fetch("/api/caliber-badges");
-        if (!res.ok) throw new Error("Failed to load badges");
-        return res.json();
-      } catch (err) {
-        console.error("Error fetching caliber badges:", err);
-        throw err;
-      }
+      const res = await fetch("/api/caliber-badges");
+      if (!res.ok) throw new Error("Failed to load badges");
+      return res.json();
     },
-  });
-
-  console.log("CaliberBadgesTabWrapper state:", {
-    playersLoading,
-    badgesLoading,
-    playersError,
-    badgesError,
-    playersErrorData,
-    badgesErrorData,
-    playersData,
-    badgesData
   });
 
   const awardMutation = useMutation({
