@@ -106,18 +106,12 @@ export function CaliberBadge({ playerId, isOwner = false, showControls = false, 
     <div className="inline-flex items-center gap-2">
       {badge && (
         <div className="relative group" data-testid="caliber-badge-display">
-          {/* Outer glow */}
-          <div 
-            className={`absolute -inset-1 rounded-full opacity-60 blur-md`}
-            style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #F5D76E 50%, #D4AF37 100%)' }}
-          />
-          
           {/* Main badge - Black with gold kintsugi veins */}
           <div
             className={`relative flex items-center justify-center ${sizeClasses[size]} rounded-full overflow-hidden`}
             style={{
               background: '#0a0a0a',
-              boxShadow: '0 0 20px rgba(212, 175, 55, 0.4), inset 0 0 10px rgba(212, 175, 55, 0.1)',
+              boxShadow: '0 0 8px rgba(212, 175, 55, 0.3)',
             }}
           >
             {/* Kintsugi gold veins pattern */}
