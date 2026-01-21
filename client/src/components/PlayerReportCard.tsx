@@ -302,6 +302,69 @@ export function PlayerReportCard({ playerId, dateRange, showActions = true }: Pl
     };
   }, [reportCard]);
 
+  // Calculate best attribute and area needing work - must be before any conditional returns
+  const playerSummary = useMemo(() => {
+    if (!reportCard) return null;
+    
+    const { seasonStats, gradeDistribution, trends } = reportCard;
+    
+    const statCategories = [
+      { key: "points", label: "Scoring", value: Number(seasonStats.avgPoints) || 0, trend: trends?.pointsTrend || 0 },
+      { key: "rebounds", label: "Rebounding", value: Number(seasonStats.avgRebounds) || 0, trend: trends?.reboundsTrend || 0 },
+      { key: "assists", label: "Playmaking", value: Number(seasonStats.avgAssists) || 0, trend: trends?.assistsTrend || 0 },
+      { key: "hustle", label: "Hustle", value: Number(seasonStats.avgHustle) || 0, trend: trends?.hustleTrend || 0 },
+    ];
+
+    const statsWithData = statCategories.filter(s => s.value > 0);
+    const bestStat = statsWithData.length > 0 
+      ? statsWithData.reduce((a, b) => (a.value > b.value ? a : b))
+      : null;
+    
+    const decliningStats = statCategories.filter(s => s.trend < -0.5);
+    const worstTrend = decliningStats.length > 0 
+      ? decliningStats.reduce((a, b) => (a.trend < b.trend ? a : b))
+      : null;
+    
+    const candidatesForImprovement = statsWithData.filter(s => bestStat && s.key !== bestStat.key);
+    const lowestStat = candidatesForImprovement.length > 0
+      ? candidatesForImprovement.reduce((a, b) => (a.value < b.value ? a : b))
+      : null;
+
+    const total = Object.values(gradeDistribution).reduce((a, b) => a + b, 0);
+    let avgGrade = "—";
+    if (total > 0) {
+      const gradeWeights: Record<string, number> = {
+        'A+': 4.3, 'A': 4.0, 'A-': 3.7,
+        'B+': 3.3, 'B': 3.0, 'B-': 2.7,
+        'C+': 2.3, 'C': 2.0, 'C-': 1.7,
+        'D': 1.0, 'F': 0.0
+      };
+      let weightedSum = 0;
+      Object.entries(gradeDistribution).forEach(([grade, count]) => {
+        weightedSum += (gradeWeights[grade] || 0) * count;
+      });
+      const avg = weightedSum / total;
+      if (avg >= 4.15) avgGrade = 'A+';
+      else if (avg >= 3.85) avgGrade = 'A';
+      else if (avg >= 3.5) avgGrade = 'A-';
+      else if (avg >= 3.15) avgGrade = 'B+';
+      else if (avg >= 2.85) avgGrade = 'B';
+      else if (avg >= 2.5) avgGrade = 'B-';
+      else if (avg >= 2.15) avgGrade = 'C+';
+      else if (avg >= 1.85) avgGrade = 'C';
+      else if (avg >= 1.5) avgGrade = 'C-';
+      else if (avg >= 0.5) avgGrade = 'D';
+      else avgGrade = 'F';
+    }
+
+    return {
+      bestAttribute: bestStat && bestStat.value > 0 ? bestStat : null,
+      needsWork: worstTrend || (lowestStat && lowestStat.value > 0 ? lowestStat : null),
+      avgGrade,
+      gamesPlayed: seasonStats.gamesPlayed,
+    };
+  }, [reportCard]);
+
   if (reportLoading || playerLoading) {
     return (
       <Card className="print:shadow-none" data-testid="report-card-loading">
@@ -343,70 +406,6 @@ export function PlayerReportCard({ playerId, dateRange, showActions = true }: Pl
 
   const { seasonStats, gradeDistribution, trends, coachGoals, recentCoachNotes } = reportCard;
   const publicCoachNotes = recentCoachNotes;
-
-  // Calculate best attribute and area needing work
-  const playerSummary = useMemo(() => {
-    // Only include stats that have trend data available
-    const statCategories = [
-      { key: "points", label: "Scoring", value: Number(seasonStats.avgPoints) || 0, trend: trends?.pointsTrend || 0 },
-      { key: "rebounds", label: "Rebounding", value: Number(seasonStats.avgRebounds) || 0, trend: trends?.reboundsTrend || 0 },
-      { key: "assists", label: "Playmaking", value: Number(seasonStats.avgAssists) || 0, trend: trends?.assistsTrend || 0 },
-      { key: "hustle", label: "Hustle", value: Number(seasonStats.avgHustle) || 0, trend: trends?.hustleTrend || 0 },
-    ];
-
-    // Find best attribute (highest value among stats with actual data)
-    const statsWithData = statCategories.filter(s => s.value > 0);
-    const bestStat = statsWithData.length > 0 
-      ? statsWithData.reduce((a, b) => (a.value > b.value ? a : b))
-      : null;
-    
-    // Find area needing work (worst declining trend)
-    const decliningStats = statCategories.filter(s => s.trend < -0.5);
-    const worstTrend = decliningStats.length > 0 
-      ? decliningStats.reduce((a, b) => (a.trend < b.trend ? a : b))
-      : null;
-    
-    // If no declining trends, find lowest non-zero stat that could improve (excluding best stat)
-    const candidatesForImprovement = statsWithData.filter(s => bestStat && s.key !== bestStat.key);
-    const lowestStat = candidatesForImprovement.length > 0
-      ? candidatesForImprovement.reduce((a, b) => (a.value < b.value ? a : b))
-      : null;
-
-    // Calculate average grade
-    const total = Object.values(gradeDistribution).reduce((a, b) => a + b, 0);
-    let avgGrade = "—";
-    if (total > 0) {
-      const gradeWeights: Record<string, number> = {
-        'A+': 4.3, 'A': 4.0, 'A-': 3.7,
-        'B+': 3.3, 'B': 3.0, 'B-': 2.7,
-        'C+': 2.3, 'C': 2.0, 'C-': 1.7,
-        'D': 1.0, 'F': 0.0
-      };
-      let weightedSum = 0;
-      Object.entries(gradeDistribution).forEach(([grade, count]) => {
-        weightedSum += (gradeWeights[grade] || 0) * count;
-      });
-      const avg = weightedSum / total;
-      if (avg >= 4.15) avgGrade = 'A+';
-      else if (avg >= 3.85) avgGrade = 'A';
-      else if (avg >= 3.5) avgGrade = 'A-';
-      else if (avg >= 3.15) avgGrade = 'B+';
-      else if (avg >= 2.85) avgGrade = 'B';
-      else if (avg >= 2.5) avgGrade = 'B-';
-      else if (avg >= 2.15) avgGrade = 'C+';
-      else if (avg >= 1.85) avgGrade = 'C';
-      else if (avg >= 1.5) avgGrade = 'C-';
-      else if (avg >= 0.5) avgGrade = 'D';
-      else avgGrade = 'F';
-    }
-
-    return {
-      bestAttribute: bestStat && bestStat.value > 0 ? bestStat : null,
-      needsWork: worstTrend || (lowestStat && lowestStat.value > 0 ? lowestStat : null),
-      avgGrade,
-      gamesPlayed: seasonStats.gamesPlayed,
-    };
-  }, [seasonStats, trends, gradeDistribution]);
 
   return (
     <div className="space-y-6 print:space-y-4 print:bg-white" data-testid="player-report-card" id="report-card-container">
@@ -488,7 +487,7 @@ export function PlayerReportCard({ playerId, dateRange, showActions = true }: Pl
               .
             </p>
             
-            {playerSummary.gamesPlayed > 0 ? (
+            {playerSummary && playerSummary.gamesPlayed > 0 ? (
               <>
                 <p className="text-muted-foreground">
                   Over <span className="text-foreground font-semibold">{playerSummary.gamesPlayed} game{playerSummary.gamesPlayed !== 1 ? "s" : ""}</span> this season, 
