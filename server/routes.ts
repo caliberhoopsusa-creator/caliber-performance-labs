@@ -2218,9 +2218,16 @@ export async function registerRoutes(
   // --- Player Discovery (Public) ---
   app.get('/api/discover', async (req, res) => {
     try {
-      const { position, state, school, graduationYear, search, openOnly, minGpa, minThreePct } = req.query;
+      const { 
+        position, state, school, graduationYear, search, openOnly, 
+        minGpa, minThreePct, minPpg, minRpg, minApg, minSpg, minBpg, 
+        caliberOnly 
+      } = req.query;
       
       const playersWithStats = await storage.getPlayersWithStats();
+      
+      // Fetch all caliber badges once for efficiency
+      const allCaliberBadges = await storage.getAllCaliberBadges();
       
       // Grade score mapping for filtering and sorting
       const gradeScores: Record<string, number> = {
@@ -2241,6 +2248,9 @@ export async function registerRoutes(
           storage.getPlayerBadgeCount(player.id),
         ]);
         
+        // Check if player has caliber badge
+        const hasCaliberBadge = allCaliberBadges.some(cb => cb.playerId === player.id);
+        
         if (gamesPlayed === 0) {
           return {
             id: player.id,
@@ -2257,6 +2267,8 @@ export async function registerRoutes(
             ppg: 0,
             rpg: 0,
             apg: 0,
+            spg: 0,
+            bpg: 0,
             avgGrade: null,
             avgGradeScore: 0,
             gamesPlayed: 0,
@@ -2265,12 +2277,15 @@ export async function registerRoutes(
             badgeCount,
             gpa: player.gpa ? parseFloat(player.gpa) : null,
             threePtPct: null,
+            hasCaliberBadge,
           };
         }
 
         const ppg = games.reduce((acc, g) => acc + g.points, 0) / gamesPlayed;
         const rpg = games.reduce((acc, g) => acc + g.rebounds, 0) / gamesPlayed;
         const apg = games.reduce((acc, g) => acc + g.assists, 0) / gamesPlayed;
+        const spg = games.reduce((acc, g) => acc + (g.steals || 0), 0) / gamesPlayed;
+        const bpg = games.reduce((acc, g) => acc + (g.blocks || 0), 0) / gamesPlayed;
         
         // Calculate 3PT%
         const totalThreeMade = games.reduce((acc, g) => acc + (g.threeMade || 0), 0);
@@ -2302,6 +2317,8 @@ export async function registerRoutes(
           ppg: Number(ppg.toFixed(1)),
           rpg: Number(rpg.toFixed(1)),
           apg: Number(apg.toFixed(1)),
+          spg: Number(spg.toFixed(1)),
+          bpg: Number(bpg.toFixed(1)),
           avgGrade,
           avgGradeScore,
           gamesPlayed,
@@ -2310,6 +2327,7 @@ export async function registerRoutes(
           badgeCount,
           gpa: player.gpa ? parseFloat(player.gpa) : null,
           threePtPct: threePtPct !== null ? Number(threePtPct.toFixed(1)) : null,
+          hasCaliberBadge,
         };
       }));
 
@@ -2361,6 +2379,51 @@ export async function registerRoutes(
         if (!isNaN(threePctThreshold)) {
           results = results.filter(p => p.threePtPct !== null && p.threePtPct >= threePctThreshold);
         }
+      }
+
+      // Filter by minimum PPG
+      if (minPpg && typeof minPpg === 'string') {
+        const ppgThreshold = parseFloat(minPpg);
+        if (!isNaN(ppgThreshold)) {
+          results = results.filter(p => p.ppg >= ppgThreshold);
+        }
+      }
+
+      // Filter by minimum RPG
+      if (minRpg && typeof minRpg === 'string') {
+        const rpgThreshold = parseFloat(minRpg);
+        if (!isNaN(rpgThreshold)) {
+          results = results.filter(p => p.rpg >= rpgThreshold);
+        }
+      }
+
+      // Filter by minimum APG
+      if (minApg && typeof minApg === 'string') {
+        const apgThreshold = parseFloat(minApg);
+        if (!isNaN(apgThreshold)) {
+          results = results.filter(p => p.apg >= apgThreshold);
+        }
+      }
+
+      // Filter by minimum SPG
+      if (minSpg && typeof minSpg === 'string') {
+        const spgThreshold = parseFloat(minSpg);
+        if (!isNaN(spgThreshold)) {
+          results = results.filter(p => p.spg >= spgThreshold);
+        }
+      }
+
+      // Filter by minimum BPG
+      if (minBpg && typeof minBpg === 'string') {
+        const bpgThreshold = parseFloat(minBpg);
+        if (!isNaN(bpgThreshold)) {
+          results = results.filter(p => p.bpg >= bpgThreshold);
+        }
+      }
+
+      // Filter by Caliber Badge only
+      if (caliberOnly === 'true') {
+        results = results.filter(p => p.hasCaliberBadge);
       }
 
       // Sort by avgGradeScore by default (descending)

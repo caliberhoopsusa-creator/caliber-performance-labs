@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { GradeBadge } from "@/components/GradeBadge";
-import { Search, MapPin, GraduationCap, Users, ChevronRight, Sparkles, Eye, CheckCircle, Target, Film, Trophy, BookOpen, Crosshair } from "lucide-react";
+import { Search, MapPin, GraduationCap, Users, ChevronRight, Sparkles, Eye, CheckCircle, Target, Film, Trophy, BookOpen, Crosshair, Award, Shield, Zap } from "lucide-react";
 
 interface DiscoverPlayer {
   id: number;
@@ -27,6 +27,8 @@ interface DiscoverPlayer {
   ppg: number;
   rpg: number;
   apg: number;
+  spg: number;
+  bpg: number;
   avgGrade: string | null;
   gamesPlayed: number;
   openToOpportunities: boolean;
@@ -34,6 +36,7 @@ interface DiscoverPlayer {
   badgeCount?: number;
   gpa: number | null;
   threePtPct: number | null;
+  hasCaliberBadge: boolean;
 }
 
 function getProfileCompleteness(player: DiscoverPlayer): number {
@@ -237,6 +240,20 @@ function PlayerDiscoverCard({ player }: { player: DiscoverPlayer }) {
                     {player.badgeCount}
                   </Badge>
                 )}
+                {player.hasCaliberBadge && (
+                  <Badge 
+                    variant="outline" 
+                    className="text-[10px] px-2 py-0.5 border-0"
+                    style={{ 
+                      background: '#0a0a0a', 
+                      color: '#D4AF37',
+                      border: '1px solid rgba(212, 175, 55, 0.5)'
+                    }}
+                  >
+                    <Award className="w-3 h-3 mr-1" style={{ color: '#D4AF37' }} />
+                    Caliber
+                  </Badge>
+                )}
               </div>
             </div>
           </div>
@@ -273,6 +290,11 @@ function PlayerCardSkeleton() {
 
 const GPA_OPTIONS = ["All", "2.0", "2.5", "3.0", "3.5"];
 const THREE_PT_OPTIONS = ["All", "30", "35", "40", "45"];
+const PPG_OPTIONS = ["All", "5", "10", "15", "20", "25"];
+const RPG_OPTIONS = ["All", "3", "5", "7", "10"];
+const APG_OPTIONS = ["All", "2", "4", "6", "8"];
+const SPG_OPTIONS = ["All", "1", "2", "3"];
+const BPG_OPTIONS = ["All", "1", "2", "3"];
 
 export default function Discover() {
   const [position, setPosition] = useState("All");
@@ -280,8 +302,14 @@ export default function Discover() {
   const [graduationYear, setGraduationYear] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [openOnly, setOpenOnly] = useState(false);
+  const [caliberOnly, setCaliberOnly] = useState(false);
   const [minGpa, setMinGpa] = useState("All");
   const [minThreePct, setMinThreePct] = useState("All");
+  const [minPpg, setMinPpg] = useState("All");
+  const [minRpg, setMinRpg] = useState("All");
+  const [minApg, setMinApg] = useState("All");
+  const [minSpg, setMinSpg] = useState("All");
+  const [minBpg, setMinBpg] = useState("All");
 
   const queryParams = new URLSearchParams();
   if (position !== "All") queryParams.append("position", position);
@@ -289,11 +317,17 @@ export default function Discover() {
   if (graduationYear !== "All") queryParams.append("graduationYear", graduationYear);
   if (searchQuery.trim()) queryParams.append("search", searchQuery.trim());
   if (openOnly) queryParams.append("openOnly", "true");
+  if (caliberOnly) queryParams.append("caliberOnly", "true");
   if (minGpa !== "All") queryParams.append("minGpa", minGpa);
   if (minThreePct !== "All") queryParams.append("minThreePct", minThreePct);
+  if (minPpg !== "All") queryParams.append("minPpg", minPpg);
+  if (minRpg !== "All") queryParams.append("minRpg", minRpg);
+  if (minApg !== "All") queryParams.append("minApg", minApg);
+  if (minSpg !== "All") queryParams.append("minSpg", minSpg);
+  if (minBpg !== "All") queryParams.append("minBpg", minBpg);
 
   const { data: players, isLoading } = useQuery<DiscoverPlayer[]>({
-    queryKey: ["/api/discover", position, state, graduationYear, searchQuery, openOnly, minGpa, minThreePct],
+    queryKey: ["/api/discover", position, state, graduationYear, searchQuery, openOnly, caliberOnly, minGpa, minThreePct, minPpg, minRpg, minApg, minSpg, minBpg],
     queryFn: async () => {
       const res = await fetch(`/api/discover?${queryParams.toString()}`);
       if (!res.ok) throw new Error("Failed to fetch players");
@@ -390,7 +424,7 @@ export default function Discover() {
               <Target className="w-4 h-4 text-primary" />
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Scout Filters</span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
               <div>
                 <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
                   <BookOpen className="w-3 h-3" />
@@ -426,6 +460,96 @@ export default function Discover() {
                   </SelectContent>
                 </Select>
               </div>
+
+              <div>
+                <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
+                  <Target className="w-3 h-3" />
+                  Min PPG
+                </label>
+                <Select value={minPpg} onValueChange={setMinPpg}>
+                  <SelectTrigger className="h-9" data-testid="select-min-ppg">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">Any PPG</SelectItem>
+                    {PPG_OPTIONS.filter(p => p !== "All").map((p) => (
+                      <SelectItem key={p} value={p}>{p}+</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
+                  <Zap className="w-3 h-3" />
+                  Min RPG
+                </label>
+                <Select value={minRpg} onValueChange={setMinRpg}>
+                  <SelectTrigger className="h-9" data-testid="select-min-rpg">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">Any RPG</SelectItem>
+                    {RPG_OPTIONS.filter(r => r !== "All").map((r) => (
+                      <SelectItem key={r} value={r}>{r}+</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
+                  <Users className="w-3 h-3" />
+                  Min APG
+                </label>
+                <Select value={minApg} onValueChange={setMinApg}>
+                  <SelectTrigger className="h-9" data-testid="select-min-apg">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">Any APG</SelectItem>
+                    {APG_OPTIONS.filter(a => a !== "All").map((a) => (
+                      <SelectItem key={a} value={a}>{a}+</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
+                  <Shield className="w-3 h-3" />
+                  Min SPG
+                </label>
+                <Select value={minSpg} onValueChange={setMinSpg}>
+                  <SelectTrigger className="h-9" data-testid="select-min-spg">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">Any SPG</SelectItem>
+                    {SPG_OPTIONS.filter(s => s !== "All").map((s) => (
+                      <SelectItem key={s} value={s}>{s}+</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
+                  <Shield className="w-3 h-3" />
+                  Min BPG
+                </label>
+                <Select value={minBpg} onValueChange={setMinBpg}>
+                  <SelectTrigger className="h-9" data-testid="select-min-bpg">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">Any BPG</SelectItem>
+                    {BPG_OPTIONS.filter(b => b !== "All").map((b) => (
+                      <SelectItem key={b} value={b}>{b}+</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -438,20 +562,37 @@ export default function Discover() {
             {isLoading ? "Loading..." : `${players?.length || 0} players found`}
           </span>
         </div>
-        <div className="flex items-center gap-3">
-          <label 
-            htmlFor="open-only" 
-            className="text-sm text-muted-foreground cursor-pointer flex items-center gap-2"
-          >
-            <Sparkles className="w-4 h-4 text-green-400" />
-            Open to Opportunities Only
-          </label>
-          <Switch
-            id="open-only"
-            checked={openOnly}
-            onCheckedChange={setOpenOnly}
-            data-testid="switch-open-only"
-          />
+        <div className="flex items-center gap-6 flex-wrap">
+          <div className="flex items-center gap-3">
+            <label 
+              htmlFor="caliber-only" 
+              className="text-sm text-muted-foreground cursor-pointer flex items-center gap-2"
+            >
+              <Award className="w-4 h-4" style={{ color: '#D4AF37' }} />
+              Caliber Certified Only
+            </label>
+            <Switch
+              id="caliber-only"
+              checked={caliberOnly}
+              onCheckedChange={setCaliberOnly}
+              data-testid="switch-caliber-only"
+            />
+          </div>
+          <div className="flex items-center gap-3">
+            <label 
+              htmlFor="open-only" 
+              className="text-sm text-muted-foreground cursor-pointer flex items-center gap-2"
+            >
+              <Sparkles className="w-4 h-4 text-green-400" />
+              Open to Opportunities Only
+            </label>
+            <Switch
+              id="open-only"
+              checked={openOnly}
+              onCheckedChange={setOpenOnly}
+              data-testid="switch-open-only"
+            />
+          </div>
         </div>
       </div>
 
