@@ -28,7 +28,7 @@ import { PlayerArchetype } from "@/components/PlayerArchetype";
 import { EliteAchievements } from "@/components/EliteAchievements";
 import { StateRankingBadge } from "@/components/StateRankingBadge";
 import { CaliberBadge } from "@/components/CaliberBadge";
-import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Trophy, Share2, BarChart3, Medal, User, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye, BookOpen } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Trophy, Share2, BarChart3, Medal, User, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye, BookOpen, Phone, Save } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
@@ -48,7 +48,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ObjectUploader } from "@/components/ObjectUploader";
-import { BADGE_DEFINITIONS, type Badge, type Game } from "@shared/schema";
+import { BADGE_DEFINITIONS, type Badge, type Game, type Player } from "@shared/schema";
+import { queryClient } from "@/lib/queryClient";
+import { Label } from "@/components/ui/label";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -656,6 +658,143 @@ function AccoladesSection({ playerId, isOwnProfile }: AccoladesSectionProps) {
   );
 }
 
+interface CoachContactSectionProps {
+  player: Player;
+  isOwnProfile: boolean;
+}
+
+function CoachContactSection({ player, isOwnProfile }: CoachContactSectionProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [coachName, setCoachName] = useState(player.coachName || "");
+  const [coachPhone, setCoachPhone] = useState(player.coachPhone || "");
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const response = await fetch(`/api/players/${player.id}/coach-contact`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ coachName, coachPhone }),
+      });
+      
+      if (!response.ok) throw new Error("Failed to save");
+      
+      queryClient.invalidateQueries({ queryKey: ["/api/players", player.id] });
+      toast({ title: "Coach contact saved!" });
+      setIsEditing(false);
+    } catch (error) {
+      toast({ title: "Failed to save", variant: "destructive" });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <Card className="glass-card p-6">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <Phone className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold">Coach Contact</h3>
+            <p className="text-sm text-muted-foreground">Contact information for your coach</p>
+          </div>
+        </div>
+        {isOwnProfile && !isEditing && (
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setIsEditing(true)}
+            data-testid="button-edit-coach"
+          >
+            <Pencil className="w-4 h-4 mr-2" />
+            Edit
+          </Button>
+        )}
+      </div>
+
+      {isEditing ? (
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="coachName">Coach Name</Label>
+            <Input
+              id="coachName"
+              placeholder="Enter coach's name"
+              value={coachName}
+              onChange={(e) => setCoachName(e.target.value)}
+              data-testid="input-coach-name"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="coachPhone">Phone Number</Label>
+            <Input
+              id="coachPhone"
+              placeholder="Enter phone number"
+              value={coachPhone}
+              onChange={(e) => setCoachPhone(e.target.value)}
+              data-testid="input-coach-phone"
+            />
+          </div>
+          <div className="flex gap-2 pt-2">
+            <Button 
+              onClick={handleSave} 
+              disabled={isSaving}
+              data-testid="button-save-coach"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {isSaving ? "Saving..." : "Save"}
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsEditing(false);
+                setCoachName(player.coachName || "");
+                setCoachPhone(player.coachPhone || "");
+              }}
+              data-testid="button-cancel-coach"
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {player.coachName || player.coachPhone ? (
+            <>
+              <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/30">
+                <User className="w-10 h-10 p-2 rounded-full bg-primary/10 text-primary" />
+                <div>
+                  <p className="font-medium">{player.coachName || "No name provided"}</p>
+                  {player.coachPhone && (
+                    <a 
+                      href={`tel:${player.coachPhone}`}
+                      className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
+                    >
+                      <Phone className="w-3 h-3" />
+                      {player.coachPhone}
+                    </a>
+                  )}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <Phone className="w-12 h-12 mx-auto mb-3 opacity-30" />
+              <p>No coach contact information added yet.</p>
+              {isOwnProfile && (
+                <p className="text-sm mt-1">Click "Edit" to add your coach's details.</p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </Card>
+  );
+}
+
 interface FollowingPlayer {
   id: number;
   playerId: number;
@@ -1087,6 +1226,9 @@ export default function PlayerDetail() {
           </TabsTrigger>
           <TabsTrigger value="accolades" data-testid="tab-accolades">
             <Trophy className="w-4 h-4 mr-2" /> Accolades
+          </TabsTrigger>
+          <TabsTrigger value="coach" data-testid="tab-coach">
+            <Phone className="w-4 h-4 mr-2" /> Coach
           </TabsTrigger>
         </TabsList>
 
@@ -1559,6 +1701,13 @@ export default function PlayerDetail() {
 
         <TabsContent value="accolades">
           <AccoladesSection playerId={player.id} isOwnProfile={isOwnProfile} />
+        </TabsContent>
+
+        <TabsContent value="coach">
+          <CoachContactSection 
+            player={player} 
+            isOwnProfile={isOwnProfile} 
+          />
         </TabsContent>
       </Tabs>
 
