@@ -258,7 +258,7 @@ function GradeTrendTable({ gradeDistribution }: { gradeDistribution: Record<stri
 }
 
 export function PlayerReportCard({ playerId, dateRange, showActions = true }: PlayerReportCardProps) {
-  const { data: reportCard, isLoading: reportLoading } = usePlayerReportCard(playerId);
+  const { data: reportCard, isLoading: reportLoading, isError: reportError, refetch: refetchReport } = usePlayerReportCard(playerId);
   const { data: player, isLoading: playerLoading } = usePlayer(playerId);
   const [copied, setCopied] = useState(false);
 
@@ -320,14 +320,25 @@ export function PlayerReportCard({ playerId, dateRange, showActions = true }: Pl
     );
   }
 
-  if (!reportCard || !player) {
+  if (reportError || (!reportLoading && !reportCard) || (!playerLoading && !player)) {
     return (
       <Card data-testid="report-card-error">
-        <CardContent className="p-6 text-center text-muted-foreground">
-          <p>Unable to load report card.</p>
+        <CardContent className="p-6 text-center space-y-4">
+          <p className="text-muted-foreground">Unable to load report card.</p>
+          <Button 
+            variant="outline" 
+            onClick={() => refetchReport()}
+            data-testid="button-retry-report"
+          >
+            Try Again
+          </Button>
         </CardContent>
       </Card>
     );
+  }
+
+  if (!reportCard || !player) {
+    return null;
   }
 
   const { seasonStats, gradeDistribution, trends, coachGoals, recentCoachNotes } = reportCard;

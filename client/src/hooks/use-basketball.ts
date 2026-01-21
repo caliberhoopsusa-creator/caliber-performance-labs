@@ -1451,11 +1451,18 @@ export function usePlayerReportCard(playerId: number) {
   return useQuery<PlayerReportCardData>({
     queryKey: ['/api/players', playerId, 'report-card'],
     queryFn: async () => {
-      const res = await fetch(`/api/players/${playerId}/report-card`);
-      if (!res.ok) throw new Error("Failed to fetch report card");
+      const res = await fetch(`/api/players/${playerId}/report-card`, {
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to fetch report card");
+      }
       return res.json();
     },
     enabled: !!playerId,
+    retry: 2,
+    retryDelay: 500,
   });
 }
 
