@@ -576,13 +576,13 @@ function ProductsTab() {
               <TableCell className="max-w-xs truncate">{product.description || "-"}</TableCell>
               <TableCell>
                 <div className="flex flex-wrap gap-1">
-                  {product.prices.map((price) => (
+                  {(product.prices || []).map((price) => (
                     <Badge key={price.id} variant={price.active ? "default" : "secondary"}>
                       {formatPrice(price.unit_amount, price.currency)}
                       {price.recurring && ` / ${price.recurring.interval}`}
                     </Badge>
                   ))}
-                  {product.prices.length === 0 && <span className="text-muted-foreground">No prices</span>}
+                  {(!product.prices || product.prices.length === 0) && <span className="text-muted-foreground">No prices</span>}
                 </div>
               </TableCell>
               <TableCell>
