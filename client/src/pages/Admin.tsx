@@ -1223,12 +1223,13 @@ function StateRankingsTab() {
         const data = await res.json();
         throw new Error(data.error || "Failed to set state ranking");
       }
-      return res.json();
+      return { ...await res.json(), playerId };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({ title: "Success", description: "State ranking set!" });
       refetchPlayers();
       refetchRankings();
+      queryClient.invalidateQueries({ queryKey: ["/api/players/:id", data.playerId] });
     },
     onError: (err: any) => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -1247,12 +1248,13 @@ function StateRankingsTab() {
         const data = await res.json();
         throw new Error(data.error || "Failed to set country ranking");
       }
-      return res.json();
+      return { ...await res.json(), playerId };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({ title: "Success", description: "Country ranking set!" });
       refetchPlayers();
       refetchRankings();
+      queryClient.invalidateQueries({ queryKey: ["/api/players/:id", data.playerId] });
     },
     onError: (err: any) => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -1269,12 +1271,13 @@ function StateRankingsTab() {
         const data = await res.json();
         throw new Error(data.error || "Failed to remove state ranking");
       }
-      return res.json();
+      return { ...await res.json(), playerId };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({ title: "Success", description: "State ranking removed!" });
       refetchPlayers();
       refetchRankings();
+      queryClient.invalidateQueries({ queryKey: ["/api/players/:id", data.playerId] });
     },
     onError: (err: any) => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -1291,12 +1294,13 @@ function StateRankingsTab() {
         const data = await res.json();
         throw new Error(data.error || "Failed to remove country ranking");
       }
-      return res.json();
+      return { ...await res.json(), playerId };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({ title: "Success", description: "Country ranking removed!" });
       refetchPlayers();
       refetchRankings();
+      queryClient.invalidateQueries({ queryKey: ["/api/players/:id", data.playerId] });
     },
     onError: (err: any) => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
