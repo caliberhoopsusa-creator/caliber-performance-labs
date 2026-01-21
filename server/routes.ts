@@ -6736,8 +6736,8 @@ Respond in this exact JSON format:
       
       // State awards can only be given by the app owner
       if (input.type === 'state_award') {
-        const OWNER_USER_ID = "53178287";
-        if (req.user?.id !== OWNER_USER_ID) {
+        const userId = req.user?.claims?.sub;
+        if (!isAppOwner(userId)) {
           return res.status(403).json({ message: "Only the app owner can award state recognitions" });
         }
       } else {
