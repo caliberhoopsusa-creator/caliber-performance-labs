@@ -49,7 +49,7 @@
   --grade-a: 142 71% 45%;
   --grade-b: 142 71% 45%;
   --grade-c: 48 96% 53%;
-  --grade-d: 25 95% 53%;
+  --grade-d: 350 89% 60%;
   --grade-f: 0 84% 60%;
 
   /* Premium accent colors */
@@ -414,8 +414,8 @@
   }
 
   .grade-display-d {
-    @apply bg-gradient-to-br from-orange-400 to-orange-600 text-white;
-    box-shadow: 0 4px 20px rgba(249, 115, 22, 0.4);
+    @apply bg-gradient-to-br from-rose-400 to-rose-600 text-white;
+    box-shadow: 0 4px 20px rgba(251, 113, 133, 0.4);
   }
 
   .grade-display-f {

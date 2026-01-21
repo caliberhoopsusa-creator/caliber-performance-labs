@@ -178,7 +178,7 @@ export default function Leaderboard() {
                         <div className="flex items-center gap-2 md:gap-3">
                           {index === 0 && <Trophy className="w-4 h-4 md:w-5 md:h-5 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]" />}
                           {index === 1 && <Medal className="w-4 h-4 md:w-5 md:h-5 text-slate-300 drop-shadow-[0_0_6px_rgba(148,163,184,0.4)]" />}
-                          {index === 2 && <Medal className="w-4 h-4 md:w-5 md:h-5 text-amber-500 drop-shadow-[0_0_6px_rgba(245,158,11,0.4)]" />}
+                          {index === 2 && <Medal className="w-4 h-4 md:w-5 md:h-5 text-rose-400 drop-shadow-[0_0_6px_rgba(251,113,133,0.4)]" />}
                           <span className={cn(
                             "font-display font-bold text-base md:text-lg",
                             index < 3 ? "bg-gradient-to-b from-white to-cyan-100/80 bg-clip-text text-transparent" : "text-cyan-200/50"

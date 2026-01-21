@@ -20,7 +20,7 @@ export function GradeBadge({ grade, size = "md", className }: { grade: string, s
   }
   else if (["D", "D+", "D-"].includes(normalizedGrade)) { 
     gradeDisplayClass = "grade-display-d"; 
-    glowColor = "rgba(249,115,22,0.4)";
+    glowColor = "rgba(251,113,133,0.4)";
   }
   else if (["F"].includes(normalizedGrade)) { 
     gradeDisplayClass = "grade-display-f"; 
