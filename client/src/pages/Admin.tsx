@@ -901,7 +901,7 @@ const CALIBER_CATEGORIES = [
   { value: "potential", label: "Potential", icon: Sparkles, color: "text-green-500" },
 ];
 
-function CaliberBadgesTab() {
+function CaliberBadgesTabWrapper() {
   const { toast } = useToast();
   const [awardOpen, setAwardOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
@@ -1417,7 +1417,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                 <CardDescription>Award special recognition badges to outstanding players</CardDescription>
               </CardHeader>
               <CardContent>
-                <CaliberBadgesTab />
+                <CaliberBadgesTabWrapper />
               </CardContent>
             </Card>
           </TabsContent>
