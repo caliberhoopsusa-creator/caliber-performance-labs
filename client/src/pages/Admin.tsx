@@ -127,6 +127,8 @@ interface Player {
   team: string | null;
   height: string | null;
   jerseyNumber: number | null;
+  state: string | null;
+  stateRank: number | null;
 }
 
 interface Product {
@@ -1186,6 +1188,267 @@ interface Accolade {
   createdAt: string;
 }
 
+function StateRankingsTab() {
+  const { toast } = useToast();
+  const [rankOpen, setRankOpen] = useState(false);
+  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+  const [rank, setRank] = useState("");
+
+  const { data: playersData, isLoading: playersLoading, refetch: refetchPlayers } = useQuery<{ players: Player[] }>({
+    queryKey: ["/api/admin/players", "rankings-tab"],
+    queryFn: async () => {
+      const res = await adminFetch("/api/admin/players");
+      return res.json();
+    },
+  });
+
+  const { data: rankingsData, refetch: refetchRankings } = useQuery<{ players: Array<{ id: number; name: string; position: string; state: string; team: string; stateRank: number }> }>({
+    queryKey: ["/api/state-rankings"],
+    queryFn: async () => {
+      const res = await fetch("/api/state-rankings");
+      return res.json();
+    },
+  });
+
+  const setRankMutation = useMutation({
+    mutationFn: async ({ playerId, rankValue }: { playerId: number; rankValue: number }) => {
+      const res = await fetch(`/api/players/${playerId}/state-rank`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ rank: rankValue }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to set state ranking");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "State ranking set!" });
+      setRankOpen(false);
+      setSelectedPlayer(null);
+      setRank("");
+      refetchPlayers();
+      refetchRankings();
+    },
+    onError: (err: any) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const removeRankMutation = useMutation({
+    mutationFn: async (playerId: number) => {
+      const res = await fetch(`/api/players/${playerId}/state-rank`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to remove state ranking");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "State ranking removed!" });
+      refetchPlayers();
+      refetchRankings();
+    },
+    onError: (err: any) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const openRankDialog = (player: Player) => {
+    setSelectedPlayer(player);
+    setRank("");
+    setRankOpen(true);
+  };
+
+  const handleSetRank = () => {
+    if (!selectedPlayer || !rank) {
+      toast({ title: "Error", description: "Please enter a rank", variant: "destructive" });
+      return;
+    }
+    const rankValue = parseInt(rank);
+    if (isNaN(rankValue) || rankValue < 1 || rankValue > 100) {
+      toast({ title: "Error", description: "Rank must be a number between 1 and 100", variant: "destructive" });
+      return;
+    }
+    setRankMutation.mutate({ playerId: selectedPlayer.id, rankValue });
+  };
+
+  if (playersLoading) {
+    return (
+      <div className="flex justify-center py-8">
+        <Loader2 className="w-6 h-6 animate-spin" />
+      </div>
+    );
+  }
+
+  const players = playersData?.players || [];
+  const rankedPlayers = rankingsData?.players || [];
+  const playersWithState = players.filter(p => p.state);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          Assign state rankings to players. Only players with a state set can be ranked.
+        </p>
+      </div>
+
+      {rankedPlayers.length > 0 && (
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <Crown className="w-5 h-5" style={{ color: '#D4AF37' }} />
+            Current Rankings
+          </h3>
+          <div className="grid gap-2">
+            {rankedPlayers.map((p) => (
+              <div 
+                key={p.id} 
+                className="flex items-center justify-between p-3 rounded-lg border"
+                style={{ 
+                  background: 'linear-gradient(135deg, rgba(212,175,55,0.1) 0%, rgba(10,10,10,0.3) 100%)',
+                  borderColor: 'rgba(212,175,55,0.3)'
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="px-3 py-1 rounded-full text-sm font-bold"
+                    style={{ 
+                      background: '#0a0a0a', 
+                      color: '#D4AF37',
+                      border: '1px solid #D4AF37'
+                    }}
+                  >
+                    #{p.stateRank} IN {p.state}
+                  </div>
+                  <span className="font-medium">{p.name}</span>
+                  <Badge variant="outline">{p.position}</Badge>
+                  {p.team && <span className="text-sm text-muted-foreground">{p.team}</span>}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeRankMutation.mutate(p.id)}
+                  disabled={removeRankMutation.isPending}
+                >
+                  <Trash2 className="w-4 h-4 text-destructive" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Player</TableHead>
+            <TableHead>Position</TableHead>
+            <TableHead>State</TableHead>
+            <TableHead>Team</TableHead>
+            <TableHead>Current Rank</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {playersWithState.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                No players with state information found
+              </TableCell>
+            </TableRow>
+          ) : (
+            playersWithState.map((player) => {
+              const currentRanking = rankedPlayers.find(r => r.id === player.id);
+              return (
+                <TableRow key={player.id}>
+                  <TableCell className="font-medium">{player.name}</TableCell>
+                  <TableCell>{player.position}</TableCell>
+                  <TableCell>{player.state}</TableCell>
+                  <TableCell>{player.team || "-"}</TableCell>
+                  <TableCell>
+                    {currentRanking ? (
+                      <Badge 
+                        variant="outline"
+                        className="border-0"
+                        style={{ 
+                          background: '#0a0a0a', 
+                          color: '#D4AF37',
+                          border: '1px solid rgba(212,175,55,0.5)'
+                        }}
+                      >
+                        <Crown className="w-3 h-3 mr-1" style={{ color: '#D4AF37' }} />
+                        #{currentRanking.stateRank}
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openRankDialog(player)}
+                      className="gap-2"
+                    >
+                      <Crown className="w-4 h-4" />
+                      {currentRanking ? "Update Rank" : "Set Rank"}
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              );
+            })
+          )}
+        </TableBody>
+      </Table>
+
+      <Dialog open={rankOpen} onOpenChange={setRankOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Set State Ranking</DialogTitle>
+            <DialogDescription>
+              Set the state ranking for {selectedPlayer?.name}
+              {selectedPlayer?.state && ` in ${selectedPlayer.state}`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label>Rank (1-100)</Label>
+              <Input
+                type="number"
+                min={1}
+                max={100}
+                value={rank}
+                onChange={(e) => setRank(e.target.value)}
+                placeholder="e.g., 1 for #1 in state"
+                className="mt-1"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                This will display as "#{rank} IN {selectedPlayer?.state}" on the player's profile
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRankOpen(false)}>Cancel</Button>
+            <Button 
+              onClick={handleSetRank} 
+              disabled={setRankMutation.isPending}
+              className="gap-2"
+            >
+              {setRankMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+              Set Ranking
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
 function StateAwardsTab() {
   const { toast } = useToast();
   const [awardOpen, setAwardOpen] = useState(false);
@@ -1375,7 +1638,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
       </div>
       <div className="max-w-7xl mx-auto px-4 py-8">
         <Tabs defaultValue="roster" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 max-w-3xl">
+          <TabsList className="grid w-full grid-cols-7 max-w-4xl">
             <TabsTrigger value="roster" data-testid="tab-roster">
               <UserCog className="w-4 h-4 mr-2" />
               Roster
@@ -1383,6 +1646,10 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
             <TabsTrigger value="badges" data-testid="tab-badges">
               <Award className="w-4 h-4 mr-2" />
               Badges
+            </TabsTrigger>
+            <TabsTrigger value="rankings" data-testid="tab-rankings">
+              <Crown className="w-4 h-4 mr-2" />
+              Rankings
             </TabsTrigger>
             <TabsTrigger value="state" data-testid="tab-state">
               <Trophy className="w-4 h-4 mr-2" />
@@ -1422,6 +1689,18 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               </CardHeader>
               <CardContent>
                 <CaliberBadgesTabWrapper />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="rankings">
+            <Card>
+              <CardHeader>
+                <CardTitle>State Rankings</CardTitle>
+                <CardDescription>Assign state rankings to players (e.g., #1 in MT, #5 in CA)</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <StateRankingsTab />
               </CardContent>
             </Card>
           </TabsContent>

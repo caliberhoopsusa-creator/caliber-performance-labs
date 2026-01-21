@@ -28,7 +28,7 @@ import { PlayerArchetype } from "@/components/PlayerArchetype";
 import { EliteAchievements } from "@/components/EliteAchievements";
 import { StateRankingBadge } from "@/components/StateRankingBadge";
 import { CaliberBadge } from "@/components/CaliberBadge";
-import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Trophy, Share2, BarChart3, Medal, User, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye, BookOpen, Phone, Save } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Trophy, Share2, BarChart3, Medal, User, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye, BookOpen, Phone, Save, Crown } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
@@ -1103,6 +1103,25 @@ export default function PlayerDetail() {
                   showControls={isAuthenticated}
                   size="md" 
                 />
+                {player.stateRank && player.state && (
+                  <div 
+                    className="flex items-center gap-2 px-4 py-2 rounded-full"
+                    style={{
+                      background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)',
+                      border: '2px solid #D4AF37',
+                      boxShadow: '0 0 15px rgba(212,175,55,0.3)'
+                    }}
+                    data-testid="state-rank-badge"
+                  >
+                    <Crown className="w-5 h-5" style={{ color: '#D4AF37' }} />
+                    <span 
+                      className="font-bold text-lg tracking-wide"
+                      style={{ color: '#D4AF37' }}
+                    >
+                      #{player.stateRank} IN {player.state}
+                    </span>
+                  </div>
+                )}
               </div>
               <div className="flex flex-wrap items-center gap-2 text-xs md:text-sm text-muted-foreground">
                 {player.height && (

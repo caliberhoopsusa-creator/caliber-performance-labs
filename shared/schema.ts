@@ -29,6 +29,8 @@ export const players = pgTable("players", {
   // Coach contact info
   coachName: text("coach_name"),
   coachPhone: text("coach_phone"),
+  // State ranking badge (admin-awarded)
+  stateRank: integer("state_rank"), // Rank number (e.g., 1 for "#1 IN MT")
   // Widget preferences (JSON array of widget IDs to show)
   widgetPreferences: text("widget_preferences"), // JSON: ["trends", "grades", "radar", "averages"]
   createdAt: timestamp("created_at").defaultNow(),

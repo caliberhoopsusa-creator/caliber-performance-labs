@@ -6106,6 +6106,71 @@ Respond in this exact JSON format:
     }
   });
 
+  // Set state ranking for a player (owner only)
+  app.post('/api/players/:id/state-rank', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!isAppOwner(userId)) {
+        return res.status(403).json({ error: 'Only the app owner can set state rankings' });
+      }
+      
+      const playerId = parseInt(req.params.id);
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ error: 'Player not found' });
+      }
+      
+      const { rank } = req.body;
+      if (!rank || typeof rank !== 'number' || rank < 1 || rank > 100) {
+        return res.status(400).json({ error: 'Invalid rank. Must be a number between 1 and 100.' });
+      }
+      
+      await storage.updatePlayer(playerId, { stateRank: rank });
+      res.json({ success: true, stateRank: rank });
+    } catch (err) {
+      console.error('Set state rank error:', err);
+      res.status(500).json({ error: 'Could not set state ranking' });
+    }
+  });
+
+  // Remove state ranking from a player (owner only)
+  app.delete('/api/players/:id/state-rank', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!isAppOwner(userId)) {
+        return res.status(403).json({ error: 'Only the app owner can remove state rankings' });
+      }
+      
+      const playerId = parseInt(req.params.id);
+      await storage.updatePlayer(playerId, { stateRank: null });
+      res.json({ success: true });
+    } catch (err) {
+      console.error('Remove state rank error:', err);
+      res.status(500).json({ error: 'Could not remove state ranking' });
+    }
+  });
+
+  // Get all players with state rankings
+  app.get('/api/state-rankings', async (req, res) => {
+    try {
+      const players = await storage.getPlayers();
+      const rankedPlayers = players
+        .filter((p: any) => p.stateRank !== null)
+        .map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          position: p.position,
+          state: p.state,
+          team: p.team,
+          stateRank: p.stateRank,
+        }));
+      res.json({ players: rankedPlayers });
+    } catch (err) {
+      console.error('Get state rankings error:', err);
+      res.status(500).json({ error: 'Could not fetch state rankings' });
+    }
+  });
+
   // Get all products with prices (fetch directly from Stripe)
   app.get('/api/admin/products', isAdmin, async (req, res) => {
     try {
