@@ -907,7 +907,7 @@ function CaliberBadgesTab() {
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [form, setForm] = useState({ category: "excellence", reason: "" });
 
-  const { data: playersData, isLoading: playersLoading } = useQuery<{ players: Player[] }>({
+  const { data: playersData, isLoading: playersLoading, isError: playersError } = useQuery<{ players: Player[] }>({
     queryKey: ["/api/admin/players"],
     queryFn: async () => {
       const res = await adminFetch("/api/admin/players");
@@ -915,10 +915,11 @@ function CaliberBadgesTab() {
     },
   });
 
-  const { data: badgesData, isLoading: badgesLoading, refetch: refetchBadges } = useQuery<{ badges: CaliberBadge[] }>({
+  const { data: badgesData, isLoading: badgesLoading, isError: badgesError, refetch: refetchBadges } = useQuery<{ badges: CaliberBadge[] }>({
     queryKey: ["/api/caliber-badges"],
     queryFn: async () => {
       const res = await fetch("/api/caliber-badges");
+      if (!res.ok) throw new Error("Failed to load badges");
       return res.json();
     },
   });
@@ -989,6 +990,17 @@ function CaliberBadgesTab() {
     return (
       <div className="flex justify-center py-8">
         <Loader2 className="w-6 h-6 animate-spin" />
+      </div>
+    );
+  }
+
+  if (playersError || badgesError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-8 gap-4">
+        <p className="text-destructive">Failed to load data. Please try again.</p>
+        <Button variant="outline" onClick={() => window.location.reload()}>
+          Retry
+        </Button>
       </div>
     );
   }
