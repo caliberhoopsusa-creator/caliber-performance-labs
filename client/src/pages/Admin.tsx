@@ -938,12 +938,14 @@ function CaliberBadgesTabWrapper() {
       }
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       toast({ title: "Success", description: "Caliber badge awarded!" });
       setAwardOpen(false);
       setSelectedPlayer(null);
       setForm({ category: "excellence", reason: "" });
       refetchBadges();
+      // Also invalidate the player-specific query for their profile
+      queryClient.invalidateQueries({ queryKey: ["/api/players", variables.playerId, "caliber-badge"] });
     },
     onError: (err: any) => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -960,11 +962,13 @@ function CaliberBadgesTabWrapper() {
         const data = await res.json();
         throw new Error(data.error || "Failed to revoke badge");
       }
-      return res.json();
+      return { playerId };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({ title: "Success", description: "Caliber badge revoked" });
       refetchBadges();
+      // Also invalidate the player-specific query for their profile
+      queryClient.invalidateQueries({ queryKey: ["/api/players", data.playerId, "caliber-badge"] });
     },
     onError: (err: any) => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
