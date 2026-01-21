@@ -695,6 +695,374 @@
     left: -100px;
     background: rgba(255,255,255,0.015);
   }
+
+  /* ========== FUTURISTIC SCI-FI ENHANCEMENTS ========== */
+
+  /* Cyber grid background pattern */
+  .cyber-grid {
+    background-image: 
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+
+  /* Scan lines overlay */
+  .scan-lines {
+    position: relative;
+  }
+  .scan-lines::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.03) 2px,
+      rgba(0,0,0,0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  /* Holographic shimmer */
+  .holo-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .holo-shimmer::after {
+    content: '';
+    position: absolute;
+    inset: -50%;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0%,
+      rgba(255,255,255,0.03) 10%,
+      transparent 20%,
+      rgba(100,200,255,0.02) 30%,
+      transparent 40%,
+      rgba(255,100,200,0.02) 50%,
+      transparent 60%,
+      rgba(100,255,200,0.02) 70%,
+      transparent 80%,
+      rgba(255,255,255,0.03) 90%,
+      transparent 100%
+    );
+    animation: holoRotate 20s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes holoRotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* Neon border glow */
+  .neon-border {
+    position: relative;
+  }
+  .neon-border::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: linear-gradient(
+      135deg,
+      rgba(255,255,255,0.2) 0%,
+      rgba(255,255,255,0.05) 25%,
+      rgba(100,200,255,0.1) 50%,
+      rgba(255,255,255,0.05) 75%,
+      rgba(255,255,255,0.2) 100%
+    );
+    z-index: -1;
+    filter: blur(8px);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  .neon-border:hover::before {
+    opacity: 1;
+  }
+
+  /* Tech panel styling */
+  .tech-panel {
+    @apply relative rounded-lg overflow-hidden;
+    background: linear-gradient(
+      135deg,
+      rgba(20,30,50,0.9) 0%,
+      rgba(10,15,25,0.95) 100%
+    );
+    border: 1px solid rgba(100,150,255,0.1);
+    box-shadow: 
+      0 0 20px rgba(100,150,255,0.05) inset,
+      0 8px 32px rgba(0,0,0,0.5);
+  }
+  .tech-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(100,200,255,0.3), transparent);
+  }
+
+  /* HUD-style container */
+  .hud-container {
+    @apply relative p-4 rounded-lg;
+    background: rgba(10,15,25,0.8);
+    border: 1px solid rgba(100,200,255,0.15);
+    clip-path: polygon(
+      0 8px, 8px 0, calc(100% - 8px) 0, 100% 8px,
+      100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px)
+    );
+  }
+  .hud-container::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    right: 4px;
+    bottom: 4px;
+    border: 1px solid rgba(100,200,255,0.08);
+    clip-path: inherit;
+    pointer-events: none;
+  }
+
+  /* Futuristic card with angular corners */
+  .card-angular {
+    @apply relative overflow-hidden;
+    background: linear-gradient(
+      145deg,
+      rgba(255,255,255,0.04) 0%,
+      rgba(255,255,255,0.01) 100%
+    );
+    border: 1px solid rgba(255,255,255,0.08);
+    clip-path: polygon(
+      12px 0, calc(100% - 12px) 0, 100% 12px, 
+      100% calc(100% - 12px), calc(100% - 12px) 100%, 
+      12px 100%, 0 calc(100% - 12px), 0 12px
+    );
+  }
+  .card-angular::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 20%;
+    right: 20%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  }
+
+  /* Data stream animation */
+  .data-stream {
+    position: relative;
+    overflow: hidden;
+  }
+  .data-stream::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(100,200,255,0.1),
+      transparent
+    );
+    animation: dataStream 3s ease-in-out infinite;
+  }
+  @keyframes dataStream {
+    0% { left: -50%; }
+    100% { left: 150%; }
+  }
+
+  /* Pulse ring effect */
+  .pulse-ring {
+    position: relative;
+  }
+  .pulse-ring::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: inherit;
+    animation: pulseRing 2s ease-out infinite;
+  }
+  @keyframes pulseRing {
+    0% { transform: scale(1); opacity: 0.5; }
+    100% { transform: scale(1.1); opacity: 0; }
+  }
+
+  /* Cyber button styling */
+  .btn-cyber {
+    @apply relative font-display uppercase tracking-widest text-sm;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+    border: 1px solid rgba(255,255,255,0.2);
+    clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+    transition: all 0.3s ease;
+  }
+  .btn-cyber:hover {
+    background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 100%);
+    box-shadow: 0 0 20px rgba(255,255,255,0.1);
+  }
+
+  /* Status indicator with pulse */
+  .status-live {
+    @apply relative w-2 h-2 rounded-full bg-emerald-400;
+  }
+  .status-live::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    background: rgba(52, 211, 153, 0.3);
+    animation: statusPulse 1.5s ease-out infinite;
+  }
+  @keyframes statusPulse {
+    0% { transform: scale(1); opacity: 0.6; }
+    100% { transform: scale(2); opacity: 0; }
+  }
+
+  /* Tech divider */
+  .divider-tech {
+    @apply relative h-px w-full;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(100,200,255,0.1) 20%,
+      rgba(255,255,255,0.2) 50%,
+      rgba(100,200,255,0.1) 80%,
+      transparent 100%
+    );
+  }
+  .divider-tech::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: -3px;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 6px;
+    background: rgba(255,255,255,0.3);
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  }
+
+  /* Glitch text effect on hover */
+  .glitch-hover:hover {
+    animation: glitch 0.3s ease;
+  }
+  @keyframes glitch {
+    0% { transform: translate(0); }
+    20% { transform: translate(-2px, 2px); }
+    40% { transform: translate(-2px, -2px); }
+    60% { transform: translate(2px, 2px); }
+    80% { transform: translate(2px, -2px); }
+    100% { transform: translate(0); }
+  }
+
+  /* Corner accents for containers */
+  .corner-accents {
+    position: relative;
+  }
+  .corner-accents::before,
+  .corner-accents::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border: 1px solid rgba(255,255,255,0.2);
+    pointer-events: none;
+  }
+  .corner-accents::before {
+    top: -1px;
+    left: -1px;
+    border-right: none;
+    border-bottom: none;
+  }
+  .corner-accents::after {
+    bottom: -1px;
+    right: -1px;
+    border-left: none;
+    border-top: none;
+  }
+
+  /* Sleek progress bar */
+  .progress-sleek {
+    @apply relative h-1 w-full rounded-full overflow-hidden;
+    background: rgba(255,255,255,0.05);
+  }
+  .progress-sleek::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: var(--progress, 50%);
+    background: linear-gradient(90deg, rgba(255,255,255,0.2), rgba(255,255,255,0.8));
+    border-radius: inherit;
+    box-shadow: 0 0 10px rgba(255,255,255,0.3);
+  }
+
+  /* Futuristic label */
+  .label-futuristic {
+    @apply inline-flex items-center gap-2 px-3 py-1 text-xs font-medium uppercase tracking-wider;
+    background: linear-gradient(135deg, rgba(100,200,255,0.1) 0%, rgba(100,200,255,0.05) 100%);
+    border: 1px solid rgba(100,200,255,0.2);
+    color: rgba(150,200,255,1);
+    clip-path: polygon(8px 0, 100% 0, 100% 100%, 0 100%, 0 8px);
+  }
+
+  /* Breathing border */
+  .border-breathe {
+    animation: borderBreathe 3s ease-in-out infinite;
+  }
+  @keyframes borderBreathe {
+    0%, 100% { border-color: rgba(255,255,255,0.05); }
+    50% { border-color: rgba(255,255,255,0.15); }
+  }
+
+  /* Orbital glow for profile pics */
+  .orbital-glow {
+    position: relative;
+  }
+  .orbital-glow::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 0deg,
+      rgba(255,255,255,0.3),
+      rgba(255,255,255,0.05),
+      rgba(255,255,255,0.3),
+      rgba(255,255,255,0.05),
+      rgba(255,255,255,0.3)
+    );
+    animation: orbitalSpin 8s linear infinite;
+    z-index: -1;
+  }
+  @keyframes orbitalSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* Ultra sleek input */
+  .input-sleek {
+    @apply bg-transparent border-b border-white/20 rounded-none px-0 py-2;
+    transition: all 0.3s ease;
+  }
+  .input-sleek:focus {
+    @apply border-white/60;
+    box-shadow: 0 4px 20px -4px rgba(255,255,255,0.2);
+  }
+
+  /* Hexagon badge */
+  .hex-badge {
+    @apply inline-flex items-center justify-center w-12 h-14;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+  }
 }
 
 /* Safe area utilities for mobile devices */

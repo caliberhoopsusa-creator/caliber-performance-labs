@@ -126,8 +126,9 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
   const navSections = isPlayer ? playerSections : coachSections;
 
   return (
-    <div className="hidden md:flex flex-col w-64 bg-gradient-to-b from-[hsl(var(--sidebar-background))] to-[hsl(220,20%,6%)] border-r border-white/[0.06] h-screen sticky top-0 overflow-y-auto backdrop-blur-xl">
-      <div className="p-5 flex items-center gap-3 border-b border-white/[0.06] bg-white/[0.01]">
+    <div className="hidden md:flex flex-col w-64 bg-gradient-to-b from-[hsl(220,25%,8%)] via-[hsl(220,20%,6%)] to-[hsl(220,25%,4%)] border-r border-cyan-500/[0.08] h-screen sticky top-0 overflow-y-auto backdrop-blur-2xl">
+      <div className="absolute inset-0 cyber-grid opacity-20 pointer-events-none" />
+      <div className="p-5 flex items-center gap-3 border-b border-cyan-500/[0.08] bg-gradient-to-r from-cyan-500/[0.02] to-transparent relative z-10">
         <img src={caliberLogo} alt="Caliber Logo" className="h-9 w-9 rounded-lg shadow-lg shadow-black/20 object-contain" />
         <div className="flex-1">
           <h1 className="text-xl font-bold font-display text-white tracking-wider uppercase">CALIBER</h1>
@@ -160,14 +161,14 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
                 const isFeatured = item.featured && !isActive;
                 return (
                   <Link key={item.href} href={item.href} className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group font-medium text-sm",
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 group font-medium text-sm relative overflow-hidden",
                     isActive 
-                      ? "bg-white/[0.08] text-white shadow-[0_0_20px_rgba(255,255,255,0.05)_inset]" 
+                      ? "bg-gradient-to-r from-cyan-500/[0.12] to-transparent text-white border-l-2 border-cyan-400 shadow-[0_0_20px_rgba(100,200,255,0.1)_inset]" 
                       : isFeatured
-                      ? "text-primary bg-primary/5"
+                      ? "text-cyan-400 bg-cyan-500/5"
                       : needsUpgrade
-                      ? "text-muted-foreground/60 hover:text-muted-foreground hover:bg-white/[0.03]"
-                      : "text-muted-foreground hover:text-white hover:bg-white/[0.04]"
+                      ? "text-muted-foreground/50 hover:text-muted-foreground hover:bg-white/[0.02]"
+                      : "text-muted-foreground hover:text-cyan-300 hover:bg-cyan-500/[0.05] hover:border-l-2 hover:border-cyan-500/30"
                   )} data-testid={`nav-${item.href.replace(/\//g, '-').replace(/^-/, '') || 'home'}`}>
                     <item.icon className={cn("w-4 h-4", isActive && "text-primary")} />
                     {item.label}
@@ -230,7 +231,7 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
   ];
   
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[hsl(var(--sidebar-background))] to-[hsl(var(--sidebar-background))]/90 backdrop-blur-2xl border-t border-white/[0.08] z-50 safe-area-bottom shadow-[0_-8px_32px_rgba(0,0,0,0.4)]">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[hsl(220,25%,5%)] to-[hsl(220,25%,5%)]/95 backdrop-blur-2xl border-t border-cyan-500/[0.1] z-50 safe-area-bottom shadow-[0_-8px_40px_rgba(0,0,0,0.5),0_0_30px_rgba(100,200,255,0.03)]">
       <div className="flex justify-around items-center h-14 px-1">
         {navItems.map((item) => {
           const isActive = location === item.href || 
