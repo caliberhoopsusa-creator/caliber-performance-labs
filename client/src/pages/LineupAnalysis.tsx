@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { usePlayers, useTeamDashboard, useLineups, useCreateLineup, useDeleteLineup, useLineup, type Lineup, type TeamDashboardPlayer } from "@/hooks/use-basketball";
+import { usePlayers, useTeamDashboard, useLineups, useCreateLineup, useDeleteLineup, useLineup, useUpdateRosterRole, type Lineup, type TeamDashboardPlayer, type RosterRole } from "@/hooks/use-basketball";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,15 +8,22 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, Plus, Trash2, ArrowLeftRight, TrendingUp, Clock, Target } from "lucide-react";
+import { Users, Plus, Trash2, ArrowLeftRight, TrendingUp, Clock, Target, Settings2 } from "lucide-react";
 import { Paywall } from "@/components/Paywall";
 import { useToast } from "@/hooks/use-toast";
 
-const TIER_COLORS: Record<string, string> = {
-  "Starter": "bg-green-500/20 text-green-400 border-green-500/30",
-  "Rotation": "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  "Bench": "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  "Development": "bg-gray-500/20 text-gray-400 border-gray-500/30",
+const ROLE_COLORS: Record<string, string> = {
+  "starter": "bg-green-500/20 text-green-400 border-green-500/30",
+  "rotation": "bg-blue-500/20 text-blue-400 border-blue-500/30",
+  "bench": "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+  "development": "bg-gray-500/20 text-gray-400 border-gray-500/30",
+};
+
+const ROLE_LABELS: Record<string, string> = {
+  "starter": "Starter",
+  "rotation": "Rotation",
+  "bench": "Bench",
+  "development": "Development",
 };
 
 const POSITION_ICONS: Record<string, string> = {
@@ -24,14 +31,6 @@ const POSITION_ICONS: Record<string, string> = {
   "Wing": "SF/SG",
   "Big": "PF/C",
 };
-
-function getPlayerTier(rank: number, total: number): string {
-  const ratio = rank / total;
-  if (ratio <= 0.2) return "Starter";
-  if (ratio <= 0.5) return "Rotation";
-  if (ratio <= 0.75) return "Bench";
-  return "Development";
-}
 
 function gradeToScore(grade: string | null): number {
   if (!grade) return 0;
@@ -51,6 +50,7 @@ export default function LineupAnalysis() {
   const { data: lineups, isLoading: lineupsLoading } = useLineups();
   const createLineup = useCreateLineup();
   const deleteLineup = useDeleteLineup();
+  const updateRosterRole = useUpdateRosterRole();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [lineupName, setLineupName] = useState("");
@@ -234,7 +234,9 @@ export default function LineupAnalysis() {
         <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
           <Target className="h-5 w-5" />
           Position Depth Chart
+          <Settings2 className="h-4 w-4 text-muted-foreground ml-1" />
         </h2>
+        <p className="text-sm text-cyan-200/50 mb-4">Assign roles to players by selecting from the dropdown</p>
         <div className="grid gap-4 md:grid-cols-3">
           {(["Guard", "Wing", "Big"] as const).map(position => (
             <Card key={position} data-testid={`card-depth-${position.toLowerCase()}`}>
@@ -252,27 +254,51 @@ export default function LineupAnalysis() {
                   <p className="text-sm text-muted-foreground">No players at this position</p>
                 ) : (
                   depthChart[position].map((player, index) => {
-                    const tier = getPlayerTier(index + 1, depthChart[position].length);
+                    const currentRole = player.rosterRole || "rotation";
                     return (
                       <div
                         key={player.id}
-                        className="flex items-center justify-between p-2 rounded border bg-card"
+                        className="flex items-center justify-between p-2 rounded border bg-card gap-2"
                         data-testid={`depth-player-${player.id}`}
                       >
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-muted-foreground w-4">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-sm font-medium text-muted-foreground w-4 shrink-0">
                             {index + 1}.
                           </span>
-                          <span className="font-medium">{player.name}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">
+                          <span className="font-medium truncate">{player.name}</span>
+                          <Badge variant="outline" className="text-xs shrink-0">
                             {player.avgGrade || "N/A"}
                           </Badge>
-                          <Badge className={`text-xs border ${TIER_COLORS[tier]}`}>
-                            {tier}
-                          </Badge>
                         </div>
+                        <Select
+                          value={currentRole}
+                          onValueChange={(value: RosterRole) => {
+                            updateRosterRole.mutate(
+                              { id: player.id, rosterRole: value },
+                              {
+                                onSuccess: () => {
+                                  toast({ title: "Role Updated", description: `${player.name} is now ${ROLE_LABELS[value]}` });
+                                },
+                                onError: () => {
+                                  toast({ title: "Error", description: "Failed to update role", variant: "destructive" });
+                                }
+                              }
+                            );
+                          }}
+                        >
+                          <SelectTrigger 
+                            className={`w-[110px] text-xs border ${ROLE_COLORS[currentRole]}`}
+                            data-testid={`select-role-${player.id}`}
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="starter">Starter</SelectItem>
+                            <SelectItem value="rotation">Rotation</SelectItem>
+                            <SelectItem value="bench">Bench</SelectItem>
+                            <SelectItem value="development">Development</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     );
                   })

@@ -67,6 +67,28 @@ export function useDeletePlayer() {
   });
 }
 
+export type RosterRole = "starter" | "rotation" | "bench" | "development";
+
+export function useUpdateRosterRole() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, rosterRole }: { id: number; rosterRole: RosterRole }) => {
+      const res = await fetch(`/api/players/${id}/roster-role`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rosterRole }),
+      });
+      if (!res.ok) throw new Error("Failed to update roster role");
+      return res.json();
+    },
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: [api.players.get.path, id] });
+      queryClient.invalidateQueries({ queryKey: [api.players.list.path] });
+      queryClient.invalidateQueries({ queryKey: ["/api/team-dashboard"] });
+    },
+  });
+}
+
 export type PlayerUpdate = {
   name?: string;
   position?: "Guard" | "Wing" | "Big";
@@ -565,6 +587,7 @@ export type TeamDashboardPlayer = {
   team: string | null;
   jerseyNumber: number | null;
   photoUrl: string | null;
+  rosterRole: RosterRole | null;
   ppg: number;
   rpg: number;
   apg: number;

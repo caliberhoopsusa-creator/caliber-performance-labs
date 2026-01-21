@@ -1466,6 +1466,34 @@ export async function registerRoutes(
     }
   });
 
+  // Update player roster role - coaches only
+  app.patch('/api/players/:id/roster-role', isCoach, async (req: any, res) => {
+    try {
+      const playerId = Number(req.params.id);
+      
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: 'Player not found' });
+      }
+      
+      const updateSchema = z.object({
+        rosterRole: z.enum(['starter', 'rotation', 'bench', 'development']),
+      });
+      
+      const input = updateSchema.parse(req.body);
+      const updated = await storage.updatePlayer(playerId, { rosterRole: input.rosterRole });
+      res.json(updated);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join('.'),
+        });
+      }
+      throw err;
+    }
+  });
+
   // --- Games ---
 
   // Create game - requires auth, players can only log for themselves
@@ -5721,6 +5749,7 @@ Respond in this exact JSON format:
             team: player.team,
             jerseyNumber: player.jerseyNumber,
             photoUrl: player.photoUrl,
+            rosterRole: player.rosterRole || 'rotation',
             ppg: 0,
             rpg: 0,
             apg: 0,
@@ -5748,6 +5777,7 @@ Respond in this exact JSON format:
           team: player.team,
           jerseyNumber: player.jerseyNumber,
           photoUrl: player.photoUrl,
+          rosterRole: player.rosterRole || 'rotation',
           ppg: Number(ppg.toFixed(1)),
           rpg: Number(rpg.toFixed(1)),
           apg: Number(apg.toFixed(1)),

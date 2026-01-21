@@ -34,6 +34,8 @@ export const players = pgTable("players", {
   countryRank: integer("country_rank"), // Country rank number (e.g., 5 for "#5 IN USA")
   // Widget preferences (JSON array of widget IDs to show)
   widgetPreferences: text("widget_preferences"), // JSON: ["trends", "grades", "radar", "averages"]
+  // Coach-assigned roster role
+  rosterRole: text("roster_role").default("rotation"), // 'starter', 'rotation', 'bench', 'development'
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -454,6 +456,7 @@ export const teamMembers = pgTable("team_members", {
   displayName: text("display_name").notNull(),
   sessionId: text("session_id").notNull(),
   role: text("role").notNull().default("member"),
+  rosterRole: text("roster_role").default("rotation"), // 'starter', 'rotation', 'bench', 'development'
   joinedAt: timestamp("joined_at").defaultNow(),
 });
 
