@@ -30,10 +30,10 @@ interface CaliberBadgeProps {
 }
 
 const categoryConfig = {
-  excellence: { label: "Excellence", icon: Crown, color: "from-amber-400 to-yellow-500" },
-  dedication: { label: "Dedication", icon: Star, color: "from-blue-400 to-cyan-500" },
-  leadership: { label: "Leadership", icon: Shield, color: "from-purple-400 to-pink-500" },
-  potential: { label: "High Potential", icon: Sparkles, color: "from-emerald-400 to-green-500" },
+  excellence: { label: "Excellence", icon: Crown },
+  dedication: { label: "Dedication", icon: Star },
+  leadership: { label: "Leadership", icon: Shield },
+  potential: { label: "High Potential", icon: Sparkles },
 };
 
 export function CaliberBadge({ playerId, isOwner = false, showControls = false, size = "md" }: CaliberBadgeProps) {
@@ -99,29 +99,83 @@ export function CaliberBadge({ playerId, isOwner = false, showControls = false, 
 
   if (!badge && !showControls) return null;
 
+  // Kintsugi gold vein pattern SVG
+  const kintsugiPattern = `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5 0L15 10M0 25L10 15L25 30M20 0L35 15L45 5M60 10L50 20L55 25M30 25L45 40L60 35M0 45L15 60M25 45L40 60M50 45L60 55M10 35L25 50M35 30L50 45M55 35L60 40' stroke='%23D4AF37' stroke-width='0.5' fill='none' opacity='0.6'/%3E%3C/svg%3E")`;
+
   return (
     <div className="inline-flex items-center gap-2">
       {badge && (
         <div className="relative group" data-testid="caliber-badge-display">
+          {/* Outer glow */}
+          <div 
+            className={`absolute -inset-1 rounded-full opacity-60 blur-md`}
+            style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #F5D76E 50%, #D4AF37 100%)' }}
+          />
+          
+          {/* Main badge - Black with gold kintsugi veins */}
           <div
-            className={`relative flex items-center justify-center ${sizeClasses[size]} rounded-full bg-gradient-to-br ${config?.color} shadow-lg ring-2 ring-white/20`}
+            className={`relative flex items-center justify-center ${sizeClasses[size]} rounded-full overflow-hidden`}
             style={{
-              animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+              background: '#0a0a0a',
+              boxShadow: '0 0 20px rgba(212, 175, 55, 0.4), inset 0 0 10px rgba(212, 175, 55, 0.1)',
             }}
           >
-            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/30 to-transparent" />
-            <IconComponent className={`${iconSizes[size]} text-white drop-shadow-md relative z-10`} />
-            <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-white/20 to-transparent blur-sm opacity-50" />
+            {/* Kintsugi gold veins pattern */}
+            <div 
+              className="absolute inset-0 opacity-80"
+              style={{ 
+                backgroundImage: kintsugiPattern,
+                backgroundSize: '30px 30px',
+              }}
+            />
+            
+            {/* Gold ring border */}
+            <div 
+              className="absolute inset-0 rounded-full"
+              style={{
+                border: '1.5px solid transparent',
+                background: 'linear-gradient(135deg, #D4AF37, #F5D76E, #D4AF37, #B8860B) border-box',
+                WebkitMask: 'linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0)',
+                WebkitMaskComposite: 'xor',
+                maskComposite: 'exclude',
+              }}
+            />
+            
+            {/* Icon with gold gradient */}
+            <IconComponent 
+              className={`${iconSizes[size]} relative z-10`}
+              style={{ 
+                color: '#D4AF37',
+                filter: 'drop-shadow(0 0 4px rgba(212, 175, 55, 0.6))',
+              }}
+            />
           </div>
           
-          <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-            <div className="bg-card/95 backdrop-blur-sm border border-white/10 rounded-lg px-3 py-2 shadow-xl whitespace-nowrap">
+          {/* Hover tooltip */}
+          <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+            <div 
+              className="backdrop-blur-sm rounded-lg px-3 py-2 shadow-xl whitespace-nowrap"
+              style={{
+                background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)',
+                border: '1px solid rgba(212, 175, 55, 0.3)',
+              }}
+            >
               <div className="flex items-center gap-2 text-xs font-medium">
-                <Award className="h-3 w-3 text-amber-400" />
-                <span className="bg-gradient-to-r from-amber-400 to-yellow-500 bg-clip-text text-transparent">
+                <Award className="h-3 w-3" style={{ color: '#D4AF37' }} />
+                <span 
+                  className="font-semibold"
+                  style={{ 
+                    background: 'linear-gradient(90deg, #D4AF37, #F5D76E, #D4AF37)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                  }}
+                >
                   Caliber Certified
                 </span>
               </div>
+              <p className="text-xs mt-0.5" style={{ color: '#D4AF37' }}>
+                {config?.label}
+              </p>
               {badge.reason && (
                 <p className="text-xs text-muted-foreground mt-1 max-w-48 truncate">{badge.reason}</p>
               )}
