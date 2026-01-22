@@ -9,7 +9,7 @@ import {
   UsersRound, CalendarCheck, Eye, UserCircle, LogOut, CreditCard, Lock, Dumbbell, 
   CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, Bell
 } from "lucide-react";
-import caliberLogo from "@assets/Gemini_Generated_Image_3ld7js3ld7js3ld7_(1)_1768700977754.png";
+import caliberLogo from "@assets/caliber-logo-cyan.png";
 import { cn } from "@/lib/utils";
 import { useSubscription, type SubscriptionTier } from "@/hooks/use-subscription";
 import { useAuth } from "@/hooks/use-auth";

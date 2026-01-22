@@ -3,7 +3,7 @@ import {
   ArrowRight, Zap, Trophy, Video, BarChart3, Users, Target, Award, Star, TrendingUp, Shield
 } from "lucide-react";
 import { Link } from "wouter";
-import caliberLogo from "@assets/Gemini_Generated_Image_3ld7js3ld7js3ld7_(1)_1768700977754.png";
+import caliberLogo from "@assets/caliber-logo-cyan.png";
 
 // Animated floating particles component
 function FloatingParticles() {

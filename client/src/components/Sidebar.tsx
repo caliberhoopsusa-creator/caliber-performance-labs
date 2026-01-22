@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, CalendarDays, Film, FileText, ArrowLeftRight, UserPlus } from "lucide-react";
-import caliberLogo from "@assets/Gemini_Generated_Image_3ld7js3ld7js3ld7_(1)_1768700977754.png";
+import caliberLogo from "@assets/caliber-logo-cyan.png";
 import { cn } from "@/lib/utils";
 import { AlertsBadge } from "@/components/AlertsCenter";
 import { Button } from "@/components/ui/button";
