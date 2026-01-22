@@ -1138,10 +1138,10 @@ export default function PlayerDetail() {
   }, 0) / games.length : 0;
 
   const footballRadarData = [
-    { category: 'Efficiency', value: Math.round((avgEfficiencyGrade / 12) * 100), fullMark: 100 },
-    { category: 'Playmaking', value: Math.round((avgPlaymakingGrade / 12) * 100), fullMark: 100 },
-    { category: 'Ball Security', value: Math.round((avgBallSecurityGrade / 12) * 100), fullMark: 100 },
-    { category: 'Impact', value: Math.round((avgImpactGrade / 12) * 100), fullMark: 100 },
+    { category: 'Efficiency', value: Math.round(avgEfficiencyGrade), fullMark: 100 },
+    { category: 'Playmaking', value: Math.round(avgPlaymakingGrade), fullMark: 100 },
+    { category: 'Ball Security', value: Math.round(avgBallSecurityGrade), fullMark: 100 },
+    { category: 'Impact', value: Math.round(avgImpactGrade), fullMark: 100 },
     { category: 'Consistency', value: Math.round(hustleRating), fullMark: 100 },
     { category: 'Big Plays', value: Math.round(Math.min(100, (totalTDs / Math.max(games.length, 1)) * 20)), fullMark: 100 },
   ];
