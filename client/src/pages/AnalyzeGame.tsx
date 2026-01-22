@@ -94,7 +94,7 @@ export default function AnalyzeGame() {
 
 function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
   const [autoCalcPoints, setAutoCalcPoints] = useState(true);
-  const [footballPosition, setFootballPosition] = useState<FootballPosition | ''>('');
+  const [selectedFootballPositions, setSelectedFootballPositions] = useState<FootballPosition[]>([]);
   const sport = useSport();
   
   const form = useForm<z.infer<typeof insertGameSchema>>({
@@ -195,17 +195,28 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
   const selectedPlayer = players.find((p: any) => p.id === playerId);
   const storedPosition = selectedPlayer?.position || 'Wing';
   
-  // Check if the stored position is a valid football position
-  const isValidFootballPosition = FOOTBALL_POSITIONS.includes(storedPosition as FootballPosition);
+  // Check if the stored position contains a valid football position
+  const storedPositions: string[] = storedPosition?.split(',').map((p: string) => p.trim()) || [];
+  const hasValidFootballPosition = storedPositions.some((pos: string) => FOOTBALL_POSITIONS.includes(pos as FootballPosition));
   const isValidBasketballPosition = BASKETBALL_POSITIONS.includes(storedPosition as any);
   
-  // For football mode, use the footballPosition state if the stored position is not a football position
-  const effectiveFootballPosition = sport === 'football' 
-    ? (isValidFootballPosition ? storedPosition as FootballPosition : footballPosition)
-    : null;
+  // For football mode, use the first valid football position from profile or selected positions
+  const effectiveFootballPositions: FootballPosition[] = sport === 'football' 
+    ? (hasValidFootballPosition 
+        ? storedPositions.filter((pos: string) => FOOTBALL_POSITIONS.includes(pos as FootballPosition)) as FootballPosition[]
+        : selectedFootballPositions)
+    : [];
+  
+  // Primary position for calculations (use first selected position)
+  const effectiveFootballPosition = effectiveFootballPositions[0] || null;
   
   // Position used for calculations and display
   const position = sport === 'football' ? effectiveFootballPosition : storedPosition;
+  
+  // Helper to check if player has any of the given positions
+  const hasPosition = (positions: FootballPosition[]) => {
+    return effectiveFootballPositions.some(pos => positions.includes(pos));
+  };
 
   // Calculate percentages
   const fgPercent = fgAttempted > 0 ? ((fgMade / fgAttempted) * 100).toFixed(1) : '—';
@@ -276,14 +287,17 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
         else if (ypc >= 3) score += 2;
       }
       
-      // Position-based bonuses
-      if (effectiveFootballPosition === 'LB' || effectiveFootballPosition === 'DB') {
+      // Position-based bonuses (check all selected positions)
+      if (effectiveFootballPositions.includes('LB') || effectiveFootballPositions.includes('DB')) {
         score += tackles * 1; // Extra tackle bonus for defensive backs
-      } else if (effectiveFootballPosition === 'DL') {
+      }
+      if (effectiveFootballPositions.includes('DL')) {
         score += sacks * 2; // Extra sack bonus for D-line
-      } else if (effectiveFootballPosition === 'OL') {
+      }
+      if (effectiveFootballPositions.includes('OL')) {
         score += pancakeBlocks * 2; // Extra pancake bonus for O-line
-      } else if (effectiveFootballPosition === 'RB') {
+      }
+      if (effectiveFootballPositions.includes('RB')) {
         if (carries >= 15) score += 5; // Workhorse bonus
       }
       
@@ -345,7 +359,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
   }, [steals, blocks, defensiveRebounds, offensiveRebounds, assists, minutes, position, 
       // Football stats for hustle calculation
       tackles, soloTackles, sacks, forcedFumbles, fumbleRecoveries, passDeflections, 
-      pancakeBlocks, rushingYards, carries, effectiveFootballPosition, sport]);
+      pancakeBlocks, rushingYards, carries, effectiveFootballPosition, effectiveFootballPositions, sport]);
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -527,26 +541,39 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
               </div>
             )}
 
-            {playerId && !isValidFootballPosition && (
+            {playerId && !hasValidFootballPosition && (
               <div className="mb-6">
-                <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider block mb-2">Football Position (for this game)</label>
-                <Select 
-                  onValueChange={(val) => setFootballPosition(val as FootballPosition)} 
-                  value={footballPosition}
-                >
-                  <SelectTrigger className="bg-secondary/30 border-white/10 text-white h-11 max-w-xs">
-                    <SelectValue placeholder="Select football position..." />
-                  </SelectTrigger>
-                  <SelectContent className="bg-card border-white/10 text-white">
-                    {FOOTBALL_POSITIONS.map((pos) => (
-                      <SelectItem key={pos} value={pos}>
-                        {FOOTBALL_POSITION_LABELS[pos]} ({pos})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider block mb-2">Football Position(s) for this game</label>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                  {FOOTBALL_POSITIONS.map((pos) => (
+                    <label
+                      key={pos}
+                      className={cn(
+                        "flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-all",
+                        selectedFootballPositions.includes(pos)
+                          ? "border-primary bg-primary/20 text-white"
+                          : "border-white/10 bg-secondary/20 text-muted-foreground hover:border-primary/50"
+                      )}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedFootballPositions.includes(pos)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedFootballPositions([...selectedFootballPositions, pos]);
+                          } else {
+                            setSelectedFootballPositions(selectedFootballPositions.filter(p => p !== pos));
+                          }
+                        }}
+                        className="sr-only"
+                        data-testid={`checkbox-position-${pos}`}
+                      />
+                      <span className="text-xs font-medium">{FOOTBALL_POSITION_LABELS[pos]}</span>
+                    </label>
+                  ))}
+                </div>
                 <p className="text-xs text-muted-foreground mt-1.5">
-                  Your profile uses a basketball position. Select a football position for this game.
+                  Your profile uses a basketball position. Select one or more football positions for this game.
                 </p>
               </div>
             )}
@@ -564,7 +591,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
               </div>
             )}
 
-            {playerId && !effectiveFootballPosition && !isValidFootballPosition && (
+            {playerId && !effectiveFootballPosition && !hasValidFootballPosition && selectedFootballPositions.length === 0 && (
               <div className="text-center text-muted-foreground py-4 border border-dashed border-white/10 rounded-xl">
                 Select a football position above to see relevant stat fields
               </div>
@@ -581,7 +608,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* Passing Efficiency for QB */}
-                {effectiveFootballPosition === 'QB' && (
+                {hasPosition(['QB']) && (
                   <>
                     <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
                       <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Completion %</p>
@@ -609,7 +636,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
                 )}
 
                 {/* Rushing Efficiency for RB */}
-                {effectiveFootballPosition === 'RB' && (
+                {hasPosition(['RB']) && (
                   <>
                     <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
                       <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Yards Per Carry</p>
@@ -635,7 +662,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
                 )}
 
                 {/* Receiving Efficiency for WR/TE */}
-                {(effectiveFootballPosition === 'WR' || effectiveFootballPosition === 'TE') && (
+                {hasPosition(['WR', 'TE']) && (
                   <>
                     <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
                       <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Catch Rate</p>
@@ -663,7 +690,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
                 )}
 
                 {/* Defensive Stats for DL/LB/DB */}
-                {(effectiveFootballPosition === 'DL' || effectiveFootballPosition === 'LB' || effectiveFootballPosition === 'DB') && (
+                {hasPosition(['DL', 'LB', 'DB']) && (
                   <>
                     <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
                       <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Total Tackles</p>
@@ -849,22 +876,34 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
           </div>
         )}
 
-        {/* Football Hustle Score - Manual input */}
+        {/* Football Hustle Score - Auto-calculated */}
         {sport === 'football' && (
           <div className="mb-6">
             <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
-              <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider block mb-3">Hustle Score (0-100)</label>
-              <Input 
-                type="number"
-                inputMode="numeric"
-                min={0}
-                max={100}
-                {...form.register("hustleScore", { valueAsNumber: true })}
-                className="bg-secondary/30 border-white/10 text-white text-center font-mono h-11"
-                data-testid="input-hustleScore"
-              />
+              <div className="flex items-center justify-between mb-3">
+                <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Hustle Score</label>
+                <span className={cn(
+                  "text-2xl font-mono font-bold",
+                  calculatedHustleScore >= 75 ? "text-green-400" :
+                  calculatedHustleScore >= 60 ? "text-primary" :
+                  calculatedHustleScore < 40 ? "text-red-400" : "text-muted-foreground"
+                )} data-testid="text-football-hustle-score">
+                  {calculatedHustleScore}
+                </span>
+              </div>
+              <div className="h-2 bg-secondary/30 rounded-full overflow-hidden">
+                <div 
+                  className={cn(
+                    "h-full rounded-full transition-all duration-300",
+                    calculatedHustleScore >= 75 ? "bg-green-500" :
+                    calculatedHustleScore >= 60 ? "bg-primary" :
+                    calculatedHustleScore < 40 ? "bg-red-500" : "bg-muted-foreground"
+                  )}
+                  style={{ width: `${calculatedHustleScore}%` }}
+                />
+              </div>
               <p className="text-[10px] text-muted-foreground mt-2">
-                Rate effort, motor, and intangibles (0 = Poor, 100 = Elite)
+                Auto-calculated from tackles, sacks, forced fumbles, pancakes & effort plays
               </p>
             </div>
           </div>
