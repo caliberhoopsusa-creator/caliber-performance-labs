@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, createContext, useContext, useCallback, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useSubscription } from "@/hooks/use-subscription";
@@ -9,6 +9,69 @@ import { Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Sport = 'basketball' | 'football';
+
+interface SportContextType {
+  sport: Sport;
+  setSport: (sport: Sport) => void;
+}
+
+const SportContext = createContext<SportContextType | null>(null);
+
+function getInitialSport(): Sport {
+  if (typeof window !== 'undefined') {
+    const stored = localStorage.getItem('caliber_sport');
+    if (stored === 'basketball' || stored === 'football') {
+      return stored;
+    }
+  }
+  return 'basketball';
+}
+
+export function SportProvider({ children }: { children: ReactNode }) {
+  const [sport, setSportState] = useState<Sport>(getInitialSport);
+
+  const setSport = useCallback((newSport: Sport) => {
+    setSportState(newSport);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('caliber_sport', newSport);
+    }
+  }, []);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('caliber_sport');
+    if (stored && (stored === 'basketball' || stored === 'football')) {
+      if (stored !== sport) {
+        setSportState(stored);
+      }
+    }
+  }, []);
+
+  return (
+    <SportContext.Provider value={{ sport, setSport }}>
+      {children}
+    </SportContext.Provider>
+  );
+}
+
+export function useSport(): Sport {
+  const context = useContext(SportContext);
+  if (!context) {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('caliber_sport');
+      return (stored as Sport) || 'basketball';
+    }
+    return 'basketball';
+  }
+  return context.sport;
+}
+
+export function useSportContext(): SportContextType {
+  const context = useContext(SportContext);
+  if (!context) {
+    throw new Error('useSportContext must be used within SportProvider');
+  }
+  return context;
+}
 
 interface SportToggleProps {
   className?: string;
@@ -21,14 +84,11 @@ export function SportToggle({ className, showLabels = true, size = 'default' }: 
   const { isPro } = useSubscription();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const context = useContext(SportContext);
   
-  const [currentSport, setCurrentSport] = useState<Sport>(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('caliber_sport');
-      return (stored as Sport) || 'basketball';
-    }
-    return 'basketball';
-  });
+  const [localSport, setLocalSport] = useState<Sport>(getInitialSport);
+  
+  const currentSport = context?.sport ?? localSport;
 
   const updateSportMutation = useMutation({
     mutationFn: async (sport: Sport) => {
@@ -42,6 +102,7 @@ export function SportToggle({ className, showLabels = true, size = 'default' }: 
       queryClient.invalidateQueries({ queryKey: ["/api/players"] });
       queryClient.invalidateQueries({ queryKey: ["/api/leaderboard"] });
       queryClient.invalidateQueries({ queryKey: ["/api/discover"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/schedule-events"] });
     },
   });
 
@@ -57,8 +118,13 @@ export function SportToggle({ className, showLabels = true, size = 'default' }: 
       return;
     }
     
-    setCurrentSport(sport);
-    localStorage.setItem('caliber_sport', sport);
+    if (context) {
+      context.setSport(sport);
+    } else {
+      setLocalSport(sport);
+      localStorage.setItem('caliber_sport', sport);
+    }
+    
     updateSportMutation.mutate(sport);
     
     toast({
@@ -66,13 +132,6 @@ export function SportToggle({ className, showLabels = true, size = 'default' }: 
       description: "Content is now filtered for your selected sport.",
     });
   };
-
-  useEffect(() => {
-    const stored = localStorage.getItem('caliber_sport');
-    if (stored && (stored === 'basketball' || stored === 'football')) {
-      setCurrentSport(stored);
-    }
-  }, []);
 
   const iconSize = size === 'sm' ? 'w-4 h-4' : 'w-5 h-5';
   const buttonPadding = size === 'sm' ? 'px-2 py-1' : 'px-3 py-2';
@@ -126,39 +185,4 @@ export function SportToggle({ className, showLabels = true, size = 'default' }: 
       </Button>
     </div>
   );
-}
-
-export function useSport(): Sport {
-  const [sport, setSport] = useState<Sport>(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('caliber_sport');
-      return (stored as Sport) || 'basketball';
-    }
-    return 'basketball';
-  });
-
-  useEffect(() => {
-    const handleStorageChange = () => {
-      const stored = localStorage.getItem('caliber_sport');
-      if (stored && (stored === 'basketball' || stored === 'football')) {
-        setSport(stored);
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    
-    const interval = setInterval(() => {
-      const stored = localStorage.getItem('caliber_sport');
-      if (stored && stored !== sport) {
-        setSport(stored as Sport);
-      }
-    }, 500);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
-    };
-  }, [sport]);
-
-  return sport;
 }

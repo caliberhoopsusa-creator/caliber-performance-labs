@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { Activity, UserCircle, ClipboardList, ChevronRight, Loader2, Users, Plus
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useSport } from "@/components/SportToggle";
+import { useSport, useSportContext } from "@/components/SportToggle";
 import { BASKETBALL_POSITIONS, FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS, type Sport } from "@shared/sports-config";
 
 type RoleType = 'player' | 'coach' | null;
@@ -41,6 +41,7 @@ function FootballIcon({ className }: { className?: string }) {
 
 export default function RoleSelection() {
   const defaultSport = useSport();
+  const sportContext = useSportContext();
   const [selectedRole, setSelectedRole] = useState<RoleType>(null);
   const [coachStep, setCoachStep] = useState<CoachStep>(null);
   const [playerForm, setPlayerForm] = useState({
@@ -62,6 +63,8 @@ export default function RoleSelection() {
 
   const handleSportChange = (sport: Sport) => {
     setPlayerForm(prev => ({ ...prev, sport, position: '' }));
+    // Update the sport context (which also persists to localStorage)
+    sportContext.setSport(sport);
   };
 
   const getPositionsForSport = () => {

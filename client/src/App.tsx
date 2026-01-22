@@ -10,6 +10,7 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { OfflineBanner, OfflineIndicator } from "@/components/OfflineBanner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OnboardingTour } from "@/components/OnboardingTour";
+import { SportProvider } from "@/components/SportToggle";
 import { useAuth } from "@/hooks/use-auth";
 import { useOffline } from "@/hooks/use-offline";
 import { useToast } from "@/hooks/use-toast";
@@ -199,14 +200,16 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <Toaster />
-          <InstallPrompt />
-          <Switch>
-            <Route path="/admin" component={Admin} />
-            <Route>
-              <MainRouter />
-            </Route>
-          </Switch>
+          <SportProvider>
+            <Toaster />
+            <InstallPrompt />
+            <Switch>
+              <Route path="/admin" component={Admin} />
+              <Route>
+                <MainRouter />
+              </Route>
+            </Switch>
+          </SportProvider>
         </TooltipProvider>
       </QueryClientProvider>
     </ErrorBoundary>
