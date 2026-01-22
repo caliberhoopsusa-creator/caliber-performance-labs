@@ -47,7 +47,7 @@ export default function RoleSelection() {
   const [playerForm, setPlayerForm] = useState({
     name: '',
     sport: defaultSport as Sport,
-    position: '',
+    positions: [] as string[],
     height: '',
     team: '',
     jerseyNumber: '',
@@ -62,9 +62,18 @@ export default function RoleSelection() {
   const queryClient = useQueryClient();
 
   const handleSportChange = (sport: Sport) => {
-    setPlayerForm(prev => ({ ...prev, sport, position: '' }));
+    setPlayerForm(prev => ({ ...prev, sport, positions: [] }));
     // Update the sport context (which also persists to localStorage)
     sportContext.setSport(sport);
+  };
+  
+  const togglePosition = (position: string) => {
+    setPlayerForm(prev => ({
+      ...prev,
+      positions: prev.positions.includes(position)
+        ? prev.positions.filter(p => p !== position)
+        : [...prev.positions, position]
+    }));
   };
 
   const getPositionsForSport = () => {
@@ -99,7 +108,7 @@ export default function RoleSelection() {
   });
 
   const createPlayerMutation = useMutation({
-    mutationFn: async (data: typeof playerForm) => {
+    mutationFn: async (data: { name: string; sport: Sport; position: string; height: string; team: string; jerseyNumber: string; teamCode: string }) => {
       const result = await apiRequest('POST', '/api/users/create-player-profile', {
         name: data.name,
         sport: data.sport,
@@ -220,15 +229,20 @@ export default function RoleSelection() {
 
   const handlePlayerProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!playerForm.name || !playerForm.position) {
+    if (!playerForm.name || playerForm.positions.length === 0) {
       toast({
         title: "Missing Information",
-        description: "Please enter your name and position",
+        description: "Please enter your name and select at least one position",
         variant: "destructive",
       });
       return;
     }
-    await createPlayerMutation.mutateAsync(playerForm);
+    // Convert positions array to comma-separated string for storage
+    const formData = {
+      ...playerForm,
+      position: playerForm.positions.join(','),
+    };
+    await createPlayerMutation.mutateAsync(formData);
   };
 
   const handleCreateTeamSubmit = async (e: React.FormEvent) => {
@@ -332,22 +346,30 @@ export default function RoleSelection() {
               </div>
 
               <div>
-                <Label htmlFor="position">Position *</Label>
-                <Select
-                  value={playerForm.position}
-                  onValueChange={(value) => setPlayerForm(prev => ({ ...prev, position: value }))}
-                >
-                  <SelectTrigger className="mt-1" data-testid="select-position">
-                    <SelectValue placeholder="Select your position" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {getPositionsForSport().map((pos) => (
-                      <SelectItem key={pos} value={pos}>
-                        {getPositionLabel(pos)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>Position(s) * <span className="text-xs text-muted-foreground font-normal">(Select all that apply)</span></Label>
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  {getPositionsForSport().map((pos) => (
+                    <div
+                      key={pos}
+                      onClick={() => togglePosition(pos)}
+                      className={`
+                        cursor-pointer rounded-lg border p-2 text-center text-sm font-medium transition-all
+                        ${playerForm.positions.includes(pos)
+                          ? 'border-primary bg-primary/10 text-white'
+                          : 'border-white/10 bg-secondary/30 text-muted-foreground hover:border-white/30 hover:bg-secondary/50'
+                        }
+                      `}
+                      data-testid={`position-${pos.toLowerCase()}`}
+                    >
+                      {getPositionLabel(pos)}
+                    </div>
+                  ))}
+                </div>
+                {playerForm.positions.length > 0 && (
+                  <p className="text-xs text-primary mt-2">
+                    Selected: {playerForm.positions.map(p => getPositionLabel(p)).join(', ')}
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">

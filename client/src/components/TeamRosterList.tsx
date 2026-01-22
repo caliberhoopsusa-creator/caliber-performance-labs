@@ -3,6 +3,14 @@ import { Link } from "wouter";
 import { GradeBadge } from "@/components/GradeBadge";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { FOOTBALL_POSITION_LABELS, type FootballPosition } from "@shared/sports-config";
+
+// Helper to format comma-separated positions with full labels
+function formatPositions(position: string): string {
+  return position?.split(',').map(p => p.trim()).map(pos => 
+    FOOTBALL_POSITION_LABELS[pos as FootballPosition] || pos
+  ).join(' / ') || position;
+}
 
 interface Player {
   id: number;
@@ -133,7 +141,7 @@ export function TeamRosterList({ players, teamName, compact = false }: TeamRoste
                   </Link>
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <span className="text-muted-foreground text-xs">{player.position}</span>
+                  <span className="text-muted-foreground text-xs">{formatPositions(player.position)}</span>
                 </td>
                 <td className="px-4 py-3 text-center">
                   <GradeBadge grade={player.avgGrade} size="sm" />

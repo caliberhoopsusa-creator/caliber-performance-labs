@@ -55,6 +55,12 @@ interface DiscoverPlayer {
   hasCaliberBadge: boolean;
 }
 
+// Helper to check if player has any of the given positions (supports comma-separated multi-positions)
+function hasPosition(playerPosition: string, positions: string[]): boolean {
+  const playerPositions = playerPosition?.split(',').map(p => p.trim()) || [];
+  return playerPositions.some(pos => positions.includes(pos));
+}
+
 function getProfileCompleteness(player: DiscoverPlayer): number {
   let score = 0;
   const maxScore = 11;
@@ -178,7 +184,11 @@ function PlayerDiscoverCard({
                     {player.name}
                   </h3>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground mt-0.5">
-                    <span className="font-medium">{player.position}</span>
+                    <span className="font-medium">
+                      {player.position?.split(',').map(p => p.trim()).map(pos => 
+                        FOOTBALL_POSITION_LABELS[pos as keyof typeof FOOTBALL_POSITION_LABELS] || pos
+                      ).join(' / ') || player.position}
+                    </span>
                     {player.height && (
                       <>
                         <span className="text-border">|</span>
@@ -238,7 +248,7 @@ function PlayerDiscoverCard({
               <div className="flex items-center gap-3 text-sm mb-3">
                 {isFootball ? (
                   <>
-                    {['QB'].includes(player.position) && (
+                    {hasPosition(player.position, ['QB']) && (
                       <>
                         <div className="text-center">
                           <div className="font-bold text-white text-base">{player.passingYards}</div>
@@ -256,7 +266,7 @@ function PlayerDiscoverCard({
                         )}
                       </>
                     )}
-                    {['RB'].includes(player.position) && (
+                    {hasPosition(player.position, ['RB']) && (
                       <>
                         <div className="text-center">
                           <div className="font-bold text-white text-base">{player.rushingYards}</div>
@@ -272,7 +282,7 @@ function PlayerDiscoverCard({
                         </div>
                       </>
                     )}
-                    {['WR', 'TE'].includes(player.position) && (
+                    {hasPosition(player.position, ['WR', 'TE']) && (
                       <>
                         <div className="text-center">
                           <div className="font-bold text-white text-base">{player.receivingYards}</div>
@@ -284,7 +294,7 @@ function PlayerDiscoverCard({
                         </div>
                       </>
                     )}
-                    {['DL', 'LB', 'DB'].includes(player.position) && (
+                    {hasPosition(player.position, ['DL', 'LB', 'DB']) && (
                       <>
                         <div className="text-center">
                           <div className="font-bold text-white text-base">{player.tackles}</div>
@@ -300,7 +310,7 @@ function PlayerDiscoverCard({
                         </div>
                       </>
                     )}
-                    {['OL', 'K', 'P'].includes(player.position) && (
+                    {hasPosition(player.position, ['OL', 'K', 'P']) && (
                       <div className="text-center">
                         <div className="font-bold text-white text-base">{player.gamesPlayed}</div>
                         <div className="text-[10px] uppercase text-muted-foreground tracking-wide">GAMES</div>

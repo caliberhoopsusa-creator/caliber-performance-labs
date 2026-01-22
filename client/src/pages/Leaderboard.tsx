@@ -27,8 +27,17 @@ const US_STATES = [
   "Wisconsin", "Wyoming"
 ];
 
+import { FOOTBALL_POSITION_LABELS, type FootballPosition } from "@shared/sports-config";
+
 const BASKETBALL_POSITIONS = ["Guard", "Wing", "Big"];
 const FOOTBALL_POSITIONS = ["QB", "RB", "WR", "TE", "OL", "DL", "LB", "DB", "K", "P"];
+
+// Helper to format comma-separated positions with full labels
+function formatPositions(position: string): string {
+  return position?.split(',').map(p => p.trim()).map(pos => 
+    FOOTBALL_POSITION_LABELS[pos as FootballPosition] || pos
+  ).join(' / ') || position;
+}
 
 const LEVELS = [
   { value: "middle_school", label: "Middle School" },
@@ -235,7 +244,7 @@ export default function Leaderboard() {
                               <div className="font-bold text-sm md:text-base text-white group-hover:text-cyan-300 transition-colors truncate">{entry.name}</div>
                               <div className="flex items-center gap-2">
                                 <span className="text-[10px] md:text-xs text-cyan-200/40 truncate">{entry.team || "No Team"}</span>
-                                <span className="text-[10px] text-cyan-400/60">{entry.position}</span>
+                                <span className="text-[10px] text-cyan-400/60">{formatPositions(entry.position)}</span>
                               </div>
                             </div>
                           </div>

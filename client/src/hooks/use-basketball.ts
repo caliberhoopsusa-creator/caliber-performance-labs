@@ -91,7 +91,7 @@ export function useUpdateRosterRole() {
 
 export type PlayerUpdate = {
   name?: string;
-  position?: "Guard" | "Wing" | "Big";
+  position?: string; // Comma-separated positions for multi-position support
   height?: string;
   team?: string;
   jerseyNumber?: number;

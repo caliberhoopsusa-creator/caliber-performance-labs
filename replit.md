@@ -6,6 +6,7 @@ Caliber is a **multi-sport** player analytics and performance tracking applicati
 ### Multi-Sport Support
 - **Basketball**: Guard, Wing, Big positions with PPG, RPG, APG, FG%, 3P% stats
 - **Football**: 10 positions (QB, RB, WR, TE, OL, DL, LB, DB, K, P) with position-specific stats
+- **Multi-Position Support**: Players can select multiple positions (stored as comma-separated strings, displayed with " / " separator)
   - Passing: completions, passAttempts, passingYards, passingTouchdowns, interceptions
   - Rushing: carries, rushingYards, rushingTouchdowns, fumbles
   - Receiving: receptions, targets, receivingYards, receivingTouchdowns, drops

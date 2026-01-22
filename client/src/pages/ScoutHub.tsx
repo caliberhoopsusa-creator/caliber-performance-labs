@@ -101,9 +101,18 @@ function ScoutPlayerCard({ player, sport }: ScoutPlayerCardProps) {
   const isFootball = sport === 'football';
   const isRecruitReady = player.openToOpportunities;
 
-  const positionLabel = isFootball && FOOTBALL_POSITIONS.includes(player.position as FootballPosition)
-    ? FOOTBALL_POSITION_LABELS[player.position as FootballPosition]
-    : player.position;
+  // Handle comma-separated multi-positions
+  const positionLabel = player.position?.split(',').map(p => p.trim()).map(pos => 
+    isFootball && FOOTBALL_POSITIONS.includes(pos as FootballPosition)
+      ? FOOTBALL_POSITION_LABELS[pos as FootballPosition]
+      : pos
+  ).join(' / ') || player.position;
+  
+  // Helper to check if player has any of the given positions
+  const hasPos = (positions: string[]) => {
+    const playerPositions = player.position?.split(',').map(p => p.trim()) || [];
+    return playerPositions.some(pos => positions.includes(pos));
+  };
 
   return (
     <Link href={`/players/${player.id}`}>
@@ -174,7 +183,7 @@ function ScoutPlayerCard({ player, sport }: ScoutPlayerCardProps) {
           <div className="mt-4 pt-3 border-t border-border/50">
             {isFootball ? (
               <div className="grid grid-cols-4 gap-2 text-center">
-                {player.position === 'QB' ? (
+                {hasPos(['QB']) ? (
                   <>
                     <div>
                       <div className="text-lg font-bold text-primary">{player.passingYards || 0}</div>
@@ -193,7 +202,7 @@ function ScoutPlayerCard({ player, sport }: ScoutPlayerCardProps) {
                       <div className="text-xs text-muted-foreground">Games</div>
                     </div>
                   </>
-                ) : player.position === 'RB' ? (
+                ) : hasPos(['RB']) ? (
                   <>
                     <div>
                       <div className="text-lg font-bold text-primary">{player.rushingYards || 0}</div>
@@ -212,7 +221,7 @@ function ScoutPlayerCard({ player, sport }: ScoutPlayerCardProps) {
                       <div className="text-xs text-muted-foreground">Games</div>
                     </div>
                   </>
-                ) : player.position === 'WR' || player.position === 'TE' ? (
+                ) : hasPos(['WR', 'TE']) ? (
                   <>
                     <div>
                       <div className="text-lg font-bold text-primary">{player.receivingYards || 0}</div>
@@ -231,7 +240,7 @@ function ScoutPlayerCard({ player, sport }: ScoutPlayerCardProps) {
                       <div className="text-xs text-muted-foreground">Games</div>
                     </div>
                   </>
-                ) : ['DL', 'LB', 'DB'].includes(player.position) ? (
+                ) : hasPos(['DL', 'LB', 'DB']) ? (
                   <>
                     <div>
                       <div className="text-lg font-bold text-primary">{player.tackles || 0}</div>
@@ -250,7 +259,7 @@ function ScoutPlayerCard({ player, sport }: ScoutPlayerCardProps) {
                       <div className="text-xs text-muted-foreground">Games</div>
                     </div>
                   </>
-                ) : player.position === 'OL' ? (
+                ) : hasPos(['OL']) ? (
                   <>
                     <div>
                       <div className="text-lg font-bold text-primary">{player.gamesPlayed || 0}</div>
@@ -269,7 +278,7 @@ function ScoutPlayerCard({ player, sport }: ScoutPlayerCardProps) {
                       <div className="text-xs text-muted-foreground">Tier</div>
                     </div>
                   </>
-                ) : player.position === 'K' ? (
+                ) : hasPos(['K']) ? (
                   <>
                     <div>
                       <div className="text-lg font-bold text-primary">{player.gamesPlayed || 0}</div>
@@ -288,7 +297,7 @@ function ScoutPlayerCard({ player, sport }: ScoutPlayerCardProps) {
                       <div className="text-xs text-muted-foreground">Tier</div>
                     </div>
                   </>
-                ) : player.position === 'P' ? (
+                ) : hasPos(['P']) ? (
                   <>
                     <div>
                       <div className="text-lg font-bold text-primary">{player.gamesPlayed || 0}</div>

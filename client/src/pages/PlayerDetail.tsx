@@ -819,6 +819,7 @@ export default function PlayerDetail() {
   const [expandedGameId, setExpandedGameId] = useState<number | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editForm, setEditForm] = useState<PlayerUpdate>({});
+  const [editPositions, setEditPositions] = useState<string[]>([]);
   const [showFollowersSheet, setShowFollowersSheet] = useState(false);
   const [showFollowingSheet, setShowFollowingSheet] = useState(false);
   const [showPlayerShareModal, setShowPlayerShareModal] = useState(false);
@@ -853,9 +854,12 @@ export default function PlayerDetail() {
 
   useEffect(() => {
     if (player && isEditDialogOpen) {
+      // Parse positions from comma-separated string
+      const positionsList = player.position ? player.position.split(',').map(p => p.trim()) : [];
+      setEditPositions(positionsList);
       setEditForm({
         name: player.name,
-        position: player.position as "Guard" | "Wing" | "Big",
+        position: player.position,
         height: player.height || "",
         team: player.team || "",
         jerseyNumber: player.jerseyNumber || undefined,
@@ -872,9 +876,22 @@ export default function PlayerDetail() {
     }
   }, [player, isEditDialogOpen]);
 
+  const toggleEditPosition = (pos: string) => {
+    setEditPositions(prev => {
+      const newPositions = prev.includes(pos)
+        ? prev.filter(p => p !== pos)
+        : [...prev, pos];
+      // Also update editForm.position
+      setEditForm(form => ({ ...form, position: newPositions.join(',') }));
+      return newPositions;
+    });
+  };
+
   const handleSaveProfile = () => {
+    // Ensure position is set from editPositions
+    const updatedForm = { ...editForm, position: editPositions.join(',') };
     updatePlayer(
-      { id, updates: editForm },
+      { id, updates: updatedForm },
       {
         onSuccess: () => {
           toast({
@@ -1183,12 +1200,14 @@ export default function PlayerDetail() {
                 {player.jerseyNumber && (
                   <span className="text-xl md:text-3xl font-display font-bold text-primary/80">#{player.jerseyNumber}</span>
                 )}
-                {/* Show position - hide basketball positions in football mode */}
-                {(!isFootball || FOOTBALL_POSITIONS.includes(player.position as FootballPosition)) && (
+                {/* Show positions - supports multiple comma-separated positions */}
+                {player.position && (
                   <span className="bg-primary/20 text-primary px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border border-primary/20">
-                    {isFootball && FOOTBALL_POSITIONS.includes(player.position as FootballPosition) 
-                      ? FOOTBALL_POSITION_LABELS[player.position as FootballPosition] 
-                      : player.position}
+                    {player.position.split(',').map(p => p.trim()).map(pos => 
+                      isFootball && FOOTBALL_POSITIONS.includes(pos as FootballPosition)
+                        ? FOOTBALL_POSITION_LABELS[pos as FootballPosition]
+                        : pos
+                    ).join(' / ')}
                   </span>
                 )}
               </div>
@@ -2138,34 +2157,51 @@ export default function PlayerDetail() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Position</label>
-                  <Select
-                    value={editForm.position}
-                    onValueChange={(val) => setEditForm((prev) => ({ ...prev, position: val as "Guard" | "Wing" | "Big" }))}
-                  >
-                    <SelectTrigger className="bg-secondary/30 border-white/10 text-white" data-testid="select-edit-position">
-                      <SelectValue placeholder="Position" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-card border-white/10 text-white">
-                      <SelectItem value="Guard">Guard</SelectItem>
-                      <SelectItem value="Wing">Wing</SelectItem>
-                      <SelectItem value="Big">Big</SelectItem>
-                    </SelectContent>
-                  </Select>
+              <div className="space-y-2">
+                <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">
+                  Position(s) <span className="font-normal text-muted-foreground/60">(Select all that apply)</span>
+                </label>
+                <div className={`grid gap-2 ${isFootball ? 'grid-cols-5' : 'grid-cols-3'}`}>
+                  {(isFootball ? FOOTBALL_POSITIONS : ['Guard', 'Wing', 'Big']).map((pos) => (
+                    <div
+                      key={pos}
+                      onClick={() => toggleEditPosition(pos)}
+                      className={`
+                        cursor-pointer rounded-lg border p-2 text-center text-sm font-medium transition-all
+                        ${editPositions.includes(pos)
+                          ? 'border-primary bg-primary/10 text-white'
+                          : 'border-white/10 bg-secondary/30 text-muted-foreground hover:border-white/30 hover:bg-secondary/50'
+                        }
+                      `}
+                      data-testid={`position-edit-${pos.toLowerCase()}`}
+                    >
+                      {isFootball && FOOTBALL_POSITIONS.includes(pos as FootballPosition) 
+                        ? FOOTBALL_POSITION_LABELS[pos as FootballPosition] 
+                        : pos}
+                    </div>
+                  ))}
                 </div>
-                <div className="space-y-2">
-                  <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Jersey #</label>
-                  <Input
-                    type="number"
-                    value={editForm.jerseyNumber || ""}
-                    onChange={(e) => setEditForm((prev) => ({ ...prev, jerseyNumber: e.target.value ? Number(e.target.value) : undefined }))}
-                    placeholder="23"
-                    className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20"
-                    data-testid="input-edit-jersey"
-                  />
-                </div>
+                {editPositions.length > 0 && (
+                  <p className="text-xs text-primary">
+                    Selected: {editPositions.map(p => 
+                      isFootball && FOOTBALL_POSITIONS.includes(p as FootballPosition) 
+                        ? FOOTBALL_POSITION_LABELS[p as FootballPosition] 
+                        : p
+                    ).join(', ')}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Jersey #</label>
+                <Input
+                  type="number"
+                  value={editForm.jerseyNumber || ""}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, jerseyNumber: e.target.value ? Number(e.target.value) : undefined }))}
+                  placeholder="23"
+                  className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20"
+                  data-testid="input-edit-jersey"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">

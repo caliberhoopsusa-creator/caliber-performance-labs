@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { Star, Zap, Trophy, Crown, Sparkles, Target, Crosshair, Shield, Hand, Grab } from "lucide-react";
 import { type PlayerWithGames, type Badge as BadgeType, BADGE_DEFINITIONS, TIER_THRESHOLDS } from "@shared/schema";
 import { type SkillBadge } from "@/hooks/use-basketball";
+import { FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS, type FootballPosition } from "@shared/sports-config";
 
 const SKILL_ICONS: Record<string, typeof Target> = {
   sharpshooter: Crosshair,
@@ -176,7 +177,11 @@ export const ShareablePlayerCard = forwardRef<HTMLDivElement, ShareablePlayerCar
                   <span className="text-xl font-bold text-orange-500 font-display">#{player.jerseyNumber}</span>
                 )}
                 <span className="text-xs font-bold uppercase tracking-wider bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded border border-orange-500/30">
-                  {player.position}
+                  {player.position?.split(',').map(p => p.trim()).map(pos => 
+                    FOOTBALL_POSITIONS.includes(pos as FootballPosition)
+                      ? FOOTBALL_POSITION_LABELS[pos as FootballPosition]
+                      : pos
+                  ).join(' / ') || player.position}
                 </span>
               </div>
               <h2 className="text-2xl font-bold text-white font-display uppercase tracking-tight truncate">
