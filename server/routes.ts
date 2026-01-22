@@ -1522,6 +1522,12 @@ export async function registerRoutes(
         return res.status(404).json({ message: 'User not found' });
       }
       
+      // Also update the player's sport field if they have a player profile
+      const player = await storage.getPlayerByUserId(userId);
+      if (player) {
+        await storage.updatePlayer(player.id, { sport });
+      }
+      
       res.json(updatedUser);
     } catch (err) {
       if (err instanceof z.ZodError) {
