@@ -314,14 +314,16 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
                 <SelectValue placeholder="Select a player..." />
               </SelectTrigger>
               <SelectContent className="bg-card border-white/10 text-white">
-                {players.filter((p: any) => p.sport === sport).map((p: any) => {
-                  const positionLabel = p.sport === 'football' && FOOTBALL_POSITION_LABELS[p.position as FootballPosition]
-                    ? FOOTBALL_POSITION_LABELS[p.position as FootballPosition]
-                    : p.position;
-                  return (
-                    <SelectItem key={p.id} value={String(p.id)}>{p.name} (#{p.jerseyNumber}) - {positionLabel}</SelectItem>
-                  );
-                })}
+                {players
+                  .filter((p: any) => p.sport === sport || String(p.id) === preselectedPlayerId)
+                  .map((p: any) => {
+                    const positionLabel = p.sport === 'football' && FOOTBALL_POSITION_LABELS[p.position as FootballPosition]
+                      ? FOOTBALL_POSITION_LABELS[p.position as FootballPosition]
+                      : p.position;
+                    return (
+                      <SelectItem key={p.id} value={String(p.id)}>{p.name} (#{p.jerseyNumber}) - {positionLabel}</SelectItem>
+                    );
+                  })}
               </SelectContent>
             </Select>
             {form.formState.errors.playerId && <p className="text-red-400 text-xs">Player is required</p>}
