@@ -1333,12 +1333,18 @@ export default function PlayerDetail() {
           <h3 className="text-lg font-bold font-display text-white mb-4 flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-primary" /> Player Profile
           </h3>
-          <Card className="p-4">
+          <Card className="p-4 animate-fade-up">
             <div className="h-[220px] w-full">
               {games.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
-                    <PolarGrid stroke="rgba(255,255,255,0.1)" />
+                    <defs>
+                      <linearGradient id="playerRadarGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor="#00D4FF" stopOpacity={0.4} />
+                        <stop offset="100%" stopColor="#3B82F6" stopOpacity={0.1} />
+                      </linearGradient>
+                    </defs>
+                    <PolarGrid stroke="rgba(255,255,255,0.08)" />
                     <PolarAngleAxis 
                       dataKey="category" 
                       tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 11 }}
@@ -1352,10 +1358,11 @@ export default function PlayerDetail() {
                     <Radar
                       name="Rating"
                       dataKey="value"
-                      stroke="hsl(var(--primary))"
-                      fill="hsl(var(--primary))"
-                      fillOpacity={0.3}
-                      strokeWidth={2}
+                      stroke="#00D4FF"
+                      fill="url(#playerRadarGradient)"
+                      strokeWidth={2.5}
+                      isAnimationActive
+                      filter="drop-shadow(0 0 8px rgba(0,212,255,0.3))"
                     />
                   </RadarChart>
                 </ResponsiveContainer>

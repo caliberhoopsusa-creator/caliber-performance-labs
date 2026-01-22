@@ -231,8 +231,12 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
   ];
   
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[hsl(220,25%,5%)] to-[hsl(220,25%,5%)]/95 backdrop-blur-2xl border-t border-cyan-500/[0.1] z-50 safe-area-bottom shadow-[0_-8px_40px_rgba(0,0,0,0.5),0_0_30px_rgba(100,200,255,0.03)]">
-      <div className="flex justify-around items-center h-14 px-1">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 safe-area-bottom">
+      {/* Enhanced glassmorphic background with better blur and depth */}
+      <div className="absolute inset-0 navbar-glass shadow-[0_-8px_40px_rgba(0,0,0,0.5),0_0_30px_rgba(100,200,255,0.06),inset_0_1px_0_rgba(100,200,255,0.1)]" />
+      
+      {/* Navigation container with proper spacing and touch targets */}
+      <div className="relative flex justify-around items-center min-h-16 px-2 gap-1">
         {navItems.map((item) => {
           const isActive = location === item.href || 
             (item.href.includes('/players/') && location.includes('/players/') && location === item.href);
@@ -243,15 +247,22 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
               <Link 
                 key={item.href} 
                 href={item.href} 
-                className="flex flex-col items-center gap-0.5 min-w-[48px] min-h-[44px] justify-center transition-colors duration-200" 
+                className="flex flex-col items-center justify-center touch-target -mt-8 transition-all duration-300 active:scale-95" 
                 data-testid={`mobile-nav-${item.label.toLowerCase()}`}
               >
-                <div className="rounded-full p-2.5 -mt-6 shadow-xl shadow-primary/30 border border-primary/20 transition-all duration-200 bg-primary text-white">
-                  <Icon className="w-5 h-5" />
+                <div className={cn(
+                  "rounded-full p-2.5 border transition-all duration-300 nav-item-transition",
+                  isActive 
+                    ? "bg-primary text-white border-primary shadow-xl glow-cyan" 
+                    : "bg-primary text-white border-primary/80 shadow-lg shadow-primary/40 hover:shadow-xl hover:glow-cyan-sm"
+                )}>
+                  <Icon className="w-6 h-6" />
                 </div>
                 <span className={cn(
-                  "text-[9px] font-medium uppercase tracking-wide mt-0.5 transition-colors duration-200",
-                  isActive ? "text-primary" : "text-muted-foreground"
+                  "text-[9px] font-medium uppercase tracking-widest mt-1.5 transition-all duration-300 nav-item-transition",
+                  isActive 
+                    ? "text-primary font-bold nav-active-indicator" 
+                    : "text-muted-foreground hover:text-cyan-300"
                 )}>{item.label}</span>
               </Link>
             );
@@ -262,15 +273,15 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
               key={item.href} 
               href={item.href} 
               className={cn(
-                "flex flex-col items-center gap-0.5 min-w-[48px] min-h-[44px] justify-center p-1.5 transition-colors duration-200",
+                "flex flex-col items-center justify-center touch-target p-2 transition-all duration-300 nav-item-transition active:scale-95",
                 isActive 
-                  ? "text-primary" 
-                  : "text-muted-foreground hover:text-white"
+                  ? "text-primary nav-item-active nav-active-indicator" 
+                  : "text-muted-foreground hover:text-cyan-300 hover:glow-cyan-sm"
               )} 
               data-testid={`mobile-nav-${item.label.toLowerCase()}`}
             >
-              <Icon className="w-5 h-5" />
-              <span className="text-[9px] font-medium uppercase tracking-wide">{item.label}</span>
+              <Icon className="w-6 h-6" />
+              <span className="text-[9px] font-medium uppercase tracking-widest mt-0.5">{item.label}</span>
             </Link>
           );
         })}

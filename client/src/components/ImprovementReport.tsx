@@ -40,6 +40,23 @@ import {
 import { cn } from "@/lib/utils";
 import type { Game } from "@shared/schema";
 
+// Premium tooltip component with glassmorphic styling
+const PremiumTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-card/80 backdrop-blur-md border border-primary/20 rounded-lg p-3 shadow-xl shadow-primary/10">
+        <p className="text-xs text-muted-foreground">{label}</p>
+        {payload.map((entry: any, index: number) => (
+          <p key={index} style={{ color: entry.color }} className="text-sm font-medium">
+            {entry.name}: {typeof entry.value === 'number' ? entry.value.toFixed(1) : entry.value}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
 type TimePeriod = "7" | "30" | "season";
 
 interface ImprovementReportProps {
@@ -518,7 +535,7 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
           </Card>
 
           <div className="grid md:grid-cols-1 gap-6">
-            <Card data-testid="grade-distribution-card">
+            <Card data-testid="grade-distribution-card" className="animate-fade-up">
               <CardHeader>
                 <CardTitle>Grade Distribution</CardTitle>
               </CardHeader>
@@ -526,24 +543,23 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={gradeDistribution} layout="vertical">
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis type="number" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                      <XAxis type="number" tick={{ fontSize: 11, fill: "rgba(255,255,255,0.5)" }} axisLine={{ stroke: 'rgba(255,255,255,0.1)' }} />
                       <YAxis
                         dataKey="name"
                         type="category"
-                        tick={{ fontSize: 12, fill: "hsl(var(--foreground))" }}
+                        tick={{ fontSize: 12, fill: "rgba(255,255,255,0.6)" }}
                         width={40}
+                        axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
                       />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "hsl(var(--card))",
-                          borderColor: "hsl(var(--border))",
-                          borderRadius: "8px",
-                        }}
-                      />
-                      <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                      <Tooltip content={<PremiumTooltip />} cursor={{ fill: 'rgba(0,212,255,0.1)' }} />
+                      <Bar dataKey="value" radius={[0, 6, 6, 0]} isAnimationActive>
                         {gradeDistribution.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
+                          <Cell 
+                            key={`cell-${index}`} 
+                            fill={entry.color}
+                            filter={`drop-shadow(0 0 4px ${entry.color}40)`}
+                          />
                         ))}
                       </Bar>
                     </BarChart>
@@ -553,7 +569,7 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
             </Card>
           </div>
 
-          <Card data-testid="grade-trend-card">
+          <Card data-testid="grade-trend-card" className="animate-fade-up">
             <CardHeader>
               <CardTitle>Grade Progression</CardTitle>
             </CardHeader>
@@ -561,34 +577,51 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
               <div className="h-48">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={trendData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <defs>
+                      <linearGradient id="gradeGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#00D4FF" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.2} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" vertical={false} />
                     <XAxis
                       dataKey="date"
-                      tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                      tick={{ fontSize: 11, fill: "rgba(255,255,255,0.5)" }}
                       tickLine={false}
+                      axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
                     />
                     <YAxis
                       domain={[0, 12]}
                       ticks={[0, 3, 6, 9, 12]}
                       tickFormatter={(v) => valueToGrade(v)}
-                      tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                      tick={{ fontSize: 11, fill: "rgba(255,255,255,0.5)" }}
                       tickLine={false}
-                      axisLine={false}
+                      axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
                     />
                     <Tooltip
-                      contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        borderColor: "hsl(var(--border))",
-                        borderRadius: "8px",
+                      content={({ active, payload }: any) => {
+                        if (active && payload && payload[0]) {
+                          return (
+                            <div className="bg-card/80 backdrop-blur-md border border-primary/20 rounded-lg p-3 shadow-xl shadow-primary/10">
+                              <p className="text-xs text-muted-foreground">{payload[0].payload.date}</p>
+                              <p style={{ color: '#00D4FF' }} className="text-sm font-medium">
+                                Grade: {valueToGrade(payload[0].value)}
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
                       }}
-                      formatter={(v: number) => [valueToGrade(v), "Grade"]}
+                      cursor={{ stroke: 'rgba(0,212,255,0.3)' }}
                     />
                     <Line
                       type="monotone"
                       dataKey="grade"
-                      stroke="#8b5cf6"
+                      stroke="#00D4FF"
                       strokeWidth={3}
-                      dot={{ r: 4, fill: "#8b5cf6" }}
+                      dot={{ r: 4, fill: '#00D4FF', filter: 'drop-shadow(0 0 8px rgba(0,212,255,0.6))' }}
+                      activeDot={{ r: 6, filter: 'drop-shadow(0 0 12px rgba(0,212,255,0.8))' }}
+                      isAnimationActive
                       name="Grade"
                     />
                   </LineChart>

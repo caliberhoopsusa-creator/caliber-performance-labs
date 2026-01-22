@@ -3,10 +3,27 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, BarChart, Bar, Cell } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, BarChart, Bar, Cell, CartesianGrid } from 'recharts';
 import { Settings2, TrendingUp, Target, Activity, BarChart3, Award } from "lucide-react";
 import type { Game } from "@shared/schema";
 import { format } from "date-fns";
+
+// Premium tooltip component with glassmorphic styling
+const PremiumTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-card/80 backdrop-blur-md border border-primary/20 rounded-lg p-3 shadow-xl shadow-primary/10">
+        <p className="text-xs text-muted-foreground">{label}</p>
+        {payload.map((entry: any, index: number) => (
+          <p key={index} style={{ color: entry.color }} className="text-sm font-medium">
+            {entry.name}: {typeof entry.value === 'number' ? entry.value.toFixed(1) : entry.value}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
 
 export interface WidgetConfig {
   id: string;
@@ -149,27 +166,31 @@ function TrendsWidget({ games }: { games: Game[] }) {
   }, [games]);
 
   return (
-    <Card className="p-4" data-testid="widget-trends">
+    <Card className="p-4 animate-fade-up" data-testid="widget-trends">
       <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
         <TrendingUp className="w-4 h-4 text-primary" /> Performance Trends
       </h3>
       <div className="h-48">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData}>
-            <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#888' }} />
-            <YAxis tick={{ fontSize: 10, fill: '#888' }} width={30} />
-            <Tooltip 
-              contentStyle={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: '8px' }}
-              labelStyle={{ color: '#fff' }}
-            />
-            <Line type="monotone" dataKey="points" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} name="PTS" />
-            <Line type="monotone" dataKey="rebounds" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} name="REB" />
-            <Line type="monotone" dataKey="assists" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3 }} name="AST" />
+            <defs>
+              <linearGradient id="pointsGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#00D4FF" stopOpacity={0.8} />
+                <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.2} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" vertical={false} />
+            <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.5)' }} axisLine={{ stroke: 'rgba(255,255,255,0.1)' }} />
+            <YAxis tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.5)' }} width={30} axisLine={{ stroke: 'rgba(255,255,255,0.1)' }} />
+            <Tooltip content={<PremiumTooltip />} cursor={{ stroke: 'rgba(0,212,255,0.3)' }} />
+            <Line type="monotone" dataKey="points" stroke="#00D4FF" strokeWidth={2.5} dot={{ r: 4, fill: '#00D4FF', filter: 'drop-shadow(0 0 8px rgba(0,212,255,0.6))' }} activeDot={{ r: 6, filter: 'drop-shadow(0 0 12px rgba(0,212,255,0.8))' }} isAnimationActive name="PTS" />
+            <Line type="monotone" dataKey="rebounds" stroke="#10b981" strokeWidth={2.5} dot={{ r: 4, fill: '#10b981', filter: 'drop-shadow(0 0 8px rgba(16,185,129,0.6))' }} activeDot={{ r: 6, filter: 'drop-shadow(0 0 12px rgba(16,185,129,0.8))' }} isAnimationActive name="REB" />
+            <Line type="monotone" dataKey="assists" stroke="#f59e0b" strokeWidth={2.5} dot={{ r: 4, fill: '#f59e0b', filter: 'drop-shadow(0 0 8px rgba(245,158,11,0.6))' }} activeDot={{ r: 6, filter: 'drop-shadow(0 0 12px rgba(245,158,11,0.8))' }} isAnimationActive name="AST" />
           </LineChart>
         </ResponsiveContainer>
       </div>
       <div className="flex justify-center gap-4 mt-2 text-xs">
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500" /> PTS</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-cyan-400" /> PTS</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /> REB</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500" /> AST</span>
       </div>
@@ -196,26 +217,43 @@ function GradesWidget({ games }: { games: Game[] }) {
       }));
   }, [games]);
 
+  const getGradeColor = (value: number) => {
+    if (value >= 90) return '#22c55e';
+    if (value >= 80) return '#3b82f6';
+    if (value >= 70) return '#f59e0b';
+    return '#ef4444';
+  };
+
   return (
-    <Card className="p-4" data-testid="widget-grades">
+    <Card className="p-4 animate-fade-up" data-testid="widget-grades">
       <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
         <Award className="w-4 h-4 text-primary" /> Grade History
       </h3>
       <div className="h-48">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData}>
-            <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#888' }} />
-            <YAxis domain={[50, 100]} tick={{ fontSize: 10, fill: '#888' }} width={30} />
-            <Tooltip 
-              contentStyle={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: '8px' }}
-              labelStyle={{ color: '#fff' }}
-              formatter={(value: number, name: string, props: any) => [props.payload.grade, 'Grade']}
-            />
-            <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" vertical={false} />
+            <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.5)' }} axisLine={{ stroke: 'rgba(255,255,255,0.1)' }} />
+            <YAxis domain={[50, 100]} tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.5)' }} width={30} axisLine={{ stroke: 'rgba(255,255,255,0.1)' }} />
+            <Tooltip content={({ active, payload }: any) => {
+              if (active && payload && payload[0]) {
+                return (
+                  <div className="bg-card/80 backdrop-blur-md border border-primary/20 rounded-lg p-3 shadow-xl shadow-primary/10">
+                    <p className="text-xs text-muted-foreground">{payload[0].payload.date}</p>
+                    <p style={{ color: getGradeColor(payload[0].payload.value) }} className="text-sm font-medium">
+                      Grade: {payload[0].payload.grade}
+                    </p>
+                  </div>
+                );
+              }
+              return null;
+            }} cursor={{ fill: 'rgba(0,212,255,0.1)' }} />
+            <Bar dataKey="value" radius={[6, 6, 0, 0]} isAnimationActive>
               {chartData.map((entry, index) => (
                 <Cell 
                   key={`cell-${index}`} 
-                  fill={entry.value >= 90 ? '#22c55e' : entry.value >= 80 ? '#3b82f6' : entry.value >= 70 ? '#f59e0b' : '#ef4444'} 
+                  fill={getGradeColor(entry.value)}
+                  filter={`drop-shadow(0 0 4px ${getGradeColor(entry.value)}40)`}
                 />
               ))}
             </Bar>
@@ -246,22 +284,29 @@ function RadarWidget({ games }: { games: Game[] }) {
   }, [games]);
 
   return (
-    <Card className="p-4" data-testid="widget-radar">
+    <Card className="p-4 animate-fade-up" data-testid="widget-radar">
       <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
         <Target className="w-4 h-4 text-primary" /> Skill Breakdown
       </h3>
       <div className="h-48">
         <ResponsiveContainer width="100%" height="100%">
           <RadarChart data={radarData}>
-            <PolarGrid stroke="#333" />
-            <PolarAngleAxis dataKey="stat" tick={{ fontSize: 10, fill: '#888' }} />
+            <defs>
+              <linearGradient id="radarGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#00D4FF" stopOpacity={0.3} />
+                <stop offset="100%" stopColor="#3B82F6" stopOpacity={0.1} />
+              </linearGradient>
+            </defs>
+            <PolarGrid stroke="rgba(255,255,255,0.08)" />
+            <PolarAngleAxis dataKey="stat" tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.6)' }} />
             <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
             <Radar
               dataKey="value"
-              stroke="#3b82f6"
-              fill="#3b82f6"
-              fillOpacity={0.3}
-              strokeWidth={2}
+              stroke="#00D4FF"
+              fill="url(#radarGradient)"
+              strokeWidth={2.5}
+              isAnimationActive
+              filter="drop-shadow(0 0 8px rgba(0,212,255,0.3))"
             />
           </RadarChart>
         </ResponsiveContainer>
@@ -283,29 +328,29 @@ function AveragesWidget({ games }: { games: Game[] }) {
   }, [games]);
 
   return (
-    <Card className="p-4" data-testid="widget-averages">
+    <Card className="p-4 animate-fade-up" data-testid="widget-averages">
       <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
         <BarChart3 className="w-4 h-4 text-primary" /> Season Averages
       </h3>
       <div className="grid grid-cols-5 gap-2 text-center">
-        <div className="p-3 rounded-lg bg-muted/30">
-          <p className="text-xl font-bold text-white">{stats.pts}</p>
+        <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 hover-elevate transition-all">
+          <p className="text-xl font-bold text-cyan-400">{stats.pts}</p>
           <p className="text-xs text-muted-foreground">PTS</p>
         </div>
-        <div className="p-3 rounded-lg bg-muted/30">
-          <p className="text-xl font-bold text-white">{stats.reb}</p>
+        <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 hover-elevate transition-all">
+          <p className="text-xl font-bold text-cyan-400">{stats.reb}</p>
           <p className="text-xs text-muted-foreground">REB</p>
         </div>
-        <div className="p-3 rounded-lg bg-muted/30">
-          <p className="text-xl font-bold text-white">{stats.ast}</p>
+        <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 hover-elevate transition-all">
+          <p className="text-xl font-bold text-cyan-400">{stats.ast}</p>
           <p className="text-xs text-muted-foreground">AST</p>
         </div>
-        <div className="p-3 rounded-lg bg-muted/30">
-          <p className="text-xl font-bold text-white">{stats.stl}</p>
+        <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 hover-elevate transition-all">
+          <p className="text-xl font-bold text-cyan-400">{stats.stl}</p>
           <p className="text-xs text-muted-foreground">STL</p>
         </div>
-        <div className="p-3 rounded-lg bg-muted/30">
-          <p className="text-xl font-bold text-white">{stats.blk}</p>
+        <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 hover-elevate transition-all">
+          <p className="text-xl font-bold text-cyan-400">{stats.blk}</p>
           <p className="text-xs text-muted-foreground">BLK</p>
         </div>
       </div>
@@ -332,20 +377,20 @@ function ShootingWidget({ games }: { games: Game[] }) {
   }, [games]);
 
   return (
-    <Card className="p-4" data-testid="widget-shooting">
+    <Card className="p-4 animate-fade-up" data-testid="widget-shooting">
       <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
         <Activity className="w-4 h-4 text-primary" /> Shooting Splits
       </h3>
       <div className="grid grid-cols-3 gap-3 text-center">
-        <div className="p-4 rounded-lg bg-muted/30">
-          <p className="text-2xl font-bold text-blue-400">{shooting.fg}%</p>
+        <div className="p-4 rounded-lg bg-gradient-to-br from-blue-500/15 to-cyan-500/5 border border-blue-500/20 hover-elevate transition-all">
+          <p className="text-2xl font-bold text-cyan-400">{shooting.fg}%</p>
           <p className="text-xs text-muted-foreground">FG%</p>
         </div>
-        <div className="p-4 rounded-lg bg-muted/30">
+        <div className="p-4 rounded-lg bg-gradient-to-br from-green-500/15 to-cyan-500/5 border border-green-500/20 hover-elevate transition-all">
           <p className="text-2xl font-bold text-green-400">{shooting.three}%</p>
           <p className="text-xs text-muted-foreground">3PT%</p>
         </div>
-        <div className="p-4 rounded-lg bg-muted/30">
+        <div className="p-4 rounded-lg bg-gradient-to-br from-amber-500/15 to-cyan-500/5 border border-amber-500/20 hover-elevate transition-all">
           <p className="text-2xl font-bold text-amber-400">{shooting.ft}%</p>
           <p className="text-xs text-muted-foreground">FT%</p>
         </div>

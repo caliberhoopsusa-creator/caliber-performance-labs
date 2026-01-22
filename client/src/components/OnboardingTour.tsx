@@ -1,39 +1,44 @@
 import { useState, useEffect } from "react";
 import { X, ChevronRight, ChevronLeft, Trophy, Activity, Video, Target, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 
 interface TourStep {
   title: string;
   description: string;
   icon: React.ReactNode;
+  gradient: string;
 }
 
 const tourSteps: TourStep[] = [
   {
     title: "Welcome to Caliber!",
     description: "Your personal basketball performance lab. Let's show you around and get you started on your journey to greatness.",
-    icon: <Sparkles className="w-8 h-8 text-primary" />,
+    icon: <Sparkles className="w-8 h-8" />,
+    gradient: "from-cyan-500 to-blue-600",
   },
   {
     title: "Log Your Games",
     description: "After each game, log your stats to receive instant performance grades. Our AI calculates position-weighted metrics to give you an accurate rating.",
-    icon: <Activity className="w-8 h-8 text-primary" />,
+    icon: <Activity className="w-8 h-8" />,
+    gradient: "from-blue-500 to-purple-600",
   },
   {
     title: "Earn Badges & Level Up",
     description: "Complete challenges, maintain streaks, and unlock badges as you progress from Rookie to Hall of Fame. Every game brings you closer to the top!",
-    icon: <Trophy className="w-8 h-8 text-primary" />,
+    icon: <Trophy className="w-8 h-8" />,
+    gradient: "from-amber-500 to-orange-600",
   },
   {
     title: "AI Video Analysis",
     description: "Upload game footage and let our AI extract stats automatically. No more manual tracking - just play and let us handle the rest.",
-    icon: <Video className="w-8 h-8 text-primary" />,
+    icon: <Video className="w-8 h-8" />,
+    gradient: "from-emerald-500 to-teal-600",
   },
   {
     title: "Track Your Progress",
     description: "View detailed analytics, compare yourself to others on the leaderboard, and watch your skills improve over time.",
-    icon: <Target className="w-8 h-8 text-primary" />,
+    icon: <Target className="w-8 h-8" />,
+    gradient: "from-pink-500 to-rose-600",
   },
 ];
 
@@ -95,63 +100,85 @@ export function OnboardingTour({ forceShow = false, onComplete }: OnboardingTour
   const isLastStep = currentStep === tourSteps.length - 1;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" data-testid="onboarding-tour-modal">
-      <Card className="relative max-w-md w-full glass-card border-primary/20 p-6 space-y-6">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute top-3 right-3"
-          onClick={handleSkip}
-          data-testid="button-tour-skip"
-        >
-          <X className="w-4 h-4" />
-        </Button>
-
-        <div className="text-center space-y-4 pt-2">
-          <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center">
-            {step.icon}
-          </div>
-          <h2 className="text-2xl font-bold text-white" data-testid="text-tour-title">{step.title}</h2>
-          <p className="text-muted-foreground leading-relaxed" data-testid="text-tour-description">{step.description}</p>
-        </div>
-
-        <div className="flex items-center justify-center gap-1.5">
-          {tourSteps.map((_, index) => (
-            <div
-              key={index}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                index === currentStep
-                  ? "w-6 bg-primary"
-                  : index < currentStep
-                  ? "bg-primary/50"
-                  : "bg-white/20"
-              }`}
-            />
-          ))}
-        </div>
-
-        <div className="flex items-center justify-between gap-3">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md" data-testid="onboarding-tour-modal">
+      {/* Premium modal card */}
+      <div className="relative max-w-md w-full rounded-2xl overflow-hidden animate-scale-in">
+        {/* Background glow */}
+        <div className={`absolute inset-0 bg-gradient-to-br ${step.gradient} opacity-10 blur-3xl`} />
+        
+        {/* Main content */}
+        <div className="relative bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,20%,6%)] border border-cyan-500/20 rounded-2xl p-8 space-y-6">
+          {/* Top accent line */}
+          <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${step.gradient}`} />
+          
+          {/* Close button */}
           <Button
             variant="ghost"
-            onClick={handlePrev}
-            disabled={currentStep === 0}
-            className="gap-1"
-            data-testid="button-tour-prev"
+            size="icon"
+            className="absolute top-4 right-4 text-muted-foreground hover:text-white"
+            onClick={handleSkip}
+            data-testid="button-tour-skip"
           >
-            <ChevronLeft className="w-4 h-4" />
-            Back
+            <X className="w-4 h-4" />
           </Button>
 
-          <Button
-            onClick={handleNext}
-            className="gap-1 min-w-[100px]"
-            data-testid="button-tour-next"
-          >
-            {isLastStep ? "Get Started" : "Next"}
-            {!isLastStep && <ChevronRight className="w-4 h-4" />}
-          </Button>
+          <div className="text-center space-y-5 pt-4">
+            {/* Animated icon container */}
+            <div className="relative w-20 h-20 mx-auto">
+              <div className={`absolute inset-0 bg-gradient-to-br ${step.gradient} opacity-20 rounded-2xl blur-xl animate-pulse`} />
+              <div className={`relative w-full h-full rounded-2xl bg-gradient-to-br ${step.gradient} flex items-center justify-center text-white shadow-lg`}>
+                {step.icon}
+              </div>
+            </div>
+            
+            <h2 className="text-2xl font-display font-bold text-white tracking-wide" data-testid="text-tour-title">
+              {step.title}
+            </h2>
+            <p className="text-muted-foreground leading-relaxed" data-testid="text-tour-description">
+              {step.description}
+            </p>
+          </div>
+
+          {/* Progress dots */}
+          <div className="flex items-center justify-center gap-2">
+            {tourSteps.map((s, index) => (
+              <div
+                key={index}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  index === currentStep
+                    ? `w-8 bg-gradient-to-r ${s.gradient}`
+                    : index < currentStep
+                    ? "w-2 bg-cyan-500/50"
+                    : "w-2 bg-white/20"
+                }`}
+              />
+            ))}
+          </div>
+
+          {/* Navigation buttons */}
+          <div className="flex items-center justify-between gap-4 pt-2">
+            <Button
+              variant="ghost"
+              onClick={handlePrev}
+              disabled={currentStep === 0}
+              className="gap-1"
+              data-testid="button-tour-prev"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Back
+            </Button>
+
+            <Button
+              onClick={handleNext}
+              className={`gap-1 min-w-[120px] bg-gradient-to-r ${step.gradient} hover:opacity-90 border-0 shadow-lg`}
+              data-testid="button-tour-next"
+            >
+              {isLastStep ? "Get Started" : "Next"}
+              {!isLastStep && <ChevronRight className="w-4 h-4" />}
+            </Button>
+          </div>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }
