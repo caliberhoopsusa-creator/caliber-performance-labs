@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { usePlayerSkillBadges, type SkillBadge } from "@/hooks/use-basketball";
 import { Target, Crosshair, Zap, Shield, Hand, Grab } from "lucide-react";
+import { useSport } from "@/components/SportToggle";
 
 const SKILL_ICONS: Record<string, typeof Target> = {
   sharpshooter: Crosshair,
@@ -200,6 +201,12 @@ interface SkillBadgesProps {
 
 export function SkillBadges({ playerId }: SkillBadgesProps) {
   const { data: skillBadges, isLoading } = usePlayerSkillBadges(playerId);
+  const sport = useSport();
+  
+  // Hide basketball-specific skill badges when in football mode
+  if (sport === 'football') {
+    return null;
+  }
 
   if (isLoading) {
     return (

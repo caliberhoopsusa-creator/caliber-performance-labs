@@ -7,6 +7,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, RadarChart
 import { Settings2, TrendingUp, Target, Activity, BarChart3, Award } from "lucide-react";
 import type { Game } from "@shared/schema";
 import { format } from "date-fns";
+import { useSport } from "@/components/SportToggle";
 
 // Premium tooltip component with glassmorphic styling
 const PremiumTooltip = ({ active, payload, label }: any) => {
@@ -32,13 +33,23 @@ export interface WidgetConfig {
   icon: any;
 }
 
-export const AVAILABLE_WIDGETS: WidgetConfig[] = [
+export const BASKETBALL_WIDGETS: WidgetConfig[] = [
   { id: "trends", label: "Performance Trends", description: "Points, rebounds, assists over time", icon: TrendingUp },
   { id: "grades", label: "Grade History", description: "Your game grades over time", icon: Award },
   { id: "radar", label: "Skill Breakdown", description: "Radar chart of your abilities", icon: Target },
   { id: "averages", label: "Season Averages", description: "Key stats at a glance", icon: BarChart3 },
   { id: "shooting", label: "Shooting Splits", description: "FG%, 3PT%, FT% breakdown", icon: Activity },
 ];
+
+export const FOOTBALL_WIDGETS: WidgetConfig[] = [
+  { id: "trends", label: "Performance Trends", description: "Yards and touchdowns over time", icon: TrendingUp },
+  { id: "grades", label: "Grade History", description: "Your game grades over time", icon: Award },
+  { id: "radar", label: "Skill Breakdown", description: "Radar chart of your abilities", icon: Target },
+  { id: "averages", label: "Season Averages", description: "Key stats at a glance", icon: BarChart3 },
+  { id: "efficiency", label: "Efficiency Stats", description: "Completion %, YPC, YPR breakdown", icon: Activity },
+];
+
+export const AVAILABLE_WIDGETS: WidgetConfig[] = BASKETBALL_WIDGETS;
 
 const DEFAULT_WIDGETS = ["trends", "averages", "radar"];
 
@@ -52,6 +63,10 @@ interface ProfileWidgetsProps {
 export function ProfileWidgets({ games, selectedWidgets, onWidgetsChange, isOwnProfile }: ProfileWidgetsProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [tempWidgets, setTempWidgets] = useState<string[]>([]);
+  const sport = useSport();
+  const isFootball = sport === 'football';
+
+  const availableWidgets = isFootball ? FOOTBALL_WIDGETS : BASKETBALL_WIDGETS;
 
   const sortedGames = useMemo(() => {
     return [...games].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -92,7 +107,7 @@ export function ProfileWidgets({ games, selectedWidgets, onWidgetsChange, isOwnP
           <DialogTitle>Customize Your Widgets</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          {AVAILABLE_WIDGETS.map((widget) => (
+          {availableWidgets.map((widget) => (
             <div key={widget.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30" data-testid={`widget-toggle-${widget.id}`}>
               <div className="flex items-center gap-3">
                 <widget.icon className="w-5 h-5 text-primary" />
@@ -141,11 +156,12 @@ export function ProfileWidgets({ games, selectedWidgets, onWidgetsChange, isOwnP
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {widgets.includes("trends") && <TrendsWidget games={sortedGames} />}
+        {widgets.includes("trends") && <TrendsWidget games={sortedGames} isFootball={isFootball} />}
         {widgets.includes("grades") && <GradesWidget games={sortedGames} />}
-        {widgets.includes("radar") && <RadarWidget games={sortedGames} />}
-        {widgets.includes("averages") && <AveragesWidget games={sortedGames} />}
-        {widgets.includes("shooting") && <ShootingWidget games={sortedGames} />}
+        {widgets.includes("radar") && <RadarWidget games={sortedGames} isFootball={isFootball} />}
+        {widgets.includes("averages") && <AveragesWidget games={sortedGames} isFootball={isFootball} />}
+        {widgets.includes("shooting") && !isFootball && <ShootingWidget games={sortedGames} />}
+        {widgets.includes("efficiency") && isFootball && <EfficiencyWidget games={sortedGames} />}
       </div>
 
       {settingsDialog}
@@ -153,17 +169,63 @@ export function ProfileWidgets({ games, selectedWidgets, onWidgetsChange, isOwnP
   );
 }
 
-function TrendsWidget({ games }: { games: Game[] }) {
+function TrendsWidget({ games, isFootball }: { games: Game[]; isFootball: boolean }) {
   const chartData = useMemo(() => {
     return games
       .slice(-10)
-      .map(g => ({
-        date: format(new Date(g.date), "M/d"),
-        points: g.points,
-        rebounds: g.rebounds,
-        assists: g.assists,
-      }));
-  }, [games]);
+      .map(g => {
+        if (isFootball) {
+          const totalYards = (g.passingYards || 0) + (g.rushingYards || 0) + (g.receivingYards || 0);
+          const totalTDs = (g.passingTouchdowns || 0) + (g.rushingTouchdowns || 0) + (g.receivingTouchdowns || 0);
+          return {
+            date: format(new Date(g.date), "M/d"),
+            yards: totalYards,
+            tds: totalTDs * 10,
+            tackles: g.tackles || 0,
+          };
+        }
+        return {
+          date: format(new Date(g.date), "M/d"),
+          points: g.points,
+          rebounds: g.rebounds,
+          assists: g.assists,
+        };
+      });
+  }, [games, isFootball]);
+
+  if (isFootball) {
+    return (
+      <Card className="p-4 animate-fade-up" data-testid="widget-trends">
+        <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+          <TrendingUp className="w-4 h-4 text-primary" /> Performance Trends
+        </h3>
+        <div className="h-48">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData}>
+              <defs>
+                <linearGradient id="yardsGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#00D4FF" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.2} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" vertical={false} />
+              <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.5)' }} axisLine={{ stroke: 'rgba(255,255,255,0.1)' }} />
+              <YAxis tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.5)' }} width={40} axisLine={{ stroke: 'rgba(255,255,255,0.1)' }} />
+              <Tooltip content={<PremiumTooltip />} cursor={{ stroke: 'rgba(0,212,255,0.3)' }} />
+              <Line type="monotone" dataKey="yards" stroke="#00D4FF" strokeWidth={2.5} dot={{ r: 4, fill: '#00D4FF', filter: 'drop-shadow(0 0 8px rgba(0,212,255,0.6))' }} activeDot={{ r: 6, filter: 'drop-shadow(0 0 12px rgba(0,212,255,0.8))' }} isAnimationActive name="YDS" />
+              <Line type="monotone" dataKey="tds" stroke="#10b981" strokeWidth={2.5} dot={{ r: 4, fill: '#10b981', filter: 'drop-shadow(0 0 8px rgba(16,185,129,0.6))' }} activeDot={{ r: 6, filter: 'drop-shadow(0 0 12px rgba(16,185,129,0.8))' }} isAnimationActive name="TD×10" />
+              <Line type="monotone" dataKey="tackles" stroke="#f59e0b" strokeWidth={2.5} dot={{ r: 4, fill: '#f59e0b', filter: 'drop-shadow(0 0 8px rgba(245,158,11,0.6))' }} activeDot={{ r: 6, filter: 'drop-shadow(0 0 12px rgba(245,158,11,0.8))' }} isAnimationActive name="TCK" />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="flex justify-center gap-4 mt-2 text-xs">
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-cyan-400" /> YDS</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /> TD×10</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500" /> TCK</span>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="p-4 animate-fade-up" data-testid="widget-trends">
@@ -264,9 +326,25 @@ function GradesWidget({ games }: { games: Game[] }) {
   );
 }
 
-function RadarWidget({ games }: { games: Game[] }) {
+function RadarWidget({ games, isFootball }: { games: Game[]; isFootball: boolean }) {
   const radarData = useMemo(() => {
     if (games.length === 0) return [];
+    
+    if (isFootball) {
+      const avgPassYds = games.reduce((acc, g) => acc + (g.passingYards || 0), 0) / games.length;
+      const avgRushYds = games.reduce((acc, g) => acc + (g.rushingYards || 0), 0) / games.length;
+      const avgRecYds = games.reduce((acc, g) => acc + (g.receivingYards || 0), 0) / games.length;
+      const avgTackles = games.reduce((acc, g) => acc + (g.tackles || 0), 0) / games.length;
+      const avgSacks = games.reduce((acc, g) => acc + (g.sacks || 0), 0) / games.length;
+
+      return [
+        { stat: 'Passing', value: Math.min(100, (avgPassYds / 300) * 100) },
+        { stat: 'Rushing', value: Math.min(100, (avgRushYds / 100) * 100) },
+        { stat: 'Receiving', value: Math.min(100, (avgRecYds / 100) * 100) },
+        { stat: 'Tackling', value: Math.min(100, (avgTackles / 10) * 100) },
+        { stat: 'Pass Rush', value: Math.min(100, (avgSacks / 2) * 100) },
+      ];
+    }
     
     const avgPoints = games.reduce((acc, g) => acc + g.points, 0) / games.length;
     const avgReb = games.reduce((acc, g) => acc + g.rebounds, 0) / games.length;
@@ -281,7 +359,7 @@ function RadarWidget({ games }: { games: Game[] }) {
       { stat: 'Defense', value: avgDefense },
       { stat: 'Hustle', value: avgHustle },
     ];
-  }, [games]);
+  }, [games, isFootball]);
 
   return (
     <Card className="p-4 animate-fade-up" data-testid="widget-radar">
@@ -315,9 +393,9 @@ function RadarWidget({ games }: { games: Game[] }) {
   );
 }
 
-function AveragesWidget({ games }: { games: Game[] }) {
-  const stats = useMemo(() => {
-    if (games.length === 0) return { pts: 0, reb: 0, ast: 0, stl: 0, blk: 0 };
+function AveragesWidget({ games, isFootball }: { games: Game[]; isFootball: boolean }) {
+  const basketballStats = useMemo(() => {
+    if (games.length === 0) return { pts: '0', reb: '0', ast: '0', stl: '0', blk: '0' };
     return {
       pts: (games.reduce((acc, g) => acc + g.points, 0) / games.length).toFixed(1),
       reb: (games.reduce((acc, g) => acc + g.rebounds, 0) / games.length).toFixed(1),
@@ -327,6 +405,54 @@ function AveragesWidget({ games }: { games: Game[] }) {
     };
   }, [games]);
 
+  const footballStats = useMemo(() => {
+    if (games.length === 0) return { passYds: '0', rushYds: '0', recYds: '0', tds: '0', tck: '0' };
+    const totalPassYds = games.reduce((acc, g) => acc + (g.passingYards || 0), 0);
+    const totalRushYds = games.reduce((acc, g) => acc + (g.rushingYards || 0), 0);
+    const totalRecYds = games.reduce((acc, g) => acc + (g.receivingYards || 0), 0);
+    const totalTDs = games.reduce((acc, g) => acc + (g.passingTouchdowns || 0) + (g.rushingTouchdowns || 0) + (g.receivingTouchdowns || 0), 0);
+    const totalTackles = games.reduce((acc, g) => acc + (g.tackles || 0), 0);
+    return {
+      passYds: (totalPassYds / games.length).toFixed(0),
+      rushYds: (totalRushYds / games.length).toFixed(0),
+      recYds: (totalRecYds / games.length).toFixed(0),
+      tds: (totalTDs / games.length).toFixed(1),
+      tck: (totalTackles / games.length).toFixed(1),
+    };
+  }, [games]);
+
+  if (isFootball) {
+    return (
+      <Card className="p-4 animate-fade-up" data-testid="widget-averages">
+        <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+          <BarChart3 className="w-4 h-4 text-primary" /> Season Averages
+        </h3>
+        <div className="grid grid-cols-5 gap-2 text-center">
+          <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 hover-elevate transition-all">
+            <p className="text-xl font-bold text-cyan-400">{footballStats.passYds}</p>
+            <p className="text-xs text-muted-foreground">PASS</p>
+          </div>
+          <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 hover-elevate transition-all">
+            <p className="text-xl font-bold text-cyan-400">{footballStats.rushYds}</p>
+            <p className="text-xs text-muted-foreground">RUSH</p>
+          </div>
+          <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 hover-elevate transition-all">
+            <p className="text-xl font-bold text-cyan-400">{footballStats.recYds}</p>
+            <p className="text-xs text-muted-foreground">REC</p>
+          </div>
+          <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 hover-elevate transition-all">
+            <p className="text-xl font-bold text-cyan-400">{footballStats.tds}</p>
+            <p className="text-xs text-muted-foreground">TD</p>
+          </div>
+          <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 hover-elevate transition-all">
+            <p className="text-xl font-bold text-cyan-400">{footballStats.tck}</p>
+            <p className="text-xs text-muted-foreground">TCK</p>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <Card className="p-4 animate-fade-up" data-testid="widget-averages">
       <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
@@ -334,23 +460,23 @@ function AveragesWidget({ games }: { games: Game[] }) {
       </h3>
       <div className="grid grid-cols-5 gap-2 text-center">
         <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 hover-elevate transition-all">
-          <p className="text-xl font-bold text-cyan-400">{stats.pts}</p>
+          <p className="text-xl font-bold text-cyan-400">{basketballStats.pts}</p>
           <p className="text-xs text-muted-foreground">PTS</p>
         </div>
         <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 hover-elevate transition-all">
-          <p className="text-xl font-bold text-cyan-400">{stats.reb}</p>
+          <p className="text-xl font-bold text-cyan-400">{basketballStats.reb}</p>
           <p className="text-xs text-muted-foreground">REB</p>
         </div>
         <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 hover-elevate transition-all">
-          <p className="text-xl font-bold text-cyan-400">{stats.ast}</p>
+          <p className="text-xl font-bold text-cyan-400">{basketballStats.ast}</p>
           <p className="text-xs text-muted-foreground">AST</p>
         </div>
         <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 hover-elevate transition-all">
-          <p className="text-xl font-bold text-cyan-400">{stats.stl}</p>
+          <p className="text-xl font-bold text-cyan-400">{basketballStats.stl}</p>
           <p className="text-xs text-muted-foreground">STL</p>
         </div>
         <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 hover-elevate transition-all">
-          <p className="text-xl font-bold text-cyan-400">{stats.blk}</p>
+          <p className="text-xl font-bold text-cyan-400">{basketballStats.blk}</p>
           <p className="text-xs text-muted-foreground">BLK</p>
         </div>
       </div>
@@ -393,6 +519,47 @@ function ShootingWidget({ games }: { games: Game[] }) {
         <div className="p-4 rounded-lg bg-gradient-to-br from-amber-500/15 to-cyan-500/5 border border-amber-500/20 hover-elevate transition-all">
           <p className="text-2xl font-bold text-amber-400">{shooting.ft}%</p>
           <p className="text-xs text-muted-foreground">FT%</p>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function EfficiencyWidget({ games }: { games: Game[] }) {
+  const efficiency = useMemo(() => {
+    if (games.length === 0) return { compPct: '0', ypc: '0', ypr: '0' };
+    
+    const totalComp = games.reduce((acc, g) => acc + (g.completions || 0), 0);
+    const totalAtt = games.reduce((acc, g) => acc + (g.passAttempts || 0), 0);
+    const totalCarries = games.reduce((acc, g) => acc + (g.carries || 0), 0);
+    const totalRushYds = games.reduce((acc, g) => acc + (g.rushingYards || 0), 0);
+    const totalRec = games.reduce((acc, g) => acc + (g.receptions || 0), 0);
+    const totalRecYds = games.reduce((acc, g) => acc + (g.receivingYards || 0), 0);
+
+    return {
+      compPct: totalAtt > 0 ? ((totalComp / totalAtt) * 100).toFixed(1) : '0',
+      ypc: totalCarries > 0 ? (totalRushYds / totalCarries).toFixed(1) : '0',
+      ypr: totalRec > 0 ? (totalRecYds / totalRec).toFixed(1) : '0',
+    };
+  }, [games]);
+
+  return (
+    <Card className="p-4 animate-fade-up" data-testid="widget-efficiency">
+      <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+        <Activity className="w-4 h-4 text-primary" /> Efficiency Stats
+      </h3>
+      <div className="grid grid-cols-3 gap-3 text-center">
+        <div className="p-4 rounded-lg bg-gradient-to-br from-blue-500/15 to-cyan-500/5 border border-blue-500/20 hover-elevate transition-all">
+          <p className="text-2xl font-bold text-cyan-400">{efficiency.compPct}%</p>
+          <p className="text-xs text-muted-foreground">CMP%</p>
+        </div>
+        <div className="p-4 rounded-lg bg-gradient-to-br from-green-500/15 to-cyan-500/5 border border-green-500/20 hover-elevate transition-all">
+          <p className="text-2xl font-bold text-green-400">{efficiency.ypc}</p>
+          <p className="text-xs text-muted-foreground">YPC</p>
+        </div>
+        <div className="p-4 rounded-lg bg-gradient-to-br from-amber-500/15 to-cyan-500/5 border border-amber-500/20 hover-elevate transition-all">
+          <p className="text-2xl font-bold text-amber-400">{efficiency.ypr}</p>
+          <p className="text-xs text-muted-foreground">YPR</p>
         </div>
       </div>
     </Card>

@@ -15,6 +15,7 @@ import {
   ChevronRight
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useSport } from "@/components/SportToggle";
 
 const ARCHETYPE_ICONS: Record<ArchetypeId, React.ElementType> = {
   scoring_guard: Target,
@@ -105,6 +106,13 @@ export function PlayerArchetype({
   variant = "full",
   className 
 }: PlayerArchetypeProps) {
+  const sport = useSport();
+  
+  // Archetypes are basketball-specific (for now)
+  if (sport === 'football') {
+    return null;
+  }
+  
   const result = getPlayerArchetype(games, position);
 
   if (!result) {

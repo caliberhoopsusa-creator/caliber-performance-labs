@@ -3,6 +3,7 @@ import { usePlayer } from "@/hooks/use-basketball";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useSport } from "@/components/SportToggle";
 import {
   Select,
   SelectContent,
@@ -201,6 +202,60 @@ function calculateAverages(games: Game[]) {
   };
 }
 
+function calculateFootballAverages(games: Game[]) {
+  if (games.length === 0) {
+    return {
+      passingYards: 0,
+      rushingYards: 0,
+      receivingYards: 0,
+      totalTDs: 0,
+      tackles: 0,
+      sacks: 0,
+      interceptions: 0,
+      compPercent: 0,
+      avgGrade: 0,
+      gamesPlayed: 0,
+    };
+  }
+
+  const totals = games.reduce(
+    (acc, g) => ({
+      passingYards: acc.passingYards + (g.passingYards || 0),
+      rushingYards: acc.rushingYards + (g.rushingYards || 0),
+      receivingYards: acc.receivingYards + (g.receivingYards || 0),
+      passingTDs: acc.passingTDs + (g.passingTouchdowns || 0),
+      rushingTDs: acc.rushingTDs + (g.rushingTouchdowns || 0),
+      receivingTDs: acc.receivingTDs + (g.receivingTouchdowns || 0),
+      tackles: acc.tackles + (g.tackles || 0),
+      sacks: acc.sacks + (g.sacks || 0),
+      interceptions: acc.interceptions + (g.defensiveInterceptions || 0),
+      completions: acc.completions + (g.completions || 0),
+      passAttempts: acc.passAttempts + (g.passAttempts || 0),
+      gradeSum: acc.gradeSum + gradeToValue(g.grade),
+    }),
+    {
+      passingYards: 0, rushingYards: 0, receivingYards: 0,
+      passingTDs: 0, rushingTDs: 0, receivingTDs: 0,
+      tackles: 0, sacks: 0, interceptions: 0,
+      completions: 0, passAttempts: 0, gradeSum: 0,
+    }
+  );
+
+  const count = games.length;
+  return {
+    passingYards: totals.passingYards / count,
+    rushingYards: totals.rushingYards / count,
+    receivingYards: totals.receivingYards / count,
+    totalTDs: (totals.passingTDs + totals.rushingTDs + totals.receivingTDs) / count,
+    tackles: totals.tackles / count,
+    sacks: totals.sacks / count,
+    interceptions: totals.interceptions / count,
+    compPercent: totals.passAttempts > 0 ? (totals.completions / totals.passAttempts) * 100 : 0,
+    avgGrade: totals.gradeSum / count,
+    gamesPlayed: count,
+  };
+}
+
 function TrendIndicator({
   current,
   previous,
@@ -276,12 +331,14 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
   const [period, setPeriod] = useState<TimePeriod>("30");
   const reportRef = useRef<HTMLDivElement>(null);
   const { data: player, isLoading } = usePlayer(playerId);
+  const sport = useSport();
+  const isFootball = sport === 'football';
 
   const games = useMemo(() => {
     return player?.games ?? [];
   }, [player]);
 
-  const { currentPeriodGames, previousPeriodGames, currentStats, previousStats } = useMemo(() => {
+  const { currentPeriodGames, previousPeriodGames, currentStats, previousStats, footballStats, prevFootballStats } = useMemo(() => {
     const current = filterGamesByPeriod(games, period);
     const previous = getPreviousPeriodGames(games, period);
     return {
@@ -289,6 +346,8 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
       previousPeriodGames: previous,
       currentStats: calculateAverages(current),
       previousStats: calculateAverages(previous),
+      footballStats: calculateFootballAverages(current),
+      prevFootballStats: calculateFootballAverages(previous),
     };
   }, [games, period]);
 
@@ -322,38 +381,63 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
 
   const improvements = useMemo(() => {
     const items: { label: string; change: number; type: "improvement" | "decline" }[] = [];
-    const stats = [
-      { key: "points", label: "Points" },
-      { key: "rebounds", label: "Rebounds" },
-      { key: "assists", label: "Assists" },
-      { key: "steals", label: "Steals" },
-      { key: "blocks", label: "Blocks" },
-      { key: "fgPercent", label: "FG%" },
-      { key: "threePercent", label: "3PT%" },
-    ] as const;
+    
+    if (isFootball) {
+      const footballStatsList = [
+        { key: "passingYards", label: "Pass YDS" },
+        { key: "rushingYards", label: "Rush YDS" },
+        { key: "receivingYards", label: "Rec YDS" },
+        { key: "totalTDs", label: "Total TDs" },
+        { key: "tackles", label: "Tackles" },
+        { key: "sacks", label: "Sacks" },
+        { key: "interceptions", label: "INTs" },
+        { key: "compPercent", label: "CMP%" },
+      ] as const;
 
-    stats.forEach(({ key, label }) => {
-      const diff = currentStats[key] - previousStats[key];
-      if (Math.abs(diff) > 0.5) {
+      footballStatsList.forEach(({ key, label }) => {
+        const diff = footballStats[key] - prevFootballStats[key];
+        if (Math.abs(diff) > 0.5) {
+          items.push({
+            label,
+            change: diff,
+            type: diff > 0 ? "improvement" : "decline",
+          });
+        }
+      });
+    } else {
+      const stats = [
+        { key: "points", label: "Points" },
+        { key: "rebounds", label: "Rebounds" },
+        { key: "assists", label: "Assists" },
+        { key: "steals", label: "Steals" },
+        { key: "blocks", label: "Blocks" },
+        { key: "fgPercent", label: "FG%" },
+        { key: "threePercent", label: "3PT%" },
+      ] as const;
+
+      stats.forEach(({ key, label }) => {
+        const diff = currentStats[key] - previousStats[key];
+        if (Math.abs(diff) > 0.5) {
+          items.push({
+            label,
+            change: diff,
+            type: diff > 0 ? "improvement" : "decline",
+          });
+        }
+      });
+
+      const toDiff = previousStats.turnovers - currentStats.turnovers;
+      if (Math.abs(toDiff) > 0.3) {
         items.push({
-          label,
-          change: diff,
-          type: diff > 0 ? "improvement" : "decline",
+          label: "Turnovers",
+          change: toDiff,
+          type: toDiff > 0 ? "improvement" : "decline",
         });
       }
-    });
-
-    const toDiff = previousStats.turnovers - currentStats.turnovers;
-    if (Math.abs(toDiff) > 0.3) {
-      items.push({
-        label: "Turnovers",
-        change: toDiff,
-        type: toDiff > 0 ? "improvement" : "decline",
-      });
     }
 
     return items.sort((a, b) => Math.abs(b.change) - Math.abs(a.change));
-  }, [currentStats, previousStats]);
+  }, [currentStats, previousStats, footballStats, prevFootballStats, isFootball]);
 
   const handlePrint = () => {
     window.print();
@@ -362,22 +446,37 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
   const handleExport = () => {
     if (!player) return;
 
+    const averages = isFootball 
+      ? {
+          passingYards: footballStats.passingYards.toFixed(1),
+          rushingYards: footballStats.rushingYards.toFixed(1),
+          receivingYards: footballStats.receivingYards.toFixed(1),
+          totalTDs: footballStats.totalTDs.toFixed(1),
+          tackles: footballStats.tackles.toFixed(1),
+          sacks: footballStats.sacks.toFixed(1),
+          interceptions: footballStats.interceptions.toFixed(1),
+          compPercent: footballStats.compPercent.toFixed(1),
+          averageGrade: valueToGrade(footballStats.avgGrade),
+        }
+      : {
+          points: currentStats.points.toFixed(1),
+          rebounds: currentStats.rebounds.toFixed(1),
+          assists: currentStats.assists.toFixed(1),
+          steals: currentStats.steals.toFixed(1),
+          blocks: currentStats.blocks.toFixed(1),
+          turnovers: currentStats.turnovers.toFixed(1),
+          fgPercent: currentStats.fgPercent.toFixed(1),
+          threePercent: currentStats.threePercent.toFixed(1),
+          ftPercent: currentStats.ftPercent.toFixed(1),
+          averageGrade: valueToGrade(currentStats.avgGrade),
+        };
+
     const data = {
       player: player.name,
+      sport: isFootball ? 'football' : 'basketball',
       period: period === "7" ? "Last 7 Days" : period === "30" ? "Last 30 Days" : "Season",
-      gamesPlayed: currentStats.gamesPlayed,
-      averages: {
-        points: currentStats.points.toFixed(1),
-        rebounds: currentStats.rebounds.toFixed(1),
-        assists: currentStats.assists.toFixed(1),
-        steals: currentStats.steals.toFixed(1),
-        blocks: currentStats.blocks.toFixed(1),
-        turnovers: currentStats.turnovers.toFixed(1),
-        fgPercent: currentStats.fgPercent.toFixed(1),
-        threePercent: currentStats.threePercent.toFixed(1),
-        ftPercent: currentStats.ftPercent.toFixed(1),
-        averageGrade: valueToGrade(currentStats.avgGrade),
-      },
+      gamesPlayed: isFootball ? footballStats.gamesPlayed : currentStats.gamesPlayed,
+      averages,
       improvements: improvements.filter((i) => i.type === "improvement").map((i) => i.label),
       areasToImprove: improvements.filter((i) => i.type === "decline").map((i) => i.label),
       gradeDistribution,
@@ -469,68 +568,125 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                <StatComparisonCard
-                  label="Points"
-                  current={currentStats.points}
-                  previous={previousStats.points}
-                />
-                <StatComparisonCard
-                  label="Rebounds"
-                  current={currentStats.rebounds}
-                  previous={previousStats.rebounds}
-                />
-                <StatComparisonCard
-                  label="Assists"
-                  current={currentStats.assists}
-                  previous={previousStats.assists}
-                />
-                <StatComparisonCard
-                  label="Steals"
-                  current={currentStats.steals}
-                  previous={previousStats.steals}
-                />
-                <StatComparisonCard
-                  label="Blocks"
-                  current={currentStats.blocks}
-                  previous={previousStats.blocks}
-                />
-                <StatComparisonCard
-                  label="Turnovers"
-                  current={currentStats.turnovers}
-                  previous={previousStats.turnovers}
-                  inverted
-                />
-                <StatComparisonCard
-                  label="FG%"
-                  current={currentStats.fgPercent}
-                  previous={previousStats.fgPercent}
-                  format="percent"
-                />
-                <StatComparisonCard
-                  label="3PT%"
-                  current={currentStats.threePercent}
-                  previous={previousStats.threePercent}
-                  format="percent"
-                />
-                <StatComparisonCard
-                  label="FT%"
-                  current={currentStats.ftPercent}
-                  previous={previousStats.ftPercent}
-                  format="percent"
-                />
-                <div
-                  className="bg-secondary/20 rounded-lg p-3 space-y-1"
-                  data-testid="stat-comparison-avg-grade"
-                >
-                  <p className="text-xs text-muted-foreground">Avg Grade</p>
-                  <p className="text-xl font-bold">{valueToGrade(currentStats.avgGrade)}</p>
-                  <TrendIndicator
-                    current={currentStats.avgGrade}
-                    previous={previousStats.avgGrade}
+              {isFootball ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  <StatComparisonCard
+                    label="Pass YDS"
+                    current={footballStats.passingYards}
+                    previous={prevFootballStats.passingYards}
                   />
+                  <StatComparisonCard
+                    label="Rush YDS"
+                    current={footballStats.rushingYards}
+                    previous={prevFootballStats.rushingYards}
+                  />
+                  <StatComparisonCard
+                    label="Rec YDS"
+                    current={footballStats.receivingYards}
+                    previous={prevFootballStats.receivingYards}
+                  />
+                  <StatComparisonCard
+                    label="Total TDs"
+                    current={footballStats.totalTDs}
+                    previous={prevFootballStats.totalTDs}
+                  />
+                  <StatComparisonCard
+                    label="Tackles"
+                    current={footballStats.tackles}
+                    previous={prevFootballStats.tackles}
+                  />
+                  <StatComparisonCard
+                    label="Sacks"
+                    current={footballStats.sacks}
+                    previous={prevFootballStats.sacks}
+                  />
+                  <StatComparisonCard
+                    label="INTs"
+                    current={footballStats.interceptions}
+                    previous={prevFootballStats.interceptions}
+                  />
+                  <StatComparisonCard
+                    label="CMP%"
+                    current={footballStats.compPercent}
+                    previous={prevFootballStats.compPercent}
+                    format="percent"
+                  />
+                  <div
+                    className="bg-secondary/20 rounded-lg p-3 space-y-1"
+                    data-testid="stat-comparison-avg-grade"
+                  >
+                    <p className="text-xs text-muted-foreground">Avg Grade</p>
+                    <p className="text-xl font-bold">{valueToGrade(footballStats.avgGrade)}</p>
+                    <TrendIndicator
+                      current={footballStats.avgGrade}
+                      previous={prevFootballStats.avgGrade}
+                    />
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  <StatComparisonCard
+                    label="Points"
+                    current={currentStats.points}
+                    previous={previousStats.points}
+                  />
+                  <StatComparisonCard
+                    label="Rebounds"
+                    current={currentStats.rebounds}
+                    previous={previousStats.rebounds}
+                  />
+                  <StatComparisonCard
+                    label="Assists"
+                    current={currentStats.assists}
+                    previous={previousStats.assists}
+                  />
+                  <StatComparisonCard
+                    label="Steals"
+                    current={currentStats.steals}
+                    previous={previousStats.steals}
+                  />
+                  <StatComparisonCard
+                    label="Blocks"
+                    current={currentStats.blocks}
+                    previous={previousStats.blocks}
+                  />
+                  <StatComparisonCard
+                    label="Turnovers"
+                    current={currentStats.turnovers}
+                    previous={previousStats.turnovers}
+                    inverted
+                  />
+                  <StatComparisonCard
+                    label="FG%"
+                    current={currentStats.fgPercent}
+                    previous={previousStats.fgPercent}
+                    format="percent"
+                  />
+                  <StatComparisonCard
+                    label="3PT%"
+                    current={currentStats.threePercent}
+                    previous={previousStats.threePercent}
+                    format="percent"
+                  />
+                  <StatComparisonCard
+                    label="FT%"
+                    current={currentStats.ftPercent}
+                    previous={previousStats.ftPercent}
+                    format="percent"
+                  />
+                  <div
+                    className="bg-secondary/20 rounded-lg p-3 space-y-1"
+                    data-testid="stat-comparison-avg-grade"
+                  >
+                    <p className="text-xs text-muted-foreground">Avg Grade</p>
+                    <p className="text-xl font-bold">{valueToGrade(currentStats.avgGrade)}</p>
+                    <TrendIndicator
+                      current={currentStats.avgGrade}
+                      previous={previousStats.avgGrade}
+                    />
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
