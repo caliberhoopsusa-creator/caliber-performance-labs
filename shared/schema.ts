@@ -9,7 +9,8 @@ export const players = pgTable("players", {
   id: serial("id").primaryKey(),
   userId: text("user_id"), // Links to auth user - null for coach-created players
   name: text("name").notNull(),
-  position: text("position").notNull(), // 'Guard', 'Wing', 'Big'
+  sport: text("sport").notNull().default("basketball"), // 'basketball' or 'football'
+  position: text("position").notNull(), // Basketball: 'Guard', 'Wing', 'Big' | Football: 'QB', 'RB', 'WR', etc.
   height: text("height"), // e.g., "6'5"
   team: text("team"),
   jerseyNumber: integer("jersey_number"),
@@ -107,10 +108,12 @@ export const streaks = pgTable("streaks", {
 export const games = pgTable("games", {
   id: serial("id").primaryKey(),
   playerId: integer("player_id").notNull(),
+  sport: text("sport").notNull().default("basketball"), // 'basketball' or 'football'
   date: date("date").notNull(),
   opponent: text("opponent").notNull(),
-  result: text("result"), // "W 105-98"
+  result: text("result"), // "W 105-98" or "W 24-17"
   
+  // === BASKETBALL STATS ===
   // Traditional Stats
   minutes: integer("minutes").notNull().default(0),
   points: integer("points").notNull().default(0),
@@ -138,11 +141,57 @@ export const games = pgTable("games", {
   per: decimal("per", { precision: 5, scale: 2 }).default("0"), // Player Efficiency Rating
   notes: text("notes"), // Video notes or observations
   
+  // === FOOTBALL STATS ===
+  // Passing (QB)
+  completions: integer("completions").default(0),
+  passAttempts: integer("pass_attempts").default(0),
+  passingYards: integer("passing_yards").default(0),
+  passingTouchdowns: integer("passing_touchdowns").default(0),
+  interceptions: integer("interceptions").default(0),
+  sacksTaken: integer("sacks_taken").default(0),
+  
+  // Rushing (RB, QB)
+  carries: integer("carries").default(0),
+  rushingYards: integer("rushing_yards").default(0),
+  rushingTouchdowns: integer("rushing_touchdowns").default(0),
+  fumbles: integer("fumbles").default(0),
+  
+  // Receiving (WR, TE, RB)
+  receptions: integer("receptions").default(0),
+  targets: integer("targets").default(0),
+  receivingYards: integer("receiving_yards").default(0),
+  receivingTouchdowns: integer("receiving_touchdowns").default(0),
+  drops: integer("drops").default(0),
+  
+  // Defense (DL, LB, DB)
+  tackles: integer("tackles").default(0),
+  soloTackles: integer("solo_tackles").default(0),
+  sacks: integer("sacks").default(0),
+  defensiveInterceptions: integer("defensive_interceptions").default(0),
+  passDeflections: integer("pass_deflections").default(0),
+  forcedFumbles: integer("forced_fumbles").default(0),
+  fumbleRecoveries: integer("fumble_recoveries").default(0),
+  
+  // Special Teams (K, P)
+  fieldGoalsMade: integer("field_goals_made").default(0),
+  fieldGoalsAttempted: integer("field_goals_attempted").default(0),
+  extraPointsMade: integer("extra_points_made").default(0),
+  extraPointsAttempted: integer("extra_points_attempted").default(0),
+  punts: integer("punts").default(0),
+  puntYards: integer("punt_yards").default(0),
+  
+  // Football Category Grades
+  efficiencyGrade: text("efficiency_grade"), // QB: Comp%, RB: YPC, WR: Catch rate
+  playmakingGrade: text("playmaking_grade"), // TDs, big plays
+  ballSecurityGrade: text("ball_security_grade"), // INTs thrown, fumbles
+  impactGrade: text("impact_grade"), // Tackles, sacks, INTs for defense
+  
+  // === SHARED FIELDS ===
   // Calculated / Generated Fields (Stored for easy querying)
   grade: text("grade"), // A+, B, C-, etc. (overall)
   feedback: text("feedback"), // Generated coaching feedback
   
-  // Category Grades (position-weighted)
+  // Category Grades (position-weighted) - Basketball
   defensiveGrade: text("defensive_grade"), // A+, B, C-, etc.
   shootingGrade: text("shooting_grade"), // A+, B, C-, etc.
   reboundingGrade: text("rebounding_grade"), // A+, B, C-, etc.

@@ -23,6 +23,7 @@ export const users = pgTable("users", {
   profileImageUrl: varchar("profile_image_url"),
   role: varchar("role"), // 'player' or 'coach' - null means role not yet selected
   playerId: integer("player_id"), // For players, links to their player profile
+  preferredSport: varchar("preferred_sport").default("basketball"), // 'basketball' or 'football' - user's selected sport context
   stripeCustomerId: varchar("stripe_customer_id"), // Stripe customer ID
   stripeSubscriptionId: varchar("stripe_subscription_id"), // Active subscription ID
   subscriptionStatus: varchar("subscription_status"), // 'active', 'canceled', 'past_due', etc.

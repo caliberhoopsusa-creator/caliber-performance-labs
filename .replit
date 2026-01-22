@@ -45,3 +45,6 @@ integrations = ["javascript_gemini_ai_integrations:2.0.0", "javascript_object_st
 
 [userenv.shared]
 OWNER_USER_ID = "53178287"
+
+[objectStorage]
+defaultBucketID = "replit-objstore-5726312f-d15c-452d-9bbe-50ff29edab31"

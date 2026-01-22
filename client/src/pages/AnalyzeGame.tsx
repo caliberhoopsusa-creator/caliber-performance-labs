@@ -18,6 +18,40 @@ import { Link } from "wouter";
 import { ShareModal } from "@/components/ShareModal";
 import { ShareableGameCard } from "@/components/ShareableCard";
 import { HighlightUploader } from "@/components/HighlightUploader";
+import { useSport } from "@/components/SportToggle";
+import { FOOTBALL_POSITION_STATS, FootballPosition } from "@shared/sports-config";
+
+const FOOTBALL_STAT_LABELS: Record<string, string> = {
+  completions: "Completions",
+  passAttempts: "Pass Attempts",
+  passingYards: "Pass Yards",
+  passingTouchdowns: "Pass TDs",
+  interceptions: "Interceptions",
+  sacksTaken: "Sacks Taken",
+  carries: "Carries",
+  rushingYards: "Rush Yards",
+  rushingTouchdowns: "Rush TDs",
+  fumbles: "Fumbles",
+  receptions: "Receptions",
+  targets: "Targets",
+  receivingYards: "Rec Yards",
+  receivingTouchdowns: "Rec TDs",
+  drops: "Drops",
+  tackles: "Tackles",
+  soloTackles: "Solo Tackles",
+  sacks: "Sacks",
+  defensiveInterceptions: "INTs",
+  passDeflections: "Pass Deflections",
+  forcedFumbles: "Forced Fumbles",
+  fumbleRecoveries: "Fumble Rec",
+  fieldGoalsMade: "FG Made",
+  fieldGoalsAttempted: "FG Attempted",
+  extraPointsMade: "XP Made",
+  extraPointsAttempted: "XP Attempted",
+  punts: "Punts",
+  puntYards: "Punt Yards",
+  hustleScore: "Hustle Score",
+};
 
 export default function AnalyzeGame() {
   const [location, setLocation] = useLocation();
@@ -56,11 +90,13 @@ export default function AnalyzeGame() {
 
 function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
   const [autoCalcPoints, setAutoCalcPoints] = useState(true);
+  const sport = useSport();
   
   const form = useForm<z.infer<typeof insertGameSchema>>({
     resolver: zodResolver(insertGameSchema),
     defaultValues: {
       playerId: preselectedPlayerId ? Number(preselectedPlayerId) : undefined,
+      sport: sport,
       date: new Date().toISOString().split('T')[0],
       opponent: "",
       result: "W",
@@ -82,9 +118,42 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
       defensiveRebounds: 0,
       hustleScore: 50,
       defenseRating: 50,
-      notes: ""
+      notes: "",
+      completions: 0,
+      passAttempts: 0,
+      passingYards: 0,
+      passingTouchdowns: 0,
+      interceptions: 0,
+      sacksTaken: 0,
+      carries: 0,
+      rushingYards: 0,
+      rushingTouchdowns: 0,
+      fumbles: 0,
+      receptions: 0,
+      targets: 0,
+      receivingYards: 0,
+      receivingTouchdowns: 0,
+      drops: 0,
+      tackles: 0,
+      soloTackles: 0,
+      sacks: 0,
+      defensiveInterceptions: 0,
+      passDeflections: 0,
+      forcedFumbles: 0,
+      fumbleRecoveries: 0,
+      fieldGoalsMade: 0,
+      fieldGoalsAttempted: 0,
+      extraPointsMade: 0,
+      extraPointsAttempted: 0,
+      punts: 0,
+      puntYards: 0,
     }
   });
+
+  // Update sport field when sport context changes
+  useEffect(() => {
+    form.setValue('sport', sport);
+  }, [sport, form]);
 
   // Watch shooting stats for live calculations
   const fgMade = form.watch('fgMade') || 0;
@@ -225,8 +294,8 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
                 <SelectValue placeholder="Select a player..." />
               </SelectTrigger>
               <SelectContent className="bg-card border-white/10 text-white">
-                {players.map((p: any) => (
-                  <SelectItem key={p.id} value={String(p.id)}>{p.name} (#{p.jerseyNumber})</SelectItem>
+                {players.filter((p: any) => p.sport === sport).map((p: any) => (
+                  <SelectItem key={p.id} value={String(p.id)}>{p.name} (#{p.jerseyNumber}) - {p.position}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -251,181 +320,417 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
         </div>
       </section>
 
-      {/* 2. Core Stats */}
-      <section className="bg-card border border-white/5 p-6 rounded-2xl shadow-lg">
-        <h3 className="text-lg font-bold font-display text-primary mb-6 uppercase tracking-wider flex items-center gap-2">
-          <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs">2</span>
-          Box Score
-        </h3>
+      {/* 2. Core Stats - Sport Specific */}
+      {sport === 'basketball' ? (
+        <>
+          <section className="bg-card border border-white/5 p-6 rounded-2xl shadow-lg">
+            <h3 className="text-lg font-bold font-display text-primary mb-6 uppercase tracking-wider flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs">2</span>
+              Box Score
+            </h3>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          <NumberInput label="Minutes" name="minutes" register={form.register} />
-          <NumberInput label="Points" name="points" register={form.register} />
-          <NumberInput label="Rebounds" name="rebounds" register={form.register} />
-          <NumberInput label="Assists" name="assists" register={form.register} />
-          <NumberInput label="Steals" name="steals" register={form.register} />
-          <NumberInput label="Blocks" name="blocks" register={form.register} />
-          <NumberInput label="Turnovers" name="turnovers" register={form.register} />
-          <NumberInput label="Fouls" name="fouls" register={form.register} />
-        </div>
-      </section>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <NumberInput label="Minutes" name="minutes" register={form.register} />
+              <NumberInput label="Points" name="points" register={form.register} />
+              <NumberInput label="Rebounds" name="rebounds" register={form.register} />
+              <NumberInput label="Assists" name="assists" register={form.register} />
+              <NumberInput label="Steals" name="steals" register={form.register} />
+              <NumberInput label="Blocks" name="blocks" register={form.register} />
+              <NumberInput label="Turnovers" name="turnovers" register={form.register} />
+              <NumberInput label="Fouls" name="fouls" register={form.register} />
+            </div>
+          </section>
 
-      {/* 3. Shooting Efficiency */}
-      <section className="bg-card border border-white/5 p-6 rounded-2xl shadow-lg">
-        <h3 className="text-lg font-bold font-display text-primary mb-6 uppercase tracking-wider flex items-center gap-2">
-          <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs">3</span>
-          Shooting Splits
-        </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="bg-secondary/10 p-4 rounded-xl space-y-4">
-            <div className="flex items-center justify-between">
-              <h4 className="text-sm font-bold text-white">Field Goals</h4>
-              <span className={cn(
-                "text-lg font-mono font-bold",
-                fgPercent !== '—' && parseFloat(fgPercent) >= 50 ? "text-green-400" : 
-                fgPercent !== '—' && parseFloat(fgPercent) < 40 ? "text-red-400" : "text-primary"
-              )}>
-                {fgPercent !== '—' ? `${fgPercent}%` : '—'}
-              </span>
-            </div>
-            <div className="flex gap-4">
-              <NumberInput label="Made" name="fgMade" register={form.register} />
-              <NumberInput label="Attempted" name="fgAttempted" register={form.register} />
-            </div>
-          </div>
-          <div className="bg-secondary/10 p-4 rounded-xl space-y-4">
-            <div className="flex items-center justify-between">
-              <h4 className="text-sm font-bold text-white">3-Pointers</h4>
-              <span className={cn(
-                "text-lg font-mono font-bold",
-                threePercent !== '—' && parseFloat(threePercent) >= 40 ? "text-green-400" : 
-                threePercent !== '—' && parseFloat(threePercent) < 30 ? "text-red-400" : "text-primary"
-              )}>
-                {threePercent !== '—' ? `${threePercent}%` : '—'}
-              </span>
-            </div>
-            <div className="flex gap-4">
-              <NumberInput label="Made" name="threeMade" register={form.register} />
-              <NumberInput label="Attempted" name="threeAttempted" register={form.register} />
-            </div>
-          </div>
-          <div className="bg-secondary/10 p-4 rounded-xl space-y-4">
-            <div className="flex items-center justify-between">
-              <h4 className="text-sm font-bold text-white">Free Throws</h4>
-              <span className={cn(
-                "text-lg font-mono font-bold",
-                ftPercent !== '—' && parseFloat(ftPercent) >= 80 ? "text-green-400" : 
-                ftPercent !== '—' && parseFloat(ftPercent) < 70 ? "text-red-400" : "text-primary"
-              )}>
-                {ftPercent !== '—' ? `${ftPercent}%` : '—'}
-              </span>
-            </div>
-            <div className="flex gap-4">
-              <NumberInput label="Made" name="ftMade" register={form.register} />
-              <NumberInput label="Attempted" name="ftAttempted" register={form.register} />
-            </div>
-          </div>
-        </div>
-
-        {/* Auto-calculated metrics */}
-        <div className="mt-6 p-4 bg-primary/10 rounded-xl border border-primary/20">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-6">
-              <div className="text-center">
-                <p className="text-xs text-muted-foreground uppercase font-bold">True Shooting</p>
-                <p className={cn(
-                  "text-2xl font-mono font-bold",
-                  tsPercent !== '—' && parseFloat(tsPercent) >= 60 ? "text-green-400" : 
-                  tsPercent !== '—' && parseFloat(tsPercent) < 50 ? "text-red-400" : "text-primary"
-                )}>
-                  {tsPercent !== '—' ? `${tsPercent}%` : '—'}
-                </p>
+          {/* 3. Shooting Efficiency */}
+          <section className="bg-card border border-white/5 p-6 rounded-2xl shadow-lg">
+            <h3 className="text-lg font-bold font-display text-primary mb-6 uppercase tracking-wider flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs">3</span>
+              Shooting Splits
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="bg-secondary/10 p-4 rounded-xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-bold text-white">Field Goals</h4>
+                  <span className={cn(
+                    "text-lg font-mono font-bold",
+                    fgPercent !== '—' && parseFloat(fgPercent) >= 50 ? "text-green-400" : 
+                    fgPercent !== '—' && parseFloat(fgPercent) < 40 ? "text-red-400" : "text-primary"
+                  )}>
+                    {fgPercent !== '—' ? `${fgPercent}%` : '—'}
+                  </span>
+                </div>
+                <div className="flex gap-4">
+                  <NumberInput label="Made" name="fgMade" register={form.register} />
+                  <NumberInput label="Attempted" name="fgAttempted" register={form.register} />
+                </div>
               </div>
-              <div className="text-center">
-                <p className="text-xs text-muted-foreground uppercase font-bold">Calc. Points</p>
-                <p className="text-2xl font-mono font-bold text-white">{calculatedPoints}</p>
+              <div className="bg-secondary/10 p-4 rounded-xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-bold text-white">3-Pointers</h4>
+                  <span className={cn(
+                    "text-lg font-mono font-bold",
+                    threePercent !== '—' && parseFloat(threePercent) >= 40 ? "text-green-400" : 
+                    threePercent !== '—' && parseFloat(threePercent) < 30 ? "text-red-400" : "text-primary"
+                  )}>
+                    {threePercent !== '—' ? `${threePercent}%` : '—'}
+                  </span>
+                </div>
+                <div className="flex gap-4">
+                  <NumberInput label="Made" name="threeMade" register={form.register} />
+                  <NumberInput label="Attempted" name="threeAttempted" register={form.register} />
+                </div>
+              </div>
+              <div className="bg-secondary/10 p-4 rounded-xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-bold text-white">Free Throws</h4>
+                  <span className={cn(
+                    "text-lg font-mono font-bold",
+                    ftPercent !== '—' && parseFloat(ftPercent) >= 80 ? "text-green-400" : 
+                    ftPercent !== '—' && parseFloat(ftPercent) < 70 ? "text-red-400" : "text-primary"
+                  )}>
+                    {ftPercent !== '—' ? `${ftPercent}%` : '—'}
+                  </span>
+                </div>
+                <div className="flex gap-4">
+                  <NumberInput label="Made" name="ftMade" register={form.register} />
+                  <NumberInput label="Attempted" name="ftAttempted" register={form.register} />
+                </div>
               </div>
             </div>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input 
-                type="checkbox" 
-                checked={autoCalcPoints}
-                onChange={(e) => setAutoCalcPoints(e.target.checked)}
-                className="w-4 h-4 rounded border-white/20 bg-secondary/30 text-primary focus:ring-primary"
-                data-testid="checkbox-auto-calc-points"
-              />
-              <span className="text-sm text-muted-foreground">Auto-fill points from shooting</span>
-            </label>
-          </div>
-        </div>
-      </section>
+
+            {/* Auto-calculated metrics */}
+            <div className="mt-6 p-4 bg-primary/10 rounded-xl border border-primary/20">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-6">
+                  <div className="text-center">
+                    <p className="text-xs text-muted-foreground uppercase font-bold">True Shooting</p>
+                    <p className={cn(
+                      "text-2xl font-mono font-bold",
+                      tsPercent !== '—' && parseFloat(tsPercent) >= 60 ? "text-green-400" : 
+                      tsPercent !== '—' && parseFloat(tsPercent) < 50 ? "text-red-400" : "text-primary"
+                    )}>
+                      {tsPercent !== '—' ? `${tsPercent}%` : '—'}
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs text-muted-foreground uppercase font-bold">Calc. Points</p>
+                    <p className="text-2xl font-mono font-bold text-white">{calculatedPoints}</p>
+                  </div>
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={autoCalcPoints}
+                    onChange={(e) => setAutoCalcPoints(e.target.checked)}
+                    className="w-4 h-4 rounded border-white/20 bg-secondary/30 text-primary focus:ring-primary"
+                    data-testid="checkbox-auto-calc-points"
+                  />
+                  <span className="text-sm text-muted-foreground">Auto-fill points from shooting</span>
+                </label>
+              </div>
+            </div>
+          </section>
+        </>
+      ) : (
+        <>
+          {/* Football Position-Based Stats */}
+          <section className="bg-card border border-white/5 p-6 rounded-2xl shadow-lg">
+            <h3 className="text-lg font-bold font-display text-primary mb-6 uppercase tracking-wider flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs">2</span>
+              {position ? `${position} Stats` : 'Position Stats'}
+            </h3>
+
+            {!playerId && (
+              <div className="text-center text-muted-foreground py-8 border border-dashed border-white/10 rounded-xl">
+                Select a player to see position-specific stat fields
+              </div>
+            )}
+
+            {playerId && position && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {(FOOTBALL_POSITION_STATS[position as FootballPosition] || []).map((stat: string) => (
+                  <NumberInput 
+                    key={stat}
+                    label={FOOTBALL_STAT_LABELS[stat] || stat} 
+                    name={stat} 
+                    register={form.register} 
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Football Efficiency Metrics */}
+          {playerId && position && (
+            <section className="bg-card border border-white/5 p-6 rounded-2xl shadow-lg">
+              <h3 className="text-lg font-bold font-display text-primary mb-6 uppercase tracking-wider flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs">3</span>
+                Efficiency Metrics
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* Passing Efficiency for QB */}
+                {position === 'QB' && (
+                  <>
+                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
+                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Completion %</p>
+                      <p className="text-2xl font-mono font-bold text-primary">
+                        {(form.watch('passAttempts') || 0) > 0 
+                          ? ((((form.watch('completions') || 0) / (form.watch('passAttempts') || 1)) * 100).toFixed(1)) + '%'
+                          : '—'}
+                      </p>
+                    </div>
+                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
+                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Yards Per Attempt</p>
+                      <p className="text-2xl font-mono font-bold text-primary">
+                        {(form.watch('passAttempts') || 0) > 0 
+                          ? (((form.watch('passingYards') || 0) / (form.watch('passAttempts') || 1)).toFixed(1))
+                          : '—'}
+                      </p>
+                    </div>
+                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
+                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">TD:INT Ratio</p>
+                      <p className="text-2xl font-mono font-bold text-primary">
+                        {form.watch('passingTouchdowns') || 0}:{form.watch('interceptions') || 0}
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                {/* Rushing Efficiency for RB */}
+                {position === 'RB' && (
+                  <>
+                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
+                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Yards Per Carry</p>
+                      <p className="text-2xl font-mono font-bold text-primary">
+                        {(form.watch('carries') || 0) > 0 
+                          ? (((form.watch('rushingYards') || 0) / (form.watch('carries') || 1)).toFixed(1))
+                          : '—'}
+                      </p>
+                    </div>
+                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
+                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Total Yards</p>
+                      <p className="text-2xl font-mono font-bold text-primary">
+                        {(form.watch('rushingYards') || 0) + (form.watch('receivingYards') || 0)}
+                      </p>
+                    </div>
+                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
+                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Total TDs</p>
+                      <p className="text-2xl font-mono font-bold text-primary">
+                        {(form.watch('rushingTouchdowns') || 0) + (form.watch('receivingTouchdowns') || 0)}
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                {/* Receiving Efficiency for WR/TE */}
+                {(position === 'WR' || position === 'TE') && (
+                  <>
+                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
+                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Catch Rate</p>
+                      <p className="text-2xl font-mono font-bold text-primary">
+                        {(form.watch('targets') || 0) > 0 
+                          ? ((((form.watch('receptions') || 0) / (form.watch('targets') || 1)) * 100).toFixed(1)) + '%'
+                          : '—'}
+                      </p>
+                    </div>
+                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
+                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Yards Per Catch</p>
+                      <p className="text-2xl font-mono font-bold text-primary">
+                        {(form.watch('receptions') || 0) > 0 
+                          ? (((form.watch('receivingYards') || 0) / (form.watch('receptions') || 1)).toFixed(1))
+                          : '—'}
+                      </p>
+                    </div>
+                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
+                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">TDs</p>
+                      <p className="text-2xl font-mono font-bold text-primary">
+                        {form.watch('receivingTouchdowns') || 0}
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                {/* Defensive Stats for DL/LB/DB */}
+                {(position === 'DL' || position === 'LB' || position === 'DB') && (
+                  <>
+                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
+                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Total Tackles</p>
+                      <p className="text-2xl font-mono font-bold text-primary">
+                        {form.watch('tackles') || 0}
+                      </p>
+                    </div>
+                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
+                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Playmaker Stats</p>
+                      <p className="text-2xl font-mono font-bold text-primary">
+                        {(form.watch('sacks') || 0) + (form.watch('defensiveInterceptions') || 0) + (form.watch('forcedFumbles') || 0)}
+                      </p>
+                    </div>
+                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
+                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Pass Deflections</p>
+                      <p className="text-2xl font-mono font-bold text-primary">
+                        {form.watch('passDeflections') || 0}
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                {/* Kicker Stats */}
+                {position === 'K' && (
+                  <>
+                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
+                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">FG %</p>
+                      <p className="text-2xl font-mono font-bold text-primary">
+                        {(form.watch('fieldGoalsAttempted') || 0) > 0 
+                          ? ((((form.watch('fieldGoalsMade') || 0) / (form.watch('fieldGoalsAttempted') || 1)) * 100).toFixed(1)) + '%'
+                          : '—'}
+                      </p>
+                    </div>
+                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
+                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">XP %</p>
+                      <p className="text-2xl font-mono font-bold text-primary">
+                        {(form.watch('extraPointsAttempted') || 0) > 0 
+                          ? ((((form.watch('extraPointsMade') || 0) / (form.watch('extraPointsAttempted') || 1)) * 100).toFixed(1)) + '%'
+                          : '—'}
+                      </p>
+                    </div>
+                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
+                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Total Points</p>
+                      <p className="text-2xl font-mono font-bold text-primary">
+                        {((form.watch('fieldGoalsMade') || 0) * 3) + (form.watch('extraPointsMade') || 0)}
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                {/* Punter Stats */}
+                {position === 'P' && (
+                  <>
+                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
+                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Punt Average</p>
+                      <p className="text-2xl font-mono font-bold text-primary">
+                        {(form.watch('punts') || 0) > 0 
+                          ? (((form.watch('puntYards') || 0) / (form.watch('punts') || 1)).toFixed(1))
+                          : '—'}
+                      </p>
+                    </div>
+                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
+                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Total Punts</p>
+                      <p className="text-2xl font-mono font-bold text-primary">
+                        {form.watch('punts') || 0}
+                      </p>
+                    </div>
+                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
+                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Total Yards</p>
+                      <p className="text-2xl font-mono font-bold text-primary">
+                        {form.watch('puntYards') || 0}
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                {/* OL - minimal stats */}
+                {position === 'OL' && (
+                  <div className="bg-secondary/10 p-4 rounded-xl border border-white/5 col-span-full">
+                    <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Offensive Line Rating</p>
+                    <p className="text-sm text-muted-foreground">Graded primarily on team performance and hustle.</p>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
+        </>
+      )}
 
       {/* 4. Intangibles */}
       <section className="bg-card border border-white/5 p-6 rounded-2xl shadow-lg">
         <h3 className="text-lg font-bold font-display text-primary mb-6 uppercase tracking-wider flex items-center gap-2">
-          <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs">4</span>
+          <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs">{sport === 'basketball' ? '4' : playerId ? '4' : '3'}</span>
           Intangibles & Notes
         </h3>
 
-        {/* Auto-calculated Defense & Hustle */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
-            <div className="flex items-center justify-between mb-3">
-              <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Defense Rating</label>
-              <span className={cn(
-                "text-2xl font-mono font-bold",
-                calculatedDefenseRating >= 75 ? "text-green-400" :
-                calculatedDefenseRating >= 60 ? "text-primary" :
-                calculatedDefenseRating < 40 ? "text-red-400" : "text-muted-foreground"
-              )} data-testid="text-defense-rating">
-                {calculatedDefenseRating}
-              </span>
+        {/* Auto-calculated Defense & Hustle - Basketball Only */}
+        {sport === 'basketball' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
+              <div className="flex items-center justify-between mb-3">
+                <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Defense Rating</label>
+                <span className={cn(
+                  "text-2xl font-mono font-bold",
+                  calculatedDefenseRating >= 75 ? "text-green-400" :
+                  calculatedDefenseRating >= 60 ? "text-primary" :
+                  calculatedDefenseRating < 40 ? "text-red-400" : "text-muted-foreground"
+                )} data-testid="text-defense-rating">
+                  {calculatedDefenseRating}
+                </span>
+              </div>
+              <div className="h-2 bg-secondary/30 rounded-full overflow-hidden">
+                <div 
+                  className={cn(
+                    "h-full rounded-full transition-all duration-300",
+                    calculatedDefenseRating >= 75 ? "bg-green-500" :
+                    calculatedDefenseRating >= 60 ? "bg-primary" :
+                    calculatedDefenseRating < 40 ? "bg-red-500" : "bg-muted-foreground"
+                  )}
+                  style={{ width: `${calculatedDefenseRating}%` }}
+                />
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-2">
+                Based on steals, blocks, def. rebounds & position
+              </p>
             </div>
-            <div className="h-2 bg-secondary/30 rounded-full overflow-hidden">
-              <div 
-                className={cn(
-                  "h-full rounded-full transition-all duration-300",
-                  calculatedDefenseRating >= 75 ? "bg-green-500" :
-                  calculatedDefenseRating >= 60 ? "bg-primary" :
-                  calculatedDefenseRating < 40 ? "bg-red-500" : "bg-muted-foreground"
-                )}
-                style={{ width: `${calculatedDefenseRating}%` }}
-              />
+            
+            <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
+              <div className="flex items-center justify-between mb-3">
+                <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Hustle Score</label>
+                <span className={cn(
+                  "text-2xl font-mono font-bold",
+                  calculatedHustleScore >= 75 ? "text-green-400" :
+                  calculatedHustleScore >= 60 ? "text-primary" :
+                  calculatedHustleScore < 40 ? "text-red-400" : "text-muted-foreground"
+                )} data-testid="text-hustle-score">
+                  {calculatedHustleScore}
+                </span>
+              </div>
+              <div className="h-2 bg-secondary/30 rounded-full overflow-hidden">
+                <div 
+                  className={cn(
+                    "h-full rounded-full transition-all duration-300",
+                    calculatedHustleScore >= 75 ? "bg-green-500" :
+                    calculatedHustleScore >= 60 ? "bg-primary" :
+                    calculatedHustleScore < 40 ? "bg-red-500" : "bg-muted-foreground"
+                  )}
+                  style={{ width: `${calculatedHustleScore}%` }}
+                />
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-2">
+                Based on steals, off. rebounds, assists & effort
+              </p>
             </div>
-            <p className="text-[10px] text-muted-foreground mt-2">
-              Based on steals, blocks, def. rebounds & position
-            </p>
           </div>
-          
-          <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
-            <div className="flex items-center justify-between mb-3">
-              <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Hustle Score</label>
-              <span className={cn(
-                "text-2xl font-mono font-bold",
-                calculatedHustleScore >= 75 ? "text-green-400" :
-                calculatedHustleScore >= 60 ? "text-primary" :
-                calculatedHustleScore < 40 ? "text-red-400" : "text-muted-foreground"
-              )} data-testid="text-hustle-score">
-                {calculatedHustleScore}
-              </span>
-            </div>
-            <div className="h-2 bg-secondary/30 rounded-full overflow-hidden">
-              <div 
-                className={cn(
-                  "h-full rounded-full transition-all duration-300",
-                  calculatedHustleScore >= 75 ? "bg-green-500" :
-                  calculatedHustleScore >= 60 ? "bg-primary" :
-                  calculatedHustleScore < 40 ? "bg-red-500" : "bg-muted-foreground"
-                )}
-                style={{ width: `${calculatedHustleScore}%` }}
+        )}
+
+        {/* Football Hustle Score - Manual input */}
+        {sport === 'football' && (
+          <div className="mb-6">
+            <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
+              <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider block mb-3">Hustle Score (0-100)</label>
+              <Input 
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={100}
+                {...form.register("hustleScore", { valueAsNumber: true })}
+                className="bg-secondary/30 border-white/10 text-white text-center font-mono h-11"
+                data-testid="input-hustleScore"
               />
+              <p className="text-[10px] text-muted-foreground mt-2">
+                Rate effort, motor, and intangibles (0 = Poor, 100 = Elite)
+              </p>
             </div>
-            <p className="text-[10px] text-muted-foreground mt-2">
-              Based on steals, off. rebounds, assists & effort
-            </p>
           </div>
-        </div>
+        )}
 
         <div className="space-y-2">
           <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Coach's Notes</label>

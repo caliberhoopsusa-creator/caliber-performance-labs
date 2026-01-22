@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useSubscription, type SubscriptionTier } from "@/hooks/use-subscription";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { SportToggle } from "@/components/SportToggle";
 
 type NavSection = {
   title: string;
@@ -147,6 +148,10 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
             <AlertsBadge />
           </Link>
         )}
+      </div>
+
+      <div className="px-3 py-2 border-b border-cyan-500/[0.08]">
+        <SportToggle size="sm" showLabels={true} className="w-full justify-center" />
       </div>
 
       <nav className="flex-1 p-3 space-y-5">

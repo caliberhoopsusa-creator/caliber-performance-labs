@@ -8,16 +8,45 @@ import { Activity, UserCircle, ClipboardList, ChevronRight, Loader2, Users, Plus
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useSport } from "@/components/SportToggle";
+import { BASKETBALL_POSITIONS, FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS, type Sport } from "@shared/sports-config";
 
 type RoleType = 'player' | 'coach' | null;
 type CoachStep = 'select-team-action' | 'create-team' | 'join-team' | null;
 
+function BasketballIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none"/>
+      <path d="M12 2C12 12 12 12 12 22" stroke="currentColor" strokeWidth="1.5"/>
+      <path d="M2 12C12 12 12 12 22 12" stroke="currentColor" strokeWidth="1.5"/>
+      <path d="M4.5 4.5C8 8 8 16 4.5 19.5" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+      <path d="M19.5 4.5C16 8 16 16 19.5 19.5" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+    </svg>
+  );
+}
+
+function FootballIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <ellipse cx="12" cy="12" rx="10" ry="6" stroke="currentColor" strokeWidth="2" fill="none" transform="rotate(-30 12 12)"/>
+      <path d="M7 12L17 12" stroke="currentColor" strokeWidth="1.5"/>
+      <path d="M9 10L9 14" stroke="currentColor" strokeWidth="1"/>
+      <path d="M11 9L11 15" stroke="currentColor" strokeWidth="1"/>
+      <path d="M13 9L13 15" stroke="currentColor" strokeWidth="1"/>
+      <path d="M15 10L15 14" stroke="currentColor" strokeWidth="1"/>
+    </svg>
+  );
+}
+
 export default function RoleSelection() {
+  const defaultSport = useSport();
   const [selectedRole, setSelectedRole] = useState<RoleType>(null);
   const [coachStep, setCoachStep] = useState<CoachStep>(null);
   const [playerForm, setPlayerForm] = useState({
     name: '',
-    position: '' as '' | 'Guard' | 'Wing' | 'Big',
+    sport: defaultSport as Sport,
+    position: '',
     height: '',
     team: '',
     jerseyNumber: '',
@@ -30,6 +59,24 @@ export default function RoleSelection() {
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  const handleSportChange = (sport: Sport) => {
+    setPlayerForm(prev => ({ ...prev, sport, position: '' }));
+  };
+
+  const getPositionsForSport = () => {
+    if (playerForm.sport === 'football') {
+      return FOOTBALL_POSITIONS;
+    }
+    return BASKETBALL_POSITIONS;
+  };
+
+  const getPositionLabel = (position: string) => {
+    if (playerForm.sport === 'football' && position in FOOTBALL_POSITION_LABELS) {
+      return FOOTBALL_POSITION_LABELS[position as keyof typeof FOOTBALL_POSITION_LABELS];
+    }
+    return position;
+  };
 
   const setRoleMutation = useMutation({
     mutationFn: async (role: 'player' | 'coach') => {
@@ -52,6 +99,7 @@ export default function RoleSelection() {
     mutationFn: async (data: typeof playerForm) => {
       const result = await apiRequest('POST', '/api/users/create-player-profile', {
         name: data.name,
+        sport: data.sport,
         position: data.position,
         height: data.height || undefined,
         team: data.team || undefined,
@@ -243,18 +291,58 @@ export default function RoleSelection() {
               </div>
 
               <div>
+                <Label>Sport *</Label>
+                <div className="grid grid-cols-2 gap-3 mt-2">
+                  <div
+                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                      playerForm.sport === 'basketball'
+                        ? 'border-orange-500 bg-orange-500/10'
+                        : 'border-border hover:border-muted-foreground/50'
+                    }`}
+                    onClick={() => handleSportChange('basketball')}
+                    data-testid="card-sport-basketball"
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <BasketballIcon className={`w-8 h-8 ${playerForm.sport === 'basketball' ? 'text-orange-500' : 'text-muted-foreground'}`} />
+                      <span className={`text-sm font-medium ${playerForm.sport === 'basketball' ? 'text-white' : 'text-muted-foreground'}`}>
+                        Basketball
+                      </span>
+                    </div>
+                  </div>
+                  <div
+                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                      playerForm.sport === 'football'
+                        ? 'border-amber-700 bg-amber-700/10'
+                        : 'border-border hover:border-muted-foreground/50'
+                    }`}
+                    onClick={() => handleSportChange('football')}
+                    data-testid="card-sport-football"
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <FootballIcon className={`w-8 h-8 ${playerForm.sport === 'football' ? 'text-amber-600' : 'text-muted-foreground'}`} />
+                      <span className={`text-sm font-medium ${playerForm.sport === 'football' ? 'text-white' : 'text-muted-foreground'}`}>
+                        Football
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
                 <Label htmlFor="position">Position *</Label>
                 <Select
                   value={playerForm.position}
-                  onValueChange={(value) => setPlayerForm(prev => ({ ...prev, position: value as 'Guard' | 'Wing' | 'Big' }))}
+                  onValueChange={(value) => setPlayerForm(prev => ({ ...prev, position: value }))}
                 >
                   <SelectTrigger className="mt-1" data-testid="select-position">
                     <SelectValue placeholder="Select your position" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Guard">Guard</SelectItem>
-                    <SelectItem value="Wing">Wing</SelectItem>
-                    <SelectItem value="Big">Big</SelectItem>
+                    {getPositionsForSport().map((pos) => (
+                      <SelectItem key={pos} value={pos}>
+                        {getPositionLabel(pos)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

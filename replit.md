@@ -1,7 +1,20 @@
 # Caliber Performance Labs
 
 ## Overview
-Caliber is a basketball player analytics and performance tracking application designed to help users manage player rosters, log game statistics, and receive automated performance feedback. It generates letter grades (A-F) based on position-weighted traditional stats and efficiency metrics. The application includes features like a player leaderboard, head-to-head comparisons, and performance trendline visualizations. The project aims to provide comprehensive tools for player development and scouting, incorporating gamification, AI-powered analysis, and robust coach features, positioning itself as a leading solution in sports analytics.
+Caliber is a **multi-sport** player analytics and performance tracking application designed to help users manage player rosters, log game statistics, and receive automated performance feedback. Currently supports **basketball** and **football** with position-weighted grading systems for each sport. It generates letter grades (A-F) based on position-weighted traditional stats and efficiency metrics. The application includes features like a player leaderboard with sport filtering, head-to-head comparisons, and performance trendline visualizations. The project aims to provide comprehensive tools for player development and scouting, incorporating gamification, AI-powered analysis, and robust coach features, positioning itself as a leading solution in sports analytics.
+
+### Multi-Sport Support
+- **Basketball**: Guard, Wing, Big positions with PPG, RPG, APG, FG%, 3P% stats
+- **Football**: 10 positions (QB, RB, WR, TE, OL, DL, LB, DB, K, P) with position-specific stats
+  - Passing: completions, passAttempts, passingYards, passingTouchdowns, interceptions
+  - Rushing: carries, rushingYards, rushingTouchdowns, fumbles
+  - Receiving: receptions, targets, receivingYards, receivingTouchdowns, drops
+  - Defense: tackles, soloTackles, sacks, defensiveInterceptions, passDeflections, forcedFumbles
+  - Kicking: fieldGoalsMade/Attempted, extraPointsMade/Attempted
+  - Punting: punts, puntYards
+- **Sport Toggle**: Located in sidebar, requires Pro subscription to switch sports (free users locked to one sport)
+- **Sport Context**: Stored in localStorage ('caliber_sport'), syncs to user.preferredSport in database
+- **Sports Config**: `shared/sports-config.ts` contains positions, stat mappings, and grading weights
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
