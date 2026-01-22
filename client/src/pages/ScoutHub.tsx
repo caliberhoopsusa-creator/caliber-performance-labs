@@ -177,92 +177,149 @@ function ScoutPlayerCard({ player, sport }: ScoutPlayerCardProps) {
                 {player.position === 'QB' ? (
                   <>
                     <div>
-                      <div className="text-lg font-bold text-primary">{player.passingYards}</div>
+                      <div className="text-lg font-bold text-primary">{player.passingYards || 0}</div>
                       <div className="text-xs text-muted-foreground">Pass YDS</div>
                     </div>
                     <div>
-                      <div className="text-lg font-bold text-primary">{player.passingTouchdowns}</div>
+                      <div className="text-lg font-bold text-primary">{player.passingTouchdowns || 0}</div>
                       <div className="text-xs text-muted-foreground">Pass TD</div>
                     </div>
                     <div>
-                      <div className="text-lg font-bold text-primary">{player.rushingYards}</div>
+                      <div className="text-lg font-bold text-primary">{player.rushingYards || 0}</div>
                       <div className="text-xs text-muted-foreground">Rush YDS</div>
                     </div>
                     <div>
-                      <div className="text-lg font-bold text-primary">{player.gamesPlayed}</div>
+                      <div className="text-lg font-bold text-primary">{player.gamesPlayed || 0}</div>
                       <div className="text-xs text-muted-foreground">Games</div>
                     </div>
                   </>
                 ) : player.position === 'RB' ? (
                   <>
                     <div>
-                      <div className="text-lg font-bold text-primary">{player.rushingYards}</div>
+                      <div className="text-lg font-bold text-primary">{player.rushingYards || 0}</div>
                       <div className="text-xs text-muted-foreground">Rush YDS</div>
                     </div>
                     <div>
-                      <div className="text-lg font-bold text-primary">{player.rushingTouchdowns}</div>
+                      <div className="text-lg font-bold text-primary">{player.rushingTouchdowns || 0}</div>
                       <div className="text-xs text-muted-foreground">Rush TD</div>
                     </div>
                     <div>
-                      <div className="text-lg font-bold text-primary">{player.receivingYards}</div>
+                      <div className="text-lg font-bold text-primary">{player.receivingYards || 0}</div>
                       <div className="text-xs text-muted-foreground">Rec YDS</div>
                     </div>
                     <div>
-                      <div className="text-lg font-bold text-primary">{player.gamesPlayed}</div>
+                      <div className="text-lg font-bold text-primary">{player.gamesPlayed || 0}</div>
                       <div className="text-xs text-muted-foreground">Games</div>
                     </div>
                   </>
                 ) : player.position === 'WR' || player.position === 'TE' ? (
                   <>
                     <div>
-                      <div className="text-lg font-bold text-primary">{player.receivingYards}</div>
+                      <div className="text-lg font-bold text-primary">{player.receivingYards || 0}</div>
                       <div className="text-xs text-muted-foreground">Rec YDS</div>
                     </div>
                     <div>
-                      <div className="text-lg font-bold text-primary">{player.receivingTouchdowns}</div>
+                      <div className="text-lg font-bold text-primary">{player.receivingTouchdowns || 0}</div>
                       <div className="text-xs text-muted-foreground">Rec TD</div>
                     </div>
                     <div>
-                      <div className="text-lg font-bold text-primary">{player.rushingYards}</div>
+                      <div className="text-lg font-bold text-primary">{player.rushingYards || 0}</div>
                       <div className="text-xs text-muted-foreground">Rush YDS</div>
                     </div>
                     <div>
-                      <div className="text-lg font-bold text-primary">{player.gamesPlayed}</div>
+                      <div className="text-lg font-bold text-primary">{player.gamesPlayed || 0}</div>
                       <div className="text-xs text-muted-foreground">Games</div>
                     </div>
                   </>
                 ) : ['DL', 'LB', 'DB'].includes(player.position) ? (
                   <>
                     <div>
-                      <div className="text-lg font-bold text-primary">{player.tackles}</div>
+                      <div className="text-lg font-bold text-primary">{player.tackles || 0}</div>
                       <div className="text-xs text-muted-foreground">Tackles</div>
                     </div>
                     <div>
-                      <div className="text-lg font-bold text-primary">{player.sacks}</div>
+                      <div className="text-lg font-bold text-primary">{player.sacks || 0}</div>
                       <div className="text-xs text-muted-foreground">Sacks</div>
                     </div>
                     <div>
-                      <div className="text-lg font-bold text-primary">{player.defensiveInterceptions}</div>
+                      <div className="text-lg font-bold text-primary">{player.defensiveInterceptions || 0}</div>
                       <div className="text-xs text-muted-foreground">INT</div>
                     </div>
                     <div>
-                      <div className="text-lg font-bold text-primary">{player.gamesPlayed}</div>
+                      <div className="text-lg font-bold text-primary">{player.gamesPlayed || 0}</div>
                       <div className="text-xs text-muted-foreground">Games</div>
+                    </div>
+                  </>
+                ) : player.position === 'OL' ? (
+                  <>
+                    <div>
+                      <div className="text-lg font-bold text-primary">{player.gamesPlayed || 0}</div>
+                      <div className="text-xs text-muted-foreground">Games</div>
+                    </div>
+                    <div>
+                      <div className="text-lg font-bold text-primary">-</div>
+                      <div className="text-xs text-muted-foreground">Pancakes</div>
+                    </div>
+                    <div>
+                      <div className="text-lg font-bold text-primary">-</div>
+                      <div className="text-xs text-muted-foreground">Sacks Alwd</div>
+                    </div>
+                    <div>
+                      <div className="text-lg font-bold text-primary">{player.currentTier}</div>
+                      <div className="text-xs text-muted-foreground">Tier</div>
+                    </div>
+                  </>
+                ) : player.position === 'K' ? (
+                  <>
+                    <div>
+                      <div className="text-lg font-bold text-primary">{player.gamesPlayed || 0}</div>
+                      <div className="text-xs text-muted-foreground">Games</div>
+                    </div>
+                    <div>
+                      <div className="text-lg font-bold text-primary">-</div>
+                      <div className="text-xs text-muted-foreground">FG Made</div>
+                    </div>
+                    <div>
+                      <div className="text-lg font-bold text-primary">-</div>
+                      <div className="text-xs text-muted-foreground">XP Made</div>
+                    </div>
+                    <div>
+                      <div className="text-lg font-bold text-primary">{player.currentTier}</div>
+                      <div className="text-xs text-muted-foreground">Tier</div>
+                    </div>
+                  </>
+                ) : player.position === 'P' ? (
+                  <>
+                    <div>
+                      <div className="text-lg font-bold text-primary">{player.gamesPlayed || 0}</div>
+                      <div className="text-xs text-muted-foreground">Games</div>
+                    </div>
+                    <div>
+                      <div className="text-lg font-bold text-primary">-</div>
+                      <div className="text-xs text-muted-foreground">Punts</div>
+                    </div>
+                    <div>
+                      <div className="text-lg font-bold text-primary">-</div>
+                      <div className="text-xs text-muted-foreground">Avg YDS</div>
+                    </div>
+                    <div>
+                      <div className="text-lg font-bold text-primary">{player.currentTier}</div>
+                      <div className="text-xs text-muted-foreground">Tier</div>
                     </div>
                   </>
                 ) : (
                   <>
                     <div>
-                      <div className="text-lg font-bold text-primary">{player.gamesPlayed}</div>
+                      <div className="text-lg font-bold text-primary">{player.gamesPlayed || 0}</div>
                       <div className="text-xs text-muted-foreground">Games</div>
                     </div>
                     <div>
-                      <div className="text-lg font-bold text-primary">{player.tackles}</div>
-                      <div className="text-xs text-muted-foreground">Tackles</div>
+                      <div className="text-lg font-bold text-primary">{(player.rushingYards || 0) + (player.passingYards || 0) + (player.receivingYards || 0)}</div>
+                      <div className="text-xs text-muted-foreground">Total YDS</div>
                     </div>
                     <div>
-                      <div className="text-lg font-bold text-primary">{player.rushingYards + player.passingYards + player.receivingYards}</div>
-                      <div className="text-xs text-muted-foreground">Total YDS</div>
+                      <div className="text-lg font-bold text-primary">{player.tackles || 0}</div>
+                      <div className="text-xs text-muted-foreground">Tackles</div>
                     </div>
                     <div>
                       <div className="text-lg font-bold text-primary">{player.currentTier}</div>
@@ -274,23 +331,23 @@ function ScoutPlayerCard({ player, sport }: ScoutPlayerCardProps) {
             ) : (
               <div className="grid grid-cols-5 gap-2 text-center">
                 <div>
-                  <div className="text-lg font-bold text-primary">{player.ppg.toFixed(1)}</div>
+                  <div className="text-lg font-bold text-primary">{(player.ppg || 0).toFixed(1)}</div>
                   <div className="text-xs text-muted-foreground">PPG</div>
                 </div>
                 <div>
-                  <div className="text-lg font-bold text-primary">{player.rpg.toFixed(1)}</div>
+                  <div className="text-lg font-bold text-primary">{(player.rpg || 0).toFixed(1)}</div>
                   <div className="text-xs text-muted-foreground">RPG</div>
                 </div>
                 <div>
-                  <div className="text-lg font-bold text-primary">{player.apg.toFixed(1)}</div>
+                  <div className="text-lg font-bold text-primary">{(player.apg || 0).toFixed(1)}</div>
                   <div className="text-xs text-muted-foreground">APG</div>
                 </div>
                 <div>
-                  <div className="text-lg font-bold text-primary">{player.spg.toFixed(1)}</div>
+                  <div className="text-lg font-bold text-primary">{(player.spg || 0).toFixed(1)}</div>
                   <div className="text-xs text-muted-foreground">SPG</div>
                 </div>
                 <div>
-                  <div className="text-lg font-bold text-primary">{player.bpg.toFixed(1)}</div>
+                  <div className="text-lg font-bold text-primary">{(player.bpg || 0).toFixed(1)}</div>
                   <div className="text-xs text-muted-foreground">BPG</div>
                 </div>
               </div>

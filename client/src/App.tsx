@@ -30,6 +30,7 @@ import ComparePlayers from "./pages/ComparePlayers";
 import GradingSystem from "./pages/GradingSystem";
 import VideoAnalysis from "./pages/VideoAnalysis";
 import Discover from "./pages/Discover";
+import ScoutHub from "./pages/ScoutHub";
 import Challenges from "./pages/Challenges";
 import Teams from "./pages/Teams";
 import Newsfeed from "./pages/Newsfeed";
@@ -170,6 +171,7 @@ function MainRouter() {
               <Route path="/video" component={VideoAnalysis} />
               <Route path="/grading" component={GradingSystem} />
               <Route path="/discover" component={Discover} />
+              <Route path="/scout" component={ScoutHub} />
               <Route path="/analyze" component={AnalyzeGame} />
               <Route path="/coach/dashboard" component={TeamDashboard} />
               <Route path="/coach/hub" component={TeamHub} />

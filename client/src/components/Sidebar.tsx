@@ -69,6 +69,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
       title: "Explore",
       items: [
         { href: "/discover", label: "Find Players", icon: Binoculars },
+        { href: "/scout", label: "Scout Hub", icon: Eye },
         { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
         { href: "/stories", label: "Stories", icon: Camera },
         { href: "/social-hub", label: "Social Hub", icon: UsersRound },
@@ -97,6 +98,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
       title: "Explore",
       items: [
         { href: "/discover", label: "Find Players", icon: Binoculars },
+        { href: "/scout", label: "Scout Hub", icon: Eye },
         { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
         { href: "/stories", label: "Stories", icon: Camera },
         { href: "/social-hub", label: "Social Hub", icon: UsersRound },
