@@ -48,6 +48,7 @@ Preferred communication style: Simple, everyday language.
 - **Authentication**: Replit Auth with session management and role-based access control (Player/Coach).
 - **Social & Engagement**: Player following, in-app notifications, goal sharing, highlight clips gallery, and shareable achievement graphics.
 - **Player Discovery**: Public player directory (/discover) with search and filters. Players can toggle "Open to Opportunities" in their profile settings and add location (city, state), school, and graduation year to be found by coaches and scouts.
+- **Scout Hub**: Dedicated scouting page (/scout) with independent sport toggle, advanced filtering (position, state, graduation year, performance grade, position-specific stats), and sorting. Shows position-specific stat displays for all 10 football positions plus basketball. Uses client-side filtering on /api/discover data. Accessible to all user roles.
 - **Performance Tools**: Live game mode for real-time stat entry, interactive shot charts, off-court workout tracker, and advanced metric calculations (True Shooting %, PER, etc.).
 - **Scheduling**: Practice scheduler and calendar for managing events.
 - **Coach Features**: Team dashboard, shot charts, game notes, lineup analysis, practice tracking with live practice mode (real-time attendance check-in, drill scoring, timer), AI-generated drill recommendations, and comprehensive player report cards. Live Practice is accessible from both Practice Tracker and Team Hub.
