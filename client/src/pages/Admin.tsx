@@ -129,6 +129,38 @@ interface Player {
   jerseyNumber: number | null;
   state: string | null;
   stateRank: number | null;
+  sport: "basketball" | "football";
+}
+
+// Sport filter component for admin tabs
+function SportFilter({ value, onChange }: { value: "all" | "basketball" | "football"; onChange: (v: "all" | "basketball" | "football") => void }) {
+  return (
+    <div className="flex items-center gap-2">
+      <Label className="text-sm text-muted-foreground">Sport:</Label>
+      <Select value={value} onValueChange={(v) => onChange(v as "all" | "basketball" | "football")}>
+        <SelectTrigger className="w-[140px]" data-testid="select-sport-filter">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Sports</SelectItem>
+          <SelectItem value="basketball">Basketball</SelectItem>
+          <SelectItem value="football">Football</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+// Sport badge component
+function SportBadge({ sport }: { sport: "basketball" | "football" }) {
+  return (
+    <Badge 
+      variant="outline" 
+      className={sport === "football" ? "border-orange-500/50 text-orange-400" : "border-primary/50 text-primary"}
+    >
+      {sport === "football" ? "🏈" : "🏀"}
+    </Badge>
+  );
 }
 
 interface Product {
@@ -908,6 +940,7 @@ function CaliberBadgesTabWrapper() {
   const [awardOpen, setAwardOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [form, setForm] = useState({ category: "excellence", reason: "" });
+  const [sportFilter, setSportFilter] = useState<"all" | "basketball" | "football">("all");
 
   const { data: playersData, isLoading: playersLoading, isError: playersError } = useQuery<{ players: Player[] }>({
     queryKey: ["/api/admin/players", "caliber-badges-tab"],
@@ -1011,7 +1044,8 @@ function CaliberBadgesTabWrapper() {
     );
   }
 
-  const players = playersData?.players || [];
+  const allPlayers = playersData?.players || [];
+  const players = sportFilter === "all" ? allPlayers : allPlayers.filter(p => p.sport === sportFilter);
   const badges = badgesData?.badges || [];
   const badgeMap = new Map(badges.map(b => [b.playerId, b]));
 
@@ -1021,10 +1055,11 @@ function CaliberBadgesTabWrapper() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <p className="text-sm text-muted-foreground">
           Award special Caliber badges to recognize outstanding players. Only you (the app owner) can award these badges.
         </p>
+        <SportFilter value={sportFilter} onChange={setSportFilter} />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -1051,6 +1086,7 @@ function CaliberBadgesTabWrapper() {
         <TableHeader>
           <TableRow>
             <TableHead>Player</TableHead>
+            <TableHead>Sport</TableHead>
             <TableHead>Position</TableHead>
             <TableHead>Current Badge</TableHead>
             <TableHead>Reason</TableHead>
@@ -1066,6 +1102,7 @@ function CaliberBadgesTabWrapper() {
             return (
               <TableRow key={player.id} data-testid={`row-caliber-player-${player.id}`}>
                 <TableCell className="font-medium">{player.name}</TableCell>
+                <TableCell><SportBadge sport={player.sport} /></TableCell>
                 <TableCell>{player.position}</TableCell>
                 <TableCell>
                   {badge && CatIcon ? (
@@ -1194,6 +1231,7 @@ function StateRankingsTab() {
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [stateRank, setStateRank] = useState("");
   const [countryRank, setCountryRank] = useState("");
+  const [sportFilter, setSportFilter] = useState<"all" | "basketball" | "football">("all");
 
   const { data: playersData, isLoading: playersLoading, refetch: refetchPlayers } = useQuery<{ players: Player[] }>({
     queryKey: ["/api/admin/players", "rankings-tab"],
@@ -1364,15 +1402,21 @@ function StateRankingsTab() {
     );
   }
 
-  const players = playersData?.players || [];
-  const rankedPlayers = rankingsData?.players || [];
+  const allPlayers = playersData?.players || [];
+  const players = sportFilter === "all" ? allPlayers : allPlayers.filter(p => p.sport === sportFilter);
+  const allRankedPlayers = rankingsData?.players || [];
+  const rankedPlayers = sportFilter === "all" ? allRankedPlayers : allRankedPlayers.filter(p => {
+    const playerData = allPlayers.find(ap => ap.id === p.id);
+    return playerData?.sport === sportFilter;
+  });
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <p className="text-sm text-muted-foreground">
           Assign state and country rankings to players.
         </p>
+        <SportFilter value={sportFilter} onChange={setSportFilter} />
       </div>
 
       {rankedPlayers.length > 0 && (
@@ -1452,6 +1496,7 @@ function StateRankingsTab() {
         <TableHeader>
           <TableRow>
             <TableHead>Player</TableHead>
+            <TableHead>Sport</TableHead>
             <TableHead>Position</TableHead>
             <TableHead>State</TableHead>
             <TableHead>Team</TableHead>
@@ -1463,7 +1508,7 @@ function StateRankingsTab() {
         <TableBody>
           {players.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+              <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                 No players found
               </TableCell>
             </TableRow>
@@ -1473,6 +1518,7 @@ function StateRankingsTab() {
               return (
                 <TableRow key={player.id}>
                   <TableCell className="font-medium">{player.name}</TableCell>
+                  <TableCell><SportBadge sport={player.sport} /></TableCell>
                   <TableCell>{player.position}</TableCell>
                   <TableCell>{player.state || "-"}</TableCell>
                   <TableCell>{player.team || "-"}</TableCell>
@@ -1605,6 +1651,7 @@ function StateAwardsTab() {
   const [awardOpen, setAwardOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [form, setForm] = useState({ title: "", description: "", season: "" });
+  const [sportFilter, setSportFilter] = useState<"all" | "basketball" | "football">("all");
 
   const { data: playersData, isLoading: playersLoading } = useQuery<{ players: Player[] }>({
     queryKey: ["/api/admin/players"],
@@ -1672,20 +1719,23 @@ function StateAwardsTab() {
     );
   }
 
-  const players = playersData?.players || [];
+  const allPlayers = playersData?.players || [];
+  const players = sportFilter === "all" ? allPlayers : allPlayers.filter(p => p.sport === sportFilter);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <p className="text-sm text-muted-foreground">
           Award official state recognitions to players. Only you (the app owner) can give these awards.
         </p>
+        <SportFilter value={sportFilter} onChange={setSportFilter} />
       </div>
 
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Player</TableHead>
+            <TableHead>Sport</TableHead>
             <TableHead>Position</TableHead>
             <TableHead>State</TableHead>
             <TableHead>Team</TableHead>
@@ -1696,6 +1746,7 @@ function StateAwardsTab() {
           {players.map((player) => (
             <TableRow key={player.id} data-testid={`row-state-player-${player.id}`}>
               <TableCell className="font-medium">{player.name}</TableCell>
+              <TableCell><SportBadge sport={player.sport} /></TableCell>
               <TableCell>{player.position}</TableCell>
               <TableCell>{(player as any).state || "-"}</TableCell>
               <TableCell>{player.team || "-"}</TableCell>
@@ -1713,7 +1764,7 @@ function StateAwardsTab() {
           ))}
           {players.length === 0 && (
             <TableRow>
-              <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+              <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                 No players found
               </TableCell>
             </TableRow>
