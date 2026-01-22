@@ -29,6 +29,7 @@ import { EliteAchievements } from "@/components/EliteAchievements";
 import { CaliberBadge } from "@/components/CaliberBadge";
 import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Trophy, Share2, BarChart3, Medal, User, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye, BookOpen, Phone, Save, Crosshair, ShieldCheck } from "lucide-react";
 import { FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS, type FootballPosition } from "@shared/sports-config";
+import { useSport } from "@/components/SportToggle";
 import { AnimatedRankBadge } from "@/components/AnimatedRankBadge";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -989,7 +990,8 @@ export default function PlayerDetail() {
   }
 
   const games = player.games || [];
-  const isFootball = player.sport === 'football';
+  const currentSport = useSport();
+  const isFootball = currentSport === 'football';
   
   // === BASKETBALL STATS ===
   const avgPoints = games.length ? (games.reduce((acc, g) => acc + g.points, 0) / games.length).toFixed(1) : "—";

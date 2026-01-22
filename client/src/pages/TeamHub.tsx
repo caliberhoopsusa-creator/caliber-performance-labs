@@ -32,6 +32,7 @@ import { LivePractice } from "@/components/LivePractice";
 import type { Practice } from "@/hooks/use-basketball";
 import { format, isToday, isTomorrow, addDays, startOfDay, isSameDay } from "date-fns";
 import { Link, useLocation } from "wouter";
+import { useSport } from "@/components/SportToggle";
 import type { ScheduleEvent } from "@shared/schema";
 
 type TeamWithCount = {
@@ -93,6 +94,7 @@ export default function TeamHub() {
   const [, navigate] = useLocation();
   const sessionId = getSessionId();
   const { toast } = useToast();
+  const sport = useSport();
   
   // Live Practice state
   const [startDialogOpen, setStartDialogOpen] = useState(false);
@@ -141,30 +143,34 @@ export default function TeamHub() {
   });
 
   const { data: events = [], isLoading: eventsLoading } = useQuery<ScheduleEvent[]>({
-    queryKey: ['/api/schedule-events'],
+    queryKey: ['/api/schedule-events', sport],
   });
+
+  const sportFilteredEvents = useMemo(() => {
+    return events.filter(e => e.sport === sport);
+  }, [events, sport]);
 
   const upcomingEvents = useMemo(() => {
     const now = startOfDay(new Date());
-    return events
+    return sportFilteredEvents
       .filter(e => new Date(e.startTime) >= now)
       .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
       .slice(0, 10);
-  }, [events]);
+  }, [sportFilteredEvents]);
 
   const todayEvents = useMemo(() => {
     const today = new Date();
-    return events.filter(e => isToday(new Date(e.startTime)));
-  }, [events]);
+    return sportFilteredEvents.filter(e => isToday(new Date(e.startTime)));
+  }, [sportFilteredEvents]);
 
   const thisWeekEvents = useMemo(() => {
     const now = new Date();
     const weekEnd = addDays(now, 7);
-    return events.filter(e => {
+    return sportFilteredEvents.filter(e => {
       const eventDate = new Date(e.startTime);
       return eventDate >= now && eventDate <= weekEnd;
     });
-  }, [events]);
+  }, [sportFilteredEvents]);
 
   const eventsByType = useMemo(() => {
     return {

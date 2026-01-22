@@ -294,7 +294,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
                 <SelectValue placeholder="Select a player..." />
               </SelectTrigger>
               <SelectContent className="bg-card border-white/10 text-white">
-                {players.filter((p: any) => p.sport === sport).map((p: any) => (
+                {players.filter((p: any) => p.sport === sport || String(p.id) === preselectedPlayerId).map((p: any) => (
                   <SelectItem key={p.id} value={String(p.id)}>{p.name} (#{p.jerseyNumber}) - {p.position}</SelectItem>
                 ))}
               </SelectContent>
