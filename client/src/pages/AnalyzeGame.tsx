@@ -171,7 +171,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
   const ftMade = form.watch('ftMade') || 0;
   const ftAttempted = form.watch('ftAttempted') || 0;
 
-  // Watch defensive stats for auto-calculation
+  // Watch defensive stats for auto-calculation (basketball)
   const steals = form.watch('steals') || 0;
   const blocks = form.watch('blocks') || 0;
   const defensiveRebounds = form.watch('defensiveRebounds') || 0;
@@ -179,6 +179,17 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
   const assists = form.watch('assists') || 0;
   const minutes = form.watch('minutes') || 1;
   const playerId = form.watch('playerId');
+  
+  // Watch football stats for hustle score calculation
+  const tackles = form.watch('tackles') || 0;
+  const soloTackles = form.watch('soloTackles') || 0;
+  const sacks = form.watch('sacks') || 0;
+  const forcedFumbles = form.watch('forcedFumbles') || 0;
+  const fumbleRecoveries = form.watch('fumbleRecoveries') || 0;
+  const passDeflections = form.watch('passDeflections') || 0;
+  const pancakeBlocks = form.watch('pancakeBlocks') || 0;
+  const rushingYards = form.watch('rushingYards') || 0;
+  const carries = form.watch('carries') || 0;
   
   // Get selected player's position for position-based calculations
   const selectedPlayer = players.find((p: any) => p.id === playerId);
@@ -240,39 +251,78 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
   // Calculate Hustle Score (same formula as backend)
   const calcHustleScore = () => {
     let score = 50;
-    const mins = minutes || 1;
     
-    // Steals per 36 minutes
-    const stealsPerMin = (steals / mins) * 36;
-    score += stealsPerMin * 10;
-    
-    // Offensive rebounds per 36 minutes
-    const orebPerMin = (offensiveRebounds / mins) * 36;
-    score += orebPerMin * 6;
-    
-    // Defensive rebounds per 36 minutes
-    const drebPerMin = (defensiveRebounds / mins) * 36;
-    score += drebPerMin * 1.5;
-    
-    // Assists per 36 minutes
-    const astPerMin = (assists / mins) * 36;
-    score += astPerMin * 2;
-    
-    // Blocks per 36 minutes
-    const blkPerMin = (blocks / mins) * 36;
-    score += blkPerMin * 3;
-    
-    // Minutes bonus
-    if (minutes >= 30) score += 5;
-    else if (minutes >= 20) score += 3;
-    
-    // Position bonuses
-    if (position === 'Guard') {
-      score += steals * 3;
-    } else if (position === 'Big') {
-      score += offensiveRebounds * 4;
-    } else if (position === 'Wing') {
-      score += (steals + offensiveRebounds) * 2;
+    if (sport === 'football') {
+      // Football hustle score based on effort plays
+      
+      // Tackles show effort (solo tackles worth more)
+      score += soloTackles * 3;
+      score += (tackles - soloTackles) * 1.5; // Assisted tackles
+      
+      // Big plays that show hustle
+      score += sacks * 5;
+      score += forcedFumbles * 6;
+      score += fumbleRecoveries * 4;
+      score += passDeflections * 3;
+      
+      // OL hustle - pancake blocks
+      score += pancakeBlocks * 4;
+      
+      // Yards after contact / effort running (approximated by yards per carry)
+      if (carries > 0) {
+        const ypc = rushingYards / carries;
+        if (ypc >= 5) score += 8;
+        else if (ypc >= 4) score += 5;
+        else if (ypc >= 3) score += 2;
+      }
+      
+      // Position-based bonuses
+      if (effectiveFootballPosition === 'LB' || effectiveFootballPosition === 'DB') {
+        score += tackles * 1; // Extra tackle bonus for defensive backs
+      } else if (effectiveFootballPosition === 'DL') {
+        score += sacks * 2; // Extra sack bonus for D-line
+      } else if (effectiveFootballPosition === 'OL') {
+        score += pancakeBlocks * 2; // Extra pancake bonus for O-line
+      } else if (effectiveFootballPosition === 'RB') {
+        if (carries >= 15) score += 5; // Workhorse bonus
+      }
+      
+    } else {
+      // Basketball hustle score
+      const mins = minutes || 1;
+      
+      // Steals per 36 minutes
+      const stealsPerMin = (steals / mins) * 36;
+      score += stealsPerMin * 10;
+      
+      // Offensive rebounds per 36 minutes
+      const orebPerMin = (offensiveRebounds / mins) * 36;
+      score += orebPerMin * 6;
+      
+      // Defensive rebounds per 36 minutes
+      const drebPerMin = (defensiveRebounds / mins) * 36;
+      score += drebPerMin * 1.5;
+      
+      // Assists per 36 minutes
+      const astPerMin = (assists / mins) * 36;
+      score += astPerMin * 2;
+      
+      // Blocks per 36 minutes
+      const blkPerMin = (blocks / mins) * 36;
+      score += blkPerMin * 3;
+      
+      // Minutes bonus
+      if (minutes >= 30) score += 5;
+      else if (minutes >= 20) score += 3;
+      
+      // Position bonuses
+      if (position === 'Guard') {
+        score += steals * 3;
+      } else if (position === 'Big') {
+        score += offensiveRebounds * 4;
+      } else if (position === 'Wing') {
+        score += (steals + offensiveRebounds) * 2;
+      }
     }
     
     return Math.max(0, Math.min(100, Math.round(score)));
@@ -292,7 +342,10 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
   useEffect(() => {
     form.setValue('defenseRating', calculatedDefenseRating);
     form.setValue('hustleScore', calculatedHustleScore);
-  }, [steals, blocks, defensiveRebounds, offensiveRebounds, assists, minutes, position]);
+  }, [steals, blocks, defensiveRebounds, offensiveRebounds, assists, minutes, position, 
+      // Football stats for hustle calculation
+      tackles, soloTackles, sacks, forcedFumbles, fumbleRecoveries, passDeflections, 
+      pancakeBlocks, rushingYards, carries, effectiveFootballPosition, sport]);
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
