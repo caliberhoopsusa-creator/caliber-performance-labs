@@ -42,9 +42,25 @@ import {
 import { cn } from "@/lib/utils";
 import { useCreateWorkout, type CreateWorkoutInput } from "@/hooks/use-basketball";
 import { useToast } from "@/hooks/use-toast";
+import { useSport } from "@/components/SportToggle";
+
+const BASKETBALL_WORKOUT_TYPES = ["shooting", "conditioning", "weights", "skills", "recovery"] as const;
+const FOOTBALL_WORKOUT_TYPES = ["passing", "route_running", "blocking", "tackling", "conditioning", "weights", "recovery"] as const;
+
+const WORKOUT_LABELS: Record<string, string> = {
+  shooting: "Shooting",
+  conditioning: "Conditioning",
+  weights: "Weight Training",
+  skills: "Skills Training",
+  recovery: "Recovery",
+  passing: "Passing Drills",
+  route_running: "Route Running",
+  blocking: "Blocking Drills",
+  tackling: "Tackling Drills",
+};
 
 const workoutSchema = z.object({
-  workoutType: z.enum(["shooting", "conditioning", "weights", "skills", "recovery"], {
+  workoutType: z.enum([...BASKETBALL_WORKOUT_TYPES, ...FOOTBALL_WORKOUT_TYPES], {
     required_error: "Please select a workout type",
   }),
   title: z.string().min(1, "Title is required").max(100, "Title is too long"),
@@ -65,6 +81,9 @@ export function LogWorkoutModal({ playerId }: LogWorkoutModalProps) {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const { toast } = useToast();
   const createWorkout = useCreateWorkout();
+  const sport = useSport();
+
+  const workoutTypes = sport === 'football' ? FOOTBALL_WORKOUT_TYPES : BASKETBALL_WORKOUT_TYPES;
 
   const form = useForm<WorkoutFormValues>({
     resolver: zodResolver(workoutSchema),
@@ -129,7 +148,7 @@ export function LogWorkoutModal({ playerId }: LogWorkoutModalProps) {
         <DialogHeader>
           <DialogTitle>Log Workout</DialogTitle>
           <DialogDescription>
-            Record your off-court training session.
+            Record your {sport === 'football' ? 'off-field' : 'off-court'} training session.
           </DialogDescription>
         </DialogHeader>
         
@@ -148,11 +167,11 @@ export function LogWorkoutModal({ playerId }: LogWorkoutModalProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="shooting">Shooting</SelectItem>
-                      <SelectItem value="conditioning">Conditioning</SelectItem>
-                      <SelectItem value="weights">Weight Training</SelectItem>
-                      <SelectItem value="skills">Skills Training</SelectItem>
-                      <SelectItem value="recovery">Recovery</SelectItem>
+                      {workoutTypes.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {WORKOUT_LABELS[type] || type}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -168,7 +187,7 @@ export function LogWorkoutModal({ playerId }: LogWorkoutModalProps) {
                   <FormLabel>Title</FormLabel>
                   <FormControl>
                     <Input 
-                      placeholder="e.g., Morning shooting drills" 
+                      placeholder={sport === 'football' ? "e.g., Morning passing drills" : "e.g., Morning shooting drills"}
                       {...field} 
                       data-testid="input-workout-title"
                     />

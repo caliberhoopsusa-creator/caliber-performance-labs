@@ -1,21 +1,17 @@
 import { Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-interface Achievement {
-  id: string;
-  label: string;
-  value: number;
-  threshold: number;
-  tier: "bronze" | "silver" | "gold" | "elite";
-}
+import { useSport } from "@/components/SportToggle";
 
 interface EliteAchievementsProps {
-  ppg: number;
-  rpg: number;
-  apg: number;
+  ppg?: number;
+  rpg?: number;
+  apg?: number;
+  ydsPerGame?: number;
+  tdsPerGame?: number;
+  tacklesPerGame?: number;
 }
 
-const THRESHOLDS = {
+const BASKETBALL_THRESHOLDS = {
   ppg: [
     { tier: "bronze" as const, min: 15, label: "15+ PPG" },
     { tier: "silver" as const, min: 20, label: "20+ PPG" },
@@ -33,6 +29,27 @@ const THRESHOLDS = {
     { tier: "silver" as const, min: 6, label: "6+ APG" },
     { tier: "gold" as const, min: 8, label: "8+ APG" },
     { tier: "elite" as const, min: 10, label: "10+ APG" },
+  ],
+};
+
+const FOOTBALL_THRESHOLDS = {
+  ydsPerGame: [
+    { tier: "bronze" as const, min: 50, label: "50+ YPG" },
+    { tier: "silver" as const, min: 100, label: "100+ YPG" },
+    { tier: "gold" as const, min: 150, label: "150+ YPG" },
+    { tier: "elite" as const, min: 200, label: "200+ YPG" },
+  ],
+  tdsPerGame: [
+    { tier: "bronze" as const, min: 0.5, label: "0.5+ TD/G" },
+    { tier: "silver" as const, min: 1, label: "1+ TD/G" },
+    { tier: "gold" as const, min: 1.5, label: "1.5+ TD/G" },
+    { tier: "elite" as const, min: 2, label: "2+ TD/G" },
+  ],
+  tacklesPerGame: [
+    { tier: "bronze" as const, min: 4, label: "4+ TCK/G" },
+    { tier: "silver" as const, min: 6, label: "6+ TCK/G" },
+    { tier: "gold" as const, min: 8, label: "8+ TCK/G" },
+    { tier: "elite" as const, min: 10, label: "10+ TCK/G" },
   ],
 };
 
@@ -67,7 +84,9 @@ const TIER_STYLES = {
   },
 };
 
-function getAchievementTier(value: number, thresholds: typeof THRESHOLDS.ppg): { tier: "bronze" | "silver" | "gold" | "elite"; label: string } | null {
+type Threshold = { tier: "bronze" | "silver" | "gold" | "elite"; min: number; label: string };
+
+function getAchievementTier(value: number, thresholds: Threshold[]): { tier: "bronze" | "silver" | "gold" | "elite"; label: string } | null {
   for (let i = thresholds.length - 1; i >= 0; i--) {
     if (value >= thresholds[i].min) {
       return thresholds[i];
@@ -133,16 +152,37 @@ function AchievementBadge({ label, tier }: { label: string; tier: "bronze" | "si
   );
 }
 
-export function EliteAchievements({ ppg, rpg, apg }: EliteAchievementsProps) {
+export function EliteAchievements({ ppg, rpg, apg, ydsPerGame, tdsPerGame, tacklesPerGame }: EliteAchievementsProps) {
+  const sport = useSport();
   const achievements: { label: string; tier: "bronze" | "silver" | "gold" | "elite" }[] = [];
   
-  const ppgAchievement = getAchievementTier(ppg, THRESHOLDS.ppg);
-  const rpgAchievement = getAchievementTier(rpg, THRESHOLDS.rpg);
-  const apgAchievement = getAchievementTier(apg, THRESHOLDS.apg);
-  
-  if (ppgAchievement) achievements.push(ppgAchievement);
-  if (rpgAchievement) achievements.push(rpgAchievement);
-  if (apgAchievement) achievements.push(apgAchievement);
+  if (sport === 'basketball') {
+    if (ppg !== undefined) {
+      const ppgAchievement = getAchievementTier(ppg, BASKETBALL_THRESHOLDS.ppg);
+      if (ppgAchievement) achievements.push(ppgAchievement);
+    }
+    if (rpg !== undefined) {
+      const rpgAchievement = getAchievementTier(rpg, BASKETBALL_THRESHOLDS.rpg);
+      if (rpgAchievement) achievements.push(rpgAchievement);
+    }
+    if (apg !== undefined) {
+      const apgAchievement = getAchievementTier(apg, BASKETBALL_THRESHOLDS.apg);
+      if (apgAchievement) achievements.push(apgAchievement);
+    }
+  } else {
+    if (ydsPerGame !== undefined) {
+      const ydsAchievement = getAchievementTier(ydsPerGame, FOOTBALL_THRESHOLDS.ydsPerGame);
+      if (ydsAchievement) achievements.push(ydsAchievement);
+    }
+    if (tdsPerGame !== undefined) {
+      const tdsAchievement = getAchievementTier(tdsPerGame, FOOTBALL_THRESHOLDS.tdsPerGame);
+      if (tdsAchievement) achievements.push(tdsAchievement);
+    }
+    if (tacklesPerGame !== undefined) {
+      const tacklesAchievement = getAchievementTier(tacklesPerGame, FOOTBALL_THRESHOLDS.tacklesPerGame);
+      if (tacklesAchievement) achievements.push(tacklesAchievement);
+    }
+  }
   
   if (achievements.length === 0) return null;
   

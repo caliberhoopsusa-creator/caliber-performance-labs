@@ -1268,6 +1268,9 @@ export default function PlayerDetail() {
                     ppg={parseFloat(avgPoints) || 0}
                     rpg={parseFloat(avgReb) || 0}
                     apg={parseFloat(avgAst) || 0}
+                    ydsPerGame={parseFloat(String(totalYards / games.length)) || 0}
+                    tdsPerGame={parseFloat(String(totalTDs / games.length)) || 0}
+                    tacklesPerGame={parseFloat(avgTackles) || 0}
                   />
                 </div>
               )}

@@ -19,7 +19,7 @@ import { ShareModal } from "@/components/ShareModal";
 import { ShareableGameCard } from "@/components/ShareableCard";
 import { HighlightUploader } from "@/components/HighlightUploader";
 import { useSport } from "@/components/SportToggle";
-import { FOOTBALL_POSITION_STATS, FootballPosition } from "@shared/sports-config";
+import { FOOTBALL_POSITION_STATS, FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS, FootballPosition, BASKETBALL_POSITIONS } from "@shared/sports-config";
 
 const FOOTBALL_STAT_LABELS: Record<string, string> = {
   completions: "Completions",
@@ -90,6 +90,7 @@ export default function AnalyzeGame() {
 
 function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
   const [autoCalcPoints, setAutoCalcPoints] = useState(true);
+  const [footballPosition, setFootballPosition] = useState<FootballPosition | ''>('');
   const sport = useSport();
   
   const form = useForm<z.infer<typeof insertGameSchema>>({
@@ -174,7 +175,19 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
   
   // Get selected player's position for position-based calculations
   const selectedPlayer = players.find((p: any) => p.id === playerId);
-  const position = selectedPlayer?.position || 'Wing';
+  const storedPosition = selectedPlayer?.position || 'Wing';
+  
+  // Check if the stored position is a valid football position
+  const isValidFootballPosition = FOOTBALL_POSITIONS.includes(storedPosition as FootballPosition);
+  const isValidBasketballPosition = BASKETBALL_POSITIONS.includes(storedPosition as any);
+  
+  // For football mode, use the footballPosition state if the stored position is not a football position
+  const effectiveFootballPosition = sport === 'football' 
+    ? (isValidFootballPosition ? storedPosition as FootballPosition : footballPosition)
+    : null;
+  
+  // Position used for calculations and display
+  const position = sport === 'football' ? effectiveFootballPosition : storedPosition;
 
   // Calculate percentages
   const fgPercent = fgAttempted > 0 ? ((fgMade / fgAttempted) * 100).toFixed(1) : '—';
@@ -438,7 +451,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
           <section className="bg-card border border-white/5 p-6 rounded-2xl shadow-lg">
             <h3 className="text-lg font-bold font-display text-primary mb-6 uppercase tracking-wider flex items-center gap-2">
               <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs">2</span>
-              {position ? `${position} Stats` : 'Position Stats'}
+              {effectiveFootballPosition ? `${FOOTBALL_POSITION_LABELS[effectiveFootballPosition] || effectiveFootballPosition} Stats` : 'Position Stats'}
             </h3>
 
             {!playerId && (
@@ -447,9 +460,33 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
               </div>
             )}
 
-            {playerId && position && (
+            {playerId && !isValidFootballPosition && (
+              <div className="mb-6">
+                <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider block mb-2">Football Position (for this game)</label>
+                <Select 
+                  onValueChange={(val) => setFootballPosition(val as FootballPosition)} 
+                  value={footballPosition}
+                >
+                  <SelectTrigger className="bg-secondary/30 border-white/10 text-white h-11 max-w-xs">
+                    <SelectValue placeholder="Select football position..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card border-white/10 text-white">
+                    {FOOTBALL_POSITIONS.map((pos) => (
+                      <SelectItem key={pos} value={pos}>
+                        {FOOTBALL_POSITION_LABELS[pos]} ({pos})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  Your profile uses a basketball position. Select a football position for this game.
+                </p>
+              </div>
+            )}
+
+            {playerId && effectiveFootballPosition && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                {(FOOTBALL_POSITION_STATS[position as FootballPosition] || []).map((stat: string) => (
+                {(FOOTBALL_POSITION_STATS[effectiveFootballPosition] || []).map((stat: string) => (
                   <NumberInput 
                     key={stat}
                     label={FOOTBALL_STAT_LABELS[stat] || stat} 
@@ -459,10 +496,16 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
                 ))}
               </div>
             )}
+
+            {playerId && !effectiveFootballPosition && !isValidFootballPosition && (
+              <div className="text-center text-muted-foreground py-4 border border-dashed border-white/10 rounded-xl">
+                Select a football position above to see relevant stat fields
+              </div>
+            )}
           </section>
 
           {/* Football Efficiency Metrics */}
-          {playerId && position && (
+          {playerId && effectiveFootballPosition && (
             <section className="bg-card border border-white/5 p-6 rounded-2xl shadow-lg">
               <h3 className="text-lg font-bold font-display text-primary mb-6 uppercase tracking-wider flex items-center gap-2">
                 <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs">3</span>
@@ -471,7 +514,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* Passing Efficiency for QB */}
-                {position === 'QB' && (
+                {effectiveFootballPosition === 'QB' && (
                   <>
                     <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
                       <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Completion %</p>
@@ -499,7 +542,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
                 )}
 
                 {/* Rushing Efficiency for RB */}
-                {position === 'RB' && (
+                {effectiveFootballPosition === 'RB' && (
                   <>
                     <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
                       <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Yards Per Carry</p>
@@ -525,7 +568,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
                 )}
 
                 {/* Receiving Efficiency for WR/TE */}
-                {(position === 'WR' || position === 'TE') && (
+                {(effectiveFootballPosition === 'WR' || effectiveFootballPosition === 'TE') && (
                   <>
                     <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
                       <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Catch Rate</p>
@@ -553,7 +596,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
                 )}
 
                 {/* Defensive Stats for DL/LB/DB */}
-                {(position === 'DL' || position === 'LB' || position === 'DB') && (
+                {(effectiveFootballPosition === 'DL' || effectiveFootballPosition === 'LB' || effectiveFootballPosition === 'DB') && (
                   <>
                     <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
                       <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Total Tackles</p>
