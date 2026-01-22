@@ -3,7 +3,7 @@ import {
   players, games, badges, goals, streaks, likes, comments, challenges, challengeProgress,
   teams, teamMembers, teamPosts, teamPostComments,
   feedActivities, reposts, polls, pollVotes, predictions, predictionVotes, storyTemplates, playerStories, storyViews, storyReactions, storyHighlights, storyTags,
-  activityStreaks,
+  activityStreaks, footballMetrics,
   shots, gameNotes, practices, practiceAttendance, drills, drillScores, lineups, lineupStats,
   opponents, alerts, coachGoals, drillRecommendations,
   follows, notifications, highlightClips, workouts, accolades, goalShares, scheduleEvents, liveGameSessions, liveGameEvents, liveGameSpectators, shareAssets, endorsements, headToHeadChallenges, trainingGroups, trainingGroupMembers,
@@ -72,7 +72,8 @@ import {
   type MentorshipRequest, type InsertMentorshipRequest,
   type RecruitPost, type InsertRecruitPost,
   type RecruitInterest, type InsertRecruitInterest,
-  type CaliberBadge, type InsertCaliberBadge, caliberBadges
+  type CaliberBadge, type InsertCaliberBadge, caliberBadges,
+  type FootballMetrics, type InsertFootballMetrics
 } from "@shared/schema";
 import { eq, desc, and, count, gte, lte, sql, or, isNull } from "drizzle-orm";
 
@@ -456,6 +457,11 @@ export interface IStorage {
   getPostInterests(postId: number): Promise<RecruitInterest[]>;
   getPlayerInterests(playerId: number): Promise<RecruitInterest[]>;
   updateInterestStatus(id: number, status: string): Promise<RecruitInterest>;
+
+  // Football Metrics
+  getFootballMetrics(playerId: number): Promise<FootballMetrics | undefined>;
+  createFootballMetrics(metrics: InsertFootballMetrics): Promise<FootballMetrics>;
+  updateFootballMetrics(playerId: number, updates: Partial<InsertFootballMetrics>): Promise<FootballMetrics | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2380,6 +2386,25 @@ export class DatabaseStorage implements IStorage {
       .where(eq(recruitInterests.id, id))
       .returning();
     return result;
+  }
+
+  // Football Metrics
+  async getFootballMetrics(playerId: number): Promise<FootballMetrics | undefined> {
+    const [metrics] = await db.select().from(footballMetrics).where(eq(footballMetrics.playerId, playerId));
+    return metrics;
+  }
+
+  async createFootballMetrics(metrics: InsertFootballMetrics): Promise<FootballMetrics> {
+    const [created] = await db.insert(footballMetrics).values(metrics).returning();
+    return created;
+  }
+
+  async updateFootballMetrics(playerId: number, updates: Partial<InsertFootballMetrics>): Promise<FootballMetrics | undefined> {
+    const [updated] = await db.update(footballMetrics)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(footballMetrics.playerId, playerId))
+      .returning();
+    return updated;
   }
 }
 

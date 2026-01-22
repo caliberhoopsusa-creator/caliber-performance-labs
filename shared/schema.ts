@@ -83,6 +83,61 @@ export const insertCaliberBadgeSchema = createInsertSchema(caliberBadges).omit({
 export type InsertCaliberBadge = z.infer<typeof insertCaliberBadgeSchema>;
 export type CaliberBadge = typeof caliberBadges.$inferSelect;
 
+// === FOOTBALL ADVANCED METRICS & SCOUTING DATA ===
+export const footballMetrics = pgTable("football_metrics", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  
+  // === ADVANCED ANALYTICS (position-specific) ===
+  // All positions - Overall contribution metric
+  totalPointsSIS: decimal("total_points_sis", { precision: 5, scale: 1 }), // Sports Info Solutions Total Points
+  
+  // Defensive positions (DL, LB, DB)
+  handOnBallPct: decimal("hand_on_ball_pct", { precision: 5, scale: 2 }), // % of plays with hand on ball
+  adjustedTackleDepth: decimal("adjusted_tackle_depth", { precision: 4, scale: 2 }), // Average tackle depth in yards
+  missedTackleRate: decimal("missed_tackle_rate", { precision: 5, scale: 2 }), // % missed tackles
+  
+  // Pass catchers & QB (QB, WR, TE, RB)
+  yacPerCompletion: decimal("yac_per_completion", { precision: 5, scale: 2 }), // Yards after catch per completion
+  separationRating: decimal("separation_rating", { precision: 4, scale: 2 }), // Route running separation (1-10)
+  contestedCatchRate: decimal("contested_catch_rate", { precision: 5, scale: 2 }), // % contested catches made
+  
+  // QB specific
+  pressureRate: decimal("pressure_rate", { precision: 5, scale: 2 }), // % of dropbacks under pressure
+  timeToThrow: decimal("time_to_throw", { precision: 4, scale: 2 }), // Average seconds to throw
+  accuracyRating: decimal("accuracy_rating", { precision: 4, scale: 2 }), // On-target throw % adjusted
+  
+  // OL specific
+  passBlockWinRate: decimal("pass_block_win_rate", { precision: 5, scale: 2 }), // % pass block wins
+  runBlockGrade: decimal("run_block_grade", { precision: 4, scale: 2 }), // Run blocking grade (1-100)
+  
+  // === COMBINE / ATHLETIC TESTING SCORES ===
+  fortyYardDash: decimal("forty_yard_dash", { precision: 4, scale: 2 }), // 40-yard time in seconds (e.g., 4.45)
+  verticalJump: decimal("vertical_jump", { precision: 4, scale: 1 }), // Vertical jump in inches (e.g., 38.5)
+  broadJump: integer("broad_jump"), // Broad jump in inches (e.g., 124)
+  threeConeDrill: decimal("three_cone_drill", { precision: 4, scale: 2 }), // 3-cone time in seconds (e.g., 6.85)
+  shuttleTime: decimal("shuttle_time", { precision: 4, scale: 2 }), // 20-yard shuttle in seconds (e.g., 4.12)
+  benchPressReps: integer("bench_press_reps"), // 225 lb reps (e.g., 25)
+  wingspan: decimal("wingspan", { precision: 4, scale: 2 }), // Wingspan in inches (e.g., 78.5)
+  handSize: decimal("hand_size", { precision: 4, scale: 2 }), // Hand size in inches (e.g., 9.75)
+  
+  // === QUALITATIVE TRAIT RATINGS (1-10 scale) ===
+  physicality: integer("physicality"), // Physical play, pad level, finishing
+  footballIQ: integer("football_iq"), // Understanding of schemes, reads, adjustments
+  mentalToughness: integer("mental_toughness"), // Composure under pressure, resilience
+  coachability: integer("coachability"), // Receptiveness to coaching, improvement rate
+  leadership: integer("leadership"), // Vocal leader, team chemistry impact
+  workEthic: integer("work_ethic"), // Practice habits, film study, training
+  competitiveness: integer("competitiveness"), // Intensity, will to win
+  clutchPerformance: integer("clutch_performance"), // Performance in big moments
+  
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertFootballMetricsSchema = createInsertSchema(footballMetrics).omit({ id: true, updatedAt: true });
+export type InsertFootballMetrics = z.infer<typeof insertFootballMetricsSchema>;
+export type FootballMetrics = typeof footballMetrics.$inferSelect;
+
 export const goals = pgTable("goals", {
   id: serial("id").primaryKey(),
   playerId: integer("player_id").notNull(),

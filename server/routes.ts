@@ -6710,6 +6710,52 @@ Respond in this exact JSON format:
     }
   });
 
+  // === FOOTBALL METRICS ROUTES ===
+  
+  // Get football metrics for a player
+  app.get('/api/players/:id/football-metrics', async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      const metrics = await storage.getFootballMetrics(playerId);
+      res.json(metrics || null);
+    } catch (err) {
+      console.error('Get football metrics error:', err);
+      res.status(500).json({ error: 'Could not fetch football metrics' });
+    }
+  });
+  
+  // Create or update football metrics for a player
+  app.put('/api/players/:id/football-metrics', isAuthenticated, async (req: any, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      const userId = req.user?.claims?.sub;
+      
+      // Check if user owns this player or is a coach
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ error: 'Player not found' });
+      }
+      
+      const user = await authStorage.getUser(userId);
+      if (player.userId !== userId && user?.role !== 'coach' && !isAppOwner(userId)) {
+        return res.status(403).json({ error: 'Not authorized to update this player' });
+      }
+      
+      // Upsert the football metrics
+      const existing = await storage.getFootballMetrics(playerId);
+      if (existing) {
+        const updated = await storage.updateFootballMetrics(playerId, req.body);
+        res.json(updated);
+      } else {
+        const created = await storage.createFootballMetrics({ playerId, ...req.body });
+        res.json(created);
+      }
+    } catch (err) {
+      console.error('Update football metrics error:', err);
+      res.status(500).json({ error: 'Could not update football metrics' });
+    }
+  });
+
   // Get all players with rankings (state or country)
   app.get('/api/state-rankings', async (req, res) => {
     try {
