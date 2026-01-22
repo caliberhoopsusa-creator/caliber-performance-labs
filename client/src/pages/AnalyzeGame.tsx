@@ -867,6 +867,37 @@ function ReportCardView({ game, onReset }: { game: any, onReset: () => void }) {
   const { data: player } = usePlayer(game.playerId);
   const playerName = player?.name || "Player";
   const playerPhoto = player?.photoUrl || undefined;
+  const isFootball = game.sport === 'football';
+
+  // Calculate football headline stats based on position stats
+  const footballStats = isFootball ? {
+    passingYards: game.passingYards || 0,
+    rushingYards: game.rushingYards || 0,
+    receivingYards: game.receivingYards || 0,
+    totalTDs: (game.passingTouchdowns || 0) + (game.rushingTouchdowns || 0) + (game.receivingTouchdowns || 0),
+    tackles: game.tackles || 0,
+    sacks: game.sacks || 0,
+    interceptions: game.defensiveInterceptions || 0,
+  } : null;
+
+  // Get the most relevant 3 stats for football based on what's non-zero
+  const getFootballHeadlineStats = () => {
+    if (!footballStats) return [];
+    const stats = [
+      { value: footballStats.passingYards, label: 'Pass Yds' },
+      { value: footballStats.rushingYards, label: 'Rush Yds' },
+      { value: footballStats.receivingYards, label: 'Rec Yds' },
+      { value: footballStats.totalTDs, label: 'TDs' },
+      { value: footballStats.tackles, label: 'Tackles' },
+      { value: footballStats.sacks, label: 'Sacks' },
+      { value: footballStats.interceptions, label: 'INTs' },
+    ].filter(s => s.value > 0);
+    return stats.slice(0, 3).length > 0 ? stats.slice(0, 3) : [
+      { value: 0, label: 'TDs' },
+      { value: 0, label: 'Yards' },
+      { value: 0, label: 'Tackles' },
+    ];
+  };
 
   return (
     <div className="max-w-2xl mx-auto py-8 animate-in zoom-in-95 duration-500">
@@ -881,18 +912,29 @@ function ReportCardView({ game, onReset }: { game: any, onReset: () => void }) {
           </div>
           
           <div className="flex justify-center gap-8 mb-2">
-            <div className="text-center">
-              <p className="text-3xl font-display font-bold text-white">{game.points}</p>
-              <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Points</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-display font-bold text-white">{game.rebounds}</p>
-              <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Rebounds</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-display font-bold text-white">{game.assists}</p>
-              <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Assists</p>
-            </div>
+            {isFootball ? (
+              getFootballHeadlineStats().map((stat, i) => (
+                <div key={i} className="text-center">
+                  <p className="text-3xl font-display font-bold text-white">{stat.value}</p>
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">{stat.label}</p>
+                </div>
+              ))
+            ) : (
+              <>
+                <div className="text-center">
+                  <p className="text-3xl font-display font-bold text-white">{game.points}</p>
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Points</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-3xl font-display font-bold text-white">{game.rebounds}</p>
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Rebounds</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-3xl font-display font-bold text-white">{game.assists}</p>
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Assists</p>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -909,18 +951,37 @@ function ReportCardView({ game, onReset }: { game: any, onReset: () => void }) {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 bg-secondary/10 rounded-xl border border-white/5">
-              <span className="text-xs text-muted-foreground uppercase font-bold">Shooting</span>
-              <p className="text-xl font-display font-bold text-white mt-1">
-                {game.fgMade}/{game.fgAttempted} <span className="text-sm text-muted-foreground">FG</span>
-              </p>
-            </div>
-            <div className="p-4 bg-secondary/10 rounded-xl border border-white/5">
-              <span className="text-xs text-muted-foreground uppercase font-bold">Turnovers</span>
-              <p className="text-xl font-display font-bold text-white mt-1">
-                {game.turnovers} <span className="text-sm text-muted-foreground">TO</span>
-              </p>
-            </div>
+            {isFootball ? (
+              <>
+                <div className="p-4 bg-secondary/10 rounded-xl border border-white/5">
+                  <span className="text-xs text-muted-foreground uppercase font-bold">Total Yards</span>
+                  <p className="text-xl font-display font-bold text-white mt-1">
+                    {(game.passingYards || 0) + (game.rushingYards || 0) + (game.receivingYards || 0)} <span className="text-sm text-muted-foreground">YDS</span>
+                  </p>
+                </div>
+                <div className="p-4 bg-secondary/10 rounded-xl border border-white/5">
+                  <span className="text-xs text-muted-foreground uppercase font-bold">Turnovers</span>
+                  <p className="text-xl font-display font-bold text-white mt-1">
+                    {(game.interceptions || 0) + (game.fumbles || 0)} <span className="text-sm text-muted-foreground">TO</span>
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="p-4 bg-secondary/10 rounded-xl border border-white/5">
+                  <span className="text-xs text-muted-foreground uppercase font-bold">Shooting</span>
+                  <p className="text-xl font-display font-bold text-white mt-1">
+                    {game.fgMade}/{game.fgAttempted} <span className="text-sm text-muted-foreground">FG</span>
+                  </p>
+                </div>
+                <div className="p-4 bg-secondary/10 rounded-xl border border-white/5">
+                  <span className="text-xs text-muted-foreground uppercase font-bold">Turnovers</span>
+                  <p className="text-xl font-display font-bold text-white mt-1">
+                    {game.turnovers} <span className="text-sm text-muted-foreground">TO</span>
+                  </p>
+                </div>
+              </>
+            )}
           </div>
 
           <Button 
@@ -952,7 +1013,9 @@ function ReportCardView({ game, onReset }: { game: any, onReset: () => void }) {
         onOpenChange={setShareOpen}
         title="Share Game Performance"
         shareUrl={`${window.location.origin}/players/${game.playerId}/card?gameId=${game.id}`}
-        shareText={`Check out my ${game.points} PTS, ${game.rebounds} REB, ${game.assists} AST game vs ${game.opponent}! Grade: ${game.grade} on @CaliberApp`}
+        shareText={isFootball 
+          ? `Check out my ${(game.passingYards || 0) + (game.rushingYards || 0) + (game.receivingYards || 0)} total yards, ${footballStats?.totalTDs || 0} TD game vs ${game.opponent}! Grade: ${game.grade} on @CaliberApp`
+          : `Check out my ${game.points} PTS, ${game.rebounds} REB, ${game.assists} AST game vs ${game.opponent}! Grade: ${game.grade} on @CaliberApp`}
       >
         <ShareableGameCard 
           game={game} 
