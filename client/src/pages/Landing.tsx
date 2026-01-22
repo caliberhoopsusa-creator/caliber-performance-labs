@@ -105,16 +105,6 @@ export default function Landing() {
       {/* Hero Section */}
       <section className="relative min-h-screen flex flex-col items-center justify-center px-4 pt-20 pb-12">
         <div className="text-center max-w-5xl mx-auto space-y-8 relative z-10">
-          {/* Badge */}
-          <a 
-            href="/api/login" 
-            className="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/20 text-sm text-white/90 hover:border-cyan-400/40 transition-all group backdrop-blur-xl"
-          >
-            <Zap className="w-4 h-4 text-cyan-400" />
-            <span>AI-Powered Basketball Analytics</span>
-            <ArrowRight className="w-4 h-4 text-cyan-400 group-hover:translate-x-0.5 transition-transform" />
-          </a>
-          
           {/* Main headline */}
           <h2 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-bold tracking-tight leading-[0.95]">
             <span className="text-white">Unlock Your</span>
