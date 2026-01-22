@@ -404,6 +404,47 @@ export const SKILL_BADGE_TYPES = {
 
 export type SkillBadgeType = keyof typeof SKILL_BADGE_TYPES;
 
+export const FOOTBALL_SKILL_BADGE_TYPES = {
+  gunslinger: {
+    name: "Gunslinger",
+    description: "Career passing touchdowns",
+    stat: "passingTouchdowns",
+    thresholds: { brick: 2, bronze: 5, silver: 10, gold: 20, platinum: 35, hall_of_fame: 55, legend: 80, goat: 120 },
+  },
+  workhorse: {
+    name: "Workhorse",
+    description: "Career rushing yards",
+    stat: "rushingYards",
+    thresholds: { brick: 50, bronze: 150, silver: 400, gold: 800, platinum: 1500, hall_of_fame: 2500, legend: 4000, goat: 6000 },
+  },
+  deep_threat: {
+    name: "Deep Threat",
+    description: "Career receiving touchdowns",
+    stat: "receivingTouchdowns",
+    thresholds: { brick: 1, bronze: 3, silver: 7, gold: 15, platinum: 25, hall_of_fame: 40, legend: 60, goat: 90 },
+  },
+  ball_hawk: {
+    name: "Ball Hawk",
+    description: "Career interceptions",
+    stat: "defensiveInterceptions",
+    thresholds: { brick: 1, bronze: 2, silver: 4, gold: 8, platinum: 15, hall_of_fame: 25, legend: 40, goat: 60 },
+  },
+  sack_artist: {
+    name: "Sack Artist",
+    description: "Career sacks",
+    stat: "sacks",
+    thresholds: { brick: 1, bronze: 3, silver: 6, gold: 12, platinum: 22, hall_of_fame: 35, legend: 55, goat: 80 },
+  },
+  iron_wall: {
+    name: "Iron Wall",
+    description: "Career pancake blocks",
+    stat: "pancakeBlocks",
+    thresholds: { brick: 3, bronze: 8, silver: 18, gold: 35, platinum: 65, hall_of_fame: 100, legend: 150, goat: 220 },
+  },
+} as const;
+
+export type FootballSkillBadgeType = keyof typeof FOOTBALL_SKILL_BADGE_TYPES;
+
 export type SkillBadge = typeof skillBadges.$inferSelect;
 export type InsertSkillBadge = {
   playerId: number;

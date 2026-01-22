@@ -3,7 +3,7 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, headToHeadChallenges, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup } from "@shared/schema";
+import { players, games, headToHeadChallenges, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { GoogleGenAI } from "@google/genai";
 import multer from "multer";
@@ -1095,8 +1095,12 @@ async function updateSkillBadges(playerId: number, stats: any): Promise<{ upgrad
   const upgraded: string[] = [];
   const newLevels: { skill: string, level: string }[] = [];
   
-  // Map stat names from game to skill badge types
-  const statMapping: Record<string, keyof typeof stats> = {
+  // Get player to determine sport
+  const player = await storage.getPlayer(playerId);
+  const isFootball = player?.sport === 'football';
+  
+  // Map stat names from game to skill badge types based on sport
+  const basketballStatMapping: Record<string, string> = {
     sharpshooter: 'threeMade',
     pure_passer: 'assists',
     bucket_getter: 'points',
@@ -1105,7 +1109,19 @@ async function updateSkillBadges(playerId: number, stats: any): Promise<{ upgrad
     pickpocket: 'steals',
   };
   
-  for (const [skillType, config] of Object.entries(SKILL_BADGE_TYPES)) {
+  const footballStatMapping: Record<string, string> = {
+    gunslinger: 'passingTouchdowns',
+    workhorse: 'rushingYards',
+    deep_threat: 'receivingTouchdowns',
+    ball_hawk: 'defensiveInterceptions',
+    sack_artist: 'sacks',
+    iron_wall: 'pancakeBlocks',
+  };
+  
+  const statMapping = isFootball ? footballStatMapping : basketballStatMapping;
+  const badgeTypes = isFootball ? FOOTBALL_SKILL_BADGE_TYPES : SKILL_BADGE_TYPES;
+  
+  for (const [skillType, config] of Object.entries(badgeTypes)) {
     const statKey = statMapping[skillType];
     const gameValue = stats[statKey] || 0;
     
@@ -1885,7 +1901,9 @@ export async function registerRoutes(
       
       // Create feed activity for skill badge upgrades
       for (const upgrade of skillBadgeUpdates.newLevels) {
-        const skillDef = SKILL_BADGE_TYPES[upgrade.skill as keyof typeof SKILL_BADGE_TYPES];
+        const skillDef = sport === 'football'
+          ? FOOTBALL_SKILL_BADGE_TYPES[upgrade.skill as keyof typeof FOOTBALL_SKILL_BADGE_TYPES]
+          : SKILL_BADGE_TYPES[upgrade.skill as keyof typeof SKILL_BADGE_TYPES];
         const levelNames: Record<string, string> = {
           brick: 'Brick',
           bronze: 'Bronze',
@@ -2022,9 +2040,15 @@ export async function registerRoutes(
     }
     const skillBadges = await storage.getPlayerSkillBadges(playerId);
     
+    // Choose badge types based on player's sport
+    const isFootball = player.sport === 'football';
+    const badgeTypes = isFootball ? FOOTBALL_SKILL_BADGE_TYPES : SKILL_BADGE_TYPES;
+    
     // Enrich with badge definitions
     const enrichedBadges = skillBadges.map(badge => {
-      const def = SKILL_BADGE_TYPES[badge.skillType as keyof typeof SKILL_BADGE_TYPES];
+      const def = isFootball 
+        ? FOOTBALL_SKILL_BADGE_TYPES[badge.skillType as keyof typeof FOOTBALL_SKILL_BADGE_TYPES]
+        : SKILL_BADGE_TYPES[badge.skillType as keyof typeof SKILL_BADGE_TYPES];
       return {
         ...badge,
         name: def?.name || badge.skillType,
@@ -2033,9 +2057,8 @@ export async function registerRoutes(
       };
     });
     
-    // Also return badges that don't exist yet (show all possible skill badges)
-    const existingTypes = skillBadges.map(b => b.skillType);
-    const allBadges = Object.entries(SKILL_BADGE_TYPES).map(([type, def]) => {
+    // Also return badges that don't exist yet (show all possible skill badges for this sport)
+    const allBadges = Object.entries(badgeTypes).map(([type, def]) => {
       const existing = enrichedBadges.find(b => b.skillType === type);
       if (existing) return existing;
       return {
