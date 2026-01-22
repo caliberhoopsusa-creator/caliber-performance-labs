@@ -180,6 +180,11 @@ export const games = pgTable("games", {
   punts: integer("punts").default(0),
   puntYards: integer("punt_yards").default(0),
   
+  // Offensive Line (OL)
+  pancakeBlocks: integer("pancake_blocks").default(0),
+  sacksAllowed: integer("sacks_allowed").default(0),
+  penalties: integer("penalties").default(0),
+  
   // Football Category Grades
   efficiencyGrade: text("efficiency_grade"), // QB: Comp%, RB: YPC, WR: Catch rate
   playmakingGrade: text("playmaking_grade"), // TDs, big plays

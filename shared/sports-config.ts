@@ -47,7 +47,7 @@ export const FOOTBALL_POSITION_STATS: Record<FootballPosition, string[]> = {
   RB: ['carries', 'rushingYards', 'rushingTouchdowns', 'fumbles', 'receptions', 'receivingYards', 'receivingTouchdowns'],
   WR: ['receptions', 'targets', 'receivingYards', 'receivingTouchdowns', 'drops'],
   TE: ['receptions', 'targets', 'receivingYards', 'receivingTouchdowns', 'drops'],
-  OL: ['hustleScore'], // OL graded mainly on team performance and hustle
+  OL: ['pancakeBlocks', 'sacksAllowed', 'penalties'], // OL-specific blocking stats
   DL: ['tackles', 'soloTackles', 'sacks', 'forcedFumbles', 'fumbleRecoveries'],
   LB: ['tackles', 'soloTackles', 'sacks', 'defensiveInterceptions', 'passDeflections', 'forcedFumbles'],
   DB: ['tackles', 'defensiveInterceptions', 'passDeflections', 'forcedFumbles'],

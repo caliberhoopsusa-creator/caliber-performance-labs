@@ -1067,6 +1067,11 @@ export default function PlayerDetail() {
   const totalPuntYards = games.reduce((acc, g) => acc + (g.puntYards || 0), 0);
   const avgPuntYards = totalPunts > 0 ? (totalPuntYards / totalPunts).toFixed(1) : "—";
   
+  // OL stats
+  const totalPancakeBlocks = games.reduce((acc, g) => acc + (g.pancakeBlocks || 0), 0);
+  const totalSacksAllowed = games.reduce((acc, g) => acc + (g.sacksAllowed || 0), 0);
+  const totalPenalties = games.reduce((acc, g) => acc + (g.penalties || 0), 0);
+  
   const averageGrade = getAverageGrade(games);
   
   const topGames = [...games]
@@ -1505,10 +1510,12 @@ export default function PlayerDetail() {
                   <StatCard label="Avg Punt" value={avgPuntYards} />
                 </>
               )}
-              {/* OL - basic stats */}
+              {/* OL - blocking stats */}
               {player.position === 'OL' && (
                 <>
-                  <StatCard label="Total TDs" value={totalTDs} />
+                  <StatCard label="Pancakes" value={totalPancakeBlocks} highlight={true} />
+                  <StatCard label="Sacks Allowed" value={totalSacksAllowed} />
+                  <StatCard label="Penalties" value={totalPenalties} />
                 </>
               )}
               <div className="glass-card rounded-xl p-5 flex flex-col justify-between relative overflow-hidden group hover:border-primary/30 transition-colors duration-300">

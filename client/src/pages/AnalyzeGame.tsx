@@ -8,6 +8,7 @@ import { useLocation, useRoute } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
@@ -51,6 +52,9 @@ const FOOTBALL_STAT_LABELS: Record<string, string> = {
   punts: "Punts",
   puntYards: "Punt Yards",
   hustleScore: "Hustle Score",
+  pancakeBlocks: "Pancake Blocks",
+  sacksAllowed: "Sacks Allowed",
+  penalties: "Penalties",
 };
 
 export default function AnalyzeGame() {
@@ -148,6 +152,9 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
       extraPointsAttempted: 0,
       punts: 0,
       puntYards: 0,
+      pancakeBlocks: 0,
+      sacksAllowed: 0,
+      penalties: 0,
     }
   });
 
@@ -673,12 +680,40 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
                   </>
                 )}
 
-                {/* OL - minimal stats */}
+                {/* OL - blocking stats */}
                 {position === 'OL' && (
-                  <div className="bg-secondary/10 p-4 rounded-xl border border-white/5 col-span-full">
-                    <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Offensive Line Rating</p>
-                    <p className="text-sm text-muted-foreground">Graded primarily on team performance and hustle.</p>
-                  </div>
+                  <>
+                    <div className="space-y-2">
+                      <Label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Pancake Blocks</Label>
+                      <Input
+                        {...form.register('pancakeBlocks', { valueAsNumber: true })}
+                        type="number"
+                        min="0"
+                        className="bg-secondary/30 border-white/10"
+                        data-testid="input-pancake-blocks"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Sacks Allowed</Label>
+                      <Input
+                        {...form.register('sacksAllowed', { valueAsNumber: true })}
+                        type="number"
+                        min="0"
+                        className="bg-secondary/30 border-white/10"
+                        data-testid="input-sacks-allowed"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Penalties</Label>
+                      <Input
+                        {...form.register('penalties', { valueAsNumber: true })}
+                        type="number"
+                        min="0"
+                        className="bg-secondary/30 border-white/10"
+                        data-testid="input-penalties"
+                      />
+                    </div>
+                  </>
                 )}
               </div>
             </section>
