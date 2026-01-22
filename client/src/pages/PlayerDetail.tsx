@@ -1183,9 +1183,14 @@ export default function PlayerDetail() {
                 {player.jerseyNumber && (
                   <span className="text-xl md:text-3xl font-display font-bold text-primary/80">#{player.jerseyNumber}</span>
                 )}
-                <span className="bg-primary/20 text-primary px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border border-primary/20">
-                  {player.position}
-                </span>
+                {/* Show position - hide basketball positions in football mode */}
+                {(!isFootball || FOOTBALL_POSITIONS.includes(player.position as FootballPosition)) && (
+                  <span className="bg-primary/20 text-primary px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border border-primary/20">
+                    {isFootball && FOOTBALL_POSITIONS.includes(player.position as FootballPosition) 
+                      ? FOOTBALL_POSITION_LABELS[player.position as FootballPosition] 
+                      : player.position}
+                  </span>
+                )}
               </div>
               <div className="flex flex-wrap items-center gap-2 mb-2">
                 <h1 className="text-xl md:text-4xl font-display font-bold text-white uppercase tracking-tight leading-tight break-words">
@@ -1197,14 +1202,15 @@ export default function PlayerDetail() {
                   showControls={isAuthenticated}
                   size="md" 
                 />
-                {player.stateRank && player.state && (
+                {/* Only show ranking badges when player sport matches context, or in basketball mode */}
+                {!isFootball && player.stateRank && player.state && (
                   <AnimatedRankBadge 
                     type="state" 
                     rank={player.stateRank} 
                     state={player.state} 
                   />
                 )}
-                {player.countryRank && (
+                {!isFootball && player.countryRank && (
                   <AnimatedRankBadge 
                     type="country" 
                     rank={player.countryRank} 
