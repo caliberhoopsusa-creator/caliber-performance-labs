@@ -47,11 +47,17 @@ interface ShareableGameCardProps {
   playerName: string;
   badges?: { badgeType: string }[];
   aspectRatio?: "1:1" | "16:9";
+  sport?: string;
 }
 
 export const ShareableGameCard = forwardRef<HTMLDivElement, ShareableGameCardProps>(
-  ({ game, playerName, badges = [], aspectRatio = "16:9" }, ref) => {
+  ({ game, playerName, badges = [], aspectRatio = "16:9", sport }, ref) => {
     const gameDate = new Date(game.date);
+    const isFootball = sport === 'football' || game.sport === 'football';
+    
+    // Football stats
+    const totalYards = (game.passingYards || 0) + (game.rushingYards || 0) + (game.receivingYards || 0);
+    const totalTDs = (game.passingTouchdowns || 0) + (game.rushingTouchdowns || 0) + (game.receivingTouchdowns || 0);
     const grade = game.grade || "—";
     const gameBadges = badges.slice(0, 4);
     
@@ -112,55 +118,121 @@ export const ShareableGameCard = forwardRef<HTMLDivElement, ShareableGameCardPro
           </div>
           
           <div className="grid grid-cols-4 gap-3 mb-4">
-            <div className="bg-white/5 rounded-lg p-4 text-center border border-white/10">
-              <div className="text-3xl font-bold text-orange-400 font-display">{game.points}</div>
-              <div className="text-[10px] text-white/50 uppercase tracking-wider">Points</div>
-            </div>
-            <div className="bg-white/5 rounded-lg p-4 text-center border border-white/10">
-              <div className="text-3xl font-bold text-white font-display">{game.rebounds}</div>
-              <div className="text-[10px] text-white/50 uppercase tracking-wider">Rebounds</div>
-            </div>
-            <div className="bg-white/5 rounded-lg p-4 text-center border border-white/10">
-              <div className="text-3xl font-bold text-white font-display">{game.assists}</div>
-              <div className="text-[10px] text-white/50 uppercase tracking-wider">Assists</div>
-            </div>
-            <div className="bg-white/5 rounded-lg p-4 text-center border border-white/10">
-              <div className="text-3xl font-bold text-white font-display">{game.steals + game.blocks}</div>
-              <div className="text-[10px] text-white/50 uppercase tracking-wider">Stl+Blk</div>
-            </div>
+            {isFootball ? (
+              <>
+                <div className="bg-white/5 rounded-lg p-4 text-center border border-white/10">
+                  <div className="text-3xl font-bold text-orange-400 font-display">{totalYards}</div>
+                  <div className="text-[10px] text-white/50 uppercase tracking-wider">Total Yds</div>
+                </div>
+                <div className="bg-white/5 rounded-lg p-4 text-center border border-white/10">
+                  <div className="text-3xl font-bold text-white font-display">{totalTDs}</div>
+                  <div className="text-[10px] text-white/50 uppercase tracking-wider">TDs</div>
+                </div>
+                <div className="bg-white/5 rounded-lg p-4 text-center border border-white/10">
+                  <div className="text-3xl font-bold text-white font-display">{game.tackles || 0}</div>
+                  <div className="text-[10px] text-white/50 uppercase tracking-wider">Tackles</div>
+                </div>
+                <div className="bg-white/5 rounded-lg p-4 text-center border border-white/10">
+                  <div className="text-3xl font-bold text-white font-display">{(game.sacks || 0) + (game.defensiveInterceptions || 0)}</div>
+                  <div className="text-[10px] text-white/50 uppercase tracking-wider">Sck+INT</div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="bg-white/5 rounded-lg p-4 text-center border border-white/10">
+                  <div className="text-3xl font-bold text-orange-400 font-display">{game.points}</div>
+                  <div className="text-[10px] text-white/50 uppercase tracking-wider">Points</div>
+                </div>
+                <div className="bg-white/5 rounded-lg p-4 text-center border border-white/10">
+                  <div className="text-3xl font-bold text-white font-display">{game.rebounds}</div>
+                  <div className="text-[10px] text-white/50 uppercase tracking-wider">Rebounds</div>
+                </div>
+                <div className="bg-white/5 rounded-lg p-4 text-center border border-white/10">
+                  <div className="text-3xl font-bold text-white font-display">{game.assists}</div>
+                  <div className="text-[10px] text-white/50 uppercase tracking-wider">Assists</div>
+                </div>
+                <div className="bg-white/5 rounded-lg p-4 text-center border border-white/10">
+                  <div className="text-3xl font-bold text-white font-display">{game.steals + game.blocks}</div>
+                  <div className="text-[10px] text-white/50 uppercase tracking-wider">Stl+Blk</div>
+                </div>
+              </>
+            )}
           </div>
           
-          {game.fgAttempted && game.fgAttempted > 0 && (
-            <div className="grid grid-cols-3 gap-2 mb-4">
-              <div className="bg-white/3 rounded px-3 py-2 text-center border border-white/5">
-                <span className="text-sm text-white/80 font-medium">
-                  {game.fgMade}/{game.fgAttempted} FG
-                </span>
-                <span className="text-xs text-white/40 ml-1">
-                  ({((game.fgMade || 0) / game.fgAttempted * 100).toFixed(0)}%)
-                </span>
+          {isFootball ? (
+            (game.passingYards || game.rushingYards || game.receivingYards) ? (
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                {game.passingYards ? (
+                  <div className="bg-white/3 rounded px-3 py-2 text-center border border-white/5">
+                    <span className="text-sm text-white/80 font-medium">
+                      {game.passingYards} Pass
+                    </span>
+                    {game.passAttempts && (
+                      <span className="text-xs text-white/40 ml-1">
+                        ({game.completions}/{game.passAttempts})
+                      </span>
+                    )}
+                  </div>
+                ) : null}
+                {game.rushingYards ? (
+                  <div className="bg-white/3 rounded px-3 py-2 text-center border border-white/5">
+                    <span className="text-sm text-white/80 font-medium">
+                      {game.rushingYards} Rush
+                    </span>
+                    {game.carries && (
+                      <span className="text-xs text-white/40 ml-1">
+                        ({game.carries} car)
+                      </span>
+                    )}
+                  </div>
+                ) : null}
+                {game.receivingYards ? (
+                  <div className="bg-white/3 rounded px-3 py-2 text-center border border-white/5">
+                    <span className="text-sm text-white/80 font-medium">
+                      {game.receivingYards} Rec
+                    </span>
+                    {game.receptions && (
+                      <span className="text-xs text-white/40 ml-1">
+                        ({game.receptions} rec)
+                      </span>
+                    )}
+                  </div>
+                ) : null}
               </div>
-              {game.threeAttempted && game.threeAttempted > 0 && (
+            ) : null
+          ) : (
+            game.fgAttempted && game.fgAttempted > 0 && (
+              <div className="grid grid-cols-3 gap-2 mb-4">
                 <div className="bg-white/3 rounded px-3 py-2 text-center border border-white/5">
                   <span className="text-sm text-white/80 font-medium">
-                    {game.threeMade}/{game.threeAttempted} 3PT
+                    {game.fgMade}/{game.fgAttempted} FG
                   </span>
                   <span className="text-xs text-white/40 ml-1">
-                    ({((game.threeMade || 0) / game.threeAttempted * 100).toFixed(0)}%)
+                    ({((game.fgMade || 0) / game.fgAttempted * 100).toFixed(0)}%)
                   </span>
                 </div>
-              )}
-              {game.ftAttempted && game.ftAttempted > 0 && (
-                <div className="bg-white/3 rounded px-3 py-2 text-center border border-white/5">
-                  <span className="text-sm text-white/80 font-medium">
-                    {game.ftMade}/{game.ftAttempted} FT
-                  </span>
-                  <span className="text-xs text-white/40 ml-1">
-                    ({((game.ftMade || 0) / game.ftAttempted * 100).toFixed(0)}%)
-                  </span>
-                </div>
-              )}
-            </div>
+                {game.threeAttempted && game.threeAttempted > 0 && (
+                  <div className="bg-white/3 rounded px-3 py-2 text-center border border-white/5">
+                    <span className="text-sm text-white/80 font-medium">
+                      {game.threeMade}/{game.threeAttempted} 3PT
+                    </span>
+                    <span className="text-xs text-white/40 ml-1">
+                      ({((game.threeMade || 0) / game.threeAttempted * 100).toFixed(0)}%)
+                    </span>
+                  </div>
+                )}
+                {game.ftAttempted && game.ftAttempted > 0 && (
+                  <div className="bg-white/3 rounded px-3 py-2 text-center border border-white/5">
+                    <span className="text-sm text-white/80 font-medium">
+                      {game.ftMade}/{game.ftAttempted} FT
+                    </span>
+                    <span className="text-xs text-white/40 ml-1">
+                      ({((game.ftMade || 0) / game.ftAttempted * 100).toFixed(0)}%)
+                    </span>
+                  </div>
+                )}
+              </div>
+            )
           )}
           
           <div className="flex-1 flex items-end justify-between">

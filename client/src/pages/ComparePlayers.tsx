@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api, buildUrl } from "@shared/routes";
 import { usePlayers } from "@/hooks/use-basketball";
+import { useSport } from "@/components/SportToggle";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { GradeBadge } from "@/components/GradeBadge";
 import { Activity, Target, Zap, Shield } from "lucide-react";
@@ -10,6 +11,8 @@ import { Paywall } from "@/components/Paywall";
 
 export default function ComparePlayers() {
   const { data: players } = usePlayers();
+  const currentSport = useSport();
+  const isFootball = currentSport === 'football';
   const [p1Id, setP1Id] = useState<string>("");
   const [p2Id, setP2Id] = useState<string>("");
 
@@ -27,8 +30,16 @@ export default function ComparePlayers() {
     enabled: !!p1Id && !!p2Id
   });
 
-  const getAvg = (games: any[], field: string) => {
+  const getAvg = (games: any[], field: string, isComputed = false) => {
     if (!games?.length) return 0;
+    if (isComputed) {
+      if (field === 'totalYards') {
+        return (games.reduce((acc, g) => acc + (g.passingYards || 0) + (g.rushingYards || 0) + (g.receivingYards || 0), 0) / games.length).toFixed(1);
+      }
+      if (field === 'totalTDs') {
+        return (games.reduce((acc, g) => acc + (g.passingTouchdowns || 0) + (g.rushingTouchdowns || 0) + (g.receivingTouchdowns || 0), 0) / games.length).toFixed(1);
+      }
+    }
     return (games.reduce((acc, g) => acc + (g[field] || 0), 0) / games.length).toFixed(1);
   };
 
@@ -86,27 +97,54 @@ export default function ComparePlayers() {
           <div className="bg-card border border-white/5 rounded-2xl p-8 shadow-xl">
             <h3 className="text-xl font-bold font-display text-white mb-8 text-center uppercase tracking-widest">Statistical Comparison</h3>
             <div className="space-y-8">
-              <StatRow 
-                label="Points Per Game" 
-                v1={getAvg(comparison.player1.games, 'points')} 
-                v2={getAvg(comparison.player2.games, 'points')} 
-              />
-              <StatRow 
-                label="Rebounds Per Game" 
-                v1={getAvg(comparison.player1.games, 'rebounds')} 
-                v2={getAvg(comparison.player2.games, 'rebounds')} 
-              />
-              <StatRow 
-                label="Assists Per Game" 
-                v1={getAvg(comparison.player1.games, 'assists')} 
-                v2={getAvg(comparison.player2.games, 'assists')} 
-              />
-              <StatRow 
-                label="FG Percentage" 
-                v1={((comparison.player1.games?.reduce((acc:any, g:any) => acc + g.fgMade, 0) / comparison.player1.games?.reduce((acc:any, g:any) => acc + g.fgAttempted, 1)) * 100).toFixed(1)} 
-                v2={((comparison.player2.games?.reduce((acc:any, g:any) => acc + g.fgMade, 0) / comparison.player2.games?.reduce((acc:any, g:any) => acc + g.fgAttempted, 1)) * 100).toFixed(1)} 
-                suffix="%"
-              />
+              {isFootball ? (
+                <>
+                  <StatRow 
+                    label="Total Yards Per Game" 
+                    v1={getAvg(comparison.player1.games, 'totalYards', true)} 
+                    v2={getAvg(comparison.player2.games, 'totalYards', true)} 
+                  />
+                  <StatRow 
+                    label="Rushing Yards Per Game" 
+                    v1={getAvg(comparison.player1.games, 'rushingYards')} 
+                    v2={getAvg(comparison.player2.games, 'rushingYards')} 
+                  />
+                  <StatRow 
+                    label="Touchdowns Per Game" 
+                    v1={getAvg(comparison.player1.games, 'totalTDs', true)} 
+                    v2={getAvg(comparison.player2.games, 'totalTDs', true)} 
+                  />
+                  <StatRow 
+                    label="Tackles Per Game" 
+                    v1={getAvg(comparison.player1.games, 'tackles')} 
+                    v2={getAvg(comparison.player2.games, 'tackles')} 
+                  />
+                </>
+              ) : (
+                <>
+                  <StatRow 
+                    label="Points Per Game" 
+                    v1={getAvg(comparison.player1.games, 'points')} 
+                    v2={getAvg(comparison.player2.games, 'points')} 
+                  />
+                  <StatRow 
+                    label="Rebounds Per Game" 
+                    v1={getAvg(comparison.player1.games, 'rebounds')} 
+                    v2={getAvg(comparison.player2.games, 'rebounds')} 
+                  />
+                  <StatRow 
+                    label="Assists Per Game" 
+                    v1={getAvg(comparison.player1.games, 'assists')} 
+                    v2={getAvg(comparison.player2.games, 'assists')} 
+                  />
+                  <StatRow 
+                    label="FG Percentage" 
+                    v1={((comparison.player1.games?.reduce((acc:any, g:any) => acc + g.fgMade, 0) / comparison.player1.games?.reduce((acc:any, g:any) => acc + g.fgAttempted, 1)) * 100).toFixed(1)} 
+                    v2={((comparison.player2.games?.reduce((acc:any, g:any) => acc + g.fgMade, 0) / comparison.player2.games?.reduce((acc:any, g:any) => acc + g.fgAttempted, 1)) * 100).toFixed(1)} 
+                    suffix="%"
+                  />
+                </>
+              )}
             </div>
           </div>
         </div>
