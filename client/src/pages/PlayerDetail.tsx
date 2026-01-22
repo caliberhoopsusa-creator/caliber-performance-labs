@@ -28,7 +28,7 @@ import { PlayerArchetype } from "@/components/PlayerArchetype";
 import { EliteAchievements } from "@/components/EliteAchievements";
 import { CaliberBadge } from "@/components/CaliberBadge";
 import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Trophy, Share2, BarChart3, Medal, User, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye, BookOpen, Phone, Save, Crosshair, ShieldCheck } from "lucide-react";
-import { FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS, type FootballPosition } from "@shared/sports-config";
+import { FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS, FOOTBALL_POSITION_STATS, type FootballPosition } from "@shared/sports-config";
 import { useSport } from "@/components/SportToggle";
 import { AnimatedRankBadge } from "@/components/AnimatedRankBadge";
 import { Switch } from "@/components/ui/switch";
@@ -1045,10 +1045,27 @@ export default function PlayerDetail() {
   
   // Defense stats
   const totalTackles = games.reduce((acc, g) => acc + (g.tackles || 0), 0);
+  const totalSoloTackles = games.reduce((acc, g) => acc + (g.soloTackles || 0), 0);
   const totalSacks = games.reduce((acc, g) => acc + (g.sacks || 0), 0);
   const totalDefensiveINTs = games.reduce((acc, g) => acc + (g.defensiveInterceptions || 0), 0);
   const totalPassDeflections = games.reduce((acc, g) => acc + (g.passDeflections || 0), 0);
+  const totalForcedFumbles = games.reduce((acc, g) => acc + (g.forcedFumbles || 0), 0);
   const avgTackles = games.length ? (totalTackles / games.length).toFixed(1) : "—";
+  
+  // Receiving efficiency
+  const yardsPerReception = totalReceptions > 0 ? (totalReceivingYards / totalReceptions).toFixed(1) : "—";
+  
+  // Kicking stats
+  const totalFGMade = games.reduce((acc, g) => acc + (g.fieldGoalsMade || 0), 0);
+  const totalFGAttempted = games.reduce((acc, g) => acc + (g.fieldGoalsAttempted || 0), 0);
+  const fgKickPercent = totalFGAttempted > 0 ? ((totalFGMade / totalFGAttempted) * 100).toFixed(1) : "—";
+  const totalXPMade = games.reduce((acc, g) => acc + (g.extraPointsMade || 0), 0);
+  const totalXPAttempted = games.reduce((acc, g) => acc + (g.extraPointsAttempted || 0), 0);
+  
+  // Punting stats
+  const totalPunts = games.reduce((acc, g) => acc + (g.punts || 0), 0);
+  const totalPuntYards = games.reduce((acc, g) => acc + (g.puntYards || 0), 0);
+  const avgPuntYards = totalPunts > 0 ? (totalPuntYards / totalPunts).toFixed(1) : "—";
   
   const averageGrade = getAverageGrade(games);
   
@@ -1426,19 +1443,74 @@ export default function PlayerDetail() {
           {isFootball ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
               <StatCard label="Games" value={games.length} />
-              <StatCard label="Pass YDS" value={totalPassingYards} highlight={true} />
-              <StatCard label="Rush YDS" value={totalRushingYards} />
-              <StatCard label="Rec YDS" value={totalReceivingYards} />
-              <StatCard label="Total TDs" value={totalTDs} highlight={true} />
-              <StatCard label="Pass TDs" value={totalPassingTDs} />
-              <StatCard label="Rush TDs" value={totalRushingTDs} />
-              <StatCard label="Rec TDs" value={totalReceivingTDs} />
-              <StatCard label="COMP%" value={compPercent !== "—" ? `${compPercent}%` : "—"} />
-              <StatCard label="YPC" value={yardsPerCarry} />
-              <StatCard label="Receptions" value={totalReceptions} />
-              <StatCard label="Tackles" value={totalTackles} />
-              <StatCard label="Sacks" value={totalSacks} />
-              <StatCard label="INTs" value={totalDefensiveINTs} />
+              {/* QB Stats */}
+              {player.position === 'QB' && (
+                <>
+                  <StatCard label="Pass YDS" value={totalPassingYards} highlight={true} />
+                  <StatCard label="Pass TDs" value={totalPassingTDs} highlight={true} />
+                  <StatCard label="COMP%" value={compPercent !== "—" ? `${compPercent}%` : "—"} />
+                  <StatCard label="INTs" value={totalDefensiveINTs} />
+                  <StatCard label="Rush YDS" value={totalRushingYards} />
+                  <StatCard label="Rush TDs" value={totalRushingTDs} />
+                </>
+              )}
+              {/* RB Stats */}
+              {player.position === 'RB' && (
+                <>
+                  <StatCard label="Rush YDS" value={totalRushingYards} highlight={true} />
+                  <StatCard label="Rush TDs" value={totalRushingTDs} highlight={true} />
+                  <StatCard label="YPC" value={yardsPerCarry} />
+                  <StatCard label="Carries" value={totalCarries} />
+                  <StatCard label="Rec YDS" value={totalReceivingYards} />
+                  <StatCard label="Rec TDs" value={totalReceivingTDs} />
+                  <StatCard label="Receptions" value={totalReceptions} />
+                </>
+              )}
+              {/* WR/TE Stats */}
+              {(player.position === 'WR' || player.position === 'TE') && (
+                <>
+                  <StatCard label="Rec YDS" value={totalReceivingYards} highlight={true} />
+                  <StatCard label="Rec TDs" value={totalReceivingTDs} highlight={true} />
+                  <StatCard label="Receptions" value={totalReceptions} />
+                  <StatCard label="Targets" value={totalTargets} />
+                  <StatCard label="YPR" value={yardsPerReception} />
+                </>
+              )}
+              {/* Defensive Stats (DL, LB, DB) */}
+              {(player.position === 'DL' || player.position === 'LB' || player.position === 'DB') && (
+                <>
+                  <StatCard label="Tackles" value={totalTackles} highlight={true} />
+                  <StatCard label="Solo Tackles" value={totalSoloTackles} />
+                  <StatCard label="Sacks" value={totalSacks} highlight={player.position === 'DL'} />
+                  <StatCard label="INTs" value={totalDefensiveINTs} highlight={player.position === 'DB'} />
+                  <StatCard label="Pass Def" value={totalPassDeflections} />
+                  <StatCard label="FF" value={totalForcedFumbles} />
+                </>
+              )}
+              {/* Kicker Stats */}
+              {player.position === 'K' && (
+                <>
+                  <StatCard label="FG Made" value={totalFGMade} highlight={true} />
+                  <StatCard label="FG Att" value={totalFGAttempted} />
+                  <StatCard label="FG%" value={fgKickPercent !== "—" ? `${fgKickPercent}%` : "—"} />
+                  <StatCard label="XP Made" value={totalXPMade} />
+                  <StatCard label="XP Att" value={totalXPAttempted} />
+                </>
+              )}
+              {/* Punter Stats */}
+              {player.position === 'P' && (
+                <>
+                  <StatCard label="Punts" value={totalPunts} highlight={true} />
+                  <StatCard label="Punt YDS" value={totalPuntYards} />
+                  <StatCard label="Avg Punt" value={avgPuntYards} />
+                </>
+              )}
+              {/* OL - basic stats */}
+              {player.position === 'OL' && (
+                <>
+                  <StatCard label="Total TDs" value={totalTDs} />
+                </>
+              )}
               <div className="glass-card rounded-xl p-5 flex flex-col justify-between relative overflow-hidden group hover:border-primary/30 transition-colors duration-300">
                 <span className="stat-label text-muted-foreground/80">Avg Grade</span>
                 <div className="flex items-center justify-center mt-2">
