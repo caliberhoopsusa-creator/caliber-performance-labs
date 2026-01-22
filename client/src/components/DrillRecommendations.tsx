@@ -8,6 +8,7 @@ import {
   useDeleteDrillRecommendation,
   type DrillRecommendation,
 } from "@/hooks/use-basketball";
+import { useSport } from "@/components/SportToggle";
 import { Sparkles, X, Star, Target, Dumbbell, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +17,7 @@ interface DrillRecommendationsProps {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
+  // Basketball categories
   shooting: "bg-orange-500/20 text-orange-400 border-orange-500/30",
   dribbling: "bg-blue-500/20 text-blue-400 border-blue-500/30",
   passing: "bg-green-500/20 text-green-400 border-green-500/30",
@@ -24,6 +26,14 @@ const CATEGORY_COLORS: Record<string, string> = {
   footwork: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
   rebounding: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
   finishing: "bg-pink-500/20 text-pink-400 border-pink-500/30",
+  // Football categories
+  route_running: "bg-amber-500/20 text-amber-400 border-amber-500/30",
+  rushing: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+  blocking: "bg-slate-500/20 text-slate-400 border-slate-500/30",
+  tackling: "bg-rose-500/20 text-rose-400 border-rose-500/30",
+  coverage: "bg-indigo-500/20 text-indigo-400 border-indigo-500/30",
+  special_teams: "bg-violet-500/20 text-violet-400 border-violet-500/30",
+  team: "bg-teal-500/20 text-teal-400 border-teal-500/30",
 };
 
 function PriorityStars({ priority }: { priority: number }) {
@@ -162,9 +172,14 @@ function EmptyState({ onGenerate, isGenerating }: { onGenerate: () => void; isGe
 }
 
 export function DrillRecommendations({ playerId }: DrillRecommendationsProps) {
+  const sport = useSport();
   const { data: recommendations = [], isLoading } = useDrillRecommendations(playerId);
   const generateMutation = useGenerateDrillRecommendations();
   const deleteMutation = useDeleteDrillRecommendation();
+  
+  const sportCategories = sport === 'basketball' 
+    ? ['shooting', 'dribbling', 'passing', 'defense', 'rebounding', 'conditioning', 'footwork', 'finishing']
+    : ['passing', 'route_running', 'rushing', 'blocking', 'tackling', 'coverage', 'special_teams', 'conditioning', 'team'];
 
   const handleGenerate = () => {
     generateMutation.mutate(playerId);
@@ -178,16 +193,19 @@ export function DrillRecommendations({ playerId }: DrillRecommendationsProps) {
     return <LoadingSkeleton />;
   }
 
-  const sortedRecommendations = [...recommendations].sort((a, b) => b.priority - a.priority);
+  const filteredRecommendations = recommendations.filter(rec => 
+    sportCategories.includes(rec.drillCategory.toLowerCase())
+  );
+  const sortedRecommendations = [...filteredRecommendations].sort((a, b) => b.priority - a.priority);
 
   return (
     <Card className="p-4" data-testid="drill-recommendations">
       <div className="flex items-center justify-between gap-2 mb-4">
         <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
           <Target className="w-4 h-4 text-primary" />
-          Drill Recommendations
+          {sport === 'basketball' ? 'Basketball' : 'Football'} Drill Recommendations
         </h4>
-        {recommendations.length > 0 && (
+        {sortedRecommendations.length > 0 && (
           <Button
             size="sm"
             variant="outline"
@@ -202,7 +220,7 @@ export function DrillRecommendations({ playerId }: DrillRecommendationsProps) {
         )}
       </div>
 
-      {recommendations.length === 0 ? (
+      {sortedRecommendations.length === 0 ? (
         <EmptyState onGenerate={handleGenerate} isGenerating={generateMutation.isPending} />
       ) : (
         <div className="space-y-3">

@@ -2558,10 +2558,13 @@ export async function registerRoutes(
   app.get('/api/discover', async (req, res) => {
     try {
       const { 
-        position, state, school, graduationYear, search, openOnly, 
+        sport, position, state, school, graduationYear, search, openOnly, 
         minGpa, minThreePct, minPpg, minRpg, minApg, minSpg, minBpg, 
         caliberOnly 
       } = req.query;
+      
+      // Default to basketball if no sport specified
+      const selectedSport = (sport as string) || 'basketball';
       
       const playersWithStats = await storage.getPlayersWithStats();
       
@@ -2594,6 +2597,7 @@ export async function registerRoutes(
           return {
             id: player.id,
             name: player.name,
+            sport: player.sport || 'basketball',
             position: player.position,
             height: player.height,
             team: player.team,
@@ -2608,6 +2612,15 @@ export async function registerRoutes(
             apg: 0,
             spg: 0,
             bpg: 0,
+            passingYards: 0,
+            passingTouchdowns: 0,
+            rushingYards: 0,
+            rushingTouchdowns: 0,
+            receivingYards: 0,
+            receivingTouchdowns: 0,
+            tackles: 0,
+            sacks: 0,
+            defensiveInterceptions: 0,
             avgGrade: null,
             avgGradeScore: 0,
             gamesPlayed: 0,
@@ -2616,10 +2629,12 @@ export async function registerRoutes(
             badgeCount,
             gpa: player.gpa ? parseFloat(player.gpa) : null,
             threePtPct: null,
+            completionPct: null,
             hasCaliberBadge,
           };
         }
 
+        // Basketball stats
         const ppg = games.reduce((acc, g) => acc + g.points, 0) / gamesPlayed;
         const rpg = games.reduce((acc, g) => acc + g.rebounds, 0) / gamesPlayed;
         const apg = games.reduce((acc, g) => acc + g.assists, 0) / gamesPlayed;
@@ -2630,6 +2645,22 @@ export async function registerRoutes(
         const totalThreeMade = games.reduce((acc, g) => acc + (g.threeMade || 0), 0);
         const totalThreeAttempted = games.reduce((acc, g) => acc + (g.threeAttempted || 0), 0);
         const threePtPct = totalThreeAttempted > 0 ? (totalThreeMade / totalThreeAttempted) * 100 : null;
+        
+        // Football stats (totals for the season)
+        const passingYards = games.reduce((acc, g) => acc + (g.passingYards || 0), 0);
+        const passingTouchdowns = games.reduce((acc, g) => acc + (g.passingTouchdowns || 0), 0);
+        const rushingYards = games.reduce((acc, g) => acc + (g.rushingYards || 0), 0);
+        const rushingTouchdowns = games.reduce((acc, g) => acc + (g.rushingTouchdowns || 0), 0);
+        const receivingYards = games.reduce((acc, g) => acc + (g.receivingYards || 0), 0);
+        const receivingTouchdowns = games.reduce((acc, g) => acc + (g.receivingTouchdowns || 0), 0);
+        const tackles = games.reduce((acc, g) => acc + (g.tackles || 0), 0);
+        const sacks = games.reduce((acc, g) => acc + (g.sacks || 0), 0);
+        const defensiveInterceptions = games.reduce((acc, g) => acc + (g.defensiveInterceptions || 0), 0);
+        
+        // Calculate completion percentage for QBs
+        const totalCompletions = games.reduce((acc, g) => acc + (g.completions || 0), 0);
+        const totalPassAttempts = games.reduce((acc, g) => acc + (g.passAttempts || 0), 0);
+        const completionPct = totalPassAttempts > 0 ? (totalCompletions / totalPassAttempts) * 100 : null;
         
         const avgGradeScore = games.reduce((acc, g) => acc + (gradeScores[g.grade || 'C'] || 65), 0) / gamesPlayed;
         
@@ -2644,6 +2675,7 @@ export async function registerRoutes(
         return {
           id: player.id,
           name: player.name,
+          sport: player.sport || 'basketball',
           position: player.position,
           height: player.height,
           team: player.team,
@@ -2658,6 +2690,15 @@ export async function registerRoutes(
           apg: Number(apg.toFixed(1)),
           spg: Number(spg.toFixed(1)),
           bpg: Number(bpg.toFixed(1)),
+          passingYards,
+          passingTouchdowns,
+          rushingYards,
+          rushingTouchdowns,
+          receivingYards,
+          receivingTouchdowns,
+          tackles,
+          sacks,
+          defensiveInterceptions,
           avgGrade,
           avgGradeScore,
           gamesPlayed,
@@ -2666,9 +2707,13 @@ export async function registerRoutes(
           badgeCount,
           gpa: player.gpa ? parseFloat(player.gpa) : null,
           threePtPct: threePtPct !== null ? Number(threePtPct.toFixed(1)) : null,
+          completionPct: completionPct !== null ? Number(completionPct.toFixed(1)) : null,
           hasCaliberBadge,
         };
       }));
+
+      // Filter by sport first
+      results = results.filter(p => p.sport === selectedSport);
 
       // Apply filters
       if (position && position !== 'All') {
@@ -6107,6 +6152,7 @@ Respond in this exact JSON format:
       const playerStats = playersWithStats.map(player => {
         const games = player.games || [];
         const gamesPlayed = games.length;
+        const isFootball = player.sport === 'football';
 
         if (gamesPlayed === 0) {
           return {
@@ -6117,22 +6163,52 @@ Respond in this exact JSON format:
             jerseyNumber: player.jerseyNumber,
             photoUrl: player.photoUrl,
             rosterRole: player.rosterRole || 'rotation',
+            sport: player.sport || 'basketball',
             ppg: 0,
             rpg: 0,
             apg: 0,
             spg: 0,
             bpg: 0,
+            passYpg: 0,
+            rushYpg: 0,
+            recYpg: 0,
+            tdsPerGame: 0,
+            compPct: 0,
+            ypc: 0,
+            tackles: 0,
+            sacks: 0,
             avgGrade: null,
             avgGradeScore: 0,
             gamesPlayed: 0,
           };
         }
 
+        // Basketball stats
         const ppg = games.reduce((acc, g) => acc + g.points, 0) / gamesPlayed;
         const rpg = games.reduce((acc, g) => acc + g.rebounds, 0) / gamesPlayed;
         const apg = games.reduce((acc, g) => acc + g.assists, 0) / gamesPlayed;
         const spg = games.reduce((acc, g) => acc + g.steals, 0) / gamesPlayed;
         const bpg = games.reduce((acc, g) => acc + g.blocks, 0) / gamesPlayed;
+
+        // Football stats
+        const totalPassYards = games.reduce((acc, g) => acc + (g.passingYards || 0), 0);
+        const totalRushYards = games.reduce((acc, g) => acc + (g.rushingYards || 0), 0);
+        const totalRecYards = games.reduce((acc, g) => acc + (g.receivingYards || 0), 0);
+        const totalPassTDs = games.reduce((acc, g) => acc + (g.passingTouchdowns || 0), 0);
+        const totalRushTDs = games.reduce((acc, g) => acc + (g.rushingTouchdowns || 0), 0);
+        const totalRecTDs = games.reduce((acc, g) => acc + (g.receivingTouchdowns || 0), 0);
+        const totalCompletions = games.reduce((acc, g) => acc + (g.completions || 0), 0);
+        const totalPassAttempts = games.reduce((acc, g) => acc + (g.passAttempts || 0), 0);
+        const totalCarries = games.reduce((acc, g) => acc + (g.carries || 0), 0);
+        const totalTackles = games.reduce((acc, g) => acc + (g.tackles || 0), 0);
+        const totalSacks = games.reduce((acc, g) => acc + (g.sacks || 0), 0);
+
+        const passYpg = totalPassYards / gamesPlayed;
+        const rushYpg = totalRushYards / gamesPlayed;
+        const recYpg = totalRecYards / gamesPlayed;
+        const tdsPerGame = (totalPassTDs + totalRushTDs + totalRecTDs) / gamesPlayed;
+        const compPct = totalPassAttempts > 0 ? (totalCompletions / totalPassAttempts) * 100 : 0;
+        const ypc = totalCarries > 0 ? totalRushYards / totalCarries : 0;
 
         const avgGradeScore = games.reduce((acc, g) => acc + (gradeScores[g.grade || 'C'] || 65), 0) / gamesPlayed;
         const avgGrade = gradeFromScore(avgGradeScore);
@@ -6145,11 +6221,20 @@ Respond in this exact JSON format:
           jerseyNumber: player.jerseyNumber,
           photoUrl: player.photoUrl,
           rosterRole: player.rosterRole || 'rotation',
+          sport: player.sport || 'basketball',
           ppg: Number(ppg.toFixed(1)),
           rpg: Number(rpg.toFixed(1)),
           apg: Number(apg.toFixed(1)),
           spg: Number(spg.toFixed(1)),
           bpg: Number(bpg.toFixed(1)),
+          passYpg: Number(passYpg.toFixed(1)),
+          rushYpg: Number(rushYpg.toFixed(1)),
+          recYpg: Number(recYpg.toFixed(1)),
+          tdsPerGame: Number(tdsPerGame.toFixed(1)),
+          compPct: Number(compPct.toFixed(1)),
+          ypc: Number(ypc.toFixed(1)),
+          tackles: Number((totalTackles / gamesPlayed).toFixed(1)),
+          sacks: Number((totalSacks / gamesPlayed).toFixed(1)),
           avgGrade,
           avgGradeScore: Number(avgGradeScore.toFixed(1)),
           gamesPlayed,
@@ -6175,10 +6260,10 @@ Respond in this exact JSON format:
       const topAssister = [...playerStats].sort((a, b) => b.apg - a.apg)[0] || null;
 
       // Recent activity (last 5 games across all players)
-      const allGames: { playerId: number; playerName: string; game: any }[] = [];
+      const allGames: { playerId: number; playerName: string; sport: string; game: any }[] = [];
       playersWithStats.forEach(player => {
         (player.games || []).forEach(game => {
-          allGames.push({ playerId: player.id, playerName: player.name, game });
+          allGames.push({ playerId: player.id, playerName: player.name, sport: player.sport || 'basketball', game });
         });
       });
       const recentGames = allGames
@@ -6187,12 +6272,17 @@ Respond in this exact JSON format:
         .map(item => ({
           playerId: item.playerId,
           playerName: item.playerName,
+          sport: item.sport,
           id: item.game.id,
           date: item.game.date,
           opponent: item.game.opponent,
           points: item.game.points,
           rebounds: item.game.rebounds,
           assists: item.game.assists,
+          passingYards: item.game.passingYards || 0,
+          rushingYards: item.game.rushingYards || 0,
+          receivingYards: item.game.receivingYards || 0,
+          touchdowns: (item.game.passingTouchdowns || 0) + (item.game.rushingTouchdowns || 0) + (item.game.receivingTouchdowns || 0),
           grade: item.game.grade,
         }));
 

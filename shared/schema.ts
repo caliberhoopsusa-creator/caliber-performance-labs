@@ -1009,6 +1009,7 @@ export const scheduleEvents = pgTable("schedule_events", {
   endTime: timestamp("end_time"),
   isRecurring: boolean("is_recurring").default(false).notNull(),
   recurrenceRule: text("recurrence_rule"), // iCal RRULE format
+  sport: text("sport").default("basketball").notNull(), // 'basketball' or 'football'
   createdBy: text("created_by"),
   createdAt: timestamp("created_at").defaultNow(),
 });

@@ -588,11 +588,20 @@ export type TeamDashboardPlayer = {
   jerseyNumber: number | null;
   photoUrl: string | null;
   rosterRole: RosterRole | null;
+  sport: string;
   ppg: number;
   rpg: number;
   apg: number;
   spg: number;
   bpg: number;
+  passYpg: number;
+  rushYpg: number;
+  recYpg: number;
+  tdsPerGame: number;
+  compPct: number;
+  ypc: number;
+  tackles: number;
+  sacks: number;
   avgGrade: string | null;
   avgGradeScore: number;
   gamesPlayed: number;
@@ -615,12 +624,17 @@ export type TeamDashboardData = {
   recentGames: {
     playerId: number;
     playerName: string;
+    sport: string;
     id: number;
     date: string;
     opponent: string;
     points: number;
     rebounds: number;
     assists: number;
+    passingYards: number;
+    rushingYards: number;
+    receivingYards: number;
+    touchdowns: number;
     grade: string | null;
   }[];
   positionDistribution: {

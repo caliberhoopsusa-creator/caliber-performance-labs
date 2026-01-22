@@ -32,9 +32,10 @@ type AddEventModalProps = {
   defaultDate?: Date;
   defaultEventType?: 'practice' | 'game' | 'workout' | 'meeting' | 'other';
   playerId?: number;
+  sport?: 'basketball' | 'football';
 };
 
-export function AddEventModal({ open, onOpenChange, defaultDate, defaultEventType, playerId }: AddEventModalProps) {
+export function AddEventModal({ open, onOpenChange, defaultDate, defaultEventType, playerId, sport = 'basketball' }: AddEventModalProps) {
   const { toast } = useToast();
   
   const form = useForm<AddEventFormValues>({
@@ -79,6 +80,7 @@ export function AddEventModal({ open, onOpenChange, defaultDate, defaultEventTyp
         endTime: endDateTime?.toISOString() || null,
         location: values.location || null,
         description: values.description || null,
+        sport: sport,
       });
       return response;
     },

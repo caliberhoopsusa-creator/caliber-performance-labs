@@ -10,6 +10,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { GradeBadge } from "@/components/GradeBadge";
+import { useSport } from "@/components/SportToggle";
+import { BASKETBALL_POSITIONS, FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS } from "@shared/sports-config";
 import { Search, MapPin, GraduationCap, Users, ChevronRight, Sparkles, Eye, CheckCircle, Target, Film, Trophy, BookOpen, Crosshair, Award, Shield, Zap, UserPlus, UserCheck, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -18,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 interface DiscoverPlayer {
   id: number;
   name: string;
+  sport: string;
   position: string;
   height: string | null;
   team: string | null;
@@ -32,6 +35,15 @@ interface DiscoverPlayer {
   apg: number;
   spg: number;
   bpg: number;
+  passingYards: number;
+  passingTouchdowns: number;
+  rushingYards: number;
+  rushingTouchdowns: number;
+  receivingYards: number;
+  receivingTouchdowns: number;
+  tackles: number;
+  sacks: number;
+  defensiveInterceptions: number;
   avgGrade: string | null;
   gamesPlayed: number;
   openToOpportunities: boolean;
@@ -39,6 +51,7 @@ interface DiscoverPlayer {
   badgeCount?: number;
   gpa: number | null;
   threePtPct: number | null;
+  completionPct: number | null;
   hasCaliberBadge: boolean;
 }
 
@@ -81,6 +94,7 @@ const TIER_COLORS: Record<string, string> = {
 
 interface PlayerDiscoverCardProps {
   player: DiscoverPlayer;
+  sport: 'basketball' | 'football';
   isAuthenticated: boolean;
   isFollowing: boolean;
   isFollowPending: boolean;
@@ -91,6 +105,7 @@ interface PlayerDiscoverCardProps {
 
 function PlayerDiscoverCard({ 
   player, 
+  sport,
   isAuthenticated, 
   isFollowing, 
   isFollowPending,
@@ -103,6 +118,7 @@ function PlayerDiscoverCard({
   const profileComplete = getProfileCompleteness(player);
   const isRecruitReady = player.openToOpportunities && profileComplete >= 70;
   const isOwnProfile = currentUserPlayerId === player.id;
+  const isFootball = sport === 'football';
 
   const handleFollowClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -220,23 +236,98 @@ function PlayerDiscoverCard({
               )}
 
               <div className="flex items-center gap-3 text-sm mb-3">
-                <div className="text-center">
-                  <div className="font-bold text-white text-base">{player.ppg}</div>
-                  <div className="text-[10px] uppercase text-muted-foreground tracking-wide">PPG</div>
-                </div>
-                <div className="text-center">
-                  <div className="font-bold text-white text-base">{player.rpg}</div>
-                  <div className="text-[10px] uppercase text-muted-foreground tracking-wide">RPG</div>
-                </div>
-                <div className="text-center">
-                  <div className="font-bold text-white text-base">{player.apg}</div>
-                  <div className="text-[10px] uppercase text-muted-foreground tracking-wide">APG</div>
-                </div>
-                {player.threePtPct !== null && (
-                  <div className="text-center">
-                    <div className="font-bold text-white text-base">{player.threePtPct}%</div>
-                    <div className="text-[10px] uppercase text-muted-foreground tracking-wide">3PT</div>
-                  </div>
+                {isFootball ? (
+                  <>
+                    {['QB'].includes(player.position) && (
+                      <>
+                        <div className="text-center">
+                          <div className="font-bold text-white text-base">{player.passingYards}</div>
+                          <div className="text-[10px] uppercase text-muted-foreground tracking-wide">PASS YDS</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="font-bold text-white text-base">{player.passingTouchdowns}</div>
+                          <div className="text-[10px] uppercase text-muted-foreground tracking-wide">PASS TD</div>
+                        </div>
+                        {player.completionPct !== null && (
+                          <div className="text-center">
+                            <div className="font-bold text-white text-base">{player.completionPct}%</div>
+                            <div className="text-[10px] uppercase text-muted-foreground tracking-wide">CMP%</div>
+                          </div>
+                        )}
+                      </>
+                    )}
+                    {['RB'].includes(player.position) && (
+                      <>
+                        <div className="text-center">
+                          <div className="font-bold text-white text-base">{player.rushingYards}</div>
+                          <div className="text-[10px] uppercase text-muted-foreground tracking-wide">RUSH YDS</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="font-bold text-white text-base">{player.rushingTouchdowns}</div>
+                          <div className="text-[10px] uppercase text-muted-foreground tracking-wide">RUSH TD</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="font-bold text-white text-base">{player.receivingYards}</div>
+                          <div className="text-[10px] uppercase text-muted-foreground tracking-wide">REC YDS</div>
+                        </div>
+                      </>
+                    )}
+                    {['WR', 'TE'].includes(player.position) && (
+                      <>
+                        <div className="text-center">
+                          <div className="font-bold text-white text-base">{player.receivingYards}</div>
+                          <div className="text-[10px] uppercase text-muted-foreground tracking-wide">REC YDS</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="font-bold text-white text-base">{player.receivingTouchdowns}</div>
+                          <div className="text-[10px] uppercase text-muted-foreground tracking-wide">REC TD</div>
+                        </div>
+                      </>
+                    )}
+                    {['DL', 'LB', 'DB'].includes(player.position) && (
+                      <>
+                        <div className="text-center">
+                          <div className="font-bold text-white text-base">{player.tackles}</div>
+                          <div className="text-[10px] uppercase text-muted-foreground tracking-wide">TCK</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="font-bold text-white text-base">{player.sacks}</div>
+                          <div className="text-[10px] uppercase text-muted-foreground tracking-wide">SCK</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="font-bold text-white text-base">{player.defensiveInterceptions}</div>
+                          <div className="text-[10px] uppercase text-muted-foreground tracking-wide">INT</div>
+                        </div>
+                      </>
+                    )}
+                    {['OL', 'K', 'P'].includes(player.position) && (
+                      <div className="text-center">
+                        <div className="font-bold text-white text-base">{player.gamesPlayed}</div>
+                        <div className="text-[10px] uppercase text-muted-foreground tracking-wide">GAMES</div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div className="text-center">
+                      <div className="font-bold text-white text-base">{player.ppg}</div>
+                      <div className="text-[10px] uppercase text-muted-foreground tracking-wide">PPG</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-bold text-white text-base">{player.rpg}</div>
+                      <div className="text-[10px] uppercase text-muted-foreground tracking-wide">RPG</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-bold text-white text-base">{player.apg}</div>
+                      <div className="text-[10px] uppercase text-muted-foreground tracking-wide">APG</div>
+                    </div>
+                    {player.threePtPct !== null && (
+                      <div className="text-center">
+                        <div className="font-bold text-white text-base">{player.threePtPct}%</div>
+                        <div className="text-[10px] uppercase text-muted-foreground tracking-wide">3PT</div>
+                      </div>
+                    )}
+                  </>
                 )}
                 <div className="ml-auto">
                   {player.avgGrade ? (
@@ -357,6 +448,7 @@ const BPG_OPTIONS = ["All", "1", "2", "3"];
 export default function Discover() {
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
+  const sport = useSport();
   const [position, setPosition] = useState("All");
   const [state, setState] = useState("All");
   const [graduationYear, setGraduationYear] = useState("All");
@@ -373,7 +465,10 @@ export default function Discover() {
   const [followingMap, setFollowingMap] = useState<Record<number, boolean>>({});
   const [pendingFollows, setPendingFollows] = useState<Set<number>>(new Set());
 
+  const isFootball = sport === 'football';
+
   const queryParams = new URLSearchParams();
+  queryParams.append("sport", sport);
   if (position !== "All") queryParams.append("position", position);
   if (state !== "All") queryParams.append("state", state);
   if (graduationYear !== "All") queryParams.append("graduationYear", graduationYear);
@@ -389,7 +484,7 @@ export default function Discover() {
   if (minBpg !== "All") queryParams.append("minBpg", minBpg);
 
   const { data: players, isLoading } = useQuery<DiscoverPlayer[]>({
-    queryKey: ["/api/discover", position, state, graduationYear, searchQuery, openOnly, caliberOnly, minGpa, minThreePct, minPpg, minRpg, minApg, minSpg, minBpg],
+    queryKey: ["/api/discover", sport, position, state, graduationYear, searchQuery, openOnly, caliberOnly, minGpa, minThreePct, minPpg, minRpg, minApg, minSpg, minBpg],
     queryFn: async () => {
       const res = await fetch(`/api/discover?${queryParams.toString()}`);
       if (!res.ok) throw new Error("Failed to fetch players");
@@ -476,7 +571,7 @@ export default function Discover() {
                 Discover Players
               </h1>
               <p className="text-sm text-cyan-200/50">
-                Find and connect with talented basketball players
+                Find and connect with talented {isFootball ? 'football' : 'basketball'} players
               </p>
             </div>
           </div>
@@ -508,9 +603,17 @@ export default function Discover() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="All">All Positions</SelectItem>
-                  <SelectItem value="Guard">Guard</SelectItem>
-                  <SelectItem value="Wing">Wing</SelectItem>
-                  <SelectItem value="Big">Big</SelectItem>
+                  {isFootball ? (
+                    FOOTBALL_POSITIONS.map((pos) => (
+                      <SelectItem key={pos} value={pos}>
+                        {FOOTBALL_POSITION_LABELS[pos]}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    BASKETBALL_POSITIONS.map((pos) => (
+                      <SelectItem key={pos} value={pos}>{pos}</SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -738,6 +841,7 @@ export default function Discover() {
             <PlayerDiscoverCard 
               key={player.id} 
               player={player}
+              sport={sport}
               isAuthenticated={isAuthenticated}
               isFollowing={followingMap[player.id] || false}
               isFollowPending={pendingFollows.has(player.id)}

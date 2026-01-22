@@ -12,6 +12,7 @@ import {
   type Drill,
   type PracticeAttendance,
 } from "@/hooks/use-basketball";
+import { useSport } from "@/components/SportToggle";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -247,7 +248,9 @@ export function LivePractice({ practice, onEnd, onBack }: LivePracticeProps) {
     }
   };
 
-  const DRILL_CATEGORIES = [
+  const sport = useSport();
+  
+  const BASKETBALL_DRILL_CATEGORIES = [
     { value: "shooting", label: "Shooting" },
     { value: "dribbling", label: "Dribbling" },
     { value: "passing", label: "Passing" },
@@ -257,11 +260,26 @@ export function LivePractice({ practice, onEnd, onBack }: LivePracticeProps) {
     { value: "footwork", label: "Footwork" },
     { value: "team", label: "Team Play" },
   ];
+  
+  const FOOTBALL_DRILL_CATEGORIES = [
+    { value: "passing", label: "Passing/Throwing" },
+    { value: "route_running", label: "Route Running" },
+    { value: "rushing", label: "Rushing/Running" },
+    { value: "blocking", label: "Blocking" },
+    { value: "tackling", label: "Tackling" },
+    { value: "coverage", label: "Coverage" },
+    { value: "special_teams", label: "Special Teams" },
+    { value: "conditioning", label: "Conditioning" },
+    { value: "team", label: "Team Play" },
+  ];
+  
+  const DRILL_CATEGORIES = sport === 'basketball' ? BASKETBALL_DRILL_CATEGORIES : FOOTBALL_DRILL_CATEGORIES;
 
   const drillCategories = useMemo(() => {
-    const cats = new Set(drills.map((d) => d.category));
+    const sportCategoryValues = DRILL_CATEGORIES.map(c => c.value);
+    const cats = new Set(drills.map((d) => d.category).filter(cat => sportCategoryValues.includes(cat)));
     return Array.from(cats);
-  }, [drills]);
+  }, [drills, DRILL_CATEGORIES]);
 
   const getInitials = (name: string) => {
     return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);

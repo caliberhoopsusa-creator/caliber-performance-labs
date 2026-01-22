@@ -9,6 +9,7 @@ import { DayEventsPanel } from "@/components/DayEventsPanel";
 import { EventCard } from "@/components/EventCard";
 import { type ScheduleEvent } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { useSport } from "@/components/SportToggle";
 import { 
   Plus, 
   ChevronLeft, 
@@ -32,15 +33,20 @@ import {
 
 export default function ScheduleCalendar() {
   const { toast } = useToast();
+  const currentSport = useSport();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDayPanelOpen, setIsDayPanelOpen] = useState(false);
   const [addEventDefaultDate, setAddEventDefaultDate] = useState<Date | undefined>(undefined);
 
-  const { data: events = [], isLoading } = useQuery<ScheduleEvent[]>({
+  const { data: allEvents = [], isLoading } = useQuery<ScheduleEvent[]>({
     queryKey: ['/api/schedule-events'],
   });
+
+  const events = useMemo(() => {
+    return allEvents.filter(event => !event.sport || event.sport === currentSport);
+  }, [allEvents, currentSport]);
 
   const deleteEventMutation = useMutation({
     mutationFn: async (eventId: number) => {
@@ -338,6 +344,7 @@ export default function ScheduleCalendar() {
         open={isAddModalOpen}
         onOpenChange={setIsAddModalOpen}
         defaultDate={addEventDefaultDate}
+        sport={currentSport}
       />
 
       <DayEventsPanel

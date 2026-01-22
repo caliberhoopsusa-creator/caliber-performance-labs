@@ -15,6 +15,7 @@ import {
   type PracticeAttendance,
   type Drill
 } from "@/hooks/use-basketball";
+import { useSport } from "@/components/SportToggle";
 import { LivePractice } from "@/components/LivePractice";
 import { 
   Calendar, Clock, Plus, ChevronDown, ChevronUp, 
@@ -67,12 +68,38 @@ type AttendanceRecord = {
   notes: string;
 };
 
+const BASKETBALL_DRILL_CATEGORIES = [
+  { value: "shooting", label: "Shooting" },
+  { value: "dribbling", label: "Dribbling" },
+  { value: "passing", label: "Passing" },
+  { value: "defense", label: "Defense" },
+  { value: "rebounding", label: "Rebounding" },
+  { value: "conditioning", label: "Conditioning" },
+  { value: "footwork", label: "Footwork" },
+  { value: "team", label: "Team Play" },
+];
+
+const FOOTBALL_DRILL_CATEGORIES = [
+  { value: "passing", label: "Passing/Throwing" },
+  { value: "route_running", label: "Route Running" },
+  { value: "rushing", label: "Rushing/Running" },
+  { value: "blocking", label: "Blocking" },
+  { value: "tackling", label: "Tackling" },
+  { value: "coverage", label: "Coverage" },
+  { value: "special_teams", label: "Special Teams" },
+  { value: "conditioning", label: "Conditioning" },
+  { value: "team", label: "Team Play" },
+];
+
 export default function PracticeTracker() {
   const { toast } = useToast();
+  const sport = useSport();
   const { data: practices, isLoading: practicesLoading, refetch: refetchPractices } = usePractices();
   const { data: players, isLoading: playersLoading } = usePlayers();
   const { data: drills } = useDrills();
   const { data: activePractices = [] } = useActivePractices();
+  
+  const sportDrillCategories = sport === 'basketball' ? BASKETBALL_DRILL_CATEGORIES : FOOTBALL_DRILL_CATEGORIES;
   
   const createPractice = useCreatePractice();
   const deletePractice = useDeletePractice();
@@ -286,9 +313,10 @@ export default function PracticeTracker() {
 
   const drillCategories = useMemo(() => {
     if (!drills) return [];
-    const categories = new Set(drills.map(d => d.category));
+    const sportCategoryValues = sportDrillCategories.map(c => c.value);
+    const categories = new Set(drills.map(d => d.category).filter(cat => sportCategoryValues.includes(cat)));
     return Array.from(categories);
-  }, [drills]);
+  }, [drills, sportDrillCategories]);
 
   const getAttendanceColor = (rate: number) => {
     if (rate >= 80) return "text-green-400";
@@ -347,8 +375,12 @@ export default function PracticeTracker() {
       
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl md:text-4xl font-display font-bold uppercase tracking-wide bg-gradient-to-b from-white to-cyan-100/80 bg-clip-text text-transparent">Practice Tracker</h2>
-          <p className="text-cyan-200/50 font-medium">Log practice sessions and track player attendance</p>
+          <h2 className="text-3xl md:text-4xl font-display font-bold uppercase tracking-wide bg-gradient-to-b from-white to-cyan-100/80 bg-clip-text text-transparent">
+            {sport === 'basketball' ? 'Basketball' : 'Football'} Practice Tracker
+          </h2>
+          <p className="text-cyan-200/50 font-medium">
+            Log {sport === 'basketball' ? 'basketball drills, shooting sessions' : 'football drills, plays, and conditioning'} and track player attendance
+          </p>
         </div>
         
         <div className="flex items-center gap-3 flex-wrap">
@@ -373,7 +405,9 @@ export default function PracticeTracker() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Practice Title</label>
                   <Input
-                    placeholder="e.g., Morning Drills, Team Scrimmage"
+                    placeholder={sport === 'basketball' 
+                      ? "e.g., Shooting Drills, Team Scrimmage" 
+                      : "e.g., Passing Practice, Tackling Drills"}
                     value={liveTitle}
                     onChange={(e) => setLiveTitle(e.target.value)}
                     data-testid="input-live-title"
@@ -452,7 +486,9 @@ export default function PracticeTracker() {
               <div className="space-y-2">
                 <label className="text-sm font-medium text-muted-foreground">Title</label>
                 <Input
-                  placeholder="e.g., Shooting Drills, Team Scrimmage"
+                  placeholder={sport === 'basketball' 
+                    ? "e.g., Shooting Drills, Team Scrimmage" 
+                    : "e.g., Route Running, 7-on-7 Drills"}
                   value={practiceTitle}
                   onChange={(e) => setPracticeTitle(e.target.value)}
                   data-testid="input-practice-title"
