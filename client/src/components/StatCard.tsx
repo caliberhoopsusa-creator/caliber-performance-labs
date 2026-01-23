@@ -13,12 +13,13 @@ interface StatCardProps {
 export function StatCard({ label, value, subValue, trend, className, highlight }: StatCardProps) {
   return (
     <div className={cn(
-      "relative rounded-xl p-5 flex flex-col justify-between group overflow-hidden",
+      "relative rounded-xl p-4 md:p-5 flex flex-col justify-between group overflow-hidden touch-press",
       "bg-gradient-to-br from-[hsl(220,25%,8%)] via-[hsl(220,20%,6%)] to-[hsl(220,25%,5%)]",
       "border border-cyan-500/[0.08] backdrop-blur-xl",
       "shadow-[0_4px_24px_rgba(0,0,0,0.4),0_0_50px_rgba(0,212,255,0.02)]",
-      "transition-all duration-400",
+      "transition-all duration-300",
       "hover:border-cyan-400/[0.15] hover:shadow-[0_8px_32px_rgba(0,0,0,0.5),0_0_60px_rgba(0,212,255,0.04)]",
+      "active:shadow-[0_2px_12px_rgba(0,0,0,0.5)]",
       highlight && "border-cyan-400/20 shadow-[0_0_40px_rgba(0,212,255,0.08)]",
       className
     )}>

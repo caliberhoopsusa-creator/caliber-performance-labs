@@ -239,14 +239,18 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
   
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 safe-area-bottom">
-      {/* Enhanced glassmorphic background with better blur and depth */}
-      <div className="absolute inset-0 navbar-glass shadow-[0_-8px_40px_rgba(0,0,0,0.5),0_0_30px_rgba(100,200,255,0.06),inset_0_1px_0_rgba(100,200,255,0.1)]" />
+      {/* Premium glassmorphic navbar with enhanced depth and glow */}
+      <div className="absolute inset-0 mobile-nav-glass" />
+      
+      {/* Subtle top border glow line */}
+      <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
       
       {/* Navigation container with proper spacing and touch targets */}
-      <div className="relative flex justify-around items-center min-h-16 px-2 gap-1">
+      <div className="relative flex justify-around items-center min-h-[72px] px-3 gap-1">
         {navItems.map((item) => {
+          // Enhanced active state detection - profile link should match any /players/:id path
           const isActive = location === item.href || 
-            (item.href.includes('/players/') && location.includes('/players/') && location === item.href);
+            (item.href.includes('/players/') && location.startsWith('/players/'));
           const Icon = item.icon;
           
           if (item.featured) {
@@ -254,22 +258,40 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
               <Link 
                 key={item.href} 
                 href={item.href} 
-                className="flex flex-col items-center justify-center touch-target -mt-8 transition-all duration-300 active:scale-95" 
+                className="flex flex-col items-center justify-center touch-target -mt-6 transition-all duration-300 group" 
                 data-testid={`mobile-nav-${item.label.toLowerCase()}`}
               >
-                <div className={cn(
-                  "rounded-full p-2.5 border transition-all duration-300 nav-item-transition",
-                  isActive 
-                    ? "bg-primary text-white border-primary shadow-xl glow-cyan" 
-                    : "bg-primary text-white border-primary/80 shadow-lg shadow-primary/40 hover:shadow-xl hover:glow-cyan-sm"
-                )}>
-                  <Icon className="w-6 h-6" />
+                {/* Featured button with animated ring */}
+                <div className="relative">
+                  {/* Animated outer ring */}
+                  <div className={cn(
+                    "absolute inset-[-4px] rounded-full transition-all duration-500",
+                    isActive 
+                      ? "bg-gradient-to-r from-cyan-400 via-cyan-300 to-cyan-400 animate-spin-slow opacity-100" 
+                      : "bg-gradient-to-r from-cyan-500/50 via-cyan-400/50 to-cyan-500/50 opacity-0 group-hover:opacity-100"
+                  )} style={{ animationDuration: '3s' }} />
+                  
+                  {/* Inner glow */}
+                  <div className={cn(
+                    "absolute inset-[-2px] rounded-full bg-background transition-all duration-300",
+                  )} />
+                  
+                  {/* Main button */}
+                  <div className={cn(
+                    "relative rounded-full p-3 border-2 transition-all duration-300 active:scale-90",
+                    isActive 
+                      ? "bg-gradient-to-br from-cyan-400 to-cyan-500 text-white border-cyan-300 shadow-[0_0_30px_rgba(0,212,255,0.5),0_0_60px_rgba(0,212,255,0.3)]" 
+                      : "bg-gradient-to-br from-cyan-500 to-cyan-600 text-white border-cyan-400/60 shadow-[0_4px_20px_rgba(0,212,255,0.4)] group-hover:shadow-[0_0_30px_rgba(0,212,255,0.5)]"
+                  )}>
+                    <Icon className="w-6 h-6 drop-shadow-lg" />
+                  </div>
                 </div>
+                
                 <span className={cn(
-                  "text-[9px] font-medium uppercase tracking-widest mt-1.5 transition-all duration-300 nav-item-transition",
+                  "text-[9px] font-semibold uppercase tracking-widest mt-2 transition-all duration-300",
                   isActive 
-                    ? "text-primary font-bold nav-active-indicator" 
-                    : "text-muted-foreground hover:text-cyan-300"
+                    ? "text-cyan-400 drop-shadow-[0_0_8px_rgba(0,212,255,0.8)]" 
+                    : "text-muted-foreground group-hover:text-cyan-300"
                 )}>{item.label}</span>
               </Link>
             );
@@ -280,15 +302,33 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
               key={item.href} 
               href={item.href} 
               className={cn(
-                "flex flex-col items-center justify-center touch-target p-2 transition-all duration-300 nav-item-transition active:scale-95",
-                isActive 
-                  ? "text-primary nav-item-active nav-active-indicator" 
-                  : "text-muted-foreground hover:text-cyan-300 hover:glow-cyan-sm"
+                "relative flex flex-col items-center justify-center touch-target p-2 rounded-xl transition-all duration-300 group active:scale-90",
+                isActive && "mobile-nav-active-bg"
               )} 
               data-testid={`mobile-nav-${item.label.toLowerCase()}`}
+              data-active={isActive ? "true" : undefined}
+              aria-current={isActive ? "page" : undefined}
             >
-              <Icon className="w-6 h-6" />
-              <span className="text-[9px] font-medium uppercase tracking-widest mt-0.5">{item.label}</span>
+              {/* Active indicator dot */}
+              {isActive && (
+                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(0,212,255,0.8)]" />
+              )}
+              
+              <div className={cn(
+                "relative p-2 rounded-xl transition-all duration-300",
+                isActive 
+                  ? "text-cyan-400 drop-shadow-[0_0_12px_rgba(0,212,255,0.7)]" 
+                  : "text-muted-foreground group-hover:text-cyan-300 group-hover:drop-shadow-[0_0_8px_rgba(0,212,255,0.4)]"
+              )}>
+                <Icon className="w-5 h-5" />
+              </div>
+              
+              <span className={cn(
+                "text-[9px] font-medium uppercase tracking-wider transition-all duration-300",
+                isActive 
+                  ? "text-cyan-400 font-semibold" 
+                  : "text-muted-foreground/80 group-hover:text-cyan-300/80"
+              )}>{item.label}</span>
             </Link>
           );
         })}

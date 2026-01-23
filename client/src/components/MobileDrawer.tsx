@@ -140,56 +140,68 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
         <Button 
           variant="ghost" 
           size="icon" 
-          className="md:hidden"
+          className="md:hidden relative group"
           data-testid="button-mobile-menu"
         >
-          <Menu className="w-5 h-5" />
+          <div className="absolute inset-0 rounded-lg bg-cyan-500/0 group-hover:bg-cyan-500/10 transition-all duration-300" />
+          <Menu className="w-5 h-5 relative z-10 transition-transform duration-300 group-active:scale-90" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-[280px] p-0 bg-[hsl(var(--sidebar-background))] border-r border-white/5">
+      <SheetContent side="left" className="w-[300px] p-0 mobile-drawer-glass border-r border-cyan-500/10">
         <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
         <SheetDescription className="sr-only">Access all app features from this menu</SheetDescription>
         
-        <div className="flex flex-col h-full">
-          <div className="p-4 border-b border-white/5">
-            <div className="flex items-center gap-3">
-              <img src={caliberLogo} alt="Caliber" className="w-9 h-9 rounded-lg shadow-lg shadow-black/20" />
+        {/* Ambient glow effect */}
+        <div className="absolute top-0 left-0 w-full h-48 bg-gradient-to-b from-cyan-500/[0.06] to-transparent pointer-events-none" />
+        <div className="absolute top-20 -left-20 w-40 h-40 bg-cyan-500/[0.08] rounded-full blur-3xl pointer-events-none" />
+        
+        <div className="flex flex-col h-full relative z-10">
+          {/* Premium header with gradient */}
+          <div className="p-5 border-b border-cyan-500/10 bg-gradient-to-r from-cyan-500/[0.04] to-transparent">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="absolute inset-[-3px] rounded-xl bg-gradient-to-br from-cyan-400/40 to-cyan-600/20 blur-sm" />
+                <img src={caliberLogo} alt="Caliber" className="relative w-11 h-11 rounded-xl shadow-lg shadow-cyan-500/20 object-contain" />
+              </div>
               <div>
-                <h2 className="font-display font-bold text-white text-lg uppercase tracking-wide">Caliber</h2>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{userRole} Mode</p>
+                <h2 className="font-display font-bold text-white text-xl uppercase tracking-wider">Caliber</h2>
+                <p className="text-[10px] text-cyan-400/80 uppercase tracking-[0.2em] font-medium">{userRole} Mode</p>
               </div>
             </div>
           </div>
 
-          <div className="p-3 border-b border-white/5 space-y-3">
+          {/* Mode switching and sport toggle */}
+          <div className="p-4 border-b border-cyan-500/10 space-y-4 bg-gradient-to-b from-white/[0.01] to-transparent">
             <Button
               variant="outline"
               size="sm"
               onClick={handleRoleSwitch}
               disabled={isSwitchingRole}
-              className="w-full text-xs border-white/10 bg-white/5"
+              className="w-full text-xs border-cyan-500/20 bg-cyan-500/5"
               data-testid="button-mobile-role-switch"
             >
-              <ArrowLeftRight className="w-3.5 h-3.5 mr-2" />
+              <ArrowLeftRight className="w-3.5 h-3.5 mr-2 text-cyan-400" />
               Switch to {isPlayer ? 'Coach' : 'Player'} Mode
             </Button>
             
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] uppercase font-semibold text-muted-foreground/70 tracking-widest px-1">
+            <div className="flex flex-col gap-2">
+              <span className="text-[10px] uppercase font-semibold text-cyan-400/60 tracking-[0.2em] px-1">
                 Sport Mode
               </span>
               <SportToggle size="sm" showLabels={true} className="w-full justify-center" />
             </div>
           </div>
 
+          {/* Navigation with enhanced styling */}
           <ScrollArea className="flex-1">
-            <nav className="p-3 space-y-5">
-              {sections.map((section) => (
-                <div key={section.title}>
-                  <h3 className="text-[10px] uppercase font-semibold text-muted-foreground/70 tracking-widest px-3 mb-1.5">
+            <nav className="p-4 space-y-6">
+              {sections.map((section, sectionIndex) => (
+                <div key={section.title} className="animate-fade-up" style={{ animationDelay: `${sectionIndex * 50}ms` }}>
+                  <h3 className="text-[10px] uppercase font-semibold text-cyan-400/50 tracking-[0.2em] px-3 mb-2 flex items-center gap-2">
+                    <span className="w-2 h-px bg-gradient-to-r from-cyan-500/40 to-transparent" />
                     {section.title}
                   </h3>
-                  <div className="space-y-0.5">
+                  <div className="space-y-1">
                     {section.items.map((item) => {
                       const isActive = location === item.href;
                       const needsUpgrade = item.premium && !hasAccess(item.premium);
@@ -201,26 +213,39 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
                           href={item.href}
                           onClick={() => setOpen(false)}
                           className={cn(
-                            "flex items-center gap-3 px-3 py-2 rounded-md transition-all text-sm font-medium",
+                            "mobile-menu-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium",
+                            isActive && "mobile-menu-item-active",
                             isActive 
-                              ? "bg-primary/15 text-primary" 
+                              ? "text-cyan-400" 
                               : isFeatured
-                              ? "text-primary bg-primary/5"
+                              ? "text-cyan-400 bg-cyan-500/5"
                               : needsUpgrade
-                              ? "text-muted-foreground"
-                              : "text-muted-foreground"
+                              ? "text-muted-foreground/60"
+                              : "text-muted-foreground hover:text-white"
                           )}
                           data-testid={`mobile-drawer-${item.href.replace(/\//g, '-').replace(/^-/, '') || 'home'}`}
                         >
-                          <item.icon className={cn("w-4 h-4", isActive && "text-primary")} />
+                          <div className={cn(
+                            "p-1.5 rounded-lg transition-all duration-300",
+                            isActive 
+                              ? "bg-cyan-500/20 shadow-[0_0_12px_rgba(0,212,255,0.3)]" 
+                              : "bg-white/[0.03]"
+                          )}>
+                            <item.icon className={cn(
+                              "w-4 h-4 transition-all duration-300",
+                              isActive && "text-cyan-400 drop-shadow-[0_0_6px_rgba(0,212,255,0.6)]"
+                            )} />
+                          </div>
                           <span className="flex-1">{item.label}</span>
                           {isFeatured && (
-                            <span className="text-[9px] bg-primary text-white px-1.5 py-0.5 rounded font-bold uppercase">
+                            <span className="text-[9px] bg-gradient-to-r from-cyan-500 to-cyan-400 text-white px-2 py-0.5 rounded-full font-bold uppercase tracking-wide shadow-lg shadow-cyan-500/30">
                               LIVE
                             </span>
                           )}
                           {needsUpgrade && (
-                            <Lock className="w-3 h-3 text-muted-foreground/70" />
+                            <div className="p-1 rounded bg-white/5">
+                              <Lock className="w-3 h-3 text-muted-foreground/50" />
+                            </div>
                           )}
                         </Link>
                       );
@@ -231,7 +256,8 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
             </nav>
           </ScrollArea>
 
-          <div className="p-3 border-t border-white/5">
+          {/* Footer with sign out */}
+          <div className="p-4 border-t border-cyan-500/10 bg-gradient-to-t from-black/20 to-transparent">
             <Button 
               variant="ghost" 
               className="w-full justify-start text-muted-foreground"

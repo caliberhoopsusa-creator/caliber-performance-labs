@@ -1260,6 +1260,34 @@
     height: calc(100% - max(44px, env(safe-area-inset-bottom, 0px)));
   }
   
+  /* ========== PREMIUM MOBILE NAVIGATION ========== */
+  
+  /* Ultra-premium glassmorphic mobile navbar */
+  .mobile-nav-glass {
+    background: linear-gradient(180deg, 
+      rgba(15, 25, 45, 0.85) 0%, 
+      rgba(10, 18, 35, 0.95) 100%);
+    backdrop-filter: blur(24px) saturate(200%);
+    -webkit-backdrop-filter: blur(24px) saturate(200%);
+    border-top: 1px solid rgba(0, 212, 255, 0.12);
+    box-shadow: 
+      0 -8px 40px rgba(0, 0, 0, 0.6),
+      0 -2px 20px rgba(0, 0, 0, 0.4),
+      0 0 60px rgba(0, 212, 255, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+  }
+  
+  /* Active nav item subtle background */
+  .mobile-nav-active-bg {
+    background: radial-gradient(ellipse at center, rgba(0, 212, 255, 0.08) 0%, transparent 70%);
+  }
+  
+  /* Slow spin animation for featured button ring */
+  .animate-spin-slow {
+    animation: spin 3s linear infinite;
+  }
+  
   /* Cyan glow effect for active states */
   .glow-cyan {
     box-shadow: 0 0 24px rgba(0, 212, 255, 0.4), 0 0 48px rgba(0, 212, 255, 0.2);
@@ -1269,56 +1297,243 @@
     box-shadow: 0 0 12px rgba(0, 212, 255, 0.3);
   }
   
-  /* Active navigation indicator */
-  .nav-active-indicator {
-    position: relative;
+  .glow-cyan-lg {
+    box-shadow: 0 0 40px rgba(0, 212, 255, 0.5), 0 0 80px rgba(0, 212, 255, 0.25);
   }
   
-  .nav-active-indicator::after {
+  /* ========== MOBILE DRAWER ENHANCEMENTS ========== */
+  
+  /* Premium drawer background */
+  .mobile-drawer-glass {
+    background: linear-gradient(180deg, 
+      hsl(220 25% 7%) 0%, 
+      hsl(220 22% 5%) 100%);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+  }
+  
+  /* Drawer menu item hover/active states */
+  .mobile-menu-item {
+    @apply relative overflow-hidden;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  
+  .mobile-menu-item::before {
     content: '';
     position: absolute;
-    bottom: -8px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 6px;
-    height: 6px;
-    background: #00D4FF;
-    border-radius: 50%;
-    animation: navIndicatorPulse 2s ease-in-out infinite;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(0, 212, 255, 0.08) 0%, transparent 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
   }
   
-  @keyframes navIndicatorPulse {
-    0%, 100% {
-      opacity: 1;
-      box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.7);
-    }
-    50% {
-      opacity: 0.8;
-    }
-    100% {
-      box-shadow: 0 0 0 8px rgba(0, 212, 255, 0);
-    }
+  .mobile-menu-item:hover::before {
+    opacity: 1;
   }
   
-  /* Enhanced glassmorphic navbar */
-  .navbar-glass {
+  .mobile-menu-item-active {
+    background: linear-gradient(90deg, rgba(0, 212, 255, 0.12) 0%, rgba(0, 212, 255, 0.04) 100%);
+    border-left: 2px solid rgba(0, 212, 255, 0.8);
+  }
+  
+  .mobile-menu-item-active::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 60%;
+    background: linear-gradient(180deg, transparent, rgba(0, 212, 255, 0.8), transparent);
+    box-shadow: 0 0 12px rgba(0, 212, 255, 0.6);
+  }
+  
+  /* ========== MOBILE CARD ENHANCEMENTS ========== */
+  
+  /* Mobile-optimized card with touch feedback */
+  .mobile-card {
+    @apply relative rounded-xl overflow-hidden;
+    background: linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.04) 0%, 
+      rgba(255, 255, 255, 0.02) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  
+  .mobile-card:active {
+    transform: scale(0.98);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+  }
+  
+  /* Mobile card with cyan accent */
+  .mobile-card-cyan {
+    border-color: rgba(0, 212, 255, 0.1);
+    box-shadow: 
+      0 4px 20px rgba(0, 0, 0, 0.3),
+      0 0 30px rgba(0, 212, 255, 0.04);
+  }
+  
+  .mobile-card-cyan::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.3), transparent);
+  }
+  
+  /* ========== MOBILE STATS & BADGES ========== */
+  
+  /* Glowing stat badge for mobile */
+  .mobile-stat-badge {
+    @apply inline-flex items-center justify-center px-2.5 py-1 rounded-lg text-xs font-semibold;
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.15) 0%, rgba(0, 212, 255, 0.08) 100%);
+    border: 1px solid rgba(0, 212, 255, 0.25);
+    color: rgba(0, 212, 255, 1);
+    box-shadow: 0 0 12px rgba(0, 212, 255, 0.2);
+  }
+  
+  /* Grade badges with glow for mobile */
+  .mobile-grade-a {
+    @apply bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border-emerald-500/40 text-emerald-400;
+    box-shadow: 0 0 16px rgba(16, 185, 129, 0.3);
+  }
+  
+  .mobile-grade-b {
+    @apply bg-gradient-to-br from-green-500/20 to-green-600/10 border-green-500/40 text-green-400;
+    box-shadow: 0 0 12px rgba(34, 197, 94, 0.25);
+  }
+  
+  .mobile-grade-c {
+    @apply bg-gradient-to-br from-yellow-500/20 to-yellow-600/10 border-yellow-500/40 text-yellow-400;
+    box-shadow: 0 0 12px rgba(234, 179, 8, 0.25);
+  }
+  
+  .mobile-grade-d {
+    @apply bg-gradient-to-br from-orange-500/20 to-orange-600/10 border-orange-500/40 text-orange-400;
+    box-shadow: 0 0 12px rgba(249, 115, 22, 0.25);
+  }
+  
+  .mobile-grade-f {
+    @apply bg-gradient-to-br from-red-500/20 to-red-600/10 border-red-500/40 text-red-400;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.25);
+  }
+  
+  /* ========== MOBILE HEADER ENHANCEMENTS ========== */
+  
+  /* Sticky blur header for mobile */
+  .mobile-header-blur {
+    @apply sticky top-0 z-40;
     background: linear-gradient(180deg, 
-      rgba(32, 50, 85, 0.4) 0%, 
-      rgba(32, 50, 85, 0.3) 100%);
+      rgba(10, 15, 25, 0.95) 0%, 
+      rgba(10, 15, 25, 0.85) 100%);
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid rgba(0, 212, 255, 0.1);
+    border-bottom: 1px solid rgba(0, 212, 255, 0.08);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
   }
   
-  /* Mobile nav item active glow */
-  .nav-item-active {
-    color: #00D4FF;
-    filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.6));
+  /* ========== MOBILE LOADING STATES ========== */
+  
+  /* Premium shimmer loader for mobile */
+  .mobile-shimmer {
+    @apply relative overflow-hidden;
+    background: linear-gradient(90deg, 
+      rgba(255, 255, 255, 0.02) 0%, 
+      rgba(0, 212, 255, 0.06) 50%, 
+      rgba(255, 255, 255, 0.02) 100%);
+    background-size: 200% 100%;
+    animation: mobileShimmer 1.5s ease-in-out infinite;
   }
   
-  /* Smooth mobile nav transition */
-  .nav-item-transition {
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  @keyframes mobileShimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  
+  /* Skeleton with cyan tint */
+  .mobile-skeleton {
+    @apply rounded-lg;
+    background: linear-gradient(90deg, 
+      hsl(220 20% 8%) 0%, 
+      hsl(190 50% 12%) 50%, 
+      hsl(220 20% 8%) 100%);
+    background-size: 200% 100%;
+    animation: mobileShimmer 1.5s ease-in-out infinite;
+  }
+  
+  /* ========== MOBILE TOUCH INTERACTIONS ========== */
+  
+  /* Touch ripple effect */
+  .touch-ripple {
+    @apply relative overflow-hidden;
+  }
+  
+  .touch-ripple:active::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at var(--tap-x, 50%) var(--tap-y, 50%), 
+      rgba(0, 212, 255, 0.2) 0%, 
+      transparent 60%);
+    animation: rippleFade 0.4s ease-out forwards;
+  }
+  
+  @keyframes rippleFade {
+    from { opacity: 1; transform: scale(0); }
+    to { opacity: 0; transform: scale(2); }
+  }
+  
+  /* Haptic-style press effect */
+  .touch-press {
+    transition: transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  
+  .touch-press:active {
+    transform: scale(0.96);
+  }
+  
+  /* ========== MOBILE PROFILE SECTION ========== */
+  
+  /* Profile header with gradient overlay */
+  .mobile-profile-header {
+    @apply relative overflow-hidden;
+    background: linear-gradient(180deg, 
+      rgba(0, 212, 255, 0.08) 0%, 
+      transparent 100%);
+  }
+  
+  .mobile-profile-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    background: radial-gradient(ellipse at 50% 0%, 
+      rgba(0, 212, 255, 0.12) 0%, 
+      transparent 70%);
+    pointer-events: none;
+  }
+  
+  /* Avatar ring with glow */
+  .mobile-avatar-ring {
+    @apply relative rounded-full p-1;
+    background: linear-gradient(135deg, 
+      rgba(0, 212, 255, 0.4) 0%, 
+      rgba(0, 212, 255, 0.1) 50%, 
+      rgba(0, 212, 255, 0.4) 100%);
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+  }
+  
+  .mobile-avatar-ring::before {
+    content: '';
+    position: absolute;
+    inset: 1px;
+    border-radius: 50%;
+    background: hsl(220 25% 7%);
   }
 }
 

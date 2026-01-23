@@ -37,7 +37,7 @@ export function GradeBadge({ grade, size = "md", className }: { grade: string, s
   return (
     <div 
       className={cn(
-        "font-display font-bold flex items-center justify-center shrink-0 transition-all duration-300 hover:scale-105 relative",
+        "font-display font-bold flex items-center justify-center shrink-0 transition-all duration-300 hover:scale-105 active:scale-95 relative touch-press",
         gradeDisplayClass,
         sizeClasses[size],
         className

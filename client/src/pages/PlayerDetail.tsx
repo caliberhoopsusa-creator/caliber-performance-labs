@@ -831,6 +831,7 @@ export default function PlayerDetail() {
 
   const { data: progression } = usePlayerProgression(id);
   const { data: skillBadges = [] } = usePlayerSkillBadges(id);
+  const currentSport = useSport();
 
   const { data: currentUserFollowing = [] } = useQuery<FollowingPlayer[]>({
     queryKey: ["/api/players", user?.playerId, "following"],
@@ -1008,7 +1009,6 @@ export default function PlayerDetail() {
   }
 
   const games = player.games || [];
-  const currentSport = useSport();
   const isFootball = currentSport === 'football';
   
   // === BASKETBALL STATS ===
@@ -1175,21 +1175,28 @@ export default function PlayerDetail() {
         <ArrowLeft className="w-4 h-4" /> Back to Roster
       </Link>
       
-      <Card className="p-4 md:p-8 relative overflow-hidden animate-fade-up delay-150">
+      <Card className="p-4 md:p-8 relative overflow-hidden animate-fade-up delay-150 mobile-profile-header">
+        {/* Mobile ambient glow effects */}
+        <div className="absolute top-0 left-1/4 w-32 h-32 md:w-48 md:h-48 bg-gradient-radial from-cyan-500/[0.08] to-transparent rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 w-24 h-24 md:w-40 md:h-40 bg-gradient-radial from-blue-500/[0.05] to-transparent rounded-full blur-2xl pointer-events-none" />
+        
         <div className="flex flex-col gap-6 relative z-10">
           {/* Player Info Row */}
-          <div className="flex items-start gap-4">
+          <div className="flex items-start gap-4 md:gap-6">
             <div className="relative group/avatar shrink-0">
-              <Avatar className="w-16 h-16 md:w-24 md:h-24 border-2 border-primary/20">
-                {player.photoUrl && <AvatarImage src={player.photoUrl} alt={player.name} />}
-                <AvatarFallback className="bg-gradient-to-br from-primary/30 to-primary/10 text-xl md:text-3xl font-display font-bold text-white">
-                  {getInitials(player.name)}
-                </AvatarFallback>
-              </Avatar>
+              {/* Enhanced avatar with cyan ring glow for mobile */}
+              <div className="mobile-avatar-ring p-0.5 md:p-1 rounded-full">
+                <Avatar className="w-16 h-16 md:w-24 md:h-24 border-2 border-cyan-500/30 ring-2 ring-cyan-500/20 ring-offset-2 ring-offset-background">
+                  {player.photoUrl && <AvatarImage src={player.photoUrl} alt={player.name} />}
+                  <AvatarFallback className="bg-gradient-to-br from-cyan-500/30 to-cyan-600/20 text-xl md:text-3xl font-display font-bold text-white">
+                    {getInitials(player.name)}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
               <Button
                 size="icon"
                 onClick={() => setIsEditDialogOpen(true)}
-                className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full opacity-0 group-hover/avatar:opacity-100 transition-opacity"
+                className="absolute -bottom-1 -right-1 w-7 h-7 md:w-8 md:h-8 rounded-full opacity-0 group-hover/avatar:opacity-100 md:opacity-100 transition-opacity bg-cyan-500/20 border border-cyan-500/40 hover:bg-cyan-500/30 active:scale-90"
                 data-testid="button-edit-profile-avatar"
               >
                 <Pencil className="w-3 h-3" />
@@ -1199,11 +1206,11 @@ export default function PlayerDetail() {
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-1">
                 {player.jerseyNumber && (
-                  <span className="text-xl md:text-3xl font-display font-bold text-primary/80">#{player.jerseyNumber}</span>
+                  <span className="text-xl md:text-3xl font-display font-bold text-cyan-400/90 drop-shadow-[0_0_10px_rgba(0,212,255,0.3)]">#{player.jerseyNumber}</span>
                 )}
                 {/* Show positions - supports multiple comma-separated positions */}
                 {player.position && (
-                  <span className="bg-primary/20 text-primary px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider border border-primary/20">
+                  <span className="mobile-stat-badge text-[10px] md:text-xs">
                     {player.position.split(',').map(p => p.trim()).map(pos => 
                       isFootball && FOOTBALL_POSITIONS.includes(pos as FootballPosition)
                         ? FOOTBALL_POSITION_LABELS[pos as FootballPosition]
@@ -1333,8 +1340,8 @@ export default function PlayerDetail() {
 
           {/* Grade Badge - Mobile */}
           <div className="flex md:hidden justify-center">
-            <div className="flex flex-col items-center gap-1">
-              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Overall Grade</span>
+            <div className="flex flex-col items-center gap-2 mobile-card p-4 rounded-xl mobile-card-cyan">
+              <span className="text-[10px] font-bold text-cyan-400/70 uppercase tracking-[0.2em]">Overall Grade</span>
               <GradeBadge grade={averageGrade} size="lg" />
             </div>
           </div>
