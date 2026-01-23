@@ -58,9 +58,10 @@ interface ProfileWidgetsProps {
   selectedWidgets: string[] | null;
   onWidgetsChange: (widgets: string[]) => void;
   isOwnProfile: boolean;
+  position?: string;
 }
 
-export function ProfileWidgets({ games, selectedWidgets, onWidgetsChange, isOwnProfile }: ProfileWidgetsProps) {
+export function ProfileWidgets({ games, selectedWidgets, onWidgetsChange, isOwnProfile, position }: ProfileWidgetsProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [tempWidgets, setTempWidgets] = useState<string[]>([]);
   const sport = useSport();
@@ -158,7 +159,7 @@ export function ProfileWidgets({ games, selectedWidgets, onWidgetsChange, isOwnP
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {widgets.includes("trends") && <TrendsWidget games={sortedGames} isFootball={isFootball} />}
         {widgets.includes("grades") && <GradesWidget games={sortedGames} />}
-        {widgets.includes("radar") && <RadarWidget games={sortedGames} isFootball={isFootball} />}
+        {widgets.includes("radar") && <RadarWidget games={sortedGames} isFootball={isFootball} position={position} />}
         {widgets.includes("averages") && <AveragesWidget games={sortedGames} isFootball={isFootball} />}
         {widgets.includes("shooting") && !isFootball && <ShootingWidget games={sortedGames} />}
         {widgets.includes("efficiency") && isFootball && <EfficiencyWidget games={sortedGames} />}
@@ -326,7 +327,7 @@ function GradesWidget({ games }: { games: Game[] }) {
   );
 }
 
-function RadarWidget({ games, isFootball }: { games: Game[]; isFootball: boolean }) {
+function RadarWidget({ games, isFootball, position }: { games: Game[]; isFootball: boolean; position?: string }) {
   const radarData = useMemo(() => {
     if (games.length === 0) return [];
     
@@ -336,14 +337,104 @@ function RadarWidget({ games, isFootball }: { games: Game[]; isFootball: boolean
       const avgRecYds = games.reduce((acc, g) => acc + (g.receivingYards || 0), 0) / games.length;
       const avgTackles = games.reduce((acc, g) => acc + (g.tackles || 0), 0) / games.length;
       const avgSacks = games.reduce((acc, g) => acc + (g.sacks || 0), 0) / games.length;
-
-      return [
-        { stat: 'Passing', value: Math.min(100, (avgPassYds / 300) * 100) },
-        { stat: 'Rushing', value: Math.min(100, (avgRushYds / 100) * 100) },
-        { stat: 'Receiving', value: Math.min(100, (avgRecYds / 100) * 100) },
-        { stat: 'Tackling', value: Math.min(100, (avgTackles / 10) * 100) },
-        { stat: 'Pass Rush', value: Math.min(100, (avgSacks / 2) * 100) },
-      ];
+      const avgTDs = games.reduce((acc, g) => acc + (g.passingTouchdowns || 0) + (g.rushingTouchdowns || 0) + (g.receivingTouchdowns || 0), 0) / games.length;
+      const avgCarries = games.reduce((acc, g) => acc + (g.carries || 0), 0) / games.length;
+      const avgReceptions = games.reduce((acc, g) => acc + (g.receptions || 0), 0) / games.length;
+      const avgCompletions = games.reduce((acc, g) => acc + (g.completions || 0), 0) / games.length;
+      const avgInterceptions = games.reduce((acc, g) => acc + (g.defensiveInterceptions || 0), 0) / games.length;
+      const avgPassDeflections = games.reduce((acc, g) => acc + (g.passDeflections || 0), 0) / games.length;
+      const avgForcedFumbles = games.reduce((acc, g) => acc + (g.forcedFumbles || 0), 0) / games.length;
+      const avgFGMade = games.reduce((acc, g) => acc + (g.fieldGoalsMade || 0), 0) / games.length;
+      const avgPuntYds = games.reduce((acc, g) => acc + (g.puntYards || 0), 0) / games.length;
+      
+      // Get primary position (first if multi-position)
+      const primaryPosition = position?.split(',')[0]?.trim() || '';
+      
+      // Position-specific radar charts
+      switch (primaryPosition) {
+        case 'QB':
+          return [
+            { stat: 'Passing', value: Math.min(100, (avgPassYds / 300) * 100) },
+            { stat: 'TDs', value: Math.min(100, (avgTDs / 3) * 100) },
+            { stat: 'Accuracy', value: Math.min(100, avgCompletions > 0 ? (avgCompletions / 25) * 100 : 0) },
+            { stat: 'Rushing', value: Math.min(100, (avgRushYds / 50) * 100) },
+          ];
+        case 'RB':
+          return [
+            { stat: 'Rushing', value: Math.min(100, (avgRushYds / 100) * 100) },
+            { stat: 'TDs', value: Math.min(100, (avgTDs / 2) * 100) },
+            { stat: 'Receiving', value: Math.min(100, (avgRecYds / 50) * 100) },
+            { stat: 'Workload', value: Math.min(100, (avgCarries / 20) * 100) },
+          ];
+        case 'WR':
+        case 'TE':
+          return [
+            { stat: 'Receiving', value: Math.min(100, (avgRecYds / 100) * 100) },
+            { stat: 'TDs', value: Math.min(100, (avgTDs / 1.5) * 100) },
+            { stat: 'Catches', value: Math.min(100, (avgReceptions / 8) * 100) },
+            { stat: 'YAC', value: Math.min(100, avgReceptions > 0 ? (avgRecYds / avgReceptions / 15) * 100 : 0) },
+          ];
+        case 'OL':
+          return [
+            { stat: 'Support', value: Math.min(100, (avgRushYds / 100) * 100) },
+            { stat: 'TDs', value: Math.min(100, (avgTDs / 2) * 100) },
+            { stat: 'Consistency', value: games.length > 0 ? 75 : 0 },
+            { stat: 'Durability', value: Math.min(100, games.length * 10) },
+          ];
+        case 'DL':
+          return [
+            { stat: 'Sacks', value: Math.min(100, (avgSacks / 1.5) * 100) },
+            { stat: 'Tackles', value: Math.min(100, (avgTackles / 5) * 100) },
+            { stat: 'Pressure', value: Math.min(100, (avgSacks / 1) * 80) },
+            { stat: 'Run Stop', value: Math.min(100, (avgTackles / 4) * 100) },
+          ];
+        case 'LB':
+          return [
+            { stat: 'Tackles', value: Math.min(100, (avgTackles / 8) * 100) },
+            { stat: 'Sacks', value: Math.min(100, (avgSacks / 1) * 100) },
+            { stat: 'Coverage', value: Math.min(100, (avgInterceptions / 0.5) * 100) },
+            { stat: 'Playmaking', value: Math.min(100, ((avgForcedFumbles + avgInterceptions) / 0.5) * 100) },
+          ];
+        case 'DB':
+          return [
+            { stat: 'INTs', value: Math.min(100, (avgInterceptions / 0.5) * 100) },
+            { stat: 'Tackles', value: Math.min(100, (avgTackles / 5) * 100) },
+            { stat: 'Coverage', value: Math.min(100, ((avgInterceptions + avgPassDeflections) / 1) * 100) },
+            { stat: 'PBUs', value: Math.min(100, (avgPassDeflections / 1) * 100) },
+          ];
+        case 'K':
+          return [
+            { stat: 'FGs Made', value: Math.min(100, (avgFGMade / 2) * 100) },
+            { stat: 'Accuracy', value: avgFGMade > 0 ? 80 : 0 },
+            { stat: 'Range', value: avgFGMade > 0 ? 70 : 0 },
+            { stat: 'Clutch', value: avgFGMade > 0 ? 75 : 0 },
+          ];
+        case 'P':
+          return [
+            { stat: 'Punt Avg', value: Math.min(100, (avgPuntYds / 45) * 100) },
+            { stat: 'Hang Time', value: avgPuntYds > 0 ? 70 : 0 },
+            { stat: 'Net Avg', value: Math.min(100, (avgPuntYds / 40) * 100) },
+            { stat: 'Coverage', value: avgPuntYds > 0 ? 65 : 0 },
+          ];
+        default:
+          // Generic football fallback - show only categories with data
+          const genericData = [];
+          if (avgPassYds > 0) genericData.push({ stat: 'Passing', value: Math.min(100, (avgPassYds / 300) * 100) });
+          if (avgRushYds > 0) genericData.push({ stat: 'Rushing', value: Math.min(100, (avgRushYds / 100) * 100) });
+          if (avgRecYds > 0) genericData.push({ stat: 'Receiving', value: Math.min(100, (avgRecYds / 100) * 100) });
+          if (avgTackles > 0) genericData.push({ stat: 'Tackling', value: Math.min(100, (avgTackles / 10) * 100) });
+          if (avgSacks > 0) genericData.push({ stat: 'Pass Rush', value: Math.min(100, (avgSacks / 2) * 100) });
+          // Ensure at least 3 categories for a proper radar
+          if (genericData.length < 3) {
+            return [
+              { stat: 'Rushing', value: Math.min(100, (avgRushYds / 100) * 100) },
+              { stat: 'Receiving', value: Math.min(100, (avgRecYds / 100) * 100) },
+              { stat: 'TDs', value: Math.min(100, (avgTDs / 2) * 100) },
+              { stat: 'Impact', value: Math.min(100, ((avgTackles + avgSacks) / 5) * 100) },
+            ];
+          }
+          return genericData;
+      }
     }
     
     const avgPoints = games.reduce((acc, g) => acc + g.points, 0) / games.length;
@@ -359,7 +450,7 @@ function RadarWidget({ games, isFootball }: { games: Game[]; isFootball: boolean
       { stat: 'Defense', value: avgDefense },
       { stat: 'Hustle', value: avgHustle },
     ];
-  }, [games, isFootball]);
+  }, [games, isFootball, position]);
 
   return (
     <Card className="p-4 animate-fade-up" data-testid="widget-radar">

@@ -1419,6 +1419,7 @@ export default function PlayerDetail() {
             selectedWidgets={widgetPreferences}
             onWidgetsChange={handleWidgetsChange}
             isOwnProfile={isOwnProfile}
+            position={player.position}
           />
 
           {games.length > 0 && (
