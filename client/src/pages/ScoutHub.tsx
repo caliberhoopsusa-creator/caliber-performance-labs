@@ -53,6 +53,13 @@ interface ScoutPlayer {
   hasCaliberBadge: boolean;
   stateRank: number | null;
   countryRank: number | null;
+  // Football scouting metrics
+  fortyYardDash: string | null;
+  verticalJump: string | null;
+  totalPointsSIS: string | null;
+  physicality: number | null;
+  footballIQ: number | null;
+  leadership: number | null;
 }
 
 const US_STATES = [
@@ -358,6 +365,44 @@ function ScoutPlayerCard({ player, sport }: ScoutPlayerCardProps) {
                 <div>
                   <div className="text-lg font-bold text-primary">{(player.bpg || 0).toFixed(1)}</div>
                   <div className="text-xs text-muted-foreground">BPG</div>
+                </div>
+              </div>
+            )}
+
+            {/* Football Scouting Metrics */}
+            {isFootball && (player.fortyYardDash || player.totalPointsSIS || player.physicality || player.footballIQ || player.leadership) && (
+              <div className="mt-3 pt-3 border-t border-cyan-500/20">
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  {player.fortyYardDash && (
+                    <div>
+                      <div className="text-sm font-bold text-cyan-400">{player.fortyYardDash}s</div>
+                      <div className="text-xs text-muted-foreground">40 Time</div>
+                    </div>
+                  )}
+                  {player.totalPointsSIS && (
+                    <div>
+                      <div className="text-sm font-bold text-cyan-400">{player.totalPointsSIS}</div>
+                      <div className="text-xs text-muted-foreground">SIS Pts</div>
+                    </div>
+                  )}
+                  {player.physicality !== null && player.physicality > 0 && (
+                    <div>
+                      <div className="text-sm font-bold text-cyan-400">{player.physicality}/10</div>
+                      <div className="text-xs text-muted-foreground">Physical</div>
+                    </div>
+                  )}
+                  {player.footballIQ !== null && player.footballIQ > 0 && (
+                    <div>
+                      <div className="text-sm font-bold text-cyan-400">{player.footballIQ}/10</div>
+                      <div className="text-xs text-muted-foreground">IQ</div>
+                    </div>
+                  )}
+                  {player.leadership !== null && player.leadership > 0 && (
+                    <div>
+                      <div className="text-sm font-bold text-cyan-400">{player.leadership}/10</div>
+                      <div className="text-xs text-muted-foreground">Leader</div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

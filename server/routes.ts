@@ -2613,10 +2613,11 @@ export async function registerRoutes(
         const games = player.games || [];
         const gamesPlayed = games.length;
         
-        // Fetch highlight and badge counts in parallel
-        const [highlightCount, badgeCount] = await Promise.all([
+        // Fetch highlight, badge counts, and football metrics in parallel
+        const [highlightCount, badgeCount, fbMetrics] = await Promise.all([
           storage.getPlayerHighlightCount(player.id),
           storage.getPlayerBadgeCount(player.id),
+          player.sport === 'football' ? storage.getFootballMetrics(player.id) : Promise.resolve(null),
         ]);
         
         // Check if player has caliber badge
@@ -2660,6 +2661,13 @@ export async function registerRoutes(
             threePtPct: null,
             completionPct: null,
             hasCaliberBadge,
+            // Football metrics
+            fortyYardDash: fbMetrics?.fortyYardDash ?? null,
+            verticalJump: fbMetrics?.verticalJump ?? null,
+            totalPointsSIS: fbMetrics?.totalPointsSIS ?? null,
+            physicality: fbMetrics?.physicality ?? null,
+            footballIQ: fbMetrics?.footballIQ ?? null,
+            leadership: fbMetrics?.leadership ?? null,
           };
         }
 
@@ -2738,6 +2746,13 @@ export async function registerRoutes(
           threePtPct: threePtPct !== null ? Number(threePtPct.toFixed(1)) : null,
           completionPct: completionPct !== null ? Number(completionPct.toFixed(1)) : null,
           hasCaliberBadge,
+          // Football metrics
+          fortyYardDash: fbMetrics?.fortyYardDash ?? null,
+          verticalJump: fbMetrics?.verticalJump ?? null,
+          totalPointsSIS: fbMetrics?.totalPointsSIS ?? null,
+          physicality: fbMetrics?.physicality ?? null,
+          footballIQ: fbMetrics?.footballIQ ?? null,
+          leadership: fbMetrics?.leadership ?? null,
         };
       }));
 

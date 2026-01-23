@@ -84,6 +84,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { FootballMetrics } from "@/components/FootballMetrics";
 
 const BADGE_ICONS: Record<string, any> = {
   twenty_piece: Target,
@@ -1405,6 +1406,11 @@ export default function PlayerDetail() {
           <TabsTrigger value="coach" data-testid="tab-coach">
             <Phone className="w-4 h-4 mr-2" /> Coach
           </TabsTrigger>
+          {isFootball && (
+            <TabsTrigger value="scouting" data-testid="tab-scouting">
+              <Crosshair className="w-4 h-4 mr-2" /> Scouting
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6 animate-fade-in">
@@ -2101,6 +2107,15 @@ export default function PlayerDetail() {
             isOwnProfile={isOwnProfile} 
           />
         </TabsContent>
+
+        {isFootball && (
+          <TabsContent value="scouting" className="space-y-6 animate-fade-in">
+            <FootballMetrics 
+              playerId={player.id} 
+              canEdit={isOwnProfile} 
+            />
+          </TabsContent>
+        )}
       </Tabs>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
