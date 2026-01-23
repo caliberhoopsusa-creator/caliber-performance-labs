@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { useSubscription, type SubscriptionTier } from "@/hooks/use-subscription";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { SportToggle } from "@/components/SportToggle";
 
 type NavItem = {
   href: string;
@@ -160,7 +161,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
             </div>
           </div>
 
-          <div className="p-3 border-b border-white/5">
+          <div className="p-3 border-b border-white/5 space-y-3">
             <Button
               variant="outline"
               size="sm"
@@ -172,6 +173,13 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
               <ArrowLeftRight className="w-3.5 h-3.5 mr-2" />
               Switch to {isPlayer ? 'Coach' : 'Player'} Mode
             </Button>
+            
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] uppercase font-semibold text-muted-foreground/70 tracking-widest px-1">
+                Sport Mode
+              </span>
+              <SportToggle size="sm" showLabels={true} className="w-full justify-center" />
+            </div>
           </div>
 
           <ScrollArea className="flex-1">
