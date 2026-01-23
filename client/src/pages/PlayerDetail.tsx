@@ -1402,23 +1402,26 @@ export default function PlayerDetail() {
       </Card>
 
       <Tabs defaultValue="overview" className="w-full animate-fade-up delay-200">
-        <TabsList className="w-full md:w-auto">
-          <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
-          <TabsTrigger value="highlights" data-testid="tab-highlights">
-            <Film className="w-4 h-4 mr-2" /> Highlights
-          </TabsTrigger>
-          <TabsTrigger value="accolades" data-testid="tab-accolades">
-            <Trophy className="w-4 h-4 mr-2" /> Accolades
-          </TabsTrigger>
-          <TabsTrigger value="coach" data-testid="tab-coach">
-            <Phone className="w-4 h-4 mr-2" /> Coach
-          </TabsTrigger>
-          {isFootball && (
-            <TabsTrigger value="scouting" data-testid="tab-scouting">
-              <Crosshair className="w-4 h-4 mr-2" /> Scouting
+        {/* Horizontally scrollable tabs container for mobile */}
+        <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
+          <TabsList className="w-max md:w-auto inline-flex">
+            <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
+            <TabsTrigger value="highlights" data-testid="tab-highlights">
+              <Film className="w-4 h-4 mr-2" /> Highlights
             </TabsTrigger>
-          )}
-        </TabsList>
+            <TabsTrigger value="accolades" data-testid="tab-accolades">
+              <Trophy className="w-4 h-4 mr-2" /> Accolades
+            </TabsTrigger>
+            <TabsTrigger value="coach" data-testid="tab-coach">
+              <Phone className="w-4 h-4 mr-2" /> Coach
+            </TabsTrigger>
+            {isFootball && (
+              <TabsTrigger value="scouting" data-testid="tab-scouting">
+                <Crosshair className="w-4 h-4 mr-2" /> Scouting
+              </TabsTrigger>
+            )}
+          </TabsList>
+        </div>
 
         <TabsContent value="overview" className="space-y-6 animate-fade-in">
           <ProfileWidgets

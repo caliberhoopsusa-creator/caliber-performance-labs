@@ -87,6 +87,15 @@
   .bg-grade-d { background-color: hsl(var(--grade-d)); }
   .bg-grade-f { background-color: hsl(var(--grade-f)); }
 
+  /* Hide scrollbar but keep scroll functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
   /* Dot grid background pattern */
   .dot-grid {
     background-image: radial-gradient(circle, rgba(255,255,255,0.03) 1px, transparent 1px);
