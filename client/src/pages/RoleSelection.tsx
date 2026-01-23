@@ -172,7 +172,17 @@ export default function RoleSelection() {
   const createTeamMutation = useMutation({
     mutationFn: async (data: { name: string }) => {
       await setRoleMutation.mutateAsync('coach');
-      return await apiRequest('POST', '/api/teams', { name: data.name });
+      // Get or create a session ID for team membership
+      let sessionId = localStorage.getItem("caliber_session_id");
+      if (!sessionId) {
+        sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        localStorage.setItem("caliber_session_id", sessionId);
+      }
+      return await apiRequest('POST', '/api/teams', { 
+        name: data.name,
+        sessionId,
+        displayName: 'Coach'
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/teams'] });
