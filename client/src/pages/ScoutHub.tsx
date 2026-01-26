@@ -504,6 +504,9 @@ export default function ScoutHub() {
   const [minPassingYds, setMinPassingYds] = useState("All");
   const [minRushingYds, setMinRushingYds] = useState("All");
   const [minReceivingYds, setMinReceivingYds] = useState("All");
+  const [minTackles, setMinTackles] = useState("All");
+  const [minSacks, setMinSacks] = useState("All");
+  const [minDefInt, setMinDefInt] = useState("All");
 
   const isFootball = sport === 'football';
 
