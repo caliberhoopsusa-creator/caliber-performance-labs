@@ -157,10 +157,10 @@ export function ProfileWidgets({ games, selectedWidgets, onWidgetsChange, isOwnP
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {widgets.includes("trends") && <TrendsWidget games={sortedGames} isFootball={isFootball} />}
+        {widgets.includes("trends") && <TrendsWidget games={sortedGames} isFootball={isFootball} position={position} />}
         {widgets.includes("grades") && <GradesWidget games={sortedGames} />}
         {widgets.includes("radar") && <RadarWidget games={sortedGames} isFootball={isFootball} position={position} />}
-        {widgets.includes("averages") && <AveragesWidget games={sortedGames} isFootball={isFootball} />}
+        {widgets.includes("averages") && <AveragesWidget games={sortedGames} isFootball={isFootball} position={position} />}
         {widgets.includes("shooting") && !isFootball && <ShootingWidget games={sortedGames} />}
         {widgets.includes("efficiency") && isFootball && <EfficiencyWidget games={sortedGames} />}
       </div>
@@ -170,20 +170,38 @@ export function ProfileWidgets({ games, selectedWidgets, onWidgetsChange, isOwnP
   );
 }
 
-function TrendsWidget({ games, isFootball }: { games: Game[]; isFootball: boolean }) {
+function TrendsWidget({ games, isFootball, position }: { games: Game[]; isFootball: boolean; position?: string }) {
+  const primaryPosition = position?.split(',')[0]?.trim() || '';
+  
+  // Determine position category for football
+  const isOffensiveSkill = ['QB', 'RB', 'WR', 'TE'].includes(primaryPosition);
+  const isDefensive = ['DL', 'LB', 'DB'].includes(primaryPosition);
+  const isSpecialTeams = ['K', 'P'].includes(primaryPosition);
+  
   const chartData = useMemo(() => {
     return games
       .slice(-10)
       .map(g => {
         if (isFootball) {
+          const date = format(new Date(g.date), "M/d");
+          
+          if (primaryPosition === 'QB') {
+            return { date, passYds: g.passingYards || 0, tds: ((g.passingTouchdowns || 0) + (g.rushingTouchdowns || 0)) * 10, rushYds: g.rushingYards || 0 };
+          } else if (primaryPosition === 'RB') {
+            return { date, rushYds: g.rushingYards || 0, tds: ((g.rushingTouchdowns || 0) + (g.receivingTouchdowns || 0)) * 10, recYds: g.receivingYards || 0 };
+          } else if (['WR', 'TE'].includes(primaryPosition)) {
+            return { date, recYds: g.receivingYards || 0, tds: (g.receivingTouchdowns || 0) * 10, targets: g.targets || 0 };
+          } else if (isDefensive) {
+            return { date, tackles: g.tackles || 0, sacks: (g.sacks || 0) * 10, ints: (g.defensiveInterceptions || 0) * 20 };
+          } else if (primaryPosition === 'K') {
+            return { date, fgMade: (g.fieldGoalsMade || 0) * 10, xpMade: (g.extraPointsMade || 0) * 5, pts: ((g.fieldGoalsMade || 0) * 3) + (g.extraPointsMade || 0) };
+          } else if (primaryPosition === 'P') {
+            return { date, puntYds: g.puntYards || 0, punts: (g.punts || 0) * 10, avg: g.punts ? Math.round((g.puntYards || 0) / g.punts) : 0 };
+          }
+          // Default offensive fallback
           const totalYards = (g.passingYards || 0) + (g.rushingYards || 0) + (g.receivingYards || 0);
           const totalTDs = (g.passingTouchdowns || 0) + (g.rushingTouchdowns || 0) + (g.receivingTouchdowns || 0);
-          return {
-            date: format(new Date(g.date), "M/d"),
-            yards: totalYards,
-            tds: totalTDs * 10,
-            tackles: g.tackles || 0,
-          };
+          return { date, yards: totalYards, tds: totalTDs * 10, touches: (g.carries || 0) + (g.receptions || 0) };
         }
         return {
           date: format(new Date(g.date), "M/d"),
@@ -192,9 +210,57 @@ function TrendsWidget({ games, isFootball }: { games: Game[]; isFootball: boolea
           assists: g.assists,
         };
       });
-  }, [games, isFootball]);
+  }, [games, isFootball, primaryPosition, isDefensive]);
 
   if (isFootball) {
+    // Get position-specific chart config
+    let lines: { key: string; name: string; color: string }[] = [];
+    
+    if (primaryPosition === 'QB') {
+      lines = [
+        { key: 'passYds', name: 'Pass YDS', color: '#00D4FF' },
+        { key: 'tds', name: 'TD×10', color: '#10b981' },
+        { key: 'rushYds', name: 'Rush YDS', color: '#f59e0b' },
+      ];
+    } else if (primaryPosition === 'RB') {
+      lines = [
+        { key: 'rushYds', name: 'Rush YDS', color: '#00D4FF' },
+        { key: 'tds', name: 'TD×10', color: '#10b981' },
+        { key: 'recYds', name: 'Rec YDS', color: '#f59e0b' },
+      ];
+    } else if (['WR', 'TE'].includes(primaryPosition)) {
+      lines = [
+        { key: 'recYds', name: 'Rec YDS', color: '#00D4FF' },
+        { key: 'tds', name: 'TD×10', color: '#10b981' },
+        { key: 'targets', name: 'Targets', color: '#f59e0b' },
+      ];
+    } else if (isDefensive) {
+      lines = [
+        { key: 'tackles', name: 'Tackles', color: '#00D4FF' },
+        { key: 'sacks', name: 'Sack×10', color: '#10b981' },
+        { key: 'ints', name: 'INT×20', color: '#f59e0b' },
+      ];
+    } else if (primaryPosition === 'K') {
+      lines = [
+        { key: 'fgMade', name: 'FG×10', color: '#00D4FF' },
+        { key: 'xpMade', name: 'XP×5', color: '#10b981' },
+        { key: 'pts', name: 'Points', color: '#f59e0b' },
+      ];
+    } else if (primaryPosition === 'P') {
+      lines = [
+        { key: 'puntYds', name: 'Punt YDS', color: '#00D4FF' },
+        { key: 'punts', name: 'Punts×10', color: '#10b981' },
+        { key: 'avg', name: 'Avg', color: '#f59e0b' },
+      ];
+    } else {
+      // Default fallback
+      lines = [
+        { key: 'yards', name: 'YDS', color: '#00D4FF' },
+        { key: 'tds', name: 'TD×10', color: '#10b981' },
+        { key: 'touches', name: 'Touches', color: '#f59e0b' },
+      ];
+    }
+    
     return (
       <Card className="p-4 animate-fade-up" data-testid="widget-trends">
         <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
@@ -213,16 +279,18 @@ function TrendsWidget({ games, isFootball }: { games: Game[]; isFootball: boolea
               <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.5)' }} axisLine={{ stroke: 'rgba(255,255,255,0.1)' }} />
               <YAxis tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.5)' }} width={40} axisLine={{ stroke: 'rgba(255,255,255,0.1)' }} />
               <Tooltip content={<PremiumTooltip />} cursor={{ stroke: 'rgba(0,212,255,0.3)' }} />
-              <Line type="monotone" dataKey="yards" stroke="#00D4FF" strokeWidth={2.5} dot={{ r: 4, fill: '#00D4FF', filter: 'drop-shadow(0 0 8px rgba(0,212,255,0.6))' }} activeDot={{ r: 6, filter: 'drop-shadow(0 0 12px rgba(0,212,255,0.8))' }} isAnimationActive name="YDS" />
-              <Line type="monotone" dataKey="tds" stroke="#10b981" strokeWidth={2.5} dot={{ r: 4, fill: '#10b981', filter: 'drop-shadow(0 0 8px rgba(16,185,129,0.6))' }} activeDot={{ r: 6, filter: 'drop-shadow(0 0 12px rgba(16,185,129,0.8))' }} isAnimationActive name="TD×10" />
-              <Line type="monotone" dataKey="tackles" stroke="#f59e0b" strokeWidth={2.5} dot={{ r: 4, fill: '#f59e0b', filter: 'drop-shadow(0 0 8px rgba(245,158,11,0.6))' }} activeDot={{ r: 6, filter: 'drop-shadow(0 0 12px rgba(245,158,11,0.8))' }} isAnimationActive name="TCK" />
+              {lines.map((line, i) => (
+                <Line key={line.key} type="monotone" dataKey={line.key} stroke={line.color} strokeWidth={2.5} dot={{ r: 4, fill: line.color, filter: `drop-shadow(0 0 8px ${line.color}80)` }} activeDot={{ r: 6, filter: `drop-shadow(0 0 12px ${line.color}cc)` }} isAnimationActive name={line.name} />
+              ))}
             </LineChart>
           </ResponsiveContainer>
         </div>
         <div className="flex justify-center gap-4 mt-2 text-xs">
-          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-cyan-400" /> YDS</span>
-          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /> TD×10</span>
-          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500" /> TCK</span>
+          {lines.map(line => (
+            <span key={line.key} className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: line.color }} /> {line.name}
+            </span>
+          ))}
         </div>
       </Card>
     );
@@ -484,7 +552,10 @@ function RadarWidget({ games, isFootball, position }: { games: Game[]; isFootbal
   );
 }
 
-function AveragesWidget({ games, isFootball }: { games: Game[]; isFootball: boolean }) {
+function AveragesWidget({ games, isFootball, position }: { games: Game[]; isFootball: boolean; position?: string }) {
+  const primaryPosition = position?.split(',')[0]?.trim() || '';
+  const isDefensive = ['DL', 'LB', 'DB'].includes(primaryPosition);
+  
   const basketballStats = useMemo(() => {
     if (games.length === 0) return { pts: '0', reb: '0', ast: '0', stl: '0', blk: '0' };
     return {
@@ -496,21 +567,66 @@ function AveragesWidget({ games, isFootball }: { games: Game[]; isFootball: bool
     };
   }, [games]);
 
-  const footballStats = useMemo(() => {
-    if (games.length === 0) return { passYds: '0', rushYds: '0', recYds: '0', tds: '0', tck: '0' };
-    const totalPassYds = games.reduce((acc, g) => acc + (g.passingYards || 0), 0);
-    const totalRushYds = games.reduce((acc, g) => acc + (g.rushingYards || 0), 0);
-    const totalRecYds = games.reduce((acc, g) => acc + (g.receivingYards || 0), 0);
-    const totalTDs = games.reduce((acc, g) => acc + (g.passingTouchdowns || 0) + (g.rushingTouchdowns || 0) + (g.receivingTouchdowns || 0), 0);
-    const totalTackles = games.reduce((acc, g) => acc + (g.tackles || 0), 0);
-    return {
-      passYds: (totalPassYds / games.length).toFixed(0),
-      rushYds: (totalRushYds / games.length).toFixed(0),
-      recYds: (totalRecYds / games.length).toFixed(0),
-      tds: (totalTDs / games.length).toFixed(1),
-      tck: (totalTackles / games.length).toFixed(1),
-    };
-  }, [games]);
+  // Position-specific football stats
+  const positionStats = useMemo(() => {
+    if (games.length === 0) return [];
+    const count = games.length;
+    
+    if (primaryPosition === 'QB') {
+      return [
+        { label: 'PASS', value: (games.reduce((acc, g) => acc + (g.passingYards || 0), 0) / count).toFixed(0) },
+        { label: 'TD', value: (games.reduce((acc, g) => acc + (g.passingTouchdowns || 0), 0) / count).toFixed(1) },
+        { label: 'COMP%', value: (() => { const att = games.reduce((acc, g) => acc + (g.passAttempts || 0), 0); const comp = games.reduce((acc, g) => acc + (g.completions || 0), 0); return att > 0 ? ((comp / att) * 100).toFixed(0) : '0'; })() },
+        { label: 'RUSH', value: (games.reduce((acc, g) => acc + (g.rushingYards || 0), 0) / count).toFixed(0) },
+        { label: 'INT', value: (games.reduce((acc, g) => acc + (g.interceptions || 0), 0) / count).toFixed(1) },
+      ];
+    } else if (primaryPosition === 'RB') {
+      return [
+        { label: 'RUSH', value: (games.reduce((acc, g) => acc + (g.rushingYards || 0), 0) / count).toFixed(0) },
+        { label: 'TD', value: (games.reduce((acc, g) => acc + (g.rushingTouchdowns || 0), 0) / count).toFixed(1) },
+        { label: 'YPC', value: (() => { const carries = games.reduce((acc, g) => acc + (g.carries || 0), 0); const yards = games.reduce((acc, g) => acc + (g.rushingYards || 0), 0); return carries > 0 ? (yards / carries).toFixed(1) : '0'; })() },
+        { label: 'REC', value: (games.reduce((acc, g) => acc + (g.receivingYards || 0), 0) / count).toFixed(0) },
+        { label: 'CAR', value: (games.reduce((acc, g) => acc + (g.carries || 0), 0) / count).toFixed(0) },
+      ];
+    } else if (['WR', 'TE'].includes(primaryPosition)) {
+      return [
+        { label: 'REC', value: (games.reduce((acc, g) => acc + (g.receivingYards || 0), 0) / count).toFixed(0) },
+        { label: 'TD', value: (games.reduce((acc, g) => acc + (g.receivingTouchdowns || 0), 0) / count).toFixed(1) },
+        { label: 'CATCH', value: (games.reduce((acc, g) => acc + (g.receptions || 0), 0) / count).toFixed(1) },
+        { label: 'TGT', value: (games.reduce((acc, g) => acc + (g.targets || 0), 0) / count).toFixed(1) },
+        { label: 'YPR', value: (() => { const rec = games.reduce((acc, g) => acc + (g.receptions || 0), 0); const yards = games.reduce((acc, g) => acc + (g.receivingYards || 0), 0); return rec > 0 ? (yards / rec).toFixed(1) : '0'; })() },
+      ];
+    } else if (isDefensive) {
+      return [
+        { label: 'TCK', value: (games.reduce((acc, g) => acc + (g.tackles || 0), 0) / count).toFixed(1) },
+        { label: 'SOLO', value: (games.reduce((acc, g) => acc + (g.soloTackles || 0), 0) / count).toFixed(1) },
+        { label: 'SACK', value: (games.reduce((acc, g) => acc + (g.sacks || 0), 0) / count).toFixed(1) },
+        { label: 'INT', value: (games.reduce((acc, g) => acc + (g.defensiveInterceptions || 0), 0) / count).toFixed(1) },
+        { label: 'PD', value: (games.reduce((acc, g) => acc + (g.passDeflections || 0), 0) / count).toFixed(1) },
+      ];
+    } else if (primaryPosition === 'K') {
+      return [
+        { label: 'FGM', value: (games.reduce((acc, g) => acc + (g.fieldGoalsMade || 0), 0) / count).toFixed(1) },
+        { label: 'FG%', value: (() => { const att = games.reduce((acc, g) => acc + (g.fieldGoalsAttempted || 0), 0); const made = games.reduce((acc, g) => acc + (g.fieldGoalsMade || 0), 0); return att > 0 ? ((made / att) * 100).toFixed(0) : '0'; })() },
+        { label: 'XPM', value: (games.reduce((acc, g) => acc + (g.extraPointsMade || 0), 0) / count).toFixed(1) },
+        { label: 'PTS', value: (games.reduce((acc, g) => acc + ((g.fieldGoalsMade || 0) * 3) + (g.extraPointsMade || 0), 0) / count).toFixed(1) },
+      ];
+    } else if (primaryPosition === 'P') {
+      return [
+        { label: 'YDS', value: (games.reduce((acc, g) => acc + (g.puntYards || 0), 0) / count).toFixed(0) },
+        { label: 'PUNTS', value: (games.reduce((acc, g) => acc + (g.punts || 0), 0) / count).toFixed(1) },
+        { label: 'AVG', value: (() => { const punts = games.reduce((acc, g) => acc + (g.punts || 0), 0); const yards = games.reduce((acc, g) => acc + (g.puntYards || 0), 0); return punts > 0 ? (yards / punts).toFixed(1) : '0'; })() },
+      ];
+    }
+    // Default: show all offensive stats
+    return [
+      { label: 'PASS', value: (games.reduce((acc, g) => acc + (g.passingYards || 0), 0) / count).toFixed(0) },
+      { label: 'RUSH', value: (games.reduce((acc, g) => acc + (g.rushingYards || 0), 0) / count).toFixed(0) },
+      { label: 'REC', value: (games.reduce((acc, g) => acc + (g.receivingYards || 0), 0) / count).toFixed(0) },
+      { label: 'TD', value: (games.reduce((acc, g) => acc + (g.passingTouchdowns || 0) + (g.rushingTouchdowns || 0) + (g.receivingTouchdowns || 0), 0) / count).toFixed(1) },
+      { label: 'TCK', value: (games.reduce((acc, g) => acc + (g.tackles || 0), 0) / count).toFixed(1) },
+    ];
+  }, [games, primaryPosition, isDefensive]);
 
   if (isFootball) {
     return (
@@ -518,27 +634,13 @@ function AveragesWidget({ games, isFootball }: { games: Game[]; isFootball: bool
         <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
           <BarChart3 className="w-4 h-4 text-primary" /> Season Averages
         </h3>
-        <div className="grid grid-cols-5 gap-2 text-center">
-          <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 hover-elevate transition-all">
-            <p className="text-xl font-bold text-cyan-400">{footballStats.passYds}</p>
-            <p className="text-xs text-muted-foreground">PASS</p>
-          </div>
-          <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 hover-elevate transition-all">
-            <p className="text-xl font-bold text-cyan-400">{footballStats.rushYds}</p>
-            <p className="text-xs text-muted-foreground">RUSH</p>
-          </div>
-          <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 hover-elevate transition-all">
-            <p className="text-xl font-bold text-cyan-400">{footballStats.recYds}</p>
-            <p className="text-xs text-muted-foreground">REC</p>
-          </div>
-          <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 hover-elevate transition-all">
-            <p className="text-xl font-bold text-cyan-400">{footballStats.tds}</p>
-            <p className="text-xs text-muted-foreground">TD</p>
-          </div>
-          <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 hover-elevate transition-all">
-            <p className="text-xl font-bold text-cyan-400">{footballStats.tck}</p>
-            <p className="text-xs text-muted-foreground">TCK</p>
-          </div>
+        <div className={`grid gap-2 text-center`} style={{ gridTemplateColumns: `repeat(${positionStats.length}, 1fr)` }}>
+          {positionStats.map((stat, i) => (
+            <div key={stat.label} className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 hover-elevate transition-all">
+              <p className="text-xl font-bold text-cyan-400">{stat.value}</p>
+              <p className="text-xs text-muted-foreground">{stat.label}</p>
+            </div>
+          ))}
         </div>
       </Card>
     );
