@@ -335,8 +335,10 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
   const isFootball = sport === 'football';
 
   const games = useMemo(() => {
-    return player?.games ?? [];
-  }, [player]);
+    const allGames = player?.games ?? [];
+    // Filter games by current sport
+    return allGames.filter(g => g.sport === sport);
+  }, [player, sport]);
 
   const { currentPeriodGames, previousPeriodGames, currentStats, previousStats, footballStats, prevFootballStats } = useMemo(() => {
     const current = filterGamesByPeriod(games, period);

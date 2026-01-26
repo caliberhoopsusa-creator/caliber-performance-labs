@@ -1337,10 +1337,17 @@ export function useDeleteAlert() {
 export type PreGameReportMatchup = {
   date: string;
   result: string | null;
+  grade: string | null;
+  // Basketball stats
   points: number;
   rebounds: number;
   assists: number;
-  grade: string | null;
+  // Football stats
+  passingYards: number;
+  rushingYards: number;
+  receivingYards: number;
+  touchdowns: number;
+  tackles: number;
 };
 
 export type PreGameReportScoutingReport = {
@@ -1366,10 +1373,17 @@ export type PreGameReportData = {
   };
   recentPerformance: {
     gamesPlayed: number;
-    avgPoints: string;
-    avgRebounds: string;
-    avgAssists: string;
     recentGrades: (string | null)[];
+    // Basketball stats (optional)
+    avgPoints?: string;
+    avgRebounds?: string;
+    avgAssists?: string;
+    // Football stats (optional)
+    avgPassingYards?: string;
+    avgRushingYards?: string;
+    avgReceivingYards?: string;
+    avgTouchdowns?: string;
+    avgTackles?: string;
   };
   opponentHistory: {
     matchups: PreGameReportMatchup[];
@@ -1379,13 +1393,14 @@ export type PreGameReportData = {
   activeCoachGoals: PreGameReportCoachGoal[];
 };
 
-export function usePreGameReport(playerId: number, opponent?: string) {
+export function usePreGameReport(playerId: number, opponent?: string, sport: string = 'basketball') {
   return useQuery<PreGameReportData>({
-    queryKey: ['/api/players', playerId, 'pregame-report', opponent || ''],
+    queryKey: ['/api/players', playerId, 'pregame-report', opponent || '', sport],
     queryFn: async () => {
-      const url = opponent
-        ? `/api/players/${playerId}/pregame-report?opponent=${encodeURIComponent(opponent)}`
-        : `/api/players/${playerId}/pregame-report`;
+      const params = new URLSearchParams();
+      if (opponent) params.append('opponent', opponent);
+      params.append('sport', sport);
+      const url = `/api/players/${playerId}/pregame-report?${params.toString()}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to fetch pregame report");
       return res.json();

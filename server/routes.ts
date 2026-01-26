@@ -5996,28 +5996,52 @@ Respond in this exact JSON format:
     try {
       const playerId = Number(req.params.playerId);
       const opponentName = req.query.opponent as string;
+      const sport = (req.query.sport as string) || 'basketball';
 
       const player = await storage.getPlayer(playerId);
       if (!player) {
         return res.status(404).json({ error: 'Player not found' });
       }
 
-      // Recent performance (last 5 games)
-      const recentGames = player.games.slice(0, 5);
-      const recentStats = {
+      // Filter games by sport first
+      const sportGames = (player.games || []).filter(g => g.sport === sport);
+
+      // Recent performance (last 5 games for current sport)
+      const recentGames = sportGames.slice(0, 5);
+      
+      // Sport-specific stats
+      const isFootball = sport === 'football';
+      let recentStats: any = {
         gamesPlayed: recentGames.length,
-        avgPoints: recentGames.length > 0 ? (recentGames.reduce((acc, g) => acc + g.points, 0) / recentGames.length).toFixed(1) : '0.0',
-        avgRebounds: recentGames.length > 0 ? (recentGames.reduce((acc, g) => acc + g.rebounds, 0) / recentGames.length).toFixed(1) : '0.0',
-        avgAssists: recentGames.length > 0 ? (recentGames.reduce((acc, g) => acc + g.assists, 0) / recentGames.length).toFixed(1) : '0.0',
         recentGrades: recentGames.map(g => g.grade).filter(Boolean),
       };
 
-      // Games against this opponent
+      if (isFootball) {
+        // Football stats
+        recentStats = {
+          ...recentStats,
+          avgPassingYards: recentGames.length > 0 ? (recentGames.reduce((acc, g) => acc + (g.passingYards || 0), 0) / recentGames.length).toFixed(1) : '0.0',
+          avgRushingYards: recentGames.length > 0 ? (recentGames.reduce((acc, g) => acc + (g.rushingYards || 0), 0) / recentGames.length).toFixed(1) : '0.0',
+          avgReceivingYards: recentGames.length > 0 ? (recentGames.reduce((acc, g) => acc + (g.receivingYards || 0), 0) / recentGames.length).toFixed(1) : '0.0',
+          avgTouchdowns: recentGames.length > 0 ? (recentGames.reduce((acc, g) => acc + (g.passingTouchdowns || 0) + (g.rushingTouchdowns || 0) + (g.receivingTouchdowns || 0), 0) / recentGames.length).toFixed(1) : '0.0',
+          avgTackles: recentGames.length > 0 ? (recentGames.reduce((acc, g) => acc + (g.tackles || 0), 0) / recentGames.length).toFixed(1) : '0.0',
+        };
+      } else {
+        // Basketball stats
+        recentStats = {
+          ...recentStats,
+          avgPoints: recentGames.length > 0 ? (recentGames.reduce((acc, g) => acc + g.points, 0) / recentGames.length).toFixed(1) : '0.0',
+          avgRebounds: recentGames.length > 0 ? (recentGames.reduce((acc, g) => acc + g.rebounds, 0) / recentGames.length).toFixed(1) : '0.0',
+          avgAssists: recentGames.length > 0 ? (recentGames.reduce((acc, g) => acc + g.assists, 0) / recentGames.length).toFixed(1) : '0.0',
+        };
+      }
+
+      // Games against this opponent (filtered by sport)
       let opponentMatchups: any[] = [];
       let opponentScoutInfo = null;
 
       if (opponentName) {
-        opponentMatchups = player.games.filter(g =>
+        opponentMatchups = sportGames.filter(g =>
           g.opponent.toLowerCase().includes(opponentName.toLowerCase())
         ).slice(0, 5);
 
@@ -6044,10 +6068,17 @@ Respond in this exact JSON format:
           matchups: opponentMatchups.map(g => ({
             date: g.date,
             result: g.result,
+            grade: g.grade,
+            // Basketball stats
             points: g.points,
             rebounds: g.rebounds,
             assists: g.assists,
-            grade: g.grade,
+            // Football stats
+            passingYards: g.passingYards || 0,
+            rushingYards: g.rushingYards || 0,
+            receivingYards: g.receivingYards || 0,
+            touchdowns: (g.passingTouchdowns || 0) + (g.rushingTouchdowns || 0) + (g.receivingTouchdowns || 0),
+            tackles: g.tackles || 0,
           })),
           totalGamesVs: opponentMatchups.length,
         },

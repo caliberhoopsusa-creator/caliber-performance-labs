@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { usePreGameReport } from "@/hooks/use-basketball";
+import { useSport } from "@/components/SportToggle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -83,8 +84,10 @@ function StatIndicator({ value, benchmark, label }: { value: number; benchmark: 
 export function PreGameReport({ playerId, defaultOpponent = "" }: PreGameReportProps) {
   const [opponentInput, setOpponentInput] = useState(defaultOpponent);
   const [activeOpponent, setActiveOpponent] = useState(defaultOpponent);
+  const sport = useSport();
+  const isFootball = sport === 'football';
   
-  const { data, isLoading, error } = usePreGameReport(playerId, activeOpponent);
+  const { data, isLoading, error } = usePreGameReport(playerId, activeOpponent, sport);
 
   const handleSearch = () => {
     setActiveOpponent(opponentInput);
@@ -114,9 +117,18 @@ export function PreGameReport({ playerId, defaultOpponent = "" }: PreGameReportP
   }
 
   const { player, recentPerformance, opponentHistory, scoutingReport, activeCoachGoals } = data;
-  const avgPoints = parseFloat(recentPerformance.avgPoints);
-  const avgRebounds = parseFloat(recentPerformance.avgRebounds);
-  const avgAssists = parseFloat(recentPerformance.avgAssists);
+  
+  // Basketball stats
+  const avgPoints = parseFloat(recentPerformance.avgPoints || '0');
+  const avgRebounds = parseFloat(recentPerformance.avgRebounds || '0');
+  const avgAssists = parseFloat(recentPerformance.avgAssists || '0');
+  
+  // Football stats
+  const avgPassingYards = parseFloat(recentPerformance.avgPassingYards || '0');
+  const avgRushingYards = parseFloat(recentPerformance.avgRushingYards || '0');
+  const avgReceivingYards = parseFloat(recentPerformance.avgReceivingYards || '0');
+  const avgTouchdowns = parseFloat(recentPerformance.avgTouchdowns || '0');
+  const avgTackles = parseFloat(recentPerformance.avgTackles || '0');
 
   return (
     <div className="space-y-6 print:space-y-4" data-testid="pregame-report">
@@ -198,11 +210,19 @@ export function PreGameReport({ playerId, defaultOpponent = "" }: PreGameReportP
               <p className="text-muted-foreground text-sm" data-testid="text-no-recent-games">No recent games found</p>
             ) : (
               <>
-                <div className="grid grid-cols-3 gap-3">
-                  <StatIndicator value={avgPoints} benchmark={10} label="PPG" />
-                  <StatIndicator value={avgRebounds} benchmark={5} label="RPG" />
-                  <StatIndicator value={avgAssists} benchmark={3} label="APG" />
-                </div>
+                {isFootball ? (
+                  <div className="grid grid-cols-3 gap-3">
+                    <StatIndicator value={avgPassingYards} benchmark={150} label="Pass YDS" />
+                    <StatIndicator value={avgRushingYards} benchmark={50} label="Rush YDS" />
+                    <StatIndicator value={avgReceivingYards} benchmark={40} label="Rec YDS" />
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 gap-3">
+                    <StatIndicator value={avgPoints} benchmark={10} label="PPG" />
+                    <StatIndicator value={avgRebounds} benchmark={5} label="RPG" />
+                    <StatIndicator value={avgAssists} benchmark={3} label="APG" />
+                  </div>
+                )}
                 
                 <div>
                   <p className="text-xs text-muted-foreground mb-2 print:text-gray-600">Recent Grades</p>
@@ -255,7 +275,11 @@ export function PreGameReport({ playerId, defaultOpponent = "" }: PreGameReportP
                         )}
                       </div>
                       <div className="flex items-center gap-3">
-                        <span>{matchup.points}pts {matchup.rebounds}reb {matchup.assists}ast</span>
+                        {isFootball ? (
+                          <span>{matchup.passingYards + matchup.rushingYards + matchup.receivingYards}yds {matchup.touchdowns}td</span>
+                        ) : (
+                          <span>{matchup.points}pts {matchup.rebounds}reb {matchup.assists}ast</span>
+                        )}
                         <GradeBadge grade={matchup.grade} />
                       </div>
                     </div>
