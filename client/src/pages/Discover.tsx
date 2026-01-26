@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { GradeBadge } from "@/components/GradeBadge";
 import { useSport } from "@/components/SportToggle";
 import { BASKETBALL_POSITIONS, FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS } from "@shared/sports-config";
-import { Search, MapPin, GraduationCap, Users, ChevronRight, Sparkles, Eye, CheckCircle, Target, Film, Trophy, BookOpen, Crosshair, Award, Shield, Zap, UserPlus, UserCheck, Loader2 } from "lucide-react";
+import { Search, MapPin, GraduationCap, Users, ChevronRight, Sparkles, Eye, CheckCircle, Target, Film, Trophy, BookOpen, Crosshair, Award, Shield, Zap, UserPlus, UserCheck, Loader2, ArrowUpDown } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -487,10 +487,37 @@ export default function Discover() {
   const [minTackles, setMinTackles] = useState("All");
   const [minSacks, setMinSacks] = useState("All");
   const [minDefInt, setMinDefInt] = useState("All");
+  const [sortBy, setSortBy] = useState("grade");
   const [followingMap, setFollowingMap] = useState<Record<number, boolean>>({});
   const [pendingFollows, setPendingFollows] = useState<Set<number>>(new Set());
+  const prevSportRef = useRef(sport);
 
   const isFootball = sport === 'football';
+
+  // Reset sport-specific filters when switching sports
+  useEffect(() => {
+    if (prevSportRef.current !== sport) {
+      // Reset position filter since positions differ between sports
+      setPosition("All");
+      // Reset basketball-specific filters
+      setMinThreePct("All");
+      setMinPpg("All");
+      setMinRpg("All");
+      setMinApg("All");
+      setMinSpg("All");
+      setMinBpg("All");
+      // Reset football-specific filters
+      setMinPassYds("All");
+      setMinRushYds("All");
+      setMinRecYds("All");
+      setMinTackles("All");
+      setMinSacks("All");
+      setMinDefInt("All");
+      // Reset sort to default
+      setSortBy("grade");
+      prevSportRef.current = sport;
+    }
+  }, [sport]);
 
   const queryParams = new URLSearchParams();
   queryParams.append("sport", sport);
@@ -515,9 +542,10 @@ export default function Discover() {
   if (minTackles !== "All") queryParams.append("minTackles", minTackles);
   if (minSacks !== "All") queryParams.append("minSacks", minSacks);
   if (minDefInt !== "All") queryParams.append("minDefInt", minDefInt);
+  if (sortBy !== "grade") queryParams.append("sortBy", sortBy);
 
   const { data: players, isLoading } = useQuery<DiscoverPlayer[]>({
-    queryKey: ["/api/discover", sport, position, state, graduationYear, searchQuery, openOnly, caliberOnly, minGpa, minThreePct, minPpg, minRpg, minApg, minSpg, minBpg, minPassYds, minRushYds, minRecYds, minTackles, minSacks, minDefInt],
+    queryKey: ["/api/discover", sport, position, state, graduationYear, searchQuery, openOnly, caliberOnly, minGpa, minThreePct, minPpg, minRpg, minApg, minSpg, minBpg, minPassYds, minRushYds, minRecYds, minTackles, minSacks, minDefInt, sortBy],
     queryFn: async () => {
       const res = await fetch(`/api/discover?${queryParams.toString()}`);
       if (!res.ok) throw new Error("Failed to fetch players");
@@ -929,6 +957,70 @@ export default function Discover() {
               )}
             </div>
           </div>
+
+          {isFootball && (
+            <div className="border-t border-border/50 mt-4 pt-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Zap className="w-4 h-4 text-primary" />
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Quick Filters</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant={position === "QB" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setPosition(position === "QB" ? "All" : "QB")}
+                  className="h-7 text-xs"
+                  data-testid="button-preset-qb"
+                >
+                  Quarterbacks
+                </Button>
+                <Button
+                  variant={position === "RB" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setPosition(position === "RB" ? "All" : "RB")}
+                  className="h-7 text-xs"
+                  data-testid="button-preset-rb"
+                >
+                  Running Backs
+                </Button>
+                <Button
+                  variant={["WR", "TE"].includes(position) ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setPosition(["WR", "TE"].includes(position) ? "All" : "WR")}
+                  className="h-7 text-xs"
+                  data-testid="button-preset-receivers"
+                >
+                  Receivers
+                </Button>
+                <Button
+                  variant={["DL", "LB", "DB"].includes(position) ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setPosition(["DL", "LB", "DB"].includes(position) ? "All" : "LB")}
+                  className="h-7 text-xs"
+                  data-testid="button-preset-defense"
+                >
+                  Defensive
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setPosition("All");
+                    setMinPassYds("All");
+                    setMinRushYds("All");
+                    setMinRecYds("All");
+                    setMinTackles("All");
+                    setMinSacks("All");
+                    setMinDefInt("All");
+                  }}
+                  className="h-7 text-xs text-muted-foreground"
+                  data-testid="button-clear-filters"
+                >
+                  Clear All
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -940,6 +1032,32 @@ export default function Discover() {
           </span>
         </div>
         <div className="flex items-center gap-6 flex-wrap">
+          <div className="flex items-center gap-2">
+            <ArrowUpDown className="w-4 h-4 text-muted-foreground" />
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="h-8 w-[140px] text-xs" data-testid="select-sort">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="grade">Best Grade</SelectItem>
+                <SelectItem value="games">Most Games</SelectItem>
+                {isFootball ? (
+                  <>
+                    <SelectItem value="passYds">Pass Yards</SelectItem>
+                    <SelectItem value="rushYds">Rush Yards</SelectItem>
+                    <SelectItem value="recYds">Rec Yards</SelectItem>
+                    <SelectItem value="tackles">Tackles</SelectItem>
+                  </>
+                ) : (
+                  <>
+                    <SelectItem value="ppg">Points (PPG)</SelectItem>
+                    <SelectItem value="rpg">Rebounds (RPG)</SelectItem>
+                    <SelectItem value="apg">Assists (APG)</SelectItem>
+                  </>
+                )}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex items-center gap-3">
             <label 
               htmlFor="caliber-only" 

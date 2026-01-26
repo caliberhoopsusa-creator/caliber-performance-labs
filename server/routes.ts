@@ -3056,8 +3056,38 @@ export async function registerRoutes(
         results = results.filter(p => p.hasCaliberBadge);
       }
 
-      // Sort by avgGradeScore by default (descending)
-      results.sort((a, b) => b.avgGradeScore - a.avgGradeScore);
+      // Sort based on sortBy parameter
+      const sortByParam = (req.query.sortBy as string) || 'grade';
+      switch (sortByParam) {
+        case 'games':
+          results.sort((a, b) => b.gamesPlayed - a.gamesPlayed);
+          break;
+        case 'ppg':
+          results.sort((a, b) => b.ppg - a.ppg);
+          break;
+        case 'rpg':
+          results.sort((a, b) => b.rpg - a.rpg);
+          break;
+        case 'apg':
+          results.sort((a, b) => b.apg - a.apg);
+          break;
+        case 'passYds':
+          results.sort((a, b) => b.passingYards - a.passingYards);
+          break;
+        case 'rushYds':
+          results.sort((a, b) => b.rushingYards - a.rushingYards);
+          break;
+        case 'recYds':
+          results.sort((a, b) => b.receivingYards - a.receivingYards);
+          break;
+        case 'tackles':
+          results.sort((a, b) => b.tackles - a.tackles);
+          break;
+        case 'grade':
+        default:
+          results.sort((a, b) => b.avgGradeScore - a.avgGradeScore);
+          break;
+      }
 
       // Remove internal fields before sending
       const response = results.map(({ avgGradeScore, ...rest }) => rest);
