@@ -1008,8 +1008,11 @@ export default function PlayerDetail() {
     );
   }
 
-  const games = player.games || [];
+  const allGames = player.games || [];
   const isFootball = currentSport === 'football';
+  
+  // Filter games by current sport to ensure stats are accurate per sport
+  const games = allGames.filter(g => g.sport === currentSport);
   
   // === BASKETBALL STATS ===
   const avgPoints = games.length ? (games.reduce((acc, g) => acc + g.points, 0) / games.length).toFixed(1) : "—";
