@@ -1,11 +1,11 @@
 {
   "name": "Caliber Performance Labs",
   "short_name": "Caliber",
-  "description": "Track, analyze, and elevate your basketball game with AI-powered analytics",
+  "description": "Multi-sport player analytics for basketball and football. Track stats, get AI-powered performance grades, earn badges, and level up your game.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0f",
-  "theme_color": "#f97316",
+  "theme_color": "#00D4FF",
   "orientation": "portrait-primary",
   "categories": ["sports", "fitness", "productivity"],
   "icons": [

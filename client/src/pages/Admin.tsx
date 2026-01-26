@@ -31,7 +31,6 @@ function clearAdminPassword() {
 
 async function adminFetch(url: string, options: RequestInit = {}): Promise<Response> {
   const password = getAdminPassword();
-  console.log("adminFetch called:", url, "password exists:", !!password);
   const headers: Record<string, string> = {
     ...(options.headers as Record<string, string> || {}),
   };
@@ -41,18 +40,12 @@ async function adminFetch(url: string, options: RequestInit = {}): Promise<Respo
   if (options.body && typeof options.body === "string") {
     headers["Content-Type"] = "application/json";
   }
-  try {
-    const res = await fetch(url, { ...options, headers });
-    console.log("adminFetch response:", res.status, res.statusText);
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(text || res.statusText);
-    }
-    return res;
-  } catch (err) {
-    console.error("adminFetch error:", err);
-    throw err;
+  const res = await fetch(url, { ...options, headers });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || res.statusText);
   }
+  return res;
 }
 
 function LoginForm({ onLogin }: { onLogin: () => void }) {
