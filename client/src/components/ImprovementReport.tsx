@@ -876,22 +876,41 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
                 </p>
                 <p>
                   Over the <span className="text-foreground font-semibold">{periodLabel.toLowerCase()}</span>, they played{" "}
-                  <span className="text-foreground font-semibold">{currentStats.gamesPlayed} game{currentStats.gamesPlayed !== 1 ? "s" : ""}</span>{" "}
-                  with an average grade of <span className="text-foreground font-semibold">{valueToGrade(currentStats.avgGrade)}</span>.
+                  <span className="text-foreground font-semibold">{isFootball ? footballStats.gamesPlayed : currentStats.gamesPlayed} game{(isFootball ? footballStats.gamesPlayed : currentStats.gamesPlayed) !== 1 ? "s" : ""}</span>{" "}
+                  with an average grade of <span className="text-foreground font-semibold">{valueToGrade(isFootball ? footballStats.avgGrade : currentStats.avgGrade)}</span>.
                 </p>
                 <p>
                   Stat averages:{" "}
-                  <span className="text-foreground font-semibold">{currentStats.points.toFixed(1)} PPG</span>,{" "}
-                  <span className="text-foreground font-semibold">{currentStats.rebounds.toFixed(1)} RPG</span>,{" "}
-                  <span className="text-foreground font-semibold">{currentStats.assists.toFixed(1)} APG</span>,{" "}
-                  <span className="text-foreground font-semibold">{currentStats.steals.toFixed(1)} SPG</span>,{" "}
-                  <span className="text-foreground font-semibold">{currentStats.blocks.toFixed(1)} BPG</span>.
+                  {isFootball ? (
+                    <>
+                      <span className="text-foreground font-semibold">{footballStats.passingYards.toFixed(1)} Pass YDS</span>,{" "}
+                      <span className="text-foreground font-semibold">{footballStats.rushingYards.toFixed(1)} Rush YDS</span>,{" "}
+                      <span className="text-foreground font-semibold">{footballStats.receivingYards.toFixed(1)} Rec YDS</span>,{" "}
+                      <span className="text-foreground font-semibold">{footballStats.totalTDs.toFixed(1)} TDs</span>,{" "}
+                      <span className="text-foreground font-semibold">{footballStats.tackles.toFixed(1)} Tackles</span>.
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-foreground font-semibold">{currentStats.points.toFixed(1)} PPG</span>,{" "}
+                      <span className="text-foreground font-semibold">{currentStats.rebounds.toFixed(1)} RPG</span>,{" "}
+                      <span className="text-foreground font-semibold">{currentStats.assists.toFixed(1)} APG</span>,{" "}
+                      <span className="text-foreground font-semibold">{currentStats.steals.toFixed(1)} SPG</span>,{" "}
+                      <span className="text-foreground font-semibold">{currentStats.blocks.toFixed(1)} BPG</span>.
+                    </>
+                  )}
                 </p>
                 {(() => {
                   const bestImprovement = improvements.find((i) => i.type === "improvement");
                   const worstDecline = improvements.find((i) => i.type === "decline");
                   
-                  const statCategories = [
+                  const statCategories = isFootball ? [
+                    { key: "passingYards", label: "Passing", value: footballStats.passingYards },
+                    { key: "rushingYards", label: "Rushing", value: footballStats.rushingYards },
+                    { key: "receivingYards", label: "Receiving", value: footballStats.receivingYards },
+                    { key: "touchdowns", label: "Scoring TDs", value: footballStats.totalTDs },
+                    { key: "tackles", label: "Tackling", value: footballStats.tackles },
+                    { key: "compPercent", label: "Completion percentage", value: footballStats.compPercent },
+                  ] : [
                     { key: "points", label: "Scoring", value: currentStats.points },
                     { key: "rebounds", label: "Rebounding", value: currentStats.rebounds },
                     { key: "assists", label: "Playmaking", value: currentStats.assists },
