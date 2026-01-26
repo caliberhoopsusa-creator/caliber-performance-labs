@@ -23,6 +23,7 @@ import {
   type Alert,
 } from "@/hooks/use-basketball";
 import { cn } from "@/lib/utils";
+import { useSport } from "@/components/SportToggle";
 
 const ALERT_TYPE_CONFIG: Record<string, { label: string; icon: typeof TrendingDown; className: string }> = {
   performance_drop: { label: "Performance Drop", icon: TrendingDown, className: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300" },
@@ -147,8 +148,9 @@ interface AlertsCenterProps {
 export function AlertsCenter({ playerId }: AlertsCenterProps) {
   const [filterType, setFilterType] = useState<string | null>(null);
   const [filterSeverity, setFilterSeverity] = useState<string | null>(null);
+  const sport = useSport();
 
-  const { data: alerts, isLoading: alertsLoading } = useAlerts(playerId);
+  const { data: alerts, isLoading: alertsLoading } = useAlerts(playerId, sport);
   const { data: players } = usePlayers();
   const markRead = useMarkAlertRead();
   const markAllRead = useMarkAllAlertsRead();

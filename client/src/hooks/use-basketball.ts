@@ -1263,11 +1263,14 @@ export type AlertWithPlayer = Alert & {
   playerName?: string;
 };
 
-export function useAlerts(playerId?: number) {
+export function useAlerts(playerId?: number, sport?: string) {
   return useQuery<Alert[]>({
-    queryKey: playerId ? ['/api/alerts', playerId] : ['/api/alerts'],
+    queryKey: playerId ? ['/api/alerts', playerId, sport] : ['/api/alerts', sport],
     queryFn: async () => {
-      const url = playerId ? `/api/alerts?playerId=${playerId}` : '/api/alerts';
+      const params = new URLSearchParams();
+      if (playerId) params.set('playerId', String(playerId));
+      if (sport) params.set('sport', sport);
+      const url = params.toString() ? `/api/alerts?${params}` : '/api/alerts';
       const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to fetch alerts");
       return res.json();
@@ -1275,11 +1278,12 @@ export function useAlerts(playerId?: number) {
   });
 }
 
-export function useUnreadAlerts() {
+export function useUnreadAlerts(sport?: string) {
   return useQuery<Alert[]>({
-    queryKey: ['/api/alerts/unread'],
+    queryKey: ['/api/alerts/unread', sport],
     queryFn: async () => {
-      const res = await fetch('/api/alerts/unread');
+      const url = sport ? `/api/alerts/unread?sport=${sport}` : '/api/alerts/unread';
+      const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to fetch unread alerts");
       return res.json();
     },

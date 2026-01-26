@@ -317,8 +317,8 @@ export interface IStorage {
 
   // Alerts
   createAlert(data: InsertAlert): Promise<Alert>;
-  getAlerts(playerId?: number): Promise<Alert[]>;
-  getUnreadAlerts(): Promise<Alert[]>;
+  getAlerts(playerId?: number, sport?: string): Promise<Alert[]>;
+  getUnreadAlerts(sport?: string): Promise<Alert[]>;
   markAlertRead(id: number): Promise<void>;
   markAllAlertsRead(): Promise<void>;
   deleteAlert(id: number): Promise<void>;
@@ -1710,14 +1710,56 @@ export class DatabaseStorage implements IStorage {
     return newAlert;
   }
 
-  async getAlerts(playerId?: number): Promise<Alert[]> {
+  async getAlerts(playerId?: number, sport?: string): Promise<Alert[]> {
+    if (sport) {
+      const alertsWithSport = await db
+        .select({
+          id: alerts.id,
+          playerId: alerts.playerId,
+          alertType: alerts.alertType,
+          title: alerts.title,
+          message: alerts.message,
+          severity: alerts.severity,
+          isRead: alerts.isRead,
+          relatedGameId: alerts.relatedGameId,
+          createdAt: alerts.createdAt,
+        })
+        .from(alerts)
+        .leftJoin(games, eq(alerts.relatedGameId, games.id))
+        .where(
+          playerId 
+            ? and(eq(alerts.playerId, playerId), eq(games.sport, sport))
+            : eq(games.sport, sport)
+        )
+        .orderBy(desc(alerts.createdAt));
+      return alertsWithSport as Alert[];
+    }
     if (playerId) {
       return await db.select().from(alerts).where(eq(alerts.playerId, playerId)).orderBy(desc(alerts.createdAt));
     }
     return await db.select().from(alerts).orderBy(desc(alerts.createdAt));
   }
 
-  async getUnreadAlerts(): Promise<Alert[]> {
+  async getUnreadAlerts(sport?: string): Promise<Alert[]> {
+    if (sport) {
+      const unreadWithSport = await db
+        .select({
+          id: alerts.id,
+          playerId: alerts.playerId,
+          alertType: alerts.alertType,
+          title: alerts.title,
+          message: alerts.message,
+          severity: alerts.severity,
+          isRead: alerts.isRead,
+          relatedGameId: alerts.relatedGameId,
+          createdAt: alerts.createdAt,
+        })
+        .from(alerts)
+        .leftJoin(games, eq(alerts.relatedGameId, games.id))
+        .where(and(eq(alerts.isRead, false), eq(games.sport, sport)))
+        .orderBy(desc(alerts.createdAt));
+      return unreadWithSport as Alert[];
+    }
     return await db.select().from(alerts).where(eq(alerts.isRead, false)).orderBy(desc(alerts.createdAt));
   }
 

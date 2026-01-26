@@ -1282,65 +1282,249 @@ async function updatePlayerStreaks(playerId: number, gameId: number, stats: any,
 }
 
 // Helper function to check for performance drops and generate alerts
-async function checkPerformanceAlerts(playerId: number, gameId: number, currentGame: any, grade: string) {
+async function checkPerformanceAlerts(playerId: number, gameId: number, currentGame: any, grade: string, sport: string = 'basketball') {
   const playerGames = await storage.getGamesByPlayerId(playerId);
   const player = await storage.getPlayer(playerId);
   
   if (!player || playerGames.length < 3) return; // Need at least 3 games to detect trends
   
-  // Get recent games excluding current one
-  const recentGames = playerGames.filter(g => g.id !== gameId).slice(0, 5);
+  // Get recent games excluding current one - filter by sport
+  const recentGames = playerGames.filter(g => g.id !== gameId && g.sport === sport).slice(0, 5);
   if (recentGames.length < 2) return;
   
-  // Calculate recent averages
-  const avgPoints = recentGames.reduce((acc, g) => acc + g.points, 0) / recentGames.length;
-  const avgRebounds = recentGames.reduce((acc, g) => acc + g.rebounds, 0) / recentGames.length;
-  const avgAssists = recentGames.reduce((acc, g) => acc + g.assists, 0) / recentGames.length;
-  const avgHustle = recentGames.reduce((acc, g) => acc + (g.hustleScore || 50), 0) / recentGames.length;
-  
-  // Check for significant performance drops (>40% below average)
   const dropThreshold = 0.4;
   
-  // Points drop
-  if (avgPoints > 5 && currentGame.points < avgPoints * (1 - dropThreshold)) {
-    await storage.createAlert({
-      playerId,
-      alertType: 'performance_drop',
-      title: 'Scoring Drop Detected',
-      message: `${player.name} scored only ${currentGame.points} points, well below their ${avgPoints.toFixed(1)} PPG average.`,
-      severity: 'warning',
-      relatedGameId: gameId,
-      isRead: false,
-    });
+  if (sport === 'football') {
+    // Football-specific alerts
+    const primaryPosition = player.position?.split(',')[0]?.trim() || '';
+    
+    // QB alerts
+    if (primaryPosition === 'QB') {
+      const avgPassYds = recentGames.reduce((acc, g) => acc + (g.passingYards || 0), 0) / recentGames.length;
+      const avgPassTDs = recentGames.reduce((acc, g) => acc + (g.passingTouchdowns || 0), 0) / recentGames.length;
+      
+      if (avgPassYds > 100 && (currentGame.passingYards || 0) < avgPassYds * (1 - dropThreshold)) {
+        await storage.createAlert({
+          playerId,
+          alertType: 'performance_drop',
+          title: 'Passing Yard Drop Detected',
+          message: `${player.name} threw for only ${currentGame.passingYards || 0} yards, well below their ${avgPassYds.toFixed(0)} YPG average.`,
+          severity: 'warning',
+          relatedGameId: gameId,
+          isRead: false,
+        });
+      }
+      
+      if ((currentGame.interceptions || 0) >= 3) {
+        await storage.createAlert({
+          playerId,
+          alertType: 'performance_drop',
+          title: 'High Interception Game',
+          message: `${player.name} threw ${currentGame.interceptions} interceptions vs ${currentGame.opponent}. Ball security needs attention.`,
+          severity: 'warning',
+          relatedGameId: gameId,
+          isRead: false,
+        });
+      }
+      
+      if (avgPassTDs > 0 && (currentGame.passingTouchdowns || 0) > avgPassTDs * 1.5) {
+        await storage.createAlert({
+          playerId,
+          alertType: 'improvement',
+          title: 'Passing Breakout!',
+          message: `${player.name} threw for ${currentGame.passingTouchdowns} TDs, significantly above their ${avgPassTDs.toFixed(1)} TD/G average!`,
+          severity: 'info',
+          relatedGameId: gameId,
+          isRead: false,
+        });
+      }
+    }
+    
+    // RB alerts
+    if (primaryPosition === 'RB') {
+      const avgRushYds = recentGames.reduce((acc, g) => acc + (g.rushingYards || 0), 0) / recentGames.length;
+      
+      if (avgRushYds > 40 && (currentGame.rushingYards || 0) < avgRushYds * (1 - dropThreshold)) {
+        await storage.createAlert({
+          playerId,
+          alertType: 'performance_drop',
+          title: 'Rushing Yard Drop Detected',
+          message: `${player.name} rushed for only ${currentGame.rushingYards || 0} yards, well below their ${avgRushYds.toFixed(0)} YPG average.`,
+          severity: 'warning',
+          relatedGameId: gameId,
+          isRead: false,
+        });
+      }
+      
+      if (avgRushYds > 0 && (currentGame.rushingYards || 0) > avgRushYds * 1.5) {
+        await storage.createAlert({
+          playerId,
+          alertType: 'improvement',
+          title: 'Rushing Breakout!',
+          message: `${player.name} exploded for ${currentGame.rushingYards} rushing yards!`,
+          severity: 'info',
+          relatedGameId: gameId,
+          isRead: false,
+        });
+      }
+    }
+    
+    // WR/TE alerts
+    if (['WR', 'TE'].includes(primaryPosition)) {
+      const avgRecYds = recentGames.reduce((acc, g) => acc + (g.receivingYards || 0), 0) / recentGames.length;
+      
+      if (avgRecYds > 30 && (currentGame.receivingYards || 0) < avgRecYds * (1 - dropThreshold)) {
+        await storage.createAlert({
+          playerId,
+          alertType: 'performance_drop',
+          title: 'Receiving Yard Drop Detected',
+          message: `${player.name} had only ${currentGame.receivingYards || 0} receiving yards, well below their ${avgRecYds.toFixed(0)} YPG average.`,
+          severity: 'warning',
+          relatedGameId: gameId,
+          isRead: false,
+        });
+      }
+      
+      if (avgRecYds > 0 && (currentGame.receivingYards || 0) > avgRecYds * 1.5) {
+        await storage.createAlert({
+          playerId,
+          alertType: 'improvement',
+          title: 'Receiving Breakout!',
+          message: `${player.name} exploded for ${currentGame.receivingYards} receiving yards!`,
+          severity: 'info',
+          relatedGameId: gameId,
+          isRead: false,
+        });
+      }
+    }
+    
+    // Defensive alerts (DL, LB, DB)
+    if (['DL', 'LB', 'DB'].includes(primaryPosition)) {
+      const avgTackles = recentGames.reduce((acc, g) => acc + (g.tackles || 0), 0) / recentGames.length;
+      
+      if (avgTackles > 3 && (currentGame.tackles || 0) < avgTackles * (1 - dropThreshold)) {
+        await storage.createAlert({
+          playerId,
+          alertType: 'performance_drop',
+          title: 'Tackle Production Drop',
+          message: `${player.name} had only ${currentGame.tackles || 0} tackles, well below their ${avgTackles.toFixed(1)} average.`,
+          severity: 'warning',
+          relatedGameId: gameId,
+          isRead: false,
+        });
+      }
+      
+      if ((currentGame.sacks || 0) >= 2) {
+        await storage.createAlert({
+          playerId,
+          alertType: 'improvement',
+          title: 'Dominant Pass Rush!',
+          message: `${player.name} recorded ${currentGame.sacks} sacks vs ${currentGame.opponent}!`,
+          severity: 'info',
+          relatedGameId: gameId,
+          isRead: false,
+        });
+      }
+      
+      if ((currentGame.defensiveInterceptions || 0) >= 2) {
+        await storage.createAlert({
+          playerId,
+          alertType: 'improvement',
+          title: 'Ballhawk Performance!',
+          message: `${player.name} grabbed ${currentGame.defensiveInterceptions} interceptions vs ${currentGame.opponent}!`,
+          severity: 'info',
+          relatedGameId: gameId,
+          isRead: false,
+        });
+      }
+    }
+    
+    // Fumble alert for skill players
+    if (['QB', 'RB', 'WR', 'TE'].includes(primaryPosition) && (currentGame.fumbles || 0) >= 2) {
+      await storage.createAlert({
+        playerId,
+        alertType: 'performance_drop',
+        title: 'Ball Security Issue',
+        message: `${player.name} had ${currentGame.fumbles} fumbles vs ${currentGame.opponent}. Ball security needs attention.`,
+        severity: 'warning',
+        relatedGameId: gameId,
+        isRead: false,
+      });
+    }
+    
+  } else {
+    // Basketball-specific alerts
+    const avgPoints = recentGames.reduce((acc, g) => acc + g.points, 0) / recentGames.length;
+    const avgRebounds = recentGames.reduce((acc, g) => acc + g.rebounds, 0) / recentGames.length;
+    const avgHustle = recentGames.reduce((acc, g) => acc + (g.hustleScore || 50), 0) / recentGames.length;
+    
+    // Points drop
+    if (avgPoints > 5 && currentGame.points < avgPoints * (1 - dropThreshold)) {
+      await storage.createAlert({
+        playerId,
+        alertType: 'performance_drop',
+        title: 'Scoring Drop Detected',
+        message: `${player.name} scored only ${currentGame.points} points, well below their ${avgPoints.toFixed(1)} PPG average.`,
+        severity: 'warning',
+        relatedGameId: gameId,
+        isRead: false,
+      });
+    }
+    
+    // Rebounds drop for Bigs
+    if (player.position === 'Big' && avgRebounds > 4 && currentGame.rebounds < avgRebounds * (1 - dropThreshold)) {
+      await storage.createAlert({
+        playerId,
+        alertType: 'performance_drop',
+        title: 'Rebounding Drop Detected',
+        message: `${player.name} grabbed only ${currentGame.rebounds} rebounds, below their ${avgRebounds.toFixed(1)} RPG average.`,
+        severity: 'warning',
+        relatedGameId: gameId,
+        isRead: false,
+      });
+    }
+    
+    // Hustle drop
+    if (avgHustle > 60 && (currentGame.hustleScore || 50) < avgHustle * (1 - dropThreshold)) {
+      await storage.createAlert({
+        playerId,
+        alertType: 'performance_drop',
+        title: 'Hustle Drop Detected',
+        message: `${player.name}'s hustle score dropped to ${currentGame.hustleScore || 50}, below their ${avgHustle.toFixed(0)} average.`,
+        severity: 'warning',
+        relatedGameId: gameId,
+        isRead: false,
+      });
+    }
+    
+    // Turnovers spike
+    if (currentGame.turnovers >= 5) {
+      await storage.createAlert({
+        playerId,
+        alertType: 'performance_drop',
+        title: 'High Turnover Game',
+        message: `${player.name} had ${currentGame.turnovers} turnovers vs ${currentGame.opponent}. Ball security needs attention.`,
+        severity: 'warning',
+        relatedGameId: gameId,
+        isRead: false,
+      });
+    }
+    
+    // Positive alert for improvement
+    if (avgPoints > 0 && currentGame.points > avgPoints * 1.5) {
+      await storage.createAlert({
+        playerId,
+        alertType: 'improvement',
+        title: 'Scoring Breakout!',
+        message: `${player.name} exploded for ${currentGame.points} points, significantly above their ${avgPoints.toFixed(1)} PPG average!`,
+        severity: 'info',
+        relatedGameId: gameId,
+        isRead: false,
+      });
+    }
   }
   
-  // Rebounds drop for Bigs
-  if (player.position === 'Big' && avgRebounds > 4 && currentGame.rebounds < avgRebounds * (1 - dropThreshold)) {
-    await storage.createAlert({
-      playerId,
-      alertType: 'performance_drop',
-      title: 'Rebounding Drop Detected',
-      message: `${player.name} grabbed only ${currentGame.rebounds} rebounds, below their ${avgRebounds.toFixed(1)} RPG average.`,
-      severity: 'warning',
-      relatedGameId: gameId,
-      isRead: false,
-    });
-  }
-  
-  // Hustle drop
-  if (avgHustle > 60 && (currentGame.hustleScore || 50) < avgHustle * (1 - dropThreshold)) {
-    await storage.createAlert({
-      playerId,
-      alertType: 'performance_drop',
-      title: 'Hustle Drop Detected',
-      message: `${player.name}'s hustle score dropped to ${currentGame.hustleScore || 50}, below their ${avgHustle.toFixed(0)} average.`,
-      severity: 'warning',
-      relatedGameId: gameId,
-      isRead: false,
-    });
-  }
-  
-  // Poor grade alert
+  // Poor grade alert (both sports)
   const poorGrades = ['D', 'F'];
   if (poorGrades.includes(grade)) {
     await storage.createAlert({
@@ -1349,32 +1533,6 @@ async function checkPerformanceAlerts(playerId: number, gameId: number, currentG
       title: 'Poor Game Grade',
       message: `${player.name} received a ${grade} grade vs ${currentGame.opponent}. Review film and address issues.`,
       severity: 'critical',
-      relatedGameId: gameId,
-      isRead: false,
-    });
-  }
-  
-  // Turnovers spike
-  if (currentGame.turnovers >= 5) {
-    await storage.createAlert({
-      playerId,
-      alertType: 'performance_drop',
-      title: 'High Turnover Game',
-      message: `${player.name} had ${currentGame.turnovers} turnovers vs ${currentGame.opponent}. Ball security needs attention.`,
-      severity: 'warning',
-      relatedGameId: gameId,
-      isRead: false,
-    });
-  }
-  
-  // Positive alert for improvement
-  if (avgPoints > 0 && currentGame.points > avgPoints * 1.5) {
-    await storage.createAlert({
-      playerId,
-      alertType: 'improvement',
-      title: 'Scoring Breakout!',
-      message: `${player.name} exploded for ${currentGame.points} points, significantly above their ${avgPoints.toFixed(1)} PPG average!`,
-      severity: 'info',
       relatedGameId: gameId,
       isRead: false,
     });
@@ -2000,7 +2158,7 @@ export async function registerRoutes(
       await updateActivityStreak(input.playerId, 'daily_game');
       
       // Check for performance alerts (drop detection)
-      await checkPerformanceAlerts(input.playerId, game.id, input, grade);
+      await checkPerformanceAlerts(input.playerId, game.id, input, grade, sport);
       
       // Calculate advanced metrics for the game
       const advancedMetrics = calculateAdvancedMetrics(input);
@@ -5786,7 +5944,8 @@ Respond in this exact JSON format:
   app.get('/api/alerts', requiresCoachPro, async (req, res) => {
     try {
       const playerId = req.query.playerId ? Number(req.query.playerId) : undefined;
-      const alerts = await storage.getAlerts(playerId);
+      const sport = req.query.sport as string | undefined;
+      const alerts = await storage.getAlerts(playerId, sport);
       res.json(alerts);
     } catch (err) {
       console.error('Get alerts error:', err);
@@ -5796,7 +5955,8 @@ Respond in this exact JSON format:
 
   app.get('/api/alerts/unread', requiresCoachPro, async (req, res) => {
     try {
-      const alerts = await storage.getUnreadAlerts();
+      const sport = req.query.sport as string | undefined;
+      const alerts = await storage.getUnreadAlerts(sport);
       res.json(alerts);
     } catch (err) {
       console.error('Get unread alerts error:', err);
