@@ -455,6 +455,14 @@ const APG_OPTIONS = ["All", "2", "4", "6", "8"];
 const SPG_OPTIONS = ["All", "1", "2", "3"];
 const BPG_OPTIONS = ["All", "1", "2", "3"];
 
+// Football-specific filter options
+const PASS_YDS_OPTIONS = ["All", "100", "150", "200", "250", "300"];
+const RUSH_YDS_OPTIONS = ["All", "50", "75", "100", "150"];
+const REC_YDS_OPTIONS = ["All", "50", "75", "100", "150"];
+const TACKLES_OPTIONS = ["All", "3", "5", "7", "10"];
+const SACKS_OPTIONS = ["All", "1", "2", "3", "5"];
+const DEF_INT_OPTIONS = ["All", "1", "2", "3"];
+
 export default function Discover() {
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
@@ -472,6 +480,13 @@ export default function Discover() {
   const [minApg, setMinApg] = useState("All");
   const [minSpg, setMinSpg] = useState("All");
   const [minBpg, setMinBpg] = useState("All");
+  // Football-specific filters
+  const [minPassYds, setMinPassYds] = useState("All");
+  const [minRushYds, setMinRushYds] = useState("All");
+  const [minRecYds, setMinRecYds] = useState("All");
+  const [minTackles, setMinTackles] = useState("All");
+  const [minSacks, setMinSacks] = useState("All");
+  const [minDefInt, setMinDefInt] = useState("All");
   const [followingMap, setFollowingMap] = useState<Record<number, boolean>>({});
   const [pendingFollows, setPendingFollows] = useState<Set<number>>(new Set());
 
@@ -486,15 +501,23 @@ export default function Discover() {
   if (openOnly) queryParams.append("openOnly", "true");
   if (caliberOnly) queryParams.append("caliberOnly", "true");
   if (minGpa !== "All") queryParams.append("minGpa", minGpa);
+  // Basketball filters
   if (minThreePct !== "All") queryParams.append("minThreePct", minThreePct);
   if (minPpg !== "All") queryParams.append("minPpg", minPpg);
   if (minRpg !== "All") queryParams.append("minRpg", minRpg);
   if (minApg !== "All") queryParams.append("minApg", minApg);
   if (minSpg !== "All") queryParams.append("minSpg", minSpg);
   if (minBpg !== "All") queryParams.append("minBpg", minBpg);
+  // Football filters
+  if (minPassYds !== "All") queryParams.append("minPassYds", minPassYds);
+  if (minRushYds !== "All") queryParams.append("minRushYds", minRushYds);
+  if (minRecYds !== "All") queryParams.append("minRecYds", minRecYds);
+  if (minTackles !== "All") queryParams.append("minTackles", minTackles);
+  if (minSacks !== "All") queryParams.append("minSacks", minSacks);
+  if (minDefInt !== "All") queryParams.append("minDefInt", minDefInt);
 
   const { data: players, isLoading } = useQuery<DiscoverPlayer[]>({
-    queryKey: ["/api/discover", sport, position, state, graduationYear, searchQuery, openOnly, caliberOnly, minGpa, minThreePct, minPpg, minRpg, minApg, minSpg, minBpg],
+    queryKey: ["/api/discover", sport, position, state, graduationYear, searchQuery, openOnly, caliberOnly, minGpa, minThreePct, minPpg, minRpg, minApg, minSpg, minBpg, minPassYds, minRushYds, minRecYds, minTackles, minSacks, minDefInt],
     queryFn: async () => {
       const res = await fetch(`/api/discover?${queryParams.toString()}`);
       if (!res.ok) throw new Error("Failed to fetch players");
@@ -683,113 +706,227 @@ export default function Discover() {
                 </Select>
               </div>
 
-              <div>
-                <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
-                  <Crosshair className="w-3 h-3" />
-                  Min 3PT%
-                </label>
-                <Select value={minThreePct} onValueChange={setMinThreePct}>
-                  <SelectTrigger className="h-9" data-testid="select-min-three-pct">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="All">Any 3PT%</SelectItem>
-                    {THREE_PT_OPTIONS.filter(t => t !== "All").map((t) => (
-                      <SelectItem key={t} value={t}>{t}%+</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {isFootball ? (
+                <>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
+                      <Target className="w-3 h-3" />
+                      Min Pass YDS
+                    </label>
+                    <Select value={minPassYds} onValueChange={setMinPassYds}>
+                      <SelectTrigger className="h-9" data-testid="select-min-pass-yds">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="All">Any Pass YDS</SelectItem>
+                        {PASS_YDS_OPTIONS.filter(p => p !== "All").map((p) => (
+                          <SelectItem key={p} value={p}>{p}+</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              <div>
-                <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
-                  <Target className="w-3 h-3" />
-                  Min PPG
-                </label>
-                <Select value={minPpg} onValueChange={setMinPpg}>
-                  <SelectTrigger className="h-9" data-testid="select-min-ppg">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="All">Any PPG</SelectItem>
-                    {PPG_OPTIONS.filter(p => p !== "All").map((p) => (
-                      <SelectItem key={p} value={p}>{p}+</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
+                      <Zap className="w-3 h-3" />
+                      Min Rush YDS
+                    </label>
+                    <Select value={minRushYds} onValueChange={setMinRushYds}>
+                      <SelectTrigger className="h-9" data-testid="select-min-rush-yds">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="All">Any Rush YDS</SelectItem>
+                        {RUSH_YDS_OPTIONS.filter(r => r !== "All").map((r) => (
+                          <SelectItem key={r} value={r}>{r}+</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              <div>
-                <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
-                  <Zap className="w-3 h-3" />
-                  Min RPG
-                </label>
-                <Select value={minRpg} onValueChange={setMinRpg}>
-                  <SelectTrigger className="h-9" data-testid="select-min-rpg">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="All">Any RPG</SelectItem>
-                    {RPG_OPTIONS.filter(r => r !== "All").map((r) => (
-                      <SelectItem key={r} value={r}>{r}+</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
+                      <Users className="w-3 h-3" />
+                      Min Rec YDS
+                    </label>
+                    <Select value={minRecYds} onValueChange={setMinRecYds}>
+                      <SelectTrigger className="h-9" data-testid="select-min-rec-yds">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="All">Any Rec YDS</SelectItem>
+                        {REC_YDS_OPTIONS.filter(r => r !== "All").map((r) => (
+                          <SelectItem key={r} value={r}>{r}+</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              <div>
-                <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
-                  <Users className="w-3 h-3" />
-                  Min APG
-                </label>
-                <Select value={minApg} onValueChange={setMinApg}>
-                  <SelectTrigger className="h-9" data-testid="select-min-apg">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="All">Any APG</SelectItem>
-                    {APG_OPTIONS.filter(a => a !== "All").map((a) => (
-                      <SelectItem key={a} value={a}>{a}+</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
+                      <Shield className="w-3 h-3" />
+                      Min Tackles
+                    </label>
+                    <Select value={minTackles} onValueChange={setMinTackles}>
+                      <SelectTrigger className="h-9" data-testid="select-min-tackles">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="All">Any Tackles</SelectItem>
+                        {TACKLES_OPTIONS.filter(t => t !== "All").map((t) => (
+                          <SelectItem key={t} value={t}>{t}+</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              <div>
-                <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
-                  <Shield className="w-3 h-3" />
-                  Min SPG
-                </label>
-                <Select value={minSpg} onValueChange={setMinSpg}>
-                  <SelectTrigger className="h-9" data-testid="select-min-spg">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="All">Any SPG</SelectItem>
-                    {SPG_OPTIONS.filter(s => s !== "All").map((s) => (
-                      <SelectItem key={s} value={s}>{s}+</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
+                      <Zap className="w-3 h-3" />
+                      Min Sacks
+                    </label>
+                    <Select value={minSacks} onValueChange={setMinSacks}>
+                      <SelectTrigger className="h-9" data-testid="select-min-sacks">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="All">Any Sacks</SelectItem>
+                        {SACKS_OPTIONS.filter(s => s !== "All").map((s) => (
+                          <SelectItem key={s} value={s}>{s}+</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              <div>
-                <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
-                  <Shield className="w-3 h-3" />
-                  Min BPG
-                </label>
-                <Select value={minBpg} onValueChange={setMinBpg}>
-                  <SelectTrigger className="h-9" data-testid="select-min-bpg">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="All">Any BPG</SelectItem>
-                    {BPG_OPTIONS.filter(b => b !== "All").map((b) => (
-                      <SelectItem key={b} value={b}>{b}+</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
+                      <Shield className="w-3 h-3" />
+                      Min INTs
+                    </label>
+                    <Select value={minDefInt} onValueChange={setMinDefInt}>
+                      <SelectTrigger className="h-9" data-testid="select-min-def-int">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="All">Any INTs</SelectItem>
+                        {DEF_INT_OPTIONS.filter(i => i !== "All").map((i) => (
+                          <SelectItem key={i} value={i}>{i}+</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
+                      <Crosshair className="w-3 h-3" />
+                      Min 3PT%
+                    </label>
+                    <Select value={minThreePct} onValueChange={setMinThreePct}>
+                      <SelectTrigger className="h-9" data-testid="select-min-three-pct">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="All">Any 3PT%</SelectItem>
+                        {THREE_PT_OPTIONS.filter(t => t !== "All").map((t) => (
+                          <SelectItem key={t} value={t}>{t}%+</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
+                      <Target className="w-3 h-3" />
+                      Min PPG
+                    </label>
+                    <Select value={minPpg} onValueChange={setMinPpg}>
+                      <SelectTrigger className="h-9" data-testid="select-min-ppg">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="All">Any PPG</SelectItem>
+                        {PPG_OPTIONS.filter(p => p !== "All").map((p) => (
+                          <SelectItem key={p} value={p}>{p}+</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
+                      <Zap className="w-3 h-3" />
+                      Min RPG
+                    </label>
+                    <Select value={minRpg} onValueChange={setMinRpg}>
+                      <SelectTrigger className="h-9" data-testid="select-min-rpg">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="All">Any RPG</SelectItem>
+                        {RPG_OPTIONS.filter(r => r !== "All").map((r) => (
+                          <SelectItem key={r} value={r}>{r}+</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
+                      <Users className="w-3 h-3" />
+                      Min APG
+                    </label>
+                    <Select value={minApg} onValueChange={setMinApg}>
+                      <SelectTrigger className="h-9" data-testid="select-min-apg">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="All">Any APG</SelectItem>
+                        {APG_OPTIONS.filter(a => a !== "All").map((a) => (
+                          <SelectItem key={a} value={a}>{a}+</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
+                      <Shield className="w-3 h-3" />
+                      Min SPG
+                    </label>
+                    <Select value={minSpg} onValueChange={setMinSpg}>
+                      <SelectTrigger className="h-9" data-testid="select-min-spg">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="All">Any SPG</SelectItem>
+                        {SPG_OPTIONS.filter(s => s !== "All").map((s) => (
+                          <SelectItem key={s} value={s}>{s}+</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
+                      <Shield className="w-3 h-3" />
+                      Min BPG
+                    </label>
+                    <Select value={minBpg} onValueChange={setMinBpg}>
+                      <SelectTrigger className="h-9" data-testid="select-min-bpg">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="All">Any BPG</SelectItem>
+                        {BPG_OPTIONS.filter(b => b !== "All").map((b) => (
+                          <SelectItem key={b} value={b}>{b}+</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </CardContent>

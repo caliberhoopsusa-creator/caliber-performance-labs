@@ -2747,6 +2747,7 @@ export async function registerRoutes(
       const { 
         sport, position, state, school, graduationYear, search, openOnly, 
         minGpa, minThreePct, minPpg, minRpg, minApg, minSpg, minBpg, 
+        minPassYds, minRushYds, minRecYds, minTackles, minSacks, minDefInt,
         caliberOnly 
       } = req.query;
       
@@ -3004,6 +3005,49 @@ export async function registerRoutes(
         const bpgThreshold = parseFloat(minBpg);
         if (!isNaN(bpgThreshold)) {
           results = results.filter(p => p.bpg >= bpgThreshold);
+        }
+      }
+
+      // Football-specific filters
+      if (minPassYds && typeof minPassYds === 'string') {
+        const passYdsThreshold = parseFloat(minPassYds);
+        if (!isNaN(passYdsThreshold)) {
+          results = results.filter(p => p.passingYards >= passYdsThreshold);
+        }
+      }
+
+      if (minRushYds && typeof minRushYds === 'string') {
+        const rushYdsThreshold = parseFloat(minRushYds);
+        if (!isNaN(rushYdsThreshold)) {
+          results = results.filter(p => p.rushingYards >= rushYdsThreshold);
+        }
+      }
+
+      if (minRecYds && typeof minRecYds === 'string') {
+        const recYdsThreshold = parseFloat(minRecYds);
+        if (!isNaN(recYdsThreshold)) {
+          results = results.filter(p => p.receivingYards >= recYdsThreshold);
+        }
+      }
+
+      if (minTackles && typeof minTackles === 'string') {
+        const tacklesThreshold = parseFloat(minTackles);
+        if (!isNaN(tacklesThreshold)) {
+          results = results.filter(p => p.tackles >= tacklesThreshold);
+        }
+      }
+
+      if (minSacks && typeof minSacks === 'string') {
+        const sacksThreshold = parseFloat(minSacks);
+        if (!isNaN(sacksThreshold)) {
+          results = results.filter(p => p.sacks >= sacksThreshold);
+        }
+      }
+
+      if (minDefInt && typeof minDefInt === 'string') {
+        const defIntThreshold = parseFloat(minDefInt);
+        if (!isNaN(defIntThreshold)) {
+          results = results.filter(p => p.defensiveInterceptions >= defIntThreshold);
         }
       }
 
