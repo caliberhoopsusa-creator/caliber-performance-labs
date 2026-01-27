@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SkeletonLeaderboardRow } from "@/components/ui/skeleton-premium";
 
 const US_STATES = [
   "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut",
@@ -80,8 +81,20 @@ export default function Leaderboard() {
 
   if (isLoading) {
     return (
-      <div className="flex h-full items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="space-y-6 md:space-y-8 animate-fade-in pb-24 md:pb-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div className="space-y-2">
+            <div className="h-10 w-56 skeleton-cyan rounded" />
+            <div className="h-4 w-48 skeleton-premium rounded" />
+          </div>
+        </div>
+        <div className="space-y-3">
+          <SkeletonLeaderboardRow />
+          <SkeletonLeaderboardRow />
+          <SkeletonLeaderboardRow />
+          <SkeletonLeaderboardRow />
+          <SkeletonLeaderboardRow />
+        </div>
       </div>
     );
   }

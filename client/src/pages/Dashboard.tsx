@@ -3,16 +3,42 @@ import { Link } from "wouter";
 import { Plus, ChevronRight, Users, TrendingUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { SkeletonStatCard, SkeletonPlayerCard } from "@/components/ui/skeleton-premium";
+
+function DashboardSkeleton() {
+  return (
+    <div className="py-6 space-y-6 pb-24 md:pb-6 animate-fade-in">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-2">
+          <div className="h-8 w-32 skeleton-cyan rounded" />
+          <div className="h-4 w-48 skeleton-premium rounded" />
+        </div>
+        <div className="h-10 w-28 skeleton-cyan rounded-lg" />
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
+        <SkeletonStatCard />
+        <SkeletonStatCard />
+      </div>
+      
+      <div className="space-y-3">
+        <div className="flex justify-between items-center">
+          <div className="h-6 w-28 skeleton-cyan rounded" />
+          <div className="h-4 w-16 skeleton-premium rounded" />
+        </div>
+        <SkeletonPlayerCard />
+        <SkeletonPlayerCard />
+        <SkeletonPlayerCard />
+      </div>
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const { data: players, isLoading } = usePlayers();
 
   if (isLoading) {
-    return (
-      <div className="flex h-full items-center justify-center p-8">
-        <div className="w-8 h-8 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   const recentPlayers = players?.slice(0, 6) || [];

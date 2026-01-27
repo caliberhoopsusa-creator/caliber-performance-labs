@@ -84,11 +84,32 @@ export function SocialEngagement({ gameId, compact = false }: SocialEngagementPr
     mutationFn: async () => {
       return apiRequest("POST", `/api/games/${gameId}/likes`, { sessionId });
     },
-    onMutate: () => {
+    onMutate: async () => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["/api/games", gameId, "likes", sessionId] });
+      
+      // Get current data
+      const previousData = queryClient.getQueryData<{ likeCount: number; hasLiked: boolean }>(["/api/games", gameId, "likes", sessionId]);
+      
+      // Optimistically update
+      queryClient.setQueryData(["/api/games", gameId, "likes", sessionId], (old: { likeCount: number; hasLiked: boolean } | undefined) => ({
+        likeCount: (old?.likeCount || 0) + (old?.hasLiked ? -1 : 1),
+        hasLiked: !old?.hasLiked
+      }));
+      
       setIsLikeAnimating(true);
       setTimeout(() => setIsLikeAnimating(false), 300);
+      
+      return { previousData };
     },
-    onSuccess: () => {
+    onError: (_err, _vars, context) => {
+      // Rollback on error
+      if (context?.previousData) {
+        queryClient.setQueryData(["/api/games", gameId, "likes", sessionId], context.previousData);
+      }
+    },
+    onSettled: () => {
+      // Sync with server
       queryClient.invalidateQueries({ queryKey: ["/api/games", gameId, "likes", sessionId] });
     },
   });
@@ -97,11 +118,35 @@ export function SocialEngagement({ gameId, compact = false }: SocialEngagementPr
     mutationFn: async () => {
       return apiRequest("POST", `/api/games/${gameId}/repost`, { sessionId });
     },
-    onMutate: () => {
+    onMutate: async () => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["/api/games", gameId, "reposts"] });
+      await queryClient.cancelQueries({ queryKey: ["/api/games", gameId, "has-reposted", sessionId] });
+      
+      // Get current data
+      const previousReposts = queryClient.getQueryData<{ repostCount: number }>(["/api/games", gameId, "reposts"]);
+      const previousHasReposted = queryClient.getQueryData<{ hasReposted: boolean }>(["/api/games", gameId, "has-reposted", sessionId]);
+      
+      // Optimistically update
+      queryClient.setQueryData(["/api/games", gameId, "reposts"], (old: { repostCount: number } | undefined) => ({
+        repostCount: (old?.repostCount || 0) + 1
+      }));
+      queryClient.setQueryData(["/api/games", gameId, "has-reposted", sessionId], { hasReposted: true });
+      
       setIsRepostAnimating(true);
       setTimeout(() => setIsRepostAnimating(false), 300);
+      
+      return { previousReposts, previousHasReposted };
     },
-    onSuccess: () => {
+    onError: (_err, _vars, context) => {
+      if (context?.previousReposts) {
+        queryClient.setQueryData(["/api/games", gameId, "reposts"], context.previousReposts);
+      }
+      if (context?.previousHasReposted) {
+        queryClient.setQueryData(["/api/games", gameId, "has-reposted", sessionId], context.previousHasReposted);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/games", gameId, "reposts"] });
       queryClient.invalidateQueries({ queryKey: ["/api/games", gameId, "has-reposted", sessionId] });
     },
@@ -149,12 +194,14 @@ export function SocialEngagement({ gameId, compact = false }: SocialEngagementPr
   if (compact) {
     return (
       <div className="flex items-center gap-3">
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           data-testid={`like-button-compact-${gameId}`}
           onClick={() => toggleLikeMutation.mutate()}
           className={cn(
-            "flex items-center gap-1 text-sm transition-all",
-            hasLiked ? "text-red-500" : "text-muted-foreground hover:text-red-400"
+            "flex items-center gap-1 h-auto py-1 px-2",
+            hasLiked && "text-red-500"
           )}
         >
           <Heart
@@ -165,15 +212,16 @@ export function SocialEngagement({ gameId, compact = false }: SocialEngagementPr
             )}
           />
           <span>{likeCount}</span>
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
           data-testid={`repost-button-compact-${gameId}`}
           onClick={() => !hasReposted && repostMutation.mutate()}
           disabled={hasReposted || repostMutation.isPending}
           className={cn(
-            "flex items-center gap-1 text-sm transition-all",
-            hasReposted ? "text-green-500" : "text-muted-foreground hover:text-green-400",
-            hasReposted && "cursor-default"
+            "flex items-center gap-1 h-auto py-1 px-2",
+            hasReposted && "text-green-500"
           )}
         >
           <Repeat2
@@ -183,7 +231,7 @@ export function SocialEngagement({ gameId, compact = false }: SocialEngagementPr
             )}
           />
           <span>{repostCount}</span>
-        </button>
+        </Button>
         <span className="flex items-center gap-1 text-sm text-muted-foreground">
           <MessageCircle className="w-4 h-4" />
           <span>{commentCount}</span>
@@ -202,8 +250,8 @@ export function SocialEngagement({ gameId, compact = false }: SocialEngagementPr
           onClick={() => toggleLikeMutation.mutate()}
           disabled={toggleLikeMutation.isPending}
           className={cn(
-            "gap-2 transition-all",
-            hasLiked && "text-red-500 hover:text-red-600"
+            "gap-2",
+            hasLiked && "text-red-500"
           )}
         >
           <Heart
@@ -223,8 +271,8 @@ export function SocialEngagement({ gameId, compact = false }: SocialEngagementPr
           onClick={() => !hasReposted && repostMutation.mutate()}
           disabled={hasReposted || repostMutation.isPending}
           className={cn(
-            "gap-2 transition-all",
-            hasReposted && "text-green-500 hover:text-green-600"
+            "gap-2",
+            hasReposted && "text-green-500"
           )}
         >
           <Repeat2

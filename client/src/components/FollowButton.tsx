@@ -16,25 +16,40 @@ export function FollowButton({ playerId, initialIsFollowing, onFollowChange, cla
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
 
   const followMutation = useMutation({
-    mutationFn: async () => {
-      if (isFollowing) {
+    mutationFn: async (newFollowState: boolean) => {
+      if (!newFollowState) {
         await apiRequest("DELETE", `/api/players/${playerId}/follow`);
       } else {
         await apiRequest("POST", `/api/players/${playerId}/follow`);
       }
     },
+    onMutate: async (newFollowState: boolean) => {
+      // Capture previous state for rollback
+      const previousState = isFollowing;
+      
+      // Optimistically update UI immediately
+      setIsFollowing(newFollowState);
+      onFollowChange?.(newFollowState);
+      
+      return { previousState };
+    },
     onSuccess: () => {
-      const newState = !isFollowing;
-      setIsFollowing(newState);
-      onFollowChange?.(newState);
+      // Invalidate to sync with server
       queryClient.invalidateQueries({ queryKey: ["/api/players", playerId, "followers"] });
       queryClient.invalidateQueries({ queryKey: ["/api/players", playerId, "following"] });
       queryClient.invalidateQueries({ queryKey: ["/api/players", playerId, "follow-stats"] });
     },
+    onError: (_err, _newState, context) => {
+      // Rollback on error using context
+      if (context?.previousState !== undefined) {
+        setIsFollowing(context.previousState);
+        onFollowChange?.(context.previousState);
+      }
+    },
   });
 
   const handleClick = () => {
-    followMutation.mutate();
+    followMutation.mutate(!isFollowing);
   };
 
   return (

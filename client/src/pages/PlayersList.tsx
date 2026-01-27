@@ -38,6 +38,7 @@ import { Card } from "@/components/ui/card";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { SkeletonPlayerCard } from "@/components/ui/skeleton-premium";
 import { cn } from "@/lib/utils";
 
 interface TeamMember {
@@ -163,7 +164,7 @@ export default function PlayersList() {
         
         {hasTeam && (
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={copyTeamCode} className="gap-2 border-cyan-500/20 text-cyan-300 hover:bg-cyan-500/10 hover:text-cyan-200" data-testid="button-copy-code">
+            <Button variant="outline" onClick={copyTeamCode} className="gap-2 border-cyan-500/20 text-cyan-300" data-testid="button-copy-code">
               {copiedCode ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               {copiedCode ? "Copied!" : `Code: ${primaryTeam?.code}`}
             </Button>
@@ -199,8 +200,11 @@ export default function PlayersList() {
               </div>
 
               {isLoading ? (
-                <div className="flex justify-center p-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                <div className="space-y-3 p-4">
+                  <SkeletonPlayerCard />
+                  <SkeletonPlayerCard />
+                  <SkeletonPlayerCard />
+                  <SkeletonPlayerCard />
                 </div>
               ) : filteredRosterPlayers.length === 0 ? (
                 <div className="text-center py-20 border-2 border-dashed border-white/5 rounded-2xl bg-card/30">
@@ -325,13 +329,13 @@ export default function PlayersList() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-secondary/30 border-white/10 text-white hover:bg-secondary/50">
+            <AlertDialogCancel className="bg-secondary/30 border-white/10 text-white">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => playerToDelete && handleDeletePlayer(playerToDelete.id, playerToDelete.name)}
               disabled={isDeleting}
-              className="bg-red-500 hover:bg-red-600 text-white"
+              className="bg-red-500 text-white"
               data-testid="button-confirm-delete"
             >
               {isDeleting ? "Removing..." : "Remove Player"}
@@ -385,7 +389,7 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="w-8 h-8 text-muted-foreground hover:text-white"
+                      className="w-8 h-8 text-muted-foreground"
                       data-testid={`button-player-menu-${player.id}`}
                     >
                       <MoreVertical className="w-4 h-4" />
@@ -480,7 +484,7 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
                       variant="outline"
                       size="icon"
                       onClick={() => setPlayerToDelete({ id: player.id, name: player.name })}
-                      className="text-red-400 hover:text-red-300 hover:bg-red-500/10 hover:border-red-500/30"
+                      className="text-red-400"
                       data-testid={`button-delete-player-${player.id}`}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -564,7 +568,7 @@ function CreatePlayerForm({ onSuccess }: { onSuccess: () => void }) {
       </div>
 
       <DialogFooter className="pt-4">
-        <Button type="submit" disabled={isPending} className="w-full bg-primary text-primary-foreground font-bold hover:bg-primary/90">
+        <Button type="submit" disabled={isPending} className="w-full bg-primary text-primary-foreground font-bold">
           {isPending ? "Adding..." : "Add to Roster"}
         </Button>
       </DialogFooter>
