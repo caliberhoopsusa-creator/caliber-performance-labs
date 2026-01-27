@@ -69,7 +69,7 @@ function StoryRing({
         <div className="bg-background p-[2px] rounded-full">
           <div className="w-14 h-14 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center overflow-hidden">
             {story.imageUrl ? (
-              <img src={story.imageUrl} alt="" className="w-full h-full object-cover" />
+              <img src={story.imageUrl} alt="" className="w-full h-full object-cover" loading="lazy" width={56} height={56} />
             ) : (
               <User className="w-6 h-6 text-primary" />
             )}
@@ -240,6 +240,7 @@ function StoryViewer({
             alt={currentStory.headline}
             className="max-h-[60vh] max-w-full object-contain rounded-lg"
             data-testid="story-image"
+            loading="lazy"
           />
         )}
 
@@ -529,7 +530,7 @@ function CreateStoryDialog({
               {mediaUrl ? (
                 <div className="relative">
                   {mediaType === 'image' ? (
-                    <img src={mediaUrl} alt="Preview" className="w-full h-48 object-cover rounded-lg" />
+                    <img src={mediaUrl} alt="Preview" className="w-full h-48 object-cover rounded-lg" loading="lazy" />
                   ) : (
                     <video src={mediaUrl} className="w-full h-48 object-cover rounded-lg" controls />
                   )}
@@ -806,7 +807,7 @@ export default function Stories() {
             >
               <div className="aspect-[3/4] relative">
                 {story.mediaType === 'image' && story.imageUrl ? (
-                  <img src={story.imageUrl} alt="" className="w-full h-full object-cover" />
+                  <img src={story.imageUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
                 ) : story.mediaType === 'video' && story.videoUrl ? (
                   <div className="w-full h-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
                     <Video className="w-12 h-12 text-blue-400" />

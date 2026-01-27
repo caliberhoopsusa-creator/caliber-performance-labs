@@ -402,7 +402,7 @@ export function LivePractice({ practice, onEnd, onBack }: LivePracticeProps) {
                         >
                           <div className="flex items-center gap-3">
                             <Avatar className="h-10 w-10">
-                              <AvatarImage src={player.photoUrl || undefined} />
+                              <AvatarImage src={player.photoUrl || undefined} width={40} height={40} />
                               <AvatarFallback>{getInitials(player.name)}</AvatarFallback>
                             </Avatar>
                             <div>
@@ -537,7 +537,7 @@ export function LivePractice({ practice, onEnd, onBack }: LivePracticeProps) {
                             >
                               <div className="flex items-center gap-3 mb-3">
                                 <Avatar className="h-8 w-8">
-                                  <AvatarImage src={player.photoUrl || undefined} />
+                                  <AvatarImage src={player.photoUrl || undefined} width={32} height={32} />
                                   <AvatarFallback>{getInitials(player.name)}</AvatarFallback>
                                 </Avatar>
                                 <span className="font-medium">{player.name}</span>

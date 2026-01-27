@@ -1,9 +1,10 @@
 import { usePlayers } from "@/hooks/use-basketball";
 import { Link } from "wouter";
-import { Plus, ChevronRight, Users, TrendingUp } from "lucide-react";
+import { Plus, ChevronRight, Users, TrendingUp, UserPlus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SkeletonStatCard, SkeletonPlayerCard } from "@/components/ui/skeleton-premium";
+import { EmptyState } from "@/components/ui/empty-state";
 
 function DashboardSkeleton() {
   return (
@@ -105,13 +106,13 @@ export default function Dashboard() {
         
         <div className="divide-y divide-cyan-500/[0.06]">
           {recentPlayers.length === 0 ? (
-            <div className="p-8 text-center">
-              <Users className="w-10 h-10 text-cyan-400/30 mx-auto mb-3" />
-              <p className="text-cyan-200/50 text-sm mb-3">No players added yet</p>
-              <Link href="/players">
-                <Button size="sm">Add Player</Button>
-              </Link>
-            </div>
+            <EmptyState
+              icon={UserPlus}
+              title="Build Your Roster"
+              description="Add your first player to start tracking performance, earning grades, and unlocking insights."
+              action={{ label: "Add First Player", href: "/players" }}
+              variant="compact"
+            />
           ) : (
             recentPlayers.map((player, index) => (
               <Link key={player.id} href={`/players/${player.id}`} className="block hover:bg-gradient-to-r hover:from-cyan-500/[0.05] hover:to-transparent transition-all duration-300" data-testid={`link-player-${player.id}`}>

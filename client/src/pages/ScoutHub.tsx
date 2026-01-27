@@ -14,8 +14,9 @@ import { BASKETBALL_POSITIONS, FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS, typ
 import { 
   Search, MapPin, GraduationCap, Users, Target, Award, 
   Trophy, Filter, ArrowUpDown, Crosshair, Zap, BookOpen,
-  TrendingUp, Star, Eye
+  TrendingUp, Star, Eye, UserSearch
 } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface ScoutPlayer {
   id: number;
@@ -145,7 +146,7 @@ function ScoutPlayerCard({ player, sport }: ScoutPlayerCardProps) {
 
           <div className="flex gap-4">
             <Avatar className="w-16 h-16 rounded-lg border-2 border-primary/20">
-              <AvatarImage src={player.photoUrl || undefined} alt={player.name} />
+              <AvatarImage src={player.photoUrl || undefined} alt={player.name} width={64} height={64} />
               <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-bold">
                 {initials}
               </AvatarFallback>
@@ -884,15 +885,15 @@ export default function ScoutHub() {
           ))}
         </div>
       ) : (
-        <Card className="border-border/50 bg-card/50">
-          <CardContent className="py-16 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/50 flex items-center justify-center">
-              <Search className="w-8 h-8 text-muted-foreground" />
-            </div>
-            <h3 className="text-lg font-medium mb-2">No Players Found</h3>
-            <p className="text-muted-foreground max-w-md mx-auto">
-              Try adjusting your filters or search query to find more players.
-            </p>
+        <Card className="border-cyan-500/[0.08] bg-gradient-to-br from-[hsl(220,25%,8%)] via-[hsl(220,20%,6%)] to-[hsl(220,25%,5%)] relative overflow-hidden">
+          <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent" />
+          <CardContent className="py-8">
+            <EmptyState
+              icon={UserSearch}
+              title="No Players Match Your Filters"
+              description="Try adjusting your search criteria, clearing filters, or broadening your position and location preferences."
+              variant="compact"
+            />
           </CardContent>
         </Card>
       )}

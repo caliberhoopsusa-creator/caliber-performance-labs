@@ -79,7 +79,7 @@ export function SharedGoalsList() {
                 <div className="flex items-start gap-3">
                   {sharedByPlayer && (
                     <Avatar className="h-9 w-9 border border-primary/20">
-                      <AvatarImage src={sharedByPlayer.photoUrl || undefined} />
+                      <AvatarImage src={sharedByPlayer.photoUrl || undefined} width={36} height={36} />
                       <AvatarFallback className="bg-primary/10 text-primary text-xs">
                         {sharedByPlayer.name?.slice(0, 2).toUpperCase()}
                       </AvatarFallback>

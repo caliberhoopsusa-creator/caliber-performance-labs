@@ -286,10 +286,20 @@ export function GoalsPanel({ playerId, games }: GoalsPanelProps) {
         </div>
 
         {activeGoals.length === 0 && completedGoals.length === 0 ? (
-          <div className="text-center py-6 text-muted-foreground">
-            <Target className="w-10 h-10 mx-auto mb-2 opacity-30" />
-            <p className="text-sm">No goals set yet</p>
-            <p className="text-xs">Click "Add Goal" to get started</p>
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <div className="relative mb-4">
+              <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-2xl blur-xl animate-pulse-slow" />
+              <div className="relative w-14 h-14 flex items-center justify-center rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-cyan-500/10">
+                <Target className="w-7 h-7 text-cyan-400/60" />
+              </div>
+            </div>
+            <h3 className="font-display font-semibold text-white mb-1">Set Your First Goal</h3>
+            <p className="text-sm text-muted-foreground max-w-xs mb-4">
+              Goals help track progress and keep players motivated. Set targets for points, assists, or grades.
+            </p>
+            <Button size="sm" onClick={() => setIsOpen(true)} className="gap-1 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 border-0 shadow-lg shadow-cyan-500/20">
+              <Plus className="w-4 h-4" /> Create Goal
+            </Button>
           </div>
         ) : (
           <div className="space-y-3">

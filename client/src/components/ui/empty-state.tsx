@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { LucideIcon } from "lucide-react";
 import { Button } from "./button";
+import { Link } from "wouter";
 
 interface EmptyStateProps {
   icon: LucideIcon;
@@ -8,7 +9,8 @@ interface EmptyStateProps {
   description: string;
   action?: {
     label: string;
-    onClick: () => void;
+    onClick?: () => void;
+    href?: string;
   };
   className?: string;
   variant?: "default" | "compact";
@@ -66,12 +68,21 @@ export function EmptyState({
       
       {/* Action button */}
       {action && (
-        <Button 
-          onClick={action.onClick}
-          className="mt-6 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 border-0 shadow-lg shadow-cyan-500/20"
-        >
-          {action.label}
-        </Button>
+        action.href ? (
+          <Button 
+            asChild
+            className="mt-6 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 border-0 shadow-lg shadow-cyan-500/20"
+          >
+            <Link href={action.href}>{action.label}</Link>
+          </Button>
+        ) : (
+          <Button 
+            onClick={action.onClick}
+            className="mt-6 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 border-0 shadow-lg shadow-cyan-500/20"
+          >
+            {action.label}
+          </Button>
+        )
       )}
     </div>
   );

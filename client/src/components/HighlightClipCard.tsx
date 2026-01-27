@@ -42,6 +42,7 @@ export function HighlightClipCard({
             src={clip.thumbnailUrl}
             alt={clip.title}
             className="w-full h-full object-cover"
+            loading="lazy"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-orange-500/5">

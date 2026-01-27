@@ -208,7 +208,7 @@ export function AchievementCard({
 
               <div className="flex-1 flex flex-col items-center justify-center text-center">
                 <Avatar className="w-24 h-24 border-4 border-white/20 mb-4">
-                  {player.photoUrl && <AvatarImage src={player.photoUrl} alt={player.name} />}
+                  {player.photoUrl && <AvatarImage src={player.photoUrl} alt={player.name} width={96} height={96} />}
                   <AvatarFallback className="bg-gradient-to-br from-primary/50 to-primary/20 text-2xl font-bold text-white">
                     {getInitials(player.name)}
                   </AvatarFallback>

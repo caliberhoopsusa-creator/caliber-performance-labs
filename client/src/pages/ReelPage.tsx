@@ -260,7 +260,7 @@ export default function ReelPage() {
               <Link href={`/players/${playerId}`}>
                 <div className="flex items-center gap-3 mb-3">
                   <Avatar className="w-10 h-10 border-2 border-primary/50">
-                    {player.photoUrl && <AvatarImage src={player.photoUrl} alt={player.name} />}
+                    {player.photoUrl && <AvatarImage src={player.photoUrl} alt={player.name} width={40} height={40} />}
                     <AvatarFallback className="bg-primary/20 text-white text-sm font-bold">
                       {getInitials(player.name)}
                     </AvatarFallback>

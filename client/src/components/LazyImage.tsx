@@ -108,6 +108,13 @@ const sizeClasses = {
   xl: "w-16 h-16 text-lg",
 };
 
+const sizeDimensions = {
+  sm: 32,
+  md: 40,
+  lg: 48,
+  xl: 64,
+};
+
 export function LazyAvatar({ src, name, size = "md", className }: LazyAvatarProps) {
   const initials = name
     .split(" ")
@@ -118,7 +125,7 @@ export function LazyAvatar({ src, name, size = "md", className }: LazyAvatarProp
 
   return (
     <Avatar className={cn(sizeClasses[size], "border border-cyan-500/30", className)}>
-      {src && <AvatarImage src={src} alt={name} />}
+      {src && <AvatarImage src={src} alt={name} width={sizeDimensions[size]} height={sizeDimensions[size]} />}
       <AvatarFallback className="bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 text-cyan-400 font-semibold">
         {initials}
       </AvatarFallback>

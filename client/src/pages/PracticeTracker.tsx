@@ -20,8 +20,9 @@ import { LivePractice } from "@/components/LivePractice";
 import { 
   Calendar, Clock, Plus, ChevronDown, ChevronUp, 
   Users, CheckCircle2, XCircle, ClipboardList, Target,
-  Trash2, Play, Zap
+  Trash2, Play, Zap, Dumbbell
 } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Paywall } from "@/components/Paywall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -540,7 +541,13 @@ export default function PracticeTracker() {
             </CardHeader>
             <CardContent className="space-y-3">
               {sortedPractices.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">No practice sessions yet. Create one to get started!</p>
+                <EmptyState
+                  icon={Dumbbell}
+                  title="No Practices Yet"
+                  description="Start tracking practice sessions to monitor attendance, run drills, and measure player development."
+                  action={{ label: "Start Live Practice", onClick: () => setStartDialogOpen(true) }}
+                  variant="compact"
+                />
               ) : (
                 sortedPractices.map((practice) => (
                   <PracticeCard

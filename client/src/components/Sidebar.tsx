@@ -156,7 +156,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
     <div className="hidden md:flex flex-col w-64 bg-gradient-to-b from-[hsl(220,25%,8%)] via-[hsl(220,20%,6%)] to-[hsl(220,25%,4%)] border-r border-cyan-500/[0.08] h-screen sticky top-0 overflow-y-auto backdrop-blur-2xl">
       <div className="absolute inset-0 cyber-grid opacity-20 pointer-events-none" />
       <div className="p-5 flex items-center gap-3 border-b border-cyan-500/[0.08] bg-gradient-to-r from-cyan-500/[0.02] to-transparent relative z-10">
-        <img src={caliberLogo} alt="Caliber Logo" className="h-9 w-9 rounded-lg shadow-lg shadow-black/20 object-contain" />
+        <img src={caliberLogo} alt="Caliber Logo" className="h-9 w-9 rounded-lg shadow-lg shadow-black/20 object-contain" width={36} height={36} />
         <div className="flex-1">
           <h1 className="text-xl font-bold font-display text-white tracking-wider uppercase">CALIBER</h1>
           <button 

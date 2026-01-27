@@ -88,7 +88,7 @@ export function FollowingList({ playerId, showUnfollowButton = true }: Following
                 className="flex items-center gap-3 flex-1 min-w-0 hover-elevate rounded-lg p-1 -m-1"
               >
                 <Avatar className="w-10 h-10 border-2 border-primary/20">
-                  {player.photoUrl && <AvatarImage src={player.photoUrl} alt={player.name} />}
+                  {player.photoUrl && <AvatarImage src={player.photoUrl} alt={player.name} width={40} height={40} />}
                   <AvatarFallback className="bg-gradient-to-br from-primary/30 to-primary/10 text-sm font-display font-bold text-white">
                     {getInitials(player.name)}
                   </AvatarFallback>

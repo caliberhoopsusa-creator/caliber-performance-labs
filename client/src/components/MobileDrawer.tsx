@@ -184,7 +184,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
             <div className="flex items-center gap-4">
               <div className="relative">
                 <div className="absolute inset-[-3px] rounded-xl bg-gradient-to-br from-cyan-400/40 to-cyan-600/20 blur-sm" />
-                <img src={caliberLogo} alt="Caliber" className="relative w-11 h-11 rounded-xl shadow-lg shadow-cyan-500/20 object-contain" />
+                <img src={caliberLogo} alt="Caliber" className="relative w-11 h-11 rounded-xl shadow-lg shadow-cyan-500/20 object-contain" width={44} height={44} />
               </div>
               <div>
                 <h2 className="font-display font-bold text-white text-xl uppercase tracking-wider">Caliber</h2>

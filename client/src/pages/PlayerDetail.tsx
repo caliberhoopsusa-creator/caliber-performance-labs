@@ -27,7 +27,8 @@ import { GradeBadge } from "@/components/GradeBadge";
 import { PlayerArchetype } from "@/components/PlayerArchetype";
 import { EliteAchievements } from "@/components/EliteAchievements";
 import { CaliberBadge } from "@/components/CaliberBadge";
-import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Trophy, Share2, BarChart3, Medal, User, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye, BookOpen, Phone, Save, Crosshair, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Trophy, Share2, BarChart3, Medal, User, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye, BookOpen, Phone, Save, Crosshair, ShieldCheck, PlayCircle } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS, FOOTBALL_POSITION_STATS, type FootballPosition } from "@shared/sports-config";
 import { useSport } from "@/components/SportToggle";
 import { AnimatedRankBadge } from "@/components/AnimatedRankBadge";
@@ -1284,7 +1285,7 @@ export default function PlayerDetail() {
               {/* Enhanced avatar with cyan ring glow for mobile */}
               <div className="mobile-avatar-ring p-0.5 md:p-1 rounded-full">
                 <Avatar className="w-16 h-16 md:w-24 md:h-24 border-2 border-cyan-500/30 ring-2 ring-cyan-500/20 ring-offset-2 ring-offset-background">
-                  {player.photoUrl && <AvatarImage src={player.photoUrl} alt={player.name} />}
+                  {player.photoUrl && <AvatarImage src={player.photoUrl} alt={player.name} width={96} height={96} />}
                   <AvatarFallback className="bg-gradient-to-br from-cyan-500/30 to-cyan-600/20 text-xl md:text-3xl font-display font-bold text-white">
                     {getInitials(player.name)}
                   </AvatarFallback>
@@ -1763,8 +1764,15 @@ export default function PlayerDetail() {
         </div>
         
         {topGames.length === 0 ? (
-          <Card className="p-8 text-center">
-            <p className="text-muted-foreground text-sm">No games logged yet. Log your first game to see your top performances!</p>
+          <Card className="relative overflow-hidden border-cyan-500/[0.08]">
+            <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent" />
+            <EmptyState
+              icon={PlayCircle}
+              title="No Games Logged Yet"
+              description="Log your first game to track performance, earn grades, and see your top plays."
+              action={{ label: "Log First Game", href: "/analyze" }}
+              variant="compact"
+            />
           </Card>
         ) : (
           <div className="space-y-3">
@@ -2068,7 +2076,16 @@ export default function PlayerDetail() {
             
             <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
               {games.length === 0 ? (
-                <div className="text-muted-foreground text-sm text-center py-10">No games logged yet.</div>
+                <div className="flex flex-col items-center justify-center py-10 text-center">
+                  <div className="relative mb-4">
+                    <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-2xl blur-xl" />
+                    <div className="relative w-12 h-12 flex items-center justify-center rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-cyan-500/10">
+                      <ClipboardList className="w-6 h-6 text-cyan-400/60" />
+                    </div>
+                  </div>
+                  <h4 className="font-display font-medium text-white text-sm mb-1">No Game History</h4>
+                  <p className="text-xs text-muted-foreground max-w-[200px]">Log games to build a complete performance record</p>
+                </div>
               ) : (
                 displayedGames.map(game => (
                   <div key={game.id} className="bg-secondary/20 hover:bg-secondary/40 border border-white/5 p-4 rounded-xl transition-colors group">
@@ -2239,7 +2256,7 @@ export default function PlayerDetail() {
             <div className="flex flex-col items-center gap-4">
               <div className="relative">
                 <Avatar className="w-24 h-24 border-4 border-primary/20">
-                  {editForm.photoUrl && <AvatarImage src={editForm.photoUrl} alt="Profile" />}
+                  {editForm.photoUrl && <AvatarImage src={editForm.photoUrl} alt="Profile" width={96} height={96} />}
                   <AvatarFallback className="bg-gradient-to-br from-primary/30 to-primary/10 text-2xl font-display font-bold text-white">
                     {editForm.name ? getInitials(editForm.name) : "?"}
                   </AvatarFallback>
@@ -2493,7 +2510,7 @@ export default function PlayerDetail() {
                 </div>
                 {editForm.bannerUrl && (
                   <div className="mt-2 rounded-lg overflow-hidden border border-white/10">
-                    <img src={editForm.bannerUrl} alt="Banner preview" className="w-full h-24 object-cover" />
+                    <img src={editForm.bannerUrl} alt="Banner preview" className="w-full h-24 object-cover" loading="lazy" />
                   </div>
                 )}
               </div>

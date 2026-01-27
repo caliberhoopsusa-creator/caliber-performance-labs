@@ -165,7 +165,7 @@ function PlayerDiscoverCard({
           <div className="flex gap-4">
             <div className="flex-shrink-0 relative">
               <Avatar className={`w-16 h-16 rounded-lg border ${isRecruitReady ? 'border-green-500/50' : 'border-border/50'}`}>
-                <AvatarImage src={player.photoUrl || undefined} alt={player.name} className="object-cover" />
+                <AvatarImage src={player.photoUrl || undefined} alt={player.name} className="object-cover" width={64} height={64} />
                 <AvatarFallback className="rounded-lg bg-gradient-to-br from-primary/30 to-primary/10 text-primary font-bold text-lg">
                   {initials}
                 </AvatarFallback>

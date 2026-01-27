@@ -356,7 +356,9 @@ export default function Teams() {
                               : team.profilePicture.startsWith('/objects') 
                                 ? team.profilePicture 
                                 : `/objects${team.profilePicture.startsWith('/') ? '' : '/'}${team.profilePicture}`} 
-                            alt={team.name} 
+                            alt={team.name}
+                            width={40}
+                            height={40}
                           />
                         ) : null}
                         <AvatarFallback className="rounded-lg bg-gradient-to-br from-primary/20 to-primary/5">

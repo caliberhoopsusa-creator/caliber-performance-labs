@@ -117,6 +117,7 @@ export function HighlightsGallery({ playerId, isOwner = false }: HighlightsGalle
                     src={clip.thumbnailUrl}
                     alt={clip.title}
                     className="w-full h-full object-cover"
+                    loading="lazy"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary/40 to-secondary/20">

@@ -4,7 +4,8 @@ import { Link } from "wouter";
 import { api } from "@shared/routes";
 import { GradeBadge } from "@/components/GradeBadge";
 import { useSport } from "@/components/SportToggle";
-import { Trophy, Medal, Filter, X } from "lucide-react";
+import { Trophy, Medal, Filter, X, Users } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -214,21 +215,20 @@ export default function Leaderboard() {
               <tbody className="divide-y divide-cyan-500/[0.06]">
                 {leaderboard?.length === 0 ? (
                   <tr>
-                    <td colSpan={isBasketball ? 9 : 9} className="px-3 md:px-6 py-12 text-center">
-                      <div className="text-cyan-200/40">
-                        <Trophy className="w-8 h-8 mx-auto mb-2 text-cyan-400/30" />
-                        <p className="text-sm">No players found matching your filters</p>
-                        {hasFilters && (
-                          <Button 
-                            variant="ghost" 
-                            onClick={clearFilters} 
-                            className="text-cyan-400 mt-2 hover:text-cyan-300"
-                            data-testid="button-clear-filters-empty"
-                          >
-                            Clear filters
-                          </Button>
-                        )}
-                      </div>
+                    <td colSpan={isBasketball ? 9 : 9} className="px-3 md:px-6 py-4">
+                      <EmptyState
+                        icon={hasFilters ? Trophy : Users}
+                        title={hasFilters ? "No Matches Found" : "No Players Yet"}
+                        description={hasFilters 
+                          ? "No players match your current filters. Try adjusting your search criteria."
+                          : "Add players and log games to see them ranked on the leaderboard."
+                        }
+                        action={hasFilters 
+                          ? { label: "Clear Filters", onClick: clearFilters }
+                          : { label: "Add Players", href: "/players" }
+                        }
+                        variant="compact"
+                      />
                     </td>
                   </tr>
                 ) : (

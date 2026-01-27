@@ -87,7 +87,7 @@ export function ShareableGameCard({ game, playerName, playerPhoto, badges = [] }
 
         <div className="flex items-center gap-3 mb-5">
           {playerPhoto ? (
-            <img src={playerPhoto} alt={playerName} className="w-14 h-14 rounded-xl object-cover border-2 border-white/20" />
+            <img src={playerPhoto} alt={playerName} className="w-14 h-14 rounded-xl object-cover border-2 border-white/20" loading="lazy" width={56} height={56} />
           ) : (
             <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/30 to-orange-500/30 flex items-center justify-center border-2 border-white/20">
               <span className="text-xl font-bold text-white">{playerName.charAt(0)}</span>
@@ -223,7 +223,7 @@ export function ShareableBadgeCard({ badgeType, playerName, playerPhoto, earnedD
 
         <div className="flex items-center justify-center gap-3 mt-4 pt-4 border-t border-white/10">
           {playerPhoto ? (
-            <img src={playerPhoto} alt={playerName} className="w-12 h-12 rounded-xl object-cover border-2 border-white/20" />
+            <img src={playerPhoto} alt={playerName} className="w-12 h-12 rounded-xl object-cover border-2 border-white/20" loading="lazy" width={48} height={48} />
           ) : (
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/30 to-orange-500/30 flex items-center justify-center border-2 border-white/20">
               <span className="text-lg font-bold text-white">{playerName.charAt(0)}</span>
@@ -299,7 +299,7 @@ export function ShareableLevelUpCard({ playerName, playerPhoto, newTier, totalXp
 
         <div className="flex items-center justify-center gap-3 pt-4 border-t border-white/10">
           {playerPhoto ? (
-            <img src={playerPhoto} alt={playerName} className="w-12 h-12 rounded-xl object-cover border-2 border-white/20" />
+            <img src={playerPhoto} alt={playerName} className="w-12 h-12 rounded-xl object-cover border-2 border-white/20" loading="lazy" width={48} height={48} />
           ) : (
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/30 to-orange-500/30 flex items-center justify-center border-2 border-white/20">
               <span className="text-lg font-bold text-white">{playerName.charAt(0)}</span>
@@ -371,7 +371,7 @@ export function ShareableStreakCard({ playerName, playerPhoto, streakCount, stre
 
         <div className="flex items-center justify-center gap-3 pt-4 border-t border-white/10">
           {playerPhoto ? (
-            <img src={playerPhoto} alt={playerName} className="w-12 h-12 rounded-xl object-cover border-2 border-white/20" />
+            <img src={playerPhoto} alt={playerName} className="w-12 h-12 rounded-xl object-cover border-2 border-white/20" loading="lazy" width={48} height={48} />
           ) : (
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/30 to-orange-500/30 flex items-center justify-center border-2 border-white/20">
               <span className="text-lg font-bold text-white">{playerName.charAt(0)}</span>

@@ -61,7 +61,7 @@ export function FollowersList({ playerId }: FollowersListProps) {
               data-testid={`link-follower-${follower.playerId}`}
             >
               <Avatar className="w-10 h-10 border-2 border-primary/20">
-                {follower.photoUrl && <AvatarImage src={follower.photoUrl} alt={follower.name} />}
+                {follower.photoUrl && <AvatarImage src={follower.photoUrl} alt={follower.name} width={40} height={40} />}
                 <AvatarFallback className="bg-gradient-to-br from-primary/30 to-primary/10 text-sm font-display font-bold text-white">
                   {getInitials(follower.name)}
                 </AvatarFallback>

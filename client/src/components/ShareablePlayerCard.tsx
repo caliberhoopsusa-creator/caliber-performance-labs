@@ -159,7 +159,7 @@ export const ShareablePlayerCard = forwardRef<HTMLDivElement, ShareablePlayerCar
             <div className="relative">
               <div className="w-20 h-20 rounded-xl overflow-hidden border-2 border-orange-500/30 shadow-lg shadow-orange-500/20">
                 {player.photoUrl ? (
-                  <img src={player.photoUrl} alt={player.name} className="w-full h-full object-cover" />
+                  <img src={player.photoUrl} alt={player.name} className="w-full h-full object-cover" loading="lazy" width={80} height={80} />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-orange-500/30 to-orange-600/10 flex items-center justify-center">
                     <span className="text-2xl font-bold text-white font-display">{getInitials(player.name)}</span>

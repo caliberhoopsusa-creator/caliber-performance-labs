@@ -85,7 +85,7 @@ export default function Landing() {
           <div className="flex items-center gap-3">
             <div className="relative">
               <div className="absolute inset-0 bg-cyan-500/30 rounded-xl blur-lg" />
-              <img src={caliberLogo} alt="Caliber Logo" className="relative h-10 w-10 rounded-xl shadow-lg object-contain" />
+              <img src={caliberLogo} alt="Caliber Logo" className="relative h-10 w-10 rounded-xl shadow-lg object-contain" width={40} height={40} />
             </div>
             <h1 className="text-xl font-bold font-display text-white tracking-wider uppercase">CALIBER</h1>
           </div>
@@ -270,7 +270,7 @@ export default function Landing() {
       <footer className="relative py-12 px-4 border-t border-white/[0.05]">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 text-sm text-muted-foreground">
           <div className="flex items-center gap-3">
-            <img src={caliberLogo} alt="Caliber Logo" className="h-8 w-8 rounded-lg object-contain opacity-70" />
+            <img src={caliberLogo} alt="Caliber Logo" className="h-8 w-8 rounded-lg object-contain opacity-70" width={32} height={32} />
             <span>&copy; 2026 Caliber Performance Labs</span>
           </div>
           <div className="flex items-center gap-8">

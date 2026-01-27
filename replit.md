@@ -40,6 +40,14 @@ Preferred communication style: Simple, everyday language.
 - **Database**: PostgreSQL
 - **ORM**: Drizzle ORM with drizzle-zod
 - **Schema**: Defined in `shared/schema.ts`
+- **Database Indexes**: Comprehensive indexing for query optimization on 60+ tables with 98 total indexes covering:
+  - Foreign key columns (playerId, gameId, userId, teamId, etc.) for efficient JOINs
+  - Filtering columns (sport, status, category) for WHERE clause optimization
+  - Relationship tables (follows, notifications, likes, comments) for aggregation queries
+  - Coaching and team tables (gameNotes, shots, practices, teamMembers) for coach dashboard performance
+  - Social features (storyViews, storyReactions, highlightClips) for feed queries
+  - Messaging tables (dmParticipants, dmMessages) for real-time messaging
+  - All indexes follow naming convention: `table_column_idx`
 
 ### Core Features
 - **Player Management**: Add, view, edit, delete players with comprehensive profiles.

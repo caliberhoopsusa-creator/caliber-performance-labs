@@ -446,7 +446,7 @@ export function PlayerReportCard({ playerId, dateRange, showActions = true }: Pl
           <CardContent className="p-6 print:p-4">
             <div className="flex items-start gap-4 pb-6 border-b border-border print:border-gray-300 print:pb-4">
               <Avatar className="w-20 h-20 border-2 border-primary/20 print:border-gray-300">
-                <AvatarImage src={player.photoUrl || undefined} alt={player.name} />
+                <AvatarImage src={player.photoUrl || undefined} alt={player.name} width={80} height={80} />
                 <AvatarFallback className="text-2xl font-bold bg-primary/10 print:bg-gray-200 print:text-black">
                   {player.name.split(' ').map(n => n[0]).join('')}
                 </AvatarFallback>

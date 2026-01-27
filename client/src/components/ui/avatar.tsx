@@ -21,13 +21,22 @@ const Avatar = React.forwardRef<
 ))
 Avatar.displayName = AvatarPrimitive.Root.displayName
 
+interface AvatarImageProps extends React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image> {
+  loading?: "eager" | "lazy";
+  width?: number | string;
+  height?: number | string;
+}
+
 const AvatarImage = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Image>,
-  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>
->(({ className, ...props }, ref) => (
+  AvatarImageProps
+>(({ className, loading = "lazy", width, height, ...props }, ref) => (
   <AvatarPrimitive.Image
     ref={ref}
     className={cn("aspect-square h-full w-full", className)}
+    loading={loading}
+    width={width}
+    height={height}
     {...props}
   />
 ))

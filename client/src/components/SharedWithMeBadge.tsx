@@ -41,7 +41,7 @@ export function SharedWithMeBadge({
       <span className="flex items-center gap-1">
         {sharedByPhotoUrl ? (
           <Avatar className="h-4 w-4">
-            <AvatarImage src={sharedByPhotoUrl} />
+            <AvatarImage src={sharedByPhotoUrl} width={16} height={16} />
             <AvatarFallback className="text-[8px] bg-primary/20">
               {sharedByName.slice(0, 1)}
             </AvatarFallback>

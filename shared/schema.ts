@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, decimal, date } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, decimal, date, index } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -38,7 +38,10 @@ export const players = pgTable("players", {
   // Coach-assigned roster role
   rosterRole: text("roster_role").default("rotation"), // 'starter', 'rotation', 'bench', 'development'
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  userIdIdx: index("players_user_id_idx").on(table.userId),
+  sportIdx: index("players_sport_idx").on(table.sport),
+}));
 
 // === ACTIVITY STREAKS (for daily login/activity tracking) ===
 export const activityStreaks = pgTable("activity_streaks", {
@@ -49,7 +52,9 @@ export const activityStreaks = pgTable("activity_streaks", {
   longestStreak: integer("longest_streak").notNull().default(0),
   lastActivityDate: date("last_activity_date"),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => ({
+  playerIdIdx: index("activity_streaks_player_id_idx").on(table.playerId),
+}));
 
 export const badges = pgTable("badges", {
   id: serial("id").primaryKey(),
@@ -57,7 +62,10 @@ export const badges = pgTable("badges", {
   badgeType: text("badge_type").notNull(),
   gameId: integer("game_id"),
   earnedAt: timestamp("earned_at").defaultNow(),
-});
+}, (table) => ({
+  playerIdIdx: index("badges_player_id_idx").on(table.playerId),
+  gameIdIdx: index("badges_game_id_idx").on(table.gameId),
+}));
 
 // === SKILL BADGES (Progressive career-based badges that upgrade) ===
 export const skillBadges = pgTable("skill_badges", {
@@ -67,7 +75,9 @@ export const skillBadges = pgTable("skill_badges", {
   currentLevel: text("current_level").notNull().default("none"), // 'none', 'bronze', 'silver', 'gold', 'hall_of_fame'
   careerValue: integer("career_value").notNull().default(0), // Cumulative stat value
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => ({
+  playerIdIdx: index("skill_badges_player_id_idx").on(table.playerId),
+}));
 
 // === CALIBER BADGE (Special owner-awarded badge) ===
 export const caliberBadges = pgTable("caliber_badges", {
@@ -77,7 +87,9 @@ export const caliberBadges = pgTable("caliber_badges", {
   reason: text("reason"), // Optional reason/note for the award
   category: text("category").notNull().default("excellence"), // 'excellence', 'dedication', 'leadership', 'potential'
   awardedAt: timestamp("awarded_at").defaultNow(),
-});
+}, (table) => ({
+  playerIdIdx: index("caliber_badges_player_id_idx").on(table.playerId),
+}));
 
 export const insertCaliberBadgeSchema = createInsertSchema(caliberBadges).omit({ id: true, awardedAt: true });
 export type InsertCaliberBadge = z.infer<typeof insertCaliberBadgeSchema>;
@@ -132,7 +144,9 @@ export const footballMetrics = pgTable("football_metrics", {
   clutchPerformance: integer("clutch_performance"), // Performance in big moments
   
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => ({
+  playerIdIdx: index("football_metrics_player_id_idx").on(table.playerId),
+}));
 
 export const insertFootballMetricsSchema = createInsertSchema(footballMetrics).omit({ id: true, updatedAt: true });
 export type InsertFootballMetrics = z.infer<typeof insertFootballMetricsSchema>;
@@ -148,7 +162,9 @@ export const goals = pgTable("goals", {
   deadline: date("deadline"),
   completed: boolean("completed").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  playerIdIdx: index("goals_player_id_idx").on(table.playerId),
+}));
 
 export const streaks = pgTable("streaks", {
   id: serial("id").primaryKey(),
@@ -158,7 +174,10 @@ export const streaks = pgTable("streaks", {
   bestCount: integer("best_count").notNull().default(0),
   lastGameId: integer("last_game_id"),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => ({
+  playerIdIdx: index("streaks_player_id_idx").on(table.playerId),
+  lastGameIdIdx: index("streaks_last_game_id_idx").on(table.lastGameId),
+}));
 
 export const games = pgTable("games", {
   id: serial("id").primaryKey(),
@@ -258,7 +277,10 @@ export const games = pgTable("games", {
   passingGrade: text("passing_grade"), // A+, B, C-, etc. (assist-to-turnover ratio)
   
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  playerIdIdx: index("games_player_id_idx").on(table.playerId),
+  sportIdx: index("games_sport_idx").on(table.sport),
+}));
 
 // === SOCIAL ENGAGEMENT TABLES ===
 export const likes = pgTable("likes", {
@@ -266,7 +288,9 @@ export const likes = pgTable("likes", {
   gameId: integer("game_id").notNull().references(() => games.id, { onDelete: "cascade" }),
   sessionId: text("session_id").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  gameIdIdx: index("likes_game_id_idx").on(table.gameId),
+}));
 
 export const comments = pgTable("comments", {
   id: serial("id").primaryKey(),
@@ -275,7 +299,9 @@ export const comments = pgTable("comments", {
   content: text("content").notNull(),
   sessionId: text("session_id").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  gameIdIdx: index("comments_game_id_idx").on(table.gameId),
+}));
 
 // === RELATIONS ===
 export const playersRelations = relations(players, ({ many }) => ({
@@ -313,7 +339,9 @@ export const messages = pgTable("messages", {
   role: text("role").notNull(),
   content: text("content").notNull(),
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
-});
+}, (table) => ({
+  conversationIdIdx: index("messages_conversation_id_idx").on(table.conversationId),
+}));
 
 // === EXPLICIT API CONTRACT TYPES ===
 
@@ -649,7 +677,10 @@ export const challengeProgress = pgTable("challenge_progress", {
   currentValue: integer("current_value").notNull().default(0),
   completed: boolean("completed").default(false).notNull(),
   completedAt: timestamp("completed_at"),
-});
+}, (table) => ({
+  challengeIdIdx: index("challenge_progress_challenge_id_idx").on(table.challengeId),
+  playerIdIdx: index("challenge_progress_player_id_idx").on(table.playerId),
+}));
 
 export type Challenge = typeof challenges.$inferSelect;
 export const insertChallengeSchema = createInsertSchema(challenges).omit({ id: true, createdAt: true });
@@ -685,7 +716,10 @@ export const teamMembers = pgTable("team_members", {
   role: text("role").notNull().default("member"),
   rosterRole: text("roster_role").default("rotation"), // 'starter', 'rotation', 'bench', 'development'
   joinedAt: timestamp("joined_at").defaultNow(),
-});
+}, (table) => ({
+  teamIdIdx: index("team_members_team_id_idx").on(table.teamId),
+  playerIdIdx: index("team_members_player_id_idx").on(table.playerId),
+}));
 
 export const teamPosts = pgTable("team_posts", {
   id: serial("id").primaryKey(),
@@ -697,7 +731,10 @@ export const teamPosts = pgTable("team_posts", {
   practiceLocation: text("practice_location"), // Location for practice
   isPinned: boolean("is_pinned").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  teamIdIdx: index("team_posts_team_id_idx").on(table.teamId),
+  authorIdIdx: index("team_posts_author_id_idx").on(table.authorId),
+}));
 
 export const teamPostComments = pgTable("team_post_comments", {
   id: serial("id").primaryKey(),
@@ -705,7 +742,10 @@ export const teamPostComments = pgTable("team_post_comments", {
   authorId: integer("author_id").notNull().references(() => teamMembers.id, { onDelete: "cascade" }),
   content: text("content").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  postIdIdx: index("team_post_comments_post_id_idx").on(table.postId),
+  authorIdIdx: index("team_post_comments_author_id_idx").on(table.authorId),
+}));
 
 export type Team = typeof teams.$inferSelect;
 export const insertTeamSchema = createInsertSchema(teams).omit({ id: true, createdAt: true });
@@ -742,7 +782,11 @@ export const feedActivities = pgTable("feed_activities", {
   subtext: text("subtext"),
   sessionId: text("session_id"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  playerIdIdx: index("feed_activities_player_id_idx").on(table.playerId),
+  gameIdIdx: index("feed_activities_game_id_idx").on(table.gameId),
+  badgeIdIdx: index("feed_activities_badge_id_idx").on(table.badgeId),
+}));
 
 // === REPOSTS ===
 export const reposts = pgTable("reposts", {
@@ -752,7 +796,10 @@ export const reposts = pgTable("reposts", {
   sessionId: text("session_id").notNull(),
   comment: text("comment"), // Optional comment when reposting
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  originalActivityIdIdx: index("reposts_original_activity_id_idx").on(table.originalActivityId),
+  gameIdIdx: index("reposts_game_id_idx").on(table.gameId),
+}));
 
 // === POLLS ===
 export const polls = pgTable("polls", {
@@ -763,7 +810,9 @@ export const polls = pgTable("polls", {
   playerId: integer("player_id").references(() => players.id, { onDelete: "set null" }),
   expiresAt: timestamp("expires_at"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  playerIdIdx: index("polls_player_id_idx").on(table.playerId),
+}));
 
 export const pollVotes = pgTable("poll_votes", {
   id: serial("id").primaryKey(),
@@ -771,7 +820,9 @@ export const pollVotes = pgTable("poll_votes", {
   optionIndex: integer("option_index").notNull(),
   sessionId: text("session_id").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  pollIdIdx: index("poll_votes_poll_id_idx").on(table.pollId),
+}));
 
 // === MATCHUP PREDICTIONS ===
 export const predictions = pgTable("predictions", {
@@ -783,7 +834,10 @@ export const predictions = pgTable("predictions", {
   sessionId: text("session_id"),
   gameDate: date("game_date"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  player1IdIdx: index("predictions_player1_id_idx").on(table.player1Id),
+  player2IdIdx: index("predictions_player2_id_idx").on(table.player2Id),
+}));
 
 export const predictionVotes = pgTable("prediction_votes", {
   id: serial("id").primaryKey(),
@@ -791,7 +845,9 @@ export const predictionVotes = pgTable("prediction_votes", {
   votedFor: integer("voted_for").notNull(), // player1_id or player2_id
   sessionId: text("session_id").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  predictionIdIdx: index("prediction_votes_prediction_id_idx").on(table.predictionId),
+}));
 
 // === WEEKLY STORY TEMPLATES ===
 export const storyTemplates = pgTable("story_templates", {
@@ -819,7 +875,10 @@ export const playerStories = pgTable("player_stories", {
   expiresAt: timestamp("expires_at"), // 24-hour story expiry
   viewCount: integer("view_count").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  playerIdIdx: index("player_stories_player_id_idx").on(table.playerId),
+  templateIdIdx: index("player_stories_template_id_idx").on(table.templateId),
+}));
 
 // Story views tracking
 export const storyViews = pgTable("story_views", {
@@ -828,7 +887,10 @@ export const storyViews = pgTable("story_views", {
   viewerId: integer("viewer_id").references(() => players.id, { onDelete: "set null" }),
   sessionId: text("session_id"),
   viewedAt: timestamp("viewed_at").defaultNow(),
-});
+}, (table) => ({
+  storyIdIdx: index("story_views_story_id_idx").on(table.storyId),
+  viewerIdIdx: index("story_views_viewer_id_idx").on(table.viewerId),
+}));
 
 // Story reactions (emoji reactions like Instagram)
 export const storyReactions = pgTable("story_reactions", {
@@ -838,7 +900,10 @@ export const storyReactions = pgTable("story_reactions", {
   sessionId: text("session_id"),
   reaction: text("reaction").notNull(), // emoji code: 'fire', 'heart', 'clap', '100', 'goat', 'muscle'
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  storyIdIdx: index("story_reactions_story_id_idx").on(table.storyId),
+  reactorIdIdx: index("story_reactions_reactor_id_idx").on(table.reactorId),
+}));
 
 // Story highlights - saved stories that don't expire
 export const storyHighlights = pgTable("story_highlights", {
@@ -848,7 +913,9 @@ export const storyHighlights = pgTable("story_highlights", {
   coverImageUrl: text("cover_image_url"),
   storyIds: text("story_ids").notNull(), // JSON array of story IDs
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  playerIdIdx: index("story_highlights_player_id_idx").on(table.playerId),
+}));
 
 // === COACH ANALYSIS TABLES ===
 
@@ -862,7 +929,10 @@ export const shots = pgTable("shots", {
   result: text("result").notNull(), // 'made', 'missed'
   quarter: integer("quarter").notNull(), // 1-4 or OT (5+)
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  gameIdIdx: index("shots_game_id_idx").on(table.gameId),
+  playerIdIdx: index("shots_player_id_idx").on(table.playerId),
+}));
 
 export const gameNotes = pgTable("game_notes", {
   id: serial("id").primaryKey(),
@@ -874,7 +944,10 @@ export const gameNotes = pgTable("game_notes", {
   noteType: text("note_type").notNull(), // 'observation', 'improvement', 'praise', 'strategy'
   isPrivate: boolean("is_private").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  gameIdIdx: index("game_notes_game_id_idx").on(table.gameId),
+  playerIdIdx: index("game_notes_player_id_idx").on(table.playerId),
+}));
 
 export const practices = pgTable("practices", {
   id: serial("id").primaryKey(),
@@ -889,7 +962,9 @@ export const practices = pgTable("practices", {
   currentDrillId: integer("current_drill_id").references(() => drills.id, { onDelete: "set null" }),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  teamIdIdx: index("practices_team_id_idx").on(table.teamId),
+}));
 
 export const practiceAttendance = pgTable("practice_attendance", {
   id: serial("id").primaryKey(),
@@ -899,7 +974,10 @@ export const practiceAttendance = pgTable("practice_attendance", {
   checkedInAt: timestamp("checked_in_at"), // live check-in timestamp
   effortRating: integer("effort_rating"), // 1-10 scale
   notes: text("notes"),
-});
+}, (table) => ({
+  practiceIdIdx: index("practice_attendance_practice_id_idx").on(table.practiceId),
+  playerIdIdx: index("practice_attendance_player_id_idx").on(table.playerId),
+}));
 
 export const drills = pgTable("drills", {
   id: serial("id").primaryKey(),
@@ -917,7 +995,11 @@ export const drillScores = pgTable("drill_scores", {
   score: integer("score").notNull(), // 1-100
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  practiceIdIdx: index("drill_scores_practice_id_idx").on(table.practiceId),
+  playerIdIdx: index("drill_scores_player_id_idx").on(table.playerId),
+  drillIdIdx: index("drill_scores_drill_id_idx").on(table.drillId),
+}));
 
 export const lineups = pgTable("lineups", {
   id: serial("id").primaryKey(),
@@ -934,7 +1016,10 @@ export const lineupStats = pgTable("lineup_stats", {
   plusMinus: integer("plus_minus").notNull(),
   points: integer("points").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  lineupIdIdx: index("lineup_stats_lineup_id_idx").on(table.lineupId),
+  gameIdIdx: index("lineup_stats_game_id_idx").on(table.gameId),
+}));
 
 export const opponents = pgTable("opponents", {
   id: serial("id").primaryKey(),
@@ -958,7 +1043,10 @@ export const alerts = pgTable("alerts", {
   isRead: boolean("is_read").default(false).notNull(),
   relatedGameId: integer("related_game_id").references(() => games.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  playerIdIdx: index("alerts_player_id_idx").on(table.playerId),
+  relatedGameIdIdx: index("alerts_related_game_id_idx").on(table.relatedGameId),
+}));
 
 export const coachGoals = pgTable("coach_goals", {
   id: serial("id").primaryKey(),
@@ -973,7 +1061,9 @@ export const coachGoals = pgTable("coach_goals", {
   status: text("status").notNull().default("active"), // 'active', 'completed', 'missed'
   coachFeedback: text("coach_feedback"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  playerIdIdx: index("coach_goals_player_id_idx").on(table.playerId),
+}));
 
 export const drillRecommendations = pgTable("drill_recommendations", {
   id: serial("id").primaryKey(),
@@ -984,7 +1074,9 @@ export const drillRecommendations = pgTable("drill_recommendations", {
   weakStat: text("weak_stat"), // which stat needs improvement
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  playerIdIdx: index("drill_recommendations_player_id_idx").on(table.playerId),
+}));
 
 // === COACH ANALYSIS INSERT SCHEMAS ===
 export const insertShotSchema = createInsertSchema(shots).omit({ id: true, createdAt: true });
@@ -1106,7 +1198,10 @@ export const follows = pgTable("follows", {
   followerUserId: text("follower_user_id"),
   followeePlayerId: integer("followee_player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  followerPlayerIdIdx: index("follows_follower_player_id_idx").on(table.followerPlayerId),
+  followeePlayerIdIdx: index("follows_followee_player_id_idx").on(table.followeePlayerId),
+}));
 
 // === IN-APP NOTIFICATIONS ===
 export const notifications = pgTable("notifications", {
@@ -1120,7 +1215,9 @@ export const notifications = pgTable("notifications", {
   relatedType: text("related_type"), // 'game', 'badge', 'goal', 'challenge', 'player', 'story'
   isRead: boolean("is_read").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  playerIdIdx: index("notifications_player_id_idx").on(table.playerId),
+}));
 
 // === HIGHLIGHT CLIPS ===
 export const highlightClips = pgTable("highlight_clips", {
@@ -1134,7 +1231,10 @@ export const highlightClips = pgTable("highlight_clips", {
   duration: integer("duration"), // seconds
   viewCount: integer("view_count").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  playerIdIdx: index("highlight_clips_player_id_idx").on(table.playerId),
+  gameIdIdx: index("highlight_clips_game_id_idx").on(table.gameId),
+}));
 
 // === WORKOUT TRACKER ===
 export const workouts = pgTable("workouts", {
@@ -1149,7 +1249,9 @@ export const workouts = pgTable("workouts", {
   videoUrl: text("video_url"),
   metrics: text("metrics"), // JSON string for type-specific metrics
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  playerIdIdx: index("workouts_player_id_idx").on(table.playerId),
+}));
 
 // === PLAYER ACCOLADES ===
 export const accolades = pgTable("accolades", {
@@ -1162,7 +1264,9 @@ export const accolades = pgTable("accolades", {
   dateEarned: date("date_earned"),
   verified: boolean("verified").default(false),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  playerIdIdx: index("accolades_player_id_idx").on(table.playerId),
+}));
 
 // === GOAL SHARING ===
 export const goalShares = pgTable("goal_shares", {
@@ -1172,7 +1276,11 @@ export const goalShares = pgTable("goal_shares", {
   sharedWithTeamId: integer("shared_with_team_id").references(() => teams.id, { onDelete: "cascade" }),
   visibility: text("visibility").notNull().default("private"), // 'private', 'teammates', 'public'
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  goalIdIdx: index("goal_shares_goal_id_idx").on(table.goalId),
+  sharedWithPlayerIdIdx: index("goal_shares_shared_with_player_id_idx").on(table.sharedWithPlayerId),
+  sharedWithTeamIdIdx: index("goal_shares_shared_with_team_id_idx").on(table.sharedWithTeamId),
+}));
 
 // === SCHEDULE EVENTS (Practices, Games, Workouts) ===
 export const scheduleEvents = pgTable("schedule_events", {
@@ -1190,7 +1298,10 @@ export const scheduleEvents = pgTable("schedule_events", {
   sport: text("sport").default("basketball").notNull(), // 'basketball' or 'football'
   createdBy: text("created_by"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  playerIdIdx: index("schedule_events_player_id_idx").on(table.playerId),
+  teamIdIdx: index("schedule_events_team_id_idx").on(table.teamId),
+}));
 
 // === LIVE GAME SESSIONS ===
 export const liveGameSessions = pgTable("live_game_sessions", {
@@ -1200,7 +1311,10 @@ export const liveGameSessions = pgTable("live_game_sessions", {
   status: text("status").notNull().default("active"), // 'active', 'paused', 'completed'
   startedAt: timestamp("started_at").defaultNow(),
   endedAt: timestamp("ended_at"),
-});
+}, (table) => ({
+  gameIdIdx: index("live_game_sessions_game_id_idx").on(table.gameId),
+  playerIdIdx: index("live_game_sessions_player_id_idx").on(table.playerId),
+}));
 
 // === LIVE GAME EVENTS (Real-time stat entry) ===
 export const liveGameEvents = pgTable("live_game_events", {
@@ -1214,7 +1328,9 @@ export const liveGameEvents = pgTable("live_game_events", {
   y: integer("y"),
   metadata: text("metadata"), // JSON for additional data
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  sessionIdIdx: index("live_game_events_session_id_idx").on(table.sessionId),
+}));
 
 // === SHARE ASSETS (Social media graphics) ===
 export const shareAssets = pgTable("share_assets", {
@@ -1226,7 +1342,11 @@ export const shareAssets = pgTable("share_assets", {
   imageUrl: text("image_url").notNull(),
   sharedCount: integer("shared_count").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  playerIdIdx: index("share_assets_player_id_idx").on(table.playerId),
+  gameIdIdx: index("share_assets_game_id_idx").on(table.gameId),
+  badgeIdIdx: index("share_assets_badge_id_idx").on(table.badgeId),
+}));
 
 // === PLAYER ENDORSEMENTS (Coach endorses players) ===
 export const endorsements = pgTable("endorsements", {
@@ -1237,7 +1357,9 @@ export const endorsements = pgTable("endorsements", {
   message: text("message").notNull(),
   skills: text("skills"), // JSON array of skills endorsed
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  playerIdIdx: index("endorsements_player_id_idx").on(table.playerId),
+}));
 
 // === STORY TAGS (Tag players in stories) ===
 export const storyTags = pgTable("story_tags", {
@@ -1245,7 +1367,10 @@ export const storyTags = pgTable("story_tags", {
   storyId: integer("story_id").notNull().references(() => playerStories.id, { onDelete: "cascade" }),
   taggedPlayerId: integer("tagged_player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  storyIdIdx: index("story_tags_story_id_idx").on(table.storyId),
+  taggedPlayerIdIdx: index("story_tags_tagged_player_id_idx").on(table.taggedPlayerId),
+}));
 
 // === HEAD-TO-HEAD CHALLENGES ===
 export const headToHeadChallenges = pgTable("head_to_head_challenges", {
@@ -1261,7 +1386,13 @@ export const headToHeadChallenges = pgTable("head_to_head_challenges", {
   expiresAt: timestamp("expires_at"),
   createdAt: timestamp("created_at").defaultNow(),
   resolvedAt: timestamp("resolved_at"),
-});
+}, (table) => ({
+  challengerPlayerIdIdx: index("head_to_head_challenges_challenger_player_id_idx").on(table.challengerPlayerId),
+  opponentPlayerIdIdx: index("head_to_head_challenges_opponent_player_id_idx").on(table.opponentPlayerId),
+  challengerGameIdIdx: index("head_to_head_challenges_challenger_game_id_idx").on(table.challengerGameId),
+  opponentGameIdIdx: index("head_to_head_challenges_opponent_game_id_idx").on(table.opponentGameId),
+  winnerIdIdx: index("head_to_head_challenges_winner_id_idx").on(table.winnerId),
+}));
 
 // === TRAINING GROUPS ===
 export const trainingGroups = pgTable("training_groups", {
@@ -1273,7 +1404,9 @@ export const trainingGroups = pgTable("training_groups", {
   isPublic: boolean("is_public").default(false).notNull(),
   maxMembers: integer("max_members").default(20),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  ownerPlayerIdIdx: index("training_groups_owner_player_id_idx").on(table.ownerPlayerId),
+}));
 
 export const trainingGroupMembers = pgTable("training_group_members", {
   id: serial("id").primaryKey(),
@@ -1281,7 +1414,10 @@ export const trainingGroupMembers = pgTable("training_group_members", {
   playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
   role: text("role").notNull().default("member"), // 'owner', 'admin', 'member'
   joinedAt: timestamp("joined_at").defaultNow(),
-});
+}, (table) => ({
+  groupIdIdx: index("training_group_members_group_id_idx").on(table.groupId),
+  playerIdIdx: index("training_group_members_player_id_idx").on(table.playerId),
+}));
 
 // === DIRECT MESSAGES ===
 export const dmThreads = pgTable("dm_threads", {
@@ -1297,7 +1433,10 @@ export const dmParticipants = pgTable("dm_participants", {
   playerId: integer("player_id").references(() => players.id, { onDelete: "cascade" }),
   lastReadAt: timestamp("last_read_at"),
   joinedAt: timestamp("joined_at").defaultNow(),
-});
+}, (table) => ({
+  threadIdIdx: index("dm_participants_thread_id_idx").on(table.threadId),
+  playerIdIdx: index("dm_participants_player_id_idx").on(table.playerId),
+}));
 
 export const dmMessages = pgTable("dm_messages", {
   id: serial("id").primaryKey(),
@@ -1307,7 +1446,10 @@ export const dmMessages = pgTable("dm_messages", {
   content: text("content").notNull(),
   isRead: boolean("is_read").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  threadIdIdx: index("dm_messages_thread_id_idx").on(table.threadId),
+  senderPlayerIdIdx: index("dm_messages_sender_player_id_idx").on(table.senderPlayerId),
+}));
 
 // === MENTORSHIP ===
 export const mentorshipProfiles = pgTable("mentorship_profiles", {
@@ -1319,7 +1461,9 @@ export const mentorshipProfiles = pgTable("mentorship_profiles", {
   yearsExperience: integer("years_experience"),
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  playerIdIdx: index("mentorship_profiles_player_id_idx").on(table.playerId),
+}));
 
 export const mentorshipRequests = pgTable("mentorship_requests", {
   id: serial("id").primaryKey(),
@@ -1329,7 +1473,10 @@ export const mentorshipRequests = pgTable("mentorship_requests", {
   status: text("status").notNull().default("pending"), // 'pending', 'accepted', 'declined'
   createdAt: timestamp("created_at").defaultNow(),
   respondedAt: timestamp("responded_at"),
-});
+}, (table) => ({
+  requesterPlayerIdIdx: index("mentorship_requests_requester_player_id_idx").on(table.requesterPlayerId),
+  mentorPlayerIdIdx: index("mentorship_requests_mentor_player_id_idx").on(table.mentorPlayerId),
+}));
 
 // === LIVE GAME SPECTATORS ===
 export const liveGameSpectators = pgTable("live_game_spectators", {
@@ -1339,7 +1486,10 @@ export const liveGameSpectators = pgTable("live_game_spectators", {
   viewerPlayerId: integer("viewer_player_id").references(() => players.id, { onDelete: "cascade" }),
   joinedAt: timestamp("joined_at").defaultNow(),
   leftAt: timestamp("left_at"),
-});
+}, (table) => ({
+  sessionIdIdx: index("live_game_spectators_session_id_idx").on(table.sessionId),
+  viewerPlayerIdIdx: index("live_game_spectators_viewer_player_id_idx").on(table.viewerPlayerId),
+}));
 
 // === RECRUIT BOARD (Coach scouting) ===
 export const recruitPosts = pgTable("recruit_posts", {
@@ -1353,7 +1503,9 @@ export const recruitPosts = pgTable("recruit_posts", {
   location: text("location"),
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  playerIdIdx: index("recruit_posts_player_id_idx").on(table.playerId),
+}));
 
 export const recruitInterests = pgTable("recruit_interests", {
   id: serial("id").primaryKey(),
@@ -1362,7 +1514,10 @@ export const recruitInterests = pgTable("recruit_interests", {
   message: text("message"),
   status: text("status").notNull().default("pending"), // 'pending', 'viewed', 'contacted'
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  postIdIdx: index("recruit_interests_post_id_idx").on(table.postId),
+  playerIdIdx: index("recruit_interests_player_id_idx").on(table.playerId),
+}));
 
 // === INSERT SCHEMAS FOR NEW TABLES ===
 export const insertFollowSchema = createInsertSchema(follows).omit({ id: true, createdAt: true });
