@@ -10,6 +10,7 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { OfflineBanner, OfflineIndicator } from "@/components/OfflineBanner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OnboardingTour } from "@/components/OnboardingTour";
+import { GuidedOnboarding } from "@/components/GuidedOnboarding";
 import { SportProvider } from "@/components/SportToggle";
 import { PageTransition } from "@/components/PageTransition";
 import { useAuth } from "@/hooks/use-auth";
@@ -132,6 +133,7 @@ function MainRouter() {
   return (
     <>
       <OnboardingTour />
+      <GuidedOnboarding />
       <SyncHandler />
       <OfflineBanner />
       <div className="flex min-h-screen w-full max-w-full overflow-x-hidden bg-background text-foreground font-body selection:bg-primary/30">
