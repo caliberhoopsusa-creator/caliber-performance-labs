@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { X, ChevronRight, ChevronLeft, Trophy, Activity, Video, Target, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 
 interface TourStep {
@@ -94,92 +95,125 @@ export function OnboardingTour({ forceShow = false, onComplete }: OnboardingTour
     onComplete?.();
   };
 
-  if (!isVisible) return null;
-
   const step = tourSteps[currentStep];
   const isLastStep = currentStep === tourSteps.length - 1;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md" data-testid="onboarding-tour-modal">
-      {/* Premium modal card */}
-      <div className="relative max-w-md w-full rounded-2xl overflow-hidden animate-scale-in">
-        {/* Background glow */}
-        <div className={`absolute inset-0 bg-gradient-to-br ${step.gradient} opacity-10 blur-3xl`} />
-        
-        {/* Main content */}
-        <div className="relative bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,20%,6%)] border border-cyan-500/20 rounded-2xl p-8 space-y-6">
-          {/* Top accent line */}
-          <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${step.gradient}`} />
-          
-          {/* Close button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-4 right-4 text-muted-foreground hover:text-white"
-            onClick={handleSkip}
-            data-testid="button-tour-skip"
+    <AnimatePresence>
+      {isVisible && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+          data-testid="onboarding-tour-modal"
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="relative max-w-md w-full rounded-2xl overflow-hidden"
           >
-            <X className="w-4 h-4" />
-          </Button>
+            <motion.div
+              className={`absolute inset-0 bg-gradient-to-br ${step.gradient} opacity-10 blur-3xl`}
+              animate={{ opacity: [0.1, 0.15, 0.1] }}
+              transition={{ repeat: Infinity, duration: 3 }}
+            />
+            
+            <div className="relative bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,20%,6%)] border border-cyan-500/20 rounded-2xl p-8 space-y-6">
+              <motion.div
+                className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${step.gradient}`}
+                layoutId="progress-bar"
+              />
+              
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-4 right-4"
+                onClick={handleSkip}
+                data-testid="button-tour-skip"
+              >
+                <X className="w-4 h-4" />
+              </Button>
 
-          <div className="text-center space-y-5 pt-4">
-            {/* Animated icon container */}
-            <div className="relative w-20 h-20 mx-auto">
-              <div className={`absolute inset-0 bg-gradient-to-br ${step.gradient} opacity-20 rounded-2xl blur-xl animate-pulse`} />
-              <div className={`relative w-full h-full rounded-2xl bg-gradient-to-br ${step.gradient} flex items-center justify-center text-white shadow-lg`}>
-                {step.icon}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentStep}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.25, ease: "easeOut" }}
+                  className="text-center space-y-5 pt-4"
+                >
+                  <motion.div
+                    className="relative w-20 h-20 mx-auto"
+                    initial={{ scale: 0.8, rotate: -10 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: "spring", damping: 15, stiffness: 300 }}
+                  >
+                    <div className={`absolute inset-0 bg-gradient-to-br ${step.gradient} opacity-20 rounded-2xl blur-xl animate-pulse`} />
+                    <div className={`relative w-full h-full rounded-2xl bg-gradient-to-br ${step.gradient} flex items-center justify-center text-white shadow-lg`}>
+                      {step.icon}
+                    </div>
+                  </motion.div>
+                  
+                  <h2 className="text-2xl font-display font-bold text-white tracking-wide" data-testid="text-tour-title">
+                    {step.title}
+                  </h2>
+                  <p className="text-muted-foreground leading-relaxed" data-testid="text-tour-description">
+                    {step.description}
+                  </p>
+                </motion.div>
+              </AnimatePresence>
+
+              <div className="flex items-center justify-center gap-2">
+                {tourSteps.map((s, index) => (
+                  <motion.div
+                    key={index}
+                    layout
+                    className={`h-2 rounded-full ${
+                      index === currentStep
+                        ? `bg-gradient-to-r ${s.gradient}`
+                        : index < currentStep
+                        ? "bg-cyan-500/50"
+                        : "bg-white/20"
+                    }`}
+                    animate={{ width: index === currentStep ? 32 : 8 }}
+                    transition={{ type: "spring", damping: 20, stiffness: 300 }}
+                  />
+                ))}
+              </div>
+
+              <div className="flex items-center justify-between gap-4 pt-2">
+                <Button
+                  variant="ghost"
+                  onClick={handlePrev}
+                  disabled={currentStep === 0}
+                  className="gap-1"
+                  data-testid="button-tour-prev"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Back
+                </Button>
+
+                <motion.div whileTap={{ scale: 0.95 }}>
+                  <Button
+                    onClick={handleNext}
+                    className={`gap-1 min-w-[120px] bg-gradient-to-r ${step.gradient} border-0 shadow-lg`}
+                    data-testid="button-tour-next"
+                  >
+                    {isLastStep ? "Get Started" : "Next"}
+                    {!isLastStep && <ChevronRight className="w-4 h-4" />}
+                  </Button>
+                </motion.div>
               </div>
             </div>
-            
-            <h2 className="text-2xl font-display font-bold text-white tracking-wide" data-testid="text-tour-title">
-              {step.title}
-            </h2>
-            <p className="text-muted-foreground leading-relaxed" data-testid="text-tour-description">
-              {step.description}
-            </p>
-          </div>
-
-          {/* Progress dots */}
-          <div className="flex items-center justify-center gap-2">
-            {tourSteps.map((s, index) => (
-              <div
-                key={index}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  index === currentStep
-                    ? `w-8 bg-gradient-to-r ${s.gradient}`
-                    : index < currentStep
-                    ? "w-2 bg-cyan-500/50"
-                    : "w-2 bg-white/20"
-                }`}
-              />
-            ))}
-          </div>
-
-          {/* Navigation buttons */}
-          <div className="flex items-center justify-between gap-4 pt-2">
-            <Button
-              variant="ghost"
-              onClick={handlePrev}
-              disabled={currentStep === 0}
-              className="gap-1"
-              data-testid="button-tour-prev"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Back
-            </Button>
-
-            <Button
-              onClick={handleNext}
-              className={`gap-1 min-w-[120px] bg-gradient-to-r ${step.gradient} hover:opacity-90 border-0 shadow-lg`}
-              data-testid="button-tour-next"
-            >
-              {isLastStep ? "Get Started" : "Next"}
-              {!isLastStep && <ChevronRight className="w-4 h-4" />}
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 

@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, CalendarDays, Film, FileText, ArrowLeftRight, UserPlus } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import caliberLogo from "@assets/caliber-logo-monogram.png";
 import { cn } from "@/lib/utils";
 import { AlertsBadge } from "@/components/AlertsCenter";
@@ -302,33 +303,50 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
               key={item.href} 
               href={item.href} 
               className={cn(
-                "relative flex flex-col items-center justify-center touch-target p-2 rounded-xl transition-all duration-300 group active:scale-90",
+                "relative flex flex-col items-center justify-center touch-target p-2 rounded-xl transition-all duration-300 group",
                 isActive && "mobile-nav-active-bg"
               )} 
               data-testid={`mobile-nav-${item.label.toLowerCase()}`}
               data-active={isActive ? "true" : undefined}
               aria-current={isActive ? "page" : undefined}
             >
-              {/* Active indicator dot */}
-              {isActive && (
-                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(0,212,255,0.8)]" />
-              )}
+              <AnimatePresence>
+                {isActive && (
+                  <motion.div 
+                    layoutId="mobile-nav-indicator"
+                    className="absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_12px_rgba(0,212,255,0.9)]"
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  />
+                )}
+              </AnimatePresence>
               
-              <div className={cn(
-                "relative p-2 rounded-xl transition-all duration-300",
-                isActive 
-                  ? "text-cyan-400 drop-shadow-[0_0_12px_rgba(0,212,255,0.7)]" 
-                  : "text-muted-foreground group-hover:text-cyan-300 group-hover:drop-shadow-[0_0_8px_rgba(0,212,255,0.4)]"
-              )}>
+              <motion.div 
+                className={cn(
+                  "relative p-2 rounded-xl transition-colors duration-300",
+                  isActive 
+                    ? "text-cyan-400 drop-shadow-[0_0_12px_rgba(0,212,255,0.7)]" 
+                    : "text-muted-foreground group-hover:text-cyan-300 group-hover:drop-shadow-[0_0_8px_rgba(0,212,255,0.4)]"
+                )}
+                whileTap={{ scale: 0.85 }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              >
                 <Icon className="w-5 h-5" />
-              </div>
+              </motion.div>
               
-              <span className={cn(
-                "text-[9px] font-medium uppercase tracking-wider transition-all duration-300",
-                isActive 
-                  ? "text-cyan-400 font-semibold" 
-                  : "text-muted-foreground/80 group-hover:text-cyan-300/80"
-              )}>{item.label}</span>
+              <motion.span 
+                className={cn(
+                  "text-[9px] font-medium uppercase tracking-wider transition-colors duration-300",
+                  isActive 
+                    ? "text-cyan-400 font-semibold" 
+                    : "text-muted-foreground/80 group-hover:text-cyan-300/80"
+                )}
+                initial={false}
+                animate={{ y: isActive ? -1 : 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              >{item.label}</motion.span>
             </Link>
           );
         })}

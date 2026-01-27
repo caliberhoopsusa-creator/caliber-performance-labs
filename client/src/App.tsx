@@ -11,6 +11,7 @@ import { OfflineBanner, OfflineIndicator } from "@/components/OfflineBanner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { SportProvider } from "@/components/SportToggle";
+import { PageTransition } from "@/components/PageTransition";
 import { useAuth } from "@/hooks/use-auth";
 import { useOffline } from "@/hooks/use-offline";
 import { useToast } from "@/hooks/use-toast";
@@ -150,45 +151,47 @@ function MainRouter() {
             </div>
           </header>
           <main className="relative z-10 flex-1 p-4 pb-20 md:px-8 md:pb-8 w-full max-w-[1600px] mx-auto overflow-x-hidden">
-            <Switch>
-              <Route path="/">
-                {extendedUser.role === 'player' && extendedUser.playerId ? (
-                  <Redirect to={`/players/${extendedUser.playerId}`} />
-                ) : (
-                  <Dashboard />
-                )}
-              </Route>
-              <Route path="/players" component={PlayersList} />
-              <Route path="/players/:id/card" component={PlayerCard} />
-              <Route path="/players/:id" component={PlayerDetail} />
-              <Route path="/challenges" component={Challenges} />
-              <Route path="/teams" component={Teams} />
-              <Route path="/feed" component={Newsfeed} />
-              <Route path="/community" component={CommunityContent} />
-              <Route path="/stories" component={Stories} />
-              <Route path="/leaderboard" component={Leaderboard} />
-              <Route path="/compare" component={ComparePlayers} />
-              <Route path="/video" component={VideoAnalysis} />
-              <Route path="/grading" component={GradingSystem} />
-              <Route path="/discover" component={Discover} />
-              <Route path="/scout" component={ScoutHub} />
-              <Route path="/analyze" component={AnalyzeGame} />
-              <Route path="/coach/dashboard" component={TeamDashboard} />
-              <Route path="/coach/hub" component={TeamHub} />
-              <Route path="/coach/lineups" component={LineupAnalysis} />
-              <Route path="/coach/practices" component={PracticeTracker} />
-              <Route path="/coach/scouting" component={OpponentScouting} />
-              <Route path="/coach/alerts" component={CoachAlertsPage} />
-              <Route path="/pricing" component={Pricing} />
-              <Route path="/workouts" component={WorkoutTracker} />
-              <Route path="/schedule" component={ScheduleCalendar} />
-              <Route path="/highlights" component={HighlightClipsPage} />
-              <Route path="/reels/:playerId" component={ReelPage} />
-              <Route path="/team-comparison" component={TeamComparison} />
-              <Route path="/report-card" component={ReportCardPage} />
-              <Route path="/social-hub" component={SocialHub} />
-              <Route component={NotFound} />
-            </Switch>
+            <PageTransition>
+              <Switch>
+                <Route path="/">
+                  {extendedUser.role === 'player' && extendedUser.playerId ? (
+                    <Redirect to={`/players/${extendedUser.playerId}`} />
+                  ) : (
+                    <Dashboard />
+                  )}
+                </Route>
+                <Route path="/players" component={PlayersList} />
+                <Route path="/players/:id/card" component={PlayerCard} />
+                <Route path="/players/:id" component={PlayerDetail} />
+                <Route path="/challenges" component={Challenges} />
+                <Route path="/teams" component={Teams} />
+                <Route path="/feed" component={Newsfeed} />
+                <Route path="/community" component={CommunityContent} />
+                <Route path="/stories" component={Stories} />
+                <Route path="/leaderboard" component={Leaderboard} />
+                <Route path="/compare" component={ComparePlayers} />
+                <Route path="/video" component={VideoAnalysis} />
+                <Route path="/grading" component={GradingSystem} />
+                <Route path="/discover" component={Discover} />
+                <Route path="/scout" component={ScoutHub} />
+                <Route path="/analyze" component={AnalyzeGame} />
+                <Route path="/coach/dashboard" component={TeamDashboard} />
+                <Route path="/coach/hub" component={TeamHub} />
+                <Route path="/coach/lineups" component={LineupAnalysis} />
+                <Route path="/coach/practices" component={PracticeTracker} />
+                <Route path="/coach/scouting" component={OpponentScouting} />
+                <Route path="/coach/alerts" component={CoachAlertsPage} />
+                <Route path="/pricing" component={Pricing} />
+                <Route path="/workouts" component={WorkoutTracker} />
+                <Route path="/schedule" component={ScheduleCalendar} />
+                <Route path="/highlights" component={HighlightClipsPage} />
+                <Route path="/reels/:playerId" component={ReelPage} />
+                <Route path="/team-comparison" component={TeamComparison} />
+                <Route path="/report-card" component={ReportCardPage} />
+                <Route path="/social-hub" component={SocialHub} />
+                <Route component={NotFound} />
+              </Switch>
+            </PageTransition>
           </main>
         </div>
         <MobileNav userRole={extendedUser.role} playerId={extendedUser.playerId} />
