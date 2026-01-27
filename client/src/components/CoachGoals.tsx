@@ -134,9 +134,9 @@ export function CoachGoals({ playerId }: CoachGoalsProps) {
   const updateGoal = useUpdateCoachGoal();
   const deleteGoal = useDeleteCoachGoal();
   
-  // Sport-aware categories
+  // Sport-aware categories - use first available category as default to ensure it always exists
   const targetCategories = sport === 'football' ? FOOTBALL_COACH_CATEGORIES : BASKETBALL_COACH_CATEGORIES;
-  const defaultCategory = sport === 'football' ? 'passingYards' : 'points';
+  const defaultCategory = targetCategories[0]?.value || 'points';
   
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<CoachGoal | null>(null);

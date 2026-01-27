@@ -71,14 +71,16 @@ export function EmptyState({
         action.href ? (
           <Button 
             asChild
-            className="mt-6 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 border-0 shadow-lg shadow-cyan-500/20"
+            data-testid="button-empty-state-action"
+            className="mt-6 bg-gradient-to-r from-cyan-500 to-blue-600 border-0 shadow-lg shadow-cyan-500/20"
           >
             <Link href={action.href}>{action.label}</Link>
           </Button>
         ) : (
           <Button 
             onClick={action.onClick}
-            className="mt-6 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 border-0 shadow-lg shadow-cyan-500/20"
+            data-testid="button-empty-state-action"
+            className="mt-6 bg-gradient-to-r from-cyan-500 to-blue-600 border-0 shadow-lg shadow-cyan-500/20"
           >
             {action.label}
           </Button>

@@ -1285,7 +1285,7 @@ export default function PlayerDetail() {
               {/* Enhanced avatar with cyan ring glow for mobile */}
               <div className="mobile-avatar-ring p-0.5 md:p-1 rounded-full">
                 <Avatar className="w-16 h-16 md:w-24 md:h-24 border-2 border-cyan-500/30 ring-2 ring-cyan-500/20 ring-offset-2 ring-offset-background">
-                  {player.photoUrl && <AvatarImage src={player.photoUrl} alt={player.name} width={96} height={96} />}
+                  {player.photoUrl && <AvatarImage src={player.photoUrl} alt={player.name} width={96} height={96} loading="eager" />}
                   <AvatarFallback className="bg-gradient-to-br from-cyan-500/30 to-cyan-600/20 text-xl md:text-3xl font-display font-bold text-white">
                     {getInitials(player.name)}
                   </AvatarFallback>
