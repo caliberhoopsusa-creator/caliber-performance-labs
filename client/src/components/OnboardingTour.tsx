@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { X, ChevronRight, ChevronLeft, Trophy, Activity, Video, Target, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { useLocation } from "wouter";
 
 interface TourStep {
   title: string;
@@ -53,6 +54,20 @@ interface OnboardingTourProps {
 export function OnboardingTour({ forceShow = false, onComplete }: OnboardingTourProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [location] = useLocation();
+  const [initialLocation] = useState(location);
+
+  const handleComplete = useCallback(() => {
+    localStorage.setItem(TOUR_STORAGE_KEY, "true");
+    setIsVisible(false);
+    onComplete?.();
+  }, [onComplete]);
+
+  const handleSkip = useCallback(() => {
+    localStorage.setItem(TOUR_STORAGE_KEY, "true");
+    setIsVisible(false);
+    onComplete?.();
+  }, [onComplete]);
 
   useEffect(() => {
     if (forceShow) {
@@ -69,6 +84,24 @@ export function OnboardingTour({ forceShow = false, onComplete }: OnboardingTour
     }
   }, [forceShow]);
 
+  // Auto-dismiss when user navigates away
+  useEffect(() => {
+    if (isVisible && location !== initialLocation) {
+      handleSkip();
+    }
+  }, [location, initialLocation, isVisible, handleSkip]);
+
+  // Handle Escape key to dismiss
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isVisible) {
+        handleSkip();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isVisible, handleSkip]);
+
   const handleNext = () => {
     if (currentStep < tourSteps.length - 1) {
       setCurrentStep(currentStep + 1);
@@ -83,18 +116,6 @@ export function OnboardingTour({ forceShow = false, onComplete }: OnboardingTour
     }
   };
 
-  const handleComplete = () => {
-    localStorage.setItem(TOUR_STORAGE_KEY, "true");
-    setIsVisible(false);
-    onComplete?.();
-  };
-
-  const handleSkip = () => {
-    localStorage.setItem(TOUR_STORAGE_KEY, "true");
-    setIsVisible(false);
-    onComplete?.();
-  };
-
   const step = tourSteps[currentStep];
   const isLastStep = currentStep === tourSteps.length - 1;
 
@@ -106,7 +127,8 @@ export function OnboardingTour({ forceShow = false, onComplete }: OnboardingTour
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md cursor-pointer"
+          onClick={handleSkip}
           data-testid="onboarding-tour-modal"
         >
           <motion.div
@@ -114,7 +136,8 @@ export function OnboardingTour({ forceShow = false, onComplete }: OnboardingTour
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="relative max-w-md w-full rounded-2xl overflow-hidden"
+            className="relative max-w-md w-full rounded-2xl overflow-hidden cursor-default"
+            onClick={(e) => e.stopPropagation()}
           >
             <motion.div
               className={`absolute inset-0 bg-gradient-to-br ${step.gradient} opacity-10 blur-3xl`}

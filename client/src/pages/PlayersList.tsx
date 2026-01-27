@@ -162,14 +162,32 @@ export default function PlayersList() {
           </p>
         </div>
         
-        {hasTeam && (
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20" data-testid="button-add-player">
+                <Plus className="w-4 h-4" />
+                Add Player
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-card border-white/10 text-white max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-xl font-display">Add New Player</DialogTitle>
+                <DialogDescription className="text-muted-foreground">
+                  Create a player profile to start tracking stats and performance.
+                </DialogDescription>
+              </DialogHeader>
+              <CreatePlayerForm onSuccess={() => setIsDialogOpen(false)} />
+            </DialogContent>
+          </Dialog>
+          
+          {hasTeam && (
             <Button variant="outline" onClick={copyTeamCode} className="gap-2 border-cyan-500/20 text-cyan-300" data-testid="button-copy-code">
               {copiedCode ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               {copiedCode ? "Copied!" : `Code: ${primaryTeam?.code}`}
             </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {hasTeam ? (
