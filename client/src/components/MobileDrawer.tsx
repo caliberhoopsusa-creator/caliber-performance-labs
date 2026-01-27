@@ -8,7 +8,7 @@ import {
   Menu, LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, 
   Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, 
   UsersRound, CalendarCheck, Eye, UserCircle, LogOut, CreditCard, Lock, Dumbbell, 
-  CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, Bell
+  CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, Bell, ShoppingBag
 } from "lucide-react";
 import caliberLogo from "@assets/caliber-logo-cyan.png";
 import { cn } from "@/lib/utils";
@@ -111,6 +111,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
     {
       title: "Account",
       items: [
+        { href: "/shop", label: "Shop", icon: ShoppingBag },
         { href: "/pricing", label: "Pricing", icon: CreditCard },
       ],
     },
@@ -152,6 +153,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
     {
       title: "Account",
       items: [
+        { href: "/shop", label: "Shop", icon: ShoppingBag },
         { href: "/pricing", label: "Pricing", icon: CreditCard },
       ],
     },

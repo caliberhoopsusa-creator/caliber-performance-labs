@@ -3,7 +3,7 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, headToHeadChallenges, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup } from "@shared/schema";
+import { players, games, headToHeadChallenges, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { GoogleGenAI } from "@google/genai";
 import multer from "multer";
@@ -13,7 +13,7 @@ import { registerObjectStorageRoutes } from "./replit_integrations/object_storag
 import { setupAuth, registerAuthRoutes, isAuthenticated, authStorage } from "./replit_integrations/auth";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 import { users } from "@shared/models/auth";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and, desc } from "drizzle-orm";
 import { db } from "./db";
 import type { RequestHandler } from "express";
 
@@ -9161,6 +9161,246 @@ Respond in this exact JSON format:
     } catch (error) {
       console.error('Error updating interest status:', error);
       res.status(500).json({ message: "Failed to update interest status" });
+    }
+  });
+
+  // === SHOP API ROUTES ===
+
+  // GET /api/shop/items - Get all active shop items (public, no auth required)
+  app.get('/api/shop/items', async (req, res) => {
+    try {
+      const items = await db.select()
+        .from(shopItems)
+        .where(eq(shopItems.isActive, true))
+        .orderBy(shopItems.sortOrder, shopItems.category, shopItems.name);
+      res.json(items);
+    } catch (error) {
+      console.error('Error fetching shop items:', error);
+      res.status(500).json({ message: "Failed to fetch shop items" });
+    }
+  });
+
+  // GET /api/shop/inventory - Get user's owned items (requires auth)
+  app.get('/api/shop/inventory', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      const inventory = await db.select({
+        id: userInventory.id,
+        userId: userInventory.userId,
+        itemId: userInventory.itemId,
+        purchasedAt: userInventory.purchasedAt,
+        isEquipped: userInventory.isEquipped,
+        item: shopItems,
+      })
+        .from(userInventory)
+        .innerJoin(shopItems, eq(userInventory.itemId, shopItems.id))
+        .where(eq(userInventory.userId, user.id));
+
+      res.json(inventory);
+    } catch (error) {
+      console.error('Error fetching user inventory:', error);
+      res.status(500).json({ message: "Failed to fetch inventory" });
+    }
+  });
+
+  // POST /api/shop/purchase - Purchase an item with coins (requires auth)
+  app.post('/api/shop/purchase', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      const { itemId } = req.body;
+      if (!itemId || typeof itemId !== 'number') {
+        return res.status(400).json({ message: "Invalid itemId" });
+      }
+
+      // Get the item
+      const [item] = await db.select().from(shopItems).where(eq(shopItems.id, itemId));
+      if (!item) {
+        return res.status(404).json({ message: "Item not found" });
+      }
+      if (!item.isActive) {
+        return res.status(400).json({ message: "Item is no longer available" });
+      }
+
+      // Check if user already owns this item
+      const [existingItem] = await db.select()
+        .from(userInventory)
+        .where(and(eq(userInventory.userId, user.id), eq(userInventory.itemId, itemId)));
+      if (existingItem) {
+        return res.status(400).json({ message: "You already own this item" });
+      }
+
+      // Check if user has enough coins
+      const userCoinBalance = user.coinBalance || 0;
+      if (userCoinBalance < item.coinPrice) {
+        return res.status(400).json({ 
+          message: "Not enough coins",
+          required: item.coinPrice,
+          current: userCoinBalance
+        });
+      }
+
+      // Perform purchase atomically
+      await db.transaction(async (tx) => {
+        // Deduct coins from user
+        await tx.update(users)
+          .set({ coinBalance: userCoinBalance - item.coinPrice })
+          .where(eq(users.id, user.id));
+
+        // Create inventory entry
+        await tx.insert(userInventory).values({
+          userId: user.id,
+          itemId: itemId,
+          isEquipped: false,
+        });
+
+        // Create coin transaction record
+        await tx.insert(coinTransactions).values({
+          userId: user.id,
+          amount: -item.coinPrice,
+          type: 'spent_shop',
+          description: `Purchased ${item.name}`,
+          relatedItemId: itemId,
+        });
+      });
+
+      res.json({ 
+        success: true, 
+        message: `Successfully purchased ${item.name}`,
+        newBalance: userCoinBalance - item.coinPrice
+      });
+    } catch (error) {
+      console.error('Error purchasing item:', error);
+      res.status(500).json({ message: "Failed to purchase item" });
+    }
+  });
+
+  // POST /api/shop/equip - Equip/unequip an item (requires auth)
+  app.post('/api/shop/equip', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      const { itemId, equipped } = req.body;
+      if (!itemId || typeof itemId !== 'number' || typeof equipped !== 'boolean') {
+        return res.status(400).json({ message: "Invalid request body. Required: { itemId: number, equipped: boolean }" });
+      }
+
+      // Check if user owns the item
+      const [inventoryEntry] = await db.select({
+        inventory: userInventory,
+        item: shopItems,
+      })
+        .from(userInventory)
+        .innerJoin(shopItems, eq(userInventory.itemId, shopItems.id))
+        .where(and(eq(userInventory.userId, user.id), eq(userInventory.itemId, itemId)));
+
+      if (!inventoryEntry) {
+        return res.status(404).json({ message: "You don't own this item" });
+      }
+
+      await db.transaction(async (tx) => {
+        // For themes, unequip any other theme first
+        if (equipped && inventoryEntry.item.category === 'theme') {
+          // Get all user's theme items
+          const themeItems = await tx.select({
+            inventoryId: userInventory.id,
+            itemId: userInventory.itemId,
+          })
+            .from(userInventory)
+            .innerJoin(shopItems, eq(userInventory.itemId, shopItems.id))
+            .where(and(
+              eq(userInventory.userId, user.id),
+              eq(shopItems.category, 'theme'),
+              eq(userInventory.isEquipped, true)
+            ));
+
+          // Unequip all currently equipped themes
+          for (const themeItem of themeItems) {
+            await tx.update(userInventory)
+              .set({ isEquipped: false })
+              .where(eq(userInventory.id, themeItem.inventoryId));
+          }
+
+          // Update active theme on user
+          await tx.update(users)
+            .set({ activeThemeId: itemId })
+            .where(eq(users.id, user.id));
+        }
+
+        // If unequipping a theme, clear the active theme
+        if (!equipped && inventoryEntry.item.category === 'theme') {
+          await tx.update(users)
+            .set({ activeThemeId: null })
+            .where(eq(users.id, user.id));
+        }
+
+        // Update the equipped status
+        await tx.update(userInventory)
+          .set({ isEquipped: equipped })
+          .where(and(eq(userInventory.userId, user.id), eq(userInventory.itemId, itemId)));
+      });
+
+      res.json({ 
+        success: true, 
+        message: equipped ? `Equipped ${inventoryEntry.item.name}` : `Unequipped ${inventoryEntry.item.name}`
+      });
+    } catch (error) {
+      console.error('Error equipping/unequipping item:', error);
+      res.status(500).json({ message: "Failed to update item equipment status" });
+    }
+  });
+
+  // GET /api/shop/coins - Get user's coin balance and recent transactions (requires auth)
+  app.get('/api/shop/coins', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      // Get recent transactions (last 20)
+      const transactions = await db.select()
+        .from(coinTransactions)
+        .where(eq(coinTransactions.userId, user.id))
+        .orderBy(desc(coinTransactions.createdAt))
+        .limit(20);
+
+      res.json({
+        balance: user.coinBalance || 0,
+        transactions,
+      });
+    } catch (error) {
+      console.error('Error fetching coin data:', error);
+      res.status(500).json({ message: "Failed to fetch coin data" });
+    }
+  });
+
+  // POST /api/shop/coins/convert-xp - Convert XP to coins (stub for future use)
+  app.post('/api/shop/coins/convert-xp', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      // Stub: This feature is not yet implemented
+      res.status(501).json({ 
+        message: "XP to coins conversion is not yet available",
+        hint: "This feature is coming soon!"
+      });
+    } catch (error) {
+      console.error('Error converting XP to coins:', error);
+      res.status(500).json({ message: "Failed to convert XP to coins" });
     }
   });
 

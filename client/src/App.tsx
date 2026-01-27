@@ -56,6 +56,7 @@ import ReelPage from "./pages/ReelPage";
 import TeamComparison from "./pages/TeamComparison";
 import ReportCardPage from "./pages/ReportCardPage";
 import SocialHub from "./pages/SocialHub";
+import Shop from "./pages/Shop";
 import NotFound from "./pages/not-found";
 
 interface ExtendedUser {
@@ -255,6 +256,7 @@ function MainRouter() {
                 <Route path="/team-comparison" component={TeamComparison} />
                 <Route path="/report-card" component={ReportCardPage} />
                 <Route path="/social-hub" component={SocialHub} />
+                <Route path="/shop" component={Shop} />
                 <Route component={NotFound} />
               </Switch>
             </PageTransition>

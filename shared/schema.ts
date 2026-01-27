@@ -1655,5 +1655,92 @@ export const LIVE_EVENT_TYPES = {
   foul: { name: "Foul", values: [1] },
 } as const;
 
+// === SHOP & CUSTOMIZATION SYSTEM ===
+
+export const shopItems = pgTable("shop_items", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  category: text("category").notNull(), // 'theme', 'profile_skin', 'badge_style', 'effect', 'team_look'
+  type: text("type").notNull(), // Specific type within category: 'accent_color', 'card_background', etc.
+  value: text("value").notNull(), // The actual value (hex color, class name, etc.)
+  previewUrl: text("preview_url"), // Preview image URL
+  coinPrice: integer("coin_price").notNull().default(0), // Price in coins (0 = free)
+  premiumPrice: integer("premium_price"), // Price in cents for real money (null = not available for purchase)
+  rarity: text("rarity").notNull().default("common"), // 'common', 'rare', 'epic', 'legendary'
+  isActive: boolean("is_active").notNull().default(true), // Available for purchase
+  sortOrder: integer("sort_order").default(0), // Display order
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  categoryIdx: index("shop_items_category_idx").on(table.category),
+  isActiveIdx: index("shop_items_is_active_idx").on(table.isActive),
+}));
+
+export const userInventory = pgTable("user_inventory", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull(), // Links to users.id
+  itemId: integer("item_id").notNull().references(() => shopItems.id, { onDelete: "cascade" }),
+  purchasedAt: timestamp("purchased_at").defaultNow(),
+  isEquipped: boolean("is_equipped").notNull().default(false), // Currently active/equipped
+}, (table) => ({
+  userIdIdx: index("user_inventory_user_id_idx").on(table.userId),
+  itemIdIdx: index("user_inventory_item_id_idx").on(table.itemId),
+}));
+
+export const coinTransactions = pgTable("coin_transactions", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  amount: integer("amount").notNull(), // Positive for earned, negative for spent
+  type: text("type").notNull(), // 'earned_xp', 'earned_achievement', 'spent_shop', 'purchased', 'bonus'
+  description: text("description"),
+  relatedItemId: integer("related_item_id"), // Shop item if spent
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  userIdIdx: index("coin_transactions_user_id_idx").on(table.userId),
+}));
+
+// === SHOP SCHEMAS & TYPES ===
+export const insertShopItemSchema = createInsertSchema(shopItems).omit({ id: true, createdAt: true });
+export type InsertShopItem = z.infer<typeof insertShopItemSchema>;
+export type ShopItem = typeof shopItems.$inferSelect;
+
+export const insertUserInventorySchema = createInsertSchema(userInventory).omit({ id: true, purchasedAt: true });
+export type InsertUserInventory = z.infer<typeof insertUserInventorySchema>;
+export type UserInventory = typeof userInventory.$inferSelect;
+
+export const insertCoinTransactionSchema = createInsertSchema(coinTransactions).omit({ id: true, createdAt: true });
+export type InsertCoinTransaction = z.infer<typeof insertCoinTransactionSchema>;
+export type CoinTransaction = typeof coinTransactions.$inferSelect;
+
+// === SHOP CONSTANTS ===
+export const SHOP_CATEGORIES = {
+  theme: { name: "Themes", description: "Change your app's accent color and style", icon: "Palette" },
+  profile_skin: { name: "Profile Skins", description: "Custom backgrounds and borders for your profile", icon: "User" },
+  badge_style: { name: "Badge Styles", description: "Exclusive badge designs", icon: "Award" },
+  effect: { name: "Effects", description: "Special animations and particles", icon: "Sparkles" },
+  team_look: { name: "Team Looks", description: "Customize your team's appearance", icon: "Users" },
+} as const;
+
+export const RARITY_COLORS = {
+  common: { name: "Common", color: "#9CA3AF", glow: "none" },
+  rare: { name: "Rare", color: "#3B82F6", glow: "0 0 10px rgba(59, 130, 246, 0.5)" },
+  epic: { name: "Epic", color: "#A855F7", glow: "0 0 15px rgba(168, 85, 247, 0.6)" },
+  legendary: { name: "Legendary", color: "#F59E0B", glow: "0 0 20px rgba(245, 158, 11, 0.7)" },
+} as const;
+
+export const COIN_REWARDS = {
+  game_logged: 10,          // Earn coins when logging a game
+  badge_earned: 5,          // Earn coins when getting a badge
+  goal_completed: 25,       // Complete a personal goal
+  streak_bonus_3: 10,       // 3-day streak
+  streak_bonus_7: 25,       // 7-day streak
+  streak_bonus_14: 50,      // 14-day streak
+  streak_bonus_30: 100,     // 30-day streak
+  a_grade: 15,              // Get an A grade
+  a_plus_grade: 25,         // Get an A+ grade
+  tier_up: 50,              // Level up a tier
+  daily_login: 5,           // Daily login bonus
+} as const;
+
 // Export auth models
 export * from "./models/auth";

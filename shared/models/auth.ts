@@ -27,6 +27,8 @@ export const users = pgTable("users", {
   stripeCustomerId: varchar("stripe_customer_id"), // Stripe customer ID
   stripeSubscriptionId: varchar("stripe_subscription_id"), // Active subscription ID
   subscriptionStatus: varchar("subscription_status"), // 'active', 'canceled', 'past_due', etc.
+  coinBalance: integer("coin_balance").default(0), // Coins for shop purchases
+  activeThemeId: integer("active_theme_id"), // Currently active theme from shop
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

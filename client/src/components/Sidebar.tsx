@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, CalendarDays, Film, FileText, ArrowLeftRight, UserPlus } from "lucide-react";
+import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, ShoppingBag } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import caliberLogo from "@assets/caliber-logo-monogram.png";
 import { cn } from "@/lib/utils";
@@ -103,6 +103,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
     {
       title: "Account",
       items: [
+        { href: "/shop", label: "Shop", icon: ShoppingBag },
         { href: "/pricing", label: "Pricing", icon: CreditCard },
       ],
     },
@@ -145,6 +146,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
     {
       title: "Account",
       items: [
+        { href: "/shop", label: "Shop", icon: ShoppingBag },
         { href: "/pricing", label: "Pricing", icon: CreditCard },
       ],
     },
