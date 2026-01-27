@@ -88,7 +88,11 @@ export default function TeamDashboard() {
     }
     
     if (positionFilter !== "All") {
-      players = players.filter(p => p.position === positionFilter);
+      // Support comma-separated positions - match if player has ANY of the specified positions
+      players = players.filter(p => {
+        const playerPositions = p.position?.split(',').map(pos => pos.trim()) || [];
+        return playerPositions.includes(positionFilter);
+      });
     }
     
     players.sort((a, b) => {

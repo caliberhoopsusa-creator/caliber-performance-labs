@@ -237,9 +237,21 @@ function scoreToGrade(score: number): string {
   return 'F';
 }
 
+// Extract primary position from comma-separated positions for stat calculation
+// For multi-position players like "QB, RB", returns "QB"
+// For single position players, returns the position as-is
+function getPrimaryPosition(position: string): string {
+  if (!position) return 'Guard';
+  const positions = position.split(',').map(p => p.trim());
+  return positions[0] || 'Guard';
+}
+
 // Category Grade: Defensive (steals, blocks, defensive rebounds)
 function calculateDefensiveGrade(stats: any, position: string): string {
   let score = 50; // Base score
+  
+  // Handle multi-position players by using primary position
+  const primaryPos = getPrimaryPosition(position);
   
   const steals = stats.steals || 0;
   const blocks = stats.blocks || 0;
@@ -252,12 +264,12 @@ function calculateDefensiveGrade(stats: any, position: string): string {
   const drebPerMin = (defensiveRebounds / minutes) * 36;
   
   // Position-weighted scoring
-  if (position === 'Guard') {
+  if (primaryPos === 'Guard') {
     // Guards: prioritize steals, less emphasis on blocks
     score += stealsPerMin * 12;
     score += blocksPerMin * 4;
     score += drebPerMin * 2;
-  } else if (position === 'Big') {
+  } else if (primaryPos === 'Big') {
     // Bigs: prioritize blocks and defensive rebounds
     score += stealsPerMin * 6;
     score += blocksPerMin * 10;
@@ -276,6 +288,9 @@ function calculateDefensiveGrade(stats: any, position: string): string {
 function calculateShootingGrade(stats: any, position: string): string {
   let score = 50; // Base score
   
+  // Handle multi-position players by using primary position
+  const primaryPos = getPrimaryPosition(position);
+  
   const fgMade = stats.fgMade || 0;
   const fgAttempted = stats.fgAttempted || 0;
   const threeMade = stats.threeMade || 0;
@@ -289,14 +304,14 @@ function calculateShootingGrade(stats: any, position: string): string {
   const ftPct = ftAttempted > 0 ? (ftMade / ftAttempted) * 100 : 0;
   
   // Position-weighted scoring
-  if (position === 'Guard') {
+  if (primaryPos === 'Guard') {
     // Guards: emphasis on 3PT and FT shooting
     score += (fgPct - 40) * 0.5;  // Baseline 40% FG
     score += (threePct - 33) * 0.8;  // Baseline 33% 3PT (important for guards)
     score += (ftPct - 70) * 0.3;  // Baseline 70% FT
     // Volume bonus for guards
     if (threeAttempted >= 5) score += 5;
-  } else if (position === 'Big') {
+  } else if (primaryPos === 'Big') {
     // Bigs: emphasis on FG% (inside scoring), less 3PT
     score += (fgPct - 45) * 0.8;  // Higher FG% baseline for bigs
     score += (threePct - 30) * 0.3;  // Less 3PT emphasis
@@ -318,6 +333,9 @@ function calculateShootingGrade(stats: any, position: string): string {
 function calculateReboundingGrade(stats: any, position: string): string {
   let score = 50; // Base score
   
+  // Handle multi-position players by using primary position
+  const primaryPos = getPrimaryPosition(position);
+  
   const rebounds = stats.rebounds || 0;
   const offensiveRebounds = stats.offensiveRebounds || 0;
   const defensiveRebounds = stats.defensiveRebounds || 0;
@@ -329,11 +347,11 @@ function calculateReboundingGrade(stats: any, position: string): string {
   const drebPerMin = (defensiveRebounds / minutes) * 36;
   
   // Position-weighted scoring
-  if (position === 'Guard') {
+  if (primaryPos === 'Guard') {
     // Guards: any rebounding is a bonus (baseline expectation is low)
     score += rebPerMin * 4;
     score += orebPerMin * 6; // Offensive rebounds are extra hustle for guards
-  } else if (position === 'Big') {
+  } else if (primaryPos === 'Big') {
     // Bigs: expected to dominate boards
     // Baseline: 10 rebounds per 36 min for average
     score += (rebPerMin - 8) * 3;
@@ -354,6 +372,9 @@ function calculateReboundingGrade(stats: any, position: string): string {
 function calculatePassingGrade(stats: any, position: string): string {
   let score = 50; // Base score
   
+  // Handle multi-position players by using primary position
+  const primaryPos = getPrimaryPosition(position);
+  
   const assists = stats.assists || 0;
   const turnovers = stats.turnovers || 0;
   const minutes = stats.minutes || 1;
@@ -365,7 +386,7 @@ function calculatePassingGrade(stats: any, position: string): string {
   const astPerMin = (assists / minutes) * 36;
   
   // Position-weighted scoring
-  if (position === 'Guard') {
+  if (primaryPos === 'Guard') {
     // Guards: primary ball handlers, highest expectations
     // Baseline: 2:1 A/TO ratio is average, 3:1 is good, 4:1 is elite
     score += (astToRatio - 1.5) * 12;
@@ -373,7 +394,7 @@ function calculatePassingGrade(stats: any, position: string): string {
     score += (astPerMin - 4) * 3;
     // Turnover penalty is higher for guards
     if (turnovers >= 5) score -= 10;
-  } else if (position === 'Big') {
+  } else if (primaryPos === 'Big') {
     // Bigs: less playmaking expectations
     // Any assists are bonus, turnovers less penalized
     score += (astToRatio - 1) * 8;
@@ -411,6 +432,9 @@ function calculateCategoryGrades(stats: any, position: string): {
 function calculateGrade(stats: any, position: string): { grade: string; feedback: string } {
   let score = 50; // Base score
   
+  // Handle multi-position players by using primary position
+  const primaryPos = getPrimaryPosition(position);
+  
   // Traditional Stat Weights
   let weights = {
     pts: 1.0,
@@ -423,14 +447,14 @@ function calculateGrade(stats: any, position: string): { grade: string; feedback
   };
 
   // Position Adjustments
-  if (position === 'Guard') {
+  if (primaryPos === 'Guard') {
     weights.ast = 2.0;
     weights.to = -3.0; // Punish TOs more
-  } else if (position === 'Big') {
+  } else if (primaryPos === 'Big') {
     weights.reb = 2.0;
     weights.blk = 3.0;
     weights.ast = 1.0;
-  } else if (position === 'Wing') {
+  } else if (primaryPos === 'Wing') {
     weights.stl = 3.0;
     weights.pts = 1.2;
   }
@@ -496,11 +520,14 @@ function calculateGrade(stats: any, position: string): { grade: string; feedback
 function calculateFootballGrade(stats: any, position: string): { grade: string; feedback: string } {
   let score = 50; // Base score
   
+  // Handle multi-position players by using primary position
+  const primaryPos = getPrimaryPosition(position);
+  
   // Helper to cap adjustments and apply minimum attempts for efficiency stats
   const clampBonus = (bonus: number, min: number, max: number) => Math.max(min, Math.min(max, bonus));
   
   // Position-specific grading with normalization for small samples
-  if (position === 'QB') {
+  if (primaryPos === 'QB') {
     // QB grading: Passing efficiency, TDs, turnovers
     const passAttempts = stats.passAttempts || 0;
     const compPct = passAttempts > 0 
@@ -517,7 +544,7 @@ function calculateFootballGrade(stats: any, position: string): { grade: string; 
     score -= (stats.interceptions || 0) * 10;
     score -= (stats.sacksTaken || 0) * 2;
     score -= (stats.fumbles || 0) * 8;
-  } else if (position === 'RB') {
+  } else if (primaryPos === 'RB') {
     // RB grading: Rushing efficiency, TDs, ball security
     const carries = stats.carries || 0;
     const ypc = carries > 0 
@@ -532,7 +559,7 @@ function calculateFootballGrade(stats: any, position: string): { grade: string; 
     score += clampBonus((stats.receivingYards || 0) * 0.03, 0, 5);
     score += (stats.receivingTouchdowns || 0) * 6;
     score -= (stats.fumbles || 0) * 12;
-  } else if (position === 'WR' || position === 'TE') {
+  } else if (primaryPos === 'WR' || primaryPos === 'TE') {
     // WR/TE grading: Catch rate, yards, TDs
     const targets = stats.targets || 0;
     const catchRate = targets > 0 
@@ -545,17 +572,17 @@ function calculateFootballGrade(stats: any, position: string): { grade: string; 
     score += clampBonus((stats.receivingYards || 0) * 0.05, 0, 10); // Max 200 yards contribution
     score += (stats.receivingTouchdowns || 0) * 8;
     score -= (stats.drops || 0) * 6;
-  } else if (position === 'OL') {
+  } else if (primaryPos === 'OL') {
     // OL grading: Based on hustle and subjective rating
     score += clampBonus((stats.hustleScore || 50) * 0.5, 0, 50);
-  } else if (position === 'DL') {
+  } else if (primaryPos === 'DL') {
     // DL grading: Tackles, sacks, disruption
     score += clampBonus((stats.tackles || 0) * 2, 0, 16); // Max 8 tackles contribution
     score += (stats.soloTackles || 0) * 1;
     score += (stats.sacks || 0) * 10;
     score += (stats.forcedFumbles || 0) * 8;
     score += (stats.fumbleRecoveries || 0) * 6;
-  } else if (position === 'LB') {
+  } else if (primaryPos === 'LB') {
     // LB grading: All-around defense
     score += clampBonus((stats.tackles || 0) * 1.5, 0, 18); // Max 12 tackles contribution
     score += (stats.soloTackles || 0) * 1;
@@ -563,13 +590,13 @@ function calculateFootballGrade(stats: any, position: string): { grade: string; 
     score += (stats.defensiveInterceptions || 0) * 12;
     score += (stats.passDeflections || 0) * 4;
     score += (stats.forcedFumbles || 0) * 6;
-  } else if (position === 'DB') {
+  } else if (primaryPos === 'DB') {
     // DB grading: Coverage and turnovers
     score += (stats.tackles || 0) * 1;
     score += (stats.defensiveInterceptions || 0) * 15;
     score += clampBonus((stats.passDeflections || 0) * 5, 0, 20); // Max 4 PDs contribution
     score += (stats.forcedFumbles || 0) * 6;
-  } else if (position === 'K') {
+  } else if (primaryPos === 'K') {
     // Kicker grading: Accuracy (only apply if attempts exist)
     const fgAttempted = stats.fieldGoalsAttempted || 0;
     const xpAttempted = stats.extraPointsAttempted || 0;
@@ -581,7 +608,7 @@ function calculateFootballGrade(stats: any, position: string): { grade: string; 
       const xpPct = (stats.extraPointsMade || 0) / xpAttempted * 100;
       score += clampBonus((xpPct - 90) * 0.5, -10, 5);
     }
-  } else if (position === 'P') {
+  } else if (primaryPos === 'P') {
     // Punter grading: Average distance
     const puntAvg = (stats.punts || 0) > 0 
       ? (stats.puntYards || 0) / (stats.punts || 1) 
@@ -610,21 +637,21 @@ function calculateFootballGrade(stats: any, position: string): { grade: string; 
   const positives = [];
   const improvements = [];
 
-  if (position === 'QB') {
+  if (primaryPos === 'QB') {
     if ((stats.passingTouchdowns || 0) >= 3) positives.push("Outstanding passing day with multiple TDs.");
     if ((stats.passingYards || 0) >= 300) positives.push("Big yardage game through the air.");
     if ((stats.interceptions || 0) === 0 && (stats.passAttempts || 0) > 15) positives.push("Took care of the football - no INTs.");
     if ((stats.interceptions || 0) >= 2) improvements.push("Turnover issues hurt the team.");
     if ((stats.sacksTaken || 0) >= 4) improvements.push("Pocket presence needs work.");
-  } else if (position === 'RB') {
+  } else if (primaryPos === 'RB') {
     if ((stats.rushingYards || 0) >= 100) positives.push("Explosive rushing performance.");
     if ((stats.rushingTouchdowns || 0) >= 2) positives.push("Found the end zone multiple times.");
     if ((stats.fumbles || 0) >= 1) improvements.push("Ball security is a concern.");
-  } else if (position === 'WR' || position === 'TE') {
+  } else if (primaryPos === 'WR' || primaryPos === 'TE') {
     if ((stats.receivingYards || 0) >= 100) positives.push("Big receiving day.");
     if ((stats.receivingTouchdowns || 0) >= 1) positives.push("Clutch TD reception.");
     if ((stats.drops || 0) >= 2) improvements.push("Too many drops - work on concentration.");
-  } else if (position === 'DL' || position === 'LB' || position === 'DB') {
+  } else if (primaryPos === 'DL' || primaryPos === 'LB' || primaryPos === 'DB') {
     if ((stats.tackles || 0) >= 10) positives.push("Dominant tackle production.");
     if ((stats.sacks || 0) >= 2) positives.push("Great pass rush pressure.");
     if ((stats.defensiveInterceptions || 0) >= 1) positives.push("Ball hawk - created a turnover.");
@@ -646,6 +673,9 @@ function calculateFootballCategoryGrades(stats: any, position: string): {
   ballSecurityGrade: string;
   impactGrade: string;
 } {
+  // Handle multi-position players by using primary position
+  const primaryPos = getPrimaryPosition(position);
+  
   const gradeFromScore = (score: number): string => {
     if (score >= 90) return 'A+';
     if (score >= 80) return 'A';
@@ -665,25 +695,25 @@ function calculateFootballCategoryGrades(stats: any, position: string): {
   let ballSecurityScore = 80; // Start high, deduct for mistakes
   let impactScore = 50;
 
-  if (position === 'QB') {
+  if (primaryPos === 'QB') {
     const compPct = (stats.passAttempts || 0) > 0 ? ((stats.completions || 0) / stats.passAttempts) * 100 : 0;
     efficiencyScore = 30 + compPct * 0.7;
     playmakingScore = 50 + (stats.passingTouchdowns || 0) * 10 + (stats.rushingTouchdowns || 0) * 8;
     ballSecurityScore = 95 - (stats.interceptions || 0) * 15 - (stats.fumbles || 0) * 10;
     impactScore = 50 + (stats.passingYards || 0) * 0.1;
-  } else if (position === 'RB') {
+  } else if (primaryPos === 'RB') {
     const ypc = (stats.carries || 0) > 0 ? (stats.rushingYards || 0) / stats.carries : 0;
     efficiencyScore = 40 + ypc * 8;
     playmakingScore = 50 + (stats.rushingTouchdowns || 0) * 12 + (stats.receivingTouchdowns || 0) * 10;
     ballSecurityScore = 100 - (stats.fumbles || 0) * 25;
     impactScore = 50 + (stats.rushingYards || 0) * 0.2 + (stats.receivingYards || 0) * 0.1;
-  } else if (position === 'WR' || position === 'TE') {
+  } else if (primaryPos === 'WR' || primaryPos === 'TE') {
     const catchRate = (stats.targets || 0) > 0 ? ((stats.receptions || 0) / stats.targets) * 100 : 0;
     efficiencyScore = 30 + catchRate * 0.6;
     playmakingScore = 50 + (stats.receivingTouchdowns || 0) * 15;
     ballSecurityScore = 100 - (stats.drops || 0) * 15 - (stats.fumbles || 0) * 25;
     impactScore = 50 + (stats.receivingYards || 0) * 0.2;
-  } else if (position === 'DL' || position === 'LB' || position === 'DB') {
+  } else if (primaryPos === 'DL' || primaryPos === 'LB' || primaryPos === 'DB') {
     efficiencyScore = 50 + (stats.soloTackles || 0) * 3;
     playmakingScore = 50 + (stats.sacks || 0) * 10 + (stats.defensiveInterceptions || 0) * 15 + (stats.forcedFumbles || 0) * 12;
     ballSecurityScore = 75; // N/A for defense
@@ -706,6 +736,9 @@ function calculateFootballCategoryGrades(stats: any, position: string): {
 function calculateDefenseRating(stats: any, position: string): number {
   let rating = 50; // Base rating
   
+  // Handle multi-position players by using primary position
+  const primaryPos = getPrimaryPosition(position);
+  
   const steals = stats.steals || 0;
   const blocks = stats.blocks || 0;
   const defensiveRebounds = stats.defensiveRebounds || 0;
@@ -727,7 +760,7 @@ function calculateDefenseRating(stats: any, position: string): number {
   
   // Blocks per minute (scaled) - rim protection
   const blocksPerMin = (blocks / minutes) * 36;
-  if (position === 'Big') {
+  if (primaryPos === 'Big') {
     rating += blocksPerMin * 6; // Bigs get more credit for blocks
   } else {
     rating += blocksPerMin * 4;
@@ -753,9 +786,9 @@ function calculateDefenseRating(stats: any, position: string): number {
   }
   
   // Position-based adjustments
-  if (position === 'Guard') {
+  if (primaryPos === 'Guard') {
     rating += steals * 2; // Guards get extra credit for steals
-  } else if (position === 'Big') {
+  } else if (primaryPos === 'Big') {
     rating += blocks * 2; // Bigs get extra credit for blocks
   }
   
@@ -765,6 +798,9 @@ function calculateDefenseRating(stats: any, position: string): number {
 
 function calculateHustleScore(stats: any, position: string): number {
   let score = 50; // Base score
+  
+  // Handle multi-position players by using primary position
+  const primaryPos = getPrimaryPosition(position);
   
   const steals = stats.steals || 0;
   const offensiveRebounds = stats.offensiveRebounds || 0;
@@ -798,11 +834,11 @@ function calculateHustleScore(stats: any, position: string): number {
   else if (minutes >= 20) score += 3;
   
   // Position adjustments
-  if (position === 'Guard') {
+  if (primaryPos === 'Guard') {
     score += steals * 3; // Guards hustling for steals
-  } else if (position === 'Big') {
+  } else if (primaryPos === 'Big') {
     score += offensiveRebounds * 4; // Bigs hustling for offensive boards
-  } else if (position === 'Wing') {
+  } else if (primaryPos === 'Wing') {
     score += (steals + offensiveRebounds) * 2; // Wings do both
   }
   
@@ -1472,7 +1508,9 @@ async function checkPerformanceAlerts(playerId: number, gameId: number, currentG
     }
     
     // Rebounds drop for Bigs
-    if (player.position === 'Big' && avgRebounds > 4 && currentGame.rebounds < avgRebounds * (1 - dropThreshold)) {
+    // Support multi-position players - check if 'Big' is any of their positions
+    const playerPositions = (player.position || '').split(',').map(p => p.trim());
+    if (playerPositions.includes('Big') && avgRebounds > 4 && currentGame.rebounds < avgRebounds * (1 - dropThreshold)) {
       await storage.createAlert({
         playerId,
         alertType: 'performance_drop',
@@ -2721,7 +2759,11 @@ export async function registerRoutes(
 
       // Apply filters
       if (position && position !== 'All') {
-        results = results.filter(p => p.position === position);
+        // Support comma-separated positions - match if player has ANY of the specified positions
+        results = results.filter(p => {
+          const playerPositions = p.position?.split(',').map(pos => pos.trim()) || [];
+          return playerPositions.includes(position as string);
+        });
       }
 
       if (minHeight) {
@@ -2951,7 +2993,11 @@ export async function registerRoutes(
 
       // Apply filters
       if (position && position !== 'All') {
-        results = results.filter(p => p.position === position);
+        // Support comma-separated positions - match if player has ANY of the specified positions
+        results = results.filter(p => {
+          const playerPositions = p.position?.split(',').map(pos => pos.trim()) || [];
+          return playerPositions.includes(position as string);
+        });
       }
 
       if (state && state !== 'All') {
@@ -3142,7 +3188,11 @@ export async function registerRoutes(
       playersList = playersList.filter(p => p.state === state);
     }
     if (position) {
-      playersList = playersList.filter(p => p.position === position);
+      // Support comma-separated positions - match if player has ANY of the specified positions
+      playersList = playersList.filter(p => {
+        const playerPositions = p.position?.split(',').map(pos => pos.trim()) || [];
+        return playerPositions.includes(position as string);
+      });
     }
     if (level) {
       playersList = playersList.filter(p => p.level === level);
@@ -3181,10 +3231,12 @@ export async function registerRoutes(
       if (playerSport === 'football') {
         // Football stats based on position
         const position = p.position || '';
-        const isQB = position === 'QB';
-        const isRB = position === 'RB';
-        const isWR = ['WR', 'TE'].includes(position);
-        const isDefense = ['DL', 'LB', 'DB', 'CB', 'S', 'DE', 'DT'].includes(position);
+        // Support multi-position players by checking if any of their positions match
+        const playerPositions = position.split(',').map(pos => pos.trim());
+        const isQB = playerPositions.includes('QB');
+        const isRB = playerPositions.includes('RB');
+        const isWR = playerPositions.some(pos => ['WR', 'TE'].includes(pos));
+        const isDefense = playerPositions.some(pos => ['DL', 'LB', 'DB', 'CB', 'S', 'DE', 'DT'].includes(pos));
         
         const avgPassYds = sportGames.length > 0 ? sportGames.reduce((acc, g) => acc + (g.passingYards || 0), 0) / sportGames.length : 0;
         const avgRushYds = sportGames.length > 0 ? sportGames.reduce((acc, g) => acc + (g.rushingYards || 0), 0) / sportGames.length : 0;
@@ -3770,7 +3822,7 @@ Respond in this exact JSON format:
 
   // --- Head-to-Head Challenges ---
 
-  app.post('/api/challenges/head-to-head', isAuthenticated, async (req: any, res) => {
+  app.post('/api/challenges/head-to-head', requiresSubscription, async (req: any, res) => {
     try {
       const createH2HSchema = z.object({
         challengerPlayerId: z.number().min(1),
@@ -3829,7 +3881,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.get('/api/challenges/head-to-head', isAuthenticated, async (req: any, res) => {
+  app.get('/api/challenges/head-to-head', requiresSubscription, async (req: any, res) => {
     try {
       const playerId = Number(req.query.playerId);
       if (!playerId) {
@@ -3844,7 +3896,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.get('/api/challenges/head-to-head/pending', isAuthenticated, async (req: any, res) => {
+  app.get('/api/challenges/head-to-head/pending', requiresSubscription, async (req: any, res) => {
     try {
       const playerId = Number(req.query.playerId);
       if (!playerId) {
@@ -3859,7 +3911,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.post('/api/challenges/head-to-head/:id/accept', isAuthenticated, async (req: any, res) => {
+  app.post('/api/challenges/head-to-head/:id/accept', requiresSubscription, async (req: any, res) => {
     try {
       const challengeId = Number(req.params.id);
       const challenge = await storage.getHeadToHeadChallenge(challengeId);
@@ -3895,7 +3947,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.post('/api/challenges/head-to-head/:id/decline', isAuthenticated, async (req: any, res) => {
+  app.post('/api/challenges/head-to-head/:id/decline', requiresSubscription, async (req: any, res) => {
     try {
       const challengeId = Number(req.params.id);
       const challenge = await storage.getHeadToHeadChallenge(challengeId);
@@ -3930,7 +3982,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.post('/api/challenges/head-to-head/:id/submit', isAuthenticated, async (req: any, res) => {
+  app.post('/api/challenges/head-to-head/:id/submit', requiresSubscription, async (req: any, res) => {
     try {
       const challengeId = Number(req.params.id);
       const submitSchema = z.object({
@@ -6204,10 +6256,12 @@ Respond in this exact JSON format:
       if (avgTurnovers > 3) {
         weaknesses.push({ stat: 'dribbling', priority: 5, reason: `High turnovers (${avgTurnovers.toFixed(1)} per game)` });
       }
-      if (player.position === 'Guard' && avgAssists < 3) {
+      // Support multi-position players - check if they have this position
+      const positionsList = (player.position || '').split(',').map(p => p.trim());
+      if (positionsList.includes('Guard') && avgAssists < 3) {
         weaknesses.push({ stat: 'passing', priority: 4, reason: `Low assists for Guard (${avgAssists.toFixed(1)} per game)` });
       }
-      if (player.position === 'Big' && avgRebounds < 5) {
+      if (positionsList.includes('Big') && avgRebounds < 5) {
         weaknesses.push({ stat: 'rebounding', priority: 4, reason: `Low rebounds for Big (${avgRebounds.toFixed(1)} per game)` });
       }
 
@@ -6626,11 +6680,11 @@ Respond in this exact JSON format:
           grade: item.game.grade,
         }));
 
-      // Position distribution
+      // Position distribution (multi-position players count for each of their positions)
       const positionDistribution = {
-        Guard: playerStats.filter(p => p.position === 'Guard').length,
-        Wing: playerStats.filter(p => p.position === 'Wing').length,
-        Big: playerStats.filter(p => p.position === 'Big').length,
+        Guard: playerStats.filter(p => (p.position || '').split(',').map(pos => pos.trim()).includes('Guard')).length,
+        Wing: playerStats.filter(p => (p.position || '').split(',').map(pos => pos.trim()).includes('Wing')).length,
+        Big: playerStats.filter(p => (p.position || '').split(',').map(pos => pos.trim()).includes('Big')).length,
       };
 
       res.json({

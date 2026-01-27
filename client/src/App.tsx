@@ -19,6 +19,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, ChevronLeft } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 // Pages
 import Landing from "./pages/Landing";
@@ -97,6 +99,39 @@ function SyncHandler() {
   return null;
 }
 
+function SessionExpiryHandler() {
+  const { isSessionExpired, isNetworkError, errorMessage, errorType } = useAuth();
+  const { toast } = useToast();
+  const hasNotifiedRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    if (isSessionExpired && !hasNotifiedRef.current) {
+      hasNotifiedRef.current = true;
+      toast({
+        title: "Session Expired",
+        description: "Your session has expired. Please log in again.",
+        variant: "destructive",
+      });
+      // Redirect to login after showing the toast
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 2000);
+    }
+  }, [isSessionExpired, toast]);
+
+  useEffect(() => {
+    if (isNetworkError && !hasNotifiedRef.current && errorType === 'network_error') {
+      toast({
+        title: "Network Error",
+        description: "Unable to connect to the server. Please check your internet connection.",
+        variant: "destructive",
+      });
+    }
+  }, [isNetworkError, errorType, toast]);
+
+  return null;
+}
+
 function PublicPricing() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[hsl(220,25%,6%)] via-[hsl(220,20%,5%)] to-[hsl(220,25%,4%)] text-white">
@@ -163,6 +198,7 @@ function MainRouter() {
       <OnboardingTour />
       <GuidedOnboarding />
       <SyncHandler />
+      <SessionExpiryHandler />
       <OfflineBanner />
       <div className="flex min-h-screen w-full max-w-full overflow-x-hidden bg-background text-foreground font-body selection:bg-primary/30">
         <Sidebar userRole={extendedUser.role} playerId={extendedUser.playerId} />

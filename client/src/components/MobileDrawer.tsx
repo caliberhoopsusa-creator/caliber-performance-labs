@@ -53,10 +53,33 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
         });
         setOpen(false);
       },
-      onError: (error: Error) => {
+      onError: (error: any) => {
+        const errorMessage = error?.message || 'Failed to switch mode';
+        const errorType = error?.type;
+        
+        // Show session expiry message
+        if (errorType === 'session_expired') {
+          toast({ 
+            title: 'Session Expired', 
+            description: 'Your session has expired. Please log in again.',
+            variant: 'destructive'
+          });
+          return;
+        }
+        
+        // Show network error
+        if (errorType === 'network_error') {
+          toast({ 
+            title: 'Network Error', 
+            description: 'Unable to connect. Please check your internet connection.',
+            variant: 'destructive'
+          });
+          return;
+        }
+
         toast({ 
           title: 'Error', 
-          description: error.message || 'Failed to switch mode',
+          description: errorMessage,
           variant: 'destructive'
         });
       }

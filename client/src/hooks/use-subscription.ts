@@ -34,23 +34,27 @@ export function useSubscription() {
   const isOwner = data?.isOwner ?? false;
   const isActive = subscription?.status === "active" || subscription?.status === "trialing" || isOwner;
   
-  // Determine the subscription tier based on the product
+  // Determine the subscription tier based on user role and subscription status
   const getTier = (): SubscriptionTier => {
-    // App owner gets full access
+    // App owner gets full access to all features
     if (isOwner) return "coach_pro";
     
-    if (!subscription || !isActive) return "free";
+    // No subscription = free tier
+    if (!isActive) return "free";
     
-    // Check product metadata or name to determine tier
-    // For now, any active subscription = pro, coach_pro determined by product name
-    const productId = subscription.items?.data?.[0]?.price?.product;
-    if (productId) {
-      // Check if it's a coach subscription based on product metadata
-      // This will be updated when we have actual product IDs
+    // If user is a coach with active subscription, they have coach_pro tier
+    // which gives them access to both pro and coach pro features
+    if (user?.role === 'coach') {
+      return "coach_pro";
+    }
+    
+    // Non-coach users with active subscription get pro tier
+    // which gives them access to pro features only
+    if (subscription) {
       return "pro";
     }
     
-    return isActive ? "pro" : "free";
+    return "free";
   };
 
   const tier = getTier();

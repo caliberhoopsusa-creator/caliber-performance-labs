@@ -47,6 +47,13 @@ Preferred communication style: Simple, everyday language.
 - **Gamification**: XP system, tier progression (Rookie to Hall of Fame), streak bonuses, and skill-based badges with progressive ranks (e.g., Sharpshooter, Pure Passer).
 - **AI Integration**: Gemini AI for video analysis to extract game statistics from uploaded footage.
 - **Authentication**: Replit Auth with session management and role-based access control (Player/Coach).
+  - **Error Handling**: Comprehensive error handling for authentication edge cases including:
+    - Session expiry detection and graceful handling with user notifications
+    - Network error detection with user-friendly messages
+    - User profile data validation after login
+    - Login/logout error handling with helpful feedback
+    - Role switching error handling with specific error types
+    - Toast notifications for all auth-related errors
 - **Social & Engagement**: Player following, in-app notifications, goal sharing, highlight clips gallery, and shareable achievement graphics.
 - **Player Discovery**: Public player directory (/discover) with search and filters. Players can toggle "Open to Opportunities" in their profile settings and add location (city, state), school, and graduation year to be found by coaches and scouts.
 - **Scout Hub**: Dedicated scouting page (/scout) with independent sport toggle, advanced filtering (position, state, graduation year, performance grade, position-specific stats), and sorting. Shows position-specific stat displays for all 10 football positions plus basketball. Uses client-side filtering on /api/discover data. Accessible to all user roles.
@@ -69,6 +76,53 @@ Preferred communication style: Simple, everyday language.
   - Premium utility classes: `cyber-grid`, `scan-lines`, `holo-shimmer`, `neon-border`, `tech-panel`, `hud-container`, `card-angular`, `data-stream`, `orbital-glow`
   - Color scheme: Cyan (#00D4FF) accent with gradient text, glowing badges, and ambient lighting effects
   - Mobile-optimized with PWA support and offline capabilities
+
+## Authentication Error Handling
+
+### Enhanced Error Detection & User Feedback
+The authentication system now includes comprehensive error handling for edge cases:
+
+#### Client-Side (`client/src/hooks/use-auth.ts`)
+- **Error State Exposure**: Hook now returns error state, error messages, and error types for use in components
+- **Session Expiry Detection**: `isSessionExpired` flag detects when user sessions expire
+- **Network Error Detection**: `isNetworkError` flag identifies connection failures
+- **User-Friendly Messages**: All error messages are non-technical and actionable:
+  - "Your session has expired. Please log in again." (Session expiry)
+  - "Network connection failed. Please check your internet connection." (Network errors)
+  - "Your profile data is incomplete. Please complete your profile." (Profile validation)
+  - "Failed to switch roles. Please try again." (Role switching errors)
+
+#### Server-Side (`server/replit_integrations/auth/routes.ts`)
+- **Session Expiry Messages**: Returns specific error responses with `type: "session_expired"`
+- **Profile Data Validation**: Checks that users have role and profile data after login
+- **User-Friendly Error Responses**: All 401/403/404/500 errors return descriptive messages
+- **Logout Error Handling**: Dedicated `/api/logout` route with proper error handling
+
+#### Session Management (`server/replit_integrations/auth/replitAuth.ts`)
+- **Token Refresh**: Automatic refresh token handling with fallback to logout
+- **Expiry Detection**: Detects token expiry via `expires_at` claim
+- **Graceful Degradation**: Returns clear error messages on token refresh failures
+
+#### App-Level Error Handling (`client/src/App.tsx`)
+- **SessionExpiryHandler Component**: Monitors auth state and shows toast notifications for:
+  - Session expiry (with automatic redirect to home)
+  - Network errors
+  - Profile incomplete warnings
+- **Role Switching Errors**: Enhanced error messages in Sidebar and MobileDrawer components
+
+#### Error Message Reference
+```
+SESSION_EXPIRED: "Your session has expired. Please log in again."
+NETWORK_ERROR: "Network connection failed. Please check your internet connection."
+INVALID_CREDENTIALS: "Invalid email or password. Please try again."
+USER_NOT_FOUND: "User account not found. Please sign up."
+INVALID_ROLE: "Invalid role selection. Please try again."
+PROFILE_MISSING: "Your profile data is incomplete. Please complete your profile."
+LOGOUT_FAILED: "Failed to log out. Please try again or clear your browser cache."
+SWITCH_ROLE_FAILED: "Failed to switch roles. Please try again."
+SERVER_ERROR: "Server error. Please try again later."
+UNAUTHORIZED: "You are not authorized to access this resource."
+```
 
 ### Subscription & Monetization
 - **Stripe Integration**: Subscription-based monetization with Stripe payment processing

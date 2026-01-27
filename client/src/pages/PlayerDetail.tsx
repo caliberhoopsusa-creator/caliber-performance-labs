@@ -178,6 +178,13 @@ function getInitials(name: string): string {
     .slice(0, 2);
 }
 
+// Helper to check if player has any of the given positions (supports comma-separated positions)
+function hasPosition(position: string | null | undefined, positionsToCheck: string[]): boolean {
+  if (!position) return false;
+  const playerPositions = position.split(',').map(p => p.trim());
+  return playerPositions.some(p => positionsToCheck.includes(p));
+}
+
 function PlayerDetailSkeleton() {
   return (
     <div className="space-y-6 animate-fade-in pb-20 w-full">
@@ -1363,25 +1370,25 @@ export default function PlayerDetail() {
                         <span className="text-xs text-muted-foreground uppercase">TD/G</span>
                         <span className="text-sm font-bold text-green-400">{avgTDs}</span>
                       </div>
-                      {['QB'].includes(player.position) && (
+                      {hasPosition(player.position, ['QB']) && (
                         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20">
                           <span className="text-xs text-muted-foreground uppercase">COMP%</span>
                           <span className="text-sm font-bold text-amber-400">{compPercent}%</span>
                         </div>
                       )}
-                      {['RB'].includes(player.position) && (
+                      {hasPosition(player.position, ['RB']) && (
                         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20">
                           <span className="text-xs text-muted-foreground uppercase">YPC</span>
                           <span className="text-sm font-bold text-amber-400">{yardsPerCarry}</span>
                         </div>
                       )}
-                      {['WR', 'TE'].includes(player.position) && (
+                      {hasPosition(player.position, ['WR', 'TE']) && (
                         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20">
                           <span className="text-xs text-muted-foreground uppercase">REC</span>
                           <span className="text-sm font-bold text-amber-400">{totalReceptions}</span>
                         </div>
                       )}
-                      {['DL', 'LB', 'DB'].includes(player.position) && (
+                      {hasPosition(player.position, ['DL', 'LB', 'DB']) && (
                         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20">
                           <span className="text-xs text-muted-foreground uppercase">TCK/G</span>
                           <span className="text-sm font-bold text-amber-400">{avgTackles}</span>
@@ -1581,7 +1588,7 @@ export default function PlayerDetail() {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
               <StatCard label="Games" value={games.length} />
               {/* QB Stats */}
-              {player.position === 'QB' && (
+              {hasPosition(player.position, ['QB']) && (
                 <>
                   <StatCard label="Pass YDS" value={totalPassingYards} highlight={true} />
                   <StatCard label="Pass TDs" value={totalPassingTDs} highlight={true} />
@@ -1592,7 +1599,7 @@ export default function PlayerDetail() {
                 </>
               )}
               {/* RB Stats */}
-              {player.position === 'RB' && (
+              {hasPosition(player.position, ['RB']) && (
                 <>
                   <StatCard label="Rush YDS" value={totalRushingYards} highlight={true} />
                   <StatCard label="Rush TDs" value={totalRushingTDs} highlight={true} />
@@ -1604,7 +1611,7 @@ export default function PlayerDetail() {
                 </>
               )}
               {/* WR/TE Stats */}
-              {(player.position === 'WR' || player.position === 'TE') && (
+              {hasPosition(player.position, ['WR', 'TE']) && (
                 <>
                   <StatCard label="Rec YDS" value={totalReceivingYards} highlight={true} />
                   <StatCard label="Rec TDs" value={totalReceivingTDs} highlight={true} />
@@ -1614,18 +1621,18 @@ export default function PlayerDetail() {
                 </>
               )}
               {/* Defensive Stats (DL, LB, DB) */}
-              {(player.position === 'DL' || player.position === 'LB' || player.position === 'DB') && (
+              {hasPosition(player.position, ['DL', 'LB', 'DB']) && (
                 <>
                   <StatCard label="Tackles" value={totalTackles} highlight={true} />
                   <StatCard label="Solo Tackles" value={totalSoloTackles} />
-                  <StatCard label="Sacks" value={totalSacks} highlight={player.position === 'DL'} />
-                  <StatCard label="INTs" value={totalDefensiveINTs} highlight={player.position === 'DB'} />
+                  <StatCard label="Sacks" value={totalSacks} highlight={hasPosition(player.position, ['DL'])} />
+                  <StatCard label="INTs" value={totalDefensiveINTs} highlight={hasPosition(player.position, ['DB'])} />
                   <StatCard label="Pass Def" value={totalPassDeflections} />
                   <StatCard label="FF" value={totalForcedFumbles} />
                 </>
               )}
               {/* Kicker Stats */}
-              {player.position === 'K' && (
+              {hasPosition(player.position, ['K']) && (
                 <>
                   <StatCard label="FG Made" value={totalFGMade} highlight={true} />
                   <StatCard label="FG Att" value={totalFGAttempted} />
@@ -1635,7 +1642,7 @@ export default function PlayerDetail() {
                 </>
               )}
               {/* Punter Stats */}
-              {player.position === 'P' && (
+              {hasPosition(player.position, ['P']) && (
                 <>
                   <StatCard label="Punts" value={totalPunts} highlight={true} />
                   <StatCard label="Punt YDS" value={totalPuntYards} />
@@ -1643,7 +1650,7 @@ export default function PlayerDetail() {
                 </>
               )}
               {/* OL - blocking stats */}
-              {player.position === 'OL' && (
+              {hasPosition(player.position, ['OL']) && (
                 <>
                   <StatCard label="Pancakes" value={totalPancakeBlocks} highlight={true} />
                   <StatCard label="Sacks Allowed" value={totalSacksAllowed} />
