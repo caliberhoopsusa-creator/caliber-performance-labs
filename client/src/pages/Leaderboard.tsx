@@ -233,12 +233,22 @@ export default function Leaderboard() {
                   </tr>
                 ) : (
                   leaderboard?.map((entry: any, index: number) => (
-                    <tr key={entry.playerId} className="transition-all duration-300 group hover:bg-gradient-to-r hover:from-cyan-500/[0.06] hover:to-transparent" data-testid={`row-leaderboard-${index}`}>
+                    <tr 
+                      key={entry.playerId} 
+                      className={cn(
+                        "animate-row-fade table-row-hover transition-all duration-300 group",
+                        index === 0 && "glow-gold",
+                        index === 1 && "glow-silver",
+                        index === 2 && "glow-bronze"
+                      )}
+                      data-row-index={index}
+                      data-testid={`row-leaderboard-${index}`}
+                    >
                       <td className="px-3 md:px-6 py-4 md:py-6">
                         <div className="flex items-center gap-2 md:gap-3">
-                          {index === 0 && <Trophy className="w-4 h-4 md:w-5 md:h-5 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]" />}
-                          {index === 1 && <Medal className="w-4 h-4 md:w-5 md:h-5 text-slate-300 drop-shadow-[0_0_6px_rgba(148,163,184,0.4)]" />}
-                          {index === 2 && <Medal className="w-4 h-4 md:w-5 md:h-5 text-rose-400 drop-shadow-[0_0_6px_rgba(251,113,133,0.4)]" />}
+                          {index === 0 && <Trophy className={cn("w-4 h-4 md:w-5 md:h-5 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]", index < 3 && "pulse-rank-badge")} />}
+                          {index === 1 && <Medal className={cn("w-4 h-4 md:w-5 md:h-5 text-slate-300 drop-shadow-[0_0_6px_rgba(148,163,184,0.4)]", index < 3 && "pulse-rank-badge")} />}
+                          {index === 2 && <Medal className={cn("w-4 h-4 md:w-5 md:h-5 text-rose-400 drop-shadow-[0_0_6px_rgba(251,113,133,0.4)]", index < 3 && "pulse-rank-badge")} />}
                           <span className={cn(
                             "font-display font-bold text-base md:text-lg",
                             index < 3 ? "bg-gradient-to-b from-white to-cyan-100/80 bg-clip-text text-transparent" : "text-cyan-200/50"

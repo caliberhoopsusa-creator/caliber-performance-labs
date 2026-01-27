@@ -190,7 +190,7 @@ export function useAuth() {
     },
   });
 
-  const switchRoleMutation = useMutation<User, AuthError>({
+  const switchRoleMutation = useMutation<User, AuthError, 'player' | 'coach'>({
     mutationFn: switchRole,
     onSuccess: (updatedUser) => {
       queryClient.setQueryData(["/api/auth/user"], updatedUser);

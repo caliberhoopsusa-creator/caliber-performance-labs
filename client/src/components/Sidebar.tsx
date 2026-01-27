@@ -46,7 +46,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
           description: `You're now viewing the app as a ${newRole}.`
         });
       },
-      onError: (error: any) => {
+      onError: (error) => {
         const errorMessage = error?.message || 'Failed to switch mode';
         const errorType = error?.type;
         
@@ -271,7 +271,7 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
       
       {/* Navigation container with proper spacing and touch targets */}
       <div className="relative flex justify-around items-center min-h-[72px] px-3 gap-1">
-        {navItems.map((item) => {
+        {navItems.map((item, index) => {
           // Enhanced active state detection - profile link should match any /players/:id path
           const isActive = location === item.href || 
             (item.href.includes('/players/') && location.startsWith('/players/'));
@@ -279,98 +279,143 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
           
           if (item.featured) {
             return (
-              <Link 
-                key={item.href} 
-                href={item.href} 
-                className="flex flex-col items-center justify-center touch-target -mt-6 transition-all duration-300 group" 
-                data-testid={`mobile-nav-${item.label.toLowerCase()}`}
+              <motion.div 
+                key={item.href}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ 
+                  delay: index * 0.05,
+                  type: "spring",
+                  stiffness: 400,
+                  damping: 25
+                }}
               >
-                {/* Featured button with animated ring */}
-                <div className="relative">
-                  {/* Animated outer ring */}
-                  <div className={cn(
-                    "absolute inset-[-4px] rounded-full transition-all duration-500",
-                    isActive 
-                      ? "bg-gradient-to-r from-cyan-400 via-cyan-300 to-cyan-400 animate-spin-slow opacity-100" 
-                      : "bg-gradient-to-r from-cyan-500/50 via-cyan-400/50 to-cyan-500/50 opacity-0 group-hover:opacity-100"
-                  )} style={{ animationDuration: '3s' }} />
+                <Link 
+                  href={item.href} 
+                  className="flex flex-col items-center justify-center touch-target -mt-6 transition-all duration-300 group min-h-16" 
+                  data-testid={`mobile-nav-${item.label.toLowerCase()}`}
+                >
+                  {/* Featured button with animated ring */}
+                  <motion.div 
+                    className="relative"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.92 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  >
+                    {/* Animated outer ring */}
+                    <motion.div 
+                      className={cn(
+                        "absolute inset-[-4px] rounded-full transition-all duration-500",
+                        isActive 
+                          ? "bg-gradient-to-r from-cyan-400 via-cyan-300 to-cyan-400 opacity-100" 
+                          : "bg-gradient-to-r from-cyan-500/50 via-cyan-400/50 to-cyan-500/50 opacity-0 group-hover:opacity-100"
+                      )}
+                      animate={isActive ? { rotate: 360 } : {}}
+                      transition={{ duration: 3, repeat: Infinity, linear: true }}
+                    />
+                    
+                    {/* Inner glow */}
+                    <div className={cn(
+                      "absolute inset-[-2px] rounded-full bg-background transition-all duration-300",
+                    )} />
+                    
+                    {/* Main button */}
+                    <motion.div 
+                      className={cn(
+                        "relative rounded-full p-3 border-2 transition-all duration-300",
+                        isActive 
+                          ? "bg-gradient-to-br from-cyan-400 to-cyan-500 text-white border-cyan-300 shadow-[0_0_30px_rgba(0,212,255,0.5),0_0_60px_rgba(0,212,255,0.3)]" 
+                          : "bg-gradient-to-br from-cyan-500 to-cyan-600 text-white border-cyan-400/60 shadow-[0_4px_20px_rgba(0,212,255,0.4)] group-hover:shadow-[0_0_30px_rgba(0,212,255,0.5)]"
+                      )}
+                      animate={isActive ? { scale: [1, 1.08, 1] } : {}}
+                      transition={{ duration: 1.5, repeat: Infinity, delay: 0.5 }}
+                    >
+                      <Icon className="w-6 h-6 drop-shadow-lg" />
+                    </motion.div>
+                  </motion.div>
                   
-                  {/* Inner glow */}
-                  <div className={cn(
-                    "absolute inset-[-2px] rounded-full bg-background transition-all duration-300",
-                  )} />
-                  
-                  {/* Main button */}
-                  <div className={cn(
-                    "relative rounded-full p-3 border-2 transition-all duration-300 active:scale-90",
-                    isActive 
-                      ? "bg-gradient-to-br from-cyan-400 to-cyan-500 text-white border-cyan-300 shadow-[0_0_30px_rgba(0,212,255,0.5),0_0_60px_rgba(0,212,255,0.3)]" 
-                      : "bg-gradient-to-br from-cyan-500 to-cyan-600 text-white border-cyan-400/60 shadow-[0_4px_20px_rgba(0,212,255,0.4)] group-hover:shadow-[0_0_30px_rgba(0,212,255,0.5)]"
-                  )}>
-                    <Icon className="w-6 h-6 drop-shadow-lg" />
-                  </div>
-                </div>
-                
-                <span className={cn(
-                  "text-[9px] font-semibold uppercase tracking-widest mt-2 transition-all duration-300",
-                  isActive 
-                    ? "text-cyan-400 drop-shadow-[0_0_8px_rgba(0,212,255,0.8)]" 
-                    : "text-muted-foreground group-hover:text-cyan-300"
-                )}>{item.label}</span>
-              </Link>
+                  <motion.span 
+                    className={cn(
+                      "text-[9px] font-semibold uppercase tracking-widest mt-2 transition-all duration-300",
+                      isActive 
+                        ? "text-cyan-400 drop-shadow-[0_0_8px_rgba(0,212,255,0.8)]" 
+                        : "text-muted-foreground group-hover:text-cyan-300"
+                    )}
+                    animate={isActive ? { y: [-2, 0] } : {}}
+                    transition={{ duration: 0.4, delay: 0.1 }}
+                  >
+                    {item.label}
+                  </motion.span>
+                </Link>
+              </motion.div>
             );
           }
           
           return (
-            <Link 
-              key={item.href} 
-              href={item.href} 
-              className={cn(
-                "relative flex flex-col items-center justify-center touch-target p-2 rounded-xl transition-all duration-300 group",
-                isActive && "mobile-nav-active-bg"
-              )} 
-              data-testid={`mobile-nav-${item.label.toLowerCase()}`}
-              data-active={isActive ? "true" : undefined}
-              aria-current={isActive ? "page" : undefined}
+            <motion.div
+              key={item.href}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ 
+                delay: index * 0.05,
+                type: "spring",
+                stiffness: 400,
+                damping: 25
+              }}
             >
-              <AnimatePresence>
-                {isActive && (
-                  <motion.div 
-                    layoutId="mobile-nav-indicator"
-                    className="absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_12px_rgba(0,212,255,0.9)]"
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0, opacity: 0 }}
-                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                  />
-                )}
-              </AnimatePresence>
-              
-              <motion.div 
+              <Link 
+                href={item.href} 
                 className={cn(
-                  "relative p-2 rounded-xl transition-colors duration-300",
-                  isActive 
-                    ? "text-cyan-400 drop-shadow-[0_0_12px_rgba(0,212,255,0.7)]" 
-                    : "text-muted-foreground group-hover:text-cyan-300 group-hover:drop-shadow-[0_0_8px_rgba(0,212,255,0.4)]"
-                )}
-                whileTap={{ scale: 0.85 }}
-                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  "relative flex flex-col items-center justify-center touch-target p-2 rounded-xl transition-all duration-300 group min-h-14",
+                  isActive && "mobile-nav-active-bg"
+                )} 
+                data-testid={`mobile-nav-${item.label.toLowerCase()}`}
+                data-active={isActive ? "true" : undefined}
+                aria-current={isActive ? "page" : undefined}
               >
-                <Icon className="w-5 h-5" />
-              </motion.div>
-              
-              <motion.span 
-                className={cn(
-                  "text-[9px] font-medium uppercase tracking-wider transition-colors duration-300",
-                  isActive 
-                    ? "text-cyan-400 font-semibold" 
-                    : "text-muted-foreground/80 group-hover:text-cyan-300/80"
-                )}
-                initial={false}
-                animate={{ y: isActive ? -1 : 0 }}
-                transition={{ type: "spring", stiffness: 400, damping: 25 }}
-              >{item.label}</motion.span>
-            </Link>
+                <AnimatePresence>
+                  {isActive && (
+                    <motion.div 
+                      layoutId="mobile-nav-indicator"
+                      className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_12px_rgba(0,212,255,0.9)]"
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    />
+                  )}
+                </AnimatePresence>
+                
+                <motion.div 
+                  className={cn(
+                    "relative p-2 rounded-xl transition-colors duration-300 flex-shrink-0",
+                    isActive 
+                      ? "text-cyan-300 drop-shadow-[0_0_12px_rgba(0,212,255,0.8)]" 
+                      : "text-muted-foreground group-hover:text-cyan-300 group-hover:drop-shadow-[0_0_8px_rgba(0,212,255,0.5)]"
+                  )}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.85 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  animate={isActive ? { scale: [1, 1.15, 1] } : {}}
+                >
+                  <Icon className="w-5 h-5" />
+                </motion.div>
+                
+                <motion.span 
+                  className={cn(
+                    "text-[9px] font-medium uppercase tracking-wider transition-colors duration-300",
+                    isActive 
+                      ? "text-cyan-400 font-semibold" 
+                      : "text-muted-foreground/80 group-hover:text-cyan-300/80"
+                  )}
+                  initial={false}
+                  animate={{ y: isActive ? -1 : 0, color: isActive ? 'rgb(34, 211, 238)' : 'inherit' }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                >
+                  {item.label}
+                </motion.span>
+              </Link>
+            </motion.div>
           );
         })}
       </div>

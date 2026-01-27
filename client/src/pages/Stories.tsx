@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Camera, Plus, User, X, ChevronLeft, ChevronRight, Eye, Heart, Flame, Trophy, Star, Zap, ThumbsUp, Upload, Image, Video, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 import type { Player, PlayerStory } from "@shared/schema";
 
 function generateSessionId(): string {
@@ -55,39 +56,65 @@ function StoryRing({
   isViewed: boolean;
 }) {
   return (
-    <button
+    <motion.button
       onClick={onClick}
       className="flex flex-col items-center gap-1 group"
       data-testid={`story-ring-${story.id}`}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
     >
-      <div className={cn(
-        "relative p-[3px] rounded-full transition-all duration-300",
-        isViewed 
-          ? "bg-gradient-to-tr from-gray-500 to-gray-600" 
-          : "bg-gradient-to-tr from-primary via-blue-400 to-purple-500"
-      )}>
+      <motion.div 
+        className={cn(
+          "relative p-[3px] rounded-full transition-all duration-300",
+          isViewed 
+            ? "bg-gradient-to-tr from-gray-500 to-gray-600" 
+            : "bg-gradient-to-tr from-cyan-400 via-blue-400 to-cyan-500"
+        )}
+        animate={!isViewed ? { boxShadow: [
+          "0 0 0 0 rgba(34, 211, 238, 0.4)",
+          "0 0 0 8px rgba(34, 211, 238, 0.2)",
+          "0 0 0 12px rgba(34, 211, 238, 0)"
+        ]} : {}}
+        transition={!isViewed ? { duration: 2, repeat: Infinity } : {}}
+      >
         <div className="bg-background p-[2px] rounded-full">
-          <div className="w-14 h-14 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center overflow-hidden">
+          <motion.div 
+            className="w-14 h-14 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center overflow-hidden"
+            initial={{ scale: 0.95 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.1 }}
+          >
             {story.imageUrl ? (
               <img src={story.imageUrl} alt="" className="w-full h-full object-cover" loading="lazy" width={56} height={56} />
             ) : (
               <User className="w-6 h-6 text-primary" />
             )}
-          </div>
+          </motion.div>
         </div>
         {story.mediaType === 'video' && (
-          <div className="absolute bottom-0 right-0 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center border-2 border-background">
+          <motion.div 
+            className="absolute bottom-0 right-0 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center border-2 border-background"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring" }}
+          >
             <Video className="w-3 h-3 text-white" />
-          </div>
+          </motion.div>
         )}
-      </div>
-      <span className={cn(
-        "text-xs font-medium truncate max-w-[70px]",
-        isViewed ? "text-muted-foreground" : "text-white"
-      )}>
+      </motion.div>
+      <motion.span 
+        className={cn(
+          "text-xs font-medium truncate max-w-[70px]",
+          isViewed ? "text-muted-foreground" : "text-white"
+        )}
+        initial={{ opacity: 0, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+      >
         {story.playerName.split(' ')[0]}
-      </span>
-    </button>
+      </motion.span>
+    </motion.button>
   );
 }
 
@@ -210,133 +237,230 @@ function StoryViewer({
 
       <div className="absolute top-4 left-4 right-16 flex gap-1 z-10">
         {stories.map((_, idx) => (
-          <div key={idx} className="flex-1 h-1 bg-white/30 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-white transition-all duration-50"
+          <div key={idx} className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
+            <motion.div 
+              className="h-full bg-gradient-to-r from-cyan-300 via-cyan-400 to-blue-400 rounded-full shadow-[0_0_10px_rgba(34,211,238,0.6)]"
               style={{ 
                 width: idx < currentIndex ? '100%' : idx === currentIndex ? `${progress}%` : '0%' 
               }}
+              transition={{ duration: 0.05, ease: "linear" }}
             />
           </div>
         ))}
       </div>
 
-      <div className="absolute top-12 left-4 flex items-center gap-3 z-10">
-        <div className="w-10 h-10 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center overflow-hidden">
-          <User className="w-5 h-5 text-primary" />
-        </div>
-        <div>
-          <p className="text-white font-semibold text-sm">{currentStory.playerName}</p>
-          <p className="text-white/60 text-xs">
-            {formatDistanceToNow(new Date(currentStory.createdAt!), { addSuffix: true })}
-          </p>
-        </div>
-      </div>
+      <AnimatePresence mode="wait">
+        <motion.div 
+          key={currentStory.id}
+          className="absolute top-12 left-4 flex items-center gap-3 z-10"
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -10 }}
+          transition={{ duration: 0.2 }}
+        >
+          <motion.div 
+            className="w-10 h-10 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center overflow-hidden"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.1, type: "spring", stiffness: 400 }}
+          >
+            <User className="w-5 h-5 text-primary" />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.15 }}
+          >
+            <p className="text-white font-semibold text-sm">{currentStory.playerName}</p>
+            <p className="text-white/60 text-xs">
+              {formatDistanceToNow(new Date(currentStory.createdAt!), { addSuffix: true })}
+            </p>
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
 
-      <div className="absolute inset-x-0 bottom-0 top-24 flex flex-col items-center justify-center p-4">
-        {currentStory.mediaType === 'image' && currentStory.imageUrl && (
-          <img 
-            src={currentStory.imageUrl} 
-            alt={currentStory.headline}
-            className="max-h-[60vh] max-w-full object-contain rounded-lg"
-            data-testid="story-image"
-            loading="lazy"
-          />
-        )}
-
-        {currentStory.mediaType === 'video' && currentStory.videoUrl && (
-          <video
-            src={currentStory.videoUrl}
-            autoPlay
-            muted
-            loop
-            playsInline
-            className="max-h-[60vh] max-w-full object-contain rounded-lg"
-            data-testid="story-video"
-          />
-        )}
-
-        <div className="mt-4 text-center max-w-md">
-          <h2 className="text-2xl font-bold text-white mb-2">{currentStory.headline}</h2>
-          {currentStory.caption && (
-            <p className="text-white/80 text-sm mb-4">{currentStory.caption}</p>
+      <AnimatePresence mode="wait">
+        <motion.div 
+          key={currentStory.id}
+          className="absolute inset-x-0 bottom-0 top-24 flex flex-col items-center justify-center p-4"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
+        >
+          {currentStory.mediaType === 'image' && currentStory.imageUrl && (
+            <motion.img 
+              src={currentStory.imageUrl} 
+              alt={currentStory.headline}
+              className="max-h-[60vh] max-w-full object-contain rounded-lg"
+              data-testid="story-image"
+              loading="lazy"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.1, duration: 0.4, ease: "easeOut" }}
+            />
           )}
 
-          {parsedStats && (
-            <div className="flex justify-center gap-6 mb-4">
-              {parsedStats.points !== undefined && (
-                <div className="text-center">
-                  <p className="text-3xl font-bold text-primary">{parsedStats.points}</p>
-                  <p className="text-xs text-white/60 uppercase">Points</p>
-                </div>
-              )}
-              {parsedStats.rebounds !== undefined && (
-                <div className="text-center">
-                  <p className="text-3xl font-bold text-primary">{parsedStats.rebounds}</p>
-                  <p className="text-xs text-white/60 uppercase">Rebounds</p>
-                </div>
-              )}
-              {parsedStats.assists !== undefined && (
-                <div className="text-center">
-                  <p className="text-3xl font-bold text-primary">{parsedStats.assists}</p>
-                  <p className="text-xs text-white/60 uppercase">Assists</p>
-                </div>
-              )}
-            </div>
+          {currentStory.mediaType === 'video' && currentStory.videoUrl && (
+            <motion.video
+              src={currentStory.videoUrl}
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="max-h-[60vh] max-w-full object-contain rounded-lg"
+              data-testid="story-video"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.1, duration: 0.4, ease: "easeOut" }}
+            />
           )}
-        </div>
 
-        <div className="flex items-center gap-2 text-white/60 text-sm mt-4">
-          <Eye className="w-4 h-4" />
-          <span>{currentStory.viewCount || 0} views</span>
-        </div>
-      </div>
+          <motion.div 
+            className="mt-4 text-center max-w-md"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.3 }}
+          >
+            <h2 className="text-2xl font-bold text-white mb-2">{currentStory.headline}</h2>
+            {currentStory.caption && (
+              <p className="text-white/80 text-sm mb-4">{currentStory.caption}</p>
+            )}
 
-      <div className="absolute bottom-8 left-0 right-0 px-4">
-        {showReactions ? (
-          <div className="flex justify-center gap-3 p-3 bg-white/10 backdrop-blur-sm rounded-full mx-auto max-w-md" onClick={e => e.stopPropagation()}>
-            {REACTIONS.map(({ key, icon: Icon, label, color }) => (
-              <button
-                key={key}
-                onClick={() => handleReaction(key)}
-                className="p-2 hover:bg-white/20 rounded-full transition-colors"
-                title={label}
-                data-testid={`reaction-${key}`}
+            {parsedStats && (
+              <motion.div 
+                className="flex justify-center gap-6 mb-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3, duration: 0.3 }}
               >
-                <Icon className={cn("w-6 h-6", color)} />
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div className="flex justify-center">
-            <Button
-              variant="ghost"
-              className="text-white hover:bg-white/20"
-              onClick={(e) => { e.stopPropagation(); setShowReactions(true); }}
-              data-testid="button-show-reactions"
-            >
-              <Heart className="w-5 h-5 mr-2" />
-              React
-            </Button>
-          </div>
-        )}
-      </div>
+                {parsedStats.points !== undefined && (
+                  <motion.div 
+                    className="text-center"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.35, type: "spring", stiffness: 300 }}
+                  >
+                    <p className="text-3xl font-bold text-primary">{parsedStats.points}</p>
+                    <p className="text-xs text-white/60 uppercase">Points</p>
+                  </motion.div>
+                )}
+                {parsedStats.rebounds !== undefined && (
+                  <motion.div 
+                    className="text-center"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.4, type: "spring", stiffness: 300 }}
+                  >
+                    <p className="text-3xl font-bold text-primary">{parsedStats.rebounds}</p>
+                    <p className="text-xs text-white/60 uppercase">Rebounds</p>
+                  </motion.div>
+                )}
+                {parsedStats.assists !== undefined && (
+                  <motion.div 
+                    className="text-center"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.45, type: "spring", stiffness: 300 }}
+                  >
+                    <p className="text-3xl font-bold text-primary">{parsedStats.assists}</p>
+                    <p className="text-xs text-white/60 uppercase">Assists</p>
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
+          </motion.div>
 
-      <button
+          <motion.div 
+            className="flex items-center gap-2 text-white/60 text-sm mt-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.25, duration: 0.3 }}
+          >
+            <Eye className="w-4 h-4" />
+            <span>{currentStory.viewCount || 0} views</span>
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
+
+      <motion.div 
+        className="absolute bottom-8 left-0 right-0 px-4"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
+        <AnimatePresence mode="wait">
+          {showReactions ? (
+            <motion.div 
+              key="reactions"
+              className="flex justify-center gap-3 p-3 bg-white/10 backdrop-blur-sm rounded-full mx-auto max-w-md" 
+              onClick={e => e.stopPropagation()}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              {REACTIONS.map(({ key, icon: Icon, label, color }, idx) => (
+                <motion.button
+                  key={key}
+                  onClick={() => handleReaction(key)}
+                  className="p-2 hover:bg-white/20 rounded-full transition-colors"
+                  title={label}
+                  data-testid={`reaction-${key}`}
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: idx * 0.05, type: "spring", stiffness: 400 }}
+                  whileHover={{ scale: 1.15 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <Icon className={cn("w-6 h-6", color)} />
+                </motion.button>
+              ))}
+            </motion.div>
+          ) : (
+            <motion.div 
+              key="react-button"
+              className="flex justify-center"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Button
+                variant="ghost"
+                className="text-white hover:bg-white/20"
+                onClick={(e) => { e.stopPropagation(); setShowReactions(true); }}
+                data-testid="button-show-reactions"
+              >
+                <Heart className="w-5 h-5 mr-2" />
+                React
+              </Button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+
+      <motion.button
         className="absolute left-2 top-1/2 -translate-y-1/2 p-2 text-white/60 hover:text-white"
         onClick={(e) => { e.stopPropagation(); goPrev(); }}
         data-testid="button-prev-story"
+        whileHover={{ scale: 1.1, color: "rgba(255, 255, 255, 1)" }}
+        whileTap={{ scale: 0.95 }}
+        transition={{ type: "spring", stiffness: 400 }}
       >
         <ChevronLeft className="w-8 h-8" />
-      </button>
+      </motion.button>
 
-      <button
+      <motion.button
         className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-white/60 hover:text-white"
         onClick={(e) => { e.stopPropagation(); goNext(); }}
         data-testid="button-next-story"
+        whileHover={{ scale: 1.1, color: "rgba(255, 255, 255, 1)" }}
+        whileTap={{ scale: 0.95 }}
+        transition={{ type: "spring", stiffness: 400 }}
       >
         <ChevronRight className="w-8 h-8" />
-      </button>
+      </motion.button>
     </div>
   );
 }
@@ -780,16 +904,28 @@ export default function Stories() {
             </div>
           </Card>
         ) : (
-          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-primary/20" data-testid="stories-scroll">
-            {groupedStories.map((story) => (
-              <StoryRing
+          <motion.div 
+            className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-primary/20" 
+            data-testid="stories-scroll"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+          >
+            {groupedStories.map((story, idx) => (
+              <motion.div
                 key={story.id}
-                story={story}
-                onClick={() => openViewerById(story.id)}
-                isViewed={viewedStories.has(story.id)}
-              />
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.08, duration: 0.3 }}
+              >
+                <StoryRing
+                  story={story}
+                  onClick={() => openViewerById(story.id)}
+                  isViewed={viewedStories.has(story.id)}
+                />
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         )}
       </section>
 
@@ -799,37 +935,52 @@ export default function Stories() {
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {stories.map((story, idx) => (
-            <Card
+            <motion.div
               key={story.id}
-              className="cursor-pointer hover-elevate overflow-hidden"
-              onClick={() => openViewer(idx)}
-              data-testid={`card-story-${story.id}`}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.05, duration: 0.3 }}
             >
-              <div className="aspect-[3/4] relative">
-                {story.mediaType === 'image' && story.imageUrl ? (
-                  <img src={story.imageUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
-                ) : story.mediaType === 'video' && story.videoUrl ? (
-                  <div className="w-full h-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
-                    <Video className="w-12 h-12 text-blue-400" />
-                  </div>
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                    <Star className="w-12 h-12 text-primary/40" />
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-3">
-                  <p className="text-white font-semibold text-sm truncate">{story.playerName}</p>
-                  <p className="text-white/80 text-xs truncate">{story.headline}</p>
-                  <div className="flex items-center gap-2 mt-1 text-white/60 text-xs">
-                    <Eye className="w-3 h-3" />
-                    <span>{story.viewCount || 0}</span>
-                    <span>•</span>
-                    <span>{formatDistanceToNow(new Date(story.createdAt!), { addSuffix: true })}</span>
-                  </div>
-                </div>
-              </div>
-            </Card>
+              <Card
+                className="cursor-pointer hover-elevate overflow-hidden"
+                onClick={() => openViewer(idx)}
+                data-testid={`card-story-${story.id}`}
+              >
+                <motion.div 
+                  className="aspect-[3/4] relative"
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  {story.mediaType === 'image' && story.imageUrl ? (
+                    <img src={story.imageUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
+                  ) : story.mediaType === 'video' && story.videoUrl ? (
+                    <div className="w-full h-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
+                      <Video className="w-12 h-12 text-blue-400" />
+                    </div>
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                      <Star className="w-12 h-12 text-primary/40" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  <motion.div 
+                    className="absolute bottom-0 left-0 right-0 p-3"
+                    initial={{ y: 10, opacity: 0 }}
+                    whileHover={{ y: 0, opacity: 1 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <p className="text-white font-semibold text-sm truncate">{story.playerName}</p>
+                    <p className="text-white/80 text-xs truncate">{story.headline}</p>
+                    <div className="flex items-center gap-2 mt-1 text-white/60 text-xs">
+                      <Eye className="w-3 h-3" />
+                      <span>{story.viewCount || 0}</span>
+                      <span>•</span>
+                      <span>{formatDistanceToNow(new Date(story.createdAt!), { addSuffix: true })}</span>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              </Card>
+            </motion.div>
           ))}
         </div>
       </section>

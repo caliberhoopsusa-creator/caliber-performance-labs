@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { 
   Menu, LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, 
   Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, 
@@ -40,6 +41,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
   const { hasAccess } = useSubscription();
   const { switchRole, isSwitchingRole } = useAuth();
   const { toast } = useToast();
+  const prefersReducedMotion = useReducedMotion();
   
   const isPlayer = userRole === 'player';
 
@@ -53,7 +55,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
         });
         setOpen(false);
       },
-      onError: (error: any) => {
+      onError: (error) => {
         const errorMessage = error?.message || 'Failed to switch mode';
         const errorType = error?.type;
         
@@ -160,17 +162,19 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="md:hidden relative group"
-          data-testid="button-mobile-menu"
-        >
-          <div className="absolute inset-0 rounded-lg bg-cyan-500/0 group-hover:bg-cyan-500/10 transition-all duration-300" />
-          <Menu className="w-5 h-5 relative z-10 transition-transform duration-300 group-active:scale-90" />
-        </Button>
+        <motion.div whileTap={prefersReducedMotion ? undefined : { scale: 0.85 }} transition={prefersReducedMotion ? undefined : { type: "spring", stiffness: 400, damping: 25 }}>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="md:hidden relative group min-h-11 min-w-11"
+            data-testid="button-mobile-menu"
+          >
+            <div className="absolute inset-0 rounded-lg bg-cyan-500/0 group-hover:bg-cyan-500/10 transition-all duration-300" />
+            <Menu className="w-5 h-5 relative z-10 transition-transform duration-300 group-active:scale-90" />
+          </Button>
+        </motion.div>
       </SheetTrigger>
-      <SheetContent side="left" className="w-[300px] p-0 mobile-drawer-glass border-r border-cyan-500/10">
+      <SheetContent side="left" className="w-[300px] p-0 mobile-drawer-glass border-r border-cyan-500/10 overflow-hidden">
         <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
         <SheetDescription className="sr-only">Access all app features from this menu</SheetDescription>
         
@@ -195,17 +199,19 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
 
           {/* Mode switching and sport toggle */}
           <div className="p-4 border-b border-cyan-500/10 space-y-4 bg-gradient-to-b from-white/[0.01] to-transparent">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRoleSwitch}
-              disabled={isSwitchingRole}
-              className="w-full text-xs border-cyan-500/20 bg-cyan-500/5"
-              data-testid="button-mobile-role-switch"
-            >
-              <ArrowLeftRight className="w-3.5 h-3.5 mr-2 text-cyan-400" />
-              Switch to {isPlayer ? 'Coach' : 'Player'} Mode
-            </Button>
+            <motion.div whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }} transition={prefersReducedMotion ? undefined : { type: "spring", stiffness: 400, damping: 25 }}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRoleSwitch}
+                disabled={isSwitchingRole}
+                className="w-full text-xs border-cyan-500/20 bg-cyan-500/5 min-h-11 touch-target"
+                data-testid="button-mobile-role-switch"
+              >
+                <ArrowLeftRight className="w-3.5 h-3.5 mr-2 text-cyan-400" />
+                Switch to {isPlayer ? 'Coach' : 'Player'} Mode
+              </Button>
+            </motion.div>
             
             <div className="flex flex-col gap-2">
               <span className="text-[10px] uppercase font-semibold text-cyan-400/60 tracking-[0.2em] px-1">
@@ -218,80 +224,122 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
           {/* Navigation with enhanced styling */}
           <ScrollArea className="flex-1">
             <nav className="p-4 space-y-6">
-              {sections.map((section, sectionIndex) => (
-                <div key={section.title} className="animate-fade-up" style={{ animationDelay: `${sectionIndex * 50}ms` }}>
-                  <h3 className="text-[10px] uppercase font-semibold text-cyan-400/50 tracking-[0.2em] px-3 mb-2 flex items-center gap-2">
-                    <span className="w-2 h-px bg-gradient-to-r from-cyan-500/40 to-transparent" />
-                    {section.title}
-                  </h3>
-                  <div className="space-y-1">
-                    {section.items.map((item) => {
-                      const isActive = location === item.href;
-                      const needsUpgrade = item.premium && !hasAccess(item.premium);
-                      const isFeatured = item.featured && !isActive;
-                      
-                      return (
-                        <Link 
-                          key={item.href} 
-                          href={item.href}
-                          onClick={() => setOpen(false)}
-                          className={cn(
-                            "mobile-menu-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium",
-                            isActive && "mobile-menu-item-active",
-                            isActive 
-                              ? "text-cyan-400" 
-                              : isFeatured
-                              ? "text-cyan-400 bg-cyan-500/5"
-                              : needsUpgrade
-                              ? "text-muted-foreground/60"
-                              : "text-muted-foreground hover:text-white"
-                          )}
-                          data-testid={`mobile-drawer-${item.href.replace(/\//g, '-').replace(/^-/, '') || 'home'}`}
-                        >
-                          <div className={cn(
-                            "p-1.5 rounded-lg transition-all duration-300",
-                            isActive 
-                              ? "bg-cyan-500/20 shadow-[0_0_12px_rgba(0,212,255,0.3)]" 
-                              : "bg-white/[0.03]"
-                          )}>
-                            <item.icon className={cn(
-                              "w-4 h-4 transition-all duration-300",
-                              isActive && "text-cyan-400 drop-shadow-[0_0_6px_rgba(0,212,255,0.6)]"
-                            )} />
-                          </div>
-                          <span className="flex-1">{item.label}</span>
-                          {isFeatured && (
-                            <span className="text-[9px] bg-gradient-to-r from-cyan-500 to-cyan-400 text-white px-2 py-0.5 rounded-full font-bold uppercase tracking-wide shadow-lg shadow-cyan-500/30">
-                              LIVE
-                            </span>
-                          )}
-                          {needsUpgrade && (
-                            <div className="p-1 rounded bg-white/5">
-                              <Lock className="w-3 h-3 text-muted-foreground/50" />
-                            </div>
-                          )}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
+              <AnimatePresence>
+                {sections.map((section, sectionIndex) => (
+                  <motion.div 
+                    key={section.title}
+                    initial={prefersReducedMotion ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: -20 }}
+                    transition={prefersReducedMotion ? { duration: 0 } : { 
+                      duration: 0.4,
+                      delay: sectionIndex * 0.1,
+                      ease: "easeOut"
+                    }}
+                  >
+                    <h3 className="text-[10px] uppercase font-semibold text-cyan-400/50 tracking-[0.2em] px-3 mb-2 flex items-center gap-2">
+                      <span className="w-2 h-px bg-gradient-to-r from-cyan-500/40 to-transparent" />
+                      {section.title}
+                    </h3>
+                    <div className="space-y-1">
+                      {section.items.map((item, itemIndex) => {
+                        const isActive = location === item.href;
+                        const needsUpgrade = item.premium && !hasAccess(item.premium);
+                        const isFeatured = item.featured && !isActive;
+                        
+                        return (
+                          <motion.div
+                            key={item.href}
+                            initial={prefersReducedMotion ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: -20 }}
+                            transition={prefersReducedMotion ? { duration: 0 } : {
+                              duration: 0.3,
+                              delay: sectionIndex * 0.1 + itemIndex * 0.05,
+                              ease: "easeOut"
+                            }}
+                            whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
+                            whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }}
+                          >
+                            <Link 
+                              href={item.href}
+                              onClick={() => setOpen(false)}
+                              className={cn(
+                                "mobile-menu-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium min-h-11 touch-target",
+                                "transition-all duration-200",
+                                isActive && "mobile-menu-item-active",
+                                isActive 
+                                  ? "text-cyan-400 bg-cyan-500/15 shadow-[0_0_16px_rgba(0,212,255,0.4)]" 
+                                  : isFeatured
+                                  ? "text-cyan-400 bg-cyan-500/5 hover:bg-cyan-500/10"
+                                  : needsUpgrade
+                                  ? "text-muted-foreground/60"
+                                  : "text-muted-foreground hover:text-white hover:bg-white/5"
+                              )}
+                              data-testid={`mobile-drawer-${item.href.replace(/\//g, '-').replace(/^-/, '') || 'home'}`}
+                            >
+                              <motion.div 
+                                className={cn(
+                                  "p-1.5 rounded-lg transition-all duration-300 flex-shrink-0",
+                                  isActive 
+                                    ? "bg-cyan-500/30 shadow-[0_0_16px_rgba(0,212,255,0.4)]" 
+                                    : "bg-white/[0.04]"
+                                )}
+                                animate={isActive && !prefersReducedMotion ? { scale: [1, 1.1, 1] } : {}}
+                                transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.6, delay: 0.2 }}
+                              >
+                                <item.icon className={cn(
+                                  "w-4 h-4 transition-all duration-300",
+                                  isActive && "text-cyan-300 drop-shadow-[0_0_8px_rgba(0,212,255,0.7)]"
+                                )} />
+                              </motion.div>
+                              <span className="flex-1 truncate">{item.label}</span>
+                              {isFeatured && (
+                                <motion.span 
+                                  className="text-[9px] bg-gradient-to-r from-cyan-500 to-cyan-400 text-white px-2 py-0.5 rounded-full font-bold uppercase tracking-wide shadow-lg shadow-cyan-500/30 whitespace-nowrap"
+                                  initial={prefersReducedMotion ? { scale: 1, opacity: 1 } : { scale: 0.8, opacity: 0 }}
+                                  animate={{ scale: 1, opacity: 1 }}
+                                  transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3, delay: 0.2 }}
+                                >
+                                  LIVE
+                                </motion.span>
+                              )}
+                              {needsUpgrade && (
+                                <div className="p-1 rounded bg-white/5 flex-shrink-0">
+                                  <Lock className="w-3 h-3 text-muted-foreground/50" />
+                                </div>
+                              )}
+                            </Link>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </nav>
           </ScrollArea>
 
           {/* Footer with sign out */}
-          <div className="p-4 border-t border-cyan-500/10 bg-gradient-to-t from-black/20 to-transparent">
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-muted-foreground"
-              asChild
-            >
-              <a href="/api/logout">
-                <LogOut className="w-4 h-4 mr-2" />
-                Sign Out
-              </a>
-            </Button>
-          </div>
+          <motion.div 
+            className="p-4 border-t border-cyan-500/10 bg-gradient-to-t from-black/20 to-transparent"
+            initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.4, delay: 0.3 }}
+          >
+            <motion.div whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }} transition={prefersReducedMotion ? undefined : { type: "spring", stiffness: 400, damping: 25 }}>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start text-muted-foreground min-h-11"
+                asChild
+              >
+                <a href="/api/logout" className="touch-target">
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </a>
+              </Button>
+            </motion.div>
+          </motion.div>
         </div>
       </SheetContent>
     </Sheet>
