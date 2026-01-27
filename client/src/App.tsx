@@ -1,4 +1,4 @@
-import { Switch, Route, Redirect } from "wouter";
+import { Switch, Route, Redirect, useLocation, Link } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -16,8 +16,9 @@ import { PageTransition } from "@/components/PageTransition";
 import { useAuth } from "@/hooks/use-auth";
 import { useOffline } from "@/hooks/use-offline";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, ChevronLeft } from "lucide-react";
 import { useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
 
 // Pages
 import Landing from "./pages/Landing";
@@ -96,9 +97,33 @@ function SyncHandler() {
   return null;
 }
 
+function PublicPricing() {
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-[hsl(220,25%,6%)] via-[hsl(220,20%,5%)] to-[hsl(220,25%,4%)] text-white">
+      <div className="absolute inset-0 cyber-grid pointer-events-none opacity-30" />
+      <header className="sticky top-0 z-50 backdrop-blur-xl bg-[hsl(220,25%,6%)]/80 border-b border-cyan-500/10">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
+          <Link href="/">
+            <Button variant="ghost" size="sm" className="text-white/70" data-testid="button-back-home">
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              Back
+            </Button>
+          </Link>
+          <h1 className="font-display text-xl font-bold tracking-tight text-gradient-primary">CALIBER</h1>
+          <div className="w-20" />
+        </div>
+      </header>
+      <main className="relative z-10 max-w-7xl mx-auto px-6 py-12">
+        <Pricing />
+      </main>
+    </div>
+  );
+}
+
 function MainRouter() {
   const { user: authUser, isLoading: authLoading } = useAuth();
   const { data: extendedUser, isLoading: userLoading } = useExtendedUser();
+  const [location] = useLocation();
   
   const isLoading = authLoading || (authUser && userLoading);
   
@@ -114,8 +139,11 @@ function MainRouter() {
     );
   }
   
-  // Not authenticated - show landing page
+  // Not authenticated - allow access to pricing, otherwise show landing page
   if (!authUser) {
+    if (location === "/pricing") {
+      return <PublicPricing />;
+    }
     return <Landing />;
   }
   
