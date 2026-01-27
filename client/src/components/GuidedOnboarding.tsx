@@ -116,12 +116,13 @@ export function GuidedOnboarding() {
 
   const { data: players } = useQuery<{ id: number }[]>({
     queryKey: ["/api/players"],
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 30,
   });
 
   const { data: games } = useQuery<{ id: number }[]>({
     queryKey: ["/api/games"],
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 30,
+    refetchOnMount: true,
   });
 
   const hasPlayer = (players?.length || 0) > 0;

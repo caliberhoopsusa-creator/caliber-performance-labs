@@ -1934,6 +1934,37 @@ export async function registerRoutes(
 
   // --- Games ---
 
+  // Get all games for current user's players (or all games for coaches)
+  app.get('/api/games', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await authStorage.getUser(userId);
+      
+      // For coaches, return all games
+      if (user?.role === 'coach') {
+        const allPlayers = await storage.getPlayersWithStats();
+        const allGames: any[] = [];
+        for (const player of allPlayers) {
+          allGames.push(...(player.games || []));
+        }
+        allGames.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        return res.json(allGames);
+      }
+      
+      // For players, get games for their player profile
+      const userPlayer = await storage.getPlayerByUserId(userId);
+      if (!userPlayer) {
+        return res.json([]);
+      }
+      const games = await storage.getGamesByPlayerId(userPlayer.id);
+      games.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      res.json(games);
+    } catch (err) {
+      console.error("Error fetching games:", err);
+      res.status(500).json({ message: "Failed to fetch games" });
+    }
+  });
+
   // Create game - requires auth, players can only log for themselves
   app.post(api.games.create.path, isAuthenticated, async (req: any, res) => {
     try {
