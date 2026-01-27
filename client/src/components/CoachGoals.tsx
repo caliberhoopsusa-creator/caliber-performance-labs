@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCoachGoals, useCreateCoachGoal, useUpdateCoachGoal, useDeleteCoachGoal, usePlayer, type CoachGoal, type UpdateCoachGoalInput } from "@/hooks/use-basketball";
+import { useSport } from "@/components/SportToggle";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,7 @@ import {
 import { Target, Plus, Pencil, Trash2, CheckCircle, XCircle, Clock, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Game } from "@shared/schema";
+import { BASKETBALL_GOAL_CATEGORIES, FOOTBALL_GOAL_CATEGORIES } from "@shared/schema";
 
 interface CoachGoalsProps {
   playerId: number;
@@ -40,16 +42,16 @@ const TARGET_TYPES = [
   { value: "attendance", label: "Attendance %" },
 ];
 
-const TARGET_CATEGORIES = [
-  { value: "points", label: "Points" },
-  { value: "rebounds", label: "Rebounds" },
-  { value: "assists", label: "Assists" },
-  { value: "steals", label: "Steals" },
-  { value: "blocks", label: "Blocks" },
-  { value: "turnovers", label: "Turnovers" },
-  { value: "defense", label: "Defense Rating" },
+// Extended basketball categories with hustle for coach goals
+const BASKETBALL_COACH_CATEGORIES = [
+  ...BASKETBALL_GOAL_CATEGORIES,
   { value: "hustle", label: "Hustle Score" },
-  { value: "overall", label: "Overall Grade" },
+];
+
+// Extended football categories with hustle for coach goals  
+const FOOTBALL_COACH_CATEGORIES = [
+  ...FOOTBALL_GOAL_CATEGORIES,
+  { value: "hustle", label: "Hustle Score" },
 ];
 
 function calculateProgress(goal: CoachGoal, games: Game[]): { current: number; percent: number } {
@@ -125,11 +127,16 @@ function getStatusBadge(status: string) {
 }
 
 export function CoachGoals({ playerId }: CoachGoalsProps) {
+  const sport = useSport();
   const { data: goals = [], isLoading } = useCoachGoals(playerId);
   const { data: player } = usePlayer(playerId);
   const createGoal = useCreateCoachGoal();
   const updateGoal = useUpdateCoachGoal();
   const deleteGoal = useDeleteCoachGoal();
+  
+  // Sport-aware categories
+  const targetCategories = sport === 'football' ? FOOTBALL_COACH_CATEGORIES : BASKETBALL_COACH_CATEGORIES;
+  const defaultCategory = sport === 'football' ? 'passingYards' : 'points';
   
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<CoachGoal | null>(null);
@@ -139,19 +146,24 @@ export function CoachGoals({ playerId }: CoachGoalsProps) {
   const [description, setDescription] = useState("");
   const [coachName, setCoachName] = useState("");
   const [targetType, setTargetType] = useState("stat_min");
-  const [targetCategory, setTargetCategory] = useState("points");
+  const [targetCategory, setTargetCategory] = useState(defaultCategory);
   const [targetValue, setTargetValue] = useState("");
   const [deadline, setDeadline] = useState("");
   const [feedback, setFeedback] = useState("");
 
   const games = player?.games || [];
+  
+  // Reset category when sport changes
+  useEffect(() => {
+    setTargetCategory(defaultCategory);
+  }, [sport, defaultCategory]);
 
   const resetForm = () => {
     setTitle("");
     setDescription("");
     setCoachName("");
     setTargetType("stat_min");
-    setTargetCategory("points");
+    setTargetCategory(defaultCategory);
     setTargetValue("");
     setDeadline("");
     setFeedback("");
@@ -312,7 +324,7 @@ export function CoachGoals({ playerId }: CoachGoalsProps) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {TARGET_CATEGORIES.map((cat) => (
+              {targetCategories.map((cat) => (
                 <SelectItem key={cat.value} value={cat.value}>
                   {cat.label}
                 </SelectItem>

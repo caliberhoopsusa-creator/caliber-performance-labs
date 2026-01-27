@@ -53,6 +53,14 @@ Preferred communication style: Simple, everyday language.
 - **Performance Tools**: Live game mode for real-time stat entry, interactive shot charts, off-court workout tracker, and advanced metric calculations (True Shooting %, PER, etc.).
 - **Scheduling**: Practice scheduler and calendar for managing events.
 - **Coach Features**: Team dashboard, shot charts, game notes, lineup analysis, practice tracking with live practice mode (real-time attendance check-in, drill scoring, timer), AI-generated drill recommendations, and comprehensive player report cards. Live Practice is accessible from both Practice Tracker and Team Hub.
+- **Error Boundary**: Class-based React Error Boundary component (`ErrorBoundary.tsx`) that catches JavaScript errors in child components and displays a futuristic error UI with:
+  - Graceful error handling with "Try Again" button to reset state
+  - Console logging for debugging
+  - Cyan-themed error screen matching app's sci-fi aesthetic
+  - Cyber grid background, ambient glow spots, corner accents, and gradient text
+  - Error details visible in development mode
+  - "Go Home" navigation button for users to return to dashboard
+  - Fully wrapped around app root for comprehensive error coverage
 - **UI/UX**: Sleek futuristic dark theme with sci-fi inspired aesthetics, cyan accent color, cyber grid background pattern, and advanced glow effects. Features include:
   - Futuristic cards: Gradient backgrounds with cyan-tinted borders, top accent lines, multi-layer shadows
   - Sidebar: Deep gradient background with cyber grid overlay, cyan glow on active items, left border indicators
