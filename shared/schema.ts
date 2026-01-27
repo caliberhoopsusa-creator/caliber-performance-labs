@@ -539,6 +539,44 @@ export const FOOTBALL_SKILL_BADGE_TYPES = {
 
 export type FootballSkillBadgeType = keyof typeof FOOTBALL_SKILL_BADGE_TYPES;
 
+// Position-specific badge mappings for basketball
+export const BASKETBALL_POSITION_BADGES: Record<string, SkillBadgeType[]> = {
+  Guard: ['sharpshooter', 'pure_passer', 'bucket_getter', 'pickpocket'],
+  Wing: ['sharpshooter', 'bucket_getter', 'pickpocket', 'glass_cleaner'],
+  Big: ['glass_cleaner', 'rim_protector', 'bucket_getter'],
+};
+
+// Position-specific badge mappings for football
+export const FOOTBALL_POSITION_BADGES: Record<string, FootballSkillBadgeType[]> = {
+  QB: ['gunslinger'],
+  RB: ['workhorse'],
+  WR: ['deep_threat'],
+  TE: ['deep_threat'],
+  OL: ['iron_wall'],
+  DL: ['sack_artist'],
+  LB: ['sack_artist', 'ball_hawk'],
+  DB: ['ball_hawk'],
+  K: [],  // Kickers don't have skill badges currently
+  P: [],  // Punters don't have skill badges currently
+};
+
+// Get relevant badges for a position (for multi-position support, returns union of badges)
+export function getBadgesForPosition(sport: 'basketball' | 'football', positions: string | string[]): string[] {
+  const positionList = Array.isArray(positions) 
+    ? positions 
+    : positions.split(',').map(p => p.trim());
+  
+  const badgeMapping = sport === 'football' ? FOOTBALL_POSITION_BADGES : BASKETBALL_POSITION_BADGES;
+  const relevantBadges = new Set<string>();
+  
+  for (const pos of positionList) {
+    const badges = badgeMapping[pos] || [];
+    badges.forEach(b => relevantBadges.add(b));
+  }
+  
+  return Array.from(relevantBadges);
+}
+
 export type SkillBadge = typeof skillBadges.$inferSelect;
 export type InsertSkillBadge = {
   playerId: number;

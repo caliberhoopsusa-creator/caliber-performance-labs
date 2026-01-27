@@ -1482,7 +1482,7 @@ export default function PlayerDetail() {
             <h3 className="text-lg font-bold font-display text-white mb-4 flex items-center gap-2">
               <Medal className="w-5 h-5 text-primary" /> Skill Badges
             </h3>
-            <SkillBadges playerId={player.id} />
+            <SkillBadges playerId={player.id} position={player.position} />
           </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

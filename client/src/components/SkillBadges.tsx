@@ -1,6 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { usePlayerSkillBadges, type SkillBadge } from "@/hooks/use-basketball";
+import { useSport } from "@/components/SportToggle";
+import { getBadgesForPosition } from "@shared/schema";
 import { Target, Crosshair, Zap, Shield, Hand, Grab, Flame, Footprints, Radar, Eye, Swords, Castle } from "lucide-react";
 
 const SKILL_ICONS: Record<string, typeof Target> = {
@@ -202,10 +204,22 @@ function SkillBadgeCard({ badge, index }: SkillBadgeCardProps) {
 
 interface SkillBadgesProps {
   playerId: number;
+  position?: string;
 }
 
-export function SkillBadges({ playerId }: SkillBadgesProps) {
+export function SkillBadges({ playerId, position }: SkillBadgesProps) {
+  const sport = useSport();
   const { data: skillBadges, isLoading } = usePlayerSkillBadges(playerId);
+  
+  // Get position-relevant badges
+  const relevantBadgeTypes = position 
+    ? getBadgesForPosition(sport, position) 
+    : null;
+  
+  // Filter badges by position relevance
+  const filteredBadges = relevantBadgeTypes && skillBadges
+    ? skillBadges.filter(b => relevantBadgeTypes.includes(b.skillType))
+    : skillBadges;
 
   if (isLoading) {
     return (
@@ -222,12 +236,12 @@ export function SkillBadges({ playerId }: SkillBadgesProps) {
     );
   }
 
-  if (!skillBadges || skillBadges.length === 0) {
+  if (!filteredBadges || filteredBadges.length === 0) {
     return null;
   }
 
-  const unlockedBadges = skillBadges.filter(b => b.currentLevel !== 'none');
-  const lockedBadges = skillBadges.filter(b => b.currentLevel === 'none');
+  const unlockedBadges = filteredBadges.filter(b => b.currentLevel !== 'none');
+  const lockedBadges = filteredBadges.filter(b => b.currentLevel === 'none');
 
   return (
     <Card className="glass-card p-6 border-white/5 overflow-hidden" data-testid="skill-badges">
@@ -241,7 +255,7 @@ export function SkillBadges({ playerId }: SkillBadgesProps) {
           <h3 className="text-lg font-bold font-display text-foreground uppercase tracking-wider">Skill Badges</h3>
           {unlockedBadges.length > 0 && (
             <span className="ml-auto text-sm font-medium px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
-              {unlockedBadges.length}/{skillBadges.length}
+              {unlockedBadges.length}/{filteredBadges.length}
             </span>
           )}
         </div>
