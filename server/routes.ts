@@ -3,7 +3,7 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, headToHeadChallenges, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions } from "@shared/schema";
+import { players, games, headToHeadChallenges, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { GoogleGenAI } from "@google/genai";
 import multer from "multer";
@@ -1577,6 +1577,43 @@ async function checkPerformanceAlerts(playerId: number, gameId: number, currentG
   }
 }
 
+// Award coins to a user and record the transaction
+async function awardCoins(
+  userId: number, 
+  amount: number, 
+  type: string, 
+  description: string,
+  relatedItemId?: number
+): Promise<number> {
+  const { users } = await import("@shared/models/auth");
+  const { eq } = await import("drizzle-orm");
+  
+  // Update user's coin balance
+  const [user] = await db.select().from(users).where(eq(users.id, userId));
+  if (!user) return 0;
+  
+  const newBalance = (user.coinBalance || 0) + amount;
+  await db.update(users)
+    .set({ coinBalance: newBalance })
+    .where(eq(users.id, userId));
+  
+  // Record transaction
+  await db.insert(coinTransactions).values({
+    userId,
+    amount,
+    type,
+    description,
+    relatedItemId,
+  });
+  
+  return newBalance;
+}
+
+// Get coins to award based on reward type
+function getCoinsForAction(actionType: keyof typeof COIN_REWARDS): number {
+  return COIN_REWARDS[actionType] || 0;
+}
+
 // Update activity streak (for consecutive days of activity)
 async function updateActivityStreak(playerId: number, streakType: string): Promise<{ streakCount: number; isNewMilestone: boolean; milestoneReached?: number }> {
   const streak = await storage.getOrCreateActivityStreak(playerId, streakType);
@@ -2203,6 +2240,27 @@ export async function registerRoutes(
       // Award XP and check for tier promotion
       const { player: updatedPlayer, newTier } = await storage.addPlayerXp(input.playerId, xpEarned);
       
+      // --- Coin Rewards ---
+      let coinsEarned = 0;
+      if (player.userId) {
+        const userId = parseInt(player.userId);
+        if (!isNaN(userId)) {
+          // Base coins for logging a game
+          coinsEarned += getCoinsForAction('game_logged');
+          
+          // Grade bonuses
+          if (grade === 'A+') coinsEarned += getCoinsForAction('a_plus_grade');
+          else if (grade.startsWith('A')) coinsEarned += getCoinsForAction('a_grade');
+          
+          // Badge bonuses
+          coinsEarned += awardedBadges.length * getCoinsForAction('badge_earned');
+          
+          if (coinsEarned > 0) {
+            await awardCoins(userId, coinsEarned, 'earned_game', `Earned ${coinsEarned} coins from game vs ${input.opponent}`);
+          }
+        }
+      }
+      
       // Award tier promotion badge if promoted
       if (newTier) {
         let tierBadge: string | null = null;
@@ -2220,6 +2278,16 @@ export async function registerRoutes(
             headline: `${player?.name || 'Player'} reached ${newTier} tier!`,
             subtext: `Tier promotion earned with ${updatedPlayer.totalXp} XP`,
           });
+          
+          // Award tier promotion coins
+          if (player.userId) {
+            const userId = parseInt(player.userId);
+            if (!isNaN(userId)) {
+              const tierCoins = getCoinsForAction('tier_up');
+              await awardCoins(userId, tierCoins, 'earned_tier_up', `Earned ${tierCoins} coins for reaching ${newTier} tier!`);
+              coinsEarned += tierCoins;
+            }
+          }
         }
       }
       
@@ -2235,6 +2303,7 @@ export async function registerRoutes(
       res.status(201).json({ 
         ...game, 
         xpEarned, 
+        coinsEarned,
         newTier, 
         totalXp: updatedPlayer.totalXp, 
         currentTier: updatedPlayer.currentTier,
@@ -2346,11 +2415,32 @@ export async function registerRoutes(
   app.patch('/api/goals/:id', async (req, res) => {
     const goalId = Number(req.params.id);
     const updates = req.body;
-    const updatedGoal = await storage.updateGoal(goalId, updates);
-    if (!updatedGoal) {
+    
+    // Get the existing goal to check if it's being completed
+    const existingGoal = await storage.getGoal(goalId);
+    if (!existingGoal) {
       return res.status(404).json({ message: 'Goal not found' });
     }
-    res.json(updatedGoal);
+    
+    const updatedGoal = await storage.updateGoal(goalId, updates);
+    if (!updatedGoal) {
+      return res.status(500).json({ message: 'Failed to update goal' });
+    }
+    
+    // Award coins if goal is being marked as completed for the first time
+    let coinsAwarded = 0;
+    if (updates.completed === true && !existingGoal.completed) {
+      const player = await storage.getPlayer(existingGoal.playerId);
+      if (player?.userId) {
+        const userId = parseInt(player.userId);
+        if (!isNaN(userId)) {
+          coinsAwarded = getCoinsForAction('goal_completed');
+          await awardCoins(userId, coinsAwarded, 'earned_goal', `Completed goal: ${existingGoal.title}`);
+        }
+      }
+    }
+    
+    res.json({ ...updatedGoal, coinsAwarded });
   });
 
   app.delete('/api/goals/:id', async (req, res) => {
@@ -2399,9 +2489,34 @@ export async function registerRoutes(
     
     const result = await updateActivityStreak(playerId, streakType);
     
-    // Award daily login XP only if this is first activity today
+    // Award daily login XP and coins only if this is first activity today
+    let coinsAwarded = 0;
     if (!alreadyActiveToday) {
       await storage.addPlayerXp(playerId, XP_REWARDS.daily_login);
+      
+      // Award daily login coins
+      if (player.userId) {
+        const userId = parseInt(player.userId);
+        if (!isNaN(userId)) {
+          coinsAwarded = getCoinsForAction('daily_login');
+          
+          // Add streak bonus coins if milestone reached
+          if (result.isNewMilestone && result.milestoneReached) {
+            const streakKey = `streak_bonus_${result.milestoneReached}` as keyof typeof COIN_REWARDS;
+            if (COIN_REWARDS[streakKey]) {
+              coinsAwarded += COIN_REWARDS[streakKey];
+            }
+          }
+          
+          if (coinsAwarded > 0) {
+            await awardCoins(userId, coinsAwarded, 'earned_activity', 
+              result.isNewMilestone 
+                ? `Earned ${coinsAwarded} coins for ${result.milestoneReached}-day streak!`
+                : `Daily login bonus: ${coinsAwarded} coins`
+            );
+          }
+        }
+      }
     }
     
     const updatedPlayer = await storage.getPlayer(playerId);
@@ -2413,6 +2528,7 @@ export async function registerRoutes(
       totalXp: updatedPlayer?.totalXp || 0,
       currentTier: updatedPlayer?.currentTier || 'Rookie',
       xpAwarded: alreadyActiveToday ? 0 : XP_REWARDS.daily_login,
+      coinsAwarded,
     });
   });
 

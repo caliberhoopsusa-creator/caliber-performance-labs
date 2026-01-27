@@ -112,6 +112,7 @@ export interface IStorage {
 
   // Goals
   createGoal(goal: InsertGoal): Promise<Goal>;
+  getGoal(id: number): Promise<Goal | undefined>;
   getPlayerGoals(playerId: number): Promise<Goal[]>;
   updateGoal(id: number, updates: Partial<Goal>): Promise<Goal | undefined>;
   deleteGoal(id: number): Promise<void>;
@@ -635,6 +636,11 @@ export class DatabaseStorage implements IStorage {
   async createGoal(goal: InsertGoal): Promise<Goal> {
     const [newGoal] = await db.insert(goals).values(goal).returning();
     return newGoal;
+  }
+
+  async getGoal(id: number): Promise<Goal | undefined> {
+    const [goal] = await db.select().from(goals).where(eq(goals.id, id));
+    return goal;
   }
 
   async getPlayerGoals(playerId: number): Promise<Goal[]> {
@@ -2372,17 +2378,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getRecruitPosts(filters?: { level?: string; location?: string }): Promise<RecruitPost[]> {
-    let query = db.select().from(recruitPosts).where(eq(recruitPosts.isActive, true));
+    const conditions = [eq(recruitPosts.isActive, true)];
     
     if (filters?.level) {
-      query = query.where(eq(recruitPosts.level, filters.level));
+      conditions.push(eq(recruitPosts.level, filters.level));
     }
     
     if (filters?.location) {
-      query = query.where(eq(recruitPosts.location, filters.location));
+      conditions.push(eq(recruitPosts.location, filters.location));
     }
     
-    return await query.orderBy(desc(recruitPosts.createdAt));
+    return await db.select().from(recruitPosts)
+      .where(and(...conditions))
+      .orderBy(desc(recruitPosts.createdAt));
   }
 
   async getRecruitPost(id: number): Promise<RecruitPost | undefined> {
