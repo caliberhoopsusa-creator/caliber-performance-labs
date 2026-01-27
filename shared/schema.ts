@@ -381,6 +381,45 @@ export const GOAL_PRESETS = [
   { title: "Dish 4+ assists per game", targetType: "stat_min", targetCategory: "assists", targetValue: 4 },
 ] as const;
 
+// Football-specific goal presets
+export const FOOTBALL_GOAL_PRESETS = [
+  { title: "Average B+ Defense", targetType: "grade_avg", targetCategory: "defense", targetValue: 85 },
+  { title: "Throw 200+ passing yards", targetType: "stat_min", targetCategory: "passingYards", targetValue: 200 },
+  { title: "Rush for 100+ yards", targetType: "stat_min", targetCategory: "rushingYards", targetValue: 100 },
+  { title: "Catch 80+ receiving yards", targetType: "stat_min", targetCategory: "receivingYards", targetValue: 80 },
+  { title: "Get 5+ tackles per game", targetType: "stat_min", targetCategory: "tackles", targetValue: 5 },
+  { title: "Zero interceptions thrown", targetType: "stat_max", targetCategory: "interceptions", targetValue: 0 },
+] as const;
+
+// Goal categories by sport
+export const BASKETBALL_GOAL_CATEGORIES = [
+  { value: "points", label: "Points" },
+  { value: "rebounds", label: "Rebounds" },
+  { value: "assists", label: "Assists" },
+  { value: "steals", label: "Steals" },
+  { value: "blocks", label: "Blocks" },
+  { value: "turnovers", label: "Turnovers" },
+  { value: "defense", label: "Defense Rating" },
+  { value: "overall", label: "Overall Grade" },
+] as const;
+
+export const FOOTBALL_GOAL_CATEGORIES = [
+  { value: "passingYards", label: "Passing Yards" },
+  { value: "passingTouchdowns", label: "Passing TDs" },
+  { value: "rushingYards", label: "Rushing Yards" },
+  { value: "rushingTouchdowns", label: "Rushing TDs" },
+  { value: "receivingYards", label: "Receiving Yards" },
+  { value: "receivingTouchdowns", label: "Receiving TDs" },
+  { value: "receptions", label: "Receptions" },
+  { value: "tackles", label: "Tackles" },
+  { value: "sacks", label: "Sacks" },
+  { value: "defensiveInterceptions", label: "Interceptions (DEF)" },
+  { value: "interceptions", label: "INTs Thrown" },
+  { value: "fumbles", label: "Fumbles" },
+  { value: "defense", label: "Defense Rating" },
+  { value: "overall", label: "Overall Grade" },
+] as const;
+
 export const BADGE_DEFINITIONS = {
   twenty_piece: { name: "20-Piece", description: "Scored 20+ points in a game" },
   thirty_bomb: { name: "30-Bomb", description: "Scored 30+ points in a game" },
