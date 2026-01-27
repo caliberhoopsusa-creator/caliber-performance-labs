@@ -189,7 +189,7 @@ function ScoutPlayerCard({ player, sport }: ScoutPlayerCardProps) {
 
           <div className="mt-4 pt-3 border-t border-border/50">
             {isFootball ? (
-              <div className="grid grid-cols-4 gap-2 text-center">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
                 {hasPos(['QB']) ? (
                   <>
                     <div>
@@ -345,7 +345,7 @@ function ScoutPlayerCard({ player, sport }: ScoutPlayerCardProps) {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-5 gap-2 text-center">
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 text-center">
                 <div>
                   <div className="text-lg font-bold text-primary">{(player.ppg || 0).toFixed(1)}</div>
                   <div className="text-xs text-muted-foreground">PPG</div>
@@ -472,19 +472,44 @@ function ScoutPlayerCard({ player, sport }: ScoutPlayerCardProps) {
 
 function PlayerCardSkeleton() {
   return (
-    <Card className="border-border/50 bg-card/80">
+    <Card className="border-cyan-500/[0.08] bg-gradient-to-br from-[hsl(220,25%,8%)] via-[hsl(220,20%,6%)] to-[hsl(220,25%,5%)] relative overflow-hidden">
+      <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent" />
       <CardContent className="p-4">
         <div className="flex gap-4">
-          <Skeleton className="w-16 h-16 rounded-lg" />
+          <Skeleton className="w-16 h-16 rounded-lg skeleton-cyan" />
           <div className="flex-1 space-y-3">
-            <Skeleton className="h-5 w-3/4" />
-            <Skeleton className="h-4 w-1/2" />
-            <div className="flex gap-4">
-              <Skeleton className="h-8 w-12" />
-              <Skeleton className="h-8 w-12" />
-              <Skeleton className="h-8 w-12" />
+            <Skeleton className="h-5 w-3/4 skeleton-cyan" />
+            <Skeleton className="h-4 w-1/2 skeleton-premium" />
+            <div className="flex flex-wrap gap-2">
+              <Skeleton className="h-5 w-20 rounded-full skeleton-premium" />
+              <Skeleton className="h-5 w-16 rounded-full skeleton-premium" />
             </div>
           </div>
+          <Skeleton className="h-10 w-10 rounded-full skeleton-cyan" />
+        </div>
+        <div className="mt-4 pt-3 border-t border-cyan-500/[0.06]">
+          <div className="grid grid-cols-4 gap-2 text-center">
+            <div className="space-y-1">
+              <Skeleton className="h-6 w-10 mx-auto skeleton-cyan" />
+              <Skeleton className="h-3 w-8 mx-auto skeleton-premium" />
+            </div>
+            <div className="space-y-1">
+              <Skeleton className="h-6 w-10 mx-auto skeleton-cyan" />
+              <Skeleton className="h-3 w-8 mx-auto skeleton-premium" />
+            </div>
+            <div className="space-y-1">
+              <Skeleton className="h-6 w-10 mx-auto skeleton-cyan" />
+              <Skeleton className="h-3 w-8 mx-auto skeleton-premium" />
+            </div>
+            <div className="space-y-1">
+              <Skeleton className="h-6 w-10 mx-auto skeleton-cyan" />
+              <Skeleton className="h-3 w-8 mx-auto skeleton-premium" />
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-1.5 mt-3">
+          <Skeleton className="h-5 w-16 rounded-full skeleton-premium" />
+          <Skeleton className="h-5 w-20 rounded-full skeleton-premium" />
         </div>
       </CardContent>
     </Card>

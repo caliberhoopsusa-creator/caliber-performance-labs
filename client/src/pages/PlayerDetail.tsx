@@ -85,6 +85,7 @@ import { z } from "zod";
 import { AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { FootballMetrics } from "@/components/FootballMetrics";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const BADGE_ICONS: Record<string, any> = {
   twenty_piece: Target,
@@ -175,6 +176,96 @@ function getInitials(name: string): string {
     .join('')
     .toUpperCase()
     .slice(0, 2);
+}
+
+function PlayerDetailSkeleton() {
+  return (
+    <div className="space-y-6 animate-fade-in pb-20 w-full">
+      <div className="h-4 w-24 skeleton-premium rounded" />
+      
+      <Card className="p-4 md:p-8 relative overflow-hidden">
+        <div className="flex flex-col gap-6">
+          <div className="flex items-start gap-4 md:gap-6">
+            <Skeleton className="w-16 h-16 md:w-24 md:h-24 rounded-full skeleton-cyan" />
+            <div className="flex-1 space-y-3">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-8 w-12 skeleton-cyan rounded" />
+                <Skeleton className="h-6 w-16 rounded" />
+              </div>
+              <Skeleton className="h-8 w-48 skeleton-cyan rounded" />
+              <div className="flex gap-2">
+                <Skeleton className="h-4 w-12 rounded" />
+                <Skeleton className="h-4 w-24 rounded" />
+                <Skeleton className="h-4 w-16 rounded" />
+              </div>
+              <div className="flex gap-3 mt-3">
+                <Skeleton className="h-8 w-20 rounded-lg skeleton-cyan" />
+                <Skeleton className="h-8 w-20 rounded-lg" />
+                <Skeleton className="h-8 w-20 rounded-lg" />
+              </div>
+            </div>
+            <div className="hidden md:flex flex-col items-center gap-2">
+              <Skeleton className="h-3 w-12 rounded" />
+              <Skeleton className="h-16 w-16 rounded-full skeleton-cyan" />
+            </div>
+          </div>
+          
+          <div className="flex justify-center md:hidden">
+            <div className="flex flex-col items-center gap-2 p-4 rounded-xl border border-cyan-500/[0.08]">
+              <Skeleton className="h-3 w-20 rounded" />
+              <Skeleton className="h-12 w-12 rounded-full skeleton-cyan" />
+            </div>
+          </div>
+          
+          <div className="flex flex-wrap justify-center md:justify-start gap-2">
+            <Skeleton className="h-9 w-24 rounded-lg" />
+            <Skeleton className="h-9 w-20 rounded-lg" />
+            <Skeleton className="h-9 w-24 rounded-lg" />
+          </div>
+        </div>
+      </Card>
+
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-full max-w-md rounded-lg" />
+        
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} className="p-4">
+              <Skeleton className="h-3 w-16 mb-2 rounded" />
+              <Skeleton className="h-8 w-12 skeleton-cyan rounded" />
+            </Card>
+          ))}
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="p-6">
+            <Skeleton className="h-5 w-32 mb-4 skeleton-cyan rounded" />
+            <Skeleton className="h-48 w-full rounded-lg" />
+          </Card>
+          <Card className="p-6">
+            <Skeleton className="h-5 w-32 mb-4 skeleton-cyan rounded" />
+            <Skeleton className="h-48 w-full rounded-lg" />
+          </Card>
+        </div>
+        
+        <Card className="p-6">
+          <Skeleton className="h-5 w-40 mb-4 skeleton-cyan rounded" />
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center gap-4 p-3 rounded-lg border border-white/5">
+                <Skeleton className="h-10 w-10 rounded-lg skeleton-cyan" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-32 rounded" />
+                  <Skeleton className="h-3 w-24 rounded" />
+                </div>
+                <Skeleton className="h-8 w-12 rounded skeleton-cyan" />
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
 }
 
 interface CoachToolsSectionProps {
@@ -992,11 +1083,7 @@ export default function PlayerDetail() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex h-full items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <PlayerDetailSkeleton />;
   }
 
   if (!player) {
