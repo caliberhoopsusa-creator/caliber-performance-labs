@@ -13,6 +13,7 @@ import { OnboardingTour } from "@/components/OnboardingTour";
 import { GuidedOnboarding } from "@/components/GuidedOnboarding";
 import { SportProvider } from "@/components/SportToggle";
 import { PageTransition } from "@/components/PageTransition";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { useAuth } from "@/hooks/use-auth";
 import { useOffline } from "@/hooks/use-offline";
 import { useToast } from "@/hooks/use-toast";
@@ -273,16 +274,18 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <SportProvider>
-            <Toaster />
-            <InstallPrompt />
-            <Switch>
-              <Route path="/admin" component={Admin} />
-              <Route>
-                <MainRouter />
-              </Route>
-            </Switch>
-          </SportProvider>
+          <ThemeProvider>
+            <SportProvider>
+              <Toaster />
+              <InstallPrompt />
+              <Switch>
+                <Route path="/admin" component={Admin} />
+                <Route>
+                  <MainRouter />
+                </Route>
+              </Switch>
+            </SportProvider>
+          </ThemeProvider>
         </TooltipProvider>
       </QueryClientProvider>
     </ErrorBoundary>

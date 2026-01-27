@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { useTheme } from "@/contexts/ThemeContext";
 import { motion } from "framer-motion";
 import { 
   Palette, 
@@ -36,6 +37,7 @@ type ShopItemWithOwnership = ShopItem & { owned: boolean; equipped: boolean };
 export default function Shop() {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { refreshTheme } = useTheme();
   const [selectedCategory, setSelectedCategory] = useState<string>("theme");
 
   const { data: shopItems = [], isLoading: itemsLoading } = useQuery<ShopItem[]>({
@@ -75,13 +77,18 @@ export default function Shop() {
   });
 
   const equipMutation = useMutation({
-    mutationFn: async ({ itemId, equipped }: { itemId: number; equipped: boolean }) => {
+    mutationFn: async ({ itemId, equipped, category }: { itemId: number; equipped: boolean; category: string }) => {
       const res = await apiRequest("POST", "/api/shop/equip", { itemId, equipped });
-      return res.json();
+      return { json: await res.json(), category };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/shop/inventory"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      
+      if (data.category === 'theme') {
+        refreshTheme();
+      }
+      
       toast({
         title: "Item equipped!",
         description: "Your customization has been applied.",
@@ -212,7 +219,7 @@ export default function Shop() {
                   item={item}
                   coinBalance={coinBalance}
                   onPurchase={() => purchaseMutation.mutate(item.id)}
-                  onEquip={(equipped) => equipMutation.mutate({ itemId: item.id, equipped })}
+                  onEquip={(equipped) => equipMutation.mutate({ itemId: item.id, equipped, category: item.category })}
                   isPurchasing={purchaseMutation.isPending}
                   isEquipping={equipMutation.isPending}
                 />

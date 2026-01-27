@@ -9501,6 +9501,53 @@ Respond in this exact JSON format:
     }
   });
 
+  // GET /api/shop/active-theme - Get user's currently active theme
+  app.get('/api/shop/active-theme', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      if (!user.activeThemeId) {
+        // Return default cyan theme
+        return res.json({ 
+          active: false,
+          theme: null,
+          accentColor: '#00D4FF' // Default Caliber cyan
+        });
+      }
+
+      // Get the active theme details
+      const [theme] = await db.select()
+        .from(shopItems)
+        .where(eq(shopItems.id, user.activeThemeId));
+
+      if (!theme) {
+        return res.json({ 
+          active: false,
+          theme: null,
+          accentColor: '#00D4FF'
+        });
+      }
+
+      res.json({
+        active: true,
+        theme: {
+          id: theme.id,
+          name: theme.name,
+          type: theme.type,
+          value: theme.value,
+          category: theme.category,
+        },
+        accentColor: theme.value
+      });
+    } catch (error) {
+      console.error('Error fetching active theme:', error);
+      res.status(500).json({ message: "Failed to fetch active theme" });
+    }
+  });
+
   // POST /api/shop/coins/convert-xp - Convert XP to coins (stub for future use)
   app.post('/api/shop/coins/convert-xp', isAuthenticated, async (req: any, res) => {
     try {
