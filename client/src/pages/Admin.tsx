@@ -186,6 +186,7 @@ interface User {
   stripeCustomerId: string | null;
   stripeSubscriptionId: string | null;
   subscriptionStatus: string | null;
+  coinBalance: number | null;
   createdAt: string | null;
 }
 
@@ -838,13 +839,50 @@ function CouponsTab() {
 }
 
 function UsersTab() {
-  const { data, isLoading } = useQuery<{ users: User[] }>({
+  const { toast } = useToast();
+  const [giveCoinsOpen, setGiveCoinsOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [coinAmount, setCoinAmount] = useState("");
+  const [coinReason, setCoinReason] = useState("");
+
+  const { data, isLoading, refetch } = useQuery<{ users: User[] }>({
     queryKey: ["/api/admin/users"],
     queryFn: async () => {
       const res = await adminFetch("/api/admin/users");
       return res.json();
     },
   });
+
+  const giveCoinsMutation = useMutation({
+    mutationFn: async ({ userId, amount, reason }: { userId: string; amount: number; reason: string }) => {
+      const res = await adminFetch("/api/admin/give-coins", {
+        method: "POST",
+        body: JSON.stringify({ userId, amount, reason }),
+      });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({ title: "Success", description: data.message });
+      setGiveCoinsOpen(false);
+      setSelectedUser(null);
+      setCoinAmount("");
+      setCoinReason("");
+      refetch();
+    },
+    onError: (err: any) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const handleGiveCoins = () => {
+    if (!selectedUser || !coinAmount) return;
+    const amount = parseInt(coinAmount, 10);
+    if (isNaN(amount) || amount <= 0) {
+      toast({ title: "Error", description: "Enter a valid positive amount", variant: "destructive" });
+      return;
+    }
+    giveCoinsMutation.mutate({ userId: selectedUser.id, amount, reason: coinReason });
+  };
 
   if (isLoading) {
     return (
@@ -862,49 +900,116 @@ function UsersTab() {
   };
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Email</TableHead>
-          <TableHead>Role</TableHead>
-          <TableHead>Subscription</TableHead>
-          <TableHead>Stripe Customer</TableHead>
-          <TableHead>Created</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {users.map((user, idx) => (
-          <TableRow key={user.id} data-testid={`row-user-${idx}`}>
-            <TableCell className="font-medium">{user.email || "-"}</TableCell>
-            <TableCell>
-              {user.role ? (
-                <Badge variant="outline">{user.role}</Badge>
-              ) : (
-                <span className="text-muted-foreground">-</span>
-              )}
-            </TableCell>
-            <TableCell>
-              {user.subscriptionStatus ? (
-                <Badge variant={user.subscriptionStatus === "active" ? "default" : "secondary"}>
-                  {user.subscriptionStatus}
-                </Badge>
-              ) : (
-                <span className="text-muted-foreground">None</span>
-              )}
-            </TableCell>
-            <TableCell className="font-mono text-xs">{user.stripeCustomerId || "-"}</TableCell>
-            <TableCell>{formatDate(user.createdAt)}</TableCell>
-          </TableRow>
-        ))}
-        {users.length === 0 && (
+    <>
+      <Table>
+        <TableHeader>
           <TableRow>
-            <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-              No users found
-            </TableCell>
+            <TableHead>Email</TableHead>
+            <TableHead>Role</TableHead>
+            <TableHead>Coins</TableHead>
+            <TableHead>Subscription</TableHead>
+            <TableHead>Created</TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
-        )}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {users.map((user, idx) => (
+            <TableRow key={user.id} data-testid={`row-user-${idx}`}>
+              <TableCell className="font-medium">{user.email || "-"}</TableCell>
+              <TableCell>
+                {user.role ? (
+                  <Badge variant="outline">{user.role}</Badge>
+                ) : (
+                  <span className="text-muted-foreground">-</span>
+                )}
+              </TableCell>
+              <TableCell>
+                <span className="font-medium text-yellow-500">{user.coinBalance ?? 0}</span>
+              </TableCell>
+              <TableCell>
+                {user.subscriptionStatus ? (
+                  <Badge variant={user.subscriptionStatus === "active" ? "default" : "secondary"}>
+                    {user.subscriptionStatus}
+                  </Badge>
+                ) : (
+                  <span className="text-muted-foreground">None</span>
+                )}
+              </TableCell>
+              <TableCell>{formatDate(user.createdAt)}</TableCell>
+              <TableCell>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedUser(user);
+                    setGiveCoinsOpen(true);
+                  }}
+                  data-testid={`btn-give-coins-${idx}`}
+                >
+                  <Plus className="w-3 h-3 mr-1" />
+                  Give Coins
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+          {users.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                No users found
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+
+      <Dialog open={giveCoinsOpen} onOpenChange={setGiveCoinsOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Give Coins</DialogTitle>
+            <DialogDescription>
+              Grant coins to {selectedUser?.email || "user"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="coin-amount">Amount</Label>
+              <Input
+                id="coin-amount"
+                type="number"
+                min="1"
+                placeholder="100"
+                value={coinAmount}
+                onChange={(e) => setCoinAmount(e.target.value)}
+                data-testid="input-coin-amount"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="coin-reason">Reason (optional)</Label>
+              <Input
+                id="coin-reason"
+                placeholder="Bonus for..."
+                value={coinReason}
+                onChange={(e) => setCoinReason(e.target.value)}
+                data-testid="input-coin-reason"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setGiveCoinsOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleGiveCoins} 
+              disabled={giveCoinsMutation.isPending}
+              data-testid="btn-confirm-give-coins"
+            >
+              {giveCoinsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Give Coins
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 

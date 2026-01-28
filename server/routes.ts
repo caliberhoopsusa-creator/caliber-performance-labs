@@ -7505,7 +7505,7 @@ Respond in this exact JSON format:
   app.get('/api/admin/users', isAdmin, async (req, res) => {
     try {
       const result = await db.execute(sql`
-        SELECT id, email, role, "stripeCustomerId", "stripeSubscriptionId", "subscriptionStatus", "createdAt"
+        SELECT id, email, role, "stripeCustomerId", "stripeSubscriptionId", "subscriptionStatus", "coinBalance", "createdAt"
         FROM users
         ORDER BY "createdAt" DESC
       `);
@@ -7513,6 +7513,46 @@ Respond in this exact JSON format:
     } catch (err) {
       console.error('Admin get users error:', err);
       res.status(500).json({ error: 'Could not fetch users' });
+    }
+  });
+
+  // Admin give coins to a user
+  app.post('/api/admin/give-coins', isAdmin, async (req, res) => {
+    try {
+      const { userId, amount, reason } = req.body;
+      
+      if (!userId || !amount || typeof amount !== 'number' || amount <= 0) {
+        return res.status(400).json({ error: 'Valid userId and positive amount are required' });
+      }
+
+      // Update user's coin balance
+      await db.update(users)
+        .set({ 
+          coinBalance: sql`COALESCE(${users.coinBalance}, 0) + ${amount}` 
+        })
+        .where(eq(users.id, userId));
+
+      // Record the transaction
+      await db.insert(coinTransactions).values({
+        userId,
+        amount,
+        type: 'awarded',
+        description: reason || `Admin granted ${amount} coins`,
+      });
+
+      // Get updated balance
+      const [updatedUser] = await db.select({ coinBalance: users.coinBalance })
+        .from(users)
+        .where(eq(users.id, userId));
+
+      res.json({ 
+        success: true, 
+        message: `Granted ${amount} coins to user`,
+        newBalance: updatedUser?.coinBalance || amount
+      });
+    } catch (err: any) {
+      console.error('Admin give coins error:', err);
+      res.status(500).json({ error: err.message || 'Could not give coins' });
     }
   });
 
