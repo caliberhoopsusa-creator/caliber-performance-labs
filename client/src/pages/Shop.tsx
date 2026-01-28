@@ -24,6 +24,18 @@ import { cn } from "@/lib/utils";
 import type { ShopItem, UserInventory, CoinPackage } from "@shared/schema";
 import { SHOP_CATEGORIES, RARITY_COLORS } from "@shared/schema";
 
+import coinsStarterImg from "@/assets/images/coins-starter.png";
+import coinsValueImg from "@/assets/images/coins-value.png";
+import coinsSuperImg from "@/assets/images/coins-super.png";
+import coinsMegaImg from "@/assets/images/coins-mega.png";
+
+const COIN_PACKAGE_IMAGES: Record<string, string> = {
+  coins_100: coinsStarterImg,
+  coins_500: coinsValueImg,
+  coins_1200: coinsSuperImg,
+  coins_3000: coinsMegaImg,
+};
+
 const CATEGORY_ICONS: Record<string, typeof Palette> = {
   theme: Palette,
   profile_skin: User,
@@ -243,11 +255,18 @@ export default function Shop() {
               )}
               
               <CardContent className={cn("p-4 space-y-3", pkg.popular && "pt-6")}>
+                <div className="flex justify-center">
+                  <img 
+                    src={COIN_PACKAGE_IMAGES[pkg.id]} 
+                    alt={pkg.name}
+                    className="w-16 h-16 object-contain"
+                  />
+                </div>
                 <div className="text-center space-y-1">
                   <h3 className="font-semibold text-sm">{pkg.name}</h3>
                   <div className="flex items-center justify-center gap-1">
-                    <Coins className="w-5 h-5 text-yellow-500" />
-                    <span className="text-2xl font-bold text-yellow-400">{pkg.coins.toLocaleString()}</span>
+                    <Coins className="w-4 h-4 text-yellow-500" />
+                    <span className="text-xl font-bold text-yellow-400">{pkg.coins.toLocaleString()}</span>
                   </div>
                 </div>
                 
