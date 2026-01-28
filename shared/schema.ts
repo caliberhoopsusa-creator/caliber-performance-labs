@@ -1744,10 +1744,10 @@ export const COIN_REWARDS = {
 
 // Coin packages available for purchase
 export const COIN_PACKAGES = [
-  { id: "coins_100", name: "Starter Pack", coins: 100, priceInCents: 99, popular: false },
-  { id: "coins_500", name: "Value Pack", coins: 500, priceInCents: 399, popular: true },
-  { id: "coins_1200", name: "Super Pack", coins: 1200, priceInCents: 799, popular: false },
-  { id: "coins_3000", name: "Mega Pack", coins: 3000, priceInCents: 1499, popular: false },
+  { id: "coins_100", name: "Starter Pack", coins: 100, priceInCents: 199, popular: false },
+  { id: "coins_500", name: "Value Pack", coins: 500, priceInCents: 499, popular: true },
+  { id: "coins_1200", name: "Super Pack", coins: 1200, priceInCents: 999, popular: false },
+  { id: "coins_3000", name: "Mega Pack", coins: 3000, priceInCents: 1999, popular: false },
 ] as const;
 
 export type CoinPackage = typeof COIN_PACKAGES[number];
