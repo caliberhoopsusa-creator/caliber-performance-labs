@@ -1104,6 +1104,7 @@ export default function PlayerDetail() {
   const [editPositions, setEditPositions] = useState<string[]>([]);
   const [showFollowersSheet, setShowFollowersSheet] = useState(false);
   const [showFollowingSheet, setShowFollowingSheet] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
   const [showPlayerShareModal, setShowPlayerShareModal] = useState(false);
   const [showGameShareModal, setShowGameShareModal] = useState(false);
   const [showBadgeShareModal, setShowBadgeShareModal] = useState(false);
@@ -1131,6 +1132,11 @@ export default function PlayerDetail() {
     const params = new URLSearchParams(window.location.search);
     if (params.get('edit') === 'true' && player) {
       setIsEditDialogOpen(true);
+      window.history.replaceState({}, '', `/players/${id}`);
+    }
+    const tabParam = params.get('tab');
+    if (tabParam && ['overview', 'highlights', 'accolades', 'coach', 'scouting', 'inventory'].includes(tabParam)) {
+      setActiveTab(tabParam);
       window.history.replaceState({}, '', `/players/${id}`);
     }
   }, [player, id]);
@@ -1728,7 +1734,7 @@ export default function PlayerDetail() {
         </div>
       </Card>
 
-      <Tabs defaultValue="overview" className="w-full animate-fade-up delay-200">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full animate-fade-up delay-200">
         {/* Horizontally scrollable tabs container for mobile */}
         <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
           <TabsList className="w-max md:w-auto inline-flex bg-card border border-white/10">

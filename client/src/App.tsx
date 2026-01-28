@@ -17,7 +17,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { useAuth } from "@/hooks/use-auth";
 import { useOffline } from "@/hooks/use-offline";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ChevronLeft } from "lucide-react";
+import { Loader2, ChevronLeft, Coins, Package } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
@@ -134,6 +134,45 @@ function SessionExpiryHandler() {
   return null;
 }
 
+function HeaderCoinDisplay() {
+  const { data: userMe } = useQuery<{ playerId: number | null; coinBalance: number }>({
+    queryKey: ["/api/users/me"],
+    staleTime: 30000,
+  });
+
+  const coinBalance = userMe?.coinBalance ?? 0;
+  const playerId = userMe?.playerId;
+
+  return (
+    <div className="flex items-center gap-2">
+      <Link href="/shop">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="flex items-center gap-2 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10"
+          data-testid="header-coin-display"
+        >
+          <Coins className="w-4 h-4" />
+          <span className="font-medium">{coinBalance.toLocaleString()}</span>
+        </Button>
+      </Link>
+      {playerId && (
+        <Link href={`/players/${playerId}?tab=inventory`}>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="text-muted-foreground hover:text-primary"
+            data-testid="header-inventory-btn"
+            title="My Inventory"
+          >
+            <Package className="w-4 h-4" />
+          </Button>
+        </Link>
+      )}
+    </div>
+  );
+}
+
 function PublicPricing() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[hsl(220,25%,6%)] via-[hsl(220,20%,5%)] to-[hsl(220,25%,4%)] text-white">
@@ -212,7 +251,10 @@ function MainRouter() {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-gradient-radial from-cyan-500/[0.02] to-transparent rounded-full pointer-events-none" />
           <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent pointer-events-none" />
           <header className="mobile-header-blur md:static md:backdrop-blur-none md:bg-transparent relative z-10 flex items-center justify-between gap-4 p-4 md:px-8 border-b border-cyan-500/[0.08] md:backdrop-blur-2xl md:bg-gradient-to-r from-[hsl(220,25%,8%)]/80 via-[hsl(220,20%,6%)]/60 to-[hsl(220,25%,8%)]/80">
-            <MobileDrawer userRole={extendedUser.role} playerId={extendedUser.playerId} />
+            <div className="flex items-center gap-3">
+              <MobileDrawer userRole={extendedUser.role} playerId={extendedUser.playerId} />
+              <HeaderCoinDisplay />
+            </div>
             <div className="flex items-center gap-3">
               <OfflineIndicator />
               <NotificationBell />

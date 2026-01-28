@@ -1809,6 +1809,21 @@ export async function registerRoutes(
     }
   });
 
+  // Get user's coin balance
+  app.get('/api/user/coins', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await authStorage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      res.json({ coinBalance: user.coinBalance || 0 });
+    } catch (err) {
+      console.error('Error fetching coin balance:', err);
+      res.status(500).json({ message: 'Failed to fetch coin balance' });
+    }
+  });
+
   // Create player profile for logged-in user (only for players)
   app.post('/api/users/create-player-profile', isAuthenticated, async (req: any, res) => {
     try {
