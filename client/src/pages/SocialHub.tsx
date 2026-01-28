@@ -392,13 +392,13 @@ export default function SocialHub() {
       </div>
 
       <Tabs defaultValue="feed" className="w-full">
-        <TabsList className="w-full grid grid-cols-2 mb-4" data-testid="tabs-social">
-          <TabsTrigger value="feed" data-testid="tab-feed">
-            <TrendingUp className="w-4 h-4 mr-2" />
+        <TabsList className="w-full grid grid-cols-2 mb-4 bg-card border border-white/10" data-testid="tabs-social">
+          <TabsTrigger value="feed" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-feed">
+            <TrendingUp className="w-4 h-4" />
             Feed
           </TabsTrigger>
-          <TabsTrigger value="discover" data-testid="tab-discover">
-            <Search className="w-4 h-4 mr-2" />
+          <TabsTrigger value="discover" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-discover">
+            <Search className="w-4 h-4" />
             Discover
           </TabsTrigger>
         </TabsList>

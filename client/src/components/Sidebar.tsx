@@ -264,7 +264,7 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
   ];
   
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 safe-area-bottom">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 pb-safe">
       {/* Premium glassmorphic navbar with enhanced depth and glow */}
       <div className="absolute inset-0 mobile-nav-glass" />
       
@@ -272,7 +272,7 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
       <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
       
       {/* Navigation container with proper spacing and touch targets */}
-      <div className="relative flex justify-around items-center min-h-[72px] px-3 gap-1">
+      <div className="relative flex justify-around items-center min-h-[72px] px-3 gap-1 pl-safe pr-safe">
         {navItems.map((item, index) => {
           // Enhanced active state detection - profile link should match any /players/:id path
           const isActive = location === item.href || 

@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 import { UserMinus, Users, Loader2 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useState } from "react";
@@ -71,10 +72,18 @@ export function FollowingList({ playerId, showUnfollowButton = true }: Following
       </h3>
 
       {following.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
-          <Users className="w-10 h-10 mx-auto mb-2 opacity-50" />
-          <p className="text-sm">Not following anyone yet</p>
-        </div>
+        <motion.div 
+          className="text-center py-12"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <Users className="w-8 h-8 text-primary/60" />
+          </div>
+          <p className="text-white font-semibold mb-1">Not following anyone yet</p>
+          <p className="text-sm text-muted-foreground">Follow other players to see their updates and compare your progress</p>
+        </motion.div>
       ) : (
         <div className="space-y-3">
           {following.map((player) => (

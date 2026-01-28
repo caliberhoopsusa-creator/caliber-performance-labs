@@ -63,13 +63,13 @@ export default function CommunityContent() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="polls" data-testid="tab-polls">
-            <BarChart3 className="w-4 h-4 mr-2" />
+        <TabsList className="bg-card border border-white/10">
+          <TabsTrigger value="polls" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-polls">
+            <BarChart3 className="w-4 h-4" />
             Polls
           </TabsTrigger>
-          <TabsTrigger value="predictions" data-testid="tab-predictions">
-            <Swords className="w-4 h-4 mr-2" />
+          <TabsTrigger value="predictions" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-predictions">
+            <Swords className="w-4 h-4" />
             Matchup Predictions
           </TabsTrigger>
         </TabsList>

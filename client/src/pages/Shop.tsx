@@ -166,14 +166,14 @@ export default function Shop() {
       </motion.div>
 
       <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
-        <TabsList className="w-full grid grid-cols-5 gap-1 h-auto p-1 bg-black/30 border border-cyan-500/10">
+        <TabsList className="w-full grid grid-cols-5 gap-1 h-auto p-1 bg-card border border-white/10">
           {categories.map(([key, cat]) => {
             const Icon = CATEGORY_ICONS[key] || Palette;
             return (
               <TabsTrigger
                 key={key}
                 value={key}
-                className="flex flex-col items-center gap-1 py-2 px-1 data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400"
+                className="flex flex-col items-center gap-1 py-2 px-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                 data-testid={`tab-shop-${key}`}
               >
                 <Icon className="w-4 h-4" />

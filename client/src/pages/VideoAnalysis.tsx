@@ -159,11 +159,11 @@ export default function VideoAnalysis() {
 
           {/* Analysis Input Tabs */}
           <Tabs defaultValue="video" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-white/5">
-              <TabsTrigger value="video" className="gap-2" data-testid="tab-video">
+            <TabsList className="grid w-full grid-cols-2 bg-card border border-white/10">
+              <TabsTrigger value="video" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-video">
                 <Video className="w-4 h-4" /> Video Upload
               </TabsTrigger>
-              <TabsTrigger value="text" className="gap-2" data-testid="tab-text">
+              <TabsTrigger value="text" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-text">
                 <FileText className="w-4 h-4" /> Play-by-Play
               </TabsTrigger>
             </TabsList>

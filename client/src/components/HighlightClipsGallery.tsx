@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Film, Filter } from "lucide-react";
+import { motion } from "framer-motion";
 import { HighlightClipCard } from "./HighlightClipCard";
 import { VideoPlayerModal } from "./VideoPlayerModal";
 import {
@@ -75,17 +76,22 @@ export function HighlightClipsGallery({
       )}
 
       {filteredClips.length === 0 ? (
-        <div className="glass-card rounded-xl p-12 text-center">
-          <Film className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-          <h3 className="font-display text-xl font-semibold text-white uppercase tracking-wide mb-2">
-            No Highlight Clips Yet
-          </h3>
-          <p className="text-muted-foreground">
+        <motion.div 
+          className="text-center py-12"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <Film className="w-8 h-8 text-primary/60" />
+          </div>
+          <p className="text-white font-semibold mb-1">No Highlight Clips Yet</p>
+          <p className="text-sm text-muted-foreground">
             {filterGameId !== "all"
               ? "No clips found for this game. Try a different filter or upload a new clip."
               : "Upload your first highlight clip to showcase your best moments!"}
           </p>
-        </div>
+        </motion.div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredClips.map((clip) => (

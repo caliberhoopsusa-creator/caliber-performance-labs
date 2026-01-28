@@ -3,10 +3,11 @@ import { useState } from "react";
 import { Play, Eye, Calendar, Film, Plus, ExternalLink } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/EmptyState";
 import { VideoPlayerModal } from "@/components/VideoPlayerModal";
 import { UploadClipModal } from "@/components/UploadClipModal";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
+import { motion } from "framer-motion";
 import type { HighlightClip, Game } from "@shared/schema";
 import { format } from "date-fns";
 
@@ -20,7 +21,7 @@ export function HighlightsGallery({ playerId, isOwner = false }: HighlightsGalle
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
-  const { data: highlights = [], isLoading } = useQuery<HighlightClip[]>({
+  const { data: highlights = [], isLoading, error } = useQuery<HighlightClip[]>({
     queryKey: [`/api/players/${playerId}/highlight-clips`],
   });
 
@@ -50,8 +51,41 @@ export function HighlightsGallery({ playerId, isOwner = false }: HighlightsGalle
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div data-testid="highlights-gallery-loading">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Card key={i} className="overflow-hidden">
+              <Skeleton className="aspect-video" />
+              <div className="p-4 space-y-2">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-3 w-1/2" />
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-3 w-12" />
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div data-testid="highlights-gallery-error">
+        <motion.div
+          className="text-center py-12"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <Film className="w-8 h-8 text-primary/60" />
+          </div>
+          <p className="text-white font-semibold mb-1">Failed to load highlights</p>
+          <p className="text-sm text-muted-foreground">There was an error loading the highlights. Please try again later.</p>
+        </motion.div>
       </div>
     );
   }
@@ -59,26 +93,31 @@ export function HighlightsGallery({ playerId, isOwner = false }: HighlightsGalle
   if (highlights.length === 0) {
     return (
       <div data-testid="highlights-gallery">
-        <EmptyState
-          icon={Film}
-          title="No highlights yet"
-          description="Upload your best plays and moments to showcase your skills."
-        />
+        <motion.div
+          className="text-center py-12"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <Film className="w-8 h-8 text-primary/60" />
+          </div>
+          <p className="text-white font-semibold mb-1">No highlights yet</p>
+          <p className="text-sm text-muted-foreground mb-6">Upload your best plays and moments to showcase your skills.</p>
+          {isOwner && (
+            <Button onClick={() => setIsUploadModalOpen(true)} className="gap-2" data-testid="button-add-highlight-empty">
+              <Plus className="w-4 h-4" />
+              Add Highlight
+            </Button>
+          )}
+        </motion.div>
         {isOwner && (
-          <>
-            <div className="flex justify-center mt-4">
-              <Button onClick={() => setIsUploadModalOpen(true)} className="gap-2" data-testid="button-add-highlight-empty">
-                <Plus className="w-4 h-4" />
-                Add Highlight
-              </Button>
-            </div>
-            <UploadClipModal
-              isOpen={isUploadModalOpen}
-              onClose={() => setIsUploadModalOpen(false)}
-              playerId={playerId}
-              games={games}
-            />
-          </>
+          <UploadClipModal
+            isOpen={isUploadModalOpen}
+            onClose={() => setIsUploadModalOpen(false)}
+            playerId={playerId}
+            games={games}
+          />
         )}
       </div>
     );
@@ -113,12 +152,21 @@ export function HighlightsGallery({ playerId, isOwner = false }: HighlightsGalle
             >
               <div className="relative aspect-video bg-black/80">
                 {clip.thumbnailUrl ? (
-                  <img
-                    src={clip.thumbnailUrl}
-                    alt={clip.title}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
+                  <>
+                    <img
+                      src={clip.thumbnailUrl}
+                      alt={clip.title}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary/40 to-secondary/20 hidden">
+                      <Film className="w-12 h-12 text-muted-foreground/50" />
+                    </div>
+                  </>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary/40 to-secondary/20">
                     <Film className="w-12 h-12 text-muted-foreground/50" />

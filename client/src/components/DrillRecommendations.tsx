@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { motion } from "framer-motion";
 import {
   useDrillRecommendations,
   useGenerateDrillRecommendations,
@@ -149,25 +150,30 @@ function LoadingSkeleton() {
 
 function EmptyState({ onGenerate, isGenerating }: { onGenerate: () => void; isGenerating: boolean }) {
   return (
-    <div className="text-center py-8" data-testid="drill-recommendations-empty">
-      <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-3">
-        <Dumbbell className="w-6 h-6 text-muted-foreground" />
+    <motion.div 
+      className="text-center py-12"
+      data-testid="drill-recommendations-empty"
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+        <Dumbbell className="w-8 h-8 text-primary/60" />
       </div>
-      <p className="text-sm font-medium mb-1">No Drill Recommendations</p>
-      <p className="text-xs text-muted-foreground mb-4">
+      <p className="text-white font-semibold mb-1">No Drill Recommendations</p>
+      <p className="text-sm text-muted-foreground mb-6">
         Generate AI-powered drill suggestions based on player weaknesses
       </p>
       <Button
-        size="sm"
         onClick={onGenerate}
         disabled={isGenerating}
-        className="gap-1.5"
+        className="gap-2"
         data-testid="button-generate-recommendations-empty"
       >
         <Sparkles className="w-4 h-4" />
         {isGenerating ? "Generating..." : "Generate Recommendations"}
       </Button>
-    </div>
+    </motion.div>
   );
 }
 

@@ -371,13 +371,13 @@ export default function Challenges() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="active" data-testid="tab-active-challenges">
-              <Flame className="w-4 h-4 mr-2" />
+          <TabsList className="bg-card border border-white/10">
+            <TabsTrigger value="active" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-active-challenges">
+              <Flame className="w-4 h-4" />
               Active ({activeChallenges?.length || 0})
             </TabsTrigger>
-            <TabsTrigger value="past" data-testid="tab-past-challenges">
-              <Calendar className="w-4 h-4 mr-2" />
+            <TabsTrigger value="past" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-past-challenges">
+              <Calendar className="w-4 h-4" />
               Past ({pastChallenges.length})
             </TabsTrigger>
           </TabsList>

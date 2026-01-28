@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -132,10 +132,17 @@ function StoryViewer({
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [progress, setProgress] = useState(0);
   const [showReactions, setShowReactions] = useState(false);
+  const [mediaLoading, setMediaLoading] = useState(true);
+  const [mediaError, setMediaError] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
   const currentStory = stories[currentIndex];
+
+  useEffect(() => {
+    setMediaLoading(true);
+    setMediaError(false);
+  }, [currentIndex]);
 
   const viewMutation = useMutation({
     mutationFn: async (storyId: number) => {
@@ -151,6 +158,9 @@ function StoryViewer({
     onSuccess: () => {
       toast({ title: "Reaction sent!" });
       setShowReactions(false);
+    },
+    onError: () => {
+      toast({ title: "Couldn't send reaction", description: "Please try again", variant: "destructive" });
     },
   });
 
@@ -181,19 +191,19 @@ function StoryViewer({
     };
   }, [currentIndex]);
 
-  const goNext = () => {
+  const goNext = useCallback(() => {
     if (currentIndex < stories.length - 1) {
       setCurrentIndex(prev => prev + 1);
     } else {
       onClose();
     }
-  };
+  }, [currentIndex, stories.length, onClose]);
 
-  const goPrev = () => {
+  const goPrev = useCallback(() => {
     if (currentIndex > 0) {
       setCurrentIndex(prev => prev - 1);
     }
-  };
+  }, [currentIndex]);
 
   const handleReaction = (reaction: string) => {
     if (currentStory) {
@@ -201,7 +211,17 @@ function StoryViewer({
     }
   };
 
-  if (!currentStory) return null;
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowLeft') goPrev();
+      if (e.key === 'ArrowRight') goNext();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose, goPrev, goNext]);
+
+  if (!stories || stories.length === 0 || !currentStory) return null;
 
   const parsedStats: { points?: number; rebounds?: number; assists?: number } | null = (() => {
     try {
@@ -231,6 +251,7 @@ function StoryViewer({
         className="absolute top-4 right-4 z-10 text-white hover:bg-white/20"
         onClick={(e) => { e.stopPropagation(); onClose(); }}
         data-testid="button-close-story"
+        aria-label="Close story viewer"
       >
         <X className="w-6 h-6" />
       </Button>
@@ -288,32 +309,80 @@ function StoryViewer({
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
         >
-          {currentStory.mediaType === 'image' && currentStory.imageUrl && (
-            <motion.img 
-              src={currentStory.imageUrl} 
-              alt={currentStory.headline}
-              className="max-h-[60vh] max-w-full object-contain rounded-lg"
-              data-testid="story-image"
-              loading="lazy"
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.1, duration: 0.4, ease: "easeOut" }}
-            />
-          )}
+          {mediaError ? (
+            <motion.div
+              className="flex flex-col items-center justify-center gap-4 p-8 bg-white/5 rounded-lg"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              data-testid="story-media-error"
+            >
+              <Image className="w-16 h-16 text-muted-foreground/50" />
+              <p className="text-white/60 text-sm">Media failed to load</p>
+            </motion.div>
+          ) : (
+            <>
+              {currentStory.mediaType === 'image' && currentStory.imageUrl && (
+                <div className="relative">
+                  {mediaLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Skeleton className="max-h-[60vh] w-64 h-96 rounded-lg" />
+                    </div>
+                  )}
+                  <motion.img 
+                    src={currentStory.imageUrl} 
+                    alt={currentStory.headline}
+                    className={cn(
+                      "max-h-[60vh] max-w-full object-contain rounded-lg",
+                      mediaLoading && "opacity-0"
+                    )}
+                    data-testid="story-image"
+                    loading="lazy"
+                    onLoad={() => setMediaLoading(false)}
+                    onError={() => { setMediaLoading(false); setMediaError(true); }}
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: mediaLoading ? 0.9 : 1, opacity: mediaLoading ? 0 : 1 }}
+                    transition={{ delay: 0.1, duration: 0.4, ease: "easeOut" }}
+                  />
+                </div>
+              )}
 
-          {currentStory.mediaType === 'video' && currentStory.videoUrl && (
-            <motion.video
-              src={currentStory.videoUrl}
-              autoPlay
-              muted
-              loop
-              playsInline
-              className="max-h-[60vh] max-w-full object-contain rounded-lg"
-              data-testid="story-video"
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.1, duration: 0.4, ease: "easeOut" }}
-            />
+              {currentStory.mediaType === 'video' && currentStory.videoUrl && (
+                <div className="relative">
+                  {mediaLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Skeleton className="max-h-[60vh] w-64 h-96 rounded-lg" />
+                    </div>
+                  )}
+                  <motion.video
+                    src={currentStory.videoUrl}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className={cn(
+                      "max-h-[60vh] max-w-full object-contain rounded-lg",
+                      mediaLoading && "opacity-0"
+                    )}
+                    data-testid="story-video"
+                    onLoadedData={() => setMediaLoading(false)}
+                    onError={() => { setMediaLoading(false); setMediaError(true); }}
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: mediaLoading ? 0.9 : 1, opacity: mediaLoading ? 0 : 1 }}
+                    transition={{ delay: 0.1, duration: 0.4, ease: "easeOut" }}
+                  />
+                </div>
+              )}
+
+              {currentStory.mediaType === 'text' && (
+                <motion.div
+                  className="flex items-center justify-center"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                >
+                  <Star className="w-24 h-24 text-primary/40" />
+                </motion.div>
+              )}
+            </>
           )}
 
           <motion.div 
@@ -406,6 +475,7 @@ function StoryViewer({
                   onClick={() => handleReaction(key)}
                   className="p-2 hover:bg-white/20 rounded-full transition-colors"
                   title={label}
+                  aria-label={label}
                   data-testid={`reaction-${key}`}
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
@@ -444,6 +514,7 @@ function StoryViewer({
         className="absolute left-2 top-1/2 -translate-y-1/2 p-2 text-white/60 hover:text-white"
         onClick={(e) => { e.stopPropagation(); goPrev(); }}
         data-testid="button-prev-story"
+        aria-label="Previous story"
         whileHover={{ scale: 1.1, color: "rgba(255, 255, 255, 1)" }}
         whileTap={{ scale: 0.95 }}
         transition={{ type: "spring", stiffness: 400 }}
@@ -455,6 +526,7 @@ function StoryViewer({
         className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-white/60 hover:text-white"
         onClick={(e) => { e.stopPropagation(); goNext(); }}
         data-testid="button-next-story"
+        aria-label="Next story"
         whileHover={{ scale: 1.1, color: "rgba(255, 255, 255, 1)" }}
         whileTap={{ scale: 0.95 }}
         transition={{ type: "spring", stiffness: 400 }}
@@ -888,24 +960,28 @@ export default function Stories() {
             <StorySkeleton />
           </div>
         ) : stories.length === 0 ? (
-          <Card className="p-8 text-center" data-testid="empty-stories">
-            <div className="flex flex-col items-center gap-3">
-              <Camera className="w-12 h-12 text-muted-foreground/50" />
-              <div>
-                <p className="text-white font-medium mb-1">No stories yet</p>
-                <p className="text-sm text-muted-foreground">
-                  Be the first to share a story!
-                </p>
-              </div>
-              <Button onClick={() => setCreateOpen(true)} className="mt-2">
-                <Plus className="w-4 h-4 mr-2" />
-                Create Story
-              </Button>
+          <motion.div 
+            className="text-center py-12"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+            data-testid="empty-stories"
+          >
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <Camera className="w-8 h-8 text-primary/60" />
             </div>
-          </Card>
+            <p className="text-white font-semibold mb-1">No stories yet</p>
+            <p className="text-sm text-muted-foreground mb-4">
+              Be the first to share a story!
+            </p>
+            <Button onClick={() => setCreateOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Create Story
+            </Button>
+          </motion.div>
         ) : (
           <motion.div 
-            className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-primary/20" 
+            className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-primary/20 scroll-snap-x-mandatory touch-pan-x" 
             data-testid="stories-scroll"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -914,6 +990,7 @@ export default function Stories() {
             {groupedStories.map((story, idx) => (
               <motion.div
                 key={story.id}
+                className="snap-start"
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.08, duration: 0.3 }}

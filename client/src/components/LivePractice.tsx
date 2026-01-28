@@ -338,11 +338,11 @@ export function LivePractice({ practice, onEnd, onBack }: LivePracticeProps) {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2" data-testid="tabs-practice-mode">
-          <TabsTrigger value="attendance" className="gap-2" data-testid="tab-attendance">
+        <TabsList className="grid w-full grid-cols-2 bg-card border border-white/10" data-testid="tabs-practice-mode">
+          <TabsTrigger value="attendance" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-attendance">
             <Users className="w-4 h-4" /> Attendance
           </TabsTrigger>
-          <TabsTrigger value="drills" className="gap-2" data-testid="tab-drills">
+          <TabsTrigger value="drills" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-drills">
             <Target className="w-4 h-4" /> Drills
           </TabsTrigger>
         </TabsList>

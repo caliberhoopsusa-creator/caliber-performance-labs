@@ -82,6 +82,15 @@
     font-family: var(--font-display);
     @apply tracking-wide uppercase font-semibold;
   }
+
+  /* Enhanced focus-visible for accessibility */
+  .focus-ring:focus-visible,
+  button:focus-visible,
+  a:focus-visible,
+  [role="button"]:focus-visible {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 2px;
+  }
 }
 
 /* Custom Utilities */
@@ -1272,7 +1281,54 @@
 /* Touch-friendly button sizes */
 @layer utilities {
   .touch-target {
-    @apply min-h-[48px] min-w-[48px];
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  /* Tailwind-style safe area padding utilities */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  
+  .pl-safe {
+    padding-left: env(safe-area-inset-left, 0px);
+  }
+  
+  .pr-safe {
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+  
+  /* Scroll snap utilities for horizontal scrolling */
+  .scroll-snap-x-mandatory {
+    scroll-snap-type: x mandatory;
+  }
+  
+  .scroll-snap-x-proximity {
+    scroll-snap-type: x proximity;
+  }
+  
+  .snap-start {
+    scroll-snap-align: start;
+  }
+  
+  .snap-center {
+    scroll-snap-align: center;
+  }
+  
+  /* Touch action utilities for better mobile scrolling */
+  .touch-pan-x {
+    touch-action: pan-x;
+  }
+  
+  .touch-pan-y {
+    touch-action: pan-y;
+  }
+  
+  .touch-manipulation {
+    touch-action: manipulation;
   }
   
   /* Enhanced mobile spacing utilities */

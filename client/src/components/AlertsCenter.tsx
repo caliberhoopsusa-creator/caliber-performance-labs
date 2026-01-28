@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { Bell, Trash2, CheckCheck, AlertTriangle, TrendingDown, Target, TrendingUp, X, Filter } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +13,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { motion } from "framer-motion";
 import {
   useAlerts,
   useUnreadAlerts,
@@ -148,7 +161,30 @@ interface AlertsCenterProps {
 export function AlertsCenter({ playerId }: AlertsCenterProps) {
   const [filterType, setFilterType] = useState<string | null>(null);
   const [filterSeverity, setFilterSeverity] = useState<string | null>(null);
+  const { toast } = useToast();
   const sport = useSport();
+
+  // Load filters from localStorage on mount
+  useEffect(() => {
+    const savedType = localStorage.getItem('caliber_alert_filter_type');
+    const savedSeverity = localStorage.getItem('caliber_alert_filter_severity');
+    if (savedType) setFilterType(savedType);
+    if (savedSeverity) setFilterSeverity(savedSeverity);
+  }, []);
+
+  // Save filters to localStorage when they change
+  useEffect(() => {
+    if (filterType) {
+      localStorage.setItem('caliber_alert_filter_type', filterType);
+    } else {
+      localStorage.removeItem('caliber_alert_filter_type');
+    }
+    if (filterSeverity) {
+      localStorage.setItem('caliber_alert_filter_severity', filterSeverity);
+    } else {
+      localStorage.removeItem('caliber_alert_filter_severity');
+    }
+  }, [filterType, filterSeverity]);
 
   const { data: alerts, isLoading: alertsLoading } = useAlerts(playerId, sport);
   const { data: players } = usePlayers();
@@ -167,11 +203,19 @@ export function AlertsCenter({ playerId }: AlertsCenterProps) {
   const unreadCount = filteredAlerts.filter(a => !a.isRead).length;
 
   const handleMarkRead = (id: number) => {
-    markRead.mutate(id);
+    markRead.mutate(id, {
+      onSuccess: () => {
+        toast({ title: "Marked as read" });
+      }
+    });
   };
 
   const handleDelete = (id: number) => {
-    deleteAlert.mutate(id);
+    deleteAlert.mutate(id, {
+      onSuccess: () => {
+        toast({ title: "Alert deleted" });
+      }
+    });
   };
 
   const handleMarkAllRead = () => {
@@ -265,30 +309,64 @@ export function AlertsCenter({ playerId }: AlertsCenterProps) {
           </DropdownMenu>
 
           {unreadCount > 0 && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleMarkAllRead}
-              disabled={markAllRead.isPending}
-              data-testid="button-mark-all-read"
-            >
-              <CheckCheck className="w-4 h-4 mr-1" />
-              Mark All Read
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button size="sm" variant="outline" data-testid="button-mark-all-read">
+                  <CheckCheck className="w-4 h-4 mr-1" />
+                  Mark All Read
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Mark all alerts as read?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will mark {unreadCount} alert{unreadCount !== 1 ? 's' : ''} as read.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={() => {
+                      markAllRead.mutate(undefined, {
+                        onSuccess: () => {
+                          toast({ title: "All alerts marked as read" });
+                        }
+                      });
+                    }}
+                    disabled={markAllRead.isPending}
+                  >
+                    Confirm
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
         </div>
       </CardHeader>
       <CardContent>
         {filteredAlerts.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground" data-testid="alerts-empty">
-            <Bell className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p>No alerts to display</p>
+          <motion.div 
+            className="text-center py-8" 
+            data-testid="alerts-empty"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <Bell className="w-8 h-8 text-primary/60" />
+            </div>
+            <p className="text-white font-semibold mb-1">No alerts to display</p>
+            <p className="text-sm text-muted-foreground">
+              {(filterType || filterSeverity) 
+                ? "Try adjusting your filters" 
+                : "You're all caught up!"}
+            </p>
             {(filterType || filterSeverity) && (
-              <Button variant="ghost" onClick={clearFilters} className="mt-2" data-testid="button-clear-filters-empty">
+              <Button variant="ghost" onClick={clearFilters} className="mt-3" data-testid="button-clear-filters-empty">
                 Clear filters
               </Button>
             )}
-          </div>
+          </motion.div>
         ) : (
           <div className="space-y-3" data-testid="alerts-list">
             {filteredAlerts.map(alert => (
@@ -326,7 +404,12 @@ export function AlertsBadge({ className }: AlertsBadgeProps) {
   }
 
   return (
-    <div className={cn("relative", className)} data-testid="alerts-badge">
+    <div 
+      className={cn("relative", className)} 
+      data-testid="alerts-badge"
+      aria-label={`Alerts${count > 0 ? `, ${count} unread` : ''}`}
+      role="button"
+    >
       <Bell className="w-5 h-5" />
       {count > 0 && (
         <Badge

@@ -1,4 +1,5 @@
 import { formatDistanceToNow } from "date-fns";
+import { motion } from "framer-motion";
 import { useNotifications } from "@/hooks/use-notifications";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -95,15 +96,20 @@ export function NotificationsPanel({ onClose }: NotificationsPanelProps) {
 
       <ScrollArea className="max-h-96">
         {notifications.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-            <div className="w-12 h-12 rounded-full bg-secondary/50 flex items-center justify-center mb-3">
-              <Bell className="w-6 h-6 text-muted-foreground" />
+          <motion.div 
+            className="flex flex-col items-center justify-center py-16 px-4 text-center"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <Bell className="w-8 h-8 text-primary/60" />
             </div>
-            <p className="text-sm font-medium text-muted-foreground">No notifications yet</p>
-            <p className="text-xs text-muted-foreground/70 mt-1">
+            <p className="text-white font-semibold mb-1">No notifications yet</p>
+            <p className="text-sm text-muted-foreground">
               We'll notify you about important updates
             </p>
-          </div>
+          </motion.div>
         ) : (
           <div className="divide-y divide-white/5">
             {notifications.map((notification) => {

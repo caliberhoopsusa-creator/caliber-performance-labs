@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
+import { motion } from "framer-motion";
 import { Users } from "lucide-react";
 
 interface Follower {
@@ -47,10 +48,18 @@ export function FollowersList({ playerId }: FollowersListProps) {
       </h3>
 
       {followers.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
-          <Users className="w-10 h-10 mx-auto mb-2 opacity-50" />
-          <p className="text-sm">No followers yet</p>
-        </div>
+        <motion.div 
+          className="text-center py-12"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <Users className="w-8 h-8 text-primary/60" />
+          </div>
+          <p className="text-white font-semibold mb-1">No followers yet</p>
+          <p className="text-sm text-muted-foreground">Share your profile to build your following and connect with other players</p>
+        </motion.div>
       ) : (
         <div className="space-y-3">
           {followers.map((follower) => (

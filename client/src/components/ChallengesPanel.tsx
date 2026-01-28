@@ -91,7 +91,18 @@ export function ChallengesPanel({ playerId }: { playerId?: number }) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground text-sm">No active challenges right now.</p>
+          <motion.div 
+            className="text-center py-8"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <Trophy className="w-8 h-8 text-primary/60" />
+            </div>
+            <p className="text-white font-semibold mb-1">No active challenges</p>
+            <p className="text-sm text-muted-foreground">Join or create challenges to compete with other players and push your limits</p>
+          </motion.div>
         </CardContent>
       </Card>
     );

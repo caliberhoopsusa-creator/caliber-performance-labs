@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { UserPlus, UserCheck, Loader2 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 interface FollowButtonProps {
   playerId: number;
@@ -14,6 +15,7 @@ interface FollowButtonProps {
 
 export function FollowButton({ playerId, initialIsFollowing, onFollowChange, className }: FollowButtonProps) {
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
+  const { toast } = useToast();
 
   const followMutation = useMutation({
     mutationFn: async (newFollowState: boolean) => {
@@ -33,11 +35,15 @@ export function FollowButton({ playerId, initialIsFollowing, onFollowChange, cla
       
       return { previousState };
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       // Invalidate to sync with server
       queryClient.invalidateQueries({ queryKey: ["/api/players", playerId, "followers"] });
       queryClient.invalidateQueries({ queryKey: ["/api/players", playerId, "following"] });
       queryClient.invalidateQueries({ queryKey: ["/api/players", playerId, "follow-stats"] });
+      toast({
+        title: variables ? "Following" : "Unfollowed",
+        description: variables ? "You're now following this player" : "You unfollowed this player"
+      });
     },
     onError: (_err, _newState, context) => {
       // Rollback on error using context
@@ -45,10 +51,16 @@ export function FollowButton({ playerId, initialIsFollowing, onFollowChange, cla
         setIsFollowing(context.previousState);
         onFollowChange?.(context.previousState);
       }
+      toast({
+        title: "Action failed",
+        description: "Could not update follow status. Please try again.",
+        variant: "destructive"
+      });
     },
   });
 
   const handleClick = () => {
+    if (followMutation.isPending) return; // Prevent double click
     followMutation.mutate(!isFollowing);
   };
 
@@ -58,19 +70,21 @@ export function FollowButton({ playerId, initialIsFollowing, onFollowChange, cla
       disabled={followMutation.isPending}
       variant={isFollowing ? "secondary" : "default"}
       className={cn(
-        "gap-2 transition-all",
+        "gap-2 transition-all duration-200",
         isFollowing && "border-primary/30",
         className
       )}
       data-testid={isFollowing ? "button-unfollow" : "button-follow"}
     >
-      {followMutation.isPending ? (
-        <Loader2 className="w-4 h-4 animate-spin" />
-      ) : isFollowing ? (
-        <UserCheck className="w-4 h-4" />
-      ) : (
-        <UserPlus className="w-4 h-4" />
-      )}
+      <span className="inline-block transition-transform duration-200">
+        {followMutation.isPending ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : isFollowing ? (
+          <UserCheck className="w-4 h-4" />
+        ) : (
+          <UserPlus className="w-4 h-4" />
+        )}
+      </span>
       {isFollowing ? "Following" : "Follow"}
     </Button>
   );

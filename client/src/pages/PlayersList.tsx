@@ -192,13 +192,13 @@ export default function PlayersList() {
 
       {hasTeam ? (
         <Tabs defaultValue="roster" className="w-full">
-          <TabsList className="w-full grid grid-cols-2 mb-4" data-testid="tabs-roster">
-            <TabsTrigger value="roster" data-testid="tab-roster">
-              <Users className="w-4 h-4 mr-2" />
+          <TabsList className="w-full grid grid-cols-2 mb-4 bg-card border border-white/10" data-testid="tabs-roster">
+            <TabsTrigger value="roster" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-roster">
+              <Users className="w-4 h-4" />
               My Roster ({rosterPlayers.length})
             </TabsTrigger>
-            <TabsTrigger value="find" data-testid="tab-find">
-              <Search className="w-4 h-4 mr-2" />
+            <TabsTrigger value="find" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-find">
+              <Search className="w-4 h-4" />
               Find Players
             </TabsTrigger>
           </TabsList>

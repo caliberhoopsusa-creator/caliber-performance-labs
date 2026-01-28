@@ -569,10 +569,10 @@ export default function TeamDashboard() {
           <div className="flex items-center gap-3">
             {hasMixedSports && (
               <Tabs value={sportFilter} onValueChange={(v) => { setSportFilter(v as SportFilter); setPositionFilter("All"); }}>
-                <TabsList className="bg-secondary/30">
-                  <TabsTrigger value="all" data-testid="sport-filter-all">All</TabsTrigger>
-                  <TabsTrigger value="basketball" data-testid="sport-filter-basketball">Basketball</TabsTrigger>
-                  <TabsTrigger value="football" data-testid="sport-filter-football">Football</TabsTrigger>
+                <TabsList className="bg-card border border-white/10">
+                  <TabsTrigger value="all" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="sport-filter-all">All</TabsTrigger>
+                  <TabsTrigger value="basketball" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="sport-filter-basketball">Basketball</TabsTrigger>
+                  <TabsTrigger value="football" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="sport-filter-football">Football</TabsTrigger>
                 </TabsList>
               </Tabs>
             )}

@@ -1833,33 +1833,33 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
       </div>
       <div className="max-w-7xl mx-auto px-4 py-8">
         <Tabs defaultValue="roster" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7 max-w-4xl">
-            <TabsTrigger value="roster" data-testid="tab-roster">
-              <UserCog className="w-4 h-4 mr-2" />
+          <TabsList className="grid w-full grid-cols-7 max-w-4xl bg-card border border-white/10">
+            <TabsTrigger value="roster" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-roster">
+              <UserCog className="w-4 h-4" />
               Roster
             </TabsTrigger>
-            <TabsTrigger value="badges" data-testid="tab-badges">
-              <Award className="w-4 h-4 mr-2" />
+            <TabsTrigger value="badges" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-badges">
+              <Award className="w-4 h-4" />
               Badges
             </TabsTrigger>
-            <TabsTrigger value="rankings" data-testid="tab-rankings">
-              <Crown className="w-4 h-4 mr-2" />
+            <TabsTrigger value="rankings" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-rankings">
+              <Crown className="w-4 h-4" />
               Rankings
             </TabsTrigger>
-            <TabsTrigger value="state" data-testid="tab-state">
-              <Trophy className="w-4 h-4 mr-2" />
+            <TabsTrigger value="state" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-state">
+              <Trophy className="w-4 h-4" />
               State Awards
             </TabsTrigger>
-            <TabsTrigger value="products" data-testid="tab-products">
-              <Package className="w-4 h-4 mr-2" />
+            <TabsTrigger value="products" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-products">
+              <Package className="w-4 h-4" />
               Products
             </TabsTrigger>
-            <TabsTrigger value="coupons" data-testid="tab-coupons">
-              <Tag className="w-4 h-4 mr-2" />
+            <TabsTrigger value="coupons" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-coupons">
+              <Tag className="w-4 h-4" />
               Coupons
             </TabsTrigger>
-            <TabsTrigger value="users" data-testid="tab-users">
-              <Users className="w-4 h-4 mr-2" />
+            <TabsTrigger value="users" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-users">
+              <Users className="w-4 h-4" />
               Users
             </TabsTrigger>
           </TabsList>

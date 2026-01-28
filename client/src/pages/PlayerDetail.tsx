@@ -27,7 +27,7 @@ import { GradeBadge } from "@/components/GradeBadge";
 import { PlayerArchetype } from "@/components/PlayerArchetype";
 import { EliteAchievements } from "@/components/EliteAchievements";
 import { CaliberBadge } from "@/components/CaliberBadge";
-import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Trophy, Share2, BarChart3, Medal, User, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye, BookOpen, Phone, Save, Crosshair, ShieldCheck, PlayCircle } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Trophy, Share2, BarChart3, Medal, User, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye, BookOpen, Phone, Save, Crosshair, ShieldCheck, PlayCircle, AlertTriangle } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS, FOOTBALL_POSITION_STATS, type FootballPosition } from "@shared/sports-config";
 import { useSport } from "@/components/SportToggle";
@@ -908,7 +908,7 @@ interface FollowingPlayer {
 export default function PlayerDetail() {
   const [, params] = useRoute("/players/:id");
   const id = Number(params?.id);
-  const { data: player, isLoading } = usePlayer(id);
+  const { data: player, isLoading, error } = usePlayer(id);
   const { data: badges = [], isLoading: badgesLoading } = usePlayerBadges(id);
   const { mutate: deleteGame } = useDeleteGame();
   const { mutate: updatePlayer, isPending: isUpdating } = useUpdatePlayer();
@@ -1094,11 +1094,58 @@ export default function PlayerDetail() {
     return <PlayerDetailSkeleton />;
   }
 
+  if (error) {
+    return (
+      <div className="space-y-6 pb-20">
+        <Link href="/players">
+          <Button variant="ghost" className="gap-2 text-muted-foreground" data-testid="button-back-error">
+            <ArrowLeft className="w-4 h-4" /> Back to Players
+          </Button>
+        </Link>
+        <Card className="p-8 text-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
+              <AlertTriangle className="w-8 h-8 text-destructive" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-white mb-2">Failed to load player</h2>
+              <p className="text-muted-foreground mb-4">
+                There was an error loading this player's profile.
+              </p>
+              <Button onClick={() => window.location.reload()} variant="outline">
+                Try Again
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   if (!player) {
     return (
-      <div className="flex flex-col items-center justify-center h-[80vh] text-center">
-        <h2 className="text-2xl font-display font-bold text-white mb-2">Player Not Found</h2>
-        <Link href="/players" className="text-primary hover:underline">Return to Roster</Link>
+      <div className="space-y-6 pb-20">
+        <Link href="/players">
+          <Button variant="ghost" className="gap-2 text-muted-foreground" data-testid="button-back-not-found">
+            <ArrowLeft className="w-4 h-4" /> Back to Players
+          </Button>
+        </Link>
+        <Card className="p-8 text-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+              <User className="w-8 h-8 text-primary/60" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-white mb-2">Player not found</h2>
+              <p className="text-muted-foreground mb-4">
+                This player profile doesn't exist or has been removed.
+              </p>
+              <Link href="/players">
+                <Button>View All Players</Button>
+              </Link>
+            </div>
+          </div>
+        </Card>
       </div>
     );
   }
@@ -1502,20 +1549,20 @@ export default function PlayerDetail() {
       <Tabs defaultValue="overview" className="w-full animate-fade-up delay-200">
         {/* Horizontally scrollable tabs container for mobile */}
         <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
-          <TabsList className="w-max md:w-auto inline-flex">
-            <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
-            <TabsTrigger value="highlights" data-testid="tab-highlights">
-              <Film className="w-4 h-4 mr-2" /> Highlights
+          <TabsList className="w-max md:w-auto inline-flex bg-card border border-white/10">
+            <TabsTrigger value="overview" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-overview">Overview</TabsTrigger>
+            <TabsTrigger value="highlights" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-highlights">
+              <Film className="w-4 h-4" /> Highlights
             </TabsTrigger>
-            <TabsTrigger value="accolades" data-testid="tab-accolades">
-              <Trophy className="w-4 h-4 mr-2" /> Accolades
+            <TabsTrigger value="accolades" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-accolades">
+              <Trophy className="w-4 h-4" /> Accolades
             </TabsTrigger>
-            <TabsTrigger value="coach" data-testid="tab-coach">
-              <Phone className="w-4 h-4 mr-2" /> Coach
+            <TabsTrigger value="coach" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-coach">
+              <Phone className="w-4 h-4" /> Coach
             </TabsTrigger>
             {isFootball && (
-              <TabsTrigger value="scouting" data-testid="tab-scouting">
-                <Crosshair className="w-4 h-4 mr-2" /> Scouting
+              <TabsTrigger value="scouting" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-scouting">
+                <Crosshair className="w-4 h-4" /> Scouting
               </TabsTrigger>
             )}
           </TabsList>
@@ -2045,11 +2092,11 @@ export default function PlayerDetail() {
       <GoalsPanel playerId={player.id} games={games} />
 
       <Tabs defaultValue="history" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-4">
-          <TabsTrigger value="history" className="gap-2" data-testid="tab-game-history">
+        <TabsList className="grid w-full grid-cols-2 mb-4 bg-card border border-white/10">
+          <TabsTrigger value="history" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-game-history">
             <ClipboardList className="w-4 h-4" /> Game History
           </TabsTrigger>
-          <TabsTrigger value="highlights" className="gap-2" data-testid="tab-highlights">
+          <TabsTrigger value="highlights" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-highlights">
             <Film className="w-4 h-4" /> Highlights
           </TabsTrigger>
         </TabsList>

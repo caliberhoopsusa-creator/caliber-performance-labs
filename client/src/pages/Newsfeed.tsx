@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -68,19 +69,26 @@ const ACTIVITY_COLORS: Record<string, string> = {
 
 function ActivitySkeleton() {
   return (
-    <Card className="p-4" data-testid="skeleton-activity">
-      <div className="flex items-start gap-4">
-        <Skeleton className="w-10 h-10 rounded-full shrink-0" />
-        <div className="flex-1 space-y-2">
-          <Skeleton className="h-5 w-3/4" />
-          <Skeleton className="h-4 w-1/2" />
-          <div className="flex items-center gap-2 mt-2">
-            <Skeleton className="h-3 w-20" />
-            <Skeleton className="h-3 w-16" />
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Card className="p-4" data-testid="skeleton-activity">
+        <div className="flex items-start gap-4">
+          <Skeleton className="w-10 h-10 rounded-full shrink-0" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-5 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+            <div className="flex items-center gap-2 mt-2">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-3 w-16" />
+            </div>
           </div>
         </div>
-      </div>
-    </Card>
+      </Card>
+    </motion.div>
   );
 }
 
@@ -169,13 +177,21 @@ interface FeedListProps {
 function FeedList({ activities, isLoading, error, emptyMessage, emptyDescription, emptyIcon: EmptyIcon }: FeedListProps) {
   if (isLoading) {
     return (
-      <>
-        <ActivitySkeleton />
-        <ActivitySkeleton />
-        <ActivitySkeleton />
-        <ActivitySkeleton />
-        <ActivitySkeleton />
-      </>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key="loading"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <ActivitySkeleton />
+          <ActivitySkeleton />
+          <ActivitySkeleton />
+          <ActivitySkeleton />
+          <ActivitySkeleton />
+        </motion.div>
+      </AnimatePresence>
     );
   }
 
@@ -189,26 +205,53 @@ function FeedList({ activities, isLoading, error, emptyMessage, emptyDescription
 
   if (activities && activities.length > 0) {
     return (
-      <>
-        {activities.map((activity) => (
-          <ActivityCard key={activity.id} activity={activity} />
-        ))}
-      </>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key="content"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          {activities.map((activity, idx) => (
+            <motion.div
+              key={activity.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.05, duration: 0.3 }}
+            >
+              <ActivityCard activity={activity} />
+            </motion.div>
+          ))}
+        </motion.div>
+      </AnimatePresence>
     );
   }
 
   return (
-    <Card className="p-8 text-center" data-testid="empty-container">
-      <div className="flex flex-col items-center gap-3">
-        <EmptyIcon className="w-12 h-12 text-muted-foreground/50" />
-        <div>
-          <p className="text-white font-medium mb-1">{emptyMessage}</p>
-          <p className="text-sm text-muted-foreground">
-            {emptyDescription}
-          </p>
-        </div>
-      </div>
-    </Card>
+    <AnimatePresence mode="wait">
+      <motion.div
+        key="empty"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.3 }}
+      >
+        <Card className="p-8 text-center" data-testid="empty-container">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+              <EmptyIcon className="w-8 h-8 text-primary/60" />
+            </div>
+            <div>
+              <p className="text-white font-semibold text-lg mb-1">{emptyMessage}</p>
+              <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+                {emptyDescription}
+              </p>
+            </div>
+          </div>
+        </Card>
+      </motion.div>
+    </AnimatePresence>
   );
 }
 
