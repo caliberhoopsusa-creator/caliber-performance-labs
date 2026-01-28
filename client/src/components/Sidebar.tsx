@@ -83,7 +83,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
     {
       title: "My Game",
       items: [
-        { href: playerId ? `/players/${playerId}` : "/", label: "My Stats", icon: UserCircle },
+        { href: playerId ? `/players/${playerId}` : "/", label: "Player Profile", icon: UserCircle },
         { href: "/analyze", label: "Log Game", icon: PlusCircle },
         { href: "/schedule", label: "Schedule", icon: CalendarDays },
         { href: "/workouts", label: "Workouts", icon: Dumbbell },

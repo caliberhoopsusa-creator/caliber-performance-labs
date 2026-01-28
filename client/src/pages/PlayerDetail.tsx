@@ -27,7 +27,7 @@ import { GradeBadge } from "@/components/GradeBadge";
 import { PlayerArchetype } from "@/components/PlayerArchetype";
 import { EliteAchievements } from "@/components/EliteAchievements";
 import { CaliberBadge } from "@/components/CaliberBadge";
-import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Trophy, Share2, BarChart3, Medal, User, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye, BookOpen, Phone, Save, Crosshair, ShieldCheck, PlayCircle, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Trophy, Share2, BarChart3, Medal, User, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye, BookOpen, Phone, Save, Crosshair, ShieldCheck, PlayCircle, AlertTriangle, Package, Sparkles, Palette, Crown, Gem, CircleDot } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS, FOOTBALL_POSITION_STATS, type FootballPosition } from "@shared/sports-config";
 import { useSport } from "@/components/SportToggle";
@@ -184,6 +184,188 @@ function hasPosition(position: string | null | undefined, positionsToCheck: stri
   if (!position) return false;
   const playerPositions = position.split(',').map(p => p.trim());
   return playerPositions.some(p => positionsToCheck.includes(p));
+}
+
+// Rarity colors for inventory items
+const RARITY_COLORS: Record<string, string> = {
+  common: "border-gray-500/50 bg-gray-500/10",
+  rare: "border-blue-500/50 bg-blue-500/10",
+  epic: "border-purple-500/50 bg-purple-500/10",
+  legendary: "border-yellow-500/50 bg-yellow-500/10",
+};
+
+const RARITY_TEXT_COLORS: Record<string, string> = {
+  common: "text-gray-400",
+  rare: "text-blue-400",
+  epic: "text-purple-400",
+  legendary: "text-yellow-400",
+};
+
+const CATEGORY_ICONS: Record<string, any> = {
+  theme: Palette,
+  profile_skin: User,
+  badge_style: Award,
+  effect: Sparkles,
+  team_look: Crown,
+};
+
+interface InventoryItem {
+  id: number;
+  userId: string;
+  itemId: number;
+  purchasedAt: string | null;
+  isEquipped: boolean;
+  item: {
+    id: number;
+    name: string;
+    description: string | null;
+    category: string;
+    type: string;
+    value: string;
+    previewUrl: string | null;
+    coinPrice: number;
+    rarity: string;
+  };
+}
+
+function InventorySection() {
+  const { data: inventory, isLoading, error } = useQuery<InventoryItem[]>({
+    queryKey: ["/api/shop/inventory"],
+  });
+
+  if (isLoading) {
+    return (
+      <Card className="p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Package className="w-5 h-5 text-primary" />
+          <h3 className="font-display text-xl uppercase tracking-wide">My Inventory</h3>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="aspect-square rounded-lg skeleton-premium" />
+          ))}
+        </div>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="p-6">
+        <EmptyState
+          icon={AlertTriangle}
+          title="Failed to load inventory"
+          description="Could not load your items. Try refreshing the page."
+        />
+      </Card>
+    );
+  }
+
+  const items = inventory || [];
+
+  // Group by category
+  const groupedItems = items.reduce((acc, item) => {
+    const category = item.item.category;
+    if (!acc[category]) acc[category] = [];
+    acc[category].push(item);
+    return acc;
+  }, {} as Record<string, InventoryItem[]>);
+
+  const categories = Object.keys(groupedItems);
+
+  return (
+    <Card className="p-6">
+      <div className="flex items-center gap-2 mb-6">
+        <Package className="w-5 h-5 text-primary" />
+        <h3 className="font-display text-xl uppercase tracking-wide">My Inventory</h3>
+        <span className="text-sm text-muted-foreground ml-2">({items.length} items)</span>
+      </div>
+
+      {items.length === 0 ? (
+        <EmptyState
+          icon={Package}
+          title="No items yet"
+          description="Visit the shop to purchase themes, skins, and more with your coins!"
+          action={{
+            label: "Go to Shop",
+            href: "/shop",
+          }}
+        />
+      ) : (
+        <div className="space-y-8">
+          {categories.map((category) => {
+            const CategoryIcon = CATEGORY_ICONS[category] || Package;
+            const categoryItems = groupedItems[category];
+            
+            return (
+              <div key={category}>
+                <div className="flex items-center gap-2 mb-4">
+                  <CategoryIcon className="w-4 h-4 text-muted-foreground" />
+                  <h4 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+                    {category.replace(/_/g, ' ')}
+                  </h4>
+                  <span className="text-xs text-muted-foreground">({categoryItems.length})</span>
+                </div>
+                
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {categoryItems.map((inventoryItem) => {
+                    const { item, isEquipped } = inventoryItem;
+                    const rarityColor = RARITY_COLORS[item.rarity] || RARITY_COLORS.common;
+                    const rarityTextColor = RARITY_TEXT_COLORS[item.rarity] || RARITY_TEXT_COLORS.common;
+                    
+                    return (
+                      <div
+                        key={inventoryItem.id}
+                        className={cn(
+                          "relative rounded-lg border-2 p-4 transition-all",
+                          rarityColor,
+                          isEquipped && "ring-2 ring-primary ring-offset-2 ring-offset-background"
+                        )}
+                        data-testid={`inventory-item-${inventoryItem.id}`}
+                      >
+                        {isEquipped && (
+                          <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <CheckCircle className="w-3 h-3" />
+                            Equipped
+                          </div>
+                        )}
+                        
+                        <div className="flex flex-col items-center text-center gap-2">
+                          {item.previewUrl ? (
+                            <img 
+                              src={item.previewUrl} 
+                              alt={item.name}
+                              className="w-12 h-12 rounded-lg object-cover"
+                            />
+                          ) : item.category === 'theme' ? (
+                            <div 
+                              className="w-12 h-12 rounded-lg border border-white/20"
+                              style={{ backgroundColor: item.value }}
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded-lg bg-white/5 flex items-center justify-center">
+                              <Gem className="w-6 h-6 text-muted-foreground" />
+                            </div>
+                          )}
+                          
+                          <div>
+                            <p className="font-medium text-sm line-clamp-1">{item.name}</p>
+                            <p className={cn("text-xs capitalize", rarityTextColor)}>
+                              {item.rarity}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Card>
+  );
 }
 
 function PlayerDetailSkeleton() {
@@ -1565,6 +1747,11 @@ export default function PlayerDetail() {
                 <Crosshair className="w-4 h-4" /> Scouting
               </TabsTrigger>
             )}
+            {isOwnProfile && (
+              <TabsTrigger value="inventory" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-inventory">
+                <Package className="w-4 h-4" /> Inventory
+              </TabsTrigger>
+            )}
           </TabsList>
         </div>
 
@@ -2286,6 +2473,12 @@ export default function PlayerDetail() {
               playerId={player.id} 
               canEdit={isOwnProfile} 
             />
+          </TabsContent>
+        )}
+
+        {isOwnProfile && (
+          <TabsContent value="inventory" className="space-y-6 animate-fade-in">
+            <InventorySection />
           </TabsContent>
         )}
       </Tabs>
