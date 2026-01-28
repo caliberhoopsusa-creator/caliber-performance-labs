@@ -24,17 +24,6 @@ import { cn } from "@/lib/utils";
 import type { ShopItem, UserInventory, CoinPackage } from "@shared/schema";
 import { SHOP_CATEGORIES, RARITY_COLORS } from "@shared/schema";
 
-import coinsStarterImg from "@/assets/images/coins-starter.png";
-import coinsValueImg from "@/assets/images/coins-value.png";
-import coinsSuperImg from "@/assets/images/coins-super.png";
-import coinsMegaImg from "@/assets/images/coins-mega.png";
-
-const COIN_PACKAGE_IMAGES: Record<string, string> = {
-  coins_100: coinsStarterImg,
-  coins_500: coinsValueImg,
-  coins_1200: coinsSuperImg,
-  coins_3000: coinsMegaImg,
-};
 
 const CATEGORY_ICONS: Record<string, typeof Palette> = {
   theme: Palette,
@@ -256,11 +245,18 @@ export default function Shop() {
               
               <CardContent className={cn("p-4 space-y-3", pkg.popular && "pt-6")}>
                 <div className="flex justify-center">
-                  <img 
-                    src={COIN_PACKAGE_IMAGES[pkg.id]} 
-                    alt={pkg.name}
-                    className="w-16 h-16 object-contain"
-                  />
+                  <div className={cn(
+                    "w-14 h-14 rounded-lg flex items-center justify-center",
+                    "bg-gradient-to-br from-yellow-500/20 to-yellow-600/10 border border-yellow-500/30"
+                  )}>
+                    <Coins className={cn(
+                      "text-yellow-500",
+                      pkg.id === "coins_100" && "w-6 h-6",
+                      pkg.id === "coins_500" && "w-7 h-7",
+                      pkg.id === "coins_1200" && "w-8 h-8",
+                      pkg.id === "coins_3000" && "w-9 h-9"
+                    )} />
+                  </div>
                 </div>
                 <div className="text-center space-y-1">
                   <h3 className="font-semibold text-sm">{pkg.name}</h3>
