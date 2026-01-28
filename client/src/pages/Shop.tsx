@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,7 +21,7 @@ import {
   Lock
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { ShopItem, UserInventory } from "@shared/schema";
+import type { ShopItem, UserInventory, CoinPackage } from "@shared/schema";
 import { SHOP_CATEGORIES, RARITY_COLORS } from "@shared/schema";
 
 const CATEGORY_ICONS: Record<string, typeof Palette> = {
@@ -52,6 +52,29 @@ export default function Shop() {
   const { data: coinsData } = useQuery<{ balance: number; transactions: any[] }>({
     queryKey: ["/api/shop/coins"],
     enabled: !!user,
+  });
+
+  const { data: coinPackages = [] } = useQuery<CoinPackage[]>({
+    queryKey: ["/api/shop/coin-packages"],
+  });
+
+  const purchaseCoinsMutation = useMutation({
+    mutationFn: async (packageId: string) => {
+      const res = await apiRequest("POST", "/api/stripe/checkout-coins", { packageId });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Purchase failed",
+        description: error.message || "Could not start checkout.",
+        variant: "destructive",
+      });
+    },
   });
 
   const purchaseMutation = useMutation({
@@ -129,6 +152,26 @@ export default function Shop() {
     animate: { transition: { staggerChildren: 0.05 } },
   };
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('coins_success') === 'true') {
+      toast({
+        title: "Coins Purchased!",
+        description: "Your coins have been added to your balance.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/shop/coins"] });
+      window.history.replaceState({}, '', '/shop');
+    }
+    if (params.get('coins_canceled') === 'true') {
+      toast({
+        title: "Purchase Canceled",
+        description: "Your coin purchase was canceled.",
+        variant: "destructive",
+      });
+      window.history.replaceState({}, '', '/shop');
+    }
+  }, []);
+
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] p-6">
@@ -162,6 +205,64 @@ export default function Shop() {
           <Coins className="w-5 h-5 text-yellow-500" />
           <span className="font-bold text-yellow-400">{coinBalance.toLocaleString()}</span>
           <span className="text-xs text-muted-foreground">coins</span>
+        </div>
+      </motion.div>
+
+      <motion.div
+        variants={fadeIn}
+        initial="initial"
+        animate="animate"
+        className="space-y-4"
+      >
+        <div className="flex items-center gap-2">
+          <Coins className="w-5 h-5 text-yellow-500" />
+          <h2 className="text-lg font-semibold">Buy Coins</h2>
+        </div>
+        
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {coinPackages.map((pkg) => (
+            <Card
+              key={pkg.id}
+              className={cn(
+                "relative overflow-hidden transition-all duration-300 hover:scale-[1.02]",
+                "bg-gradient-to-br from-black/40 to-black/20 border-white/10",
+                pkg.popular && "ring-2 ring-yellow-500/50"
+              )}
+              style={pkg.popular ? { boxShadow: "0 0 20px rgba(234, 179, 8, 0.3)" } : {}}
+              data-testid={`coin-package-${pkg.id}`}
+            >
+              {pkg.popular && (
+                <div className="absolute top-0 left-0 right-0 flex justify-center">
+                  <Badge 
+                    className="rounded-t-none rounded-b-md bg-gradient-to-r from-yellow-600 to-yellow-500 text-black text-[10px] font-bold px-2 py-0.5"
+                    style={{ boxShadow: "0 0 15px rgba(234, 179, 8, 0.5)" }}
+                  >
+                    BEST VALUE
+                  </Badge>
+                </div>
+              )}
+              
+              <CardContent className={cn("p-4 space-y-3", pkg.popular && "pt-6")}>
+                <div className="text-center space-y-1">
+                  <h3 className="font-semibold text-sm">{pkg.name}</h3>
+                  <div className="flex items-center justify-center gap-1">
+                    <Coins className="w-5 h-5 text-yellow-500" />
+                    <span className="text-2xl font-bold text-yellow-400">{pkg.coins.toLocaleString()}</span>
+                  </div>
+                </div>
+                
+                <Button
+                  size="sm"
+                  className="w-full bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-black font-semibold"
+                  onClick={() => purchaseCoinsMutation.mutate(pkg.id)}
+                  disabled={purchaseCoinsMutation.isPending}
+                  data-testid={`btn-buy-coins-${pkg.id}`}
+                >
+                  ${(pkg.priceInCents / 100).toFixed(2)}
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </motion.div>
 

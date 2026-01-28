@@ -1579,15 +1579,12 @@ async function checkPerformanceAlerts(playerId: number, gameId: number, currentG
 
 // Award coins to a user and record the transaction
 async function awardCoins(
-  userId: number, 
+  userId: string, 
   amount: number, 
   type: string, 
   description: string,
   relatedItemId?: number
 ): Promise<number> {
-  const { users } = await import("@shared/models/auth");
-  const { eq } = await import("drizzle-orm");
-  
   // Update user's coin balance
   const [user] = await db.select().from(users).where(eq(users.id, userId));
   if (!user) return 0;
@@ -2285,21 +2282,18 @@ export async function registerRoutes(
       // --- Coin Rewards ---
       let coinsEarned = 0;
       if (player.userId) {
-        const userId = parseInt(player.userId);
-        if (!isNaN(userId)) {
-          // Base coins for logging a game
-          coinsEarned += getCoinsForAction('game_logged');
-          
-          // Grade bonuses
-          if (grade === 'A+') coinsEarned += getCoinsForAction('a_plus_grade');
-          else if (grade.startsWith('A')) coinsEarned += getCoinsForAction('a_grade');
-          
-          // Badge bonuses
-          coinsEarned += awardedBadges.length * getCoinsForAction('badge_earned');
-          
-          if (coinsEarned > 0) {
-            await awardCoins(userId, coinsEarned, 'earned_game', `Earned ${coinsEarned} coins from game vs ${input.opponent}`);
-          }
+        // Base coins for logging a game
+        coinsEarned += getCoinsForAction('game_logged');
+        
+        // Grade bonuses
+        if (grade === 'A+') coinsEarned += getCoinsForAction('a_plus_grade');
+        else if (grade.startsWith('A')) coinsEarned += getCoinsForAction('a_grade');
+        
+        // Badge bonuses
+        coinsEarned += awardedBadges.length * getCoinsForAction('badge_earned');
+        
+        if (coinsEarned > 0) {
+          await awardCoins(player.userId, coinsEarned, 'earned_game', `Earned ${coinsEarned} coins from game vs ${input.opponent}`);
         }
       }
       
@@ -2323,12 +2317,9 @@ export async function registerRoutes(
           
           // Award tier promotion coins
           if (player.userId) {
-            const userId = parseInt(player.userId);
-            if (!isNaN(userId)) {
-              const tierCoins = getCoinsForAction('tier_up');
-              await awardCoins(userId, tierCoins, 'earned_tier_up', `Earned ${tierCoins} coins for reaching ${newTier} tier!`);
-              coinsEarned += tierCoins;
-            }
+            const tierCoins = getCoinsForAction('tier_up');
+            await awardCoins(player.userId, tierCoins, 'earned_tier_up', `Earned ${tierCoins} coins for reaching ${newTier} tier!`);
+            coinsEarned += tierCoins;
           }
         }
       }
@@ -2474,11 +2465,8 @@ export async function registerRoutes(
     if (updates.completed === true && !existingGoal.completed) {
       const player = await storage.getPlayer(existingGoal.playerId);
       if (player?.userId) {
-        const userId = parseInt(player.userId);
-        if (!isNaN(userId)) {
-          coinsAwarded = getCoinsForAction('goal_completed');
-          await awardCoins(userId, coinsAwarded, 'earned_goal', `Completed goal: ${existingGoal.title}`);
-        }
+        coinsAwarded = getCoinsForAction('goal_completed');
+        await awardCoins(player.userId, coinsAwarded, 'earned_goal', `Completed goal: ${existingGoal.title}`);
       }
     }
     
@@ -2538,25 +2526,22 @@ export async function registerRoutes(
       
       // Award daily login coins
       if (player.userId) {
-        const userId = parseInt(player.userId);
-        if (!isNaN(userId)) {
-          coinsAwarded = getCoinsForAction('daily_login');
-          
-          // Add streak bonus coins if milestone reached
-          if (result.isNewMilestone && result.milestoneReached) {
-            const streakKey = `streak_bonus_${result.milestoneReached}` as keyof typeof COIN_REWARDS;
-            if (COIN_REWARDS[streakKey]) {
-              coinsAwarded += COIN_REWARDS[streakKey];
-            }
+        coinsAwarded = getCoinsForAction('daily_login');
+        
+        // Add streak bonus coins if milestone reached
+        if (result.isNewMilestone && result.milestoneReached) {
+          const streakKey = `streak_bonus_${result.milestoneReached}` as keyof typeof COIN_REWARDS;
+          if (COIN_REWARDS[streakKey]) {
+            coinsAwarded += COIN_REWARDS[streakKey];
           }
-          
-          if (coinsAwarded > 0) {
-            await awardCoins(userId, coinsAwarded, 'earned_activity', 
-              result.isNewMilestone 
-                ? `Earned ${coinsAwarded} coins for ${result.milestoneReached}-day streak!`
-                : `Daily login bonus: ${coinsAwarded} coins`
-            );
-          }
+        }
+        
+        if (coinsAwarded > 0) {
+          await awardCoins(player.userId, coinsAwarded, 'earned_activity', 
+            result.isNewMilestone 
+              ? `Earned ${coinsAwarded} coins for ${result.milestoneReached}-day streak!`
+              : `Daily login bonus: ${coinsAwarded} coins`
+          );
         }
       }
     }
@@ -6964,6 +6949,78 @@ Respond in this exact JSON format:
     }
   });
 
+  // POST /api/stripe/checkout-coins - Create checkout session for coin purchase
+  app.post('/api/stripe/checkout-coins', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ error: 'Not authenticated' });
+      }
+
+      const { packageId } = req.body;
+      if (!packageId) {
+        return res.status(400).json({ error: 'Package ID required' });
+      }
+
+      // Import COIN_PACKAGES from schema
+      const { COIN_PACKAGES } = await import('../shared/schema');
+      const coinPackage = COIN_PACKAGES.find(p => p.id === packageId);
+      if (!coinPackage) {
+        return res.status(400).json({ error: 'Invalid package' });
+      }
+
+      const stripe = await getUncachableStripeClient();
+      const user = await authStorage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      let customerId = user.stripeCustomerId;
+      if (!customerId) {
+        const customer = await stripe.customers.create({
+          email: user.email || undefined,
+          metadata: { userId },
+        });
+        customerId = customer.id;
+        await db.update(users)
+          .set({ stripeCustomerId: customerId })
+          .where(eq(users.id, userId));
+      }
+
+      const baseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0] || 'localhost:5000'}`;
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        payment_method_types: ['card'],
+        line_items: [{
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: `${coinPackage.name} - ${coinPackage.coins} Coins`,
+              description: `Purchase ${coinPackage.coins} coins for Caliber`,
+            },
+            unit_amount: coinPackage.priceInCents,
+          },
+          quantity: 1,
+        }],
+        mode: 'payment',
+        success_url: `${baseUrl}/shop?coins_success=true`,
+        cancel_url: `${baseUrl}/shop?coins_canceled=true`,
+        metadata: {
+          type: 'coin_purchase',
+          packageId: coinPackage.id,
+          coins: coinPackage.coins.toString(),
+          userId,
+        },
+      });
+
+      res.json({ url: session.url });
+    } catch (err: any) {
+      console.error('Coin checkout error:', err);
+      res.status(500).json({ error: err.message || 'Checkout failed' });
+    }
+  });
+
   app.get('/api/stripe/subscription', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
@@ -9540,6 +9597,17 @@ Respond in this exact JSON format:
     } catch (error) {
       console.error('Error fetching coin data:', error);
       res.status(500).json({ message: "Failed to fetch coin data" });
+    }
+  });
+
+  // GET /api/shop/coin-packages - Get available coin packages for purchase
+  app.get('/api/shop/coin-packages', async (req, res) => {
+    try {
+      const { COIN_PACKAGES } = await import('../shared/schema');
+      res.json(COIN_PACKAGES);
+    } catch (err: any) {
+      console.error('Failed to get coin packages:', err);
+      res.status(500).json({ error: 'Failed to get coin packages' });
     }
   });
 
