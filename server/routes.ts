@@ -1681,10 +1681,52 @@ async function updateActivityStreak(playerId: number, streakType: string): Promi
   return { streakCount: newCount, isNewMilestone, milestoneReached };
 }
 
+async function seedShopItems() {
+  try {
+    const existingItems = await db.select().from(shopItems).limit(1);
+    if (existingItems.length > 0) {
+      console.log('Shop items already seeded');
+      return;
+    }
+
+    console.log('Seeding shop items...');
+    const items = [
+      { name: "Cyan Pulse", description: "The classic Caliber cyan accent", category: "theme", type: "accent_color", value: "#00D4FF", coinPrice: 0, rarity: "common", sortOrder: 1 },
+      { name: "Purple Reign", description: "Royal purple accent for a regal look", category: "theme", type: "accent_color", value: "#A855F7", coinPrice: 100, rarity: "common", sortOrder: 2 },
+      { name: "Golden Hour", description: "Warm gold accent for champions", category: "theme", type: "accent_color", value: "#F59E0B", coinPrice: 150, rarity: "rare", sortOrder: 3 },
+      { name: "Emerald City", description: "Fresh green accent for growth mindset", category: "theme", type: "accent_color", value: "#10B981", coinPrice: 100, rarity: "common", sortOrder: 4 },
+      { name: "Ruby Fire", description: "Intense red accent for competitive spirit", category: "theme", type: "accent_color", value: "#EF4444", coinPrice: 100, rarity: "common", sortOrder: 5 },
+      { name: "Electric Blue", description: "Bright blue accent for high energy", category: "theme", type: "accent_color", value: "#3B82F6", coinPrice: 100, rarity: "common", sortOrder: 6 },
+      { name: "Sunset Orange", description: "Warm orange accent for vibrant personality", category: "theme", type: "accent_color", value: "#F97316", coinPrice: 150, rarity: "rare", sortOrder: 7 },
+      { name: "Midnight Purple", description: "Deep purple accent with mystique", category: "theme", type: "accent_color", value: "#7C3AED", coinPrice: 200, rarity: "rare", sortOrder: 8 },
+      { name: "Rose Gold", description: "Elegant rose gold accent", category: "theme", type: "accent_color", value: "#F472B6", coinPrice: 250, rarity: "epic", sortOrder: 9 },
+      { name: "Diamond Ice", description: "Premium icy white accent", category: "theme", type: "accent_color", value: "#E0F2FE", coinPrice: 500, rarity: "legendary", sortOrder: 10 },
+      { name: "Neon Grid", description: "Cyber grid background for your profile", category: "profile_skin", type: "card_background", value: "neon-grid", coinPrice: 200, rarity: "rare", sortOrder: 1 },
+      { name: "Flame Burst", description: "Fiery gradient background", category: "profile_skin", type: "card_background", value: "flame-burst", coinPrice: 250, rarity: "rare", sortOrder: 2 },
+      { name: "Aurora Glow", description: "Northern lights inspired background", category: "profile_skin", type: "card_background", value: "aurora-glow", coinPrice: 400, rarity: "epic", sortOrder: 3 },
+      { name: "Galaxy Swirl", description: "Cosmic space background", category: "profile_skin", type: "card_background", value: "galaxy-swirl", coinPrice: 600, rarity: "legendary", sortOrder: 4 },
+      { name: "Gold Frame", description: "Golden frame around your badges", category: "badge_style", type: "frame", value: "gold-frame", coinPrice: 300, rarity: "epic", sortOrder: 1 },
+      { name: "Diamond Sparkle", description: "Sparkling diamond effect on badges", category: "badge_style", type: "frame", value: "diamond-sparkle", coinPrice: 750, rarity: "legendary", sortOrder: 2 },
+      { name: "Glow Trail", description: "Subtle glow effect on interactions", category: "effect", type: "interaction", value: "glow-trail", coinPrice: 150, rarity: "rare", sortOrder: 1 },
+      { name: "Particle Burst", description: "Particle explosion on achievements", category: "effect", type: "achievement", value: "particle-burst", coinPrice: 350, rarity: "epic", sortOrder: 2 },
+    ];
+
+    for (const item of items) {
+      await db.insert(shopItems).values(item);
+    }
+    console.log('Shop items seeded successfully');
+  } catch (error) {
+    console.error('Error seeding shop items:', error);
+  }
+}
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  
+  // Seed shop items on startup
+  await seedShopItems();
   
   // Setup authentication FIRST before other routes
   await setupAuth(app);
