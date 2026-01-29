@@ -22,6 +22,7 @@ import { ShareableBadgeCard } from "@/components/ShareableBadgeCard";
 import { HighlightsGallery } from "@/components/HighlightsGallery";
 import { PlayerRatingsSection } from "@/components/PlayerRatingsSection";
 import { useAuth } from "@/hooks/use-auth";
+import { useEquippedItems } from "@/contexts/EquippedItemsContext";
 import { useRoute, Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { StatCard } from "@/components/StatCard";
@@ -1099,6 +1100,7 @@ export default function PlayerDetail() {
   const { mutate: updatePlayer, isPending: isUpdating } = useUpdatePlayer();
   const { toast } = useToast();
   const { user, isAuthenticated } = useAuth();
+  const { getProfileSkinStyle, getBadgeStyle, getEffectConfig, equippedProfileSkin, equippedEffect } = useEquippedItems();
   const [location, navigate] = useLocation();
   const [showAllGames, setShowAllGames] = useState(false);
   const [expandedGameId, setExpandedGameId] = useState<number | null>(null);
@@ -1515,13 +1517,33 @@ export default function PlayerDetail() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 via-cyan-950/20 to-black/60 border border-cyan-500/20"
-        style={{ boxShadow: "0 0 40px rgba(0, 212, 255, 0.1)" }}
+        className="relative overflow-hidden rounded-2xl border"
+        style={{ 
+          background: isOwnProfile && getProfileSkinStyle()?.background 
+            ? getProfileSkinStyle()?.background 
+            : "linear-gradient(to bottom right, rgba(0,0,0,0.6), rgba(8,51,68,0.2), rgba(0,0,0,0.6))",
+          borderColor: isOwnProfile && getProfileSkinStyle()?.borderColor 
+            ? getProfileSkinStyle()?.borderColor 
+            : "rgba(0, 212, 255, 0.2)",
+          boxShadow: isOwnProfile && getProfileSkinStyle()?.boxShadow 
+            ? getProfileSkinStyle()?.boxShadow 
+            : "0 0 40px rgba(0, 212, 255, 0.1)" 
+        }}
       >
         <div className="absolute inset-0 cyber-grid opacity-30" />
         <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 blur-[100px] rounded-full pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 blur-[80px] rounded-full pointer-events-none" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-cyan-400/5 blur-[120px] rounded-full pointer-events-none" />
+        {isOwnProfile && getEffectConfig() ? (
+          <div 
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full pointer-events-none"
+            style={{ 
+              background: getEffectConfig()?.gradient,
+              animation: getEffectConfig()?.animation,
+            }}
+          />
+        ) : (
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-cyan-400/5 blur-[120px] rounded-full pointer-events-none" />
+        )}
         
         <div className="relative z-10 p-6 md:p-8">
           <div className="flex flex-col md:flex-row md:items-start gap-6 md:gap-8">
@@ -1608,6 +1630,20 @@ export default function PlayerDetail() {
                     type="country" 
                     rank={player.countryRank} 
                   />
+                )}
+                {isOwnProfile && (equippedProfileSkin || equippedEffect) && (
+                  <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-400/30" data-testid="equipped-cosmetics-indicator">
+                    {equippedProfileSkin && (
+                      <div className="flex items-center gap-1" title={`Skin: ${equippedProfileSkin.item.name}`}>
+                        <User className="w-3 h-3 text-purple-400" />
+                      </div>
+                    )}
+                    {equippedEffect && (
+                      <div className="flex items-center gap-1" title={`Effect: ${equippedEffect.item.name}`}>
+                        <Sparkles className="w-3 h-3 text-pink-400" />
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
               
