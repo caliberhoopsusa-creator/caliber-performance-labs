@@ -165,7 +165,7 @@ export default function Leaderboard() {
             <div className="flex items-center gap-3">
               <Badge 
                 className={cn(
-                  "px-4 py-2 text-sm font-bold",
+                  "px-4 py-2 text-sm font-bold flex items-center gap-2",
                   isBasketball 
                     ? "bg-gradient-to-r from-orange-600 to-orange-500 text-white" 
                     : "bg-gradient-to-r from-amber-700 to-amber-600 text-white"
@@ -173,7 +173,17 @@ export default function Leaderboard() {
                 style={{ boxShadow: isBasketball ? "0 0 20px rgba(234,88,12,0.3)" : "0 0 20px rgba(180,83,9,0.3)" }}
                 data-testid="badge-current-sport"
               >
-                {isBasketball ? "🏀 Basketball" : "🏈 Football"}
+                {isBasketball ? (
+                  <>
+                    <Target className="w-4 h-4" />
+                    Basketball
+                  </>
+                ) : (
+                  <>
+                    <Flame className="w-4 h-4" />
+                    Football
+                  </>
+                )}
               </Badge>
             </div>
           </div>
@@ -194,7 +204,7 @@ export default function Leaderboard() {
                 variant="ghost" 
                 size="sm" 
                 onClick={clearFilters}
-                className="text-xs text-cyan-400 hover:text-cyan-300"
+                className="text-xs text-cyan-400"
                 data-testid="button-clear-filters"
               >
                 <X className="w-3 h-3 mr-1" />
