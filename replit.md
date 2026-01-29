@@ -86,14 +86,19 @@ Preferred communication style: Simple, everyday language.
   - **Mobile**: Safe-area utilities (pb-safe, pt-safe, pl-safe, pr-safe), scroll-snap for horizontal scroll, 44px touch targets
   - **Accessibility**: Aria-labels on icon-only buttons, focus-visible styles globally
   - **Visual Consistency**: Standardized empty states (8 components), unified TabsList styling (11 files)
-- **UI/UX**: Sleek futuristic dark theme with sci-fi inspired aesthetics, cyan accent color, cyber grid background pattern, and advanced glow effects. Features include:
-  - Futuristic cards: Gradient backgrounds with cyan-tinted borders, top accent lines, multi-layer shadows
-  - Sidebar: Deep gradient background with cyber grid overlay, cyan glow on active items, left border indicators
-  - Mobile nav: Floating bottom navigation with deep shadows and cyan accent glow
-  - Typography: Teko font for headings, Inter for body text
-  - Premium utility classes: `cyber-grid`, `scan-lines`, `holo-shimmer`, `neon-border`, `tech-panel`, `hud-container`, `card-angular`, `data-stream`, `orbital-glow`
-  - Color scheme: Cyan (#00D4FF) accent with gradient text, glowing badges, and ambient lighting effects
-  - Mobile-optimized with PWA support and offline capabilities
+- **UI/UX**: Advanced Shop-style design system with sleek futuristic dark theme, sci-fi inspired aesthetics, and premium visual effects:
+  - **Hero Sections**: All major pages feature hero sections with cyber-grid backgrounds (opacity-30), gradient text titles (from-white via-cyan-200 to-cyan-400), and glowing blur orbs (cyan/purple accents)
+  - **Card Styling**: Gradient backgrounds (from-black/60 to-black/30), border-white/10, top accent lines with gradient, box-shadow glow effects
+  - **Animations**: Framer-motion throughout with fadeUpVariants, staggerContainer patterns, AnimatePresence for smooth transitions, stagger delay (index * 0.05)
+  - **Tier-based Glows**: Player cards have tier-specific glow colors (Rookie=zinc, Starter=blue, All-Star=purple, MVP=amber, Hall of Fame=orange)
+  - **Icon Effects**: Lucide icons with drop-shadow filters (e.g., "drop-shadow(0 0 8px #00D4FF)")
+  - **Sidebar**: Deep gradient background with cyber grid overlay, cyan glow on active items, left border indicators
+  - **Mobile nav**: Floating bottom navigation with deep shadows and cyan accent glow
+  - **Typography**: Teko font for headings, Inter for body text
+  - **Premium utility classes**: `cyber-grid`, `scan-lines`, `holo-shimmer`, `neon-border`, `tech-panel`, `hud-container`, `card-angular`, `data-stream`, `orbital-glow`
+  - **Color scheme**: Cyan (#00D4FF) primary accent, gradient buttons (from-cyan-600 to-cyan-500), consistent hover/active states
+  - **Mobile-optimized** with PWA support and offline capabilities
+  - **Redesigned Pages**: Dashboard, Leaderboard, ScoutHub, Newsfeed, HighlightClips, PlayerDetail, PlayersList, AnalyzeGame - all feature consistent hero sections and premium styling
 
 ## Authentication Error Handling
 
