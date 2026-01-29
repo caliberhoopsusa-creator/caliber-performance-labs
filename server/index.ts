@@ -6,6 +6,7 @@ import { runMigrations } from 'stripe-replit-sync';
 import { getStripeSync } from './stripeClient';
 import { WebhookHandlers } from './webhookHandlers';
 import { seedColleges } from './seeds/colleges';
+import type Stripe from 'stripe';
 
 const app = express();
 const httpServer = createServer(app);
@@ -40,42 +41,50 @@ async function initStripe() {
     const stripe = await getUncachableStripeClient();
 
     console.log('Setting up webhook...');
-    const domain = process.env.REPLIT_DOMAINS?.split(',')[0];
-    const webhookUrl = domain ? `https://${domain}/api/stripe/webhook` : null;
+    const isProduction = process.env.REPLIT_DEPLOYMENT === '1';
+    const devDomain = process.env.REPLIT_DOMAINS?.split(',')[0];
+    const knownProdDomain = 'hoops-analyst--moppenheim25.replit.app';
     
-    if (webhookUrl && !webhookUrl.includes('undefined')) {
+    // Determine the webhook URL for THIS environment
+    const currentWebhookUrl = isProduction 
+      ? `https://${knownProdDomain}/api/stripe/webhook`
+      : devDomain ? `https://${devDomain}/api/stripe/webhook` : null;
+    
+    console.log(`Webhook URL: ${currentWebhookUrl || 'none'} (production: ${isProduction})`);
+    
+    const webhookEvents: Stripe.WebhookEndpointCreateParams.EnabledEvent[] = [
+      'checkout.session.completed',
+      'customer.subscription.created',
+      'customer.subscription.updated',
+      'customer.subscription.deleted',
+      'invoice.paid',
+      'invoice.payment_failed',
+    ];
+    
+    if (currentWebhookUrl) {
       try {
-        // List existing webhooks 
         const existingWebhooks = await stripe.webhookEndpoints.list({ limit: 100 });
         
-        // Delete any existing webhooks for this URL (we need to recreate to get the secret)
-        for (const w of existingWebhooks.data.filter(w => w.url === webhookUrl)) {
+        // Delete existing webhook for this URL and recreate to get secret
+        for (const w of existingWebhooks.data.filter(w => w.url === currentWebhookUrl)) {
           await stripe.webhookEndpoints.del(w.id);
           console.log(`Deleted old webhook: ${w.id}`);
         }
         
-        // Create a new webhook endpoint to get the secret
+        // Create webhook for current environment
         const webhook = await stripe.webhookEndpoints.create({
-          url: webhookUrl,
-          enabled_events: [
-            'checkout.session.completed',
-            'customer.subscription.created',
-            'customer.subscription.updated',
-            'customer.subscription.deleted',
-            'invoice.paid',
-            'invoice.payment_failed',
-          ],
+          url: currentWebhookUrl,
+          enabled_events: webhookEvents,
         });
         webhookEndpointSecret = webhook.secret || null;
         console.log(`Webhook created: ${webhook.url}`);
+        
         if (webhookEndpointSecret) {
           console.log('Webhook secret captured for signature verification');
         }
       } catch (webhookErr: any) {
         console.log('Webhook setup error:', webhookErr.message);
       }
-    } else {
-      console.log('No valid domain for webhook, skipping');
     }
 
     console.log('Syncing Stripe data...');
