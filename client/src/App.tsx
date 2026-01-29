@@ -58,6 +58,7 @@ import TeamComparison from "./pages/TeamComparison";
 import ReportCardPage from "./pages/ReportCardPage";
 import SocialHub from "./pages/SocialHub";
 import Shop from "./pages/Shop";
+import CoachVerify from "./pages/CoachVerify";
 import NotFound from "./pages/not-found";
 
 interface ExtendedUser {
@@ -291,6 +292,7 @@ function MainRouter() {
                 <Route path="/coach/practices" component={PracticeTracker} />
                 <Route path="/coach/scouting" component={OpponentScouting} />
                 <Route path="/coach/alerts" component={CoachAlertsPage} />
+                <Route path="/coach/verify" component={CoachVerify} />
                 <Route path="/pricing" component={Pricing} />
                 <Route path="/workouts" component={WorkoutTracker} />
                 <Route path="/schedule" component={ScheduleCalendar} />

@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, ShoppingBag } from "lucide-react";
+import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, ShoppingBag, ClipboardCheck } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import caliberLogo from "@assets/caliber-logo-monogram.png";
 import { cn } from "@/lib/utils";
@@ -18,6 +19,7 @@ type NavSection = {
     icon: React.ComponentType<{ className?: string }>;
     featured?: boolean;
     premium?: SubscriptionTier;
+    badgeCount?: number;
   }[];
 };
 
@@ -36,6 +38,13 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
   // For coaches: show full navigation with all coach tools
   const isPlayer = userRole === 'player';
   const isCoach = userRole === 'coach';
+
+  // Fetch pending verification count for coaches
+  const { data: pendingGames } = useQuery<{ id: number }[]>({
+    queryKey: ['/api/coach/unverified-games'],
+    enabled: isCoach,
+  });
+  const pendingCount = pendingGames?.length ?? 0;
 
   const handleRoleSwitch = () => {
     const newRole = isPlayer ? 'coach' : 'player';
@@ -133,6 +142,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
     {
       title: "Coach Tools",
       items: [
+        { href: "/coach/verify", label: "Verify Games", icon: ClipboardCheck, featured: pendingCount > 0, badgeCount: pendingCount },
         { href: "/coach/hub", label: "Team Hub", icon: ClipboardList, premium: "coach_pro" },
         { href: "/coach/practices", label: "Practices", icon: CalendarCheck, premium: "coach_pro" },
         { href: "/coach/lineups", label: "Lineups", icon: UsersRound, premium: "coach_pro" },
@@ -203,9 +213,14 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
                       ? "text-muted-foreground/50 hover:text-muted-foreground hover:bg-white/[0.02]"
                       : "text-muted-foreground hover:text-cyan-300 hover:bg-cyan-500/[0.05] hover:border-l-2 hover:border-cyan-500/30"
                   )} data-testid={`nav-${item.href.replace(/\//g, '-').replace(/^-/, '') || 'home'}`}>
-                    <item.icon className={cn("w-4 h-4", isActive && "text-primary")} />
+                    <item.icon className={cn("w-4 h-4", isActive && "text-primary", isFeatured && "text-cyan-400")} />
                     {item.label}
-                    {isFeatured && (
+                    {item.badgeCount !== undefined && item.badgeCount > 0 && (
+                      <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] bg-gradient-to-r from-cyan-500 to-emerald-500 text-white rounded-full font-bold animate-pulse shadow-lg shadow-cyan-500/30">
+                        {item.badgeCount > 99 ? '99+' : item.badgeCount}
+                      </span>
+                    )}
+                    {isFeatured && !item.badgeCount && (
                       <span className="ml-auto text-[9px] bg-primary text-white px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">
                         LIVE
                       </span>
