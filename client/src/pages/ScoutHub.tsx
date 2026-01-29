@@ -11,10 +11,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { GradeBadge } from "@/components/GradeBadge";
 import { BASKETBALL_POSITIONS, FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS, type FootballPosition } from "@shared/sports-config";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 import { 
   Search, MapPin, GraduationCap, Users, Target, Award, 
   Trophy, Filter, ArrowUpDown, Crosshair, Zap, BookOpen,
-  TrendingUp, Star, Eye, UserSearch
+  TrendingUp, Star, Eye, UserSearch, Sparkles
 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 
@@ -54,7 +56,6 @@ interface ScoutPlayer {
   hasCaliberBadge: boolean;
   stateRank: number | null;
   countryRank: number | null;
-  // Football scouting metrics
   fortyYardDash: string | null;
   verticalJump: string | null;
   totalPointsSIS: string | null;
@@ -78,12 +79,12 @@ const PASSING_YDS_OPTIONS = ["All", "100", "150", "200", "250"];
 const RUSHING_YDS_OPTIONS = ["All", "50", "75", "100", "150"];
 const RECEIVING_YDS_OPTIONS = ["All", "50", "75", "100", "150"];
 
-const TIER_COLORS: Record<string, string> = {
-  "Rookie": "bg-zinc-500/20 text-zinc-400 border-zinc-500/30",
-  "Starter": "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  "All-Star": "bg-purple-500/20 text-purple-400 border-purple-500/30",
-  "MVP": "bg-amber-500/20 text-amber-400 border-amber-500/30",
-  "Hall of Fame": "bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border-amber-500/30",
+const TIER_GLOW_COLORS: Record<string, { glow: string; border: string; text: string }> = {
+  "Rookie": { glow: "rgba(113,113,122,0.3)", border: "border-zinc-500/40", text: "text-zinc-400" },
+  "Starter": { glow: "rgba(59,130,246,0.4)", border: "border-blue-500/50", text: "text-blue-400" },
+  "All-Star": { glow: "rgba(168,85,247,0.5)", border: "border-purple-500/50", text: "text-purple-400" },
+  "MVP": { glow: "rgba(245,158,11,0.5)", border: "border-amber-500/50", text: "text-amber-400" },
+  "Hall of Fame": { glow: "rgba(251,146,60,0.6)", border: "border-orange-500/50", text: "text-orange-400" },
 };
 
 function getGradeValue(grade: string | null): number {
@@ -101,383 +102,323 @@ function getGradeValue(grade: string | null): number {
 interface ScoutPlayerCardProps {
   player: ScoutPlayer;
   sport: 'basketball' | 'football';
+  index: number;
 }
 
-function ScoutPlayerCard({ player, sport }: ScoutPlayerCardProps) {
-  const tierClass = TIER_COLORS[player.currentTier] || TIER_COLORS["Rookie"];
+function ScoutPlayerCard({ player, sport, index }: ScoutPlayerCardProps) {
+  const tierStyles = TIER_GLOW_COLORS[player.currentTier] || TIER_GLOW_COLORS["Rookie"];
   const initials = player.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
   const isFootball = sport === 'football';
   const isRecruitReady = player.openToOpportunities;
 
-  // Handle comma-separated multi-positions
   const positionLabel = player.position?.split(',').map(p => p.trim()).map(pos => 
     isFootball && FOOTBALL_POSITIONS.includes(pos as FootballPosition)
       ? FOOTBALL_POSITION_LABELS[pos as FootballPosition]
       : pos
   ).join(' / ') || player.position;
   
-  // Helper to check if player has any of the given positions
   const hasPos = (positions: string[]) => {
     const playerPositions = player.position?.split(',').map(p => p.trim()) || [];
     return playerPositions.some(pos => positions.includes(pos));
   };
 
   return (
-    <Link href={`/players/${player.id}`}>
-      <Card 
-        className={`hover-elevate cursor-pointer transition-all h-full ${
-          isRecruitReady 
-            ? "border-green-500/50 bg-gradient-to-br from-green-500/5 to-card/80 backdrop-blur-sm" 
-            : "border-border/50 bg-card/80 backdrop-blur-sm"
-        }`}
-        data-testid={`card-scout-player-${player.id}`}
-      >
-        <CardContent className="p-4">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05, duration: 0.3 }}
+    >
+      <Link href={`/players/${player.id}`}>
+        <Card 
+          className={cn(
+            "group cursor-pointer transition-all duration-300 h-full overflow-hidden relative",
+            "bg-gradient-to-br from-black/60 to-black/30 backdrop-blur-sm",
+            "hover:scale-[1.02] hover:-translate-y-1",
+            tierStyles.border,
+            isRecruitReady && "ring-1 ring-green-500/30"
+          )}
+          style={{ 
+            boxShadow: `0 0 30px ${tierStyles.glow}, inset 0 1px 0 rgba(255,255,255,0.05)` 
+          }}
+          data-testid={`card-scout-player-${player.id}`}
+        >
+          <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
+          
           {isRecruitReady && (
-            <div className="flex items-center gap-2 mb-3 pb-3 border-b border-green-500/20">
-              <div className="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center">
-                <Target className="w-3 h-3 text-green-400" />
-              </div>
-              <span className="text-xs font-bold text-green-400 uppercase tracking-wider">
-                Open to Opportunities
-              </span>
+            <div className="absolute top-0 left-0 right-0 flex justify-center">
+              <Badge 
+                className="rounded-t-none rounded-b-lg text-[10px] font-bold px-3 py-1 border-0"
+                style={{ 
+                  background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                  boxShadow: '0 4px 20px rgba(34, 197, 94, 0.4)',
+                  color: 'white'
+                }}
+              >
+                <Sparkles className="w-3 h-3 mr-1" />
+                OPEN TO OPPORTUNITIES
+              </Badge>
             </div>
           )}
 
-          <div className="flex gap-4">
-            <Avatar className="w-16 h-16 rounded-lg border-2 border-primary/20">
-              <AvatarImage src={player.photoUrl || undefined} alt={player.name} width={64} height={64} />
-              <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-bold">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-2 mb-1">
-                <div className="min-w-0">
-                  <h3 className="font-bold text-foreground truncate">{player.name}</h3>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span>{positionLabel}</span>
-                    {player.height && <span>• {player.height}</span>}
-                  </div>
-                </div>
-                {player.avgGrade && (
-                  <GradeBadge grade={player.avgGrade} size="lg" />
-                )}
+          <CardContent className={cn("p-5", isRecruitReady && "pt-8")}>
+            <div className="flex gap-4">
+              <div className="relative">
+                <div 
+                  className="absolute inset-0 rounded-xl blur-md opacity-50 group-hover:opacity-80 transition-opacity"
+                  style={{ background: tierStyles.glow }}
+                />
+                <Avatar className={cn(
+                  "w-16 h-16 rounded-xl border-2 relative z-10",
+                  tierStyles.border
+                )}>
+                  <AvatarImage src={player.photoUrl || undefined} alt={player.name} width={64} height={64} />
+                  <AvatarFallback className="rounded-xl bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 text-cyan-400 font-bold">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
               </div>
 
-              <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                {player.school && (
-                  <Badge variant="outline" className="text-xs gap-1 py-0.5">
-                    <GraduationCap className="w-3 h-3" />
-                    {player.school}
-                  </Badge>
-                )}
-                {(player.city || player.state) && (
-                  <Badge variant="outline" className="text-xs gap-1 py-0.5">
-                    <MapPin className="w-3 h-3" />
-                    {player.city && player.state ? `${player.city}, ${player.state}` : player.state || player.city}
-                  </Badge>
-                )}
-                {player.graduationYear && (
-                  <Badge variant="outline" className="text-xs py-0.5">
-                    Class of {player.graduationYear}
-                  </Badge>
-                )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-white truncate group-hover:text-cyan-400 transition-colors">
+                      {player.name}
+                    </h3>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <span className="text-cyan-400/80">{positionLabel}</span>
+                      {player.height && <span className="text-white/50">• {player.height}</span>}
+                    </div>
+                  </div>
+                  {player.avgGrade && (
+                    <GradeBadge grade={player.avgGrade} size="lg" />
+                  )}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                  {player.school && (
+                    <Badge variant="outline" className="text-xs gap-1 py-0.5 border-white/10 bg-white/5">
+                      <GraduationCap className="w-3 h-3 text-cyan-400" />
+                      {player.school}
+                    </Badge>
+                  )}
+                  {(player.city || player.state) && (
+                    <Badge variant="outline" className="text-xs gap-1 py-0.5 border-white/10 bg-white/5">
+                      <MapPin className="w-3 h-3 text-cyan-400" />
+                      {player.city && player.state ? `${player.city}, ${player.state}` : player.state || player.city}
+                    </Badge>
+                  )}
+                  {player.graduationYear && (
+                    <Badge variant="outline" className="text-xs py-0.5 border-white/10 bg-white/5">
+                      Class of {player.graduationYear}
+                    </Badge>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="mt-4 pt-3 border-t border-border/50">
-            {isFootball ? (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
-                {hasPos(['QB']) ? (
-                  <>
-                    <div>
-                      <div className="text-lg font-bold text-primary">{player.passingYards || 0}</div>
-                      <div className="text-xs text-muted-foreground">Pass YDS</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-primary">{player.passingTouchdowns || 0}</div>
-                      <div className="text-xs text-muted-foreground">Pass TD</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-primary">{player.rushingYards || 0}</div>
-                      <div className="text-xs text-muted-foreground">Rush YDS</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-primary">{player.gamesPlayed || 0}</div>
-                      <div className="text-xs text-muted-foreground">Games</div>
-                    </div>
-                  </>
-                ) : hasPos(['RB']) ? (
-                  <>
-                    <div>
-                      <div className="text-lg font-bold text-primary">{player.rushingYards || 0}</div>
-                      <div className="text-xs text-muted-foreground">Rush YDS</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-primary">{player.rushingTouchdowns || 0}</div>
-                      <div className="text-xs text-muted-foreground">Rush TD</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-primary">{player.receivingYards || 0}</div>
-                      <div className="text-xs text-muted-foreground">Rec YDS</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-primary">{player.gamesPlayed || 0}</div>
-                      <div className="text-xs text-muted-foreground">Games</div>
-                    </div>
-                  </>
-                ) : hasPos(['WR', 'TE']) ? (
-                  <>
-                    <div>
-                      <div className="text-lg font-bold text-primary">{player.receivingYards || 0}</div>
-                      <div className="text-xs text-muted-foreground">Rec YDS</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-primary">{player.receivingTouchdowns || 0}</div>
-                      <div className="text-xs text-muted-foreground">Rec TD</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-primary">{player.rushingYards || 0}</div>
-                      <div className="text-xs text-muted-foreground">Rush YDS</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-primary">{player.gamesPlayed || 0}</div>
-                      <div className="text-xs text-muted-foreground">Games</div>
-                    </div>
-                  </>
-                ) : hasPos(['DL', 'LB', 'DB']) ? (
-                  <>
-                    <div>
-                      <div className="text-lg font-bold text-primary">{player.tackles || 0}</div>
-                      <div className="text-xs text-muted-foreground">Tackles</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-primary">{player.sacks || 0}</div>
-                      <div className="text-xs text-muted-foreground">Sacks</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-primary">{player.defensiveInterceptions || 0}</div>
-                      <div className="text-xs text-muted-foreground">INT</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-primary">{player.gamesPlayed || 0}</div>
-                      <div className="text-xs text-muted-foreground">Games</div>
-                    </div>
-                  </>
-                ) : hasPos(['OL']) ? (
-                  <>
-                    <div>
-                      <div className="text-lg font-bold text-primary">{player.gamesPlayed || 0}</div>
-                      <div className="text-xs text-muted-foreground">Games</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-primary">-</div>
-                      <div className="text-xs text-muted-foreground">Pancakes</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-primary">-</div>
-                      <div className="text-xs text-muted-foreground">Sacks Alwd</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-primary">{player.currentTier}</div>
-                      <div className="text-xs text-muted-foreground">Tier</div>
-                    </div>
-                  </>
-                ) : hasPos(['K']) ? (
-                  <>
-                    <div>
-                      <div className="text-lg font-bold text-primary">{player.gamesPlayed || 0}</div>
-                      <div className="text-xs text-muted-foreground">Games</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-primary">-</div>
-                      <div className="text-xs text-muted-foreground">FG Made</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-primary">-</div>
-                      <div className="text-xs text-muted-foreground">XP Made</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-primary">{player.currentTier}</div>
-                      <div className="text-xs text-muted-foreground">Tier</div>
-                    </div>
-                  </>
-                ) : hasPos(['P']) ? (
-                  <>
-                    <div>
-                      <div className="text-lg font-bold text-primary">{player.gamesPlayed || 0}</div>
-                      <div className="text-xs text-muted-foreground">Games</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-primary">-</div>
-                      <div className="text-xs text-muted-foreground">Punts</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-primary">-</div>
-                      <div className="text-xs text-muted-foreground">Avg YDS</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-primary">{player.currentTier}</div>
-                      <div className="text-xs text-muted-foreground">Tier</div>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div>
-                      <div className="text-lg font-bold text-primary">{player.gamesPlayed || 0}</div>
-                      <div className="text-xs text-muted-foreground">Games</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-primary">{(player.rushingYards || 0) + (player.passingYards || 0) + (player.receivingYards || 0)}</div>
-                      <div className="text-xs text-muted-foreground">Total YDS</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-primary">{player.tackles || 0}</div>
-                      <div className="text-xs text-muted-foreground">Tackles</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-primary">{player.currentTier}</div>
-                      <div className="text-xs text-muted-foreground">Tier</div>
-                    </div>
-                  </>
-                )}
-              </div>
-            ) : (
-              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 text-center">
-                <div>
-                  <div className="text-lg font-bold text-primary">{(player.ppg || 0).toFixed(1)}</div>
-                  <div className="text-xs text-muted-foreground">PPG</div>
+            <div className="mt-4 pt-4 border-t border-cyan-500/10">
+              {isFootball ? (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                  {hasPos(['QB']) ? (
+                    <>
+                      <StatDisplay value={player.passingYards || 0} label="Pass YDS" />
+                      <StatDisplay value={player.passingTouchdowns || 0} label="Pass TD" />
+                      <StatDisplay value={player.rushingYards || 0} label="Rush YDS" />
+                      <StatDisplay value={player.gamesPlayed || 0} label="Games" />
+                    </>
+                  ) : hasPos(['RB']) ? (
+                    <>
+                      <StatDisplay value={player.rushingYards || 0} label="Rush YDS" />
+                      <StatDisplay value={player.rushingTouchdowns || 0} label="Rush TD" />
+                      <StatDisplay value={player.receivingYards || 0} label="Rec YDS" />
+                      <StatDisplay value={player.gamesPlayed || 0} label="Games" />
+                    </>
+                  ) : hasPos(['WR', 'TE']) ? (
+                    <>
+                      <StatDisplay value={player.receivingYards || 0} label="Rec YDS" />
+                      <StatDisplay value={player.receivingTouchdowns || 0} label="Rec TD" />
+                      <StatDisplay value={player.rushingYards || 0} label="Rush YDS" />
+                      <StatDisplay value={player.gamesPlayed || 0} label="Games" />
+                    </>
+                  ) : hasPos(['DL', 'LB', 'DB']) ? (
+                    <>
+                      <StatDisplay value={player.tackles || 0} label="Tackles" />
+                      <StatDisplay value={player.sacks || 0} label="Sacks" />
+                      <StatDisplay value={player.defensiveInterceptions || 0} label="INT" />
+                      <StatDisplay value={player.gamesPlayed || 0} label="Games" />
+                    </>
+                  ) : hasPos(['OL']) ? (
+                    <>
+                      <StatDisplay value={player.gamesPlayed || 0} label="Games" />
+                      <StatDisplay value="-" label="Pancakes" />
+                      <StatDisplay value="-" label="Sacks Alwd" />
+                      <StatDisplay value={player.currentTier} label="Tier" isText />
+                    </>
+                  ) : hasPos(['K']) ? (
+                    <>
+                      <StatDisplay value={player.gamesPlayed || 0} label="Games" />
+                      <StatDisplay value="-" label="FG Made" />
+                      <StatDisplay value="-" label="XP Made" />
+                      <StatDisplay value={player.currentTier} label="Tier" isText />
+                    </>
+                  ) : hasPos(['P']) ? (
+                    <>
+                      <StatDisplay value={player.gamesPlayed || 0} label="Games" />
+                      <StatDisplay value="-" label="Punts" />
+                      <StatDisplay value="-" label="Avg YDS" />
+                      <StatDisplay value={player.currentTier} label="Tier" isText />
+                    </>
+                  ) : (
+                    <>
+                      <StatDisplay value={player.gamesPlayed || 0} label="Games" />
+                      <StatDisplay value={(player.rushingYards || 0) + (player.passingYards || 0) + (player.receivingYards || 0)} label="Total YDS" />
+                      <StatDisplay value={player.tackles || 0} label="Tackles" />
+                      <StatDisplay value={player.currentTier} label="Tier" isText />
+                    </>
+                  )}
                 </div>
-                <div>
-                  <div className="text-lg font-bold text-primary">{(player.rpg || 0).toFixed(1)}</div>
-                  <div className="text-xs text-muted-foreground">RPG</div>
+              ) : (
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 text-center">
+                  <StatDisplay value={(player.ppg || 0).toFixed(1)} label="PPG" />
+                  <StatDisplay value={(player.rpg || 0).toFixed(1)} label="RPG" />
+                  <StatDisplay value={(player.apg || 0).toFixed(1)} label="APG" />
+                  <StatDisplay value={(player.spg || 0).toFixed(1)} label="SPG" />
+                  <StatDisplay value={(player.bpg || 0).toFixed(1)} label="BPG" />
                 </div>
-                <div>
-                  <div className="text-lg font-bold text-primary">{(player.apg || 0).toFixed(1)}</div>
-                  <div className="text-xs text-muted-foreground">APG</div>
-                </div>
-                <div>
-                  <div className="text-lg font-bold text-primary">{(player.spg || 0).toFixed(1)}</div>
-                  <div className="text-xs text-muted-foreground">SPG</div>
-                </div>
-                <div>
-                  <div className="text-lg font-bold text-primary">{(player.bpg || 0).toFixed(1)}</div>
-                  <div className="text-xs text-muted-foreground">BPG</div>
-                </div>
-              </div>
-            )}
+              )}
 
-            {/* Football Scouting Metrics */}
-            {isFootball && (player.fortyYardDash || player.totalPointsSIS || player.physicality || player.footballIQ || player.leadership) && (
-              <div className="mt-3 pt-3 border-t border-cyan-500/20">
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  {player.fortyYardDash && (
-                    <div>
-                      <div className="text-sm font-bold text-cyan-400">{player.fortyYardDash}s</div>
-                      <div className="text-xs text-muted-foreground">40 Time</div>
-                    </div>
-                  )}
-                  {player.totalPointsSIS && (
-                    <div>
-                      <div className="text-sm font-bold text-cyan-400">{player.totalPointsSIS}</div>
-                      <div className="text-xs text-muted-foreground">SIS Pts</div>
-                    </div>
-                  )}
-                  {player.physicality !== null && player.physicality > 0 && (
-                    <div>
-                      <div className="text-sm font-bold text-cyan-400">{player.physicality}/10</div>
-                      <div className="text-xs text-muted-foreground">Physical</div>
-                    </div>
-                  )}
-                  {player.footballIQ !== null && player.footballIQ > 0 && (
-                    <div>
-                      <div className="text-sm font-bold text-cyan-400">{player.footballIQ}/10</div>
-                      <div className="text-xs text-muted-foreground">IQ</div>
-                    </div>
-                  )}
-                  {player.leadership !== null && player.leadership > 0 && (
-                    <div>
-                      <div className="text-sm font-bold text-cyan-400">{player.leadership}/10</div>
-                      <div className="text-xs text-muted-foreground">Leader</div>
-                    </div>
-                  )}
+              {isFootball && (player.fortyYardDash || player.totalPointsSIS || player.physicality || player.footballIQ || player.leadership) && (
+                <div className="mt-3 pt-3 border-t border-cyan-500/10">
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    {player.fortyYardDash && (
+                      <div>
+                        <div className="text-sm font-bold text-cyan-400" style={{ textShadow: '0 0 10px rgba(0,212,255,0.5)' }}>{player.fortyYardDash}s</div>
+                        <div className="text-xs text-muted-foreground">40 Time</div>
+                      </div>
+                    )}
+                    {player.totalPointsSIS && (
+                      <div>
+                        <div className="text-sm font-bold text-cyan-400" style={{ textShadow: '0 0 10px rgba(0,212,255,0.5)' }}>{player.totalPointsSIS}</div>
+                        <div className="text-xs text-muted-foreground">SIS Pts</div>
+                      </div>
+                    )}
+                    {player.physicality !== null && player.physicality > 0 && (
+                      <div>
+                        <div className="text-sm font-bold text-cyan-400" style={{ textShadow: '0 0 10px rgba(0,212,255,0.5)' }}>{player.physicality}/10</div>
+                        <div className="text-xs text-muted-foreground">Physical</div>
+                      </div>
+                    )}
+                    {player.footballIQ !== null && player.footballIQ > 0 && (
+                      <div>
+                        <div className="text-sm font-bold text-cyan-400" style={{ textShadow: '0 0 10px rgba(0,212,255,0.5)' }}>{player.footballIQ}/10</div>
+                        <div className="text-xs text-muted-foreground">IQ</div>
+                      </div>
+                    )}
+                    {player.leadership !== null && player.leadership > 0 && (
+                      <div>
+                        <div className="text-sm font-bold text-cyan-400" style={{ textShadow: '0 0 10px rgba(0,212,255,0.5)' }}>{player.leadership}/10</div>
+                        <div className="text-xs text-muted-foreground">Leader</div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
 
-          <div className="flex flex-wrap items-center gap-1.5 mt-3">
-            <Badge variant="outline" className={tierClass}>
-              {player.currentTier}
-            </Badge>
-            {player.gpa && player.gpa >= 3.0 && (
-              <Badge variant="outline" className="text-xs gap-1 border-blue-500/30 text-blue-400">
-                <BookOpen className="w-3 h-3" />
-                {player.gpa.toFixed(1)} GPA
-              </Badge>
-            )}
-            {player.hasCaliberBadge && (
+            <div className="flex flex-wrap items-center gap-1.5 mt-4">
               <Badge 
-                variant="outline"
-                className="text-xs gap-1 py-0.5"
-                style={{ 
-                  background: 'linear-gradient(135deg, rgba(212,175,55,0.15) 0%, rgba(10,10,10,0.3) 100%)',
-                  borderColor: 'rgba(212,175,55,0.4)',
-                  color: '#D4AF37'
-                }}
+                variant="outline" 
+                className={cn("text-xs", tierStyles.border, tierStyles.text)}
+                style={{ background: `${tierStyles.glow.replace(')', ',0.15)')}` }}
               >
-                <Award className="w-3 h-3" />
-                Caliber
+                {player.currentTier}
               </Badge>
-            )}
-            {player.stateRank && player.state && (
-              <Badge 
-                variant="outline"
-                className="text-xs gap-1 py-0.5"
-                style={{ 
-                  background: 'linear-gradient(135deg, rgba(212,175,55,0.15) 0%, rgba(10,10,10,0.3) 100%)',
-                  borderColor: 'rgba(212,175,55,0.4)',
-                  color: '#D4AF37'
-                }}
-              >
-                <Trophy className="w-3 h-3" />
-                #{player.stateRank} {player.state}
+              {player.gpa && player.gpa >= 3.0 && (
+                <Badge variant="outline" className="text-xs gap-1 border-blue-500/30 text-blue-400 bg-blue-500/10">
+                  <BookOpen className="w-3 h-3" />
+                  {player.gpa.toFixed(1)} GPA
+                </Badge>
+              )}
+              {player.hasCaliberBadge && (
+                <Badge 
+                  variant="outline"
+                  className="text-xs gap-1 py-0.5"
+                  style={{ 
+                    background: 'linear-gradient(135deg, rgba(212,175,55,0.15) 0%, rgba(10,10,10,0.3) 100%)',
+                    borderColor: 'rgba(212,175,55,0.4)',
+                    color: '#D4AF37',
+                    boxShadow: '0 0 10px rgba(212,175,55,0.2)'
+                  }}
+                >
+                  <Award className="w-3 h-3" />
+                  Caliber
+                </Badge>
+              )}
+              {player.stateRank && player.state && (
+                <Badge 
+                  variant="outline"
+                  className="text-xs gap-1 py-0.5"
+                  style={{ 
+                    background: 'linear-gradient(135deg, rgba(212,175,55,0.15) 0%, rgba(10,10,10,0.3) 100%)',
+                    borderColor: 'rgba(212,175,55,0.4)',
+                    color: '#D4AF37',
+                    boxShadow: '0 0 10px rgba(212,175,55,0.2)'
+                  }}
+                >
+                  <Trophy className="w-3 h-3" />
+                  #{player.stateRank} {player.state}
+                </Badge>
+              )}
+              {player.countryRank && (
+                <Badge 
+                  variant="outline"
+                  className="text-xs gap-1 py-0.5"
+                  style={{ 
+                    background: 'linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(10,10,10,0.3) 100%)',
+                    borderColor: 'rgba(59,130,246,0.4)',
+                    color: '#3B82F6',
+                    boxShadow: '0 0 10px rgba(59,130,246,0.2)'
+                  }}
+                >
+                  <Star className="w-3 h-3" />
+                  #{player.countryRank} USA
+                </Badge>
+              )}
+              <Badge variant="outline" className="text-xs border-white/10 bg-white/5">
+                {player.gamesPlayed} games
               </Badge>
-            )}
-            {player.countryRank && (
-              <Badge 
-                variant="outline"
-                className="text-xs gap-1 py-0.5"
-                style={{ 
-                  background: 'linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(10,10,10,0.3) 100%)',
-                  borderColor: 'rgba(59,130,246,0.4)',
-                  color: '#3B82F6'
-                }}
-              >
-                <Star className="w-3 h-3" />
-                #{player.countryRank} USA
-              </Badge>
-            )}
-            <Badge variant="outline" className="text-xs">
-              {player.gamesPlayed} games
-            </Badge>
-          </div>
-        </CardContent>
-      </Card>
-    </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
+    </motion.div>
+  );
+}
+
+function StatDisplay({ value, label, isText }: { value: string | number; label: string; isText?: boolean }) {
+  return (
+    <div>
+      <div 
+        className={cn(
+          "text-lg font-bold",
+          isText ? "text-cyan-400/80 text-sm" : "text-cyan-400"
+        )}
+        style={!isText ? { textShadow: '0 0 15px rgba(0,212,255,0.4)' } : undefined}
+      >
+        {value}
+      </div>
+      <div className="text-xs text-muted-foreground">{label}</div>
+    </div>
   );
 }
 
 function PlayerCardSkeleton() {
   return (
-    <Card className="border-cyan-500/[0.08] bg-gradient-to-br from-[hsl(220,25%,8%)] via-[hsl(220,20%,6%)] to-[hsl(220,25%,5%)] relative overflow-hidden">
+    <Card className="border-cyan-500/[0.08] bg-gradient-to-br from-black/60 to-black/30 relative overflow-hidden">
       <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent" />
-      <CardContent className="p-4">
+      <CardContent className="p-5">
         <div className="flex gap-4">
-          <Skeleton className="w-16 h-16 rounded-lg skeleton-cyan" />
+          <Skeleton className="w-16 h-16 rounded-xl skeleton-cyan" />
           <div className="flex-1 space-y-3">
             <Skeleton className="h-5 w-3/4 skeleton-cyan" />
             <Skeleton className="h-4 w-1/2 skeleton-premium" />
@@ -488,27 +429,17 @@ function PlayerCardSkeleton() {
           </div>
           <Skeleton className="h-10 w-10 rounded-full skeleton-cyan" />
         </div>
-        <div className="mt-4 pt-3 border-t border-cyan-500/[0.06]">
-          <div className="grid grid-cols-4 gap-2 text-center">
-            <div className="space-y-1">
-              <Skeleton className="h-6 w-10 mx-auto skeleton-cyan" />
-              <Skeleton className="h-3 w-8 mx-auto skeleton-premium" />
-            </div>
-            <div className="space-y-1">
-              <Skeleton className="h-6 w-10 mx-auto skeleton-cyan" />
-              <Skeleton className="h-3 w-8 mx-auto skeleton-premium" />
-            </div>
-            <div className="space-y-1">
-              <Skeleton className="h-6 w-10 mx-auto skeleton-cyan" />
-              <Skeleton className="h-3 w-8 mx-auto skeleton-premium" />
-            </div>
-            <div className="space-y-1">
-              <Skeleton className="h-6 w-10 mx-auto skeleton-cyan" />
-              <Skeleton className="h-3 w-8 mx-auto skeleton-premium" />
-            </div>
+        <div className="mt-4 pt-4 border-t border-cyan-500/[0.06]">
+          <div className="grid grid-cols-4 gap-3 text-center">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="space-y-1">
+                <Skeleton className="h-6 w-10 mx-auto skeleton-cyan" />
+                <Skeleton className="h-3 w-8 mx-auto skeleton-premium" />
+              </div>
+            ))}
           </div>
         </div>
-        <div className="flex flex-wrap gap-1.5 mt-3">
+        <div className="flex flex-wrap gap-1.5 mt-4">
           <Skeleton className="h-5 w-16 rounded-full skeleton-premium" />
           <Skeleton className="h-5 w-20 rounded-full skeleton-premium" />
         </div>
@@ -530,9 +461,6 @@ export default function ScoutHub() {
   const [minPassingYds, setMinPassingYds] = useState("All");
   const [minRushingYds, setMinRushingYds] = useState("All");
   const [minReceivingYds, setMinReceivingYds] = useState("All");
-  const [minTackles, setMinTackles] = useState("All");
-  const [minSacks, setMinSacks] = useState("All");
-  const [minDefInt, setMinDefInt] = useState("All");
 
   const isFootball = sport === 'football';
 
@@ -599,32 +527,38 @@ export default function ScoutHub() {
   };
 
   return (
-    <div className="space-y-6" data-testid="page-scout-hub">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-background border border-primary/20 p-6 md:p-8">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
-        <div className="absolute inset-0 cyber-grid opacity-10" />
-        <div className="relative">
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-cyan-600 flex items-center justify-center shadow-lg shadow-primary/20">
-                <Eye className="w-6 h-6 text-white" />
+    <div className="pb-24 md:pb-6 space-y-6" data-testid="page-scout-hub">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 via-cyan-950/20 to-black/60 border border-cyan-500/20">
+        <div className="absolute inset-0 cyber-grid opacity-30" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 blur-[100px] rounded-full" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 blur-[80px] rounded-full" />
+        
+        <div className="relative z-10 p-6 md:p-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Eye className="w-6 h-6 text-cyan-400" style={{ filter: 'drop-shadow(0 0 8px #00D4FF)' }} />
+                <span className="text-xs uppercase tracking-wider text-cyan-400 font-semibold">Talent Discovery</span>
               </div>
-              <div>
-                <h1 className="text-2xl md:text-3xl font-display font-bold bg-gradient-to-b from-white to-cyan-100/80 bg-clip-text text-transparent tracking-wide">
+              <h1 className="text-3xl md:text-4xl font-bold">
+                <span className="bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent">
                   Scout Hub
-                </h1>
-                <p className="text-sm text-cyan-200/50">
-                  Find and evaluate talented athletes
-                </p>
-              </div>
+                </span>
+              </h1>
+              <p className="text-muted-foreground max-w-md">
+                Find and evaluate talented athletes across the country
+              </p>
             </div>
 
-            <div className="flex items-center gap-2 bg-background/50 backdrop-blur-sm rounded-lg p-1 border border-border/50">
+            <div className="flex items-center gap-2 px-2 py-1.5 rounded-xl bg-black/40 border border-cyan-500/20 backdrop-blur-sm">
               <Button
                 variant={sport === 'basketball' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => handleSportChange('basketball')}
-                className="gap-2"
+                className={cn(
+                  "gap-2 transition-all",
+                  sport === 'basketball' && "bg-gradient-to-r from-cyan-600 to-cyan-700 shadow-lg shadow-cyan-500/20"
+                )}
                 data-testid="button-sport-basketball"
               >
                 <span className="text-lg">🏀</span>
@@ -634,7 +568,10 @@ export default function ScoutHub() {
                 variant={sport === 'football' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => handleSportChange('football')}
-                className="gap-2"
+                className={cn(
+                  "gap-2 transition-all",
+                  sport === 'football' && "bg-gradient-to-r from-cyan-600 to-cyan-700 shadow-lg shadow-cyan-500/20"
+                )}
                 data-testid="button-sport-football"
               >
                 <span className="text-lg">🏈</span>
@@ -645,32 +582,38 @@ export default function ScoutHub() {
         </div>
       </div>
 
-      <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-2 mb-4">
-            <Filter className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium">Filters</span>
+      <Card className="relative overflow-hidden bg-gradient-to-br from-black/60 to-black/30 border-cyan-500/20 backdrop-blur-sm">
+        <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
+        <CardContent className="p-5">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+              <Filter className="w-4 h-4 text-cyan-400" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold">Filter Athletes</h2>
+              <p className="text-xs text-muted-foreground">Narrow down your search</p>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
             <div className="lg:col-span-2">
-              <label className="text-xs text-muted-foreground mb-1.5 block">Search</label>
+              <label className="text-xs text-cyan-400/80 mb-1.5 block font-medium">Search</label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cyan-400/60" />
                 <Input
                   placeholder="Search by name, school, or team..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 h-9"
+                  className="pl-9 bg-black/40 border-cyan-500/20 focus:border-cyan-500/50 placeholder:text-muted-foreground/50"
                   data-testid="input-scout-search"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-xs text-muted-foreground mb-1.5 block">Position</label>
+              <label className="text-xs text-cyan-400/80 mb-1.5 block font-medium">Position</label>
               <Select value={position} onValueChange={setPosition}>
-                <SelectTrigger className="h-9" data-testid="select-scout-position">
+                <SelectTrigger className="bg-black/40 border-cyan-500/20 focus:border-cyan-500/50" data-testid="select-scout-position">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -691,9 +634,9 @@ export default function ScoutHub() {
             </div>
 
             <div>
-              <label className="text-xs text-muted-foreground mb-1.5 block">State</label>
+              <label className="text-xs text-cyan-400/80 mb-1.5 block font-medium">State</label>
               <Select value={state} onValueChange={setState}>
-                <SelectTrigger className="h-9" data-testid="select-scout-state">
+                <SelectTrigger className="bg-black/40 border-cyan-500/20 focus:border-cyan-500/50" data-testid="select-scout-state">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -706,9 +649,9 @@ export default function ScoutHub() {
             </div>
 
             <div>
-              <label className="text-xs text-muted-foreground mb-1.5 block">Class Year</label>
+              <label className="text-xs text-cyan-400/80 mb-1.5 block font-medium">Class Year</label>
               <Select value={graduationYear} onValueChange={setGraduationYear}>
-                <SelectTrigger className="h-9" data-testid="select-scout-year">
+                <SelectTrigger className="bg-black/40 border-cyan-500/20 focus:border-cyan-500/50" data-testid="select-scout-year">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -721,9 +664,9 @@ export default function ScoutHub() {
             </div>
 
             <div>
-              <label className="text-xs text-muted-foreground mb-1.5 block">Min Grade</label>
+              <label className="text-xs text-cyan-400/80 mb-1.5 block font-medium">Min Grade</label>
               <Select value={minGrade} onValueChange={setMinGrade}>
-                <SelectTrigger className="h-9" data-testid="select-scout-grade">
+                <SelectTrigger className="bg-black/40 border-cyan-500/20 focus:border-cyan-500/50" data-testid="select-scout-grade">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -736,21 +679,23 @@ export default function ScoutHub() {
             </div>
           </div>
 
-          <div className="border-t border-border/50 mt-4 pt-4">
-            <div className="flex items-center gap-2 mb-3">
-              <TrendingUp className="w-4 h-4 text-primary" />
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Performance Filters</span>
+          <div className="border-t border-cyan-500/10 mt-5 pt-5">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                <TrendingUp className="w-3.5 h-3.5 text-purple-400" />
+              </div>
+              <span className="text-xs font-bold text-purple-400/80 uppercase tracking-wide">Performance Filters</span>
             </div>
             
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
               {!isFootball && (
                 <div>
                   <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
-                    <Target className="w-3 h-3" />
+                    <Target className="w-3 h-3 text-cyan-400" />
                     Min PPG
                   </label>
                   <Select value={minPpg} onValueChange={setMinPpg}>
-                    <SelectTrigger className="h-9" data-testid="select-scout-ppg">
+                    <SelectTrigger className="bg-black/40 border-cyan-500/20 focus:border-cyan-500/50" data-testid="select-scout-ppg">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -767,11 +712,11 @@ export default function ScoutHub() {
                 <>
                   <div>
                     <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
-                      <Zap className="w-3 h-3" />
+                      <Zap className="w-3 h-3 text-cyan-400" />
                       Min Pass YDS
                     </label>
                     <Select value={minPassingYds} onValueChange={setMinPassingYds}>
-                      <SelectTrigger className="h-9" data-testid="select-scout-pass-yds">
+                      <SelectTrigger className="bg-black/40 border-cyan-500/20 focus:border-cyan-500/50" data-testid="select-scout-pass-yds">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -785,11 +730,11 @@ export default function ScoutHub() {
 
                   <div>
                     <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
-                      <Crosshair className="w-3 h-3" />
+                      <Crosshair className="w-3 h-3 text-cyan-400" />
                       Min Rush YDS
                     </label>
                     <Select value={minRushingYds} onValueChange={setMinRushingYds}>
-                      <SelectTrigger className="h-9" data-testid="select-scout-rush-yds">
+                      <SelectTrigger className="bg-black/40 border-cyan-500/20 focus:border-cyan-500/50" data-testid="select-scout-rush-yds">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -803,11 +748,11 @@ export default function ScoutHub() {
 
                   <div>
                     <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
-                      <Users className="w-3 h-3" />
+                      <Users className="w-3 h-3 text-cyan-400" />
                       Min Rec YDS
                     </label>
                     <Select value={minReceivingYds} onValueChange={setMinReceivingYds}>
-                      <SelectTrigger className="h-9" data-testid="select-scout-rec-yds">
+                      <SelectTrigger className="bg-black/40 border-cyan-500/20 focus:border-cyan-500/50" data-testid="select-scout-rec-yds">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -823,11 +768,11 @@ export default function ScoutHub() {
 
               <div>
                 <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
-                  <ArrowUpDown className="w-3 h-3" />
+                  <ArrowUpDown className="w-3 h-3 text-cyan-400" />
                   Sort By
                 </label>
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="h-9" data-testid="select-scout-sort">
+                  <SelectTrigger className="bg-black/40 border-cyan-500/20 focus:border-cyan-500/50" data-testid="select-scout-sort">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -840,15 +785,15 @@ export default function ScoutHub() {
               </div>
 
               <div className="flex items-end">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-green-500/10 border border-green-500/20">
                   <Switch
                     id="openOnly"
                     checked={openOnly}
                     onCheckedChange={setOpenOnly}
                     data-testid="switch-open-only"
                   />
-                  <label htmlFor="openOnly" className="text-sm cursor-pointer flex items-center gap-1.5">
-                    <Target className="w-4 h-4 text-green-500" />
+                  <label htmlFor="openOnly" className="text-sm cursor-pointer flex items-center gap-1.5 text-green-400 font-medium">
+                    <Target className="w-4 h-4" />
                     Open Only
                   </label>
                 </div>
@@ -859,16 +804,26 @@ export default function ScoutHub() {
       </Card>
 
       <div className="flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">
-          {isLoading ? (
-            "Loading players..."
-          ) : players ? (
-            <>
-              <span className="font-medium text-foreground">{players.length}</span> players found
-            </>
-          ) : (
-            "No players found"
-          )}
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+            <UserSearch className="w-4 h-4 text-cyan-400" />
+          </div>
+          <div>
+            <h2 className="text-base font-bold">
+              {isLoading ? (
+                "Loading athletes..."
+              ) : players ? (
+                <span>
+                  <span className="text-cyan-400">{players.length}</span> athletes found
+                </span>
+              ) : (
+                "No athletes found"
+              )}
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {sport === 'basketball' ? 'Basketball' : 'Football'} talent database
+            </p>
+          </div>
         </div>
       </div>
 
@@ -880,17 +835,17 @@ export default function ScoutHub() {
         </div>
       ) : players && players.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {players.map((player) => (
-            <ScoutPlayerCard key={player.id} player={player} sport={sport} />
+          {players.map((player, index) => (
+            <ScoutPlayerCard key={player.id} player={player} sport={sport} index={index} />
           ))}
         </div>
       ) : (
-        <Card className="border-cyan-500/[0.08] bg-gradient-to-br from-[hsl(220,25%,8%)] via-[hsl(220,20%,6%)] to-[hsl(220,25%,5%)] relative overflow-hidden">
+        <Card className="border-cyan-500/[0.08] bg-gradient-to-br from-black/60 to-black/30 relative overflow-hidden">
           <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent" />
           <CardContent className="py-8">
             <EmptyState
               icon={UserSearch}
-              title="No Players Match Your Filters"
+              title="No Athletes Match Your Filters"
               description="Try adjusting your search criteria, clearing filters, or broadening your position and location preferences."
               variant="compact"
             />

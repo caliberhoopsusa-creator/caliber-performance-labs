@@ -1,6 +1,7 @@
-import { Play, Eye, Trash2, Clock } from "lucide-react";
+import { Play, Eye, Trash2, Clock, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 import type { HighlightClip } from "@shared/schema";
 
@@ -10,6 +11,7 @@ interface HighlightClipCardProps {
   onPlay: () => void;
   onDelete?: () => void;
   className?: string;
+  viewMode?: "grid" | "large";
 }
 
 function formatDuration(seconds: number | null | undefined): string {
@@ -25,49 +27,75 @@ export function HighlightClipCard({
   onPlay,
   onDelete,
   className,
+  viewMode = "grid",
 }: HighlightClipCardProps) {
   return (
     <div
       data-testid={`highlight-clip-card-${clip.id}`}
       className={cn(
-        "glass-card rounded-xl overflow-hidden group cursor-pointer",
-        "transition-all duration-300 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/10",
+        "relative overflow-hidden rounded-xl group cursor-pointer",
+        "bg-gradient-to-br from-black/60 to-black/30",
+        "border border-white/10 hover:border-cyan-500/40",
+        "transition-all duration-300 hover:scale-[1.02]",
+        "shadow-lg hover:shadow-cyan-500/20",
         className
       )}
+      style={{ boxShadow: "0 0 0 1px rgba(0,212,255,0)" }}
       onClick={onPlay}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.boxShadow = "0 0 30px rgba(0,212,255,0.15)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = "0 0 0 1px rgba(0,212,255,0)";
+      }}
     >
-      <div className="relative aspect-video bg-black/50">
+      <div className={cn(
+        "relative overflow-hidden",
+        viewMode === "large" ? "aspect-video" : "aspect-video"
+      )}>
         {clip.thumbnailUrl ? (
           <img
             src={clip.thumbnailUrl}
             alt={clip.title}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-orange-500/5">
-            <Play className="w-12 h-12 text-muted-foreground" />
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-cyan-500/10 to-purple-500/5">
+            <div className="relative">
+              <div className="absolute inset-0 bg-cyan-500/20 blur-xl rounded-full" />
+              <Play className="w-16 h-16 text-cyan-400/50 relative z-10" />
+            </div>
           </div>
         )}
 
-        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-          <div className="w-16 h-16 rounded-full bg-primary/90 flex items-center justify-center transform scale-75 group-hover:scale-100 transition-transform duration-300">
-            <Play className="w-8 h-8 text-primary-foreground fill-current ml-1" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+        <div className="absolute inset-0 bg-cyan-500/0 group-hover:bg-cyan-500/10 transition-colors duration-300 flex items-center justify-center">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center transform scale-0 group-hover:scale-100 transition-transform duration-300 shadow-lg shadow-cyan-500/50">
+            <Play className="w-7 h-7 text-white fill-current ml-1" />
           </div>
         </div>
 
         {clip.duration && (
-          <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
-            <Clock className="w-3 h-3" />
+          <div className="absolute bottom-3 right-3 bg-black/80 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-md flex items-center gap-1 border border-white/10">
+            <Clock className="w-3 h-3 text-cyan-400" />
             {formatDuration(clip.duration)}
           </div>
+        )}
+
+        {(clip.viewCount || 0) > 100 && (
+          <Badge className="absolute top-3 left-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-black text-[10px] font-bold px-2 py-0.5 border-0">
+            <Sparkles className="w-3 h-3 mr-1" />
+            Popular
+          </Badge>
         )}
 
         {isOwner && onDelete && (
           <Button
             size="icon"
             variant="ghost"
-            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 hover:bg-red-500/80 text-white"
+            className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/60 backdrop-blur-sm hover:bg-red-500/80 text-white border border-white/10 hover:border-red-500/50"
             onClick={(e) => {
               e.stopPropagation();
               onDelete();
@@ -79,20 +107,20 @@ export function HighlightClipCard({
         )}
       </div>
 
-      <div className="p-4">
-        <h3 className="font-display text-lg font-semibold text-white uppercase tracking-wide line-clamp-1 mb-2">
+      <div className="p-4 space-y-2">
+        <h3 className="font-bold text-white line-clamp-1 group-hover:text-cyan-400 transition-colors duration-300">
           {clip.title}
         </h3>
 
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <Eye className="w-4 h-4" />
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/5">
+            <Eye className="w-3 h-3 text-cyan-400" />
             <span data-testid={`text-view-count-${clip.id}`}>
               {clip.viewCount.toLocaleString()} views
             </span>
           </div>
           
-          <span>
+          <span className="text-muted-foreground/70">
             {clip.createdAt
               ? formatDistanceToNow(new Date(clip.createdAt), { addSuffix: true })
               : "Just now"}

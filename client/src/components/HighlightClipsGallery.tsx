@@ -1,16 +1,10 @@
 import { useState } from "react";
-import { Film, Filter } from "lucide-react";
+import { Film, Video } from "lucide-react";
 import { motion } from "framer-motion";
 import { HighlightClipCard } from "./HighlightClipCard";
 import { VideoPlayerModal } from "./VideoPlayerModal";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import type { HighlightClip, Game } from "@shared/schema";
 
 interface HighlightClipsGalleryProps {
@@ -19,6 +13,7 @@ interface HighlightClipsGalleryProps {
   isLoading?: boolean;
   isOwner?: boolean;
   onDelete?: (clipId: number) => void;
+  viewMode?: "grid" | "large";
 }
 
 export function HighlightClipsGallery({
@@ -27,90 +22,89 @@ export function HighlightClipsGallery({
   isLoading = false,
   isOwner = false,
   onDelete,
+  viewMode = "grid",
 }: HighlightClipsGalleryProps) {
   const [selectedClip, setSelectedClip] = useState<HighlightClip | null>(null);
-  const [filterGameId, setFilterGameId] = useState<string>("all");
-
-  const filteredClips = filterGameId === "all"
-    ? clips
-    : clips.filter((clip) => clip.gameId?.toString() === filterGameId);
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-10 w-48" />
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="space-y-3">
-              <Skeleton className="aspect-video rounded-xl" />
-              <Skeleton className="h-6 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
-            </div>
-          ))}
-        </div>
+      <div className={cn(
+        "grid gap-4",
+        viewMode === "grid" 
+          ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" 
+          : "grid-cols-1 sm:grid-cols-2"
+      )}>
+        {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+          <Card key={i} className="animate-pulse bg-gradient-to-br from-black/60 to-black/30 border-white/5">
+            <CardContent className="p-0">
+              <div className="aspect-video bg-white/5" />
+              <div className="p-4 space-y-2">
+                <div className="h-4 bg-white/5 rounded w-3/4" />
+                <div className="h-3 bg-white/5 rounded w-1/2" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     );
   }
 
-  return (
-    <div className="space-y-6">
-      {games.length > 0 && (
-        <div className="flex items-center gap-3">
-          <Filter className="w-4 h-4 text-muted-foreground" />
-          <Select value={filterGameId} onValueChange={setFilterGameId}>
-            <SelectTrigger className="w-[200px]" data-testid="select-filter-game">
-              <SelectValue placeholder="Filter by game" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Clips</SelectItem>
-              {games.map((game) => (
-                <SelectItem key={game.id} value={game.id.toString()}>
-                  vs {game.opponent} - {game.date}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
-
-      {filteredClips.length === 0 ? (
-        <motion.div 
-          className="text-center py-12"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-            <Film className="w-8 h-8 text-primary/60" />
+  if (clips.length === 0) {
+    return (
+      <Card className="bg-gradient-to-br from-black/60 to-black/30 border-white/10">
+        <CardContent className="flex flex-col items-center justify-center py-16">
+          <div className="relative mb-4">
+            <div className="absolute inset-0 bg-cyan-500/10 blur-2xl rounded-full" />
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-purple-500/10 border border-cyan-500/20 flex items-center justify-center relative z-10">
+              <Film className="w-10 h-10 text-cyan-400" />
+            </div>
           </div>
-          <p className="text-white font-semibold mb-1">No Highlight Clips Yet</p>
-          <p className="text-sm text-muted-foreground">
-            {filterGameId !== "all"
-              ? "No clips found for this game. Try a different filter or upload a new clip."
-              : "Upload your first highlight clip to showcase your best moments!"}
+          <h3 className="font-bold text-lg mb-1">No Highlight Clips Yet</h3>
+          <p className="text-sm text-muted-foreground text-center max-w-sm">
+            Upload your first highlight clip to showcase your best moments on the court!
           </p>
-        </motion.div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredClips.map((clip) => (
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <>
+      <motion.div 
+        className={cn(
+          "grid gap-4",
+          viewMode === "grid" 
+            ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" 
+            : "grid-cols-1 sm:grid-cols-2"
+        )}
+        initial="initial"
+        animate="animate"
+        variants={{ animate: { transition: { staggerChildren: 0.05 } } }}
+      >
+        {clips.map((clip, index) => (
+          <motion.div
+            key={clip.id}
+            variants={{
+              initial: { opacity: 0, y: 20 },
+              animate: { opacity: 1, y: 0 },
+            }}
+          >
             <HighlightClipCard
-              key={clip.id}
               clip={clip}
               isOwner={isOwner}
               onPlay={() => setSelectedClip(clip)}
               onDelete={onDelete ? () => onDelete(clip.id) : undefined}
+              viewMode={viewMode}
             />
-          ))}
-        </div>
-      )}
+          </motion.div>
+        ))}
+      </motion.div>
 
       <VideoPlayerModal
         clip={selectedClip}
         isOpen={!!selectedClip}
         onClose={() => setSelectedClip(null)}
       />
-    </div>
+    </>
   );
 }
