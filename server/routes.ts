@@ -1010,6 +1010,65 @@ function calculateAggregatedAdvancedMetrics(games: any[]): AdvancedMetrics & { g
 
 // --- Badge Award Logic ---
 
+// Helper to convert grade to numeric value for comparison
+function getGradeValue(grade: string | null): number {
+  const GRADE_VALUES: Record<string, number> = {
+    'A+': 100, 'A': 95, 'A-': 90,
+    'B+': 88, 'B': 85, 'B-': 80,
+    'C+': 78, 'C': 75, 'C-': 70,
+    'D+': 68, 'D': 65, 'D-': 60,
+    'F': 50,
+  };
+  if (!grade) return 0;
+  return GRADE_VALUES[grade.trim().toUpperCase()] || 0;
+}
+
+// Helper to calculate average grade value from a set of games
+function getAverageGradeValue(games: Game[]): number {
+  if (games.length === 0) return 0;
+  const totalValue = games.reduce((acc, g) => acc + getGradeValue(g.grade), 0);
+  return totalValue / games.length;
+}
+
+// Check for "Most Improved" badge - 2+ letter grade improvement over 5+ games
+async function checkGradeImprovement(playerId: number): Promise<boolean> {
+  const playerGames = await storage.getGamesByPlayerId(playerId);
+  const existingBadges = await storage.getPlayerBadges(playerId);
+  
+  // Check if player already has the badge
+  if (existingBadges.some(b => b.badgeType === "most_improved")) {
+    return false;
+  }
+  
+  // Need at least 5 games to qualify
+  if (playerGames.length < 5) {
+    return false;
+  }
+  
+  // Sort games by date ascending (oldest first)
+  const sortedGames = [...playerGames].sort((a, b) => 
+    new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
+  
+  // Get first 2-3 games and last 2-3 games
+  const numEarlyGames = Math.min(3, Math.floor(sortedGames.length / 2));
+  const numRecentGames = Math.min(3, Math.floor(sortedGames.length / 2));
+  
+  const earlyGames = sortedGames.slice(0, numEarlyGames);
+  const recentGames = sortedGames.slice(-numRecentGames);
+  
+  // Calculate average grades
+  const earlyAvg = getAverageGradeValue(earlyGames);
+  const recentAvg = getAverageGradeValue(recentGames);
+  
+  // Check if improvement is at least 2 letter grades (16+ point difference)
+  // Letter grade difference: A+=100, A=95, A-=90, B+=88, B=85, B-=80, C+=78, C=75, C-=70...
+  // So 2 letter grades is approximately 10-16 points of improvement
+  // We'll use 10 as the threshold (roughly C+ to B+ or B to A-)
+  const improvement = recentAvg - earlyAvg;
+  return improvement >= 10;
+}
+
 async function checkAndAwardBadges(playerId: number, gameId: number, stats: any, grade: string) {
   const awardedBadges: string[] = [];
   
@@ -1082,6 +1141,13 @@ async function checkAndAwardBadges(playerId: number, gameId: number, stats: any,
   // Check streak badges by looking at recent games
   const streakBadges = await checkStreakBadges(playerId, gameId);
   awardedBadges.push(...streakBadges);
+  
+  // Check for grade improvement badge (2+ letter grades over 5+ games)
+  const hasImproved = await checkGradeImprovement(playerId);
+  if (hasImproved) {
+    await storage.createBadge({ playerId, badgeType: "most_improved", gameId });
+    awardedBadges.push("most_improved");
+  }
   
   return awardedBadges;
 }
@@ -2278,6 +2344,7 @@ export async function registerRoutes(
         sharpshooter: "Sharpshooter",
         hot_streak_3: "Hot Streak (3 Games)",
         hot_streak_5: "Hot Streak (5 Games)",
+        most_improved: "Most Improved",
       };
       for (const badge of awardedBadges) {
         await storage.createFeedActivity({

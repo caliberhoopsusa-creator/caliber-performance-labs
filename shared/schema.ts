@@ -461,6 +461,7 @@ export const BADGE_DEFINITIONS = {
   hot_streak_3: { name: "Hot Streak 3", description: "3 games in a row with B+ or better" },
   hot_streak_5: { name: "Hot Streak 5", description: "5 games in a row with B+ or better" },
   sharpshooter: { name: "Sharpshooter", description: "50%+ from 3 on 5+ attempts" },
+  most_improved: { name: "Most Improved", description: "Showed 2+ letter grade improvement over 5+ games" },
   hustle_champion: { name: "Hustle Champion", description: "Won the weekly hustle challenge" },
   scoring_machine: { name: "Scoring Machine", description: "Won the scorer's sprint challenge" },
   consistency_king: { name: "Consistency King", description: "Won the consistency challenge" },

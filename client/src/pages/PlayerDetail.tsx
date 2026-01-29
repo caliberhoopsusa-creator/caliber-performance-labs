@@ -103,6 +103,7 @@ const BADGE_ICONS: Record<string, any> = {
   hot_streak_3: Flame,
   hot_streak_5: Flame,
   sharpshooter: Target,
+  most_improved: TrendingUp,
 };
 
 const GRADE_VALUES: Record<string, number> = {
