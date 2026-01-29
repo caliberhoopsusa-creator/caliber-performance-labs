@@ -14,25 +14,21 @@ export class WebhookHandlers {
       );
     }
 
-    // First, let stripe-replit-sync process for subscription events
+    // Let stripe-replit-sync process and verify the webhook
+    // It handles signature verification internally with the managed webhook secret
     const sync = await getStripeSync();
     await sync.processWebhook(payload, signature);
 
-    // Then handle our custom coin purchase events
-    // Only process if webhook secret is configured and verification succeeds
-    const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
-    if (!endpointSecret) {
-      console.log('STRIPE_WEBHOOK_SECRET not configured, skipping coin purchase handling');
-      return;
-    }
-
+    // Parse the raw payload to get the event data
+    // The signature was already verified by stripe-replit-sync above
     try {
-      const stripe = await getUncachableStripeClient();
-      const event = stripe.webhooks.constructEvent(payload, signature, endpointSecret);
+      const rawBody = payload.toString('utf8');
+      const event = JSON.parse(rawBody);
+      
+      // Handle coin purchase events
       await WebhookHandlers.handleCoinPurchase(event);
     } catch (err: any) {
-      console.error('Webhook signature verification failed for coin purchase:', err.message);
-      // Do NOT process unverified events - security requirement
+      console.error('Error parsing webhook event for coin purchase:', err.message);
     }
   }
 
