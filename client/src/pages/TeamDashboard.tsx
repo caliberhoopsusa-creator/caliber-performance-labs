@@ -9,6 +9,7 @@ import {
 import { Paywall } from "@/components/Paywall";
 import { GradeBadge } from "@/components/GradeBadge";
 import { useSport } from "@/components/SportToggle";
+import { VerificationQueue } from "@/components/VerificationQueue";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -308,6 +309,8 @@ export default function TeamDashboard() {
           </>
         )}
       </div>
+
+      <VerificationQueue compact maxItems={5} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="bg-card/50 border-white/5" data-testid="card-best-performers">

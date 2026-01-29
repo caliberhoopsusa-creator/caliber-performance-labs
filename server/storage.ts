@@ -87,7 +87,7 @@ import {
   type EventIntegration, type InsertEventIntegration,
   type EventGameLink, type InsertEventGameLink
 } from "@shared/schema";
-import { eq, desc, and, count, gte, lte, sql, or, isNull } from "drizzle-orm";
+import { eq, desc, and, count, gte, lte, sql, or, isNull, inArray } from "drizzle-orm";
 
 export interface IStorage {
   // Players
@@ -492,6 +492,8 @@ export interface IStorage {
   // Stat Verifications
   getStatVerification(gameId: number, playerId: number): Promise<StatVerification | undefined>;
   getPlayerVerifiedGames(playerId: number): Promise<StatVerification[]>;
+  getUnverifiedGamesForCoach(coachUserId: string): Promise<Array<Game & { playerName: string; playerPosition: string; sport: string; verificationStatus: string | null }>>;
+  isPlayerOnCoachTeam(playerId: number, coachUserId: string): Promise<boolean>;
   createStatVerification(verification: InsertStatVerification): Promise<StatVerification>;
   updateStatVerification(id: number, updates: Partial<InsertStatVerification>): Promise<StatVerification | undefined>;
 
@@ -2720,6 +2722,75 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(statVerifications)
       .where(and(eq(statVerifications.playerId, playerId), eq(statVerifications.status, 'verified')))
       .orderBy(desc(statVerifications.verifiedAt));
+  }
+
+  async isPlayerOnCoachTeam(playerId: number, coachUserId: string): Promise<boolean> {
+    // Get all teams created by this coach
+    const coachTeamResults = await db.select().from(teams).where(eq(teams.createdBy, coachUserId));
+    if (coachTeamResults.length === 0) return false;
+    
+    const teamIds = coachTeamResults.map(t => t.id);
+    
+    // Check if player is a member of any of these teams
+    const membership = await db.select().from(teamMembers)
+      .where(and(
+        inArray(teamMembers.teamId, teamIds),
+        eq(teamMembers.playerId, playerId)
+      ))
+      .limit(1);
+    
+    return membership.length > 0;
+  }
+
+  async getUnverifiedGamesForCoach(coachUserId: string): Promise<Array<Game & { playerName: string; playerPosition: string; sport: string; verificationStatus: string | null }>> {
+    // Get all team members under this coach using the teams and teamMembers tables
+    const coachTeamResults = await db.select().from(teams).where(eq(teams.createdBy, coachUserId));
+    if (coachTeamResults.length === 0) return [];
+    
+    const teamIds = coachTeamResults.map(t => t.id);
+    
+    // Get all players in coach's teams
+    const teamMembersList = await db.select().from(teamMembers)
+      .where(inArray(teamMembers.teamId, teamIds));
+    
+    // Filter out null playerIds
+    const playerIds = teamMembersList.map(tm => tm.playerId).filter((id): id is number => id !== null);
+    if (playerIds.length === 0) return [];
+    
+    // Get all games for these players
+    const allGames = await db.select().from(games)
+      .where(inArray(games.playerId, playerIds))
+      .orderBy(desc(games.date));
+    
+    // Get verifications for these games
+    const gameIds = allGames.map(g => g.id);
+    const verifications = gameIds.length > 0 
+      ? await db.select().from(statVerifications).where(inArray(statVerifications.gameId, gameIds))
+      : [];
+    
+    const verificationMap = new Map(verifications.map(v => [v.gameId, v]));
+    
+    // Get player info
+    const playersInfo = await db.select().from(players).where(inArray(players.id, playerIds));
+    const playerMap = new Map(playersInfo.map(p => [p.id, p]));
+    
+    // Filter to only unverified or pending games and enrich with player info
+    return allGames
+      .filter(game => {
+        const verification = verificationMap.get(game.id);
+        return !verification || verification.status === 'pending';
+      })
+      .map(game => {
+        const player = playerMap.get(game.playerId);
+        const verification = verificationMap.get(game.id);
+        return {
+          ...game,
+          playerName: player?.name || 'Unknown Player',
+          playerPosition: player?.position || '',
+          sport: player?.sport || 'basketball',
+          verificationStatus: verification?.status || null,
+        };
+      });
   }
 
   async createStatVerification(verification: InsertStatVerification): Promise<StatVerification> {

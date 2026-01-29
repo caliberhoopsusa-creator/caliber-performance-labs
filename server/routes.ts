@@ -10414,6 +10414,68 @@ Respond in this exact JSON format:
   // STAT VERIFICATIONS ROUTES
   // =============================================
 
+  // GET /api/coach/unverified-games - Get all unverified games for coach's team members
+  app.get('/api/coach/unverified-games', isAuthenticated, requiresCoach, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const unverifiedGames = await storage.getUnverifiedGamesForCoach(userId);
+      res.json(unverifiedGames);
+    } catch (error) {
+      console.error('Error fetching unverified games:', error);
+      res.status(500).json({ message: "Failed to fetch unverified games" });
+    }
+  });
+
+  // POST /api/games/:id/quick-verify - Quick verify a game with minimal input
+  app.post('/api/games/:id/quick-verify', isAuthenticated, requiresCoach, async (req: any, res) => {
+    try {
+      const gameId = parseInt(req.params.id);
+      if (isNaN(gameId)) {
+        return res.status(400).json({ message: "Invalid game ID" });
+      }
+
+      // Get the game to find the player
+      const game = await storage.getGame(gameId);
+      if (!game) {
+        return res.status(404).json({ message: "Game not found" });
+      }
+
+      const userId = req.user?.id;
+      
+      // Security check: Verify the game's player is on one of this coach's teams
+      const isAuthorized = await storage.isPlayerOnCoachTeam(game.playerId, userId);
+      if (!isAuthorized) {
+        return res.status(403).json({ message: "You can only verify games for players on your team" });
+      }
+
+      const userName = req.user?.firstName && req.user?.lastName 
+        ? `${req.user.firstName} ${req.user.lastName}` 
+        : req.user?.email || 'Coach';
+
+      // Create verification with default values for quick verify
+      const verification = await storage.createStatVerification({
+        gameId,
+        playerId: game.playerId,
+        verifiedByUserId: userId,
+        verifierName: userName,
+        verifierRole: req.body.verifierRole || 'head_coach',
+        verificationMethod: req.body.verificationMethod || 'in_person',
+        status: 'verified',
+        verifiedAt: new Date(),
+        notes: req.body.notes || 'Quick verified by coach',
+      });
+
+      res.status(201).json(verification);
+    } catch (error) {
+      console.error('Error quick verifying game:', error);
+      res.status(500).json({ message: "Failed to verify game" });
+    }
+  });
+
   // GET /api/games/:id/verification - Get verification status for a game
   app.get('/api/games/:id/verification', async (req, res) => {
     try {
