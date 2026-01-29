@@ -1,0 +1,234 @@
+1) AI Rating Formula (0–100 Overall)
+Core idea
+
+Your rating should be Impact + Skill + Context + Consistency, not just box score.
+
+Step A — Build 6 sub-scores (0–100 each)
+
+Use these across any sport (works for basketball first too).
+
+Production (P)
+How much they produce (points/assists/rebounds, goals/assists, yards/TDs, etc.)
+
+Efficiency (E)
+How clean it is (TS%, eFG%, turnover rate, shot quality, completion %, etc.)
+
+Impact (I)
+Team results + on/off + plus-minus proxies + “big plays” (stops, forced turnovers, extra possessions)
+
+Defense / Two-Way (D)
+Stops, contests, steals, blocks, matchup difficulty, defensive errors (from film tagging later)
+
+Athletic / Physical (A)
+Speed, strength, vertical, size for position, endurance (combine tests OR inferred from tracking later)
+
+Intangibles (T)
+Consistency, clutch, effort, coachability, role acceptance (start with proxies; add coach verification later)
+
+Step B — Normalize each sub-score
+
+Convert raw stats into percentiles vs peers:
+
+same sport
+
+same position
+
+same age/grade/year
+
+same competition tier (varsity/AAU/D1 conference/etc.)
+
+Then map percentile → 0–100:
+
+50th percentile ≈ 50
+
+90th percentile ≈ 90
+
+This is the secret sauce: ratings become fair across regions and leagues.
+
+Step C — Weight them into an Overall
+
+Use a weighted score (start simple, adjust per sport):
+
+Overall =
+
+22% Production (P)
+
+18% Efficiency (E)
+
+22% Impact (I)
+
+18% Defense/Two-way (D)
+
+12% Athletic/Physical (A)
+
+8% Intangibles (T)
+
+Then apply context multipliers:
+
+Context multipliers (small but powerful)
+
+Opponent strength multiplier (0.90–1.10)
+
+Game importance multiplier (0.95–1.05)
+
+Role multiplier (starter vs bench; usage adjustment)
+
+Recency weighting (last 5 games count more)
+
+Final Rating = clamp( Overall * ContextMultiplier, 0, 100 )
+
+Basketball MVP version (if you want it concrete)
+
+If you don’t have tracking data yet, use:
+
+Production: per-game + per-36
+
+Efficiency: TS%, eFG%, AST/TO
+
+Impact: BPM-lite (your own), plus/minus if available
+
+Defense: steals+blocks + foul rate + opponent FG% if you can
+
+Athletic: height/weight + verified combine OR coach input
+
+Intangibles: consistency index + clutch sample + coach tag
+
+Consistency index (easy + legit)
+
+Score how stable they are:
+
+Calculate std dev of GameScore across last N games
+
+Lower variation = higher consistency
+
+Translate to 0–100 vs peers
+
+2) Projection Algorithm Logic (Ceiling / Floor / Likely Level)
+
+Projection is basically:
+current rating + growth rate + physical upside + competition translation + risk
+
+Step A — Create a “Trajectory Score”
+
+Measure improvement speed over time.
+
+Trajectory = weighted slope of Overall Rating over last 6–18 months
+
+Recent games/seasons weighted more
+
+Big minutes/strong opponents weighted more
+
+Then normalize vs peers → 0–100.
+
+Step B — Create a “Translation Score” (how well it scales up)
+
+This predicts whether their game works against better athletes.
+
+Inputs (proxies are fine early):
+
+efficiency under pressure (close games, top opponents)
+
+turnover rate vs strong opponents
+
+ability to create advantages (rim pressure, separation, shot quality)
+
+defensive versatility (positions guarded, foul rate)
+
+Normalize → 0–100.
+
+Step C — Create a “Upside Score”
+
+This is “how much room left to grow.”
+
+Key inputs:
+
+age vs competition level (younger = higher upside)
+
+physical frame potential (height/wingspan, strength potential)
+
+skill gaps that are teachable (FT% is a classic indicator in basketball)
+
+training volume / improvement habits (later)
+
+Normalize → 0–100.
+
+Step D — Create a “Risk Score”
+
+Injury + inconsistency + reliance on low-transfer skills.
+
+Inputs:
+
+injury history (if available)
+
+consistency index (volatile = higher risk)
+
+“one-trick” dependence (only scores one way)
+
+low efficiency + high usage
+
+Normalize → 0–100 where higher = more risk.
+
+Step E — Output: Likely / Floor / Ceiling
+
+Pick a target horizon (ex: 2 years, 4 years).
+
+Likely Future Rating
+= CurrentRating
+
+(Trajectory * 0.12)
+
+(Translation * 0.10)
+
+(Upside * 0.10)
+
+(Risk * 0.08)
+
+Then cap the change so it’s realistic:
+
+max +18 in 12 months
+
+max +30 in 24 months (tune per sport)
+
+Ceiling
+= Likely + (Upside * 0.20) - (Risk * 0.05)
+Floor
+= Likely - (Risk * 0.20)
+
+Clamp 0–100.
+
+“Level Mapping” (what scouts actually want)
+
+Map rating bands to levels (example for basketball—customize):
+
+90–100: high-major D1 / pro track
+
+80–89: mid-major D1
+
+70–79: D2 / NAIA high level
+
+60–69: strong HS varsity
+
+<60: developing
+
+Also show:
+
+Confidence % based on sample size + verification level
+
+What I’d build first (MVP that feels elite)
+
+Overall rating with peer percentiles
+
+Consistency index
+
+Opponent-strength adjustment
+
+Trajectory slope + ceiling/floor output
+
+Confidence score + “why” explanation bullets
+
+Because the killer feature isn’t just the number.
+It’s the explanation:
+
+“Rating rose +6 since November due to improved efficiency (+12 percentile) and lower turnover rate vs top opponents.”
+
+That’s what coaches trust.
