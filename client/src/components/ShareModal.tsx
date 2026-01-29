@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Download, Copy, Share2, X } from "lucide-react";
-import { SiX, SiFacebook } from "react-icons/si";
+import { SiX, SiFacebook, SiInstagram, SiTiktok } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
 
 interface ShareModalProps {
@@ -205,10 +205,30 @@ export function ShareModal({
             >
               <SiFacebook className="w-5 h-5 text-blue-400" />
             </Button>
+            <Button
+              onClick={handleDownload}
+              variant="ghost"
+              size="icon"
+              className="hover:bg-gradient-to-br hover:from-purple-500/20 hover:via-pink-500/20 hover:to-orange-500/20"
+              title="Download image to share on Instagram"
+              data-testid="button-share-instagram"
+            >
+              <SiInstagram className="w-5 h-5 text-pink-400" />
+            </Button>
+            <Button
+              onClick={handleDownload}
+              variant="ghost"
+              size="icon"
+              className="hover:bg-white/10"
+              title="Download image to share on TikTok"
+              data-testid="button-share-tiktok"
+            >
+              <SiTiktok className="w-5 h-5" />
+            </Button>
           </div>
           
           <p className="text-[10px] text-center text-muted-foreground mt-3">
-            Download the image and share it on Instagram or any platform!
+            Tap Instagram or TikTok to download and share on those platforms!
           </p>
         </div>
       </DialogContent>

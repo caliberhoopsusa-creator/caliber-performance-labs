@@ -13,6 +13,8 @@ import {
   mentorshipProfiles, mentorshipRequests,
   recruitPosts, recruitInterests,
   playerRatings, statVerifications, skillChallenges, challengeResults, performanceMilestones, aiProjections, highlightVerifications, eventIntegrations, eventGameLinks,
+  leagues, leagueTeams, leagueTeamRosters, leagueGames, leagueRivalries,
+  colleges, playerCollegeMatches, fitnessData,
   type Player, type InsertPlayer,
   type Game, type InsertGame,
   type UpdateGameRequest,
@@ -85,7 +87,15 @@ import {
   type AiProjection, type InsertAiProjection,
   type HighlightVerification, type InsertHighlightVerification,
   type EventIntegration, type InsertEventIntegration,
-  type EventGameLink, type InsertEventGameLink
+  type EventGameLink, type InsertEventGameLink,
+  type League, type InsertLeague,
+  type LeagueTeam, type InsertLeagueTeam,
+  type LeagueTeamRoster, type InsertLeagueTeamRoster,
+  type LeagueGame, type InsertLeagueGame,
+  type LeagueRivalry, type InsertLeagueRivalry,
+  type College, type InsertCollege,
+  type PlayerCollegeMatch, type InsertPlayerCollegeMatch,
+  type FitnessData, type InsertFitnessData
 } from "@shared/schema";
 import { eq, desc, and, count, gte, lte, sql, or, isNull, inArray } from "drizzle-orm";
 
@@ -371,8 +381,10 @@ export interface IStorage {
   createHighlightClip(clip: InsertHighlightClip): Promise<HighlightClip>;
   getPlayerHighlightClips(playerId: number): Promise<HighlightClip[]>;
   getHighlightClip(id: number): Promise<HighlightClip | undefined>;
+  updateHighlightClip(id: number, updates: Partial<InsertHighlightClip>): Promise<HighlightClip | undefined>;
   deleteHighlightClip(id: number): Promise<void>;
   incrementClipViewCount(id: number): Promise<void>;
+  incrementClipLikeCount(id: number): Promise<void>;
   getPlayerHighlightCount(playerId: number): Promise<number>;
   linkHighlightToGame(highlightId: number, gameId: number, timestamp: string): Promise<HighlightClip | undefined>;
   unlinkHighlightFromGame(highlightId: number): Promise<HighlightClip | undefined>;
@@ -529,6 +541,64 @@ export interface IStorage {
   createEventIntegration(event: InsertEventIntegration): Promise<EventIntegration>;
   getEventGameLinks(eventId: number): Promise<EventGameLink[]>;
   linkGameToEvent(link: InsertEventGameLink): Promise<EventGameLink>;
+
+  // Leagues
+  getLeagues(sport?: string): Promise<League[]>;
+  getPublicLeagues(sport?: string): Promise<League[]>;
+  getLeague(id: number): Promise<League | undefined>;
+  getLeagueByJoinCode(joinCode: string): Promise<League | undefined>;
+  getLeagueWithTeams(id: number): Promise<(League & { teams: LeagueTeam[] }) | undefined>;
+  createLeague(league: InsertLeague): Promise<League>;
+  updateLeague(id: number, updates: Partial<League>): Promise<League | undefined>;
+  deleteLeague(id: number): Promise<void>;
+
+  // League Teams
+  getLeagueTeams(leagueId: number): Promise<LeagueTeam[]>;
+  getLeagueTeam(id: number): Promise<LeagueTeam | undefined>;
+  createLeagueTeam(team: InsertLeagueTeam): Promise<LeagueTeam>;
+  updateLeagueTeam(id: number, updates: Partial<LeagueTeam>): Promise<LeagueTeam | undefined>;
+  deleteLeagueTeam(id: number): Promise<void>;
+
+  // League Team Rosters
+  getLeagueTeamRoster(teamId: number): Promise<LeagueTeamRoster[]>;
+  addPlayerToLeagueTeam(roster: InsertLeagueTeamRoster): Promise<LeagueTeamRoster>;
+  removePlayerFromLeagueTeam(teamId: number, playerId: number): Promise<void>;
+
+  // League Games
+  getLeagueGames(leagueId: number): Promise<LeagueGame[]>;
+  getLeagueGame(id: number): Promise<LeagueGame | undefined>;
+  createLeagueGame(game: InsertLeagueGame): Promise<LeagueGame>;
+  updateLeagueGame(id: number, updates: Partial<LeagueGame>): Promise<LeagueGame | undefined>;
+  deleteLeagueGame(id: number): Promise<void>;
+
+  // League Rivalries
+  getLeagueRivalries(leagueId: number): Promise<LeagueRivalry[]>;
+  getLeagueRivalry(id: number): Promise<LeagueRivalry | undefined>;
+  getRivalryBetweenTeams(team1Id: number, team2Id: number): Promise<LeagueRivalry | undefined>;
+  createLeagueRivalry(rivalry: InsertLeagueRivalry): Promise<LeagueRivalry>;
+  updateLeagueRivalry(id: number, updates: Partial<LeagueRivalry>): Promise<LeagueRivalry | undefined>;
+  deleteLeagueRivalry(id: number): Promise<void>;
+
+  // Colleges
+  getColleges(filters?: { sport?: string; division?: string; state?: string }): Promise<College[]>;
+  getCollege(id: number): Promise<College | undefined>;
+  createCollege(college: InsertCollege): Promise<College>;
+  updateCollege(id: number, updates: Partial<College>): Promise<College | undefined>;
+
+  // Player College Matches
+  getPlayerCollegeMatches(playerId: number): Promise<(PlayerCollegeMatch & { college: College })[]>;
+  createPlayerCollegeMatch(match: InsertPlayerCollegeMatch): Promise<PlayerCollegeMatch>;
+  updatePlayerCollegeMatch(id: number, updates: Partial<PlayerCollegeMatch>): Promise<PlayerCollegeMatch | undefined>;
+  deletePlayerCollegeMatches(playerId: number): Promise<void>;
+
+  // Fitness Data (Wearable integrations)
+  getFitnessData(playerId: number, options?: { startDate?: string, endDate?: string, source?: string }): Promise<FitnessData[]>;
+  getFitnessDataByDate(playerId: number, date: string): Promise<FitnessData | undefined>;
+  createFitnessData(data: InsertFitnessData): Promise<FitnessData>;
+  updateFitnessData(id: number, updates: Partial<FitnessData>): Promise<FitnessData | undefined>;
+  deleteFitnessData(id: number): Promise<void>;
+  getLatestFitnessData(playerId: number): Promise<FitnessData | undefined>;
+  getFitnessDataSummary(playerId: number, days: number): Promise<{ avgSleep: number, avgRecovery: number, avgHrv: number, totalWorkouts: number }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2016,8 +2086,17 @@ export class DatabaseStorage implements IStorage {
     await db.delete(highlightClips).where(eq(highlightClips.id, id));
   }
 
+  async updateHighlightClip(id: number, updates: Partial<InsertHighlightClip>): Promise<HighlightClip | undefined> {
+    const [updated] = await db.update(highlightClips).set(updates).where(eq(highlightClips.id, id)).returning();
+    return updated;
+  }
+
   async incrementClipViewCount(id: number): Promise<void> {
     await db.update(highlightClips).set({ viewCount: sql`${highlightClips.viewCount} + 1` }).where(eq(highlightClips.id, id));
+  }
+
+  async incrementClipLikeCount(id: number): Promise<void> {
+    await db.update(highlightClips).set({ likeCount: sql`${highlightClips.likeCount} + 1` }).where(eq(highlightClips.id, id));
   }
 
   async getPlayerHighlightCount(playerId: number): Promise<number> {
@@ -2940,6 +3019,358 @@ export class DatabaseStorage implements IStorage {
   async linkGameToEvent(link: InsertEventGameLink): Promise<EventGameLink> {
     const [created] = await db.insert(eventGameLinks).values(link).returning();
     return created;
+  }
+
+  // Leagues
+  async getLeagues(sport?: string): Promise<League[]> {
+    if (sport) {
+      return await db.select().from(leagues)
+        .where(eq(leagues.sport, sport))
+        .orderBy(desc(leagues.createdAt));
+    }
+    return await db.select().from(leagues).orderBy(desc(leagues.createdAt));
+  }
+
+  async getPublicLeagues(sport?: string): Promise<League[]> {
+    if (sport) {
+      return await db.select().from(leagues)
+        .where(and(eq(leagues.isPublic, true), eq(leagues.sport, sport)))
+        .orderBy(desc(leagues.createdAt));
+    }
+    return await db.select().from(leagues)
+      .where(eq(leagues.isPublic, true))
+      .orderBy(desc(leagues.createdAt));
+  }
+
+  async getLeague(id: number): Promise<League | undefined> {
+    const [league] = await db.select().from(leagues).where(eq(leagues.id, id));
+    return league;
+  }
+
+  async getLeagueByJoinCode(joinCode: string): Promise<League | undefined> {
+    const [league] = await db.select().from(leagues).where(eq(leagues.joinCode, joinCode));
+    return league;
+  }
+
+  async getLeagueWithTeams(id: number): Promise<(League & { teams: LeagueTeam[] }) | undefined> {
+    const [league] = await db.select().from(leagues).where(eq(leagues.id, id));
+    if (!league) return undefined;
+
+    const teams = await db.select().from(leagueTeams)
+      .where(eq(leagueTeams.leagueId, id))
+      .orderBy(desc(leagueTeams.createdAt));
+
+    return { ...league, teams };
+  }
+
+  async createLeague(league: InsertLeague): Promise<League> {
+    const [created] = await db.insert(leagues).values(league).returning();
+    return created;
+  }
+
+  async updateLeague(id: number, updates: Partial<League>): Promise<League | undefined> {
+    const [updated] = await db.update(leagues)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(leagues.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteLeague(id: number): Promise<void> {
+    await db.delete(leagues).where(eq(leagues.id, id));
+  }
+
+  // League Teams
+  async getLeagueTeams(leagueId: number): Promise<LeagueTeam[]> {
+    return await db.select().from(leagueTeams)
+      .where(eq(leagueTeams.leagueId, leagueId))
+      .orderBy(desc(leagueTeams.createdAt));
+  }
+
+  async getLeagueTeam(id: number): Promise<LeagueTeam | undefined> {
+    const [team] = await db.select().from(leagueTeams).where(eq(leagueTeams.id, id));
+    return team;
+  }
+
+  async createLeagueTeam(team: InsertLeagueTeam): Promise<LeagueTeam> {
+    const [created] = await db.insert(leagueTeams).values(team).returning();
+    return created;
+  }
+
+  async updateLeagueTeam(id: number, updates: Partial<LeagueTeam>): Promise<LeagueTeam | undefined> {
+    const [updated] = await db.update(leagueTeams)
+      .set(updates)
+      .where(eq(leagueTeams.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteLeagueTeam(id: number): Promise<void> {
+    await db.delete(leagueTeams).where(eq(leagueTeams.id, id));
+  }
+
+  // League Team Rosters
+  async getLeagueTeamRoster(teamId: number): Promise<LeagueTeamRoster[]> {
+    return await db.select().from(leagueTeamRosters)
+      .where(eq(leagueTeamRosters.leagueTeamId, teamId))
+      .orderBy(desc(leagueTeamRosters.joinedAt));
+  }
+
+  async addPlayerToLeagueTeam(roster: InsertLeagueTeamRoster): Promise<LeagueTeamRoster> {
+    const [created] = await db.insert(leagueTeamRosters).values(roster).returning();
+    return created;
+  }
+
+  async removePlayerFromLeagueTeam(teamId: number, playerId: number): Promise<void> {
+    await db.delete(leagueTeamRosters)
+      .where(and(
+        eq(leagueTeamRosters.leagueTeamId, teamId),
+        eq(leagueTeamRosters.playerId, playerId)
+      ));
+  }
+
+  // League Games
+  async getLeagueGames(leagueId: number): Promise<LeagueGame[]> {
+    return await db.select().from(leagueGames)
+      .where(eq(leagueGames.leagueId, leagueId))
+      .orderBy(desc(leagueGames.scheduledDate));
+  }
+
+  async getLeagueGame(id: number): Promise<LeagueGame | undefined> {
+    const [game] = await db.select().from(leagueGames).where(eq(leagueGames.id, id));
+    return game;
+  }
+
+  async createLeagueGame(game: InsertLeagueGame): Promise<LeagueGame> {
+    const [created] = await db.insert(leagueGames).values(game).returning();
+    return created;
+  }
+
+  async updateLeagueGame(id: number, updates: Partial<LeagueGame>): Promise<LeagueGame | undefined> {
+    const [updated] = await db.update(leagueGames)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(leagueGames.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteLeagueGame(id: number): Promise<void> {
+    await db.delete(leagueGames).where(eq(leagueGames.id, id));
+  }
+
+  // League Rivalries
+  async getLeagueRivalries(leagueId: number): Promise<LeagueRivalry[]> {
+    return await db.select().from(leagueRivalries)
+      .where(eq(leagueRivalries.leagueId, leagueId))
+      .orderBy(desc(leagueRivalries.createdAt));
+  }
+
+  async getLeagueRivalry(id: number): Promise<LeagueRivalry | undefined> {
+    const [rivalry] = await db.select().from(leagueRivalries).where(eq(leagueRivalries.id, id));
+    return rivalry;
+  }
+
+  async getRivalryBetweenTeams(team1Id: number, team2Id: number): Promise<LeagueRivalry | undefined> {
+    const [rivalry] = await db.select().from(leagueRivalries)
+      .where(or(
+        and(eq(leagueRivalries.team1Id, team1Id), eq(leagueRivalries.team2Id, team2Id)),
+        and(eq(leagueRivalries.team1Id, team2Id), eq(leagueRivalries.team2Id, team1Id))
+      ));
+    return rivalry;
+  }
+
+  async createLeagueRivalry(rivalry: InsertLeagueRivalry): Promise<LeagueRivalry> {
+    const [created] = await db.insert(leagueRivalries).values(rivalry).returning();
+    return created;
+  }
+
+  async updateLeagueRivalry(id: number, updates: Partial<LeagueRivalry>): Promise<LeagueRivalry | undefined> {
+    const [updated] = await db.update(leagueRivalries)
+      .set(updates)
+      .where(eq(leagueRivalries.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteLeagueRivalry(id: number): Promise<void> {
+    await db.delete(leagueRivalries).where(eq(leagueRivalries.id, id));
+  }
+
+  // Colleges
+  async getColleges(filters?: { sport?: string; division?: string; state?: string }): Promise<College[]> {
+    const conditions = [eq(colleges.isActive, true)];
+    
+    if (filters?.sport) {
+      conditions.push(eq(colleges.sport, filters.sport));
+    }
+    if (filters?.division) {
+      conditions.push(eq(colleges.division, filters.division));
+    }
+    if (filters?.state) {
+      conditions.push(eq(colleges.state, filters.state));
+    }
+    
+    return await db.select().from(colleges)
+      .where(and(...conditions))
+      .orderBy(desc(colleges.programStrength));
+  }
+
+  async getCollege(id: number): Promise<College | undefined> {
+    const [college] = await db.select().from(colleges).where(eq(colleges.id, id));
+    return college;
+  }
+
+  async createCollege(college: InsertCollege): Promise<College> {
+    const [created] = await db.insert(colleges).values(college).returning();
+    return created;
+  }
+
+  async updateCollege(id: number, updates: Partial<College>): Promise<College | undefined> {
+    const [updated] = await db.update(colleges)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(colleges.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Player College Matches
+  async getPlayerCollegeMatches(playerId: number): Promise<(PlayerCollegeMatch & { college: College })[]> {
+    const matches = await db.select().from(playerCollegeMatches)
+      .where(eq(playerCollegeMatches.playerId, playerId))
+      .orderBy(desc(playerCollegeMatches.overallMatchScore));
+    
+    const matchesWithColleges: (PlayerCollegeMatch & { college: College })[] = [];
+    
+    for (const match of matches) {
+      const [college] = await db.select().from(colleges)
+        .where(eq(colleges.id, match.collegeId));
+      if (college) {
+        matchesWithColleges.push({ ...match, college });
+      }
+    }
+    
+    return matchesWithColleges;
+  }
+
+  async createPlayerCollegeMatch(match: InsertPlayerCollegeMatch): Promise<PlayerCollegeMatch> {
+    const [created] = await db.insert(playerCollegeMatches).values(match).returning();
+    return created;
+  }
+
+  async updatePlayerCollegeMatch(id: number, updates: Partial<PlayerCollegeMatch>): Promise<PlayerCollegeMatch | undefined> {
+    const [updated] = await db.update(playerCollegeMatches)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(playerCollegeMatches.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deletePlayerCollegeMatches(playerId: number): Promise<void> {
+    await db.delete(playerCollegeMatches)
+      .where(eq(playerCollegeMatches.playerId, playerId));
+  }
+
+  // Fitness Data (Wearable integrations)
+  async getFitnessData(playerId: number, options?: { startDate?: string, endDate?: string, source?: string }): Promise<FitnessData[]> {
+    const conditions = [eq(fitnessData.playerId, playerId)];
+    
+    if (options?.startDate) {
+      conditions.push(gte(fitnessData.date, options.startDate));
+    }
+    if (options?.endDate) {
+      conditions.push(lte(fitnessData.date, options.endDate));
+    }
+    if (options?.source) {
+      conditions.push(eq(fitnessData.source, options.source));
+    }
+    
+    return await db.select()
+      .from(fitnessData)
+      .where(and(...conditions))
+      .orderBy(desc(fitnessData.date));
+  }
+
+  async getFitnessDataByDate(playerId: number, date: string): Promise<FitnessData | undefined> {
+    const [data] = await db.select()
+      .from(fitnessData)
+      .where(and(eq(fitnessData.playerId, playerId), eq(fitnessData.date, date)));
+    return data;
+  }
+
+  async createFitnessData(data: InsertFitnessData): Promise<FitnessData> {
+    const [created] = await db.insert(fitnessData).values(data).returning();
+    return created;
+  }
+
+  async updateFitnessData(id: number, updates: Partial<FitnessData>): Promise<FitnessData | undefined> {
+    const [updated] = await db.update(fitnessData)
+      .set(updates)
+      .where(eq(fitnessData.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteFitnessData(id: number): Promise<void> {
+    await db.delete(fitnessData).where(eq(fitnessData.id, id));
+  }
+
+  async getLatestFitnessData(playerId: number): Promise<FitnessData | undefined> {
+    const [latest] = await db.select()
+      .from(fitnessData)
+      .where(eq(fitnessData.playerId, playerId))
+      .orderBy(desc(fitnessData.date))
+      .limit(1);
+    return latest;
+  }
+
+  async getFitnessDataSummary(playerId: number, days: number): Promise<{ avgSleep: number, avgRecovery: number, avgHrv: number, totalWorkouts: number }> {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    const startDateStr = startDate.toISOString().split('T')[0];
+
+    const data = await db.select()
+      .from(fitnessData)
+      .where(and(
+        eq(fitnessData.playerId, playerId),
+        gte(fitnessData.date, startDateStr)
+      ));
+
+    if (data.length === 0) {
+      return { avgSleep: 0, avgRecovery: 0, avgHrv: 0, totalWorkouts: 0 };
+    }
+
+    let totalSleep = 0;
+    let sleepCount = 0;
+    let totalRecovery = 0;
+    let recoveryCount = 0;
+    let totalHrv = 0;
+    let hrvCount = 0;
+    let totalWorkouts = 0;
+
+    for (const entry of data) {
+      if (entry.sleepHours) {
+        totalSleep += parseFloat(String(entry.sleepHours));
+        sleepCount++;
+      }
+      if (entry.recoveryScore) {
+        totalRecovery += entry.recoveryScore;
+        recoveryCount++;
+      }
+      if (entry.hrvScore) {
+        totalHrv += entry.hrvScore;
+        hrvCount++;
+      }
+      if (entry.workoutCount) {
+        totalWorkouts += entry.workoutCount;
+      }
+    }
+
+    return {
+      avgSleep: sleepCount > 0 ? Math.round((totalSleep / sleepCount) * 10) / 10 : 0,
+      avgRecovery: recoveryCount > 0 ? Math.round(totalRecovery / recoveryCount) : 0,
+      avgHrv: hrvCount > 0 ? Math.round(totalHrv / hrvCount) : 0,
+      totalWorkouts
+    };
   }
 }
 

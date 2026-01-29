@@ -1231,8 +1231,11 @@ export const highlightClips = pgTable("highlight_clips", {
   thumbnailUrl: text("thumbnail_url"),
   duration: integer("duration"), // seconds
   viewCount: integer("view_count").default(0).notNull(),
+  likeCount: integer("like_count").default(0).notNull(), // TikTok-style likes
   linkedGameId: integer("linked_game_id").references(() => games.id, { onDelete: "set null" }), // Links to verified game stats
   linkedTimestamp: text("linked_timestamp"), // Timestamp format: "MM:SS"
+  overlayStyle: text("overlay_style").default("minimal"), // 'minimal', 'full', 'animated'
+  statsToFeature: text("stats_to_feature"), // JSON array: ["points", "rebounds", "assists"]
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
   playerIdIdx: index("highlight_clips_player_id_idx").on(table.playerId),
@@ -1967,6 +1970,256 @@ export const eventGameLinks = pgTable("event_game_links", {
   gameIdIdx: index("event_game_links_game_id_idx").on(table.gameId),
 }));
 
+// === LEAGUES & RIVALRIES ===
+export const leagues = pgTable("leagues", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  sport: text("sport").notNull().default("basketball"), // 'basketball' or 'football'
+  description: text("description"),
+  logoUrl: text("logo_url"),
+  
+  // League settings
+  seasonName: text("season_name"), // "Spring 2025"
+  startDate: date("start_date"),
+  endDate: date("end_date"),
+  maxTeams: integer("max_teams").default(12),
+  gameFormat: text("game_format").default("round_robin"), // 'round_robin', 'single_elimination', 'double_elimination'
+  
+  // Privacy
+  isPublic: boolean("is_public").default(true).notNull(),
+  joinCode: text("join_code"), // For private leagues
+  
+  // Admin
+  createdByUserId: text("created_by_user_id").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  sportIdx: index("leagues_sport_idx").on(table.sport),
+  createdByIdx: index("leagues_created_by_idx").on(table.createdByUserId),
+}));
+
+export const leagueTeams = pgTable("league_teams", {
+  id: serial("id").primaryKey(),
+  leagueId: integer("league_id").notNull().references(() => leagues.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  logoUrl: text("logo_url"),
+  primaryColor: text("primary_color").default("#00D4FF"),
+  
+  // Captain/Manager
+  captainUserId: text("captain_user_id"), // User who manages this team
+  
+  // Stats (computed/cached)
+  wins: integer("wins").default(0).notNull(),
+  losses: integer("losses").default(0).notNull(),
+  ties: integer("ties").default(0).notNull(),
+  pointsFor: integer("points_for").default(0).notNull(),
+  pointsAgainst: integer("points_against").default(0).notNull(),
+  
+  // Playoff status
+  playoffSeed: integer("playoff_seed"),
+  isEliminated: boolean("is_eliminated").default(false).notNull(),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  leagueIdIdx: index("league_teams_league_id_idx").on(table.leagueId),
+  captainIdx: index("league_teams_captain_idx").on(table.captainUserId),
+}));
+
+export const leagueTeamRosters = pgTable("league_team_rosters", {
+  id: serial("id").primaryKey(),
+  leagueTeamId: integer("league_team_id").notNull().references(() => leagueTeams.id, { onDelete: "cascade" }),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  jerseyNumber: integer("jersey_number"),
+  position: text("position"),
+  role: text("role").default("player"), // 'captain', 'co-captain', 'player'
+  joinedAt: timestamp("joined_at").defaultNow(),
+}, (table) => ({
+  teamIdIdx: index("league_team_rosters_team_id_idx").on(table.leagueTeamId),
+  playerIdIdx: index("league_team_rosters_player_id_idx").on(table.playerId),
+}));
+
+export const leagueGames = pgTable("league_games", {
+  id: serial("id").primaryKey(),
+  leagueId: integer("league_id").notNull().references(() => leagues.id, { onDelete: "cascade" }),
+  homeTeamId: integer("home_team_id").notNull().references(() => leagueTeams.id, { onDelete: "cascade" }),
+  awayTeamId: integer("away_team_id").notNull().references(() => leagueTeams.id, { onDelete: "cascade" }),
+  
+  // Schedule
+  scheduledDate: timestamp("scheduled_date"),
+  location: text("location"),
+  
+  // Scores
+  homeScore: integer("home_score"),
+  awayScore: integer("away_score"),
+  
+  // Status
+  status: text("status").default("scheduled").notNull(), // 'scheduled', 'live', 'final', 'postponed', 'cancelled'
+  quarter: integer("quarter"), // Current quarter/period for live games
+  gameTime: text("game_time"), // "5:32" remaining in quarter
+  
+  // Playoff info
+  isPlayoff: boolean("is_playoff").default(false).notNull(),
+  playoffRound: text("playoff_round"), // 'quarterfinal', 'semifinal', 'championship'
+  
+  // Link to player stats (optional)
+  linkedGameId: integer("linked_game_id").references(() => games.id),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  leagueIdIdx: index("league_games_league_id_idx").on(table.leagueId),
+  homeTeamIdx: index("league_games_home_team_idx").on(table.homeTeamId),
+  awayTeamIdx: index("league_games_away_team_idx").on(table.awayTeamId),
+  statusIdx: index("league_games_status_idx").on(table.status),
+}));
+
+export const leagueRivalries = pgTable("league_rivalries", {
+  id: serial("id").primaryKey(),
+  leagueId: integer("league_id").notNull().references(() => leagues.id, { onDelete: "cascade" }),
+  team1Id: integer("team_1_id").notNull().references(() => leagueTeams.id, { onDelete: "cascade" }),
+  team2Id: integer("team_2_id").notNull().references(() => leagueTeams.id, { onDelete: "cascade" }),
+  
+  // Rivalry name (e.g., "The Crosstown Classic")
+  rivalryName: text("rivalry_name"),
+  
+  // Historical record
+  team1Wins: integer("team_1_wins").default(0).notNull(),
+  team2Wins: integer("team_2_wins").default(0).notNull(),
+  ties: integer("ties").default(0).notNull(),
+  
+  // Streak tracking
+  currentStreakTeamId: integer("current_streak_team_id"),
+  currentStreakCount: integer("current_streak_count").default(0),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  leagueIdIdx: index("league_rivalries_league_id_idx").on(table.leagueId),
+}));
+
+// === COLLEGE DATABASE (for AI Recruiting Match) ===
+export const colleges = pgTable("colleges", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  shortName: text("short_name"), // "UCLA", "Duke"
+  logoUrl: text("logo_url"),
+  
+  // Location
+  city: text("city").notNull(),
+  state: text("state").notNull(),
+  region: text("region"), // 'West', 'East', 'Midwest', 'South'
+  
+  // Academic
+  division: text("division").notNull(), // 'D1', 'D2', 'D3', 'NAIA', 'JUCO'
+  conference: text("conference"), // "Pac-12", "Big Ten", etc.
+  academicRating: integer("academic_rating"), // 1-100
+  avgGpaRequired: decimal("avg_gpa_required", { precision: 3, scale: 2 }),
+  satRange: text("sat_range"), // "1200-1400"
+  
+  // Sports program
+  sport: text("sport").notNull().default("basketball"),
+  programStrength: integer("program_strength"), // 1-100 overall program rating
+  coachingRating: integer("coaching_rating"), // 1-100
+  facilitiesRating: integer("facilities_rating"), // 1-100
+  
+  // Play style (for matching algorithm)
+  tempoRating: integer("tempo_rating"), // 1-100 (100 = fast pace)
+  defensiveStyle: text("defensive_style"), // 'man', 'zone', 'switching', 'pressure'
+  offensiveStyle: text("offensive_style"), // 'motion', 'iso', 'pick_and_roll', 'spread'
+  
+  // Roster needs (what positions they're recruiting)
+  positionNeeds: text("position_needs"), // JSON array of positions
+  scholarshipsAvailable: integer("scholarships_available"),
+  
+  // Contact
+  recruitingContactEmail: text("recruiting_contact_email"),
+  recruitingUrl: text("recruiting_url"),
+  
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  divisionIdx: index("colleges_division_idx").on(table.division),
+  sportIdx: index("colleges_sport_idx").on(table.sport),
+  stateIdx: index("colleges_state_idx").on(table.state),
+}));
+
+export const playerCollegeMatches = pgTable("player_college_matches", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  collegeId: integer("college_id").notNull().references(() => colleges.id, { onDelete: "cascade" }),
+  
+  // Match scores (0-100)
+  overallMatchScore: integer("overall_match_score").notNull(),
+  skillMatchScore: integer("skill_match_score"),
+  academicMatchScore: integer("academic_match_score"),
+  styleMatchScore: integer("style_match_score"), // Play style fit
+  locationMatchScore: integer("location_match_score"),
+  
+  // AI analysis
+  matchReasoning: text("match_reasoning"), // Why this is a good fit
+  strengthsForProgram: text("strengths_for_program"),
+  developmentAreas: text("development_areas"),
+  
+  // Status
+  isRecommended: boolean("is_recommended").default(false).notNull(), // Top 10 match
+  isSaved: boolean("is_saved").default(false).notNull(), // Player saved this match
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  playerIdIdx: index("player_college_matches_player_id_idx").on(table.playerId),
+  collegeIdIdx: index("player_college_matches_college_id_idx").on(table.collegeId),
+  matchScoreIdx: index("player_college_matches_score_idx").on(table.overallMatchScore),
+}));
+
+// === FITNESS / WEARABLE DATA ===
+export const fitnessData = pgTable("fitness_data", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  
+  // Source
+  source: text("source").notNull(), // 'apple_health', 'google_fit', 'whoop', 'manual'
+  syncedAt: timestamp("synced_at"),
+  
+  // Date range this data covers
+  date: date("date").notNull(),
+  
+  // Activity metrics
+  stepCount: integer("step_count"),
+  activeMinutes: integer("active_minutes"),
+  caloriesBurned: integer("calories_burned"),
+  distanceMeters: decimal("distance_meters", { precision: 10, scale: 2 }),
+  
+  // Heart rate
+  restingHeartRate: integer("resting_heart_rate"),
+  avgHeartRate: integer("avg_heart_rate"),
+  maxHeartRate: integer("max_heart_rate"),
+  hrvScore: integer("hrv_score"), // Heart rate variability (higher = better recovery)
+  
+  // Sleep
+  sleepHours: decimal("sleep_hours", { precision: 4, scale: 2 }),
+  sleepQualityScore: integer("sleep_quality_score"), // 1-100
+  deepSleepMinutes: integer("deep_sleep_minutes"),
+  remSleepMinutes: integer("rem_sleep_minutes"),
+  
+  // Recovery / Readiness
+  recoveryScore: integer("recovery_score"), // 1-100 (Whoop-style)
+  strainScore: decimal("strain_score", { precision: 4, scale: 2 }), // 0-21 (Whoop-style)
+  readinessScore: integer("readiness_score"), // 1-100
+  
+  // Training load
+  workoutCount: integer("workout_count"),
+  trainingLoadScore: integer("training_load_score"), // Cumulative training stress
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  playerIdIdx: index("fitness_data_player_id_idx").on(table.playerId),
+  dateIdx: index("fitness_data_date_idx").on(table.date),
+  sourceIdx: index("fitness_data_source_idx").on(table.source),
+}));
+
 // === SCHEMAS FOR NEW TABLES ===
 export const insertPlayerRatingSchema = createInsertSchema(playerRatings).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertPlayerRating = z.infer<typeof insertPlayerRatingSchema>;
@@ -2003,6 +2256,41 @@ export type EventIntegration = typeof eventIntegrations.$inferSelect;
 export const insertEventGameLinkSchema = createInsertSchema(eventGameLinks).omit({ id: true, createdAt: true });
 export type InsertEventGameLink = z.infer<typeof insertEventGameLinkSchema>;
 export type EventGameLink = typeof eventGameLinks.$inferSelect;
+
+// === LEAGUE SCHEMAS & TYPES ===
+export const insertLeagueSchema = createInsertSchema(leagues).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertLeague = z.infer<typeof insertLeagueSchema>;
+export type League = typeof leagues.$inferSelect;
+
+export const insertLeagueTeamSchema = createInsertSchema(leagueTeams).omit({ id: true, createdAt: true });
+export type InsertLeagueTeam = z.infer<typeof insertLeagueTeamSchema>;
+export type LeagueTeam = typeof leagueTeams.$inferSelect;
+
+export const insertLeagueTeamRosterSchema = createInsertSchema(leagueTeamRosters).omit({ id: true, joinedAt: true });
+export type InsertLeagueTeamRoster = z.infer<typeof insertLeagueTeamRosterSchema>;
+export type LeagueTeamRoster = typeof leagueTeamRosters.$inferSelect;
+
+export const insertLeagueGameSchema = createInsertSchema(leagueGames).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertLeagueGame = z.infer<typeof insertLeagueGameSchema>;
+export type LeagueGame = typeof leagueGames.$inferSelect;
+
+export const insertLeagueRivalrySchema = createInsertSchema(leagueRivalries).omit({ id: true, createdAt: true });
+export type InsertLeagueRivalry = z.infer<typeof insertLeagueRivalrySchema>;
+export type LeagueRivalry = typeof leagueRivalries.$inferSelect;
+
+// === COLLEGE SCHEMAS & TYPES ===
+export const insertCollegeSchema = createInsertSchema(colleges).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertCollege = z.infer<typeof insertCollegeSchema>;
+export type College = typeof colleges.$inferSelect;
+
+export const insertPlayerCollegeMatchSchema = createInsertSchema(playerCollegeMatches).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertPlayerCollegeMatch = z.infer<typeof insertPlayerCollegeMatchSchema>;
+export type PlayerCollegeMatch = typeof playerCollegeMatches.$inferSelect;
+
+// === FITNESS DATA SCHEMAS & TYPES ===
+export const insertFitnessDataSchema = createInsertSchema(fitnessData).omit({ id: true, createdAt: true });
+export type InsertFitnessData = z.infer<typeof insertFitnessDataSchema>;
+export type FitnessData = typeof fitnessData.$inferSelect;
 
 // === MILESTONE DEFINITIONS ===
 export const MILESTONE_DEFINITIONS = {

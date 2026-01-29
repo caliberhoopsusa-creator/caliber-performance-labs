@@ -53,12 +53,17 @@ import Admin from "./pages/Admin";
 import WorkoutTracker from "./pages/WorkoutTracker";
 import ScheduleCalendar from "./pages/ScheduleCalendar";
 import HighlightClipsPage from "./pages/HighlightClipsPage";
+import Highlights from "./pages/Highlights";
 import ReelPage from "./pages/ReelPage";
 import TeamComparison from "./pages/TeamComparison";
 import ReportCardPage from "./pages/ReportCardPage";
 import SocialHub from "./pages/SocialHub";
 import Shop from "./pages/Shop";
 import CoachVerify from "./pages/CoachVerify";
+import LeagueHub from "./pages/LeagueHub";
+import LeagueDetail from "./pages/LeagueDetail";
+import CollegeRecruiting from "./pages/CollegeRecruiting";
+import FitnessDashboard from "./pages/FitnessDashboard";
 import NotFound from "./pages/not-found";
 
 interface ExtendedUser {
@@ -296,12 +301,16 @@ function MainRouter() {
                 <Route path="/pricing" component={Pricing} />
                 <Route path="/workouts" component={WorkoutTracker} />
                 <Route path="/schedule" component={ScheduleCalendar} />
-                <Route path="/highlights" component={HighlightClipsPage} />
+                <Route path="/highlights" component={Highlights} />
                 <Route path="/reels/:playerId" component={ReelPage} />
                 <Route path="/team-comparison" component={TeamComparison} />
                 <Route path="/report-card" component={ReportCardPage} />
                 <Route path="/social-hub" component={SocialHub} />
                 <Route path="/shop" component={Shop} />
+                <Route path="/leagues" component={LeagueHub} />
+                <Route path="/leagues/:id" component={LeagueDetail} />
+                <Route path="/recruiting" component={CollegeRecruiting} />
+                <Route path="/fitness" component={FitnessDashboard} />
                 <Route component={NotFound} />
               </Switch>
             </PageTransition>

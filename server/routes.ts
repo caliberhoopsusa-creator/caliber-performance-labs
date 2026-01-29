@@ -3,7 +3,7 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, headToHeadChallenges, statVerifications, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema } from "@shared/schema";
+import { players, games, headToHeadChallenges, statVerifications, playerCollegeMatches, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { calculateAIRating, calculateProjection, type GameStats, type PlayerMetrics, type PeerStats, type AIRatingResult, type ProjectionResult } from "@shared/ai-rating-engine";
 import type { Sport } from "@shared/sports-config";
@@ -2134,6 +2134,248 @@ export async function registerRoutes(
         });
       }
       throw err;
+    }
+  });
+
+  // --- Sharing Endpoints ---
+
+  // GET /api/players/:id/share-card - Generate shareable stat card data
+  app.get('/api/players/:id/share-card', async (req, res) => {
+    try {
+      const playerId = Number(req.params.id);
+      const player = await storage.getPlayer(playerId);
+      
+      if (!player) {
+        return res.status(404).json({ message: 'Player not found' });
+      }
+      
+      const games = await storage.getGamesByPlayerId(playerId);
+      const badges = await storage.getPlayerBadges(playerId);
+      const skillBadges = await storage.getPlayerSkillBadges(playerId);
+      
+      // Calculate averages
+      const gamesPlayed = games.length;
+      const avgPoints = gamesPlayed ? games.reduce((acc, g) => acc + g.points, 0) / gamesPlayed : 0;
+      const avgRebounds = gamesPlayed ? games.reduce((acc, g) => acc + g.rebounds, 0) / gamesPlayed : 0;
+      const avgAssists = gamesPlayed ? games.reduce((acc, g) => acc + g.assists, 0) / gamesPlayed : 0;
+      
+      // Football stats
+      const avgPassingYards = gamesPlayed ? games.reduce((acc, g) => acc + (g.passingYards || 0), 0) / gamesPlayed : 0;
+      const avgRushingYards = gamesPlayed ? games.reduce((acc, g) => acc + (g.rushingYards || 0), 0) / gamesPlayed : 0;
+      const totalTDs = games.reduce((acc, g) => acc + (g.passingTouchdowns || 0) + (g.rushingTouchdowns || 0) + (g.receivingTouchdowns || 0), 0);
+      const avgTackles = gamesPlayed ? games.reduce((acc, g) => acc + (g.tackles || 0), 0) / gamesPlayed : 0;
+      
+      // Calculate average grade
+      const GRADE_VALUES: Record<string, number> = {
+        'A+': 100, 'A': 95, 'A-': 90,
+        'B+': 88, 'B': 85, 'B-': 80,
+        'C+': 78, 'C': 75, 'C-': 70,
+        'D+': 68, 'D': 65, 'D-': 60,
+        'F': 50,
+      };
+      
+      let averageGrade = '—';
+      if (gamesPlayed > 0) {
+        const totalValue = games.reduce((acc, g) => {
+          const grade = g.grade?.trim().toUpperCase() || '';
+          return acc + (GRADE_VALUES[grade] || 0);
+        }, 0);
+        const avgValue = totalValue / gamesPlayed;
+        
+        if (avgValue >= 97) averageGrade = 'A+';
+        else if (avgValue >= 92) averageGrade = 'A';
+        else if (avgValue >= 87) averageGrade = 'A-';
+        else if (avgValue >= 84) averageGrade = 'B+';
+        else if (avgValue >= 81) averageGrade = 'B';
+        else if (avgValue >= 77) averageGrade = 'B-';
+        else if (avgValue >= 74) averageGrade = 'C+';
+        else if (avgValue >= 71) averageGrade = 'C';
+        else if (avgValue >= 67) averageGrade = 'C-';
+        else if (avgValue >= 64) averageGrade = 'D+';
+        else if (avgValue >= 61) averageGrade = 'D';
+        else if (avgValue >= 55) averageGrade = 'D-';
+        else averageGrade = 'F';
+      }
+      
+      // Recent games (last 5)
+      const recentGames = [...games]
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 5)
+        .map(g => ({
+          id: g.id,
+          date: g.date,
+          opponent: g.opponent,
+          grade: g.grade,
+          points: g.points,
+          rebounds: g.rebounds,
+          assists: g.assists,
+        }));
+      
+      // Get unlocked skill badges
+      const unlockedSkillBadges = skillBadges
+        .filter(b => b.currentLevel !== 'none')
+        .map(b => ({
+          skillType: b.skillType,
+          level: b.currentLevel,
+        }));
+      
+      // Earned badges (recent 10)
+      const earnedBadges = badges.slice(0, 10).map(b => ({
+        type: b.badgeType,
+        earnedAt: b.earnedAt,
+      }));
+      
+      res.json({
+        player: {
+          id: player.id,
+          name: player.name,
+          position: player.position,
+          team: player.team,
+          jerseyNumber: player.jerseyNumber,
+          photoUrl: player.photoUrl,
+          sport: player.sport,
+          currentTier: player.currentTier,
+          totalXp: player.totalXp,
+        },
+        stats: {
+          gamesPlayed,
+          averageGrade,
+          basketball: {
+            ppg: Number(avgPoints.toFixed(1)),
+            rpg: Number(avgRebounds.toFixed(1)),
+            apg: Number(avgAssists.toFixed(1)),
+          },
+          football: {
+            passingYpg: Number(avgPassingYards.toFixed(1)),
+            rushingYpg: Number(avgRushingYards.toFixed(1)),
+            totalTDs,
+            tacklesPerGame: Number(avgTackles.toFixed(1)),
+          },
+        },
+        recentGames,
+        badges: earnedBadges,
+        skillBadges: unlockedSkillBadges,
+        shareUrl: `${req.protocol}://${req.get('host')}/players/${playerId}`,
+      });
+    } catch (err) {
+      console.error('Error generating share card data:', err);
+      res.status(500).json({ message: 'Failed to generate share card data' });
+    }
+  });
+
+  // GET /api/players/:id/achievement-share - Get shareable achievement data
+  app.get('/api/players/:id/achievement-share', async (req, res) => {
+    try {
+      const playerId = Number(req.params.id);
+      const { type, achievementId } = req.query;
+      
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: 'Player not found' });
+      }
+      
+      let achievementData: any = null;
+      
+      switch (type) {
+        case 'badge': {
+          const badges = await storage.getPlayerBadges(playerId);
+          const badge = badges.find(b => b.id === Number(achievementId) || b.badgeType === achievementId);
+          if (badge) {
+            const badgeDef = BADGE_DEFINITIONS[badge.badgeType];
+            achievementData = {
+              type: 'badge',
+              badge: {
+                type: badge.badgeType,
+                name: badgeDef?.name || badge.badgeType,
+                description: badgeDef?.description || '',
+                tier: badgeDef?.tier || 'bronze',
+                earnedAt: badge.earnedAt,
+              },
+            };
+          }
+          break;
+        }
+        
+        case 'milestone': {
+          const games = await storage.getGamesByPlayerId(playerId);
+          const gamesCount = games.length;
+          
+          // Define milestones
+          const milestones = [
+            { count: 10, name: '10 Games Played', emoji: '🏀' },
+            { count: 25, name: '25 Games Played', emoji: '🔥' },
+            { count: 50, name: '50 Games Played', emoji: '⭐' },
+            { count: 100, name: '100 Games Played', emoji: '🏆' },
+          ];
+          
+          const milestone = milestones.find(m => m.count === Number(achievementId));
+          if (milestone && gamesCount >= milestone.count) {
+            achievementData = {
+              type: 'milestone',
+              milestone: {
+                name: milestone.name,
+                count: milestone.count,
+                achieved: true,
+                totalGames: gamesCount,
+              },
+            };
+          }
+          break;
+        }
+        
+        case 'grade': {
+          const games = await storage.getGamesByPlayerId(playerId);
+          const game = games.find(g => g.id === Number(achievementId));
+          if (game && game.grade) {
+            achievementData = {
+              type: 'grade',
+              game: {
+                id: game.id,
+                date: game.date,
+                opponent: game.opponent,
+                grade: game.grade,
+                points: game.points,
+                rebounds: game.rebounds,
+                assists: game.assists,
+              },
+            };
+          }
+          break;
+        }
+        
+        case 'tier_up': {
+          achievementData = {
+            type: 'tier_up',
+            tier: {
+              name: player.currentTier,
+              totalXp: player.totalXp,
+            },
+          };
+          break;
+        }
+        
+        default:
+          return res.status(400).json({ message: 'Invalid achievement type. Use: badge, milestone, grade, or tier_up' });
+      }
+      
+      if (!achievementData) {
+        return res.status(404).json({ message: 'Achievement not found' });
+      }
+      
+      res.json({
+        player: {
+          id: player.id,
+          name: player.name,
+          position: player.position,
+          team: player.team,
+          photoUrl: player.photoUrl,
+        },
+        achievement: achievementData,
+        shareUrl: `${req.protocol}://${req.get('host')}/players/${playerId}`,
+      });
+    } catch (err) {
+      console.error('Error generating achievement share data:', err);
+      res.status(500).json({ message: 'Failed to generate achievement share data' });
     }
   });
 
@@ -8160,6 +8402,101 @@ Respond in this exact JSON format:
     }
   });
 
+  // === HIGHLIGHT CLIPS API - TikTok Style ===
+  
+  // GET /api/players/:id/highlights - Get a player's highlight clips
+  app.get('/api/players/:id/highlights', async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      const clips = await storage.getPlayerHighlightClips(playerId);
+      res.json(clips);
+    } catch (error) {
+      console.error('Error fetching player highlights:', error);
+      res.status(500).json({ message: "Failed to fetch highlights" });
+    }
+  });
+
+  // POST /api/highlights - Create a new highlight clip
+  app.post('/api/highlights', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const validatedData = insertHighlightClipSchema.parse(req.body);
+      
+      // Authorization: owner or coach
+      if (user.role !== 'coach' && user.playerId !== validatedData.playerId) {
+        return res.status(403).json({ message: "Not authorized to create clips for this player" });
+      }
+      
+      const newClip = await storage.createHighlightClip(validatedData);
+      res.status(201).json(newClip);
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      }
+      console.error('Error creating highlight clip:', error);
+      res.status(500).json({ message: "Failed to create highlight clip" });
+    }
+  });
+
+  // POST /api/highlights/generate-overlay - Generate/update overlay settings for a clip
+  app.post('/api/highlights/generate-overlay', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      const { highlightId, overlayStyle, statsToFeature } = req.body;
+      
+      if (!highlightId || typeof highlightId !== 'number') {
+        return res.status(400).json({ message: "highlightId is required" });
+      }
+      
+      if (!overlayStyle || !['minimal', 'full', 'animated'].includes(overlayStyle)) {
+        return res.status(400).json({ message: "overlayStyle must be 'minimal', 'full', or 'animated'" });
+      }
+      
+      // Get the clip
+      const clip = await storage.getHighlightClip(highlightId);
+      if (!clip) {
+        return res.status(404).json({ message: "Highlight clip not found" });
+      }
+      
+      // Authorization: owner or coach
+      if (user.role !== 'coach' && user.playerId !== clip.playerId) {
+        return res.status(403).json({ message: "Not authorized to modify this clip" });
+      }
+      
+      // Update the clip with overlay settings
+      const statsToFeatureJson = Array.isArray(statsToFeature) ? JSON.stringify(statsToFeature) : null;
+      const updated = await storage.updateHighlightClip(highlightId, {
+        overlayStyle,
+        statsToFeature: statsToFeatureJson,
+      });
+      
+      res.json(updated);
+    } catch (error) {
+      console.error('Error generating overlay:', error);
+      res.status(500).json({ message: "Failed to generate overlay" });
+    }
+  });
+
+  // POST /api/highlights/:id/like - Increment like count
+  app.post('/api/highlights/:id/like', async (req, res) => {
+    try {
+      const highlightId = parseInt(req.params.id);
+      await storage.incrementClipLikeCount(highlightId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error liking highlight:', error);
+      res.status(500).json({ message: "Failed to like highlight" });
+    }
+  });
+
   // Get all highlights linked to a specific game
   app.get('/api/games/:id/highlights', async (req, res) => {
     try {
@@ -10808,9 +11145,1473 @@ Respond in this exact JSON format:
     }
   });
 
+  // =====================
+  // LEAGUE ROUTES
+  // =====================
+
+  // GET /api/leagues - Get all public leagues (with optional sport filter)
+  app.get("/api/leagues", async (req, res) => {
+    try {
+      const sport = req.query.sport as string | undefined;
+      const leagues = await storage.getPublicLeagues(sport);
+      res.json(leagues);
+    } catch (error) {
+      console.error('Error fetching leagues:', error);
+      res.status(500).json({ message: "Failed to fetch leagues" });
+    }
+  });
+
+  // POST /api/leagues/join - Join a league by join code
+  app.post("/api/leagues/join", isAuthenticated, async (req: any, res) => {
+    try {
+      const { joinCode } = req.body;
+      if (!joinCode || typeof joinCode !== 'string') {
+        return res.status(400).json({ message: "Join code is required" });
+      }
+
+      const league = await storage.getLeagueByJoinCode(joinCode.trim());
+      if (!league) {
+        return res.status(404).json({ message: "League not found with that join code" });
+      }
+
+      res.json(league);
+    } catch (error) {
+      console.error('Error joining league:', error);
+      res.status(500).json({ message: "Failed to join league" });
+    }
+  });
+
+  // GET /api/leagues/:id - Get single league with teams
+  app.get("/api/leagues/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid league ID" });
+      }
+
+      const league = await storage.getLeagueWithTeams(id);
+      if (!league) {
+        return res.status(404).json({ message: "League not found" });
+      }
+
+      res.json(league);
+    } catch (error) {
+      console.error('Error fetching league:', error);
+      res.status(500).json({ message: "Failed to fetch league" });
+    }
+  });
+
+  // POST /api/leagues - Create new league
+  app.post("/api/leagues", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const validatedData = insertLeagueSchema.parse({
+        ...req.body,
+        createdByUserId: userId,
+      });
+
+      const league = await storage.createLeague(validatedData);
+      res.status(201).json(league);
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Invalid league data", errors: error.errors });
+      }
+      console.error('Error creating league:', error);
+      res.status(500).json({ message: "Failed to create league" });
+    }
+  });
+
+  // PUT /api/leagues/:id - Update league (only if user is creator)
+  app.put("/api/leagues/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid league ID" });
+      }
+
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const league = await storage.getLeague(id);
+      if (!league) {
+        return res.status(404).json({ message: "League not found" });
+      }
+
+      if (league.createdByUserId !== userId) {
+        return res.status(403).json({ message: "Only the league creator can update this league" });
+      }
+
+      const updates = req.body;
+      delete updates.id;
+      delete updates.createdByUserId;
+      delete updates.createdAt;
+
+      const updated = await storage.updateLeague(id, updates);
+      res.json(updated);
+    } catch (error) {
+      console.error('Error updating league:', error);
+      res.status(500).json({ message: "Failed to update league" });
+    }
+  });
+
+  // DELETE /api/leagues/:id - Delete league (only if user is creator)
+  app.delete("/api/leagues/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid league ID" });
+      }
+
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const league = await storage.getLeague(id);
+      if (!league) {
+        return res.status(404).json({ message: "League not found" });
+      }
+
+      if (league.createdByUserId !== userId) {
+        return res.status(403).json({ message: "Only the league creator can delete this league" });
+      }
+
+      await storage.deleteLeague(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting league:', error);
+      res.status(500).json({ message: "Failed to delete league" });
+    }
+  });
+
+  // POST /api/leagues/:id/teams - Create team in league
+  app.post("/api/leagues/:id/teams", isAuthenticated, async (req: any, res) => {
+    try {
+      const leagueId = parseInt(req.params.id);
+      if (isNaN(leagueId)) {
+        return res.status(400).json({ message: "Invalid league ID" });
+      }
+
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const league = await storage.getLeague(leagueId);
+      if (!league) {
+        return res.status(404).json({ message: "League not found" });
+      }
+
+      const validatedData = insertLeagueTeamSchema.parse({
+        ...req.body,
+        leagueId,
+        captainUserId: req.body.captainUserId || userId,
+      });
+
+      const team = await storage.createLeagueTeam(validatedData);
+      res.status(201).json(team);
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Invalid team data", errors: error.errors });
+      }
+      console.error('Error creating team:', error);
+      res.status(500).json({ message: "Failed to create team" });
+    }
+  });
+
+  // PUT /api/leagues/:id/teams/:teamId - Update team (only if user is captain)
+  app.put("/api/leagues/:id/teams/:teamId", isAuthenticated, async (req: any, res) => {
+    try {
+      const leagueId = parseInt(req.params.id);
+      const teamId = parseInt(req.params.teamId);
+      if (isNaN(leagueId) || isNaN(teamId)) {
+        return res.status(400).json({ message: "Invalid league or team ID" });
+      }
+
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const team = await storage.getLeagueTeam(teamId);
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+
+      if (team.leagueId !== leagueId) {
+        return res.status(400).json({ message: "Team does not belong to this league" });
+      }
+
+      if (team.captainUserId !== userId) {
+        return res.status(403).json({ message: "Only the team captain can update this team" });
+      }
+
+      const updates = req.body;
+      delete updates.id;
+      delete updates.leagueId;
+      delete updates.createdAt;
+
+      const updated = await storage.updateLeagueTeam(teamId, updates);
+      res.json(updated);
+    } catch (error) {
+      console.error('Error updating team:', error);
+      res.status(500).json({ message: "Failed to update team" });
+    }
+  });
+
+  // DELETE /api/leagues/:id/teams/:teamId - Delete team
+  app.delete("/api/leagues/:id/teams/:teamId", isAuthenticated, async (req: any, res) => {
+    try {
+      const leagueId = parseInt(req.params.id);
+      const teamId = parseInt(req.params.teamId);
+      if (isNaN(leagueId) || isNaN(teamId)) {
+        return res.status(400).json({ message: "Invalid league or team ID" });
+      }
+
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const team = await storage.getLeagueTeam(teamId);
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+
+      if (team.leagueId !== leagueId) {
+        return res.status(400).json({ message: "Team does not belong to this league" });
+      }
+
+      const league = await storage.getLeague(leagueId);
+      if (team.captainUserId !== userId && league?.createdByUserId !== userId) {
+        return res.status(403).json({ message: "Only the team captain or league creator can delete this team" });
+      }
+
+      await storage.deleteLeagueTeam(teamId);
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting team:', error);
+      res.status(500).json({ message: "Failed to delete team" });
+    }
+  });
+
+  // GET /api/leagues/:id/teams/:teamId/roster - Get team roster with player details
+  app.get("/api/leagues/:id/teams/:teamId/roster", async (req, res) => {
+    try {
+      const leagueId = parseInt(req.params.id);
+      const teamId = parseInt(req.params.teamId);
+      if (isNaN(leagueId) || isNaN(teamId)) {
+        return res.status(400).json({ message: "Invalid league or team ID" });
+      }
+
+      const team = await storage.getLeagueTeam(teamId);
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+
+      if (team.leagueId !== leagueId) {
+        return res.status(400).json({ message: "Team does not belong to this league" });
+      }
+
+      const roster = await storage.getLeagueTeamRoster(teamId);
+      
+      // Fetch player details for each roster member
+      const rosterWithPlayers = await Promise.all(
+        roster.map(async (member) => {
+          const player = await storage.getPlayer(member.playerId);
+          return {
+            ...member,
+            player: player ? {
+              id: player.id,
+              name: player.name,
+              position: player.position,
+              photoUrl: player.photoUrl,
+            } : null,
+          };
+        })
+      );
+
+      res.json(rosterWithPlayers);
+    } catch (error) {
+      console.error('Error fetching roster:', error);
+      res.status(500).json({ message: "Failed to fetch roster" });
+    }
+  });
+
+  // POST /api/leagues/:id/teams/:teamId/roster - Add player to team roster
+  app.post("/api/leagues/:id/teams/:teamId/roster", isAuthenticated, async (req: any, res) => {
+    try {
+      const leagueId = parseInt(req.params.id);
+      const teamId = parseInt(req.params.teamId);
+      if (isNaN(leagueId) || isNaN(teamId)) {
+        return res.status(400).json({ message: "Invalid league or team ID" });
+      }
+
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const team = await storage.getLeagueTeam(teamId);
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+
+      if (team.leagueId !== leagueId) {
+        return res.status(400).json({ message: "Team does not belong to this league" });
+      }
+
+      const validatedData = insertLeagueTeamRosterSchema.parse({
+        ...req.body,
+        leagueTeamId: teamId,
+      });
+
+      const roster = await storage.addPlayerToLeagueTeam(validatedData);
+      res.status(201).json(roster);
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Invalid roster data", errors: error.errors });
+      }
+      console.error('Error adding player to roster:', error);
+      res.status(500).json({ message: "Failed to add player to roster" });
+    }
+  });
+
+  // DELETE /api/leagues/:id/teams/:teamId/roster/:playerId - Remove player from roster
+  app.delete("/api/leagues/:id/teams/:teamId/roster/:playerId", isAuthenticated, async (req: any, res) => {
+    try {
+      const leagueId = parseInt(req.params.id);
+      const teamId = parseInt(req.params.teamId);
+      const playerId = parseInt(req.params.playerId);
+      if (isNaN(leagueId) || isNaN(teamId) || isNaN(playerId)) {
+        return res.status(400).json({ message: "Invalid league, team, or player ID" });
+      }
+
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const team = await storage.getLeagueTeam(teamId);
+      if (!team) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+
+      if (team.leagueId !== leagueId) {
+        return res.status(400).json({ message: "Team does not belong to this league" });
+      }
+
+      await storage.removePlayerFromLeagueTeam(teamId, playerId);
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error removing player from roster:', error);
+      res.status(500).json({ message: "Failed to remove player from roster" });
+    }
+  });
+
+  // GET /api/leagues/:id/games - Get league games
+  app.get("/api/leagues/:id/games", async (req, res) => {
+    try {
+      const leagueId = parseInt(req.params.id);
+      if (isNaN(leagueId)) {
+        return res.status(400).json({ message: "Invalid league ID" });
+      }
+
+      const league = await storage.getLeague(leagueId);
+      if (!league) {
+        return res.status(404).json({ message: "League not found" });
+      }
+
+      const games = await storage.getLeagueGames(leagueId);
+      res.json(games);
+    } catch (error) {
+      console.error('Error fetching league games:', error);
+      res.status(500).json({ message: "Failed to fetch league games" });
+    }
+  });
+
+  // POST /api/leagues/:id/games - Create/schedule a game
+  app.post("/api/leagues/:id/games", isAuthenticated, async (req: any, res) => {
+    try {
+      const leagueId = parseInt(req.params.id);
+      if (isNaN(leagueId)) {
+        return res.status(400).json({ message: "Invalid league ID" });
+      }
+
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const league = await storage.getLeague(leagueId);
+      if (!league) {
+        return res.status(404).json({ message: "League not found" });
+      }
+
+      const validatedData = insertLeagueGameSchema.parse({
+        ...req.body,
+        leagueId,
+      });
+
+      const game = await storage.createLeagueGame(validatedData);
+      res.status(201).json(game);
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Invalid game data", errors: error.errors });
+      }
+      console.error('Error creating league game:', error);
+      res.status(500).json({ message: "Failed to create league game" });
+    }
+  });
+
+  // PUT /api/leagues/:id/games/:gameId - Update game (score, status, etc.)
+  app.put("/api/leagues/:id/games/:gameId", isAuthenticated, async (req: any, res) => {
+    try {
+      const leagueId = parseInt(req.params.id);
+      const gameId = parseInt(req.params.gameId);
+      if (isNaN(leagueId) || isNaN(gameId)) {
+        return res.status(400).json({ message: "Invalid league or game ID" });
+      }
+
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const game = await storage.getLeagueGame(gameId);
+      if (!game) {
+        return res.status(404).json({ message: "Game not found" });
+      }
+
+      if (game.leagueId !== leagueId) {
+        return res.status(400).json({ message: "Game does not belong to this league" });
+      }
+
+      const updates = req.body;
+      delete updates.id;
+      delete updates.leagueId;
+      delete updates.createdAt;
+
+      const updated = await storage.updateLeagueGame(gameId, updates);
+      res.json(updated);
+    } catch (error) {
+      console.error('Error updating league game:', error);
+      res.status(500).json({ message: "Failed to update league game" });
+    }
+  });
+
+  // PUT /api/leagues/:id/games/:gameId/finalize - Finalize game and update standings
+  app.put("/api/leagues/:id/games/:gameId/finalize", isAuthenticated, async (req: any, res) => {
+    try {
+      const leagueId = parseInt(req.params.id);
+      const gameId = parseInt(req.params.gameId);
+      if (isNaN(leagueId) || isNaN(gameId)) {
+        return res.status(400).json({ message: "Invalid league or game ID" });
+      }
+
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const game = await storage.getLeagueGame(gameId);
+      if (!game) {
+        return res.status(404).json({ message: "Game not found" });
+      }
+
+      if (game.leagueId !== leagueId) {
+        return res.status(400).json({ message: "Game does not belong to this league" });
+      }
+
+      if (game.status === "final") {
+        return res.status(400).json({ message: "Game is already finalized" });
+      }
+
+      const { homeScore, awayScore } = req.body;
+      if (typeof homeScore !== "number" || typeof awayScore !== "number") {
+        return res.status(400).json({ message: "Valid scores are required to finalize" });
+      }
+
+      if (homeScore < 0 || awayScore < 0) {
+        return res.status(400).json({ message: "Scores cannot be negative" });
+      }
+
+      const homeTeam = await storage.getLeagueTeam(game.homeTeamId);
+      const awayTeam = await storage.getLeagueTeam(game.awayTeamId);
+
+      if (!homeTeam || !awayTeam) {
+        return res.status(404).json({ message: "Teams not found" });
+      }
+
+      const homeWins = homeScore > awayScore;
+      const awayWins = awayScore > homeScore;
+      const isTie = homeScore === awayScore;
+
+      await storage.updateLeagueTeam(homeTeam.id, {
+        wins: homeTeam.wins + (homeWins ? 1 : 0),
+        losses: homeTeam.losses + (awayWins ? 1 : 0),
+        ties: homeTeam.ties + (isTie ? 1 : 0),
+        pointsFor: homeTeam.pointsFor + homeScore,
+        pointsAgainst: homeTeam.pointsAgainst + awayScore,
+      });
+
+      await storage.updateLeagueTeam(awayTeam.id, {
+        wins: awayTeam.wins + (awayWins ? 1 : 0),
+        losses: awayTeam.losses + (homeWins ? 1 : 0),
+        ties: awayTeam.ties + (isTie ? 1 : 0),
+        pointsFor: awayTeam.pointsFor + awayScore,
+        pointsAgainst: awayTeam.pointsAgainst + homeScore,
+      });
+
+      const updatedGame = await storage.updateLeagueGame(gameId, {
+        homeScore,
+        awayScore,
+        status: "final",
+        quarter: null,
+        gameTime: null,
+      });
+
+      res.json(updatedGame);
+    } catch (error) {
+      console.error('Error finalizing league game:', error);
+      res.status(500).json({ message: "Failed to finalize league game" });
+    }
+  });
+
+  // === LEAGUE PLAYOFFS API ===
+
+  // POST /api/leagues/:id/start-playoffs - Start playoffs and create bracket games
+  app.post("/api/leagues/:id/start-playoffs", isAuthenticated, async (req: any, res) => {
+    try {
+      const leagueId = parseInt(req.params.id);
+      if (isNaN(leagueId)) {
+        return res.status(400).json({ message: "Invalid league ID" });
+      }
+
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const league = await storage.getLeague(leagueId);
+      if (!league) {
+        return res.status(404).json({ message: "League not found" });
+      }
+
+      if (league.createdByUserId !== userId) {
+        return res.status(403).json({ message: "Only the league creator can start playoffs" });
+      }
+
+      const teams = await storage.getLeagueTeams(leagueId);
+      if (teams.length < 4) {
+        return res.status(400).json({ message: "Need at least 4 teams to start playoffs" });
+      }
+
+      // Check if playoffs already started
+      const existingGames = await storage.getLeagueGames(leagueId);
+      const playoffGames = existingGames.filter(g => g.isPlayoff);
+      if (playoffGames.length > 0) {
+        return res.status(400).json({ message: "Playoffs have already been started" });
+      }
+
+      // Sort teams by standings (wins, then point differential)
+      const sortedTeams = [...teams].sort((a, b) => {
+        if (b.wins !== a.wins) return b.wins - a.wins;
+        if (a.losses !== b.losses) return a.losses - b.losses;
+        return (b.pointsFor - b.pointsAgainst) - (a.pointsFor - a.pointsAgainst);
+      });
+
+      // Determine bracket size based on team count (4, 8)
+      let bracketSize = 4;
+      if (sortedTeams.length >= 8) bracketSize = 8;
+      
+      // Take top teams for playoff bracket
+      const playoffTeams = sortedTeams.slice(0, bracketSize);
+
+      // Assign playoff seeds and update teams
+      for (let i = 0; i < playoffTeams.length; i++) {
+        await storage.updateLeagueTeam(playoffTeams[i].id, { playoffSeed: i + 1 });
+      }
+
+      const createdGames: any[] = [];
+
+      if (bracketSize === 8) {
+        // Quarterfinals: 1v8, 4v5, 3v6, 2v7
+        const qfMatchups = [
+          { home: 0, away: 7 }, // 1 vs 8
+          { home: 3, away: 4 }, // 4 vs 5
+          { home: 2, away: 5 }, // 3 vs 6
+          { home: 1, away: 6 }, // 2 vs 7
+        ];
+
+        for (const matchup of qfMatchups) {
+          const game = await storage.createLeagueGame({
+            leagueId,
+            homeTeamId: playoffTeams[matchup.home].id,
+            awayTeamId: playoffTeams[matchup.away].id,
+            isPlayoff: true,
+            playoffRound: "quarterfinals",
+            status: "scheduled",
+          });
+          createdGames.push(game);
+        }
+
+        // Create placeholder semifinal games
+        const sf1 = await storage.createLeagueGame({
+          leagueId,
+          homeTeamId: playoffTeams[0].id, // Placeholder - will be updated
+          awayTeamId: playoffTeams[0].id, // Placeholder - will be updated
+          isPlayoff: true,
+          playoffRound: "semifinals",
+          status: "scheduled",
+        });
+        const sf2 = await storage.createLeagueGame({
+          leagueId,
+          homeTeamId: playoffTeams[0].id, // Placeholder
+          awayTeamId: playoffTeams[0].id, // Placeholder
+          isPlayoff: true,
+          playoffRound: "semifinals",
+          status: "scheduled",
+        });
+        createdGames.push(sf1, sf2);
+
+        // Create placeholder championship game
+        const championship = await storage.createLeagueGame({
+          leagueId,
+          homeTeamId: playoffTeams[0].id, // Placeholder
+          awayTeamId: playoffTeams[0].id, // Placeholder
+          isPlayoff: true,
+          playoffRound: "championship",
+          status: "scheduled",
+        });
+        createdGames.push(championship);
+      } else {
+        // 4-team bracket: Semifinals only
+        // Semifinal 1: 1 vs 4
+        const sf1 = await storage.createLeagueGame({
+          leagueId,
+          homeTeamId: playoffTeams[0].id,
+          awayTeamId: playoffTeams[3].id,
+          isPlayoff: true,
+          playoffRound: "semifinals",
+          status: "scheduled",
+        });
+        // Semifinal 2: 2 vs 3
+        const sf2 = await storage.createLeagueGame({
+          leagueId,
+          homeTeamId: playoffTeams[1].id,
+          awayTeamId: playoffTeams[2].id,
+          isPlayoff: true,
+          playoffRound: "semifinals",
+          status: "scheduled",
+        });
+        createdGames.push(sf1, sf2);
+
+        // Championship placeholder
+        const championship = await storage.createLeagueGame({
+          leagueId,
+          homeTeamId: playoffTeams[0].id, // Placeholder
+          awayTeamId: playoffTeams[0].id, // Placeholder
+          isPlayoff: true,
+          playoffRound: "championship",
+          status: "scheduled",
+        });
+        createdGames.push(championship);
+      }
+
+      res.status(201).json({ 
+        message: "Playoffs started successfully",
+        bracketSize,
+        games: createdGames 
+      });
+    } catch (error) {
+      console.error('Error starting playoffs:', error);
+      res.status(500).json({ message: "Failed to start playoffs" });
+    }
+  });
+
+  // === LEAGUE RIVALRIES API ===
+
+  // GET /api/leagues/:id/rivalries - Get all rivalries in a league
+  app.get("/api/leagues/:id/rivalries", async (req, res) => {
+    try {
+      const leagueId = parseInt(req.params.id);
+      if (isNaN(leagueId)) {
+        return res.status(400).json({ message: "Invalid league ID" });
+      }
+
+      const league = await storage.getLeague(leagueId);
+      if (!league) {
+        return res.status(404).json({ message: "League not found" });
+      }
+
+      const rivalries = await storage.getLeagueRivalries(leagueId);
+      res.json(rivalries);
+    } catch (error) {
+      console.error('Error fetching league rivalries:', error);
+      res.status(500).json({ message: "Failed to fetch league rivalries" });
+    }
+  });
+
+  // POST /api/leagues/:id/rivalries - Create a rivalry between two teams
+  app.post("/api/leagues/:id/rivalries", isAuthenticated, async (req: any, res) => {
+    try {
+      const leagueId = parseInt(req.params.id);
+      if (isNaN(leagueId)) {
+        return res.status(400).json({ message: "Invalid league ID" });
+      }
+
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const league = await storage.getLeague(leagueId);
+      if (!league) {
+        return res.status(404).json({ message: "League not found" });
+      }
+
+      const { team1Id, team2Id, rivalryName } = req.body;
+
+      if (!team1Id || !team2Id) {
+        return res.status(400).json({ message: "Both team1Id and team2Id are required" });
+      }
+
+      if (team1Id === team2Id) {
+        return res.status(400).json({ message: "A team cannot be rivals with itself" });
+      }
+
+      // Check if rivalry already exists between these teams
+      const existingRivalry = await storage.getRivalryBetweenTeams(team1Id, team2Id);
+      if (existingRivalry) {
+        return res.status(400).json({ message: "A rivalry already exists between these teams" });
+      }
+
+      // Verify both teams belong to this league
+      const team1 = await storage.getLeagueTeam(team1Id);
+      const team2 = await storage.getLeagueTeam(team2Id);
+
+      if (!team1 || team1.leagueId !== leagueId) {
+        return res.status(400).json({ message: "Team 1 not found in this league" });
+      }
+      if (!team2 || team2.leagueId !== leagueId) {
+        return res.status(400).json({ message: "Team 2 not found in this league" });
+      }
+
+      const validatedData = insertLeagueRivalrySchema.parse({
+        leagueId,
+        team1Id,
+        team2Id,
+        rivalryName: rivalryName || null,
+      });
+
+      const rivalry = await storage.createLeagueRivalry(validatedData);
+      res.status(201).json(rivalry);
+    } catch (error) {
+      console.error('Error creating league rivalry:', error);
+      res.status(500).json({ message: "Failed to create league rivalry" });
+    }
+  });
+
+  // PUT /api/leagues/:id/rivalries/:rivalryId - Update rivalry (name, record)
+  app.put("/api/leagues/:id/rivalries/:rivalryId", isAuthenticated, async (req: any, res) => {
+    try {
+      const leagueId = parseInt(req.params.id);
+      const rivalryId = parseInt(req.params.rivalryId);
+      if (isNaN(leagueId) || isNaN(rivalryId)) {
+        return res.status(400).json({ message: "Invalid league or rivalry ID" });
+      }
+
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const rivalry = await storage.getLeagueRivalry(rivalryId);
+      if (!rivalry) {
+        return res.status(404).json({ message: "Rivalry not found" });
+      }
+
+      if (rivalry.leagueId !== leagueId) {
+        return res.status(400).json({ message: "Rivalry does not belong to this league" });
+      }
+
+      const { rivalryName, team1Wins, team2Wins, ties, currentStreakTeamId, currentStreakCount } = req.body;
+
+      const updates: Record<string, any> = {};
+      if (rivalryName !== undefined) updates.rivalryName = rivalryName;
+      if (team1Wins !== undefined) updates.team1Wins = team1Wins;
+      if (team2Wins !== undefined) updates.team2Wins = team2Wins;
+      if (ties !== undefined) updates.ties = ties;
+      if (currentStreakTeamId !== undefined) updates.currentStreakTeamId = currentStreakTeamId;
+      if (currentStreakCount !== undefined) updates.currentStreakCount = currentStreakCount;
+
+      const updatedRivalry = await storage.updateLeagueRivalry(rivalryId, updates);
+      res.json(updatedRivalry);
+    } catch (error) {
+      console.error('Error updating league rivalry:', error);
+      res.status(500).json({ message: "Failed to update league rivalry" });
+    }
+  });
+
+  // DELETE /api/leagues/:id/rivalries/:rivalryId - Delete a rivalry
+  app.delete("/api/leagues/:id/rivalries/:rivalryId", isAuthenticated, async (req: any, res) => {
+    try {
+      const leagueId = parseInt(req.params.id);
+      const rivalryId = parseInt(req.params.rivalryId);
+      if (isNaN(leagueId) || isNaN(rivalryId)) {
+        return res.status(400).json({ message: "Invalid league or rivalry ID" });
+      }
+
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const rivalry = await storage.getLeagueRivalry(rivalryId);
+      if (!rivalry) {
+        return res.status(404).json({ message: "Rivalry not found" });
+      }
+
+      if (rivalry.leagueId !== leagueId) {
+        return res.status(400).json({ message: "Rivalry does not belong to this league" });
+      }
+
+      await storage.deleteLeagueRivalry(rivalryId);
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting league rivalry:', error);
+      res.status(500).json({ message: "Failed to delete league rivalry" });
+    }
+  });
+
+  // POST /api/leagues/:id/rivalries/:rivalryId/update-record - Update rivalry record after a game
+  app.post("/api/leagues/:id/rivalries/:rivalryId/update-record", isAuthenticated, async (req: any, res) => {
+    try {
+      const leagueId = parseInt(req.params.id);
+      const rivalryId = parseInt(req.params.rivalryId);
+      if (isNaN(leagueId) || isNaN(rivalryId)) {
+        return res.status(400).json({ message: "Invalid league or rivalry ID" });
+      }
+
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const rivalry = await storage.getLeagueRivalry(rivalryId);
+      if (!rivalry) {
+        return res.status(404).json({ message: "Rivalry not found" });
+      }
+
+      if (rivalry.leagueId !== leagueId) {
+        return res.status(400).json({ message: "Rivalry does not belong to this league" });
+      }
+
+      const { winningTeamId, isTie } = req.body;
+
+      if (!isTie && !winningTeamId) {
+        return res.status(400).json({ message: "winningTeamId is required unless isTie is true" });
+      }
+
+      // Validate winning team is part of this rivalry
+      if (winningTeamId && winningTeamId !== rivalry.team1Id && winningTeamId !== rivalry.team2Id) {
+        return res.status(400).json({ message: "Winning team must be part of this rivalry" });
+      }
+
+      const updates: Record<string, any> = {};
+
+      if (isTie) {
+        updates.ties = rivalry.ties + 1;
+        updates.currentStreakTeamId = null;
+        updates.currentStreakCount = 0;
+      } else if (winningTeamId === rivalry.team1Id) {
+        updates.team1Wins = rivalry.team1Wins + 1;
+        // Update streak
+        if (rivalry.currentStreakTeamId === rivalry.team1Id) {
+          updates.currentStreakCount = (rivalry.currentStreakCount || 0) + 1;
+        } else {
+          updates.currentStreakTeamId = rivalry.team1Id;
+          updates.currentStreakCount = 1;
+        }
+      } else if (winningTeamId === rivalry.team2Id) {
+        updates.team2Wins = rivalry.team2Wins + 1;
+        // Update streak
+        if (rivalry.currentStreakTeamId === rivalry.team2Id) {
+          updates.currentStreakCount = (rivalry.currentStreakCount || 0) + 1;
+        } else {
+          updates.currentStreakTeamId = rivalry.team2Id;
+          updates.currentStreakCount = 1;
+        }
+      }
+
+      const updatedRivalry = await storage.updateLeagueRivalry(rivalryId, updates);
+      res.json(updatedRivalry);
+    } catch (error) {
+      console.error('Error updating rivalry record:', error);
+      res.status(500).json({ message: "Failed to update rivalry record" });
+    }
+  });
+
+  // === COLLEGES API ===
+  
+  // GET /api/colleges - Get all colleges with optional filters
+  app.get("/api/colleges", async (req, res) => {
+    try {
+      const { sport, division, state } = req.query;
+      const filters: { sport?: string; division?: string; state?: string } = {};
+      
+      if (typeof sport === 'string') filters.sport = sport;
+      if (typeof division === 'string') filters.division = division;
+      if (typeof state === 'string') filters.state = state;
+      
+      const colleges = await storage.getColleges(Object.keys(filters).length > 0 ? filters : undefined);
+      res.json(colleges);
+    } catch (error) {
+      console.error('Error getting colleges:', error);
+      res.status(500).json({ message: "Failed to get colleges" });
+    }
+  });
+
+  // GET /api/colleges/:id - Get single college
+  app.get("/api/colleges/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid college ID" });
+      }
+      
+      const college = await storage.getCollege(id);
+      if (!college) {
+        return res.status(404).json({ message: "College not found" });
+      }
+      
+      res.json(college);
+    } catch (error) {
+      console.error('Error getting college:', error);
+      res.status(500).json({ message: "Failed to get college" });
+    }
+  });
+
+  // GET /api/players/:id/college-matches - Get player's college matches with college details
+  app.get("/api/players/:id/college-matches", async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      if (isNaN(playerId)) {
+        return res.status(400).json({ message: "Invalid player ID" });
+      }
+      
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+      
+      const matches = await storage.getPlayerCollegeMatches(playerId);
+      res.json(matches);
+    } catch (error) {
+      console.error('Error getting player college matches:', error);
+      res.status(500).json({ message: "Failed to get college matches" });
+    }
+  });
+
+  // POST /api/players/:id/college-matches/generate - Generate AI college matches for player
+  app.post("/api/players/:id/college-matches/generate", async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      if (isNaN(playerId)) {
+        return res.status(400).json({ message: "Invalid player ID" });
+      }
+      
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+
+      // Delete existing matches for fresh generation
+      await storage.deletePlayerCollegeMatches(playerId);
+
+      // Get all colleges for the player's sport
+      const colleges = await storage.getColleges({ sport: player.sport });
+      if (colleges.length === 0) {
+        return res.json({ matches: [], message: "No colleges found for this sport" });
+      }
+
+      // Calculate match scores based on player profile
+      const generatedMatches: Array<{ match: any; college: College }> = [];
+
+      for (const college of colleges) {
+        // Calculate different match components
+        const academicMatch = calculateAcademicMatch(player, college);
+        const skillMatch = calculateSkillMatch(player, college);
+        const styleMatch = calculateStyleMatch(player, college);
+        const locationMatch = calculateLocationMatch(player, college);
+        
+        // Overall weighted score
+        const overallScore = Math.round(
+          (skillMatch * 0.4) + (academicMatch * 0.25) + (styleMatch * 0.2) + (locationMatch * 0.15)
+        );
+
+        // Only include matches with score >= 50
+        if (overallScore >= 50) {
+          const matchData = {
+            playerId,
+            collegeId: college.id,
+            overallMatchScore: overallScore,
+            skillMatchScore: skillMatch,
+            academicMatchScore: academicMatch,
+            styleMatchScore: styleMatch,
+            locationMatchScore: locationMatch,
+            matchReasoning: generateMatchReasoning(player, college, overallScore),
+            strengthsForProgram: generateStrengths(player, college),
+            developmentAreas: generateDevelopmentAreas(player),
+            isRecommended: overallScore >= 75,
+            isSaved: false,
+          };
+
+          const match = await storage.createPlayerCollegeMatch(matchData);
+          generatedMatches.push({ match, college });
+        }
+      }
+
+      // Sort by overall score and return top matches
+      generatedMatches.sort((a, b) => b.match.overallMatchScore - a.match.overallMatchScore);
+      
+      res.json({
+        matches: generatedMatches.slice(0, 20).map(m => ({ ...m.match, college: m.college })),
+        totalGenerated: generatedMatches.length,
+      });
+    } catch (error) {
+      console.error('Error generating college matches:', error);
+      res.status(500).json({ message: "Failed to generate college matches" });
+    }
+  });
+
+  // PATCH /api/college-matches/:id/toggle-save - Toggle save status on a college match
+  app.patch("/api/college-matches/:id/toggle-save", async (req, res) => {
+    try {
+      const matchId = parseInt(req.params.id);
+      if (isNaN(matchId)) {
+        return res.status(400).json({ message: "Invalid match ID" });
+      }
+
+      // Get current match to toggle the saved status
+      const allMatches = await db.select().from(playerCollegeMatches).where(eq(playerCollegeMatches.id, matchId));
+      const match = allMatches[0];
+      
+      if (!match) {
+        return res.status(404).json({ message: "Match not found" });
+      }
+
+      const updated = await storage.updatePlayerCollegeMatch(matchId, { 
+        isSaved: !match.isSaved 
+      });
+
+      res.json(updated);
+    } catch (error) {
+      console.error('Error toggling save status:', error);
+      res.status(500).json({ message: "Failed to toggle save status" });
+    }
+  });
+
+  // ============ FITNESS DATA ROUTES (Wearable Integrations) ============
+
+  // GET /api/players/:id/fitness - Get player's fitness data
+  app.get("/api/players/:id/fitness", isAuthenticated, async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      if (isNaN(playerId)) {
+        return res.status(400).json({ message: "Invalid player ID" });
+      }
+
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+
+      const { startDate, endDate, source } = req.query;
+      const options: { startDate?: string; endDate?: string; source?: string } = {};
+      
+      if (typeof startDate === 'string') options.startDate = startDate;
+      if (typeof endDate === 'string') options.endDate = endDate;
+      if (typeof source === 'string') options.source = source;
+
+      const fitnessData = await storage.getFitnessData(playerId, options);
+      res.json(fitnessData);
+    } catch (error) {
+      console.error('Error getting fitness data:', error);
+      res.status(500).json({ message: "Failed to get fitness data" });
+    }
+  });
+
+  // GET /api/players/:id/fitness/latest - Get most recent fitness entry
+  app.get("/api/players/:id/fitness/latest", isAuthenticated, async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      if (isNaN(playerId)) {
+        return res.status(400).json({ message: "Invalid player ID" });
+      }
+
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+
+      const latestData = await storage.getLatestFitnessData(playerId);
+      if (!latestData) {
+        return res.status(404).json({ message: "No fitness data found" });
+      }
+
+      res.json(latestData);
+    } catch (error) {
+      console.error('Error getting latest fitness data:', error);
+      res.status(500).json({ message: "Failed to get latest fitness data" });
+    }
+  });
+
+  // GET /api/players/:id/fitness/summary - Get fitness summary for last N days
+  app.get("/api/players/:id/fitness/summary", isAuthenticated, async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      if (isNaN(playerId)) {
+        return res.status(400).json({ message: "Invalid player ID" });
+      }
+
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+
+      const days = parseInt(req.query.days as string) || 7;
+      const summary = await storage.getFitnessDataSummary(playerId, days);
+      res.json(summary);
+    } catch (error) {
+      console.error('Error getting fitness summary:', error);
+      res.status(500).json({ message: "Failed to get fitness summary" });
+    }
+  });
+
+  // POST /api/players/:id/fitness - Create new fitness data entry (manual entry)
+  app.post("/api/players/:id/fitness", isAuthenticated, async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      if (isNaN(playerId)) {
+        return res.status(400).json({ message: "Invalid player ID" });
+      }
+
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+
+      const validatedData = insertFitnessDataSchema.parse({
+        ...req.body,
+        playerId
+      });
+
+      const createdData = await storage.createFitnessData(validatedData);
+      res.status(201).json(createdData);
+    } catch (error) {
+      console.error('Error creating fitness data:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid fitness data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create fitness data" });
+    }
+  });
+
+  // PUT /api/players/:id/fitness/:dataId - Update fitness data entry
+  app.put("/api/players/:id/fitness/:dataId", isAuthenticated, async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      const dataId = parseInt(req.params.dataId);
+      
+      if (isNaN(playerId) || isNaN(dataId)) {
+        return res.status(400).json({ message: "Invalid player ID or data ID" });
+      }
+
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+
+      const updatedData = await storage.updateFitnessData(dataId, req.body);
+      if (!updatedData) {
+        return res.status(404).json({ message: "Fitness data not found" });
+      }
+
+      res.json(updatedData);
+    } catch (error) {
+      console.error('Error updating fitness data:', error);
+      res.status(500).json({ message: "Failed to update fitness data" });
+    }
+  });
+
+  // DELETE /api/players/:id/fitness/:dataId - Delete fitness data entry
+  app.delete("/api/players/:id/fitness/:dataId", isAuthenticated, async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      const dataId = parseInt(req.params.dataId);
+      
+      if (isNaN(playerId) || isNaN(dataId)) {
+        return res.status(400).json({ message: "Invalid player ID or data ID" });
+      }
+
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+
+      await storage.deleteFitnessData(dataId);
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting fitness data:', error);
+      res.status(500).json({ message: "Failed to delete fitness data" });
+    }
+  });
+
+  // POST /api/players/:id/fitness/sync - Endpoint for syncing wearable data (bulk)
+  app.post("/api/players/:id/fitness/sync", isAuthenticated, async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      if (isNaN(playerId)) {
+        return res.status(400).json({ message: "Invalid player ID" });
+      }
+
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+
+      const { entries } = req.body;
+      if (!Array.isArray(entries)) {
+        return res.status(400).json({ message: "Expected 'entries' array in request body" });
+      }
+
+      const results: { created: FitnessData[]; updated: FitnessData[]; errors: string[] } = {
+        created: [],
+        updated: [],
+        errors: []
+      };
+
+      for (const entry of entries) {
+        try {
+          const validatedData = insertFitnessDataSchema.parse({
+            ...entry,
+            playerId,
+            syncedAt: new Date()
+          });
+
+          // Check if data exists for this date and source
+          const existingData = await storage.getFitnessDataByDate(playerId, validatedData.date);
+          
+          if (existingData && existingData.source === validatedData.source) {
+            // Update existing entry
+            const updated = await storage.updateFitnessData(existingData.id, validatedData);
+            if (updated) results.updated.push(updated);
+          } else {
+            // Create new entry
+            const created = await storage.createFitnessData(validatedData);
+            results.created.push(created);
+          }
+        } catch (entryError) {
+          results.errors.push(`Error processing entry for date ${entry.date}: ${entryError}`);
+        }
+      }
+
+      res.json({
+        message: "Sync completed",
+        created: results.created.length,
+        updated: results.updated.length,
+        errors: results.errors.length,
+        details: results
+      });
+    } catch (error) {
+      console.error('Error syncing fitness data:', error);
+      res.status(500).json({ message: "Failed to sync fitness data" });
+    }
+  });
+
   await seedDatabase();
 
   return httpServer;
+}
+
+// Helper functions for college match scoring
+function calculateAcademicMatch(player: any, college: College): number {
+  let score = 70; // Base score
+  
+  if (player.gpa && college.avgGpaRequired) {
+    const playerGpa = parseFloat(player.gpa);
+    const requiredGpa = parseFloat(college.avgGpaRequired);
+    if (playerGpa >= requiredGpa) {
+      score += 20;
+    } else if (playerGpa >= requiredGpa - 0.3) {
+      score += 10;
+    } else {
+      score -= 20;
+    }
+  }
+  
+  // Academic rating bonus
+  if (college.academicRating) {
+    if (college.academicRating >= 80) score += 5;
+    if (college.academicRating <= 60) score += 10; // Easier to get into
+  }
+  
+  return Math.max(0, Math.min(100, score));
+}
+
+function calculateSkillMatch(player: any, college: College): number {
+  let score = 60; // Base score
+  
+  // Check position needs
+  if (college.positionNeeds) {
+    try {
+      const needs = JSON.parse(college.positionNeeds);
+      if (Array.isArray(needs) && needs.includes(player.position)) {
+        score += 25;
+      }
+    } catch {
+      // Invalid JSON, ignore
+    }
+  }
+  
+  // Program strength consideration - stronger programs for top players
+  if (college.programStrength) {
+    if (player.currentTier === 'MVP' || player.currentTier === 'Hall of Fame') {
+      if (college.programStrength >= 80) score += 15;
+    } else if (player.currentTier === 'All-Star') {
+      if (college.programStrength >= 60 && college.programStrength <= 85) score += 10;
+    } else {
+      if (college.programStrength <= 70) score += 10;
+    }
+  }
+  
+  // Scholarships available bonus
+  if (college.scholarshipsAvailable && college.scholarshipsAvailable > 0) {
+    score += 10;
+  }
+  
+  return Math.max(0, Math.min(100, score));
+}
+
+function calculateStyleMatch(player: any, college: College): number {
+  let score = 70; // Base score - most players can adapt
+  
+  // Position-based style preferences
+  if (player.position === 'Guard') {
+    if (college.tempoRating && college.tempoRating >= 70) score += 15;
+    if (college.offensiveStyle === 'motion' || college.offensiveStyle === 'spread') score += 10;
+  } else if (player.position === 'Big') {
+    if (college.offensiveStyle === 'pick_and_roll' || college.offensiveStyle === 'iso') score += 10;
+    if (college.defensiveStyle === 'zone') score += 5;
+  } else if (player.position === 'Wing') {
+    if (college.offensiveStyle === 'motion' || college.offensiveStyle === 'spread') score += 10;
+    if (college.defensiveStyle === 'switching') score += 10;
+  }
+  
+  return Math.max(0, Math.min(100, score));
+}
+
+function calculateLocationMatch(player: any, college: College): number {
+  let score = 70; // Base score
+  
+  // Same state bonus
+  if (player.state && college.state && player.state === college.state) {
+    score += 20;
+  }
+  
+  // Same region bonus
+  const playerRegion = getRegionForState(player.state);
+  if (playerRegion && college.region && playerRegion === college.region) {
+    score += 10;
+  }
+  
+  return Math.max(0, Math.min(100, score));
+}
+
+function getRegionForState(state: string | null | undefined): string | null {
+  if (!state) return null;
+  
+  const regions: Record<string, string[]> = {
+    'West': ['CA', 'WA', 'OR', 'NV', 'AZ', 'UT', 'CO', 'NM', 'MT', 'WY', 'ID'],
+    'Midwest': ['IL', 'OH', 'MI', 'IN', 'WI', 'MN', 'IA', 'MO', 'KS', 'NE', 'SD', 'ND'],
+    'South': ['TX', 'FL', 'GA', 'NC', 'SC', 'VA', 'TN', 'AL', 'MS', 'LA', 'AR', 'KY', 'WV', 'MD', 'DE', 'OK'],
+    'East': ['NY', 'PA', 'NJ', 'MA', 'CT', 'RI', 'NH', 'VT', 'ME', 'DC'],
+  };
+  
+  for (const [region, states] of Object.entries(regions)) {
+    if (states.includes(state.toUpperCase())) {
+      return region;
+    }
+  }
+  
+  return null;
+}
+
+function generateMatchReasoning(player: any, college: College, score: number): string {
+  const reasons: string[] = [];
+  
+  if (score >= 85) {
+    reasons.push(`${college.name} is an excellent fit for ${player.name}'s skill set and profile.`);
+  } else if (score >= 70) {
+    reasons.push(`${college.name} offers a strong opportunity for ${player.name}.`);
+  } else {
+    reasons.push(`${college.name} could be a viable option for ${player.name}.`);
+  }
+  
+  if (college.division === 'D1') {
+    reasons.push('Division I program with high-level competition.');
+  } else if (college.division === 'D2') {
+    reasons.push('Division II program with competitive athletics and academic focus.');
+  } else if (college.division === 'D3') {
+    reasons.push('Division III program emphasizing student-athlete experience.');
+  }
+  
+  if (college.conference) {
+    reasons.push(`Competes in the ${college.conference}.`);
+  }
+  
+  return reasons.join(' ');
+}
+
+function generateStrengths(player: any, college: College): string {
+  const strengths: string[] = [];
+  
+  if (player.position) {
+    strengths.push(`Strong ${player.position} skills`);
+  }
+  
+  if (player.currentTier === 'MVP' || player.currentTier === 'Hall of Fame') {
+    strengths.push('Elite performance metrics');
+  } else if (player.currentTier === 'All-Star') {
+    strengths.push('Above-average performance consistency');
+  }
+  
+  if (player.height) {
+    strengths.push(`Height: ${player.height}`);
+  }
+  
+  return strengths.join(', ') || 'Solid fundamentals and work ethic';
+}
+
+function generateDevelopmentAreas(player: any): string {
+  const areas: string[] = [];
+  
+  if (player.currentTier === 'Rookie' || player.currentTier === 'Starter') {
+    areas.push('Continue developing game experience');
+  }
+  
+  areas.push('Strength and conditioning');
+  areas.push('Mental game and leadership');
+  
+  return areas.join(', ');
 }
 
 // Seed function (can be called from index.ts if desired, or just run manually via a route if needed)

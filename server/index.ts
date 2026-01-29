@@ -5,6 +5,7 @@ import { createServer } from "http";
 import { runMigrations } from 'stripe-replit-sync';
 import { getStripeSync } from './stripeClient';
 import { WebhookHandlers } from './webhookHandlers';
+import { seedColleges } from './seeds/colleges';
 
 const app = express();
 const httpServer = createServer(app);
@@ -130,6 +131,12 @@ app.use((req, res, next) => {
 
 (async () => {
   await registerRoutes(httpServer, app);
+
+  try {
+    await seedColleges();
+  } catch (error) {
+    console.error('Failed to seed colleges:', error);
+  }
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

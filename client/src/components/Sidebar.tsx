@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, ShoppingBag, ClipboardCheck } from "lucide-react";
+import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, ShoppingBag, ClipboardCheck, Medal, GraduationCap, Heart } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import caliberLogo from "@assets/caliber-logo-monogram.png";
@@ -95,7 +95,10 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         { href: playerId ? `/players/${playerId}` : "/", label: "Player Profile", icon: UserCircle },
         { href: "/analyze", label: "Log Game", icon: PlusCircle },
         { href: "/schedule", label: "Schedule", icon: CalendarDays },
+        { href: "/highlights", label: "Highlights", icon: Film },
         { href: "/workouts", label: "Workouts", icon: Dumbbell },
+        { href: "/fitness", label: "Fitness", icon: Heart },
+        { href: "/recruiting", label: "Recruiting", icon: GraduationCap },
       ],
     },
     {
@@ -104,6 +107,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         { href: "/discover", label: "Find Players", icon: Binoculars },
         { href: "/scout", label: "Scout Hub", icon: Eye },
         { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
+        { href: "/leagues", label: "League Hub", icon: Medal },
         { href: "/stories", label: "Stories", icon: Camera },
         { href: "/social-hub", label: "Social Hub", icon: UsersRound },
         { href: "/teams", label: "Teams", icon: Users },
@@ -134,6 +138,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         { href: "/discover", label: "Find Players", icon: Binoculars },
         { href: "/scout", label: "Scout Hub", icon: Eye },
         { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
+        { href: "/leagues", label: "League Hub", icon: Medal },
         { href: "/stories", label: "Stories", icon: Camera },
         { href: "/social-hub", label: "Social Hub", icon: UsersRound },
         { href: "/teams", label: "Teams", icon: MessageSquare },
