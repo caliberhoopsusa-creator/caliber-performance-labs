@@ -20,6 +20,7 @@ import { ShareablePlayerCard } from "@/components/ShareablePlayerCard";
 import { ShareableGameCard } from "@/components/ShareableGameCard";
 import { ShareableBadgeCard } from "@/components/ShareableBadgeCard";
 import { HighlightsGallery } from "@/components/HighlightsGallery";
+import { PlayerRatingsSection } from "@/components/PlayerRatingsSection";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoute, Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
@@ -1869,6 +1870,24 @@ export default function PlayerDetail() {
               isOwnProfile={isOwnProfile}
               position={player.position}
             />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.12, duration: 0.4 }}
+          >
+            <Card className="p-6 bg-gradient-to-br from-black/60 to-black/30 border-white/10">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
+                <div className="p-1.5 rounded-lg bg-amber-500/20 border border-amber-500/30">
+                  <Star className="w-4 h-4 text-amber-400" style={{ filter: "drop-shadow(0 0 6px rgba(251, 191, 36, 0.6))" }} />
+                </div>
+                <span className="bg-gradient-to-r from-white to-amber-300 bg-clip-text text-transparent">
+                  Ratings & Trust Score
+                </span>
+              </h3>
+              <PlayerRatingsSection playerId={player.id} isOwnProfile={isOwnProfile} />
+            </Card>
           </motion.div>
 
           {games.length > 0 && (
