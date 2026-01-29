@@ -372,6 +372,9 @@ export interface IStorage {
   deleteHighlightClip(id: number): Promise<void>;
   incrementClipViewCount(id: number): Promise<void>;
   getPlayerHighlightCount(playerId: number): Promise<number>;
+  linkHighlightToGame(highlightId: number, gameId: number, timestamp: string): Promise<HighlightClip | undefined>;
+  unlinkHighlightFromGame(highlightId: number): Promise<HighlightClip | undefined>;
+  getGameHighlights(gameId: number): Promise<HighlightClip[]>;
 
   // Workouts
   createWorkout(workout: InsertWorkout): Promise<Workout>;
@@ -2013,6 +2016,20 @@ export class DatabaseStorage implements IStorage {
   async getPlayerHighlightCount(playerId: number): Promise<number> {
     const [result] = await db.select({ count: count() }).from(highlightClips).where(eq(highlightClips.playerId, playerId));
     return result?.count || 0;
+  }
+
+  async linkHighlightToGame(highlightId: number, gameId: number, timestamp: string): Promise<HighlightClip | undefined> {
+    const [updated] = await db.update(highlightClips).set({ linkedGameId: gameId, linkedTimestamp: timestamp }).where(eq(highlightClips.id, highlightId)).returning();
+    return updated;
+  }
+
+  async unlinkHighlightFromGame(highlightId: number): Promise<HighlightClip | undefined> {
+    const [updated] = await db.update(highlightClips).set({ linkedGameId: null, linkedTimestamp: null }).where(eq(highlightClips.id, highlightId)).returning();
+    return updated;
+  }
+
+  async getGameHighlights(gameId: number): Promise<HighlightClip[]> {
+    return await db.select().from(highlightClips).where(eq(highlightClips.linkedGameId, gameId)).orderBy(desc(highlightClips.createdAt));
   }
 
   // Workouts

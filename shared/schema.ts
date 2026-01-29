@@ -1231,10 +1231,13 @@ export const highlightClips = pgTable("highlight_clips", {
   thumbnailUrl: text("thumbnail_url"),
   duration: integer("duration"), // seconds
   viewCount: integer("view_count").default(0).notNull(),
+  linkedGameId: integer("linked_game_id").references(() => games.id, { onDelete: "set null" }), // Links to verified game stats
+  linkedTimestamp: text("linked_timestamp"), // Timestamp format: "MM:SS"
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
   playerIdIdx: index("highlight_clips_player_id_idx").on(table.playerId),
   gameIdIdx: index("highlight_clips_game_id_idx").on(table.gameId),
+  linkedGameIdIdx: index("highlight_clips_linked_game_id_idx").on(table.linkedGameId),
 }));
 
 // === WORKOUT TRACKER ===
@@ -1537,6 +1540,10 @@ export const insertRecruitPostSchema = createInsertSchema(recruitPosts).omit({ i
 export const insertRecruitInterestSchema = createInsertSchema(recruitInterests).omit({ id: true, createdAt: true });
 export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true });
 export const insertHighlightClipSchema = createInsertSchema(highlightClips).omit({ id: true, createdAt: true, viewCount: true });
+export const linkHighlightToGameSchema = z.object({
+  gameId: z.number().int().positive("Game ID must be a positive integer"),
+  timestamp: z.string().regex(/^\d{1,2}:\d{2}$/, "Timestamp must be in MM:SS format"),
+});
 export const insertWorkoutSchema = createInsertSchema(workouts).omit({ id: true, createdAt: true });
 export const insertAccoladeSchema = createInsertSchema(accolades).omit({ id: true, createdAt: true });
 export const insertGoalShareSchema = createInsertSchema(goalShares).omit({ id: true, createdAt: true });

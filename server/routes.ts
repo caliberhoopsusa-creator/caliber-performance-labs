@@ -3,7 +3,7 @@ import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, headToHeadChallenges, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema } from "@shared/schema";
+import { players, games, headToHeadChallenges, statVerifications, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { GoogleGenAI } from "@google/genai";
 import multer from "multer";
@@ -8079,6 +8079,102 @@ Respond in this exact JSON format:
     } catch (error) {
       console.error('Error deleting highlight clip:', error);
       res.status(500).json({ message: "Failed to delete highlight clip" });
+    }
+  });
+
+  // Link a highlight clip to a verified game
+  app.post('/api/highlights/:id/link-game', isAuthenticated, async (req: any, res) => {
+    try {
+      const highlightId = parseInt(req.params.id);
+      const user = await authStorage.getUser(req.user.claims.sub);
+      
+      // Get the highlight clip
+      const clip = await storage.getHighlightClip(highlightId);
+      if (!clip) {
+        return res.status(404).json({ message: "Highlight clip not found" });
+      }
+      
+      // Authorization: owner or coach
+      if (!user || (user.role !== 'coach' && user.playerId !== clip.playerId)) {
+        return res.status(403).json({ message: "Not authorized to link this clip" });
+      }
+      
+      // Validate request body
+      const validatedData = linkHighlightToGameSchema.parse(req.body);
+      
+      // Check if the game exists
+      const game = await storage.getGame(validatedData.gameId);
+      if (!game) {
+        return res.status(404).json({ message: "Game not found" });
+      }
+      
+      // Check if the game has verified stats (check statVerifications table)
+      const verification = await db.select().from(statVerifications).where(
+        and(
+          eq(statVerifications.gameId, validatedData.gameId),
+          eq(statVerifications.status, 'verified')
+        )
+      ).limit(1);
+      
+      if (!verification || verification.length === 0) {
+        return res.status(400).json({ message: "Game must have verified stats before linking highlights" });
+      }
+      
+      // Link the highlight to the game
+      const updated = await storage.linkHighlightToGame(highlightId, validatedData.gameId, validatedData.timestamp);
+      res.json(updated);
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      }
+      console.error('Error linking highlight to game:', error);
+      res.status(500).json({ message: "Failed to link highlight to game" });
+    }
+  });
+
+  // Unlink a highlight clip from a game
+  app.post('/api/highlights/:id/unlink-game', isAuthenticated, async (req: any, res) => {
+    try {
+      const highlightId = parseInt(req.params.id);
+      const user = await authStorage.getUser(req.user.claims.sub);
+      
+      // Get the highlight clip
+      const clip = await storage.getHighlightClip(highlightId);
+      if (!clip) {
+        return res.status(404).json({ message: "Highlight clip not found" });
+      }
+      
+      // Authorization: owner or coach
+      if (!user || (user.role !== 'coach' && user.playerId !== clip.playerId)) {
+        return res.status(403).json({ message: "Not authorized to unlink this clip" });
+      }
+      
+      // Unlink the highlight from the game
+      const updated = await storage.unlinkHighlightFromGame(highlightId);
+      res.json(updated);
+    } catch (error) {
+      console.error('Error unlinking highlight from game:', error);
+      res.status(500).json({ message: "Failed to unlink highlight from game" });
+    }
+  });
+
+  // Get all highlights linked to a specific game
+  app.get('/api/games/:id/highlights', async (req, res) => {
+    try {
+      const gameId = parseInt(req.params.id);
+      
+      // Check if the game exists
+      const game = await storage.getGame(gameId);
+      if (!game) {
+        return res.status(404).json({ message: "Game not found" });
+      }
+      
+      // Get all linked highlights
+      const highlights = await storage.getGameHighlights(gameId);
+      res.json(highlights);
+    } catch (error) {
+      console.error('Error getting game highlights:', error);
+      res.status(500).json({ message: "Failed to get game highlights" });
     }
   });
 
