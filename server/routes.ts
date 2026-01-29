@@ -1855,14 +1855,18 @@ export async function registerRoutes(
         jerseyNumber: z.number().optional(),
       }).parse(req.body);
       
-      // Validate position based on sport
+      // Validate position based on sport (supports multi-position with comma-separated values)
       const validBasketballPositions = ['Guard', 'Wing', 'Big'];
       const validFootballPositions = ['QB', 'RB', 'WR', 'TE', 'OL', 'DL', 'LB', 'DB', 'K', 'P'];
       const validPositions = input.sport === 'football' ? validFootballPositions : validBasketballPositions;
       
-      if (!validPositions.includes(input.position)) {
+      // Split comma-separated positions and validate each one
+      const positionsList = input.position.split(',').map((p: string) => p.trim()).filter((p: string) => p);
+      const invalidPositions = positionsList.filter((p: string) => !validPositions.includes(p));
+      
+      if (invalidPositions.length > 0) {
         return res.status(400).json({ 
-          message: `Invalid position for ${input.sport}. Expected one of: ${validPositions.join(', ')}` 
+          message: `Invalid position(s) for ${input.sport}: ${invalidPositions.join(', ')}. Expected one of: ${validPositions.join(', ')}` 
         });
       }
       
@@ -1968,16 +1972,20 @@ export async function registerRoutes(
       
       const input = updateSchema.parse(req.body);
       
-      // Validate position if provided
+      // Validate position if provided (supports multi-position with comma-separated values)
       if (input.position) {
         const playerSport = input.sport || player.sport || 'basketball';
         const validBasketballPositions = ['Guard', 'Wing', 'Big'];
         const validFootballPositions = ['QB', 'RB', 'WR', 'TE', 'OL', 'DL', 'LB', 'DB', 'K', 'P'];
         const validPositions = playerSport === 'football' ? validFootballPositions : validBasketballPositions;
         
-        if (!validPositions.includes(input.position)) {
+        // Split comma-separated positions and validate each one
+        const positionsList = input.position.split(',').map((p: string) => p.trim()).filter((p: string) => p);
+        const invalidPositions = positionsList.filter((p: string) => !validPositions.includes(p));
+        
+        if (invalidPositions.length > 0) {
           return res.status(400).json({ 
-            message: `Invalid position for ${playerSport}. Expected one of: ${validPositions.join(', ')}` 
+            message: `Invalid position(s) for ${playerSport}: ${invalidPositions.join(', ')}. Expected one of: ${validPositions.join(', ')}` 
           });
         }
       }
