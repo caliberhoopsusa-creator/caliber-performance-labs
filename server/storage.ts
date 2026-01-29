@@ -1,4 +1,6 @@
 import { db } from "./db";
+import { type PeerStats } from "@shared/ai-rating-engine";
+import { type Sport } from "@shared/sports-config";
 import {
   players, games, badges, goals, streaks, likes, comments, challenges, challengeProgress,
   teams, teamMembers, teamPosts, teamPostComments,
@@ -476,6 +478,9 @@ export interface IStorage {
   getFootballMetrics(playerId: number): Promise<FootballMetrics | undefined>;
   createFootballMetrics(metrics: InsertFootballMetrics): Promise<FootballMetrics>;
   updateFootballMetrics(playerId: number, updates: Partial<InsertFootballMetrics>): Promise<FootballMetrics | undefined>;
+
+  // AI Rating Peer Statistics
+  getPeerStats(sport: Sport, position: string): Promise<PeerStats | undefined>;
 
   // Player Ratings
   getPlayerRatings(playerId: number): Promise<PlayerRating[]>;
@@ -2528,6 +2533,144 @@ export class DatabaseStorage implements IStorage {
       .where(eq(footballMetrics.playerId, playerId))
       .returning();
     return updated;
+  }
+
+  // AI Rating Peer Statistics - Calculate stats for players of the same sport and position
+  async getPeerStats(sport: Sport, position: string): Promise<PeerStats | undefined> {
+    try {
+      // Get all players matching sport and position
+      const peerPlayers = await db.select({ id: players.id })
+        .from(players)
+        .where(and(
+          eq(players.sport, sport),
+          sql`${players.position} LIKE ${'%' + position + '%'}`
+        ));
+
+      if (peerPlayers.length < 5) {
+        return undefined; // Not enough peers for meaningful comparison
+      }
+
+      const playerIds = peerPlayers.map(p => p.id);
+      
+      // Get all games for these players
+      const peerGames = await db.select()
+        .from(games)
+        .where(and(
+          eq(games.sport, sport),
+          sql`${games.playerId} = ANY(${playerIds})`
+        ));
+
+      if (peerGames.length < 20) {
+        return undefined; // Not enough game data
+      }
+
+      // Calculate average stats per player, then get distribution
+      const playerStats: Map<number, { 
+        production: number[], efficiency: number[], impact: number[], 
+        defense: number[], athletic: number[], intangibles: number[] 
+      }> = new Map();
+
+      for (const game of peerGames) {
+        if (!playerStats.has(game.playerId)) {
+          playerStats.set(game.playerId, { 
+            production: [], efficiency: [], impact: [], 
+            defense: [], athletic: [], intangibles: [] 
+          });
+        }
+        const stats = playerStats.get(game.playerId)!;
+
+        if (sport === 'basketball') {
+          // Production: points + assists + rebounds per game
+          const prod = (game.points || 0) + (game.assists || 0) * 1.5 + (game.rebounds || 0) * 1.2;
+          stats.production.push(prod);
+          
+          // Efficiency: TS% approximation
+          const possessions = (game.fgAttempted || 0) + 0.44 * (game.ftAttempted || 0);
+          const eff = possessions > 0 ? ((game.points || 0) / possessions) * 50 : 50;
+          stats.efficiency.push(eff);
+          
+          // Impact: plus-minus + PER
+          const imp = ((game.plusMinus || 0) + 20) * 2 + parseFloat(game.per || '0') * 2;
+          stats.impact.push(imp);
+          
+          // Defense: steals + blocks + defensive rebounds
+          const def = (game.steals || 0) * 3 + (game.blocks || 0) * 3 + (game.defensiveRebounds || 0);
+          stats.defense.push(def);
+          
+          // Athletic: minutes as proxy for endurance
+          stats.athletic.push(game.minutes || 20);
+          
+          // Intangibles: consistent performance (use grade numeric)
+          const gradeMap: Record<string, number> = { 'A+': 97, 'A': 93, 'A-': 90, 'B+': 87, 'B': 83, 'B-': 80, 'C+': 77, 'C': 73, 'C-': 70, 'D+': 67, 'D': 63, 'D-': 60, 'F': 50 };
+          stats.intangibles.push(gradeMap[game.grade || 'C'] || 73);
+        } else {
+          // Football stats
+          const totalYards = (game.passingYards || 0) + (game.rushingYards || 0) + (game.receivingYards || 0);
+          const totalTDs = (game.passingTouchdowns || 0) + (game.rushingTouchdowns || 0) + (game.receivingTouchdowns || 0);
+          const totalTurnovers = (game.interceptions || 0) + (game.fumbles || 0);
+          const totalDefense = (game.tackles || 0) + (game.sacks || 0) * 3 + (game.defensiveInterceptions || 0) * 5;
+          
+          stats.production.push(totalYards / 10 + totalTDs * 10);
+          stats.efficiency.push(Math.max(0, 70 - totalTurnovers * 15));
+          stats.impact.push(totalTDs * 15 + totalDefense);
+          stats.defense.push(totalDefense);
+          stats.athletic.push(50); // Placeholder without combine data
+          
+          const gradeMap: Record<string, number> = { 'A+': 97, 'A': 93, 'A-': 90, 'B+': 87, 'B': 83, 'B-': 80, 'C+': 77, 'C': 73, 'C-': 70, 'D+': 67, 'D': 63, 'D-': 60, 'F': 50 };
+          stats.intangibles.push(gradeMap[game.grade || 'C'] || 73);
+        }
+      }
+
+      // Calculate averages per player
+      const avgStats: { prod: number[], eff: number[], imp: number[], def: number[], ath: number[], int: number[] } = {
+        prod: [], eff: [], imp: [], def: [], ath: [], int: []
+      };
+
+      const playerStatsEntries = Array.from(playerStats.entries());
+      for (const [, stats] of playerStatsEntries) {
+        if (stats.production.length > 0) {
+          avgStats.prod.push(stats.production.reduce((a: number, b: number) => a + b, 0) / stats.production.length);
+          avgStats.eff.push(stats.efficiency.reduce((a: number, b: number) => a + b, 0) / stats.efficiency.length);
+          avgStats.imp.push(stats.impact.reduce((a: number, b: number) => a + b, 0) / stats.impact.length);
+          avgStats.def.push(stats.defense.reduce((a: number, b: number) => a + b, 0) / stats.defense.length);
+          avgStats.ath.push(stats.athletic.reduce((a: number, b: number) => a + b, 0) / stats.athletic.length);
+          avgStats.int.push(stats.intangibles.reduce((a: number, b: number) => a + b, 0) / stats.intangibles.length);
+        }
+      }
+
+      const calcStats = (arr: number[]) => {
+        if (arr.length === 0) return { avg: 50, std: 10 };
+        const avg = arr.reduce((a, b) => a + b, 0) / arr.length;
+        const variance = arr.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / arr.length;
+        return { avg, std: Math.sqrt(variance) || 10 };
+      };
+
+      const prod = calcStats(avgStats.prod);
+      const eff = calcStats(avgStats.eff);
+      const imp = calcStats(avgStats.imp);
+      const def = calcStats(avgStats.def);
+      const ath = calcStats(avgStats.ath);
+      const int = calcStats(avgStats.int);
+
+      return {
+        avgProduction: prod.avg,
+        stdProduction: prod.std,
+        avgEfficiency: eff.avg,
+        stdEfficiency: eff.std,
+        avgImpact: imp.avg,
+        stdImpact: imp.std,
+        avgDefense: def.avg,
+        stdDefense: def.std,
+        avgAthletic: ath.avg,
+        stdAthletic: ath.std,
+        avgIntangibles: int.avg,
+        stdIntangibles: int.std,
+        sampleSize: playerStats.size,
+      };
+    } catch (error) {
+      console.error('Error calculating peer stats:', error);
+      return undefined;
+    }
   }
 
   // Player Ratings

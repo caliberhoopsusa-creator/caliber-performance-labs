@@ -5,6 +5,8 @@ import { api } from "@shared/routes";
 import { z } from "zod";
 import { players, games, headToHeadChallenges, statVerifications, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
+import { calculateAIRating, calculateProjection, type GameStats, type PlayerMetrics, type PeerStats, type AIRatingResult, type ProjectionResult } from "@shared/ai-rating-engine";
+import type { Sport } from "@shared/sports-config";
 import { GoogleGenAI } from "@google/genai";
 import multer from "multer";
 import fs from "fs";
@@ -10105,6 +10107,306 @@ Respond in this exact JSON format:
     } catch (error) {
       console.error('Error deleting player rating:', error);
       res.status(500).json({ message: "Failed to delete player rating" });
+    }
+  });
+
+  // =============================================
+  // AI RATING CALCULATION ROUTES
+  // =============================================
+
+  // GET /api/players/:id/ai-rating - Calculate AI-powered rating with sub-scores
+  app.get('/api/players/:id/ai-rating', async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      if (isNaN(playerId)) {
+        return res.status(400).json({ message: "Invalid player ID" });
+      }
+
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+
+      const playerGames = await storage.getGamesByPlayerId(playerId);
+      if (playerGames.length === 0) {
+        return res.json({
+          overallRating: null,
+          subScores: null,
+          message: "No games found - play some games to get an AI rating"
+        });
+      }
+
+      const sortedGames = playerGames.sort((a, b) => 
+        new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+
+      const gameStats: GameStats[] = sortedGames.map(g => ({
+        id: g.id,
+        date: g.date,
+        opponent: g.opponent,
+        result: g.result || undefined,
+        minutes: g.minutes || undefined,
+        points: g.points || undefined,
+        rebounds: g.rebounds || undefined,
+        assists: g.assists || undefined,
+        steals: g.steals || undefined,
+        blocks: g.blocks || undefined,
+        turnovers: g.turnovers || undefined,
+        fouls: g.fouls || undefined,
+        fgMade: g.fgMade || undefined,
+        fgAttempted: g.fgAttempted || undefined,
+        threeMade: g.threeMade || undefined,
+        threeAttempted: g.threeAttempted || undefined,
+        ftMade: g.ftMade || undefined,
+        ftAttempted: g.ftAttempted || undefined,
+        offensiveRebounds: g.offensiveRebounds || undefined,
+        defensiveRebounds: g.defensiveRebounds || undefined,
+        hustleScore: g.hustleScore || undefined,
+        defenseRating: g.defenseRating || undefined,
+        plusMinus: g.plusMinus || undefined,
+        per: g.per || undefined,
+        completions: g.completions || undefined,
+        passAttempts: g.passAttempts || undefined,
+        passingYards: g.passingYards || undefined,
+        passingTouchdowns: g.passingTouchdowns || undefined,
+        interceptions: g.interceptions || undefined,
+        sacksTaken: g.sacksTaken || undefined,
+        carries: g.carries || undefined,
+        rushingYards: g.rushingYards || undefined,
+        rushingTouchdowns: g.rushingTouchdowns || undefined,
+        fumbles: g.fumbles || undefined,
+        receptions: g.receptions || undefined,
+        targets: g.targets || undefined,
+        receivingYards: g.receivingYards || undefined,
+        receivingTouchdowns: g.receivingTouchdowns || undefined,
+        drops: g.drops || undefined,
+        tackles: g.tackles || undefined,
+        soloTackles: g.soloTackles || undefined,
+        sacks: g.sacks || undefined,
+        defensiveInterceptions: g.defensiveInterceptions || undefined,
+        passDeflections: g.passDeflections || undefined,
+        forcedFumbles: g.forcedFumbles || undefined,
+        fumbleRecoveries: g.fumbleRecoveries || undefined,
+        fieldGoalsMade: g.fieldGoalsMade || undefined,
+        fieldGoalsAttempted: g.fieldGoalsAttempted || undefined,
+        extraPointsMade: g.extraPointsMade || undefined,
+        extraPointsAttempted: g.extraPointsAttempted || undefined,
+        punts: g.punts || undefined,
+        puntYards: g.puntYards || undefined,
+        pancakeBlocks: g.pancakeBlocks || undefined,
+        sacksAllowed: g.sacksAllowed || undefined,
+        penalties: g.penalties || undefined,
+        grade: g.grade || undefined,
+      }));
+
+      let metrics: PlayerMetrics | undefined;
+      if (player.sport === 'football') {
+        const footballMetrics = await storage.getFootballMetrics(playerId);
+        if (footballMetrics) {
+          metrics = {
+            height: player.height || undefined,
+            fortyYardDash: footballMetrics.fortyYardDash ? parseFloat(footballMetrics.fortyYardDash) : undefined,
+            verticalJump: footballMetrics.verticalJump ? parseFloat(footballMetrics.verticalJump) : undefined,
+            broadJump: footballMetrics.broadJump || undefined,
+            threeConeDrill: footballMetrics.threeConeDrill ? parseFloat(footballMetrics.threeConeDrill) : undefined,
+            benchPressReps: footballMetrics.benchPressReps || undefined,
+            wingspan: footballMetrics.wingspan ? parseFloat(footballMetrics.wingspan) : undefined,
+            physicality: footballMetrics.physicality || undefined,
+            footballIQ: footballMetrics.footballIQ || undefined,
+            mentalToughness: footballMetrics.mentalToughness || undefined,
+            coachability: footballMetrics.coachability || undefined,
+            leadership: footballMetrics.leadership || undefined,
+            workEthic: footballMetrics.workEthic || undefined,
+            competitiveness: footballMetrics.competitiveness || undefined,
+            clutchPerformance: footballMetrics.clutchPerformance || undefined,
+          };
+        }
+      } else {
+        metrics = {
+          height: player.height || undefined,
+        };
+      }
+
+      const peerStats = await storage.getPeerStats(player.sport as Sport, player.position.split(',')[0].trim());
+
+      const primaryPosition = player.position.split(',')[0].trim();
+      const aiRating = calculateAIRating(
+        gameStats,
+        player.sport as Sport,
+        primaryPosition,
+        player.rosterRole || 'rotation',
+        metrics,
+        peerStats
+      );
+
+      res.json(aiRating);
+    } catch (error) {
+      console.error('Error calculating AI rating:', error);
+      res.status(500).json({ message: "Failed to calculate AI rating" });
+    }
+  });
+
+  // GET /api/players/:id/ai-projection - Calculate AI-powered future projection
+  app.get('/api/players/:id/ai-projection', async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      if (isNaN(playerId)) {
+        return res.status(400).json({ message: "Invalid player ID" });
+      }
+
+      const horizonMonths = parseInt(req.query.horizon as string) || 12;
+
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+
+      const playerGames = await storage.getGamesByPlayerId(playerId);
+      if (playerGames.length < 3) {
+        return res.json({
+          projection: null,
+          message: "Need at least 3 games to generate projections"
+        });
+      }
+
+      const sortedGames = playerGames.sort((a, b) => 
+        new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+
+      const gameStats: GameStats[] = sortedGames.map(g => ({
+        id: g.id,
+        date: g.date,
+        opponent: g.opponent,
+        result: g.result || undefined,
+        grade: g.grade || undefined,
+        points: g.points || undefined,
+        rebounds: g.rebounds || undefined,
+        assists: g.assists || undefined,
+      }));
+
+      let metrics: PlayerMetrics | undefined;
+      if (player.sport === 'football') {
+        const footballMetrics = await storage.getFootballMetrics(playerId);
+        if (footballMetrics) {
+          metrics = {
+            coachability: footballMetrics.coachability || undefined,
+            workEthic: footballMetrics.workEthic || undefined,
+            clutchPerformance: footballMetrics.clutchPerformance || undefined,
+          };
+        }
+      }
+
+      const peerStats = await storage.getPeerStats(player.sport as Sport, player.position.split(',')[0].trim());
+      const primaryPosition = player.position.split(',')[0].trim();
+      
+      const aiRating = calculateAIRating(
+        gameStats,
+        player.sport as Sport,
+        primaryPosition,
+        player.rosterRole || 'rotation',
+        metrics,
+        peerStats
+      );
+
+      let playerAge: number | undefined;
+      if (player.graduationYear) {
+        const currentYear = new Date().getFullYear();
+        playerAge = 18 - (player.graduationYear - currentYear);
+      }
+
+      const projection = calculateProjection(
+        aiRating.overallRating,
+        gameStats,
+        metrics,
+        playerAge,
+        horizonMonths
+      );
+
+      res.json({
+        currentRating: aiRating.overallRating,
+        projection,
+      });
+    } catch (error) {
+      console.error('Error calculating AI projection:', error);
+      res.status(500).json({ message: "Failed to calculate AI projection" });
+    }
+  });
+
+  // GET /api/players/:id/rating-breakdown - Get detailed sub-score breakdown with explanations
+  app.get('/api/players/:id/rating-breakdown', async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      if (isNaN(playerId)) {
+        return res.status(400).json({ message: "Invalid player ID" });
+      }
+
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+
+      const playerGames = await storage.getGamesByPlayerId(playerId);
+      
+      const gameStats: GameStats[] = playerGames.map(g => ({
+        id: g.id,
+        date: g.date,
+        opponent: g.opponent,
+        result: g.result || undefined,
+        grade: g.grade || undefined,
+        points: g.points || undefined,
+        rebounds: g.rebounds || undefined,
+        assists: g.assists || undefined,
+        steals: g.steals || undefined,
+        blocks: g.blocks || undefined,
+        turnovers: g.turnovers || undefined,
+        fgMade: g.fgMade || undefined,
+        fgAttempted: g.fgAttempted || undefined,
+        threeMade: g.threeMade || undefined,
+        threeAttempted: g.threeAttempted || undefined,
+        ftMade: g.ftMade || undefined,
+        ftAttempted: g.ftAttempted || undefined,
+        plusMinus: g.plusMinus || undefined,
+        defenseRating: g.defenseRating || undefined,
+        per: g.per || undefined,
+        passingYards: g.passingYards || undefined,
+        passingTouchdowns: g.passingTouchdowns || undefined,
+        rushingYards: g.rushingYards || undefined,
+        rushingTouchdowns: g.rushingTouchdowns || undefined,
+        receivingYards: g.receivingYards || undefined,
+        receivingTouchdowns: g.receivingTouchdowns || undefined,
+        tackles: g.tackles || undefined,
+        sacks: g.sacks || undefined,
+        defensiveInterceptions: g.defensiveInterceptions || undefined,
+      }));
+
+      const peerStats = await storage.getPeerStats(player.sport as Sport, player.position.split(',')[0].trim());
+      const primaryPosition = player.position.split(',')[0].trim();
+      
+      const aiRating = calculateAIRating(
+        gameStats,
+        player.sport as Sport,
+        primaryPosition,
+        player.rosterRole || 'rotation',
+        undefined,
+        peerStats
+      );
+
+      const coachRatings = await storage.getPlayerRatings(playerId);
+      const avgCoachRating = coachRatings.length > 0
+        ? Math.round(coachRatings.reduce((sum, r) => sum + r.overallRating, 0) / coachRatings.length)
+        : null;
+
+      res.json({
+        aiRating,
+        coachRating: avgCoachRating,
+        gamesAnalyzed: playerGames.length,
+        sport: player.sport,
+        position: player.position,
+        rosterRole: player.rosterRole || 'rotation',
+      });
+    } catch (error) {
+      console.error('Error getting rating breakdown:', error);
+      res.status(500).json({ message: "Failed to get rating breakdown" });
     }
   });
 

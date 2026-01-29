@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
-import { Star, Shield, TrendingUp, CheckCircle, Award, Target, Sparkles, Clock, ChevronRight, AlertCircle, Lock } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Star, Shield, TrendingUp, CheckCircle, Award, Target, Sparkles, Clock, ChevronRight, AlertCircle, Lock, Zap, Crosshair, Activity, Heart, Brain, Gauge, ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useSubscription } from "@/hooks/use-subscription";
 import { cn } from "@/lib/utils";
@@ -36,6 +37,49 @@ interface PlayerRating {
   updatedAt: string;
 }
 
+interface SubScores {
+  production: number;
+  efficiency: number;
+  impact: number;
+  defense: number;
+  athletic: number;
+  intangibles: number;
+}
+
+interface AIRatingResult {
+  overallRating: number | null;
+  subScores: SubScores | null;
+  contextMultipliers?: {
+    opponentStrength: number;
+    gameImportance: number;
+    roleMultiplier: number;
+    recencyWeight: number;
+  };
+  percentileRank?: number;
+  consistencyIndex?: number;
+  explanation?: string[];
+  ratingBand?: string;
+  confidence?: number;
+  message?: string;
+}
+
+interface ProjectionResult {
+  currentRating: number;
+  projection: {
+    trajectoryScore: number;
+    translationScore: number;
+    upsideScore: number;
+    riskScore: number;
+    likelyRating: number;
+    ceilingRating: number;
+    floorRating: number;
+    levelMapping: string;
+    confidencePercent: number;
+    explanations: string[];
+  } | null;
+  message?: string;
+}
+
 interface PerformanceMilestone {
   id: number;
   playerId: number;
@@ -61,23 +105,13 @@ interface Props {
   isOwnProfile: boolean;
 }
 
-const SKILL_LABELS: Record<string, string> = {
-  shooting: "Shooting",
-  passing: "Passing",
-  dribbling: "Ball Handling",
-  defense: "Defense",
-  athleticism: "Athleticism",
-  basketball_iq: "Basketball IQ",
-  rebounding: "Rebounding",
-  arm_strength: "Arm Strength",
-  accuracy: "Accuracy",
-  speed: "Speed",
-  agility: "Agility",
-  catching: "Catching",
-  route_running: "Route Running",
-  blocking: "Blocking",
-  tackling: "Tackling",
-  coverage: "Coverage",
+const SUB_SCORE_CONFIG = {
+  production: { label: "Production", icon: Target, color: "text-cyan-400", description: "Points, yards, TDs, assists" },
+  efficiency: { label: "Efficiency", icon: Gauge, color: "text-emerald-400", description: "TS%, completion %, turnover rate" },
+  impact: { label: "Impact", icon: Zap, color: "text-amber-400", description: "Plus-minus, big plays, wins" },
+  defense: { label: "Two-Way", icon: Shield, color: "text-purple-400", description: "Stops, blocks, tackles" },
+  athletic: { label: "Athletic", icon: Activity, color: "text-red-400", description: "Speed, strength, vertical" },
+  intangibles: { label: "Intangibles", icon: Brain, color: "text-blue-400", description: "Consistency, clutch, IQ" },
 };
 
 const MILESTONE_LABELS: Record<string, { label: string; icon: typeof Award }> = {
@@ -111,6 +145,13 @@ function getRatingBgColor(rating: number): string {
   return "from-zinc-500/20 to-zinc-600/20 border-zinc-500/30";
 }
 
+function getScoreTrend(score: number): { icon: typeof ArrowUpRight; color: string; label: string } {
+  if (score >= 70) return { icon: ArrowUpRight, color: "text-emerald-400", label: "Elite" };
+  if (score >= 55) return { icon: ArrowUpRight, color: "text-cyan-400", label: "Above Avg" };
+  if (score >= 45) return { icon: Minus, color: "text-zinc-400", label: "Average" };
+  return { icon: ArrowDownRight, color: "text-red-400", label: "Developing" };
+}
+
 export function PlayerRatingsSection({ playerId, isOwnProfile }: Props) {
   const { user } = useAuth();
   const { hasAccess } = useSubscription();
@@ -128,6 +169,14 @@ export function PlayerRatingsSection({ playerId, isOwnProfile }: Props) {
 
   const { data: averageRating, isLoading: avgLoading } = useQuery<{ overall: number; potential: number }>({
     queryKey: ['/api/players', playerId, 'average-rating'],
+  });
+
+  const { data: aiRating, isLoading: aiRatingLoading } = useQuery<AIRatingResult>({
+    queryKey: ['/api/players', playerId, 'ai-rating'],
+  });
+
+  const { data: aiProjection, isLoading: aiProjectionLoading } = useQuery<ProjectionResult>({
+    queryKey: ['/api/players', playerId, 'ai-projection'],
   });
 
   const { data: milestones, isLoading: milestonesLoading } = useQuery<PerformanceMilestone[]>({
@@ -191,16 +240,21 @@ export function PlayerRatingsSection({ playerId, isOwnProfile }: Props) {
       >
         <Card className={cn(
           "p-6 bg-gradient-to-br border backdrop-blur-sm",
+          aiRating?.overallRating ? getRatingBgColor(aiRating.overallRating) : 
           averageRating ? getRatingBgColor(averageRating.overall) : "from-zinc-500/20 to-zinc-600/20 border-zinc-500/30"
         )}>
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm text-muted-foreground mb-1">Overall Rating</p>
-              {avgLoading ? (
+              <p className="text-sm text-muted-foreground mb-1">AI Rating</p>
+              {aiRatingLoading || avgLoading ? (
                 <Skeleton className="h-12 w-20" />
               ) : (
-                <div className={cn("text-5xl font-bold font-display", averageRating ? getRatingColor(averageRating.overall) : "text-zinc-400")}>
-                  {averageRating?.overall ?? "—"}
+                <div className={cn(
+                  "text-5xl font-bold font-display", 
+                  aiRating?.overallRating ? getRatingColor(aiRating.overallRating) : 
+                  averageRating ? getRatingColor(averageRating.overall) : "text-zinc-400"
+                )}>
+                  {aiRating?.overallRating ?? averageRating?.overall ?? "—"}
                 </div>
               )}
             </div>
@@ -208,23 +262,33 @@ export function PlayerRatingsSection({ playerId, isOwnProfile }: Props) {
               <Star className="w-6 h-6 text-amber-400" style={{ filter: "drop-shadow(0 0 8px #FCD34D)" }} />
             </div>
           </div>
-          <p className="text-xs text-muted-foreground mt-3">
-            Based on {ratings?.length ?? 0} scout/coach {(ratings?.length ?? 0) === 1 ? 'rating' : 'ratings'}
+          {aiRating?.ratingBand && (
+            <Badge variant="outline" className="mt-2 text-xs border-white/20">
+              {aiRating.ratingBand}
+            </Badge>
+          )}
+          <p className="text-xs text-muted-foreground mt-2">
+            {aiRating?.confidence ? `${aiRating.confidence}% confidence` : `${ratings?.length ?? 0} coach ratings`}
           </p>
         </Card>
 
         <Card className={cn(
           "p-6 bg-gradient-to-br border backdrop-blur-sm",
+          aiProjection?.projection ? getRatingBgColor(aiProjection.projection.ceilingRating) :
           averageRating ? getRatingBgColor(averageRating.potential) : "from-zinc-500/20 to-zinc-600/20 border-zinc-500/30"
         )}>
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm text-muted-foreground mb-1">Potential Rating</p>
-              {avgLoading ? (
+              <p className="text-sm text-muted-foreground mb-1">Ceiling</p>
+              {aiProjectionLoading || avgLoading ? (
                 <Skeleton className="h-12 w-20" />
               ) : (
-                <div className={cn("text-5xl font-bold font-display", averageRating ? getRatingColor(averageRating.potential) : "text-zinc-400")}>
-                  {averageRating?.potential ?? "—"}
+                <div className={cn(
+                  "text-5xl font-bold font-display",
+                  aiProjection?.projection ? getRatingColor(aiProjection.projection.ceilingRating) :
+                  averageRating ? getRatingColor(averageRating.potential) : "text-zinc-400"
+                )}>
+                  {aiProjection?.projection?.ceilingRating ?? averageRating?.potential ?? "—"}
                 </div>
               )}
             </div>
@@ -232,8 +296,18 @@ export function PlayerRatingsSection({ playerId, isOwnProfile }: Props) {
               <TrendingUp className="w-6 h-6 text-purple-400" style={{ filter: "drop-shadow(0 0 8px #A855F7)" }} />
             </div>
           </div>
-          <p className="text-xs text-muted-foreground mt-3">
-            Projected future ceiling
+          {aiProjection?.projection && (
+            <div className="flex items-center gap-2 mt-2">
+              <Badge variant="outline" className="text-xs border-cyan-500/30 text-cyan-400">
+                Floor: {aiProjection.projection.floorRating}
+              </Badge>
+              <Badge variant="outline" className="text-xs border-purple-500/30 text-purple-400">
+                Likely: {aiProjection.projection.likelyRating}
+              </Badge>
+            </div>
+          )}
+          <p className="text-xs text-muted-foreground mt-2">
+            {aiProjection?.projection?.levelMapping || "Projected ceiling"}
           </p>
         </Card>
 
@@ -253,17 +327,103 @@ export function PlayerRatingsSection({ playerId, isOwnProfile }: Props) {
               <CheckCircle className="w-6 h-6 text-emerald-400" style={{ filter: "drop-shadow(0 0 8px #34D399)" }} />
             </div>
           </div>
-          <p className="text-xs text-muted-foreground mt-3">
+          {aiRating?.consistencyIndex !== undefined && (
+            <Badge variant="outline" className="mt-2 text-xs border-emerald-500/30 text-emerald-400">
+              {Math.round(aiRating.consistencyIndex)}% Consistency
+            </Badge>
+          )}
+          <p className="text-xs text-muted-foreground mt-2">
             Coach-verified statistics
           </p>
         </Card>
       </motion.div>
 
+      {aiRating?.subScores && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.4 }}
+        >
+          <Card className="p-6 bg-gradient-to-br from-black/60 to-black/30 border-white/10">
+            <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
+              <Crosshair className="w-5 h-5 text-cyan-400" style={{ filter: "drop-shadow(0 0 8px #00D4FF)" }} />
+              Sub-Score Breakdown
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              {Object.entries(SUB_SCORE_CONFIG).map(([key, config], index) => {
+                const score = aiRating.subScores![key as keyof SubScores];
+                const trend = getScoreTrend(score);
+                const IconComponent = config.icon;
+                const TrendIcon = trend.icon;
+                
+                return (
+                  <motion.div
+                    key={key}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="p-4 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-colors"
+                    data-testid={`sub-score-${key}`}
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <IconComponent className={cn("w-4 h-4", config.color)} />
+                      <span className="text-xs font-medium text-muted-foreground">{config.label}</span>
+                    </div>
+                    <div className="flex items-end gap-1">
+                      <span className={cn("text-2xl font-bold", config.color)}>
+                        {Math.round(score)}
+                      </span>
+                      <TrendIcon className={cn("w-4 h-4 mb-1", trend.color)} />
+                    </div>
+                    <Progress 
+                      value={score} 
+                      className="h-1.5 mt-2"
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-1.5 line-clamp-1">
+                      {config.description}
+                    </p>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </Card>
+        </motion.div>
+      )}
+
+      {aiRating?.explanation && aiRating.explanation.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15, duration: 0.4 }}
+        >
+          <Card className="p-6 bg-gradient-to-br from-black/60 to-black/30 border-white/10">
+            <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
+              <Brain className="w-5 h-5 text-blue-400" style={{ filter: "drop-shadow(0 0 8px #3B82F6)" }} />
+              AI Analysis
+            </h3>
+            <ul className="space-y-2">
+              {aiRating.explanation.map((exp, index) => (
+                <motion.li
+                  key={index}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 + index * 0.05 }}
+                  className="flex items-start gap-2 text-sm text-muted-foreground"
+                >
+                  <ChevronRight className="w-4 h-4 text-cyan-400 mt-0.5 flex-shrink-0" />
+                  {exp}
+                </motion.li>
+              ))}
+            </ul>
+          </Card>
+        </motion.div>
+      )}
+
       {canRate && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+          transition={{ delay: 0.2 }}
         >
           <Button
             onClick={() => setShowRatingDialog(true)}
@@ -288,7 +448,7 @@ export function PlayerRatingsSection({ playerId, isOwnProfile }: Props) {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.4 }}
+          transition={{ delay: 0.25, duration: 0.4 }}
         >
           <Card className="p-6 bg-gradient-to-br from-black/60 to-black/30 border-white/10">
             <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
@@ -325,16 +485,95 @@ export function PlayerRatingsSection({ playerId, isOwnProfile }: Props) {
         </motion.div>
       )}
 
+      {aiProjection?.projection && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.4 }}
+        >
+          <Card className="p-6 bg-gradient-to-br from-black/60 to-black/30 border-white/10">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-purple-400" style={{ filter: "drop-shadow(0 0 8px #A855F7)" }} />
+                Projection Factors
+              </h3>
+              <Badge variant="outline" className={cn(
+                "text-xs",
+                aiProjection.projection.confidencePercent >= 70 ? "border-emerald-500/50 text-emerald-400" :
+                aiProjection.projection.confidencePercent >= 50 ? "border-amber-500/50 text-amber-400" :
+                "border-zinc-500/50 text-zinc-400"
+              )}>
+                {aiProjection.projection.confidencePercent}% Confidence
+              </Badge>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+              <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                <p className="text-xs text-muted-foreground mb-1">Trajectory</p>
+                <p className={cn(
+                  "text-xl font-bold",
+                  aiProjection.projection.trajectoryScore >= 60 ? "text-emerald-400" :
+                  aiProjection.projection.trajectoryScore >= 45 ? "text-amber-400" : "text-red-400"
+                )}>
+                  {aiProjection.projection.trajectoryScore}
+                </p>
+              </div>
+              <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                <p className="text-xs text-muted-foreground mb-1">Translation</p>
+                <p className={cn(
+                  "text-xl font-bold",
+                  aiProjection.projection.translationScore >= 60 ? "text-emerald-400" :
+                  aiProjection.projection.translationScore >= 45 ? "text-amber-400" : "text-red-400"
+                )}>
+                  {aiProjection.projection.translationScore}
+                </p>
+              </div>
+              <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                <p className="text-xs text-muted-foreground mb-1">Upside</p>
+                <p className={cn(
+                  "text-xl font-bold",
+                  aiProjection.projection.upsideScore >= 60 ? "text-emerald-400" :
+                  aiProjection.projection.upsideScore >= 45 ? "text-amber-400" : "text-zinc-400"
+                )}>
+                  {aiProjection.projection.upsideScore}
+                </p>
+              </div>
+              <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                <p className="text-xs text-muted-foreground mb-1">Risk</p>
+                <p className={cn(
+                  "text-xl font-bold",
+                  aiProjection.projection.riskScore <= 40 ? "text-emerald-400" :
+                  aiProjection.projection.riskScore <= 60 ? "text-amber-400" : "text-red-400"
+                )}>
+                  {aiProjection.projection.riskScore}
+                </p>
+              </div>
+            </div>
+
+            {aiProjection.projection.explanations.length > 0 && (
+              <ul className="space-y-1.5">
+                {aiProjection.projection.explanations.map((exp, index) => (
+                  <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <ChevronRight className="w-4 h-4 text-purple-400 mt-0.5 flex-shrink-0" />
+                    {exp}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+        </motion.div>
+      )}
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.4 }}
+        transition={{ delay: 0.35, duration: 0.4 }}
       >
         <Card className="p-6 bg-gradient-to-br from-black/60 to-black/30 border-white/10">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-purple-400" style={{ filter: "drop-shadow(0 0 8px #A855F7)" }} />
-              AI Projections
+              Gemini AI Analysis
               {!isPremium && (
                 <Badge variant="outline" className="ml-2 text-xs border-amber-500/50 text-amber-400">
                   <Lock className="w-3 h-3 mr-1" /> Pro
@@ -354,7 +593,7 @@ export function PlayerRatingsSection({ playerId, isOwnProfile }: Props) {
                   <>Generating...</>
                 ) : (
                   <>
-                    <Sparkles className="w-4 h-4 mr-2" /> Generate Projection
+                    <Sparkles className="w-4 h-4 mr-2" /> Generate Analysis
                   </>
                 )}
               </Button>
@@ -364,7 +603,7 @@ export function PlayerRatingsSection({ playerId, isOwnProfile }: Props) {
           {!isPremium ? (
             <div className="text-center py-8">
               <Lock className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
-              <p className="text-muted-foreground mb-2">AI projections require a Pro subscription</p>
+              <p className="text-muted-foreground mb-2">Gemini AI analysis requires a Pro subscription</p>
               <Button variant="outline" size="sm" className="mt-2 border-cyan-500/50 text-cyan-400">
                 Upgrade to Pro <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
@@ -406,7 +645,7 @@ export function PlayerRatingsSection({ playerId, isOwnProfile }: Props) {
           ) : (
             <div className="text-center py-8">
               <AlertCircle className="w-8 h-8 text-muted-foreground/30 mx-auto mb-3" />
-              <p className="text-muted-foreground">No projections generated yet</p>
+              <p className="text-muted-foreground">No Gemini analysis generated yet</p>
             </div>
           )}
         </Card>
