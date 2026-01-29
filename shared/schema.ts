@@ -1699,6 +1699,328 @@ export const coinTransactions = pgTable("coin_transactions", {
   userIdIdx: index("coin_transactions_user_id_idx").on(table.userId),
 }));
 
+// === PLAYER RATINGS (Scout/Coach evaluations) ===
+export const playerRatings = pgTable("player_ratings", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  ratedByUserId: text("rated_by_user_id").notNull(), // Coach or scout who rated
+  raterRole: text("rater_role").notNull(), // 'coach', 'scout', 'system'
+  
+  // Core ratings (1-100 scale)
+  overallRating: integer("overall_rating").notNull(), // Overall player rating
+  potentialRating: integer("potential_rating"), // Future potential ceiling
+  
+  // Position-specific skill ratings (1-100)
+  athleticism: integer("athleticism"),
+  basketball_iq: integer("basketball_iq"),
+  shooting: integer("shooting"),
+  passing: integer("passing"),
+  defense: integer("defense"),
+  rebounding: integer("rebounding"),
+  leadership: integer("leadership"),
+  
+  // Football-specific ratings
+  armStrength: integer("arm_strength"),
+  accuracy: integer("accuracy"),
+  speed: integer("speed"),
+  agility: integer("agility"),
+  strength: integer("strength"),
+  footballIQ: integer("football_iq"),
+  
+  notes: text("notes"),
+  isPublic: boolean("is_public").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  playerIdIdx: index("player_ratings_player_id_idx").on(table.playerId),
+  ratedByUserIdIdx: index("player_ratings_rated_by_user_id_idx").on(table.ratedByUserId),
+}));
+
+// === STAT VERIFICATIONS (Coach-verified game stats) ===
+export const statVerifications = pgTable("stat_verifications", {
+  id: serial("id").primaryKey(),
+  gameId: integer("game_id").notNull().references(() => games.id, { onDelete: "cascade" }),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  verifiedByUserId: text("verified_by_user_id").notNull(), // Coach who verified
+  verifierName: text("verifier_name").notNull(), // Coach name for display
+  verifierRole: text("verifier_role").notNull(), // 'head_coach', 'assistant_coach', 'athletic_director'
+  verificationMethod: text("verification_method").notNull(), // 'in_person', 'game_film', 'official_scoresheet'
+  
+  // Verification status
+  status: text("status").notNull().default("pending"), // 'pending', 'verified', 'disputed', 'rejected'
+  verifiedAt: timestamp("verified_at"),
+  
+  // Optional proof/evidence
+  proofUrl: text("proof_url"), // Link to official scoresheet, game film, etc.
+  notes: text("notes"),
+  
+  // Digital signature (hash of stats at time of verification)
+  statHash: text("stat_hash"), // SHA256 of game stats for integrity
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  gameIdIdx: index("stat_verifications_game_id_idx").on(table.gameId),
+  playerIdIdx: index("stat_verifications_player_id_idx").on(table.playerId),
+  statusIdx: index("stat_verifications_status_idx").on(table.status),
+}));
+
+// === SKILL CHALLENGES (Timed drills and competitions) ===
+export const skillChallenges = pgTable("skill_challenges", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(), // "3-Point Challenge", "Free Throw Streak", etc.
+  description: text("description").notNull(),
+  sport: text("sport").notNull().default("basketball"), // 'basketball' or 'football'
+  category: text("category").notNull(), // 'shooting', 'passing', 'speed', 'agility'
+  
+  // Challenge parameters
+  duration: integer("duration"), // Time limit in seconds (null = no limit)
+  targetScore: integer("target_score"), // Target to beat for completion
+  maxAttempts: integer("max_attempts"), // Max attempts allowed
+  
+  // Scoring
+  scoringType: text("scoring_type").notNull(), // 'count', 'time', 'accuracy', 'distance'
+  higherIsBetter: boolean("higher_is_better").default(true).notNull(),
+  
+  // Requirements
+  requiredTier: text("required_tier"), // Minimum tier to attempt
+  isActive: boolean("is_active").default(true).notNull(),
+  
+  // Rewards
+  xpReward: integer("xp_reward").default(50).notNull(),
+  coinReward: integer("coin_reward").default(10).notNull(),
+  badgeReward: text("badge_reward"), // Badge type earned on completion
+  
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// === CHALLENGE RESULTS (Player attempts at skill challenges) ===
+export const challengeResults = pgTable("challenge_results", {
+  id: serial("id").primaryKey(),
+  challengeId: integer("challenge_id").notNull().references(() => skillChallenges.id, { onDelete: "cascade" }),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  
+  // Result data
+  score: integer("score").notNull(),
+  timeElapsed: integer("time_elapsed"), // Time taken in seconds
+  attemptNumber: integer("attempt_number").notNull().default(1),
+  
+  // Verification
+  videoProofUrl: text("video_proof_url"), // Video of challenge attempt
+  isVerified: boolean("is_verified").default(false).notNull(),
+  verifiedByUserId: text("verified_by_user_id"),
+  
+  // Rank/position at time of completion
+  leaderboardRank: integer("leaderboard_rank"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  challengeIdIdx: index("challenge_results_challenge_id_idx").on(table.challengeId),
+  playerIdIdx: index("challenge_results_player_id_idx").on(table.playerId),
+  scoreIdx: index("challenge_results_score_idx").on(table.score),
+}));
+
+// === PERFORMANCE MILESTONES (Career achievements) ===
+export const performanceMilestones = pgTable("performance_milestones", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  
+  // Milestone details
+  milestoneType: text("milestone_type").notNull(), // 'points', 'assists', 'rebounds', 'games', etc.
+  milestoneValue: integer("milestone_value").notNull(), // e.g., 500, 1000, 100
+  milestoneTitle: text("milestone_title").notNull(), // "500 Career Points"
+  
+  // When achieved
+  achievedAt: timestamp("achieved_at").defaultNow(),
+  achievedInGameId: integer("achieved_in_game_id").references(() => games.id, { onDelete: "set null" }),
+  
+  // Celebration
+  isAnnounced: boolean("is_announced").default(false).notNull(),
+  xpAwarded: integer("xp_awarded").default(100).notNull(),
+  coinAwarded: integer("coin_awarded").default(25).notNull(),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  playerIdIdx: index("performance_milestones_player_id_idx").on(table.playerId),
+  milestoneTypeIdx: index("performance_milestones_type_idx").on(table.milestoneType),
+}));
+
+// === AI PROJECTIONS (Gemini-powered future predictions) ===
+export const aiProjections = pgTable("ai_projections", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  
+  // Projection type
+  projectionType: text("projection_type").notNull(), // 'season_end', 'college_potential', 'nba_draft', 'career'
+  
+  // Predicted ratings (1-100)
+  projectedOverall: integer("projected_overall"),
+  projectedPotential: integer("projected_potential"),
+  
+  // Predicted stats (per-game averages)
+  projectedPpg: decimal("projected_ppg", { precision: 4, scale: 1 }),
+  projectedRpg: decimal("projected_rpg", { precision: 4, scale: 1 }),
+  projectedApg: decimal("projected_apg", { precision: 4, scale: 1 }),
+  projectedFgPct: decimal("projected_fg_pct", { precision: 4, scale: 1 }),
+  
+  // AI analysis
+  strengthsAnalysis: text("strengths_analysis"), // What player does well
+  areasToImprove: text("areas_to_improve"), // Development areas
+  comparisonPlayer: text("comparison_player"), // "Plays like a young X"
+  collegeFit: text("college_fit"), // Type of program that fits
+  
+  // Confidence and metadata
+  confidenceScore: integer("confidence_score"), // 1-100 how confident the AI is
+  dataPointsUsed: integer("data_points_used"), // Number of games analyzed
+  modelVersion: text("model_version"), // AI model version used
+  
+  // Validity
+  validUntil: timestamp("valid_until"), // When projection expires
+  isActive: boolean("is_active").default(true).notNull(),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  playerIdIdx: index("ai_projections_player_id_idx").on(table.playerId),
+  projectionTypeIdx: index("ai_projections_type_idx").on(table.projectionType),
+}));
+
+// === HIGHLIGHT VERIFICATIONS (Anti-fake detection) ===
+export const highlightVerifications = pgTable("highlight_verifications", {
+  id: serial("id").primaryKey(),
+  highlightId: integer("highlight_id").notNull().references(() => highlightClips.id, { onDelete: "cascade" }),
+  
+  // Verification status
+  verificationStatus: text("verification_status").notNull().default("pending"), // 'pending', 'verified', 'suspicious', 'fake'
+  
+  // AI analysis results
+  duplicateCheckPassed: boolean("duplicate_check_passed"),
+  duplicateOfHighlightId: integer("duplicate_of_highlight_id"),
+  metadataConsistent: boolean("metadata_consistent"),
+  aiConfidenceScore: integer("ai_confidence_score"), // 1-100
+  
+  // Manual review
+  manuallyReviewedBy: text("manually_reviewed_by"),
+  manualReviewNotes: text("manual_review_notes"),
+  reviewedAt: timestamp("reviewed_at"),
+  
+  // Flags
+  flaggedReasons: text("flagged_reasons"), // JSON array of reasons
+  appealStatus: text("appeal_status"), // 'none', 'pending', 'approved', 'denied'
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  highlightIdIdx: index("highlight_verifications_highlight_id_idx").on(table.highlightId),
+  statusIdx: index("highlight_verifications_status_idx").on(table.verificationStatus),
+}));
+
+// === EVENT INTEGRATIONS (Official tournament/league connections) ===
+export const eventIntegrations = pgTable("event_integrations", {
+  id: serial("id").primaryKey(),
+  eventName: text("event_name").notNull(), // "State Championship 2025"
+  eventType: text("event_type").notNull(), // 'tournament', 'league', 'showcase', 'camp'
+  organizationName: text("organization_name").notNull(),
+  
+  // External integration
+  externalEventId: text("external_event_id"), // ID from external system
+  externalApiSource: text("external_api_source"), // 'maxpreps', 'hudl', 'scorebook_live', etc.
+  
+  // Event details
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date"),
+  location: text("location"),
+  sport: text("sport").notNull().default("basketball"),
+  
+  // Verification
+  isOfficial: boolean("is_official").default(false).notNull(),
+  verificationCode: text("verification_code"), // Code for participants to verify
+  
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// === EVENT GAME LINKS (Connect games to official events) ===
+export const eventGameLinks = pgTable("event_game_links", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").notNull().references(() => eventIntegrations.id, { onDelete: "cascade" }),
+  gameId: integer("game_id").notNull().references(() => games.id, { onDelete: "cascade" }),
+  
+  // External data
+  externalGameId: text("external_game_id"), // ID from external system
+  externalStatsUrl: text("external_stats_url"), // Link to official stats
+  
+  // Sync status
+  syncStatus: text("sync_status").default("pending"), // 'pending', 'synced', 'error'
+  lastSyncAt: timestamp("last_sync_at"),
+  syncError: text("sync_error"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  eventIdIdx: index("event_game_links_event_id_idx").on(table.eventId),
+  gameIdIdx: index("event_game_links_game_id_idx").on(table.gameId),
+}));
+
+// === SCHEMAS FOR NEW TABLES ===
+export const insertPlayerRatingSchema = createInsertSchema(playerRatings).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertPlayerRating = z.infer<typeof insertPlayerRatingSchema>;
+export type PlayerRating = typeof playerRatings.$inferSelect;
+
+export const insertStatVerificationSchema = createInsertSchema(statVerifications).omit({ id: true, createdAt: true });
+export type InsertStatVerification = z.infer<typeof insertStatVerificationSchema>;
+export type StatVerification = typeof statVerifications.$inferSelect;
+
+export const insertSkillChallengeSchema = createInsertSchema(skillChallenges).omit({ id: true, createdAt: true });
+export type InsertSkillChallenge = z.infer<typeof insertSkillChallengeSchema>;
+export type SkillChallenge = typeof skillChallenges.$inferSelect;
+
+export const insertChallengeResultSchema = createInsertSchema(challengeResults).omit({ id: true, createdAt: true });
+export type InsertChallengeResult = z.infer<typeof insertChallengeResultSchema>;
+export type ChallengeResult = typeof challengeResults.$inferSelect;
+
+export const insertPerformanceMilestoneSchema = createInsertSchema(performanceMilestones).omit({ id: true, createdAt: true });
+export type InsertPerformanceMilestone = z.infer<typeof insertPerformanceMilestoneSchema>;
+export type PerformanceMilestone = typeof performanceMilestones.$inferSelect;
+
+export const insertAiProjectionSchema = createInsertSchema(aiProjections).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertAiProjection = z.infer<typeof insertAiProjectionSchema>;
+export type AiProjection = typeof aiProjections.$inferSelect;
+
+export const insertHighlightVerificationSchema = createInsertSchema(highlightVerifications).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertHighlightVerification = z.infer<typeof insertHighlightVerificationSchema>;
+export type HighlightVerification = typeof highlightVerifications.$inferSelect;
+
+export const insertEventIntegrationSchema = createInsertSchema(eventIntegrations).omit({ id: true, createdAt: true });
+export type InsertEventIntegration = z.infer<typeof insertEventIntegrationSchema>;
+export type EventIntegration = typeof eventIntegrations.$inferSelect;
+
+export const insertEventGameLinkSchema = createInsertSchema(eventGameLinks).omit({ id: true, createdAt: true });
+export type InsertEventGameLink = z.infer<typeof insertEventGameLinkSchema>;
+export type EventGameLink = typeof eventGameLinks.$inferSelect;
+
+// === MILESTONE DEFINITIONS ===
+export const MILESTONE_DEFINITIONS = {
+  basketball: {
+    points: [100, 250, 500, 1000, 2000, 5000],
+    assists: [50, 100, 250, 500, 1000],
+    rebounds: [50, 100, 250, 500, 1000],
+    steals: [25, 50, 100, 250],
+    blocks: [25, 50, 100, 250],
+    games: [10, 25, 50, 100, 200],
+    a_grades: [5, 10, 25, 50, 100],
+  },
+  football: {
+    passing_yards: [500, 1000, 2500, 5000, 10000],
+    passing_tds: [5, 10, 25, 50, 100],
+    rushing_yards: [250, 500, 1000, 2000, 5000],
+    rushing_tds: [5, 10, 25, 50],
+    receiving_yards: [250, 500, 1000, 2000, 5000],
+    receptions: [25, 50, 100, 200],
+    tackles: [25, 50, 100, 250, 500],
+    sacks: [5, 10, 25, 50],
+    interceptions: [2, 5, 10, 25],
+    games: [10, 25, 50, 100],
+  },
+} as const;
+
 // === SHOP SCHEMAS & TYPES ===
 export const insertShopItemSchema = createInsertSchema(shopItems).omit({ id: true, createdAt: true });
 export type InsertShopItem = z.infer<typeof insertShopItemSchema>;

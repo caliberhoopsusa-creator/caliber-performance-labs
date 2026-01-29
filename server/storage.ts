@@ -10,6 +10,7 @@ import {
   dmThreads, dmParticipants, dmMessages,
   mentorshipProfiles, mentorshipRequests,
   recruitPosts, recruitInterests,
+  playerRatings, statVerifications, skillChallenges, challengeResults, performanceMilestones, aiProjections, highlightVerifications, eventIntegrations, eventGameLinks,
   type Player, type InsertPlayer,
   type Game, type InsertGame,
   type UpdateGameRequest,
@@ -73,7 +74,16 @@ import {
   type RecruitPost, type InsertRecruitPost,
   type RecruitInterest, type InsertRecruitInterest,
   type CaliberBadge, type InsertCaliberBadge, caliberBadges,
-  type FootballMetrics, type InsertFootballMetrics
+  type FootballMetrics, type InsertFootballMetrics,
+  type PlayerRating, type InsertPlayerRating,
+  type StatVerification, type InsertStatVerification,
+  type SkillChallenge, type InsertSkillChallenge,
+  type ChallengeResult, type InsertChallengeResult,
+  type PerformanceMilestone, type InsertPerformanceMilestone,
+  type AiProjection, type InsertAiProjection,
+  type HighlightVerification, type InsertHighlightVerification,
+  type EventIntegration, type InsertEventIntegration,
+  type EventGameLink, type InsertEventGameLink
 } from "@shared/schema";
 import { eq, desc, and, count, gte, lte, sql, or, isNull } from "drizzle-orm";
 
@@ -463,6 +473,52 @@ export interface IStorage {
   getFootballMetrics(playerId: number): Promise<FootballMetrics | undefined>;
   createFootballMetrics(metrics: InsertFootballMetrics): Promise<FootballMetrics>;
   updateFootballMetrics(playerId: number, updates: Partial<InsertFootballMetrics>): Promise<FootballMetrics | undefined>;
+
+  // Player Ratings
+  getPlayerRatings(playerId: number): Promise<PlayerRating[]>;
+  getPlayerAverageRating(playerId: number): Promise<{ overall: number; potential: number } | undefined>;
+  createPlayerRating(rating: InsertPlayerRating): Promise<PlayerRating>;
+  updatePlayerRating(id: number, updates: Partial<InsertPlayerRating>): Promise<PlayerRating | undefined>;
+  deletePlayerRating(id: number): Promise<void>;
+
+  // Stat Verifications
+  getStatVerification(gameId: number, playerId: number): Promise<StatVerification | undefined>;
+  getPlayerVerifiedGames(playerId: number): Promise<StatVerification[]>;
+  createStatVerification(verification: InsertStatVerification): Promise<StatVerification>;
+  updateStatVerification(id: number, updates: Partial<InsertStatVerification>): Promise<StatVerification | undefined>;
+
+  // Skill Challenges
+  getSkillChallenges(sport?: string): Promise<SkillChallenge[]>;
+  getSkillChallenge(id: number): Promise<SkillChallenge | undefined>;
+  createSkillChallenge(challenge: InsertSkillChallenge): Promise<SkillChallenge>;
+
+  // Challenge Results
+  getChallengeLeaderboardNew(challengeId: number): Promise<ChallengeResult[]>;
+  getPlayerChallengeResults(playerId: number): Promise<ChallengeResult[]>;
+  createChallengeResult(result: InsertChallengeResult): Promise<ChallengeResult>;
+  updateChallengeResultVerification(id: number, isVerified: boolean, verifiedBy: string): Promise<ChallengeResult | undefined>;
+
+  // Performance Milestones
+  getPlayerMilestones(playerId: number): Promise<PerformanceMilestone[]>;
+  createPerformanceMilestone(milestone: InsertPerformanceMilestone): Promise<PerformanceMilestone>;
+
+  // AI Projections
+  getPlayerProjections(playerId: number): Promise<AiProjection[]>;
+  getActiveProjection(playerId: number, projectionType: string): Promise<AiProjection | undefined>;
+  createAiProjection(projection: InsertAiProjection): Promise<AiProjection>;
+  updateAiProjection(id: number, updates: Partial<InsertAiProjection>): Promise<AiProjection | undefined>;
+
+  // Highlight Verifications
+  getHighlightVerification(highlightId: number): Promise<HighlightVerification | undefined>;
+  createHighlightVerification(verification: InsertHighlightVerification): Promise<HighlightVerification>;
+  updateHighlightVerification(id: number, updates: Partial<InsertHighlightVerification>): Promise<HighlightVerification | undefined>;
+
+  // Event Integrations
+  getEventIntegrations(): Promise<EventIntegration[]>;
+  getEventIntegration(id: number): Promise<EventIntegration | undefined>;
+  createEventIntegration(event: InsertEventIntegration): Promise<EventIntegration>;
+  getEventGameLinks(eventId: number): Promise<EventGameLink[]>;
+  linkGameToEvent(link: InsertEventGameLink): Promise<EventGameLink>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2455,6 +2511,204 @@ export class DatabaseStorage implements IStorage {
       .where(eq(footballMetrics.playerId, playerId))
       .returning();
     return updated;
+  }
+
+  // Player Ratings
+  async getPlayerRatings(playerId: number): Promise<PlayerRating[]> {
+    return await db.select().from(playerRatings)
+      .where(eq(playerRatings.playerId, playerId))
+      .orderBy(desc(playerRatings.createdAt));
+  }
+
+  async getPlayerAverageRating(playerId: number): Promise<{ overall: number; potential: number } | undefined> {
+    const ratings = await db.select().from(playerRatings)
+      .where(eq(playerRatings.playerId, playerId));
+    if (ratings.length === 0) return undefined;
+    const avgOverall = Math.round(ratings.reduce((sum, r) => sum + r.overallRating, 0) / ratings.length);
+    const potentialRatings = ratings.filter(r => r.potentialRating !== null);
+    const avgPotential = potentialRatings.length > 0
+      ? Math.round(potentialRatings.reduce((sum, r) => sum + (r.potentialRating || 0), 0) / potentialRatings.length)
+      : avgOverall;
+    return { overall: avgOverall, potential: avgPotential };
+  }
+
+  async createPlayerRating(rating: InsertPlayerRating): Promise<PlayerRating> {
+    const [created] = await db.insert(playerRatings).values(rating).returning();
+    return created;
+  }
+
+  async updatePlayerRating(id: number, updates: Partial<InsertPlayerRating>): Promise<PlayerRating | undefined> {
+    const [updated] = await db.update(playerRatings)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(playerRatings.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deletePlayerRating(id: number): Promise<void> {
+    await db.delete(playerRatings).where(eq(playerRatings.id, id));
+  }
+
+  // Stat Verifications
+  async getStatVerification(gameId: number, playerId: number): Promise<StatVerification | undefined> {
+    const [verification] = await db.select().from(statVerifications)
+      .where(and(eq(statVerifications.gameId, gameId), eq(statVerifications.playerId, playerId)));
+    return verification;
+  }
+
+  async getPlayerVerifiedGames(playerId: number): Promise<StatVerification[]> {
+    return await db.select().from(statVerifications)
+      .where(and(eq(statVerifications.playerId, playerId), eq(statVerifications.status, 'verified')))
+      .orderBy(desc(statVerifications.verifiedAt));
+  }
+
+  async createStatVerification(verification: InsertStatVerification): Promise<StatVerification> {
+    const [created] = await db.insert(statVerifications).values(verification).returning();
+    return created;
+  }
+
+  async updateStatVerification(id: number, updates: Partial<InsertStatVerification>): Promise<StatVerification | undefined> {
+    const [updated] = await db.update(statVerifications)
+      .set(updates)
+      .where(eq(statVerifications.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Skill Challenges
+  async getSkillChallenges(sport?: string): Promise<SkillChallenge[]> {
+    if (sport) {
+      return await db.select().from(skillChallenges)
+        .where(and(eq(skillChallenges.sport, sport), eq(skillChallenges.isActive, true)));
+    }
+    return await db.select().from(skillChallenges)
+      .where(eq(skillChallenges.isActive, true));
+  }
+
+  async getSkillChallenge(id: number): Promise<SkillChallenge | undefined> {
+    const [challenge] = await db.select().from(skillChallenges)
+      .where(eq(skillChallenges.id, id));
+    return challenge;
+  }
+
+  async createSkillChallenge(challenge: InsertSkillChallenge): Promise<SkillChallenge> {
+    const [created] = await db.insert(skillChallenges).values(challenge).returning();
+    return created;
+  }
+
+  // Challenge Results
+  async getChallengeLeaderboardNew(challengeId: number): Promise<ChallengeResult[]> {
+    return await db.select().from(challengeResults)
+      .where(eq(challengeResults.challengeId, challengeId))
+      .orderBy(desc(challengeResults.score));
+  }
+
+  async getPlayerChallengeResults(playerId: number): Promise<ChallengeResult[]> {
+    return await db.select().from(challengeResults)
+      .where(eq(challengeResults.playerId, playerId))
+      .orderBy(desc(challengeResults.createdAt));
+  }
+
+  async createChallengeResult(result: InsertChallengeResult): Promise<ChallengeResult> {
+    const [created] = await db.insert(challengeResults).values(result).returning();
+    return created;
+  }
+
+  async updateChallengeResultVerification(id: number, isVerified: boolean, verifiedBy: string): Promise<ChallengeResult | undefined> {
+    const [updated] = await db.update(challengeResults)
+      .set({ isVerified, verifiedByUserId: verifiedBy })
+      .where(eq(challengeResults.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Performance Milestones
+  async getPlayerMilestones(playerId: number): Promise<PerformanceMilestone[]> {
+    return await db.select().from(performanceMilestones)
+      .where(eq(performanceMilestones.playerId, playerId))
+      .orderBy(desc(performanceMilestones.achievedAt));
+  }
+
+  async createPerformanceMilestone(milestone: InsertPerformanceMilestone): Promise<PerformanceMilestone> {
+    const [created] = await db.insert(performanceMilestones).values(milestone).returning();
+    return created;
+  }
+
+  // AI Projections
+  async getPlayerProjections(playerId: number): Promise<AiProjection[]> {
+    return await db.select().from(aiProjections)
+      .where(eq(aiProjections.playerId, playerId))
+      .orderBy(desc(aiProjections.createdAt));
+  }
+
+  async getActiveProjection(playerId: number, projectionType: string): Promise<AiProjection | undefined> {
+    const [projection] = await db.select().from(aiProjections)
+      .where(and(
+        eq(aiProjections.playerId, playerId),
+        eq(aiProjections.projectionType, projectionType),
+        eq(aiProjections.isActive, true)
+      ));
+    return projection;
+  }
+
+  async createAiProjection(projection: InsertAiProjection): Promise<AiProjection> {
+    const [created] = await db.insert(aiProjections).values(projection).returning();
+    return created;
+  }
+
+  async updateAiProjection(id: number, updates: Partial<InsertAiProjection>): Promise<AiProjection | undefined> {
+    const [updated] = await db.update(aiProjections)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(aiProjections.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Highlight Verifications
+  async getHighlightVerification(highlightId: number): Promise<HighlightVerification | undefined> {
+    const [verification] = await db.select().from(highlightVerifications)
+      .where(eq(highlightVerifications.highlightId, highlightId));
+    return verification;
+  }
+
+  async createHighlightVerification(verification: InsertHighlightVerification): Promise<HighlightVerification> {
+    const [created] = await db.insert(highlightVerifications).values(verification).returning();
+    return created;
+  }
+
+  async updateHighlightVerification(id: number, updates: Partial<InsertHighlightVerification>): Promise<HighlightVerification | undefined> {
+    const [updated] = await db.update(highlightVerifications)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(highlightVerifications.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Event Integrations
+  async getEventIntegrations(): Promise<EventIntegration[]> {
+    return await db.select().from(eventIntegrations)
+      .orderBy(desc(eventIntegrations.startDate));
+  }
+
+  async getEventIntegration(id: number): Promise<EventIntegration | undefined> {
+    const [event] = await db.select().from(eventIntegrations)
+      .where(eq(eventIntegrations.id, id));
+    return event;
+  }
+
+  async createEventIntegration(event: InsertEventIntegration): Promise<EventIntegration> {
+    const [created] = await db.insert(eventIntegrations).values(event).returning();
+    return created;
+  }
+
+  async getEventGameLinks(eventId: number): Promise<EventGameLink[]> {
+    return await db.select().from(eventGameLinks)
+      .where(eq(eventGameLinks.eventId, eventId));
+  }
+
+  async linkGameToEvent(link: InsertEventGameLink): Promise<EventGameLink> {
+    const [created] = await db.insert(eventGameLinks).values(link).returning();
+    return created;
   }
 }
 
