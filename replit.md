@@ -41,8 +41,8 @@ Preferred communication style: Simple, everyday language.
 - **Scout Hub**: Dedicated page with advanced filtering and sorting for scouting players across sports.
 - **Performance Tools**: Live game mode for real-time stat entry, interactive shot charts, and advanced metric calculations.
 - **Scheduling**: Practice scheduler and calendar.
-- **Coach Features**: Team dashboard, game notes, lineup analysis, practice tracking with live mode, and AI-generated drill recommendations.
-- **Trust & Verification**: Player ratings system by coaches, stat verifications with digital signatures, skill challenges with leaderboards, and AI analysis for highlight verification.
+- **Coach Features**: Team dashboard, game notes, lineup analysis, practice tracking with live mode, AI-generated drill recommendations, and one-click game verification queue with sport filtering.
+- **Trust & Verification**: Player ratings system by coaches, stat verifications with digital signatures and quick-verify workflow, skill challenges with leaderboards, AI analysis for highlight verification, and secure cross-team verification prevention.
 - **Subscription & Monetization**: Tiered subscription model (Free, Pro, Coach Pro) integrated with Stripe, protected by frontend components and backend middleware.
 
 ## External Dependencies
