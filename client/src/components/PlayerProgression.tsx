@@ -3,6 +3,8 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Flame, Star, Trophy, Crown, Sparkles, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useEquippedItems } from "@/contexts/EquippedItemsContext";
+import { useAuth } from "@/hooks/use-auth";
 
 const TIER_CONFIG: Record<string, { icon: typeof Star; color: string; bgGradient: string }> = {
   Rookie: { 
@@ -39,6 +41,11 @@ interface PlayerProgressionProps {
 
 export function PlayerProgression({ playerId, compact = false }: PlayerProgressionProps) {
   const { data: progression, isLoading } = usePlayerProgression(playerId);
+  const { getBadgeStyle, equippedBadgeStyle } = useEquippedItems();
+  const { user } = useAuth();
+  
+  const isOwnProfile = user?.playerId === playerId;
+  const badgeStyle = isOwnProfile ? getBadgeStyle() : null;
   
   if (isLoading) {
     return (
@@ -54,7 +61,16 @@ export function PlayerProgression({ playerId, compact = false }: PlayerProgressi
   if (compact) {
     return (
       <div className="flex items-center gap-3" data-testid="player-progression-compact">
-        <Badge variant="outline" className={cn("gap-1.5 px-2.5 py-1", tierConfig.color)}>
+        <Badge 
+          variant="outline" 
+          className={cn("gap-1.5 px-2.5 py-1", tierConfig.color)}
+          style={badgeStyle ? {
+            borderColor: badgeStyle.ringColor,
+            boxShadow: badgeStyle.glowColor,
+            background: badgeStyle.gradient,
+            animation: badgeStyle.animation,
+          } : undefined}
+        >
           <TierIcon className="w-3.5 h-3.5" />
           <span className="text-xs font-bold">{progression.currentTier}</span>
         </Badge>
@@ -79,18 +95,39 @@ export function PlayerProgression({ playerId, compact = false }: PlayerProgressi
     >
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-center gap-4 animate-in slide-in-from-left duration-500">
-          <div className={cn(
-            "w-16 h-16 rounded-xl flex items-center justify-center",
-            "bg-gradient-to-br from-primary/30 to-primary/10 border-2 border-primary/20",
-            "shadow-lg shadow-primary/20"
-          )}>
-            <TierIcon className={cn("w-8 h-8", tierConfig.color)} />
+          <div 
+            className={cn(
+              "relative w-16 h-16 rounded-xl flex items-center justify-center",
+              "bg-gradient-to-br from-primary/30 to-primary/10 border-2",
+              badgeStyle ? "" : "border-primary/20 shadow-lg shadow-primary/20"
+            )}
+            style={badgeStyle ? {
+              borderColor: badgeStyle.ringColor,
+              boxShadow: badgeStyle.glowColor,
+              background: badgeStyle.gradient,
+              animation: badgeStyle.animation,
+            } : undefined}
+          >
+            {badgeStyle && (
+              <div 
+                className="absolute inset-0 rounded-xl opacity-50"
+                style={{
+                  background: badgeStyle.gradient,
+                  animation: badgeStyle.animation,
+                  filter: "blur(8px)",
+                }}
+              />
+            )}
+            <TierIcon className={cn("w-8 h-8 relative z-10", tierConfig.color)} />
           </div>
           <div>
             <h3 className={cn("text-2xl font-bold font-display", tierConfig.color)}>
               {progression.currentTier}
             </h3>
             <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Current Tier</p>
+            {badgeStyle && equippedBadgeStyle && (
+              <p className="text-[10px] text-cyan-400/70 mt-0.5">{equippedBadgeStyle.item.name}</p>
+            )}
           </div>
         </div>
         
@@ -153,6 +190,10 @@ export function PlayerProgression({ playerId, compact = false }: PlayerProgressi
                   !isCurrentTier && isPastTier && "bg-white/5 border border-white/10",
                   !isPastTier && "opacity-40"
                 )}
+                style={isCurrentTier && badgeStyle ? {
+                  borderColor: badgeStyle.ringColor,
+                  boxShadow: badgeStyle.glowColor,
+                } : undefined}
               >
                 <Icon className={cn("w-5 h-5 mx-auto mb-1 transition-all duration-300", isPastTier ? config.color : "text-muted-foreground/50")} />
                 <div className="text-[10px] font-bold uppercase tracking-wide truncate px-0.5">{tier}</div>

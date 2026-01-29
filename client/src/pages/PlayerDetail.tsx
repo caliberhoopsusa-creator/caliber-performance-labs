@@ -1100,7 +1100,7 @@ export default function PlayerDetail() {
   const { mutate: updatePlayer, isPending: isUpdating } = useUpdatePlayer();
   const { toast } = useToast();
   const { user, isAuthenticated } = useAuth();
-  const { getProfileSkinStyle, getBadgeStyle, getEffectConfig, equippedProfileSkin, equippedEffect } = useEquippedItems();
+  const { getProfileSkinStyle, getBadgeStyle, getEffectConfig, equippedProfileSkin, equippedEffect, equippedBadgeStyle } = useEquippedItems();
   const [location, navigate] = useLocation();
   const [showAllGames, setShowAllGames] = useState(false);
   const [expandedGameId, setExpandedGameId] = useState<number | null>(null);
@@ -1534,13 +1534,22 @@ export default function PlayerDetail() {
         <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 blur-[100px] rounded-full pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 blur-[80px] rounded-full pointer-events-none" />
         {isOwnProfile && getEffectConfig() ? (
-          <div 
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full pointer-events-none"
-            style={{ 
-              background: getEffectConfig()?.gradient,
-              animation: getEffectConfig()?.animation,
-            }}
-          />
+          <>
+            {getEffectConfig()?.layers.map((layer, index) => (
+              <div 
+                key={index}
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none"
+                style={{ 
+                  background: layer.gradient,
+                  animation: layer.animation,
+                  width: layer.size || '400px',
+                  height: layer.size || '400px',
+                  opacity: layer.opacity || 1,
+                  filter: layer.blur ? `blur(${layer.blur})` : undefined,
+                }}
+              />
+            ))}
+          </>
         ) : (
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-cyan-400/5 blur-[120px] rounded-full pointer-events-none" />
         )}
@@ -1631,7 +1640,7 @@ export default function PlayerDetail() {
                     rank={player.countryRank} 
                   />
                 )}
-                {isOwnProfile && (equippedProfileSkin || equippedEffect) && (
+                {isOwnProfile && (equippedProfileSkin || equippedEffect || equippedBadgeStyle) && (
                   <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-400/30" data-testid="equipped-cosmetics-indicator">
                     {equippedProfileSkin && (
                       <div className="flex items-center gap-1" title={`Skin: ${equippedProfileSkin.item.name}`}>
@@ -1641,6 +1650,11 @@ export default function PlayerDetail() {
                     {equippedEffect && (
                       <div className="flex items-center gap-1" title={`Effect: ${equippedEffect.item.name}`}>
                         <Sparkles className="w-3 h-3 text-pink-400" />
+                      </div>
+                    )}
+                    {equippedBadgeStyle && (
+                      <div className="flex items-center gap-1" title={`Badge: ${equippedBadgeStyle.item.name}`}>
+                        <Gem className="w-3 h-3 text-cyan-400" />
                       </div>
                     )}
                   </div>
