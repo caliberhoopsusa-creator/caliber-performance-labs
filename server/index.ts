@@ -16,6 +16,13 @@ declare module "http" {
   }
 }
 
+// Store webhook secret globally for verification
+let webhookEndpointSecret: string | null = null;
+
+export function getWebhookSecret(): string | null {
+  return webhookEndpointSecret;
+}
+
 async function initStripe() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
@@ -29,22 +36,46 @@ async function initStripe() {
     console.log('Stripe schema ready');
 
     const stripeSync = await getStripeSync();
+    const { getUncachableStripeClient } = await import('./stripeClient');
+    const stripe = await getUncachableStripeClient();
 
-    console.log('Setting up managed webhook...');
-    const webhookBaseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
-    if (webhookBaseUrl && webhookBaseUrl !== 'https://undefined') {
+    console.log('Setting up webhook...');
+    const domain = process.env.REPLIT_DOMAINS?.split(',')[0];
+    const webhookUrl = domain ? `https://${domain}/api/stripe/webhook` : null;
+    
+    if (webhookUrl && !webhookUrl.includes('undefined')) {
       try {
-        const result = await stripeSync.findOrCreateManagedWebhook(
-          `${webhookBaseUrl}/api/stripe/webhook`
-        );
-        if (result?.webhook?.url) {
-          console.log(`Webhook configured: ${result.webhook.url}`);
-        } else {
-          console.log('Webhook setup returned without URL, skipping');
+        // List existing webhooks 
+        const existingWebhooks = await stripe.webhookEndpoints.list({ limit: 100 });
+        
+        // Delete any existing webhooks for this URL (we need to recreate to get the secret)
+        for (const w of existingWebhooks.data.filter(w => w.url === webhookUrl)) {
+          await stripe.webhookEndpoints.del(w.id);
+          console.log(`Deleted old webhook: ${w.id}`);
         }
-      } catch (webhookErr) {
-        console.log('Webhook setup skipped (may be in sandbox mode):', (webhookErr as Error).message);
+        
+        // Create a new webhook endpoint to get the secret
+        const webhook = await stripe.webhookEndpoints.create({
+          url: webhookUrl,
+          enabled_events: [
+            'checkout.session.completed',
+            'customer.subscription.created',
+            'customer.subscription.updated',
+            'customer.subscription.deleted',
+            'invoice.paid',
+            'invoice.payment_failed',
+          ],
+        });
+        webhookEndpointSecret = webhook.secret || null;
+        console.log(`Webhook created: ${webhook.url}`);
+        if (webhookEndpointSecret) {
+          console.log('Webhook secret captured for signature verification');
+        }
+      } catch (webhookErr: any) {
+        console.log('Webhook setup error:', webhookErr.message);
       }
+    } else {
+      console.log('No valid domain for webhook, skipping');
     }
 
     console.log('Syncing Stripe data...');

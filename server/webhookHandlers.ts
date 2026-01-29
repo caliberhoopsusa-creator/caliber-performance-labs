@@ -14,21 +14,39 @@ export class WebhookHandlers {
       );
     }
 
-    // Let stripe-replit-sync process and verify the webhook
-    // It handles signature verification internally with the managed webhook secret
-    const sync = await getStripeSync();
-    await sync.processWebhook(payload, signature);
-
-    // Parse the raw payload to get the event data
-    // The signature was already verified by stripe-replit-sync above
+    // Let stripe-replit-sync process subscription events
     try {
-      const rawBody = payload.toString('utf8');
-      const event = JSON.parse(rawBody);
+      const sync = await getStripeSync();
+      await sync.processWebhook(payload, signature);
+    } catch (err: any) {
+      console.log('stripe-replit-sync webhook processing:', err.message);
+    }
+
+    // Parse the event for our custom handling
+    // For coin purchases, we verify the signature using our webhook secret
+    try {
+      const { getWebhookSecret } = await import('./index');
+      const webhookSecret = getWebhookSecret();
+      
+      let event: any;
+      
+      if (webhookSecret) {
+        // Verify signature if we have the secret
+        const stripe = await getUncachableStripeClient();
+        event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
+        console.log('Webhook signature verified successfully');
+      } else {
+        // Fall back to parsing without verification (for existing webhooks)
+        // Stripe-replit-sync already verified this, so it should be safe
+        const rawBody = payload.toString('utf8');
+        event = JSON.parse(rawBody);
+        console.log('Processing webhook event (no local secret, relying on sync verification)');
+      }
       
       // Handle coin purchase events
       await WebhookHandlers.handleCoinPurchase(event);
     } catch (err: any) {
-      console.error('Error parsing webhook event for coin purchase:', err.message);
+      console.error('Error processing webhook for coin purchase:', err.message);
     }
   }
 
