@@ -92,9 +92,21 @@ export function VerificationQueue({ compact = false, maxItems }: Props) {
   if (error) {
     return (
       <Card className="p-6 bg-gradient-to-br from-black/60 to-black/30 border-white/10">
-        <div className="flex items-center gap-2 text-red-400">
-          <AlertCircle className="w-5 h-5" />
-          <span>Failed to load verification queue</span>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-2 text-red-400">
+            <AlertCircle className="w-5 h-5" />
+            <span>Failed to load verification queue</span>
+          </div>
+          <p className="text-sm text-white/60">
+            This usually happens when your session has expired. Try logging out and back in.
+          </p>
+          <a 
+            href="/api/logout" 
+            className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/30 rounded-lg text-cyan-400 text-sm font-medium transition-colors w-fit"
+            data-testid="button-logout-refresh"
+          >
+            Logout & Refresh
+          </a>
         </div>
       </Card>
     );
