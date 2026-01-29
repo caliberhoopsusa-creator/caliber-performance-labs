@@ -1887,7 +1887,12 @@ export default function PlayerDetail() {
                   Ratings & Trust Score
                 </span>
               </h3>
-              <PlayerRatingsSection playerId={player.id} isOwnProfile={isOwnProfile} />
+              <PlayerRatingsSection 
+                playerId={player.id} 
+                isOwnProfile={isOwnProfile}
+                sport={player.sport as 'basketball' | 'football'}
+                position={player.position}
+              />
             </Card>
           </motion.div>
 
