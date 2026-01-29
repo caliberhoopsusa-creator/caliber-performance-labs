@@ -207,6 +207,14 @@ const FOOTBALL_POSITION_SUB_SCORES: Record<string, Record<SubScoreKey, SubScoreC
     athletic: { label: "Athletic", icon: Activity, color: "text-red-400", description: "Leg strength" },
     intangibles: { label: "Intangibles", icon: Brain, color: "text-blue-400", description: "Consistency, pressure" },
   },
+  OL: {
+    production: { label: "Production", icon: Target, color: "text-cyan-400", description: "Pancakes, blocks" },
+    efficiency: { label: "Efficiency", icon: Gauge, color: "text-emerald-400", description: "Block win rate, penalties" },
+    impact: { label: "Impact", icon: Zap, color: "text-amber-400", description: "Clean pockets, rushing lanes" },
+    defense: { label: "Pass Pro", icon: Shield, color: "text-purple-400", description: "Sacks allowed, pressures" },
+    athletic: { label: "Athletic", icon: Activity, color: "text-red-400", description: "Strength, footwork, reach" },
+    intangibles: { label: "Intangibles", icon: Brain, color: "text-blue-400", description: "Communication, technique" },
+  },
 };
 
 function getSubScoreConfig(sport: 'basketball' | 'football', position?: string): Record<SubScoreKey, SubScoreConfigItem> {
