@@ -1,13 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { usePlayers, useCreatePlayer, useDeletePlayer } from "@/hooks/use-basketball";
 import { Link } from "wouter";
-import { Search, Plus, UserPlus, Trash2, ChevronRight, MoreVertical, Pencil, Eye, Users, Copy, Check, Send } from "lucide-react";
+import { Search, Plus, UserPlus, Trash2, ChevronRight, MoreVertical, Pencil, Eye, Users, Copy, Check, Send, Filter, Star, Zap, Crown, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { insertPlayerSchema } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
   DialogDescription, DialogFooter
@@ -34,7 +35,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -59,6 +60,8 @@ interface Team {
   memberCount?: number;
 }
 
+const POSITIONS = ["All", "Guard", "Forward", "Center"] as const;
+
 function getSessionId(): string {
   let sessionId = localStorage.getItem("caliber_session_id");
   if (!sessionId) {
@@ -68,12 +71,52 @@ function getSessionId(): string {
   return sessionId;
 }
 
+function getPlayerTier(player: any): "elite" | "pro" | "rising" | "rookie" {
+  const gamesPlayed = player.gamesPlayed || 0;
+  if (gamesPlayed >= 50) return "elite";
+  if (gamesPlayed >= 20) return "pro";
+  if (gamesPlayed >= 5) return "rising";
+  return "rookie";
+}
+
+const TIER_STYLES = {
+  elite: {
+    border: "border-yellow-500/40 hover:border-yellow-400/60",
+    glow: "0 0 30px rgba(234, 179, 8, 0.3)",
+    badge: "bg-gradient-to-r from-yellow-600 to-yellow-500 text-black",
+    icon: Crown,
+    label: "Elite",
+  },
+  pro: {
+    border: "border-purple-500/40 hover:border-purple-400/60",
+    glow: "0 0 25px rgba(168, 85, 247, 0.25)",
+    badge: "bg-gradient-to-r from-purple-600 to-purple-500 text-white",
+    icon: Star,
+    label: "Pro",
+  },
+  rising: {
+    border: "border-cyan-500/40 hover:border-cyan-400/60",
+    glow: "0 0 20px rgba(0, 212, 255, 0.2)",
+    badge: "bg-gradient-to-r from-cyan-600 to-cyan-500 text-white",
+    icon: Zap,
+    label: "Rising",
+  },
+  rookie: {
+    border: "border-white/10 hover:border-cyan-500/30",
+    glow: "none",
+    badge: "bg-white/10 text-white/70",
+    icon: UserPlus,
+    label: "Rookie",
+  },
+};
+
 export default function PlayersList() {
   const { data: players, isLoading: playersLoading } = usePlayers();
   const { mutate: deletePlayer, isPending: isDeleting } = useDeletePlayer();
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const [search, setSearch] = useState("");
+  const [positionFilter, setPositionFilter] = useState<string>("All");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [playerToDelete, setPlayerToDelete] = useState<{ id: number; name: string } | null>(null);
   const [copiedCode, setCopiedCode] = useState(false);
@@ -136,68 +179,203 @@ export default function PlayersList() {
     }
   };
 
-  const filteredRosterPlayers = rosterPlayers.filter(p => 
-    p.name.toLowerCase().includes(search.toLowerCase()) || 
-    p.team?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filterPlayers = (playerList: any[]) => {
+    return playerList.filter(p => {
+      const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || 
+        p.team?.toLowerCase().includes(search.toLowerCase());
+      const matchesPosition = positionFilter === "All" || p.position === positionFilter;
+      return matchesSearch && matchesPosition;
+    });
+  };
 
-  const filteredAllPlayers = players?.filter(p => 
-    p.name.toLowerCase().includes(search.toLowerCase()) || 
-    p.team?.toLowerCase().includes(search.toLowerCase())
-  ) || [];
+  const filteredRosterPlayers = filterPlayers(rosterPlayers);
+  const filteredAllPlayers = filterPlayers(players || []);
 
   const isLoading = playersLoading || teamsLoading || membersLoading;
-
   const hasTeam = myTeams.length > 0;
+  const hasActiveFilters = positionFilter !== "All" || search.length > 0;
+
+  const clearFilters = () => {
+    setSearch("");
+    setPositionFilter("All");
+  };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl md:text-4xl font-display font-bold bg-gradient-to-b from-white to-cyan-100/80 bg-clip-text text-transparent tracking-wide">
-            {hasTeam ? primaryTeam?.name || "Roster" : "Roster"}
-          </h2>
-          <p className="text-cyan-200/50 font-medium">
-            {hasTeam ? "Manage your team roster" : "Search and manage players"}
-          </p>
-        </div>
+    <div className="pb-24 md:pb-6 space-y-8">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 via-cyan-950/20 to-black/60 border border-cyan-500/20">
+        <div className="absolute inset-0 cyber-grid opacity-30" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 blur-[100px] rounded-full" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 blur-[80px] rounded-full" />
         
-        <div className="flex items-center gap-2">
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20" data-testid="button-add-player">
-                <Plus className="w-4 h-4" />
-                Add Player
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-card border-white/10 text-white max-w-md">
-              <DialogHeader>
-                <DialogTitle className="text-xl font-display">Add New Player</DialogTitle>
-                <DialogDescription className="text-muted-foreground">
-                  Create a player profile to start tracking stats and performance.
-                </DialogDescription>
-              </DialogHeader>
-              <CreatePlayerForm onSuccess={() => setIsDialogOpen(false)} />
-            </DialogContent>
-          </Dialog>
-          
-          {hasTeam && (
-            <Button variant="outline" onClick={copyTeamCode} className="gap-2 border-cyan-500/20 text-cyan-300" data-testid="button-copy-code">
-              {copiedCode ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              {copiedCode ? "Copied!" : `Code: ${primaryTeam?.code}`}
+        <div className="relative z-10 p-6 md:p-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Users className="w-6 h-6 text-cyan-400" style={{ filter: "drop-shadow(0 0 8px #00D4FF)" }} />
+                <span className="text-xs uppercase tracking-wider text-cyan-400 font-semibold">
+                  {hasTeam ? primaryTeam?.name : "Team Management"}
+                </span>
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold">
+                <span className="bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent">
+                  Player Roster
+                </span>
+              </h1>
+              <p className="text-muted-foreground max-w-md">
+                {hasTeam ? "Manage your team roster and track player performance" : "Search and manage players across all teams"}
+              </p>
+            </div>
+            
+            <div className="flex flex-col items-start md:items-end gap-3">
+              <div className="flex items-center gap-3">
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      className="gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg"
+                      style={{ boxShadow: "0 4px 20px rgba(0, 212, 255, 0.3)" }}
+                      data-testid="button-add-player"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Player
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-card border-white/10 text-white max-w-md">
+                    <DialogHeader>
+                      <DialogTitle className="text-xl font-display">Add New Player</DialogTitle>
+                      <DialogDescription className="text-muted-foreground">
+                        Create a player profile to start tracking stats and performance.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <CreatePlayerForm onSuccess={() => setIsDialogOpen(false)} />
+                  </DialogContent>
+                </Dialog>
+                
+                {hasTeam && (
+                  <Button 
+                    variant="outline" 
+                    onClick={copyTeamCode} 
+                    className="gap-2 border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10 hover:border-cyan-400/50" 
+                    data-testid="button-copy-code"
+                  >
+                    {copiedCode ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    {copiedCode ? "Copied!" : `Code: ${primaryTeam?.code}`}
+                  </Button>
+                )}
+              </div>
+              
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+                  <Users className="w-4 h-4 text-cyan-400" />
+                  <span className="text-cyan-300 font-medium">
+                    {hasTeam ? rosterPlayers.length : players?.length || 0}
+                  </span>
+                  <span>players</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+              <Filter className="w-5 h-5 text-cyan-400" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold">Search & Filter</h2>
+              <p className="text-xs text-muted-foreground">Find players quickly</p>
+            </div>
+          </div>
+          {hasActiveFilters && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={clearFilters}
+              className="gap-1.5 text-muted-foreground hover:text-white"
+            >
+              <X className="w-3.5 h-3.5" />
+              Clear Filters
             </Button>
           )}
         </div>
+
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search players by name or team..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 bg-black/20 border-white/10 focus:border-cyan-500/50"
+              data-testid="input-search-players"
+            />
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            {POSITIONS.map((position) => (
+              <Button
+                key={position}
+                size="sm"
+                variant={positionFilter === position ? "default" : "outline"}
+                onClick={() => setPositionFilter(position)}
+                className={cn(
+                  "capitalize transition-all",
+                  positionFilter === position 
+                    ? "bg-gradient-to-r from-cyan-500 to-cyan-600 text-white border-transparent"
+                    : "border-white/10 hover:border-cyan-500/30"
+                )}
+                data-testid={`filter-position-${position.toLowerCase()}`}
+              >
+                {position}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {hasActiveFilters && (
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-2 flex-wrap"
+          >
+            <span className="text-xs text-muted-foreground">Active filters:</span>
+            {search && (
+              <Badge variant="outline" className="gap-1.5 border-cyan-500/30 text-cyan-300">
+                Search: "{search}"
+                <button onClick={() => setSearch("")} className="ml-1 hover:text-white">
+                  <X className="w-3 h-3" />
+                </button>
+              </Badge>
+            )}
+            {positionFilter !== "All" && (
+              <Badge variant="outline" className="gap-1.5 border-cyan-500/30 text-cyan-300">
+                Position: {positionFilter}
+                <button onClick={() => setPositionFilter("All")} className="ml-1 hover:text-white">
+                  <X className="w-3 h-3" />
+                </button>
+              </Badge>
+            )}
+          </motion.div>
+        )}
       </div>
 
       {hasTeam ? (
         <Tabs defaultValue="roster" className="w-full">
-          <TabsList className="w-full grid grid-cols-2 mb-4 bg-card border border-white/10" data-testid="tabs-roster">
-            <TabsTrigger value="roster" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-roster">
+          <TabsList className="w-full grid grid-cols-2 mb-6 bg-black/40 border border-white/10 p-1 rounded-xl" data-testid="tabs-roster">
+            <TabsTrigger 
+              value="roster" 
+              className="gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/20 data-[state=active]:to-cyan-600/10 data-[state=active]:border-cyan-500/30 data-[state=active]:text-cyan-300 rounded-lg transition-all" 
+              data-testid="tab-roster"
+            >
               <Users className="w-4 h-4" />
               My Roster ({rosterPlayers.length})
             </TabsTrigger>
-            <TabsTrigger value="find" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-find">
+            <TabsTrigger 
+              value="find" 
+              className="gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/20 data-[state=active]:to-cyan-600/10 data-[state=active]:border-cyan-500/30 data-[state=active]:text-cyan-300 rounded-lg transition-all" 
+              data-testid="tab-find"
+            >
               <Search className="w-4 h-4" />
               Find Players
             </TabsTrigger>
@@ -205,39 +383,35 @@ export default function PlayersList() {
 
           <TabsContent value="roster">
             <div className="space-y-6">
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                <Input 
-                  type="text" 
-                  placeholder="Search roster..." 
-                  className="w-full bg-card border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-muted-foreground"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  data-testid="input-search-roster"
-                />
-              </div>
-
               {isLoading ? (
-                <div className="space-y-3 p-4">
-                  <SkeletonPlayerCard />
-                  <SkeletonPlayerCard />
-                  <SkeletonPlayerCard />
-                  <SkeletonPlayerCard />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[...Array(6)].map((_, i) => (
+                    <SkeletonPlayerCard key={i} />
+                  ))}
                 </div>
               ) : filteredRosterPlayers.length === 0 ? (
-                <div className="text-center py-20 border-2 border-dashed border-white/5 rounded-2xl bg-card/30">
-                  <div className="bg-secondary/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Users className="w-8 h-8 text-muted-foreground" />
-                  </div>
-                  <h3 className="text-xl font-bold text-white mb-2">No players on your roster</h3>
-                  <p className="text-muted-foreground max-w-sm mx-auto mb-6">
-                    Share your team code <span className="text-primary font-bold">{primaryTeam?.code}</span> with players to invite them, or search for players to add.
-                  </p>
-                  <Button onClick={copyTeamCode} variant="default" className="gap-2">
-                    <Copy className="w-4 h-4" />
-                    Copy Invite Code
-                  </Button>
-                </div>
+                <EmptyState
+                  icon={Users}
+                  title="No players on your roster"
+                  description={
+                    search || positionFilter !== "All"
+                      ? "Try adjusting your search or filter criteria."
+                      : `Share your team code ${primaryTeam?.code} with players to invite them, or search for players to add.`
+                  }
+                  action={
+                    search || positionFilter !== "All" ? (
+                      <Button onClick={clearFilters} variant="default" className="gap-2">
+                        <X className="w-4 h-4" />
+                        Clear Filters
+                      </Button>
+                    ) : (
+                      <Button onClick={copyTeamCode} variant="default" className="gap-2 bg-gradient-to-r from-cyan-500 to-cyan-600">
+                        <Copy className="w-4 h-4" />
+                        Copy Invite Code
+                      </Button>
+                    )
+                  }
+                />
               ) : (
                 <PlayerGrid 
                   players={filteredRosterPlayers}
@@ -251,40 +425,47 @@ export default function PlayersList() {
 
           <TabsContent value="find">
             <div className="space-y-6">
-              <Card className="p-4 bg-primary/10 border-primary/20">
+              <Card className="p-4 bg-gradient-to-r from-cyan-500/10 to-cyan-600/5 border-cyan-500/20 backdrop-blur-sm">
                 <div className="flex items-center gap-3">
-                  <Send className="w-5 h-5 text-primary" />
+                  <div className="p-2 rounded-lg bg-cyan-500/20 border border-cyan-400/30">
+                    <Send className="w-5 h-5 text-cyan-400" style={{ filter: "drop-shadow(0 0 6px #00D4FF)" }} />
+                  </div>
                   <div className="flex-1">
                     <p className="text-sm text-white font-medium">Invite players to your team</p>
-                    <p className="text-xs text-muted-foreground">Share your team code: <span className="text-primary font-bold">{primaryTeam?.code}</span></p>
+                    <p className="text-xs text-muted-foreground">Share your team code: <span className="text-cyan-400 font-bold">{primaryTeam?.code}</span></p>
                   </div>
-                  <Button size="sm" variant="outline" onClick={copyTeamCode} className="gap-1">
-                    {copiedCode ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={copyTeamCode} 
+                    className="gap-1.5 border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10"
+                  >
+                    {copiedCode ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                     Copy
                   </Button>
                 </div>
               </Card>
 
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                <Input 
-                  type="text" 
-                  placeholder="Search all players by name or team..." 
-                  className="w-full bg-card border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-muted-foreground"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  data-testid="input-search-all-players"
-                />
-              </div>
-
               {playersLoading ? (
-                <div className="flex justify-center p-12">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[...Array(6)].map((_, i) => (
+                    <SkeletonPlayerCard key={i} />
+                  ))}
                 </div>
               ) : filteredAllPlayers.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground">No players found matching your search.</p>
-                </div>
+                <EmptyState
+                  icon={Search}
+                  title="No players found"
+                  description="Try adjusting your search or filter criteria."
+                  action={
+                    hasActiveFilters ? (
+                      <Button onClick={clearFilters} variant="default" className="gap-2">
+                        <X className="w-4 h-4" />
+                        Clear Filters
+                      </Button>
+                    ) : null
+                  }
+                />
               ) : (
                 <PlayerGrid 
                   players={filteredAllPlayers}
@@ -300,32 +481,30 @@ export default function PlayersList() {
         </Tabs>
       ) : (
         <>
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
-            <Input 
-              type="text" 
-              placeholder="Search players by name or team..." 
-              className="w-full bg-card border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-muted-foreground"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              data-testid="input-search-players"
-            />
-          </div>
-
           {playersLoading ? (
-            <div className="flex justify-center p-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <SkeletonPlayerCard key={i} />
+              ))}
             </div>
           ) : filteredAllPlayers.length === 0 ? (
-            <div className="text-center py-20 border-2 border-dashed border-white/5 rounded-2xl bg-card/30">
-              <div className="bg-secondary/50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <UserPlus className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <h3 className="text-xl font-bold text-white mb-2">No players found</h3>
-              <p className="text-muted-foreground max-w-sm mx-auto">
-                {search ? "Try adjusting your search terms." : "Create a team first to manage your roster."}
-              </p>
-            </div>
+            <EmptyState
+              icon={UserPlus}
+              title="No players found"
+              description={
+                hasActiveFilters 
+                  ? "Try adjusting your search or filter criteria."
+                  : "Create a team first to manage your roster."
+              }
+              action={
+                hasActiveFilters ? (
+                  <Button onClick={clearFilters} variant="default" className="gap-2">
+                    <X className="w-4 h-4" />
+                    Clear Filters
+                  </Button>
+                ) : null
+              }
+            />
           ) : (
             <PlayerGrid 
               players={filteredAllPlayers}
@@ -365,6 +544,41 @@ export default function PlayersList() {
   );
 }
 
+interface EmptyStateProps {
+  icon: typeof Users;
+  title: string;
+  description: string;
+  action?: React.ReactNode;
+}
+
+function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps) {
+  return (
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="relative overflow-hidden text-center py-20 border border-cyan-500/10 rounded-2xl bg-gradient-to-br from-black/40 to-black/20"
+    >
+      <div className="absolute inset-0 cyber-grid opacity-10" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-cyan-500/5 blur-[80px] rounded-full" />
+      
+      <div className="relative z-10">
+        <div className="relative inline-block mb-6">
+          <div className="absolute inset-0 bg-cyan-500/20 blur-2xl rounded-full animate-pulse" />
+          <div className="relative p-4 rounded-full bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 border border-cyan-500/30">
+            <Icon 
+              className="w-10 h-10 text-cyan-400" 
+              style={{ filter: "drop-shadow(0 0 10px #00D4FF)" }}
+            />
+          </div>
+        </div>
+        <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
+        <p className="text-muted-foreground max-w-sm mx-auto mb-6">{description}</p>
+        {action}
+      </div>
+    </motion.div>
+  );
+}
+
 interface PlayerGridProps {
   players: any[];
   navigate: (path: string) => void;
@@ -388,132 +602,202 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {players.map((player) => {
-        const isOnRoster = rosterPlayerIds.includes(player.id);
-        
-        return (
-          <div key={player.id} className="group relative h-full">
-            <div className="h-full relative bg-gradient-to-br from-cyan-500/[0.04] via-white/[0.02] to-transparent border border-cyan-500/[0.08] rounded-2xl p-6 shadow-[0_4px_30px_rgba(0,0,0,0.3),0_0_40px_rgba(100,200,255,0.02)] backdrop-blur-xl transition-all duration-400 hover:border-cyan-400/20 hover:shadow-[0_8px_40px_rgba(0,0,0,0.35),0_0_50px_rgba(100,200,255,0.05)] overflow-hidden">
-              <div className="absolute inset-x-[20%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
-              {isOnRoster && showInvite && (
-                <Badge className="absolute top-3 left-3 bg-emerald-500/20 text-emerald-400 border-emerald-400/30 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-                  On Roster
+      <AnimatePresence mode="popLayout">
+        {players.map((player, index) => {
+          const isOnRoster = rosterPlayerIds.includes(player.id);
+          const tier = getPlayerTier(player);
+          const tierStyle = TIER_STYLES[tier];
+          const TierIcon = tierStyle.icon;
+          
+          return (
+            <motion.div 
+              key={player.id} 
+              className="group relative h-full"
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ 
+                duration: 0.3,
+                delay: index * 0.05,
+                ease: "easeOut"
+              }}
+              layout
+            >
+              <Card
+                className={cn(
+                  "h-full relative overflow-hidden transition-all duration-300",
+                  "bg-gradient-to-br from-black/60 to-black/30 backdrop-blur-xl",
+                  tierStyle.border,
+                  "hover:scale-[1.02]"
+                )}
+                style={{ 
+                  boxShadow: tier !== "rookie" ? tierStyle.glow : "0 4px 30px rgba(0,0,0,0.3)"
+                }}
+              >
+                <div className="absolute inset-x-[20%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
+                
+                {isOnRoster && showInvite && (
+                  <Badge className="absolute top-3 left-3 z-10 bg-emerald-500/20 text-emerald-400 border-emerald-400/30 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                    On Roster
+                  </Badge>
+                )}
+                
+                <Badge 
+                  className={cn(
+                    "absolute top-3 right-12 z-10 gap-1",
+                    tierStyle.badge
+                  )}
+                >
+                  <TierIcon className="w-3 h-3" />
+                  {tierStyle.label}
                 </Badge>
-              )}
-              
-              <div className="absolute top-3 right-3 z-20">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="w-8 h-8 text-muted-foreground"
-                      data-testid={`button-player-menu-${player.id}`}
-                    >
-                      <MoreVertical className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="bg-card border-white/10 text-white">
-                    <DropdownMenuItem
-                      onClick={() => navigate(`/players/${player.id}`)}
-                      className="gap-2 cursor-pointer"
-                      data-testid={`menu-view-player-${player.id}`}
-                    >
-                      <Eye className="w-4 h-4" /> View Profile
-                    </DropdownMenuItem>
-                    {showInvite && !isOnRoster && teamCode && (
-                      <DropdownMenuItem
-                        onClick={() => copyInviteMessage(player.name)}
-                        className="gap-2 cursor-pointer"
-                        data-testid={`menu-invite-player-${player.id}`}
+                
+                <div className="absolute top-3 right-3 z-20">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="w-8 h-8 text-muted-foreground hover:text-white hover:bg-white/10"
+                        data-testid={`button-player-menu-${player.id}`}
                       >
-                        <Send className="w-4 h-4" /> Copy Invite
+                        <MoreVertical className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="bg-card border-white/10 text-white">
+                      <DropdownMenuItem
+                        onClick={() => navigate(`/players/${player.id}`)}
+                        className="gap-2 cursor-pointer"
+                        data-testid={`menu-view-player-${player.id}`}
+                      >
+                        <Eye className="w-4 h-4" /> View Profile
                       </DropdownMenuItem>
-                    )}
-                    {!showInvite && (
-                      <>
+                      {showInvite && !isOnRoster && teamCode && (
                         <DropdownMenuItem
-                          onClick={() => navigate(`/players/${player.id}?edit=true`)}
+                          onClick={() => copyInviteMessage(player.name)}
                           className="gap-2 cursor-pointer"
-                          data-testid={`menu-edit-player-${player.id}`}
+                          data-testid={`menu-invite-player-${player.id}`}
                         >
-                          <Pencil className="w-4 h-4" /> Edit Profile
+                          <Send className="w-4 h-4" /> Copy Invite
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator className="bg-white/10" />
-                        <DropdownMenuItem
-                          onClick={() => setPlayerToDelete({ id: player.id, name: player.name })}
-                          className="gap-2 cursor-pointer text-red-400 focus:text-red-300 focus:bg-red-500/10"
-                          data-testid={`menu-delete-player-${player.id}`}
-                        >
-                          <Trash2 className="w-4 h-4" /> Delete Player
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              
-              <Link href={`/players/${player.id}`} className="block">
-                <div className="flex items-start justify-between mb-6 pr-8">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-500/20 to-transparent border-2 border-cyan-400/20 flex items-center justify-center text-2xl font-display font-bold text-cyan-300 shadow-[0_0_25px_rgba(100,200,255,0.15)]">
-                    {player.jerseyNumber || "#"}
-                  </div>
-                  <div className="bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-400/20">
-                    <span className="text-xs font-bold uppercase tracking-wider text-cyan-300">{player.position}</span>
-                  </div>
+                      )}
+                      {!showInvite && (
+                        <>
+                          <DropdownMenuItem
+                            onClick={() => navigate(`/players/${player.id}?edit=true`)}
+                            className="gap-2 cursor-pointer"
+                            data-testid={`menu-edit-player-${player.id}`}
+                          >
+                            <Pencil className="w-4 h-4" /> Edit Profile
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator className="bg-white/10" />
+                          <DropdownMenuItem
+                            onClick={() => setPlayerToDelete({ id: player.id, name: player.name })}
+                            className="gap-2 cursor-pointer text-red-400 focus:text-red-300 focus:bg-red-500/10"
+                            data-testid={`menu-delete-player-${player.id}`}
+                          >
+                            <Trash2 className="w-4 h-4" /> Delete Player
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
                 
-                <h3 className="text-xl font-bold font-display text-white mb-1 group-hover:text-cyan-300 transition-colors truncate">{player.name}</h3>
-                <p className="text-sm text-cyan-200/40 mb-4 font-medium">{player.team || "No Team"} • {player.height || "N/A"}</p>
-              </Link>
-              
-              <div className="pt-4 border-t border-cyan-500/[0.08] flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate(`/players/${player.id}`)}
-                  className="flex-1 gap-1.5"
-                  data-testid={`button-view-player-${player.id}`}
-                >
-                  <Eye className="w-3.5 h-3.5" /> View
-                </Button>
-                {showInvite && !isOnRoster && teamCode ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => copyInviteMessage(player.name)}
-                    className="flex-1 gap-1.5"
-                    data-testid={`button-invite-player-${player.id}`}
-                  >
-                    <Send className="w-3.5 h-3.5" /> Invite
-                  </Button>
-                ) : !showInvite ? (
-                  <>
+                <CardContent className="p-6">
+                  <Link href={`/players/${player.id}`} className="block">
+                    <div className="flex items-start justify-between mb-6 pr-16">
+                      <motion.div 
+                        className={cn(
+                          "w-16 h-16 rounded-full flex items-center justify-center text-2xl font-display font-bold",
+                          "bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 border-2",
+                          tier === "elite" ? "border-yellow-400/40 text-yellow-300" :
+                          tier === "pro" ? "border-purple-400/40 text-purple-300" :
+                          tier === "rising" ? "border-cyan-400/40 text-cyan-300" :
+                          "border-white/20 text-white/70"
+                        )}
+                        style={tier !== "rookie" ? { 
+                          boxShadow: tier === "elite" ? "0 0 25px rgba(234, 179, 8, 0.3)" :
+                                    tier === "pro" ? "0 0 20px rgba(168, 85, 247, 0.25)" :
+                                    "0 0 15px rgba(0, 212, 255, 0.2)"
+                        } : {}}
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ type: "spring", stiffness: 300 }}
+                      >
+                        {player.jerseyNumber || "#"}
+                      </motion.div>
+                    </div>
+                    
+                    <h3 className="text-xl font-bold font-display text-white mb-1 group-hover:text-cyan-300 transition-colors truncate">
+                      {player.name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4 font-medium">
+                      {player.team || "No Team"} • {player.height || "N/A"}
+                    </p>
+                    
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+                        <span className="text-xs font-bold uppercase tracking-wider text-cyan-300">
+                          {player.position}
+                        </span>
+                      </div>
+                      {player.gamesPlayed > 0 && (
+                        <div className="text-xs text-muted-foreground">
+                          <span className="text-white font-medium">{player.gamesPlayed}</span> games
+                        </div>
+                      )}
+                    </div>
+                  </Link>
+                  
+                  <div className="pt-4 border-t border-white/5 flex items-center gap-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => navigate(`/players/${player.id}?edit=true`)}
-                      className="flex-1 gap-1.5"
-                      data-testid={`button-edit-player-${player.id}`}
+                      onClick={() => navigate(`/players/${player.id}`)}
+                      className="flex-1 gap-1.5 border-white/10 hover:border-cyan-500/30 hover:bg-cyan-500/10"
+                      data-testid={`button-view-player-${player.id}`}
                     >
-                      <Pencil className="w-3.5 h-3.5" /> Edit
+                      <Eye className="w-3.5 h-3.5" /> View
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setPlayerToDelete({ id: player.id, name: player.name })}
-                      className="text-red-400"
-                      data-testid={`button-delete-player-${player.id}`}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
-                  </>
-                ) : null}
-              </div>
-            </div>
-          </div>
-        );
-      })}
+                    {showInvite && !isOnRoster && teamCode ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => copyInviteMessage(player.name)}
+                        className="flex-1 gap-1.5 border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10"
+                        data-testid={`button-invite-player-${player.id}`}
+                      >
+                        <Send className="w-3.5 h-3.5" /> Invite
+                      </Button>
+                    ) : !showInvite ? (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate(`/players/${player.id}?edit=true`)}
+                          className="flex-1 gap-1.5 border-white/10 hover:border-cyan-500/30 hover:bg-cyan-500/10"
+                          data-testid={`button-edit-player-${player.id}`}
+                        >
+                          <Pencil className="w-3.5 h-3.5" /> Edit
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setPlayerToDelete({ id: player.id, name: player.name })}
+                          className="text-red-400 border-red-500/20 hover:bg-red-500/10 hover:border-red-500/40"
+                          data-testid={`button-delete-player-${player.id}`}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </>
+                    ) : null}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          );
+        })}
+      </AnimatePresence>
     </div>
   );
 }
@@ -545,49 +829,88 @@ function CreatePlayerForm({ onSuccess }: { onSuccess: () => void }) {
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
       <div className="space-y-2">
         <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Full Name</label>
-        <Input {...form.register("name")} placeholder="LeBron James" className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20" />
-        {form.formState.errors.name && <p className="text-red-400 text-xs">{form.formState.errors.name.message}</p>}
+        <Input
+          {...form.register("name")}
+          placeholder="Enter player name"
+          className="bg-black/20 border-white/10 focus:border-cyan-500/50"
+          data-testid="input-player-name"
+        />
+        {form.formState.errors.name && (
+          <p className="text-xs text-red-400">{form.formState.errors.name.message}</p>
+        )}
       </div>
-
+      
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Position</label>
-          <Select onValueChange={(val) => form.setValue("position", val)} defaultValue="Guard">
-            <SelectTrigger className="bg-secondary/30 border-white/10 text-white">
-              <SelectValue placeholder="Position" />
+          <Select
+            value={form.watch("position")}
+            onValueChange={(val) => form.setValue("position", val)}
+          >
+            <SelectTrigger className="bg-black/20 border-white/10 focus:border-cyan-500/50" data-testid="select-position">
+              <SelectValue placeholder="Select position" />
             </SelectTrigger>
-            <SelectContent className="bg-card border-white/10 text-white">
+            <SelectContent className="bg-card border-white/10">
               <SelectItem value="Guard">Guard</SelectItem>
-              <SelectItem value="Wing">Wing</SelectItem>
-              <SelectItem value="Big">Big</SelectItem>
+              <SelectItem value="Forward">Forward</SelectItem>
+              <SelectItem value="Center">Center</SelectItem>
             </SelectContent>
           </Select>
         </div>
+        
         <div className="space-y-2">
           <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Jersey #</label>
-          <Input 
-            type="number" 
-            {...form.register("jerseyNumber", { valueAsNumber: true })} 
-            placeholder="23" 
-            className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20" 
+          <Input
+            {...form.register("jerseyNumber", { valueAsNumber: true })}
+            type="number"
+            placeholder="#"
+            className="bg-black/20 border-white/10 focus:border-cyan-500/50"
+            data-testid="input-jersey-number"
           />
         </div>
       </div>
-
+      
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Height</label>
-          <Input {...form.register("height")} placeholder="6'8" className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20" />
+          <Input
+            {...form.register("height")}
+            placeholder="e.g. 6'2"
+            className="bg-black/20 border-white/10 focus:border-cyan-500/50"
+            data-testid="input-height"
+          />
         </div>
+        
         <div className="space-y-2">
           <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Team</label>
-          <Input {...form.register("team")} placeholder="Lakers" className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20" />
+          <Input
+            {...form.register("team")}
+            placeholder="Team name"
+            className="bg-black/20 border-white/10 focus:border-cyan-500/50"
+            data-testid="input-team"
+          />
         </div>
       </div>
-
+      
       <DialogFooter className="pt-4">
-        <Button type="submit" disabled={isPending} className="w-full bg-primary text-primary-foreground font-bold">
-          {isPending ? "Adding..." : "Add to Roster"}
+        <Button 
+          type="submit" 
+          disabled={isPending}
+          className="w-full gap-2 bg-gradient-to-r from-cyan-500 to-cyan-600"
+          style={{ boxShadow: "0 4px 20px rgba(0, 212, 255, 0.3)" }}
+          data-testid="button-submit-player"
+        >
+          {isPending ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              Creating...
+            </>
+          ) : (
+            <>
+              <Plus className="w-4 h-4" />
+              Create Player
+            </>
+          )}
         </Button>
       </DialogFooter>
     </form>

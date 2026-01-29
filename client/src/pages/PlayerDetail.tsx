@@ -1,4 +1,5 @@
 import { usePlayer, useDeleteGame, usePlayerBadges, useUpdatePlayer, usePlayerProgression, usePlayerSkillBadges, usePlayerAccolades, useCreateAccolade, useUpdateAccolade, useDeleteAccolade, type PlayerUpdate } from "@/hooks/use-basketball";
+import { motion } from "framer-motion";
 import { GoalsPanel } from "@/components/GoalsPanel";
 import { SocialEngagement } from "@/components/SocialEngagement";
 import { PlayerProgression } from "@/components/PlayerProgression";
@@ -1508,42 +1509,65 @@ export default function PlayerDetail() {
         <ArrowLeft className="w-4 h-4" /> Back to Roster
       </Link>
       
-      <Card className="p-4 md:p-8 relative overflow-hidden animate-fade-up delay-150 mobile-profile-header">
-        {/* Mobile ambient glow effects */}
-        <div className="absolute top-0 left-1/4 w-32 h-32 md:w-48 md:h-48 bg-gradient-radial from-cyan-500/[0.08] to-transparent rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 right-1/4 w-24 h-24 md:w-40 md:h-40 bg-gradient-radial from-blue-500/[0.05] to-transparent rounded-full blur-2xl pointer-events-none" />
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 via-cyan-950/20 to-black/60 border border-cyan-500/20"
+        style={{ boxShadow: "0 0 40px rgba(0, 212, 255, 0.1)" }}
+      >
+        <div className="absolute inset-0 cyber-grid opacity-30" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 blur-[100px] rounded-full pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 blur-[80px] rounded-full pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-cyan-400/5 blur-[120px] rounded-full pointer-events-none" />
         
-        <div className="flex flex-col gap-6 relative z-10">
-          {/* Player Info Row */}
-          <div className="flex items-start gap-4 md:gap-6">
-            <div className="relative group/avatar shrink-0">
-              {/* Enhanced avatar with cyan ring glow for mobile */}
-              <div className="mobile-avatar-ring p-0.5 md:p-1 rounded-full">
-                <Avatar className="w-16 h-16 md:w-24 md:h-24 border-2 border-cyan-500/30 ring-2 ring-cyan-500/20 ring-offset-2 ring-offset-background">
-                  {player.photoUrl && <AvatarImage src={player.photoUrl} alt={player.name} width={96} height={96} loading="eager" />}
-                  <AvatarFallback className="bg-gradient-to-br from-cyan-500/30 to-cyan-600/20 text-xl md:text-3xl font-display font-bold text-white">
+        <div className="relative z-10 p-6 md:p-8">
+          <div className="flex flex-col md:flex-row md:items-start gap-6 md:gap-8">
+            <div className="relative group/avatar shrink-0 mx-auto md:mx-0">
+              <div 
+                className="absolute inset-0 rounded-full blur-xl transition-all duration-300"
+                style={{ 
+                  background: `radial-gradient(circle, rgba(0, 212, 255, 0.4) 0%, rgba(0, 212, 255, 0.1) 50%, transparent 70%)`,
+                  transform: "scale(1.3)"
+                }}
+              />
+              <div className="relative p-1 rounded-full bg-gradient-to-br from-cyan-400/50 via-cyan-500/30 to-cyan-600/50">
+                <Avatar className="w-24 h-24 md:w-32 md:h-32 border-2 border-cyan-400/40">
+                  {player.photoUrl && <AvatarImage src={player.photoUrl} alt={player.name} width={128} height={128} loading="eager" />}
+                  <AvatarFallback className="bg-gradient-to-br from-cyan-500/40 to-cyan-700/30 text-3xl md:text-4xl font-display font-bold text-white">
                     {getInitials(player.name)}
                   </AvatarFallback>
                 </Avatar>
               </div>
-              <Button
-                size="icon"
-                onClick={() => setIsEditDialogOpen(true)}
-                className="absolute -bottom-1 -right-1 w-7 h-7 md:w-8 md:h-8 rounded-full opacity-0 group-hover/avatar:opacity-100 md:opacity-100 transition-opacity bg-cyan-500/20 border border-cyan-500/40 hover:bg-cyan-500/30 active:scale-90"
-                data-testid="button-edit-profile-avatar"
-              >
-                <Pencil className="w-3 h-3" />
-              </Button>
+              {isOwnProfile && (
+                <Button
+                  size="icon"
+                  onClick={() => setIsEditDialogOpen(true)}
+                  className="absolute -bottom-1 -right-1 w-8 h-8 md:w-9 md:h-9 rounded-full opacity-0 group-hover/avatar:opacity-100 md:opacity-100 transition-all duration-300 bg-cyan-500/30 border border-cyan-400/50 hover:bg-cyan-500/50 hover:scale-110"
+                  data-testid="button-edit-profile-avatar"
+                >
+                  <Camera className="w-4 h-4 text-cyan-300" />
+                </Button>
+              )}
             </div>
             
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-2 mb-1">
+            <div className="flex-1 min-w-0 text-center md:text-left">
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 md:gap-3 mb-2">
                 {player.jerseyNumber && (
-                  <span className="text-xl md:text-3xl font-display font-bold text-cyan-400/90 drop-shadow-[0_0_10px_rgba(0,212,255,0.3)]">#{player.jerseyNumber}</span>
+                  <span 
+                    className="text-2xl md:text-4xl font-display font-black"
+                    style={{ 
+                      background: "linear-gradient(135deg, #00D4FF 0%, #00B4E6 50%, #0099CC 100%)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      filter: "drop-shadow(0 0 20px rgba(0, 212, 255, 0.5))"
+                    }}
+                  >
+                    #{player.jerseyNumber}
+                  </span>
                 )}
-                {/* Show positions - supports multiple comma-separated positions */}
                 {player.position && (
-                  <span className="mobile-stat-badge text-[10px] md:text-xs">
+                  <span className="px-3 py-1 rounded-full text-xs md:text-sm font-bold uppercase tracking-wider bg-gradient-to-r from-cyan-500/20 to-cyan-600/10 border border-cyan-400/30 text-cyan-300">
                     {player.position.split(',').map(p => p.trim()).map(pos => 
                       isFootball && FOOTBALL_POSITIONS.includes(pos as FootballPosition)
                         ? FOOTBALL_POSITION_LABELS[pos as FootballPosition]
@@ -1552,8 +1576,16 @@ export default function PlayerDetail() {
                   </span>
                 )}
               </div>
-              <div className="flex flex-wrap items-center gap-2 mb-2">
-                <h1 className="text-xl md:text-4xl font-display font-bold text-white uppercase tracking-tight leading-tight break-words">
+              
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 md:gap-3 mb-3">
+                <h1 
+                  className="text-2xl md:text-4xl lg:text-5xl font-display font-black uppercase tracking-tight"
+                  style={{
+                    background: "linear-gradient(135deg, #FFFFFF 0%, #E0F7FF 40%, #00D4FF 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                  }}
+                >
                   {player.name}
                 </h1>
                 <CaliberBadge 
@@ -1562,7 +1594,6 @@ export default function PlayerDetail() {
                   showControls={isAuthenticated}
                   size="md" 
                 />
-                {/* Only show ranking badges when player sport matches context, or in basketball mode */}
                 {!isFootball && player.stateRank && player.state && (
                   <AnimatedRankBadge 
                     type="state" 
@@ -1577,81 +1608,101 @@ export default function PlayerDetail() {
                   />
                 )}
               </div>
-              <div className="flex flex-wrap items-center gap-2 text-xs md:text-sm text-muted-foreground">
+              
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 text-xs md:text-sm text-muted-foreground mb-4">
                 {player.height && (
-                  <span className="flex items-center gap-1">
-                    <User className="w-3 h-3 md:w-4 md:h-4" /> {player.height}
+                  <span className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/5 border border-white/10">
+                    <User className="w-3.5 h-3.5 text-cyan-400" /> {player.height}
                   </span>
                 )}
                 {player.team && (
-                  <span className="font-medium">{player.team}</span>
-                )}
-                {player.gpa && (
-                  <span className="flex items-center gap-1 text-blue-400">
-                    <BookOpen className="w-3 h-3 md:w-4 md:h-4" /> {parseFloat(player.gpa).toFixed(2)} GPA
+                  <span className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/5 border border-white/10 font-medium">
+                    <Shield className="w-3.5 h-3.5 text-cyan-400" /> {player.team}
                   </span>
                 )}
-                <span>{games.length} Games</span>
+                {player.gpa && (
+                  <span className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400">
+                    <BookOpen className="w-3.5 h-3.5" /> {parseFloat(player.gpa).toFixed(2)} GPA
+                  </span>
+                )}
+                <span className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/5 border border-white/10">
+                  <Activity className="w-3.5 h-3.5 text-cyan-400" /> {games.length} Games
+                </span>
               </div>
               
               {games.length > 0 && (
-                <div className="flex flex-wrap items-center gap-3 mt-3" data-testid="player-averages-header">
+                <motion.div 
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="flex flex-wrap items-center justify-center md:justify-start gap-2 md:gap-3 mb-4" 
+                  data-testid="player-averages-header"
+                >
                   {isFootball ? (
                     <>
-                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/20">
-                        <span className="text-xs text-muted-foreground uppercase">YDS/G</span>
-                        <span className="text-sm font-bold text-primary">{games.length ? (totalYards / games.length).toFixed(0) : "—"}</span>
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-cyan-500/20 to-cyan-600/10 border border-cyan-500/30" style={{ boxShadow: "0 0 15px rgba(0, 212, 255, 0.2)" }}>
+                        <Zap className="w-4 h-4 text-cyan-400" style={{ filter: "drop-shadow(0 0 6px rgba(0, 212, 255, 0.6))" }} />
+                        <span className="text-xs text-cyan-300/80 uppercase font-medium">YDS/G</span>
+                        <span className="text-sm font-bold text-cyan-300">{games.length ? (totalYards / games.length).toFixed(0) : "—"}</span>
                       </div>
-                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-green-500/10 border border-green-500/20">
-                        <span className="text-xs text-muted-foreground uppercase">TD/G</span>
-                        <span className="text-sm font-bold text-green-400">{avgTDs}</span>
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-green-500/20 to-green-600/10 border border-green-500/30" style={{ boxShadow: "0 0 15px rgba(34, 197, 94, 0.2)" }}>
+                        <Target className="w-4 h-4 text-green-400" style={{ filter: "drop-shadow(0 0 6px rgba(34, 197, 94, 0.6))" }} />
+                        <span className="text-xs text-green-300/80 uppercase font-medium">TD/G</span>
+                        <span className="text-sm font-bold text-green-300">{avgTDs}</span>
                       </div>
                       {hasPosition(player.position, ['QB']) && (
-                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                          <span className="text-xs text-muted-foreground uppercase">COMP%</span>
-                          <span className="text-sm font-bold text-amber-400">{compPercent}%</span>
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500/20 to-amber-600/10 border border-amber-500/30" style={{ boxShadow: "0 0 15px rgba(245, 158, 11, 0.2)" }}>
+                          <Crosshair className="w-4 h-4 text-amber-400" style={{ filter: "drop-shadow(0 0 6px rgba(245, 158, 11, 0.6))" }} />
+                          <span className="text-xs text-amber-300/80 uppercase font-medium">COMP%</span>
+                          <span className="text-sm font-bold text-amber-300">{compPercent}%</span>
                         </div>
                       )}
                       {hasPosition(player.position, ['RB']) && (
-                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                          <span className="text-xs text-muted-foreground uppercase">YPC</span>
-                          <span className="text-sm font-bold text-amber-400">{yardsPerCarry}</span>
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500/20 to-amber-600/10 border border-amber-500/30" style={{ boxShadow: "0 0 15px rgba(245, 158, 11, 0.2)" }}>
+                          <Zap className="w-4 h-4 text-amber-400" style={{ filter: "drop-shadow(0 0 6px rgba(245, 158, 11, 0.6))" }} />
+                          <span className="text-xs text-amber-300/80 uppercase font-medium">YPC</span>
+                          <span className="text-sm font-bold text-amber-300">{yardsPerCarry}</span>
                         </div>
                       )}
                       {hasPosition(player.position, ['WR', 'TE']) && (
-                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                          <span className="text-xs text-muted-foreground uppercase">REC</span>
-                          <span className="text-sm font-bold text-amber-400">{totalReceptions}</span>
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500/20 to-amber-600/10 border border-amber-500/30" style={{ boxShadow: "0 0 15px rgba(245, 158, 11, 0.2)" }}>
+                          <Target className="w-4 h-4 text-amber-400" style={{ filter: "drop-shadow(0 0 6px rgba(245, 158, 11, 0.6))" }} />
+                          <span className="text-xs text-amber-300/80 uppercase font-medium">REC</span>
+                          <span className="text-sm font-bold text-amber-300">{totalReceptions}</span>
                         </div>
                       )}
                       {hasPosition(player.position, ['DL', 'LB', 'DB']) && (
-                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                          <span className="text-xs text-muted-foreground uppercase">TCK/G</span>
-                          <span className="text-sm font-bold text-amber-400">{avgTackles}</span>
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500/20 to-amber-600/10 border border-amber-500/30" style={{ boxShadow: "0 0 15px rgba(245, 158, 11, 0.2)" }}>
+                          <Shield className="w-4 h-4 text-amber-400" style={{ filter: "drop-shadow(0 0 6px rgba(245, 158, 11, 0.6))" }} />
+                          <span className="text-xs text-amber-300/80 uppercase font-medium">TCK/G</span>
+                          <span className="text-sm font-bold text-amber-300">{avgTackles}</span>
                         </div>
                       )}
                     </>
                   ) : (
                     <>
-                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/20">
-                        <span className="text-xs text-muted-foreground uppercase">PPG</span>
-                        <span className="text-sm font-bold text-primary">{avgPoints}</span>
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-cyan-500/20 to-cyan-600/10 border border-cyan-500/30" style={{ boxShadow: "0 0 15px rgba(0, 212, 255, 0.2)" }}>
+                        <Target className="w-4 h-4 text-cyan-400" style={{ filter: "drop-shadow(0 0 6px rgba(0, 212, 255, 0.6))" }} />
+                        <span className="text-xs text-cyan-300/80 uppercase font-medium">PPG</span>
+                        <span className="text-sm font-bold text-cyan-300">{avgPoints}</span>
                       </div>
-                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-green-500/10 border border-green-500/20">
-                        <span className="text-xs text-muted-foreground uppercase">RPG</span>
-                        <span className="text-sm font-bold text-green-400">{avgReb}</span>
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-green-500/20 to-green-600/10 border border-green-500/30" style={{ boxShadow: "0 0 15px rgba(34, 197, 94, 0.2)" }}>
+                        <TrendingUp className="w-4 h-4 text-green-400" style={{ filter: "drop-shadow(0 0 6px rgba(34, 197, 94, 0.6))" }} />
+                        <span className="text-xs text-green-300/80 uppercase font-medium">RPG</span>
+                        <span className="text-sm font-bold text-green-300">{avgReb}</span>
                       </div>
-                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                        <span className="text-xs text-muted-foreground uppercase">APG</span>
-                        <span className="text-sm font-bold text-amber-400">{avgAst}</span>
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500/20 to-amber-600/10 border border-amber-500/30" style={{ boxShadow: "0 0 15px rgba(245, 158, 11, 0.2)" }}>
+                        <Zap className="w-4 h-4 text-amber-400" style={{ filter: "drop-shadow(0 0 6px rgba(245, 158, 11, 0.6))" }} />
+                        <span className="text-xs text-amber-300/80 uppercase font-medium">APG</span>
+                        <span className="text-sm font-bold text-amber-300">{avgAst}</span>
                       </div>
                     </>
                   )}
-                </div>
+                </motion.div>
               )}
               
               {games.length > 0 && (
-                <div className="flex flex-wrap items-center gap-2 mt-2">
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-4">
                   <EliteAchievements 
                     ppg={parseFloat(avgPoints) || 0}
                     rpg={parseFloat(avgReb) || 0}
@@ -1662,169 +1713,260 @@ export default function PlayerDetail() {
                   />
                 </div>
               )}
+              
+              {isAuthenticated && (
+                <div className="flex justify-center md:justify-start mb-4">
+                  <FollowStats 
+                    playerId={id} 
+                    onFollowersClick={() => setShowFollowersSheet(true)}
+                    onFollowingClick={() => setShowFollowingSheet(true)}
+                  />
+                </div>
+              )}
+
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="flex flex-wrap justify-center md:justify-start gap-2 md:gap-3"
+              >
+                {isAuthenticated && !isOwnProfile && (
+                  <FollowButton 
+                    playerId={id} 
+                    initialIsFollowing={isFollowingPlayer}
+                  />
+                )}
+                {isOwnProfile && (
+                  <Button 
+                    onClick={() => setIsEditDialogOpen(true)} 
+                    size="sm"
+                    className="gap-1.5 bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-white border-0 shadow-lg shadow-cyan-500/25"
+                    data-testid="button-edit-profile"
+                  >
+                    <Pencil className="w-3.5 h-3.5" /> Edit Profile
+                  </Button>
+                )}
+                <Button 
+                  onClick={handleShareProfile} 
+                  variant="outline" 
+                  size="sm"
+                  className="gap-1.5 border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10 hover:border-cyan-400/50"
+                  data-testid="button-share-profile"
+                >
+                  <Share2 className="w-3.5 h-3.5" /> Share
+                </Button>
+                <Link href={`/report-card?player=${player.id}`}>
+                  <Button variant="outline" size="sm" className="gap-1.5 border-white/10 hover:bg-white/5" data-testid="button-generate-report">
+                    <FileText className="w-3.5 h-3.5" /> Report
+                  </Button>
+                </Link>
+                {isOwnProfile && (
+                  <Link href={`/analyze?playerId=${player.id}`}>
+                    <Button size="sm" className="gap-1.5 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white border-0 shadow-lg shadow-cyan-500/25" data-testid="button-log-game">
+                      <Plus className="w-3.5 h-3.5" /> Log Game
+                    </Button>
+                  </Link>
+                )}
+              </motion.div>
             </div>
 
-            {/* Grade Badge - Desktop */}
-            <div className="hidden md:flex flex-col items-center gap-1 shrink-0">
-              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Grade</span>
-              <GradeBadge grade={averageGrade} size="xl" />
+            <div className="hidden md:flex flex-col items-center gap-3 shrink-0">
+              <span className="text-xs font-bold text-cyan-400/70 uppercase tracking-[0.15em]">Overall Grade</span>
+              <div 
+                className="relative p-1 rounded-2xl"
+                style={{ 
+                  background: "linear-gradient(135deg, rgba(0, 212, 255, 0.3) 0%, rgba(0, 212, 255, 0.1) 100%)",
+                  boxShadow: "0 0 30px rgba(0, 212, 255, 0.3)"
+                }}
+              >
+                <GradeBadge grade={averageGrade} size="xl" />
+              </div>
             </div>
           </div>
 
-          {/* Grade Badge - Mobile */}
-          <div className="flex md:hidden justify-center">
-            <div className="flex flex-col items-center gap-2 mobile-card p-4 rounded-xl mobile-card-cyan">
+          <div className="flex md:hidden justify-center mt-4">
+            <div 
+              className="flex flex-col items-center gap-2 p-4 rounded-xl border border-cyan-500/20"
+              style={{ 
+                background: "linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(0, 212, 255, 0.02) 100%)",
+                boxShadow: "0 0 20px rgba(0, 212, 255, 0.15)"
+              }}
+            >
               <span className="text-[10px] font-bold text-cyan-400/70 uppercase tracking-[0.2em]">Overall Grade</span>
               <GradeBadge grade={averageGrade} size="lg" />
             </div>
           </div>
-
-          {/* Follow Stats */}
-          {isAuthenticated && (
-            <div className="flex justify-center md:justify-start">
-              <FollowStats 
-                playerId={id} 
-                onFollowersClick={() => setShowFollowersSheet(true)}
-                onFollowingClick={() => setShowFollowingSheet(true)}
-              />
-            </div>
-          )}
-
-          {/* Action Buttons */}
-          <div className="flex flex-wrap justify-center md:justify-start gap-2">
-            {isAuthenticated && !isOwnProfile && (
-              <FollowButton 
-                playerId={id} 
-                initialIsFollowing={isFollowingPlayer}
-              />
-            )}
-            {isOwnProfile && (
-              <Button 
-                onClick={() => setIsEditDialogOpen(true)} 
-                variant="outline" 
-                size="sm"
-                className="gap-1.5"
-                data-testid="button-edit-profile"
-              >
-                <Pencil className="w-3.5 h-3.5" /> Edit
-              </Button>
-            )}
-            <Button 
-              onClick={handleShareProfile} 
-              variant="outline" 
-              size="sm"
-              className="gap-1.5"
-              data-testid="button-share-profile"
-            >
-              <Share2 className="w-3.5 h-3.5" /> Share
-            </Button>
-            <Link href={`/report-card?player=${player.id}`}>
-              <Button variant="outline" size="sm" className="gap-1.5" data-testid="button-generate-report">
-                <FileText className="w-3.5 h-3.5" /> Report
-              </Button>
-            </Link>
-            {isOwnProfile && (
-              <Link href={`/analyze?playerId=${player.id}`}>
-                <Button size="sm" className="gap-1.5" data-testid="button-log-game">
-                  <Plus className="w-3.5 h-3.5" /> Log Game
-                </Button>
-              </Link>
-            )}
-          </div>
         </div>
-      </Card>
+      </motion.div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full animate-fade-up delay-200">
-        {/* Horizontally scrollable tabs container for mobile */}
-        <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
-          <TabsList className="w-max md:w-auto inline-flex bg-card border border-white/10">
-            <TabsTrigger value="overview" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-overview">Overview</TabsTrigger>
-            <TabsTrigger value="highlights" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-highlights">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.4 }}
+          className="overflow-x-auto scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0"
+        >
+          <TabsList className="w-max md:w-auto inline-flex bg-black/40 backdrop-blur-sm border border-white/10 p-1 rounded-xl">
+            <TabsTrigger 
+              value="overview" 
+              className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-600 data-[state=active]:to-cyan-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-cyan-500/25 text-muted-foreground hover:text-white" 
+              data-testid="tab-overview"
+            >
+              <BarChart3 className="w-4 h-4" /> Overview
+            </TabsTrigger>
+            <TabsTrigger 
+              value="highlights" 
+              className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-600 data-[state=active]:to-cyan-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-cyan-500/25 text-muted-foreground hover:text-white" 
+              data-testid="tab-highlights"
+            >
               <Film className="w-4 h-4" /> Highlights
             </TabsTrigger>
-            <TabsTrigger value="accolades" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-accolades">
+            <TabsTrigger 
+              value="accolades" 
+              className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-600 data-[state=active]:to-cyan-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-cyan-500/25 text-muted-foreground hover:text-white" 
+              data-testid="tab-accolades"
+            >
               <Trophy className="w-4 h-4" /> Accolades
             </TabsTrigger>
-            <TabsTrigger value="coach" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-coach">
+            <TabsTrigger 
+              value="coach" 
+              className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-600 data-[state=active]:to-cyan-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-cyan-500/25 text-muted-foreground hover:text-white" 
+              data-testid="tab-coach"
+            >
               <Phone className="w-4 h-4" /> Coach
             </TabsTrigger>
             {isFootball && (
-              <TabsTrigger value="scouting" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-scouting">
+              <TabsTrigger 
+                value="scouting" 
+                className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-600 data-[state=active]:to-cyan-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-cyan-500/25 text-muted-foreground hover:text-white" 
+                data-testid="tab-scouting"
+              >
                 <Crosshair className="w-4 h-4" /> Scouting
               </TabsTrigger>
             )}
             {isOwnProfile && (
-              <TabsTrigger value="inventory" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-inventory">
+              <TabsTrigger 
+                value="inventory" 
+                className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-600 data-[state=active]:to-cyan-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-cyan-500/25 text-muted-foreground hover:text-white" 
+                data-testid="tab-inventory"
+              >
                 <Package className="w-4 h-4" /> Inventory
               </TabsTrigger>
             )}
           </TabsList>
-        </div>
+        </motion.div>
 
-        <TabsContent value="overview" className="space-y-6 animate-fade-in">
-          <ProfileWidgets
-            games={games}
-            selectedWidgets={widgetPreferences}
-            onWidgetsChange={handleWidgetsChange}
-            isOwnProfile={isOwnProfile}
-            position={player.position}
-          />
+        <TabsContent value="overview" className="space-y-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.4 }}
+          >
+            <ProfileWidgets
+              games={games}
+              selectedWidgets={widgetPreferences}
+              onWidgetsChange={handleWidgetsChange}
+              isOwnProfile={isOwnProfile}
+              position={player.position}
+            />
+          </motion.div>
 
           {games.length > 0 && (
-            <PlayerArchetype 
-              games={games} 
-              position={player.position as "Guard" | "Wing" | "Big"}
-            />
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15, duration: 0.4 }}
+            >
+              <PlayerArchetype 
+                games={games} 
+                position={player.position as "Guard" | "Wing" | "Big"}
+              />
+            </motion.div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <PlayerProgression playerId={player.id} />
-        
-        <Card className="p-4">
-          <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-            <Zap className="w-4 h-4 text-primary" /> XP Rewards
-          </h4>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div className="flex items-center justify-between p-2 rounded bg-secondary/30">
-              <span className="text-muted-foreground">Log a Game</span>
-              <span className="font-bold text-primary">+50 XP</span>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.4 }}
+            className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          >
+            <PlayerProgression playerId={player.id} />
+            
+            <div 
+              className="relative overflow-hidden rounded-xl border border-cyan-500/20 p-5"
+              style={{ 
+                background: "linear-gradient(135deg, rgba(0, 212, 255, 0.05) 0%, rgba(0, 0, 0, 0.4) 100%)",
+                boxShadow: "0 0 30px rgba(0, 212, 255, 0.08)"
+              }}
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 blur-[60px] rounded-full pointer-events-none" />
+              <h4 className="text-sm font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-cyan-500/20 border border-cyan-500/30">
+                  <Zap className="w-4 h-4 text-cyan-400" style={{ filter: "drop-shadow(0 0 6px rgba(0, 212, 255, 0.6))" }} />
+                </div>
+                <span className="bg-gradient-to-r from-white to-cyan-300 bg-clip-text text-transparent">XP Rewards</span>
+              </h4>
+              <div className="grid grid-cols-2 gap-2 text-sm relative z-10">
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 border border-white/5 hover:border-cyan-500/20 transition-colors">
+                  <span className="text-muted-foreground">Log a Game</span>
+                  <span className="font-bold text-cyan-400">+50 XP</span>
+                </div>
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 border border-white/5 hover:border-cyan-500/20 transition-colors">
+                  <span className="text-muted-foreground">Earn Badge</span>
+                  <span className="font-bold text-cyan-400">+25 XP</span>
+                </div>
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 border border-white/5 hover:border-cyan-500/20 transition-colors">
+                  <span className="text-muted-foreground">A Grade</span>
+                  <span className="font-bold text-cyan-400">+30 XP</span>
+                </div>
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 border border-white/5 hover:border-cyan-500/20 transition-colors">
+                  <span className="text-muted-foreground">A+ Grade</span>
+                  <span className="font-bold text-cyan-400">+50 XP</span>
+                </div>
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-gradient-to-r from-orange-500/10 to-amber-500/5 border border-orange-500/20 hover:border-orange-500/40 transition-colors">
+                  <span className="text-orange-400">3-Day Streak</span>
+                  <span className="font-bold text-orange-400">+25 XP</span>
+                </div>
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-gradient-to-r from-orange-500/10 to-amber-500/5 border border-orange-500/20 hover:border-orange-500/40 transition-colors">
+                  <span className="text-orange-400">7-Day Streak</span>
+                  <span className="font-bold text-orange-400">+75 XP</span>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center justify-between p-2 rounded bg-secondary/30">
-              <span className="text-muted-foreground">Earn Badge</span>
-              <span className="font-bold text-primary">+25 XP</span>
-            </div>
-            <div className="flex items-center justify-between p-2 rounded bg-secondary/30">
-              <span className="text-muted-foreground">A Grade</span>
-              <span className="font-bold text-primary">+30 XP</span>
-            </div>
-            <div className="flex items-center justify-between p-2 rounded bg-secondary/30">
-              <span className="text-muted-foreground">A+ Grade</span>
-              <span className="font-bold text-primary">+50 XP</span>
-            </div>
-            <div className="flex items-center justify-between p-2 rounded bg-orange-500/10 border border-orange-500/20">
-              <span className="text-orange-400">3-Day Streak</span>
-              <span className="font-bold text-orange-400">+25 XP</span>
-            </div>
-            <div className="flex items-center justify-between p-2 rounded bg-orange-500/10 border border-orange-500/20">
-              <span className="text-orange-400">7-Day Streak</span>
-              <span className="font-bold text-orange-400">+75 XP</span>
-            </div>
-          </div>
-        </Card>
-      </div>
+          </motion.div>
 
-          <div className="mb-6">
-            <h3 className="text-lg font-bold font-display text-white mb-4 flex items-center gap-2">
-              <Medal className="w-5 h-5 text-primary" /> Skill Badges
-            </h3>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25, duration: 0.4 }}
+            className="mb-6"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+                <Medal className="w-5 h-5 text-cyan-400" style={{ filter: "drop-shadow(0 0 6px rgba(0, 212, 255, 0.6))" }} />
+              </div>
+              <h3 className="text-lg font-bold font-display bg-gradient-to-r from-white to-cyan-300 bg-clip-text text-transparent">
+                Skill Badges
+              </h3>
+            </div>
             <SkillBadges playerId={player.id} position={player.position} />
-          </div>
+          </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <h3 className="text-lg font-bold font-display text-white mb-4 flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-primary" /> Season Statistics
-          </h3>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.4 }}
+            className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+          >
+            <div className="lg:col-span-2">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+                  <BarChart3 className="w-5 h-5 text-cyan-400" style={{ filter: "drop-shadow(0 0 6px rgba(0, 212, 255, 0.6))" }} />
+                </div>
+                <h3 className="text-lg font-bold font-display bg-gradient-to-r from-white to-cyan-300 bg-clip-text text-transparent">
+                  Season Statistics
+                </h3>
+              </div>
           {isFootball ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
               <StatCard label="Games" value={games.length} />
@@ -1927,11 +2069,23 @@ export default function PlayerDetail() {
           )}
         </div>
 
-        <div>
-          <h3 className="text-lg font-bold font-display text-white mb-4 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-primary" /> Player Profile
-          </h3>
-          <Card className="p-4 animate-fade-up">
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                  <TrendingUp className="w-5 h-5 text-purple-400" style={{ filter: "drop-shadow(0 0 6px rgba(168, 85, 247, 0.6))" }} />
+                </div>
+                <h3 className="text-lg font-bold font-display bg-gradient-to-r from-white to-purple-300 bg-clip-text text-transparent">
+                  Player Profile
+                </h3>
+              </div>
+              <div 
+                className="relative overflow-hidden rounded-xl border border-purple-500/20 p-4"
+                style={{ 
+                  background: "linear-gradient(135deg, rgba(168, 85, 247, 0.05) 0%, rgba(0, 0, 0, 0.4) 100%)",
+                  boxShadow: "0 0 30px rgba(168, 85, 247, 0.08)"
+                }}
+              >
+                <div className="absolute top-0 left-0 w-32 h-32 bg-purple-500/5 blur-[60px] rounded-full pointer-events-none" />
             <div className="h-[220px] w-full">
               {games.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -1992,16 +2146,23 @@ export default function PlayerDetail() {
                 </div>
               </div>
             )}
-          </Card>
-        </div>
-      </div>
+              </div>
+            </div>
+          </motion.div>
 
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold font-display text-white flex items-center gap-2">
-            <Medal className="w-5 h-5 text-primary" /> Top 5 Games
-          </h3>
-        </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35, duration: 0.4 }}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                <Medal className="w-5 h-5 text-amber-400" style={{ filter: "drop-shadow(0 0 6px rgba(245, 158, 11, 0.6))" }} />
+              </div>
+              <h3 className="text-lg font-bold font-display bg-gradient-to-r from-white to-amber-300 bg-clip-text text-transparent">
+                Top 5 Games
+              </h3>
+            </div>
         
         {topGames.length === 0 ? (
           <Card className="relative overflow-hidden border-cyan-500/[0.08]">
@@ -2280,19 +2441,38 @@ export default function PlayerDetail() {
             ))}
           </div>
         )}
-      </div>
+          </motion.div>
 
-      <GoalsPanel playerId={player.id} games={games} />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.4 }}
+          >
+            <GoalsPanel playerId={player.id} games={games} />
+          </motion.div>
 
-      <Tabs defaultValue="history" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-4 bg-card border border-white/10">
-          <TabsTrigger value="history" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-game-history">
-            <ClipboardList className="w-4 h-4" /> Game History
-          </TabsTrigger>
-          <TabsTrigger value="highlights" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-highlights">
-            <Film className="w-4 h-4" /> Highlights
-          </TabsTrigger>
-        </TabsList>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.45, duration: 0.4 }}
+          >
+            <Tabs defaultValue="history" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-4 bg-black/40 backdrop-blur-sm border border-white/10 p-1 rounded-xl">
+                <TabsTrigger 
+                  value="history" 
+                  className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-600 data-[state=active]:to-cyan-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-cyan-500/25 text-muted-foreground hover:text-white" 
+                  data-testid="tab-game-history"
+                >
+                  <ClipboardList className="w-4 h-4" /> Game History
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="highlights" 
+                  className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-600 data-[state=active]:to-cyan-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-cyan-500/25 text-muted-foreground hover:text-white" 
+                  data-testid="tab-highlights"
+                >
+                  <Film className="w-4 h-4" /> Highlights
+                </TabsTrigger>
+              </TabsList>
         
         <TabsContent value="history">
           <Card className="p-6">
@@ -2452,10 +2632,16 @@ export default function PlayerDetail() {
             <HighlightsGallery playerId={player.id} isOwner={isOwnProfile} />
           </Card>
         </TabsContent>
-        
-      </Tabs>
+            </Tabs>
+          </motion.div>
 
-      <CoachToolsSection playerId={player.id} games={games} />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.4 }}
+          >
+            <CoachToolsSection playerId={player.id} games={games} />
+          </motion.div>
         </TabsContent>
 
         <TabsContent value="highlights">

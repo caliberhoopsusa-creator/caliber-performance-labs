@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
-import { ArrowLeft, Save, Loader2, Trophy, Share2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Trophy, Share2, Target, ClipboardList, TrendingUp, Zap, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GradeBadge } from "@/components/GradeBadge";
 import { Link } from "wouter";
@@ -21,6 +21,7 @@ import { ShareableGameCard } from "@/components/ShareableCard";
 import { HighlightUploader } from "@/components/HighlightUploader";
 import { useSport } from "@/components/SportToggle";
 import { FOOTBALL_POSITION_STATS, FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS, FootballPosition, BASKETBALL_POSITIONS } from "@shared/sports-config";
+import { motion } from "framer-motion";
 
 const FOOTBALL_STAT_LABELS: Record<string, string> = {
   completions: "Completions",
@@ -57,6 +58,32 @@ const FOOTBALL_STAT_LABELS: Record<string, string> = {
   penalties: "Penalties",
 };
 
+const STEPS = [
+  { id: 1, label: "Matchup", icon: Target },
+  { id: 2, label: "Stats", icon: Activity },
+  { id: 3, label: "Shooting", icon: TrendingUp },
+  { id: 4, label: "Intangibles", icon: Zap },
+];
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const sectionVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { duration: 0.4, ease: "easeOut" }
+  }
+};
+
 export default function AnalyzeGame() {
   const [location, setLocation] = useLocation();
   const searchParams = new URLSearchParams(window.location.search);
@@ -65,20 +92,61 @@ export default function AnalyzeGame() {
   const { data: players } = usePlayers();
   const { mutate, isPending, data: resultGame } = useCreateGame();
   
-  // If resultGame exists, show the "Report Card" view instead of the form
   if (resultGame) {
     return <ReportCardView game={resultGame} onReset={() => window.location.reload()} />;
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 animate-in slide-in-from-bottom-4 duration-500 pb-24 md:pb-8">
-      <div className="flex items-center gap-4 mb-4">
-        <Link href="/players" className="text-muted-foreground hover:text-white transition-colors p-2 -ml-2">
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
-        <div>
-          <h1 className="text-3xl font-display font-bold text-white uppercase tracking-tight">Caliber Analysis</h1>
-          <p className="text-muted-foreground text-sm font-medium">Input stats to generate a performance report card.</p>
+    <div className="pb-24 md:pb-8 space-y-8">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 via-cyan-950/20 to-black/60 border border-cyan-500/20">
+        <div className="absolute inset-0 cyber-grid opacity-30" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 blur-[100px] rounded-full" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-500/5 blur-[80px] rounded-full" />
+        
+        <div className="relative z-10 p-6 md:p-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <Link href="/players" className="text-muted-foreground hover:text-white transition-colors p-2 -ml-2" data-testid="link-back">
+                  <ArrowLeft className="w-5 h-5" />
+                </Link>
+                <div className="flex items-center gap-2">
+                  <ClipboardList className="w-6 h-6 text-cyan-400" />
+                  <span className="text-xs uppercase tracking-wider text-cyan-400 font-semibold">Performance Analysis</span>
+                </div>
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold">
+                <span className="bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent">
+                  Game Analysis
+                </span>
+              </h1>
+              <p className="text-muted-foreground max-w-md">
+                Input your game stats to generate an AI-powered performance report card with personalized feedback.
+              </p>
+            </div>
+            
+            <div className="hidden md:flex items-center gap-2">
+              {STEPS.map((step, index) => (
+                <div key={step.id} className="flex items-center">
+                  <div className={cn(
+                    "flex items-center gap-2 px-3 py-2 rounded-lg transition-all",
+                    "bg-black/30 border border-white/10"
+                  )}>
+                    <div className={cn(
+                      "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
+                      "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30"
+                    )}>
+                      {step.id}
+                    </div>
+                    <span className="text-xs text-muted-foreground hidden lg:inline">{step.label}</span>
+                  </div>
+                  {index < STEPS.length - 1 && (
+                    <div className="w-4 h-px bg-white/10 mx-1" />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -158,12 +226,10 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
     }
   });
 
-  // Update sport field when sport context changes
   useEffect(() => {
     form.setValue('sport', sport);
   }, [sport, form]);
 
-  // Watch shooting stats for live calculations
   const fgMade = form.watch('fgMade') || 0;
   const fgAttempted = form.watch('fgAttempted') || 0;
   const threeMade = form.watch('threeMade') || 0;
@@ -171,7 +237,6 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
   const ftMade = form.watch('ftMade') || 0;
   const ftAttempted = form.watch('ftAttempted') || 0;
 
-  // Watch defensive stats for auto-calculation (basketball)
   const steals = form.watch('steals') || 0;
   const blocks = form.watch('blocks') || 0;
   const defensiveRebounds = form.watch('defensiveRebounds') || 0;
@@ -180,7 +245,6 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
   const minutes = form.watch('minutes') || 1;
   const playerId = form.watch('playerId');
   
-  // Watch football stats for hustle score calculation
   const tackles = form.watch('tackles') || 0;
   const soloTackles = form.watch('soloTackles') || 0;
   const sacks = form.watch('sacks') || 0;
@@ -191,53 +255,42 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
   const rushingYards = form.watch('rushingYards') || 0;
   const carries = form.watch('carries') || 0;
   
-  // Get selected player's position for position-based calculations
   const selectedPlayer = players.find((p: any) => p.id === playerId);
   const storedPosition = selectedPlayer?.position || 'Wing';
   
-  // Check if the stored position contains a valid football position
   const storedPositions: string[] = storedPosition?.split(',').map((p: string) => p.trim()) || [];
   const hasValidFootballPosition = storedPositions.some((pos: string) => FOOTBALL_POSITIONS.includes(pos as FootballPosition));
   const isValidBasketballPosition = BASKETBALL_POSITIONS.includes(storedPosition as any);
   
-  // For football mode, use the first valid football position from profile or selected positions
   const effectiveFootballPositions: FootballPosition[] = sport === 'football' 
     ? (hasValidFootballPosition 
         ? storedPositions.filter((pos: string) => FOOTBALL_POSITIONS.includes(pos as FootballPosition)) as FootballPosition[]
         : selectedFootballPositions)
     : [];
   
-  // Primary position for calculations (use first selected position)
   const effectiveFootballPosition = effectiveFootballPositions[0] || null;
   
-  // Position used for calculations and display
   const position = sport === 'football' ? effectiveFootballPosition : storedPosition;
   
-  // Helper to check if player has any of the given positions
   const hasPosition = (positions: FootballPosition[]) => {
     return effectiveFootballPositions.some(pos => positions.includes(pos));
   };
 
-  // Calculate percentages
   const fgPercent = fgAttempted > 0 ? ((fgMade / fgAttempted) * 100).toFixed(1) : '—';
   const threePercent = threeAttempted > 0 ? ((threeMade / threeAttempted) * 100).toFixed(1) : '—';
   const ftPercent = ftAttempted > 0 ? ((ftMade / ftAttempted) * 100).toFixed(1) : '—';
   
-  // Calculate True Shooting % = PTS / (2 * (FGA + 0.44 * FTA))
   const calculatedPoints = ((fgMade - threeMade) * 2) + (threeMade * 3) + ftMade;
-  const tsa = fgAttempted + (0.44 * ftAttempted); // True Shooting Attempts
+  const tsa = fgAttempted + (0.44 * ftAttempted);
   const tsPercent = tsa > 0 ? ((calculatedPoints / (2 * tsa)) * 100).toFixed(1) : '—';
 
-  // Calculate Defense Rating (same formula as backend)
   const calcDefenseRating = () => {
     let rating = 50;
     const mins = minutes || 1;
     
-    // Steals per 36 minutes
     const stealsPerMin = (steals / mins) * 36;
     rating += stealsPerMin * 8;
     
-    // Blocks per 36 minutes (position weighted)
     const blocksPerMin = (blocks / mins) * 36;
     if (position === 'Big') {
       rating += blocksPerMin * 6;
@@ -245,11 +298,9 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
       rating += blocksPerMin * 4;
     }
     
-    // Defensive rebounds per 36 minutes
     const drebPerMin = (defensiveRebounds / mins) * 36;
     rating += drebPerMin * 1.5;
     
-    // Position-based bonuses
     if (position === 'Guard') {
       rating += steals * 2;
     } else if (position === 'Big') {
@@ -259,27 +310,20 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
     return Math.max(0, Math.min(100, Math.round(rating)));
   };
 
-  // Calculate Hustle Score (same formula as backend)
   const calcHustleScore = () => {
     let score = 50;
     
     if (sport === 'football') {
-      // Football hustle score based on effort plays
-      
-      // Tackles show effort (solo tackles worth more)
       score += soloTackles * 3;
-      score += (tackles - soloTackles) * 1.5; // Assisted tackles
+      score += (tackles - soloTackles) * 1.5;
       
-      // Big plays that show hustle
       score += sacks * 5;
       score += forcedFumbles * 6;
       score += fumbleRecoveries * 4;
       score += passDeflections * 3;
       
-      // OL hustle - pancake blocks
       score += pancakeBlocks * 4;
       
-      // Yards after contact / effort running (approximated by yards per carry)
       if (carries > 0) {
         const ypc = rushingYards / carries;
         if (ypc >= 5) score += 8;
@@ -287,49 +331,40 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
         else if (ypc >= 3) score += 2;
       }
       
-      // Position-based bonuses (check all selected positions)
       if (effectiveFootballPositions.includes('LB') || effectiveFootballPositions.includes('DB')) {
-        score += tackles * 1; // Extra tackle bonus for defensive backs
+        score += tackles * 1;
       }
       if (effectiveFootballPositions.includes('DL')) {
-        score += sacks * 2; // Extra sack bonus for D-line
+        score += sacks * 2;
       }
       if (effectiveFootballPositions.includes('OL')) {
-        score += pancakeBlocks * 2; // Extra pancake bonus for O-line
+        score += pancakeBlocks * 2;
       }
       if (effectiveFootballPositions.includes('RB')) {
-        if (carries >= 15) score += 5; // Workhorse bonus
+        if (carries >= 15) score += 5;
       }
       
     } else {
-      // Basketball hustle score
       const mins = minutes || 1;
       
-      // Steals per 36 minutes
       const stealsPerMin = (steals / mins) * 36;
       score += stealsPerMin * 10;
       
-      // Offensive rebounds per 36 minutes
       const orebPerMin = (offensiveRebounds / mins) * 36;
       score += orebPerMin * 6;
       
-      // Defensive rebounds per 36 minutes
       const drebPerMin = (defensiveRebounds / mins) * 36;
       score += drebPerMin * 1.5;
       
-      // Assists per 36 minutes
       const astPerMin = (assists / mins) * 36;
       score += astPerMin * 2;
       
-      // Blocks per 36 minutes
       const blkPerMin = (blocks / mins) * 36;
       score += blkPerMin * 3;
       
-      // Minutes bonus
       if (minutes >= 30) score += 5;
       else if (minutes >= 20) score += 3;
       
-      // Position bonuses
       if (position === 'Guard') {
         score += steals * 3;
       } else if (position === 'Big') {
@@ -345,597 +380,644 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
   const calculatedDefenseRating = calcDefenseRating();
   const calculatedHustleScore = calcHustleScore();
 
-  // Auto-update points when shooting stats change (if enabled)
   useEffect(() => {
     if (autoCalcPoints) {
       form.setValue('points', calculatedPoints);
     }
   }, [fgMade, threeMade, ftMade, autoCalcPoints]);
 
-  // Auto-update defense rating and hustle score
   useEffect(() => {
     form.setValue('defenseRating', calculatedDefenseRating);
     form.setValue('hustleScore', calculatedHustleScore);
   }, [steals, blocks, defensiveRebounds, offensiveRebounds, assists, minutes, position, 
-      // Football stats for hustle calculation
       tackles, soloTackles, sacks, forcedFumbles, fumbleRecoveries, passDeflections, 
       pancakeBlocks, rushingYards, carries, effectiveFootballPosition, effectiveFootballPositions, sport]);
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-      {/* 1. Game Info Section */}
-      <section className="bg-card border border-white/5 p-6 rounded-2xl shadow-lg">
-        <h3 className="text-lg font-bold font-display text-primary mb-6 uppercase tracking-wider flex items-center gap-2">
-          <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs">1</span>
-          Matchup Details
-        </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Player</label>
-            <Select 
-              onValueChange={(val) => form.setValue("playerId", Number(val))} 
-              defaultValue={preselectedPlayerId}
-            >
-              <SelectTrigger className="bg-secondary/30 border-white/10 text-white h-11">
-                <SelectValue placeholder="Select a player..." />
-              </SelectTrigger>
-              <SelectContent className="bg-card border-white/10 text-white">
-                {players
-                  .filter((p: any) => p.sport === sport || String(p.id) === preselectedPlayerId)
-                  .map((p: any) => {
-                    const positionLabel = p.sport === 'football' && FOOTBALL_POSITION_LABELS[p.position as FootballPosition]
-                      ? FOOTBALL_POSITION_LABELS[p.position as FootballPosition]
-                      : p.position;
-                    return (
-                      <SelectItem key={p.id} value={String(p.id)}>{p.name} (#{p.jerseyNumber}) - {positionLabel}</SelectItem>
-                    );
-                  })}
-              </SelectContent>
-            </Select>
-            {form.formState.errors.playerId && <p className="text-red-400 text-xs">Player is required</p>}
-          </div>
+    <motion.form 
+      onSubmit={form.handleSubmit(onSubmit)} 
+      className="space-y-6 max-w-4xl mx-auto"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.section 
+        variants={sectionVariants}
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 to-black/30 border border-cyan-500/20"
+        style={{ boxShadow: "0 0 40px rgba(0, 212, 255, 0.05)" }}
+      >
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
+        <div className="p-6">
+          <h3 className="text-lg font-bold font-display mb-6 uppercase tracking-wider flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center">
+              <span className="text-sm text-cyan-400 font-bold">1</span>
+            </div>
+            <span className="bg-gradient-to-r from-white to-cyan-400 bg-clip-text text-transparent">Matchup Details</span>
+          </h3>
           
-          <div className="space-y-2">
-            <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Opponent</label>
-            <Input {...form.register("opponent")} placeholder="vs. Team Name" className="bg-secondary/30 border-white/10 text-white h-11" />
-            {form.formState.errors.opponent && <p className="text-red-400 text-xs">Opponent required</p>}
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Player</label>
+              <Select 
+                onValueChange={(val) => form.setValue("playerId", Number(val))} 
+                defaultValue={preselectedPlayerId}
+              >
+                <SelectTrigger className="bg-black/20 border-white/10 text-white h-11 focus:border-cyan-500/50 transition-colors">
+                  <SelectValue placeholder="Select a player..." />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-white/10 text-white">
+                  {players
+                    .filter((p: any) => p.sport === sport || String(p.id) === preselectedPlayerId)
+                    .map((p: any) => {
+                      const positionLabel = p.sport === 'football' && FOOTBALL_POSITION_LABELS[p.position as FootballPosition]
+                        ? FOOTBALL_POSITION_LABELS[p.position as FootballPosition]
+                        : p.position;
+                      return (
+                        <SelectItem key={p.id} value={String(p.id)}>{p.name} (#{p.jerseyNumber}) - {positionLabel}</SelectItem>
+                      );
+                    })}
+                </SelectContent>
+              </Select>
+              {form.formState.errors.playerId && <p className="text-red-400 text-xs">Player is required</p>}
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Opponent</label>
+              <Input {...form.register("opponent")} placeholder="vs. Team Name" className="bg-black/20 border-white/10 text-white h-11 focus:border-cyan-500/50 transition-colors" />
+              {form.formState.errors.opponent && <p className="text-red-400 text-xs">Opponent required</p>}
+            </div>
 
-          <div className="space-y-2">
-            <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Date</label>
-            <Input type="date" {...form.register("date")} className="bg-secondary/30 border-white/10 text-white h-11" />
-          </div>
+            <div className="space-y-2">
+              <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Date</label>
+              <Input type="date" {...form.register("date")} className="bg-black/20 border-white/10 text-white h-11 focus:border-cyan-500/50 transition-colors" />
+            </div>
 
-          <div className="space-y-2">
-            <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Result</label>
-            <Input {...form.register("result")} placeholder="W 105-98" className="bg-secondary/30 border-white/10 text-white h-11" />
+            <div className="space-y-2">
+              <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Result</label>
+              <Input {...form.register("result")} placeholder="W 105-98" className="bg-black/20 border-white/10 text-white h-11 focus:border-cyan-500/50 transition-colors" />
+            </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* 2. Core Stats - Sport Specific */}
       {sport === 'basketball' ? (
         <>
-          <section className="bg-card border border-white/5 p-6 rounded-2xl shadow-lg">
-            <h3 className="text-lg font-bold font-display text-primary mb-6 uppercase tracking-wider flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs">2</span>
-              Box Score
-            </h3>
+          <motion.section 
+            variants={sectionVariants}
+            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 to-black/30 border border-cyan-500/20"
+            style={{ boxShadow: "0 0 40px rgba(0, 212, 255, 0.05)" }}
+          >
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
+            <div className="p-6">
+              <h3 className="text-lg font-bold font-display mb-6 uppercase tracking-wider flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center">
+                  <span className="text-sm text-cyan-400 font-bold">2</span>
+                </div>
+                <span className="bg-gradient-to-r from-white to-cyan-400 bg-clip-text text-transparent">Box Score</span>
+              </h3>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <NumberInput label="Minutes" name="minutes" register={form.register} />
-              <NumberInput label="Points" name="points" register={form.register} />
-              <NumberInput label="Rebounds" name="rebounds" register={form.register} />
-              <NumberInput label="Assists" name="assists" register={form.register} />
-              <NumberInput label="Steals" name="steals" register={form.register} />
-              <NumberInput label="Blocks" name="blocks" register={form.register} />
-              <NumberInput label="Turnovers" name="turnovers" register={form.register} />
-              <NumberInput label="Fouls" name="fouls" register={form.register} />
-            </div>
-          </section>
-
-          {/* 3. Shooting Efficiency */}
-          <section className="bg-card border border-white/5 p-6 rounded-2xl shadow-lg">
-            <h3 className="text-lg font-bold font-display text-primary mb-6 uppercase tracking-wider flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs">3</span>
-              Shooting Splits
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="bg-secondary/10 p-4 rounded-xl space-y-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-bold text-white">Field Goals</h4>
-                  <span className={cn(
-                    "text-lg font-mono font-bold",
-                    fgPercent !== '—' && parseFloat(fgPercent) >= 50 ? "text-green-400" : 
-                    fgPercent !== '—' && parseFloat(fgPercent) < 40 ? "text-red-400" : "text-primary"
-                  )}>
-                    {fgPercent !== '—' ? `${fgPercent}%` : '—'}
-                  </span>
-                </div>
-                <div className="flex gap-4">
-                  <NumberInput label="Made" name="fgMade" register={form.register} />
-                  <NumberInput label="Attempted" name="fgAttempted" register={form.register} />
-                </div>
-              </div>
-              <div className="bg-secondary/10 p-4 rounded-xl space-y-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-bold text-white">3-Pointers</h4>
-                  <span className={cn(
-                    "text-lg font-mono font-bold",
-                    threePercent !== '—' && parseFloat(threePercent) >= 40 ? "text-green-400" : 
-                    threePercent !== '—' && parseFloat(threePercent) < 30 ? "text-red-400" : "text-primary"
-                  )}>
-                    {threePercent !== '—' ? `${threePercent}%` : '—'}
-                  </span>
-                </div>
-                <div className="flex gap-4">
-                  <NumberInput label="Made" name="threeMade" register={form.register} />
-                  <NumberInput label="Attempted" name="threeAttempted" register={form.register} />
-                </div>
-              </div>
-              <div className="bg-secondary/10 p-4 rounded-xl space-y-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-bold text-white">Free Throws</h4>
-                  <span className={cn(
-                    "text-lg font-mono font-bold",
-                    ftPercent !== '—' && parseFloat(ftPercent) >= 80 ? "text-green-400" : 
-                    ftPercent !== '—' && parseFloat(ftPercent) < 70 ? "text-red-400" : "text-primary"
-                  )}>
-                    {ftPercent !== '—' ? `${ftPercent}%` : '—'}
-                  </span>
-                </div>
-                <div className="flex gap-4">
-                  <NumberInput label="Made" name="ftMade" register={form.register} />
-                  <NumberInput label="Attempted" name="ftAttempted" register={form.register} />
-                </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <NumberInput label="Minutes" name="minutes" register={form.register} />
+                <NumberInput label="Points" name="points" register={form.register} />
+                <NumberInput label="Rebounds" name="rebounds" register={form.register} />
+                <NumberInput label="Assists" name="assists" register={form.register} />
+                <NumberInput label="Steals" name="steals" register={form.register} />
+                <NumberInput label="Blocks" name="blocks" register={form.register} />
+                <NumberInput label="Turnovers" name="turnovers" register={form.register} />
+                <NumberInput label="Fouls" name="fouls" register={form.register} />
               </div>
             </div>
+          </motion.section>
 
-            {/* Auto-calculated metrics */}
-            <div className="mt-6 p-4 bg-primary/10 rounded-xl border border-primary/20">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div className="flex items-center gap-6">
-                  <div className="text-center">
-                    <p className="text-xs text-muted-foreground uppercase font-bold">True Shooting</p>
-                    <p className={cn(
-                      "text-2xl font-mono font-bold",
-                      tsPercent !== '—' && parseFloat(tsPercent) >= 60 ? "text-green-400" : 
-                      tsPercent !== '—' && parseFloat(tsPercent) < 50 ? "text-red-400" : "text-primary"
+          <motion.section 
+            variants={sectionVariants}
+            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 to-black/30 border border-cyan-500/20"
+            style={{ boxShadow: "0 0 40px rgba(0, 212, 255, 0.05)" }}
+          >
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
+            <div className="p-6">
+              <h3 className="text-lg font-bold font-display mb-6 uppercase tracking-wider flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center">
+                  <span className="text-sm text-cyan-400 font-bold">3</span>
+                </div>
+                <span className="bg-gradient-to-r from-white to-cyan-400 bg-clip-text text-transparent">Shooting Splits</span>
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-black/30 p-4 rounded-xl border border-white/10 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-bold text-white">Field Goals</h4>
+                    <span className={cn(
+                      "text-lg font-mono font-bold",
+                      fgPercent !== '—' && parseFloat(fgPercent) >= 50 ? "text-green-400" : 
+                      fgPercent !== '—' && parseFloat(fgPercent) < 40 ? "text-red-400" : "text-cyan-400"
                     )}>
-                      {tsPercent !== '—' ? `${tsPercent}%` : '—'}
-                    </p>
+                      {fgPercent !== '—' ? `${fgPercent}%` : '—'}
+                    </span>
                   </div>
-                  <div className="text-center">
-                    <p className="text-xs text-muted-foreground uppercase font-bold">Calc. Points</p>
-                    <p className="text-2xl font-mono font-bold text-white">{calculatedPoints}</p>
+                  <div className="flex gap-4">
+                    <NumberInput label="Made" name="fgMade" register={form.register} />
+                    <NumberInput label="Attempted" name="fgAttempted" register={form.register} />
                   </div>
                 </div>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    checked={autoCalcPoints}
-                    onChange={(e) => setAutoCalcPoints(e.target.checked)}
-                    className="w-4 h-4 rounded border-white/20 bg-secondary/30 text-primary focus:ring-primary"
-                    data-testid="checkbox-auto-calc-points"
-                  />
-                  <span className="text-sm text-muted-foreground">Auto-fill points from shooting</span>
-                </label>
+                <div className="bg-black/30 p-4 rounded-xl border border-white/10 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-bold text-white">3-Pointers</h4>
+                    <span className={cn(
+                      "text-lg font-mono font-bold",
+                      threePercent !== '—' && parseFloat(threePercent) >= 40 ? "text-green-400" : 
+                      threePercent !== '—' && parseFloat(threePercent) < 30 ? "text-red-400" : "text-cyan-400"
+                    )}>
+                      {threePercent !== '—' ? `${threePercent}%` : '—'}
+                    </span>
+                  </div>
+                  <div className="flex gap-4">
+                    <NumberInput label="Made" name="threeMade" register={form.register} />
+                    <NumberInput label="Attempted" name="threeAttempted" register={form.register} />
+                  </div>
+                </div>
+                <div className="bg-black/30 p-4 rounded-xl border border-white/10 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-bold text-white">Free Throws</h4>
+                    <span className={cn(
+                      "text-lg font-mono font-bold",
+                      ftPercent !== '—' && parseFloat(ftPercent) >= 80 ? "text-green-400" : 
+                      ftPercent !== '—' && parseFloat(ftPercent) < 70 ? "text-red-400" : "text-cyan-400"
+                    )}>
+                      {ftPercent !== '—' ? `${ftPercent}%` : '—'}
+                    </span>
+                  </div>
+                  <div className="flex gap-4">
+                    <NumberInput label="Made" name="ftMade" register={form.register} />
+                    <NumberInput label="Attempted" name="ftAttempted" register={form.register} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 p-4 bg-gradient-to-r from-cyan-500/10 to-cyan-500/5 rounded-xl border border-cyan-500/20">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-center gap-6">
+                    <div className="text-center">
+                      <p className="text-xs text-muted-foreground uppercase font-bold">True Shooting</p>
+                      <p className={cn(
+                        "text-2xl font-mono font-bold",
+                        tsPercent !== '—' && parseFloat(tsPercent) >= 60 ? "text-green-400" : 
+                        tsPercent !== '—' && parseFloat(tsPercent) < 50 ? "text-red-400" : "text-cyan-400"
+                      )}>
+                        {tsPercent !== '—' ? `${tsPercent}%` : '—'}
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-muted-foreground uppercase font-bold">Calc. Points</p>
+                      <p className="text-2xl font-mono font-bold text-white">{calculatedPoints}</p>
+                    </div>
+                  </div>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={autoCalcPoints}
+                      onChange={(e) => setAutoCalcPoints(e.target.checked)}
+                      className="w-4 h-4 rounded border-white/20 bg-black/30 text-cyan-500 focus:ring-cyan-500"
+                      data-testid="checkbox-auto-calc-points"
+                    />
+                    <span className="text-sm text-muted-foreground">Auto-fill points from shooting</span>
+                  </label>
+                </div>
               </div>
             </div>
-          </section>
+          </motion.section>
         </>
       ) : (
         <>
-          {/* Football Position-Based Stats */}
-          <section className="bg-card border border-white/5 p-6 rounded-2xl shadow-lg">
-            <h3 className="text-lg font-bold font-display text-primary mb-6 uppercase tracking-wider flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs">2</span>
-              {effectiveFootballPosition ? `${FOOTBALL_POSITION_LABELS[effectiveFootballPosition] || effectiveFootballPosition} Stats` : 'Position Stats'}
-            </h3>
+          <motion.section 
+            variants={sectionVariants}
+            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 to-black/30 border border-cyan-500/20"
+            style={{ boxShadow: "0 0 40px rgba(0, 212, 255, 0.05)" }}
+          >
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
+            <div className="p-6">
+              <h3 className="text-lg font-bold font-display mb-6 uppercase tracking-wider flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center">
+                  <span className="text-sm text-cyan-400 font-bold">2</span>
+                </div>
+                <span className="bg-gradient-to-r from-white to-cyan-400 bg-clip-text text-transparent">
+                  {effectiveFootballPosition ? `${FOOTBALL_POSITION_LABELS[effectiveFootballPosition] || effectiveFootballPosition} Stats` : 'Position Stats'}
+                </span>
+              </h3>
 
-            {!playerId && (
-              <div className="text-center text-muted-foreground py-8 border border-dashed border-white/10 rounded-xl">
-                Select a player to see position-specific stat fields
-              </div>
-            )}
+              {!playerId && (
+                <div className="text-center text-muted-foreground py-8 border border-dashed border-white/10 rounded-xl bg-black/20">
+                  Select a player to see position-specific stat fields
+                </div>
+              )}
 
-            {playerId && !hasValidFootballPosition && (
-              <div className="mb-6">
-                <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider block mb-2">Football Position(s) for this game</label>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                  {FOOTBALL_POSITIONS.map((pos) => (
-                    <label
-                      key={pos}
-                      className={cn(
-                        "flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-all",
-                        selectedFootballPositions.includes(pos)
-                          ? "border-primary bg-primary/20 text-white"
-                          : "border-white/10 bg-secondary/20 text-muted-foreground hover:border-primary/50"
-                      )}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedFootballPositions.includes(pos)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedFootballPositions([...selectedFootballPositions, pos]);
-                          } else {
-                            setSelectedFootballPositions(selectedFootballPositions.filter(p => p !== pos));
-                          }
-                        }}
-                        className="sr-only"
-                        data-testid={`checkbox-position-${pos}`}
-                      />
-                      <span className="text-xs font-medium">{FOOTBALL_POSITION_LABELS[pos]}</span>
-                    </label>
+              {playerId && !hasValidFootballPosition && (
+                <div className="mb-6">
+                  <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider block mb-2">Football Position(s) for this game</label>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                    {FOOTBALL_POSITIONS.map((pos) => (
+                      <label
+                        key={pos}
+                        className={cn(
+                          "flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-all",
+                          selectedFootballPositions.includes(pos)
+                            ? "border-cyan-500 bg-cyan-500/20 text-white"
+                            : "border-white/10 bg-black/20 text-muted-foreground hover:border-cyan-500/50"
+                        )}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedFootballPositions.includes(pos)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedFootballPositions([...selectedFootballPositions, pos]);
+                            } else {
+                              setSelectedFootballPositions(selectedFootballPositions.filter(p => p !== pos));
+                            }
+                          }}
+                          className="sr-only"
+                          data-testid={`checkbox-position-${pos}`}
+                        />
+                        <span className="text-xs font-medium">{FOOTBALL_POSITION_LABELS[pos]}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    Your profile uses a basketball position. Select one or more football positions for this game.
+                  </p>
+                </div>
+              )}
+
+              {playerId && effectiveFootballPosition && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {(FOOTBALL_POSITION_STATS[effectiveFootballPosition] || []).map((stat: string) => (
+                    <NumberInput 
+                      key={stat}
+                      label={FOOTBALL_STAT_LABELS[stat] || stat} 
+                      name={stat} 
+                      register={form.register} 
+                    />
                   ))}
                 </div>
-                <p className="text-xs text-muted-foreground mt-1.5">
-                  Your profile uses a basketball position. Select one or more football positions for this game.
-                </p>
-              </div>
-            )}
+              )}
 
-            {playerId && effectiveFootballPosition && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                {(FOOTBALL_POSITION_STATS[effectiveFootballPosition] || []).map((stat: string) => (
-                  <NumberInput 
-                    key={stat}
-                    label={FOOTBALL_STAT_LABELS[stat] || stat} 
-                    name={stat} 
-                    register={form.register} 
-                  />
-                ))}
-              </div>
-            )}
+              {playerId && !effectiveFootballPosition && !hasValidFootballPosition && selectedFootballPositions.length === 0 && (
+                <div className="text-center text-muted-foreground py-4 border border-dashed border-white/10 rounded-xl bg-black/20">
+                  Select a football position above to see relevant stat fields
+                </div>
+              )}
+            </div>
+          </motion.section>
 
-            {playerId && !effectiveFootballPosition && !hasValidFootballPosition && selectedFootballPositions.length === 0 && (
-              <div className="text-center text-muted-foreground py-4 border border-dashed border-white/10 rounded-xl">
-                Select a football position above to see relevant stat fields
-              </div>
-            )}
-          </section>
-
-          {/* Football Efficiency Metrics */}
           {playerId && effectiveFootballPosition && (
-            <section className="bg-card border border-white/5 p-6 rounded-2xl shadow-lg">
-              <h3 className="text-lg font-bold font-display text-primary mb-6 uppercase tracking-wider flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs">3</span>
-                Efficiency Metrics
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* Passing Efficiency for QB */}
-                {hasPosition(['QB']) && (
-                  <>
-                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
-                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Completion %</p>
-                      <p className="text-2xl font-mono font-bold text-primary">
-                        {(form.watch('passAttempts') || 0) > 0 
-                          ? ((((form.watch('completions') || 0) / (form.watch('passAttempts') || 1)) * 100).toFixed(1)) + '%'
-                          : '—'}
-                      </p>
-                    </div>
-                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
-                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Yards Per Attempt</p>
-                      <p className="text-2xl font-mono font-bold text-primary">
-                        {(form.watch('passAttempts') || 0) > 0 
-                          ? (((form.watch('passingYards') || 0) / (form.watch('passAttempts') || 1)).toFixed(1))
-                          : '—'}
-                      </p>
-                    </div>
-                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
-                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">TD:INT Ratio</p>
-                      <p className="text-2xl font-mono font-bold text-primary">
-                        {form.watch('passingTouchdowns') || 0}:{form.watch('interceptions') || 0}
-                      </p>
-                    </div>
-                  </>
-                )}
+            <motion.section 
+              variants={sectionVariants}
+              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 to-black/30 border border-cyan-500/20"
+              style={{ boxShadow: "0 0 40px rgba(0, 212, 255, 0.05)" }}
+            >
+              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
+              <div className="p-6">
+                <h3 className="text-lg font-bold font-display mb-6 uppercase tracking-wider flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center">
+                    <span className="text-sm text-cyan-400 font-bold">3</span>
+                  </div>
+                  <span className="bg-gradient-to-r from-white to-cyan-400 bg-clip-text text-transparent">Efficiency Metrics</span>
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {hasPosition(['QB']) && (
+                    <>
+                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                        <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Completion %</p>
+                        <p className="text-2xl font-mono font-bold text-cyan-400">
+                          {(form.watch('passAttempts') || 0) > 0 
+                            ? ((((form.watch('completions') || 0) / (form.watch('passAttempts') || 1)) * 100).toFixed(1)) + '%'
+                            : '—'}
+                        </p>
+                      </div>
+                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                        <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Yards Per Attempt</p>
+                        <p className="text-2xl font-mono font-bold text-cyan-400">
+                          {(form.watch('passAttempts') || 0) > 0 
+                            ? (((form.watch('passingYards') || 0) / (form.watch('passAttempts') || 1)).toFixed(1))
+                            : '—'}
+                        </p>
+                      </div>
+                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                        <p className="text-xs text-muted-foreground uppercase font-bold mb-2">TD:INT Ratio</p>
+                        <p className="text-2xl font-mono font-bold text-cyan-400">
+                          {form.watch('passingTouchdowns') || 0}:{form.watch('interceptions') || 0}
+                        </p>
+                      </div>
+                    </>
+                  )}
 
-                {/* Rushing Efficiency for RB */}
-                {hasPosition(['RB']) && (
-                  <>
-                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
-                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Yards Per Carry</p>
-                      <p className="text-2xl font-mono font-bold text-primary">
-                        {(form.watch('carries') || 0) > 0 
-                          ? (((form.watch('rushingYards') || 0) / (form.watch('carries') || 1)).toFixed(1))
-                          : '—'}
-                      </p>
-                    </div>
-                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
-                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Total Yards</p>
-                      <p className="text-2xl font-mono font-bold text-primary">
-                        {(form.watch('rushingYards') || 0) + (form.watch('receivingYards') || 0)}
-                      </p>
-                    </div>
-                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
-                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Total TDs</p>
-                      <p className="text-2xl font-mono font-bold text-primary">
-                        {(form.watch('rushingTouchdowns') || 0) + (form.watch('receivingTouchdowns') || 0)}
-                      </p>
-                    </div>
-                  </>
-                )}
+                  {hasPosition(['RB']) && (
+                    <>
+                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                        <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Yards Per Carry</p>
+                        <p className="text-2xl font-mono font-bold text-cyan-400">
+                          {(form.watch('carries') || 0) > 0 
+                            ? (((form.watch('rushingYards') || 0) / (form.watch('carries') || 1)).toFixed(1))
+                            : '—'}
+                        </p>
+                      </div>
+                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                        <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Total Yards</p>
+                        <p className="text-2xl font-mono font-bold text-cyan-400">
+                          {(form.watch('rushingYards') || 0) + (form.watch('receivingYards') || 0)}
+                        </p>
+                      </div>
+                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                        <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Total TDs</p>
+                        <p className="text-2xl font-mono font-bold text-cyan-400">
+                          {(form.watch('rushingTouchdowns') || 0) + (form.watch('receivingTouchdowns') || 0)}
+                        </p>
+                      </div>
+                    </>
+                  )}
 
-                {/* Receiving Efficiency for WR/TE */}
-                {hasPosition(['WR', 'TE']) && (
-                  <>
-                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
-                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Catch Rate</p>
-                      <p className="text-2xl font-mono font-bold text-primary">
-                        {(form.watch('targets') || 0) > 0 
-                          ? ((((form.watch('receptions') || 0) / (form.watch('targets') || 1)) * 100).toFixed(1)) + '%'
-                          : '—'}
-                      </p>
-                    </div>
-                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
-                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Yards Per Catch</p>
-                      <p className="text-2xl font-mono font-bold text-primary">
-                        {(form.watch('receptions') || 0) > 0 
-                          ? (((form.watch('receivingYards') || 0) / (form.watch('receptions') || 1)).toFixed(1))
-                          : '—'}
-                      </p>
-                    </div>
-                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
-                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">TDs</p>
-                      <p className="text-2xl font-mono font-bold text-primary">
-                        {form.watch('receivingTouchdowns') || 0}
-                      </p>
-                    </div>
-                  </>
-                )}
+                  {hasPosition(['WR', 'TE']) && (
+                    <>
+                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                        <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Catch Rate</p>
+                        <p className="text-2xl font-mono font-bold text-cyan-400">
+                          {(form.watch('targets') || 0) > 0 
+                            ? ((((form.watch('receptions') || 0) / (form.watch('targets') || 1)) * 100).toFixed(1)) + '%'
+                            : '—'}
+                        </p>
+                      </div>
+                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                        <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Yards Per Catch</p>
+                        <p className="text-2xl font-mono font-bold text-cyan-400">
+                          {(form.watch('receptions') || 0) > 0 
+                            ? (((form.watch('receivingYards') || 0) / (form.watch('receptions') || 1)).toFixed(1))
+                            : '—'}
+                        </p>
+                      </div>
+                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                        <p className="text-xs text-muted-foreground uppercase font-bold mb-2">TDs</p>
+                        <p className="text-2xl font-mono font-bold text-cyan-400">
+                          {form.watch('receivingTouchdowns') || 0}
+                        </p>
+                      </div>
+                    </>
+                  )}
 
-                {/* Defensive Stats for DL/LB/DB */}
-                {hasPosition(['DL', 'LB', 'DB']) && (
-                  <>
-                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
-                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Total Tackles</p>
-                      <p className="text-2xl font-mono font-bold text-primary">
-                        {form.watch('tackles') || 0}
-                      </p>
-                    </div>
-                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
-                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Playmaker Stats</p>
-                      <p className="text-2xl font-mono font-bold text-primary">
-                        {(form.watch('sacks') || 0) + (form.watch('defensiveInterceptions') || 0) + (form.watch('forcedFumbles') || 0)}
-                      </p>
-                    </div>
-                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
-                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Pass Deflections</p>
-                      <p className="text-2xl font-mono font-bold text-primary">
-                        {form.watch('passDeflections') || 0}
-                      </p>
-                    </div>
-                  </>
-                )}
+                  {hasPosition(['DL', 'LB', 'DB']) && (
+                    <>
+                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                        <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Total Tackles</p>
+                        <p className="text-2xl font-mono font-bold text-cyan-400">
+                          {form.watch('tackles') || 0}
+                        </p>
+                      </div>
+                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                        <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Playmaker Stats</p>
+                        <p className="text-2xl font-mono font-bold text-cyan-400">
+                          {(form.watch('sacks') || 0) + (form.watch('defensiveInterceptions') || 0) + (form.watch('forcedFumbles') || 0)}
+                        </p>
+                      </div>
+                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                        <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Pass Deflections</p>
+                        <p className="text-2xl font-mono font-bold text-cyan-400">
+                          {form.watch('passDeflections') || 0}
+                        </p>
+                      </div>
+                    </>
+                  )}
 
-                {/* Kicker Stats */}
-                {position === 'K' && (
-                  <>
-                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
-                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">FG %</p>
-                      <p className="text-2xl font-mono font-bold text-primary">
-                        {(form.watch('fieldGoalsAttempted') || 0) > 0 
-                          ? ((((form.watch('fieldGoalsMade') || 0) / (form.watch('fieldGoalsAttempted') || 1)) * 100).toFixed(1)) + '%'
-                          : '—'}
-                      </p>
-                    </div>
-                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
-                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">XP %</p>
-                      <p className="text-2xl font-mono font-bold text-primary">
-                        {(form.watch('extraPointsAttempted') || 0) > 0 
-                          ? ((((form.watch('extraPointsMade') || 0) / (form.watch('extraPointsAttempted') || 1)) * 100).toFixed(1)) + '%'
-                          : '—'}
-                      </p>
-                    </div>
-                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
-                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Total Points</p>
-                      <p className="text-2xl font-mono font-bold text-primary">
-                        {((form.watch('fieldGoalsMade') || 0) * 3) + (form.watch('extraPointsMade') || 0)}
-                      </p>
-                    </div>
-                  </>
-                )}
+                  {position === 'K' && (
+                    <>
+                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                        <p className="text-xs text-muted-foreground uppercase font-bold mb-2">FG %</p>
+                        <p className="text-2xl font-mono font-bold text-cyan-400">
+                          {(form.watch('fieldGoalsAttempted') || 0) > 0 
+                            ? ((((form.watch('fieldGoalsMade') || 0) / (form.watch('fieldGoalsAttempted') || 1)) * 100).toFixed(1)) + '%'
+                            : '—'}
+                        </p>
+                      </div>
+                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                        <p className="text-xs text-muted-foreground uppercase font-bold mb-2">XP %</p>
+                        <p className="text-2xl font-mono font-bold text-cyan-400">
+                          {(form.watch('extraPointsAttempted') || 0) > 0 
+                            ? ((((form.watch('extraPointsMade') || 0) / (form.watch('extraPointsAttempted') || 1)) * 100).toFixed(1)) + '%'
+                            : '—'}
+                        </p>
+                      </div>
+                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                        <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Total Points</p>
+                        <p className="text-2xl font-mono font-bold text-cyan-400">
+                          {((form.watch('fieldGoalsMade') || 0) * 3) + (form.watch('extraPointsMade') || 0)}
+                        </p>
+                      </div>
+                    </>
+                  )}
 
-                {/* Punter Stats */}
-                {position === 'P' && (
-                  <>
-                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
-                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Punt Average</p>
-                      <p className="text-2xl font-mono font-bold text-primary">
-                        {(form.watch('punts') || 0) > 0 
-                          ? (((form.watch('puntYards') || 0) / (form.watch('punts') || 1)).toFixed(1))
-                          : '—'}
-                      </p>
-                    </div>
-                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
-                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Total Punts</p>
-                      <p className="text-2xl font-mono font-bold text-primary">
-                        {form.watch('punts') || 0}
-                      </p>
-                    </div>
-                    <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
-                      <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Total Yards</p>
-                      <p className="text-2xl font-mono font-bold text-primary">
-                        {form.watch('puntYards') || 0}
-                      </p>
-                    </div>
-                  </>
-                )}
+                  {position === 'P' && (
+                    <>
+                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                        <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Punt Average</p>
+                        <p className="text-2xl font-mono font-bold text-cyan-400">
+                          {(form.watch('punts') || 0) > 0 
+                            ? (((form.watch('puntYards') || 0) / (form.watch('punts') || 1)).toFixed(1))
+                            : '—'}
+                        </p>
+                      </div>
+                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                        <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Total Punts</p>
+                        <p className="text-2xl font-mono font-bold text-cyan-400">
+                          {form.watch('punts') || 0}
+                        </p>
+                      </div>
+                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                        <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Total Yards</p>
+                        <p className="text-2xl font-mono font-bold text-cyan-400">
+                          {form.watch('puntYards') || 0}
+                        </p>
+                      </div>
+                    </>
+                  )}
 
-                {/* OL - blocking stats */}
-                {position === 'OL' && (
-                  <>
-                    <div className="space-y-2">
-                      <Label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Pancake Blocks</Label>
-                      <Input
-                        {...form.register('pancakeBlocks', { valueAsNumber: true })}
-                        type="number"
-                        min="0"
-                        className="bg-secondary/30 border-white/10"
-                        data-testid="input-pancake-blocks"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Sacks Allowed</Label>
-                      <Input
-                        {...form.register('sacksAllowed', { valueAsNumber: true })}
-                        type="number"
-                        min="0"
-                        className="bg-secondary/30 border-white/10"
-                        data-testid="input-sacks-allowed"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Penalties</Label>
-                      <Input
-                        {...form.register('penalties', { valueAsNumber: true })}
-                        type="number"
-                        min="0"
-                        className="bg-secondary/30 border-white/10"
-                        data-testid="input-penalties"
-                      />
-                    </div>
-                  </>
-                )}
+                  {position === 'OL' && (
+                    <>
+                      <div className="space-y-2">
+                        <Label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Pancake Blocks</Label>
+                        <Input
+                          {...form.register('pancakeBlocks', { valueAsNumber: true })}
+                          type="number"
+                          min="0"
+                          className="bg-black/20 border-white/10 focus:border-cyan-500/50 transition-colors"
+                          data-testid="input-pancake-blocks"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Sacks Allowed</Label>
+                        <Input
+                          {...form.register('sacksAllowed', { valueAsNumber: true })}
+                          type="number"
+                          min="0"
+                          className="bg-black/20 border-white/10 focus:border-cyan-500/50 transition-colors"
+                          data-testid="input-sacks-allowed"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Penalties</Label>
+                        <Input
+                          {...form.register('penalties', { valueAsNumber: true })}
+                          type="number"
+                          min="0"
+                          className="bg-black/20 border-white/10 focus:border-cyan-500/50 transition-colors"
+                          data-testid="input-penalties"
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
-            </section>
+            </motion.section>
           )}
         </>
       )}
 
-      {/* 4. Intangibles */}
-      <section className="bg-card border border-white/5 p-6 rounded-2xl shadow-lg">
-        <h3 className="text-lg font-bold font-display text-primary mb-6 uppercase tracking-wider flex items-center gap-2">
-          <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs">{sport === 'basketball' ? '4' : playerId ? '4' : '3'}</span>
-          Intangibles & Notes
-        </h3>
-
-        {/* Auto-calculated Defense & Hustle - Basketball Only */}
-        {sport === 'basketball' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
-              <div className="flex items-center justify-between mb-3">
-                <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Defense Rating</label>
-                <span className={cn(
-                  "text-2xl font-mono font-bold",
-                  calculatedDefenseRating >= 75 ? "text-green-400" :
-                  calculatedDefenseRating >= 60 ? "text-primary" :
-                  calculatedDefenseRating < 40 ? "text-red-400" : "text-muted-foreground"
-                )} data-testid="text-defense-rating">
-                  {calculatedDefenseRating}
-                </span>
-              </div>
-              <div className="h-2 bg-secondary/30 rounded-full overflow-hidden">
-                <div 
-                  className={cn(
-                    "h-full rounded-full transition-all duration-300",
-                    calculatedDefenseRating >= 75 ? "bg-green-500" :
-                    calculatedDefenseRating >= 60 ? "bg-primary" :
-                    calculatedDefenseRating < 40 ? "bg-red-500" : "bg-muted-foreground"
-                  )}
-                  style={{ width: `${calculatedDefenseRating}%` }}
-                />
-              </div>
-              <p className="text-[10px] text-muted-foreground mt-2">
-                Based on steals, blocks, def. rebounds & position
-              </p>
-            </div>
-            
-            <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
-              <div className="flex items-center justify-between mb-3">
-                <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Hustle Score</label>
-                <span className={cn(
-                  "text-2xl font-mono font-bold",
-                  calculatedHustleScore >= 75 ? "text-green-400" :
-                  calculatedHustleScore >= 60 ? "text-primary" :
-                  calculatedHustleScore < 40 ? "text-red-400" : "text-muted-foreground"
-                )} data-testid="text-hustle-score">
-                  {calculatedHustleScore}
-                </span>
-              </div>
-              <div className="h-2 bg-secondary/30 rounded-full overflow-hidden">
-                <div 
-                  className={cn(
-                    "h-full rounded-full transition-all duration-300",
-                    calculatedHustleScore >= 75 ? "bg-green-500" :
-                    calculatedHustleScore >= 60 ? "bg-primary" :
-                    calculatedHustleScore < 40 ? "bg-red-500" : "bg-muted-foreground"
-                  )}
-                  style={{ width: `${calculatedHustleScore}%` }}
-                />
-              </div>
-              <p className="text-[10px] text-muted-foreground mt-2">
-                Based on steals, off. rebounds, assists & effort
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Football Hustle Score - Auto-calculated */}
-        {sport === 'football' && (
-          <div className="mb-6">
-            <div className="bg-secondary/10 p-4 rounded-xl border border-white/5">
-              <div className="flex items-center justify-between mb-3">
-                <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Hustle Score</label>
-                <span className={cn(
-                  "text-2xl font-mono font-bold",
-                  calculatedHustleScore >= 75 ? "text-green-400" :
-                  calculatedHustleScore >= 60 ? "text-primary" :
-                  calculatedHustleScore < 40 ? "text-red-400" : "text-muted-foreground"
-                )} data-testid="text-football-hustle-score">
-                  {calculatedHustleScore}
-                </span>
-              </div>
-              <div className="h-2 bg-secondary/30 rounded-full overflow-hidden">
-                <div 
-                  className={cn(
-                    "h-full rounded-full transition-all duration-300",
-                    calculatedHustleScore >= 75 ? "bg-green-500" :
-                    calculatedHustleScore >= 60 ? "bg-primary" :
-                    calculatedHustleScore < 40 ? "bg-red-500" : "bg-muted-foreground"
-                  )}
-                  style={{ width: `${calculatedHustleScore}%` }}
-                />
-              </div>
-              <p className="text-[10px] text-muted-foreground mt-2">
-                Auto-calculated from tackles, sacks, forced fumbles, pancakes & effort plays
-              </p>
-            </div>
-          </div>
-        )}
-
-        <div className="space-y-2">
-          <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Coach's Notes</label>
-          <Textarea 
-            {...form.register("notes")} 
-            placeholder="Add specific observations, areas for improvement, or key moments..."
-            className="bg-secondary/30 border-white/10 text-white min-h-[100px]"
-          />
-        </div>
-      </section>
-
-      <Button 
-        type="submit" 
-        disabled={isPending} 
-        size="lg" 
-        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-14 text-lg shadow-xl shadow-primary/20"
+      <motion.section 
+        variants={sectionVariants}
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 to-black/30 border border-cyan-500/20"
+        style={{ boxShadow: "0 0 40px rgba(0, 212, 255, 0.05)" }}
       >
-        {isPending ? (
-          <>
-            <Loader2 className="w-5 h-5 mr-2 animate-spin" /> Analyzing Performance...
-          </>
-        ) : (
-          <>
-            <Save className="w-5 h-5 mr-2" /> Generate Report Card
-          </>
-        )}
-      </Button>
-    </form>
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
+        <div className="p-6">
+          <h3 className="text-lg font-bold font-display mb-6 uppercase tracking-wider flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center">
+              <span className="text-sm text-cyan-400 font-bold">{sport === 'basketball' ? '4' : playerId ? '4' : '3'}</span>
+            </div>
+            <span className="bg-gradient-to-r from-white to-cyan-400 bg-clip-text text-transparent">Intangibles & Notes</span>
+          </h3>
+
+          {sport === 'basketball' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                <div className="flex items-center justify-between mb-3">
+                  <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Defense Rating</label>
+                  <span className={cn(
+                    "text-2xl font-mono font-bold",
+                    calculatedDefenseRating >= 75 ? "text-green-400" :
+                    calculatedDefenseRating >= 60 ? "text-cyan-400" :
+                    calculatedDefenseRating < 40 ? "text-red-400" : "text-muted-foreground"
+                  )} data-testid="text-defense-rating">
+                    {calculatedDefenseRating}
+                  </span>
+                </div>
+                <div className="h-2 bg-black/50 rounded-full overflow-hidden">
+                  <div 
+                    className={cn(
+                      "h-full rounded-full transition-all duration-300",
+                      calculatedDefenseRating >= 75 ? "bg-green-500" :
+                      calculatedDefenseRating >= 60 ? "bg-cyan-500" :
+                      calculatedDefenseRating < 40 ? "bg-red-500" : "bg-muted-foreground"
+                    )}
+                    style={{ width: `${calculatedDefenseRating}%` }}
+                  />
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-2">
+                  Based on steals, blocks, def. rebounds & position
+                </p>
+              </div>
+              
+              <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                <div className="flex items-center justify-between mb-3">
+                  <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Hustle Score</label>
+                  <span className={cn(
+                    "text-2xl font-mono font-bold",
+                    calculatedHustleScore >= 75 ? "text-green-400" :
+                    calculatedHustleScore >= 60 ? "text-cyan-400" :
+                    calculatedHustleScore < 40 ? "text-red-400" : "text-muted-foreground"
+                  )} data-testid="text-hustle-score">
+                    {calculatedHustleScore}
+                  </span>
+                </div>
+                <div className="h-2 bg-black/50 rounded-full overflow-hidden">
+                  <div 
+                    className={cn(
+                      "h-full rounded-full transition-all duration-300",
+                      calculatedHustleScore >= 75 ? "bg-green-500" :
+                      calculatedHustleScore >= 60 ? "bg-cyan-500" :
+                      calculatedHustleScore < 40 ? "bg-red-500" : "bg-muted-foreground"
+                    )}
+                    style={{ width: `${calculatedHustleScore}%` }}
+                  />
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-2">
+                  Based on steals, off. rebounds, assists & effort
+                </p>
+              </div>
+            </div>
+          )}
+
+          {sport === 'football' && (
+            <div className="mb-6">
+              <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                <div className="flex items-center justify-between mb-3">
+                  <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Hustle Score</label>
+                  <span className={cn(
+                    "text-2xl font-mono font-bold",
+                    calculatedHustleScore >= 75 ? "text-green-400" :
+                    calculatedHustleScore >= 60 ? "text-cyan-400" :
+                    calculatedHustleScore < 40 ? "text-red-400" : "text-muted-foreground"
+                  )} data-testid="text-football-hustle-score">
+                    {calculatedHustleScore}
+                  </span>
+                </div>
+                <div className="h-2 bg-black/50 rounded-full overflow-hidden">
+                  <div 
+                    className={cn(
+                      "h-full rounded-full transition-all duration-300",
+                      calculatedHustleScore >= 75 ? "bg-green-500" :
+                      calculatedHustleScore >= 60 ? "bg-cyan-500" :
+                      calculatedHustleScore < 40 ? "bg-red-500" : "bg-muted-foreground"
+                    )}
+                    style={{ width: `${calculatedHustleScore}%` }}
+                  />
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-2">
+                  Auto-calculated from tackles, sacks, forced fumbles, pancakes & effort plays
+                </p>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Coach's Notes</label>
+            <Textarea 
+              {...form.register("notes")} 
+              placeholder="Add specific observations, areas for improvement, or key moments..."
+              className="bg-black/20 border-white/10 text-white min-h-[100px] focus:border-cyan-500/50 transition-colors"
+            />
+          </div>
+        </div>
+      </motion.section>
+
+      <motion.div variants={sectionVariants}>
+        <Button 
+          type="submit" 
+          disabled={isPending} 
+          size="lg" 
+          className="w-full h-14 text-lg font-bold bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-black transition-all"
+          style={{ boxShadow: "0 0 30px rgba(0, 212, 255, 0.3)" }}
+          data-testid="button-submit-game"
+        >
+          {isPending ? (
+            <>
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" /> Analyzing Performance...
+            </>
+          ) : (
+            <>
+              <Save className="w-5 h-5 mr-2" /> Generate Report Card
+            </>
+          )}
+        </Button>
+      </motion.div>
+    </motion.form>
   );
 }
 
@@ -947,7 +1029,7 @@ function NumberInput({ label, name, register }: any) {
         type="number" 
         inputMode="numeric"
         {...register(name, { valueAsNumber: true })} 
-        className="bg-secondary/30 border-white/10 text-white text-center font-mono focus:border-primary/50 h-12 md:h-10 text-base" 
+        className="bg-black/20 border-white/10 text-white text-center font-mono focus:border-cyan-500/50 h-12 md:h-10 text-base transition-colors" 
         data-testid={`input-${name}`}
       />
     </div>
@@ -961,7 +1043,6 @@ function ReportCardView({ game, onReset }: { game: any, onReset: () => void }) {
   const playerPhoto = player?.photoUrl || undefined;
   const isFootball = game.sport === 'football';
 
-  // Calculate football headline stats based on position stats
   const footballStats = isFootball ? {
     passingYards: game.passingYards || 0,
     rushingYards: game.rushingYards || 0,
@@ -972,7 +1053,6 @@ function ReportCardView({ game, onReset }: { game: any, onReset: () => void }) {
     interceptions: game.defensiveInterceptions || 0,
   } : null;
 
-  // Get the most relevant 3 stats for football based on what's non-zero
   const getFootballHeadlineStats = () => {
     if (!footballStats) return [];
     const stats = [
@@ -992,12 +1072,24 @@ function ReportCardView({ game, onReset }: { game: any, onReset: () => void }) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto py-8 animate-in zoom-in-95 duration-500">
-      <div className="bg-card border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
-        <div className="bg-gradient-to-b from-primary/20 to-card p-8 text-center relative">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50" />
+    <motion.div 
+      className="max-w-2xl mx-auto py-8"
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-black/60 to-black/30 border border-cyan-500/20 shadow-2xl"
+        style={{ boxShadow: "0 0 60px rgba(0, 212, 255, 0.15)" }}
+      >
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
+        <div className="bg-gradient-to-b from-cyan-500/10 to-transparent p-8 text-center relative">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50" />
           
-          <h2 className="text-sm font-bold text-primary uppercase tracking-widest mb-4">Performance Report</h2>
+          <p className="text-xs uppercase tracking-wider text-cyan-400 font-semibold mb-1">Game Report</p>
+          <h2 className="text-2xl font-bold font-display mb-1 bg-gradient-to-r from-white to-cyan-400 bg-clip-text text-transparent">
+            {playerName}
+          </h2>
+          <p className="text-muted-foreground text-sm mb-4">vs. {game.opponent} · {new Date(game.date).toLocaleDateString()}</p>
           
           <div className="flex justify-center mb-6">
             <GradeBadge grade={game.grade} size="xl" className="shadow-2xl scale-125" />
@@ -1033,9 +1125,9 @@ function ReportCardView({ game, onReset }: { game: any, onReset: () => void }) {
         <div className="p-8 space-y-6">
           <div className="space-y-3">
             <h3 className="text-lg font-bold font-display text-white flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-primary" /> Scouting Report
+              <Trophy className="w-5 h-5 text-cyan-400" /> Scouting Report
             </h3>
-            <div className="bg-secondary/20 p-5 rounded-xl border border-white/5">
+            <div className="bg-black/30 p-5 rounded-xl border border-white/10">
               <p className="text-muted-foreground leading-relaxed text-sm">
                 {game.feedback}
               </p>
@@ -1045,13 +1137,13 @@ function ReportCardView({ game, onReset }: { game: any, onReset: () => void }) {
           <div className="grid grid-cols-2 gap-4">
             {isFootball ? (
               <>
-                <div className="p-4 bg-secondary/10 rounded-xl border border-white/5">
+                <div className="p-4 bg-black/30 rounded-xl border border-white/10">
                   <span className="text-xs text-muted-foreground uppercase font-bold">Total Yards</span>
                   <p className="text-xl font-display font-bold text-white mt-1">
                     {(game.passingYards || 0) + (game.rushingYards || 0) + (game.receivingYards || 0)} <span className="text-sm text-muted-foreground">YDS</span>
                   </p>
                 </div>
-                <div className="p-4 bg-secondary/10 rounded-xl border border-white/5">
+                <div className="p-4 bg-black/30 rounded-xl border border-white/10">
                   <span className="text-xs text-muted-foreground uppercase font-bold">Turnovers</span>
                   <p className="text-xl font-display font-bold text-white mt-1">
                     {(game.interceptions || 0) + (game.fumbles || 0)} <span className="text-sm text-muted-foreground">TO</span>
@@ -1060,13 +1152,13 @@ function ReportCardView({ game, onReset }: { game: any, onReset: () => void }) {
               </>
             ) : (
               <>
-                <div className="p-4 bg-secondary/10 rounded-xl border border-white/5">
+                <div className="p-4 bg-black/30 rounded-xl border border-white/10">
                   <span className="text-xs text-muted-foreground uppercase font-bold">Shooting</span>
                   <p className="text-xl font-display font-bold text-white mt-1">
                     {game.fgMade}/{game.fgAttempted} <span className="text-sm text-muted-foreground">FG</span>
                   </p>
                 </div>
-                <div className="p-4 bg-secondary/10 rounded-xl border border-white/5">
+                <div className="p-4 bg-black/30 rounded-xl border border-white/10">
                   <span className="text-xs text-muted-foreground uppercase font-bold">Turnovers</span>
                   <p className="text-xl font-display font-bold text-white mt-1">
                     {game.turnovers} <span className="text-sm text-muted-foreground">TO</span>
@@ -1078,7 +1170,8 @@ function ReportCardView({ game, onReset }: { game: any, onReset: () => void }) {
 
           <Button 
             onClick={() => setShareOpen(true)} 
-            className="w-full gap-2 bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-500/90"
+            className="w-full gap-2 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-black font-bold"
+            style={{ boxShadow: "0 0 20px rgba(0, 212, 255, 0.3)" }}
             data-testid="button-share-achievement"
           >
             <Share2 className="w-4 h-4" />
@@ -1092,7 +1185,7 @@ function ReportCardView({ game, onReset }: { game: any, onReset: () => void }) {
               Close Report
             </Button>
             <Link href={`/players/${game.playerId}`} className="flex-1">
-              <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold">
+              <Button className="w-full bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-black font-bold">
                 View Player Profile
               </Button>
             </Link>
@@ -1115,6 +1208,6 @@ function ReportCardView({ game, onReset }: { game: any, onReset: () => void }) {
           playerPhoto={playerPhoto}
         />
       </ShareModal>
-    </div>
+    </motion.div>
   );
 }
