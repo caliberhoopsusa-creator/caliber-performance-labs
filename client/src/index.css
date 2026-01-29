@@ -2148,6 +2148,198 @@
 }
 
 /* ============================================ */
+/* LEGENDARY PREMIUM COSMETIC ANIMATIONS */
+/* ============================================ */
+
+/* Scan line effect for neon grid */
+@keyframes scanLine {
+  0% { background-position: 0% 0%, 0% 0%, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0; }
+  100% { background-position: 100% 0%, 0% 0%, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0; }
+}
+
+/* Flame flicker effect */
+@keyframes flameFlicker {
+  0%, 100% { filter: brightness(1) saturate(1); }
+  25% { filter: brightness(1.05) saturate(1.1); }
+  50% { filter: brightness(0.95) saturate(0.95); }
+  75% { filter: brightness(1.08) saturate(1.05); }
+}
+
+/* Aurora wave motion */
+@keyframes auroraWave {
+  0%, 100% { background-position: 0% 50%, 0% 50%, 0 0, 0 0, 0 0, 0 0; }
+  50% { background-position: 100% 50%, 100% 50%, 0 0, 0 0, 0 0, 0 0; }
+}
+
+/* Star twinkle for galaxy */
+@keyframes starTwinkle {
+  0%, 100% { opacity: 1; }
+  25% { opacity: 0.7; }
+  50% { opacity: 1; }
+  75% { opacity: 0.8; }
+}
+
+/* Nebula breathing effect */
+@keyframes nebulaBreath {
+  0%, 100% { filter: brightness(1) saturate(1); }
+  50% { filter: brightness(1.15) saturate(1.1); }
+}
+
+/* Gold pulsing glow */
+@keyframes goldPulse {
+  0%, 100% { filter: brightness(1) drop-shadow(0 0 20px rgba(255, 215, 0, 0.8)); }
+  50% { filter: brightness(1.3) drop-shadow(0 0 40px rgba(255, 215, 0, 1)); }
+}
+
+/* Prismatic color shift for diamond */
+@keyframes prismShift {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+/* Crystal flash effect */
+@keyframes crystalFlash {
+  0%, 90%, 100% { opacity: 1; }
+  95% { opacity: 0.5; filter: brightness(2); }
+}
+
+/* Central core pulse for glow trail */
+@keyframes corePulse {
+  0%, 100% { 
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.9;
+    filter: brightness(1);
+  }
+  50% { 
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 1;
+    filter: brightness(1.4);
+  }
+}
+
+/* Medium speed spin */
+@keyframes spinMedium {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Fast orbit for energy orbs */
+@keyframes orbitFast {
+  from { 
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to { 
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* Wave expanding outward */
+@keyframes waveExpand {
+  0% { 
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0.8;
+  }
+  100% { 
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Supernova core pulse */
+@keyframes supernovaPulse {
+  0%, 100% { 
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.95;
+    filter: brightness(1.2);
+  }
+  50% { 
+    transform: translate(-50%, -50%) scale(1.15);
+    opacity: 1;
+    filter: brightness(1.6);
+  }
+}
+
+/* Particle spray animations - shooting upward and outward */
+@keyframes particleSpray1 {
+  0% { 
+    transform: translate(-50%, -50%) translateY(0) translateX(0) scale(0.5);
+    opacity: 1;
+  }
+  100% { 
+    transform: translate(-50%, -50%) translateY(-180px) translateX(40px) scale(0.2);
+    opacity: 0;
+  }
+}
+
+@keyframes particleSpray2 {
+  0% { 
+    transform: translate(-50%, -50%) translateY(0) translateX(0) scale(0.5);
+    opacity: 1;
+  }
+  100% { 
+    transform: translate(-50%, -50%) translateY(-160px) translateX(-60px) scale(0.15);
+    opacity: 0;
+  }
+}
+
+@keyframes particleSpray3 {
+  0% { 
+    transform: translate(-50%, -50%) translateY(0) translateX(0) scale(0.5);
+    opacity: 1;
+  }
+  100% { 
+    transform: translate(-50%, -50%) translateY(-200px) translateX(80px) scale(0.1);
+    opacity: 0;
+  }
+}
+
+@keyframes particleSpray4 {
+  0% { 
+    transform: translate(-50%, -50%) translateY(0) translateX(0) scale(0.5);
+    opacity: 1;
+  }
+  100% { 
+    transform: translate(-50%, -50%) translateY(-140px) translateX(-90px) scale(0.2);
+    opacity: 0;
+  }
+}
+
+@keyframes particleSpray5 {
+  0% { 
+    transform: translate(-50%, -50%) translateY(0) translateX(0) scale(0.4);
+    opacity: 1;
+  }
+  100% { 
+    transform: translate(-50%, -50%) translateY(-220px) translateX(20px) scale(0.1);
+    opacity: 0;
+  }
+}
+
+/* Shockwave ring expanding */
+@keyframes shockwave {
+  0% { 
+    transform: translate(-50%, -50%) scale(0.3);
+    opacity: 0.8;
+  }
+  100% { 
+    transform: translate(-50%, -50%) scale(1.8);
+    opacity: 0;
+  }
+}
+
+/* Heat glow pulsing */
+@keyframes heatGlow {
+  0%, 100% { 
+    opacity: 0.4;
+    filter: brightness(1);
+  }
+  50% { 
+    opacity: 0.6;
+    filter: brightness(1.2);
+  }
+}
+
+/* ============================================ */
 
 @media (prefers-reduced-motion: reduce) {
   *,
