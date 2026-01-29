@@ -366,6 +366,35 @@ function ShopItemCard({
   const rarity = RARITY_COLORS[item.rarity as keyof typeof RARITY_COLORS] || RARITY_COLORS.common;
   const canAfford = coinBalance >= (item.coinPrice || 0);
 
+  const PROFILE_SKIN_STYLES: Record<string, { background: string; borderColor: string }> = {
+    "neon-grid": {
+      background: "linear-gradient(135deg, #00D4FF10 0%, #00D4FF05 50%, transparent 50%), repeating-linear-gradient(0deg, transparent, transparent 10px, #00D4FF15 10px, #00D4FF15 11px), repeating-linear-gradient(90deg, transparent, transparent 10px, #00D4FF15 10px, #00D4FF15 11px)",
+      borderColor: "#00D4FF50",
+    },
+    "flame-burst": {
+      background: "linear-gradient(135deg, #ff6b3520 0%, #ff220020 25%, #ff6b3515 50%, #ff9a0010 100%)",
+      borderColor: "#ff6b3560",
+    },
+    "aurora-glow": {
+      background: "linear-gradient(135deg, #00ff8830 0%, #00D4FF25 33%, #9b59b620 66%, #00ff8815 100%)",
+      borderColor: "#00ff8850",
+    },
+    "galaxy-swirl": {
+      background: "radial-gradient(ellipse at 30% 20%, #9b59b630 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, #3498db25 0%, transparent 50%), linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%)",
+      borderColor: "#9b59b660",
+    },
+  };
+
+  const BADGE_STYLE_PREVIEW: Record<string, { ringColor: string; glowColor: string }> = {
+    "gold-frame": { ringColor: "#FFD700", glowColor: "0 0 15px #FFD70080" },
+    "diamond-sparkle": { ringColor: "#E0E7FF", glowColor: "0 0 20px #E0E7FF80, 0 0 40px #A5B4FC40" },
+  };
+
+  const EFFECT_PREVIEW: Record<string, { gradient: string; animation?: string }> = {
+    "glow-trail": { gradient: "radial-gradient(circle at 50% 50%, #00D4FF40 0%, transparent 70%)" },
+    "particle-burst": { gradient: "radial-gradient(circle at 30% 30%, #FFD70040 0%, transparent 30%), radial-gradient(circle at 70% 60%, #FF6B3540 0%, transparent 25%), radial-gradient(circle at 50% 80%, #00D4FF40 0%, transparent 35%)" },
+  };
+
   const getPreviewStyle = () => {
     if (item.category === "theme" && item.type === "accent_color") {
       return {
@@ -374,7 +403,77 @@ function ShopItemCard({
         boxShadow: `0 0 20px ${item.value}30`,
       };
     }
+    if (item.category === "profile_skin" && item.value && PROFILE_SKIN_STYLES[item.value]) {
+      const style = PROFILE_SKIN_STYLES[item.value];
+      return {
+        background: style.background,
+        borderColor: style.borderColor,
+        boxShadow: `0 0 15px ${style.borderColor}`,
+      };
+    }
+    if (item.category === "effect" && item.value && EFFECT_PREVIEW[item.value]) {
+      return {
+        background: EFFECT_PREVIEW[item.value].gradient,
+        borderColor: "rgba(255,255,255,0.1)",
+      };
+    }
     return {};
+  };
+
+  const renderPreviewContent = () => {
+    if (item.category === "theme" && item.type === "accent_color") {
+      return (
+        <div 
+          className="w-12 h-12 rounded-full shadow-lg"
+          style={{ 
+            backgroundColor: item.value,
+            boxShadow: `0 0 30px ${item.value}80`,
+          }}
+        />
+      );
+    }
+    
+    if (item.category === "profile_skin" && item.value && PROFILE_SKIN_STYLES[item.value]) {
+      return (
+        <div className="w-16 h-20 rounded-lg border border-white/20 flex items-center justify-center" style={getPreviewStyle()}>
+          <User className="w-6 h-6 text-white/60" />
+        </div>
+      );
+    }
+    
+    if (item.category === "badge_style" && item.value && BADGE_STYLE_PREVIEW[item.value]) {
+      const style = BADGE_STYLE_PREVIEW[item.value];
+      return (
+        <div 
+          className="w-14 h-14 rounded-full flex items-center justify-center"
+          style={{ 
+            border: `3px solid ${style.ringColor}`,
+            boxShadow: style.glowColor,
+            background: "linear-gradient(135deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 100%)",
+          }}
+        >
+          <Award className="w-6 h-6" style={{ color: style.ringColor }} />
+        </div>
+      );
+    }
+    
+    if (item.category === "effect" && item.value && EFFECT_PREVIEW[item.value]) {
+      return (
+        <div className="relative w-16 h-16 flex items-center justify-center">
+          <div 
+            className="absolute inset-0 rounded-full animate-pulse"
+            style={{ background: EFFECT_PREVIEW[item.value].gradient }}
+          />
+          <Sparkles className="w-6 h-6 text-cyan-400 relative z-10" />
+        </div>
+      );
+    }
+    
+    if (item.previewUrl) {
+      return <img src={item.previewUrl} alt={item.name} className="w-full h-full object-cover rounded-lg" />;
+    }
+    
+    return <Sparkles className="w-8 h-8 text-muted-foreground" />;
   };
 
   return (
@@ -403,19 +502,7 @@ function ShopItemCard({
             className="aspect-square rounded-lg border flex items-center justify-center"
             style={getPreviewStyle()}
           >
-            {item.category === "theme" && item.type === "accent_color" ? (
-              <div 
-                className="w-12 h-12 rounded-full shadow-lg"
-                style={{ 
-                  backgroundColor: item.value,
-                  boxShadow: `0 0 30px ${item.value}80`,
-                }}
-              />
-            ) : item.previewUrl ? (
-              <img src={item.previewUrl} alt={item.name} className="w-full h-full object-cover rounded-lg" />
-            ) : (
-              <Sparkles className="w-8 h-8 text-muted-foreground" />
-            )}
+            {renderPreviewContent()}
           </div>
 
           <div className="space-y-1">
@@ -471,7 +558,12 @@ function ShopItemCard({
                 disabled={!canAfford || isPurchasing}
                 data-testid={`btn-purchase-${item.id}`}
               >
-                <Coins className="w-3 h-3 mr-1" />
+                <span 
+                  className="relative mr-1"
+                  style={{ filter: canAfford ? "drop-shadow(0 0 4px #FFD700) drop-shadow(0 0 8px #FFA500)" : "none" }}
+                >
+                  <Coins className="w-3 h-3" />
+                </span>
                 {item.coinPrice?.toLocaleString() ?? "Free"}
               </Button>
             )}
