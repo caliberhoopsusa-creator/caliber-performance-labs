@@ -2266,6 +2266,154 @@
 }
 
 /* ============================================ */
+/* PREMIUM THEME EFFECTS - Applied when user has custom theme */
+/* ============================================ */
+
+/* When theme is active, enhance UI elements */
+html.theme-active {
+  /* Cards get theme glow on hover */
+  & .card-hover-glow:hover {
+    box-shadow: var(--theme-glow, none);
+  }
+  
+  /* Main page headers get theme text glow */
+  & .theme-glow-text {
+    text-shadow: var(--theme-text-glow, none);
+  }
+  
+  /* Active sidebar items glow */
+  & [data-active="true"] {
+    box-shadow: var(--theme-glow-subtle, none);
+  }
+}
+
+/* Theme-enhanced card with gradient background */
+.theme-card {
+  position: relative;
+  overflow: hidden;
+}
+
+html.theme-active .theme-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--theme-gradient, transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+
+html.theme-active .theme-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Theme-enhanced buttons get glow on hover */
+html.theme-active .theme-btn:hover {
+  box-shadow: var(--theme-glow, none);
+}
+
+/* Theme border glow for focused inputs */
+html.theme-active input:focus,
+html.theme-active textarea:focus,
+html.theme-active select:focus {
+  box-shadow: var(--theme-border-glow, none);
+}
+
+/* Premium header with theme gradient */
+.theme-header {
+  position: relative;
+}
+
+html.theme-active .theme-header::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    hsl(var(--accent)) 20%, 
+    hsl(var(--accent)) 80%, 
+    transparent 100%
+  );
+  opacity: 0.6;
+}
+
+/* Theme-colored decorative elements */
+.theme-accent-line {
+  height: 3px;
+  background: linear-gradient(90deg, 
+    hsl(var(--accent)) 0%, 
+    hsl(var(--accent) / 0.5) 50%,
+    transparent 100%
+  );
+  border-radius: 2px;
+}
+
+/* Profile card theme enhancement */
+html.theme-active .profile-theme-border {
+  border-color: hsl(var(--accent) / 0.5);
+  box-shadow: 
+    0 0 20px hsl(var(--accent) / 0.2),
+    inset 0 0 30px hsl(var(--accent) / 0.05);
+}
+
+/* Stat cards with theme glow */
+html.theme-active .stat-card-glow {
+  box-shadow: 0 0 15px hsl(var(--accent) / 0.15);
+  border-color: hsl(var(--accent) / 0.3);
+}
+
+/* Navigation active state enhancement */
+html.theme-active .nav-active {
+  background: hsl(var(--accent) / 0.15);
+  border-left: 3px solid hsl(var(--accent));
+  box-shadow: inset 4px 0 8px hsl(var(--accent) / 0.1);
+}
+
+/* Theme badge indicator */
+.theme-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 9999px;
+  background: hsl(var(--accent) / 0.15);
+  color: hsl(var(--accent));
+  border: 1px solid hsl(var(--accent) / 0.3);
+}
+
+.theme-badge::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: hsl(var(--accent));
+  box-shadow: 0 0 6px hsl(var(--accent));
+}
+
+/* Animated theme indicator dot */
+@keyframes themePulse {
+  0%, 100% { 
+    box-shadow: 0 0 4px hsl(var(--accent)), 0 0 8px hsl(var(--accent) / 0.5);
+  }
+  50% { 
+    box-shadow: 0 0 8px hsl(var(--accent)), 0 0 16px hsl(var(--accent) / 0.5);
+  }
+}
+
+.theme-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: hsl(var(--accent));
+  animation: themePulse 2s ease-in-out infinite;
+}
+
+/* ============================================ */
 
 @media (prefers-reduced-motion: reduce) {
   *,

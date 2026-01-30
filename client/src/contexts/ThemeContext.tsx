@@ -18,6 +18,7 @@ interface ThemeContextValue {
   themeData: ThemeData | null;
   isLoading: boolean;
   accentColor: string;
+  themeName: string | null;
   refreshTheme: () => void;
 }
 
@@ -27,6 +28,7 @@ const ThemeContext = createContext<ThemeContextValue>({
   themeData: null,
   isLoading: false,
   accentColor: DEFAULT_ACCENT_COLOR,
+  themeName: null,
   refreshTheme: () => {},
 });
 
@@ -70,10 +72,11 @@ function hexToHSL(hex: string): { h: number; s: number; l: number } {
   };
 }
 
-function applyAccentColor(hexColor: string) {
+function applyAccentColor(hexColor: string, isCustomTheme: boolean) {
   const hsl = hexToHSL(hexColor);
   const root = document.documentElement;
   
+  // Core accent colors
   root.style.setProperty("--accent", `${hsl.h} ${hsl.s}% ${hsl.l}%`);
   root.style.setProperty("--accent-foreground", "0 0% 100%");
   
@@ -84,15 +87,52 @@ function applyAccentColor(hexColor: string) {
   const lighterS = Math.max(hsl.s - 10, 20);
   root.style.setProperty("--accent-hover", `${hsl.h} ${lighterS}% ${lighterL}%`);
   
+  // Sidebar accent
   root.style.setProperty("--sidebar-accent", `${hsl.h} ${hsl.s}% ${hsl.l}%`);
   root.style.setProperty("--sidebar-accent-foreground", "0 0% 100%");
   root.style.setProperty("--sidebar-accent-border", `${hsl.h} ${hsl.s}% ${darkerL}%`);
+  
+  // Premium theme effects - only apply when user has a custom theme
+  if (isCustomTheme) {
+    // Glow effects
+    root.style.setProperty("--theme-glow", `0 0 20px hsla(${hsl.h}, ${hsl.s}%, ${hsl.l}%, 0.4)`);
+    root.style.setProperty("--theme-glow-intense", `0 0 30px hsla(${hsl.h}, ${hsl.s}%, ${hsl.l}%, 0.6), 0 0 60px hsla(${hsl.h}, ${hsl.s}%, ${hsl.l}%, 0.3)`);
+    root.style.setProperty("--theme-glow-subtle", `0 0 15px hsla(${hsl.h}, ${hsl.s}%, ${hsl.l}%, 0.25)`);
+    
+    // Border glow
+    root.style.setProperty("--theme-border-glow", `0 0 10px hsla(${hsl.h}, ${hsl.s}%, ${hsl.l}%, 0.5)`);
+    
+    // Gradient backgrounds
+    root.style.setProperty("--theme-gradient", `linear-gradient(135deg, hsla(${hsl.h}, ${hsl.s}%, ${hsl.l}%, 0.15) 0%, transparent 100%)`);
+    root.style.setProperty("--theme-gradient-intense", `linear-gradient(135deg, hsla(${hsl.h}, ${hsl.s}%, ${hsl.l}%, 0.25) 0%, hsla(${hsl.h}, ${hsl.s}%, ${Math.max(hsl.l - 20, 10)}%, 0.1) 100%)`);
+    
+    // Text shadow for headers
+    root.style.setProperty("--theme-text-glow", `0 0 10px hsla(${hsl.h}, ${hsl.s}%, ${hsl.l}%, 0.5)`);
+    
+    // Ring color for focus states
+    root.style.setProperty("--theme-ring", `hsla(${hsl.h}, ${hsl.s}%, ${hsl.l}%, 0.5)`);
+    
+    // Enable theme effects
+    root.classList.add("theme-active");
+  } else {
+    // Remove custom theme effects
+    root.style.removeProperty("--theme-glow");
+    root.style.removeProperty("--theme-glow-intense");
+    root.style.removeProperty("--theme-glow-subtle");
+    root.style.removeProperty("--theme-border-glow");
+    root.style.removeProperty("--theme-gradient");
+    root.style.removeProperty("--theme-gradient-intense");
+    root.style.removeProperty("--theme-text-glow");
+    root.style.removeProperty("--theme-ring");
+    root.classList.remove("theme-active");
+  }
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const { user, isLoading: authLoading } = useAuth();
   const queryClient = useQueryClient();
   const [currentAccentColor, setCurrentAccentColor] = useState(DEFAULT_ACCENT_COLOR);
+  const [themeName, setThemeName] = useState<string | null>(null);
 
   const { data: themeData, isLoading, isError } = useQuery<ThemeData>({
     queryKey: ["/api/shop/active-theme"],
@@ -103,20 +143,24 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (isError) {
-      applyAccentColor(DEFAULT_ACCENT_COLOR);
+      applyAccentColor(DEFAULT_ACCENT_COLOR, false);
       setCurrentAccentColor(DEFAULT_ACCENT_COLOR);
+      setThemeName(null);
       return;
     }
     
     const accentColor = themeData?.accentColor || DEFAULT_ACCENT_COLOR;
+    const isCustomTheme = themeData?.active === true && themeData?.theme !== null;
     setCurrentAccentColor(accentColor);
-    applyAccentColor(accentColor);
+    setThemeName(themeData?.theme?.name || null);
+    applyAccentColor(accentColor, isCustomTheme);
   }, [themeData, isError]);
 
   useEffect(() => {
     if (!user) {
-      applyAccentColor(DEFAULT_ACCENT_COLOR);
+      applyAccentColor(DEFAULT_ACCENT_COLOR, false);
       setCurrentAccentColor(DEFAULT_ACCENT_COLOR);
+      setThemeName(null);
     }
   }, [user]);
 
@@ -130,6 +174,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         themeData: themeData || null,
         isLoading: isLoading || authLoading,
         accentColor: currentAccentColor,
+        themeName,
         refreshTheme,
       }}
     >

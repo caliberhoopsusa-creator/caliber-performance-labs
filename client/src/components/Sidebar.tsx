@@ -170,9 +170,9 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
   const navSections = isPlayer ? playerSections : coachSections;
 
   return (
-    <div className="hidden md:flex flex-col w-64 bg-gradient-to-b from-[hsl(220,25%,8%)] via-[hsl(220,20%,6%)] to-[hsl(220,25%,4%)] border-r border-cyan-500/[0.08] h-screen sticky top-0 overflow-y-auto backdrop-blur-2xl">
+    <div className="hidden md:flex flex-col w-64 bg-gradient-to-b from-[hsl(220,25%,8%)] via-[hsl(220,20%,6%)] to-[hsl(220,25%,4%)] border-r border-accent/[0.08] h-screen sticky top-0 overflow-y-auto backdrop-blur-2xl">
       <div className="absolute inset-0 cyber-grid opacity-20 pointer-events-none" />
-      <div className="p-5 flex items-center gap-3 border-b border-cyan-500/[0.08] bg-gradient-to-r from-cyan-500/[0.02] to-transparent relative z-10">
+      <div className="p-5 flex items-center gap-3 border-b border-accent/[0.08] bg-gradient-to-r from-accent/[0.02] to-transparent relative z-10">
         <img src={caliberLogo} alt="Caliber Logo" className="h-9 w-9 rounded-lg shadow-lg shadow-black/20 object-contain" width={36} height={36} />
         <div className="flex-1">
           <h1 className="text-xl font-bold font-display text-white tracking-wider uppercase">CALIBER</h1>
@@ -193,7 +193,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         )}
       </div>
 
-      <div className="px-3 py-2 border-b border-cyan-500/[0.08]">
+      <div className="px-3 py-2 border-b border-accent/[0.08]">
         <SportToggle size="sm" showLabels={true} className="w-full justify-center" />
       </div>
 
@@ -211,17 +211,17 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
                   <Link key={item.href} href={item.href} className={cn(
                     "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 group font-medium text-sm relative overflow-hidden",
                     isActive 
-                      ? "bg-gradient-to-r from-cyan-500/[0.12] to-transparent text-white border-l-2 border-cyan-400 shadow-[0_0_20px_rgba(100,200,255,0.1)_inset]" 
+                      ? "bg-gradient-to-r from-accent/[0.12] to-transparent text-white border-l-2 border-accent shadow-[0_0_20px_hsl(var(--accent)_/_0.1)_inset]" 
                       : isFeatured
-                      ? "text-cyan-400 bg-cyan-500/5"
+                      ? "text-accent bg-accent/5"
                       : needsUpgrade
                       ? "text-muted-foreground/50 hover:text-muted-foreground hover:bg-white/[0.02]"
-                      : "text-muted-foreground hover:text-cyan-300 hover:bg-cyan-500/[0.05] hover:border-l-2 hover:border-cyan-500/30"
+                      : "text-muted-foreground hover:text-accent hover:bg-accent/[0.05] hover:border-l-2 hover:border-accent/30"
                   )} data-testid={`nav-${item.href.replace(/\//g, '-').replace(/^-/, '') || 'home'}`}>
-                    <item.icon className={cn("w-4 h-4", isActive && "text-primary", isFeatured && "text-cyan-400")} />
+                    <item.icon className={cn("w-4 h-4", isActive && "text-primary", isFeatured && "text-accent")} />
                     {item.label}
                     {item.badgeCount !== undefined && item.badgeCount > 0 && (
-                      <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] bg-gradient-to-r from-cyan-500 to-emerald-500 text-white rounded-full font-bold animate-pulse shadow-lg shadow-cyan-500/30">
+                      <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] bg-gradient-to-r from-accent to-emerald-500 text-white rounded-full font-bold animate-pulse shadow-lg shadow-accent/30">
                         {item.badgeCount > 99 ? '99+' : item.badgeCount}
                       </span>
                     )}
@@ -289,7 +289,7 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
       <div className="absolute inset-0 mobile-nav-glass" />
       
       {/* Subtle top border glow line */}
-      <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
+      <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
       
       {/* Navigation container with proper spacing and touch targets */}
       <div className="relative flex justify-around items-center min-h-[72px] px-3 gap-1 pl-safe pr-safe">
@@ -329,8 +329,8 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
                       className={cn(
                         "absolute inset-[-4px] rounded-full transition-all duration-500",
                         isActive 
-                          ? "bg-gradient-to-r from-cyan-400 via-cyan-300 to-cyan-400 opacity-100" 
-                          : "bg-gradient-to-r from-cyan-500/50 via-cyan-400/50 to-cyan-500/50 opacity-0 group-hover:opacity-100"
+                          ? "bg-gradient-to-r from-accent via-accent to-accent opacity-100" 
+                          : "bg-gradient-to-r from-accent/50 via-accent/50 to-accent/50 opacity-0 group-hover:opacity-100"
                       )}
                       animate={isActive ? { rotate: 360 } : {}}
                       transition={{ duration: 3, repeat: Infinity, linear: true }}
@@ -346,8 +346,8 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
                       className={cn(
                         "relative rounded-full p-3 border-2 transition-all duration-300",
                         isActive 
-                          ? "bg-gradient-to-br from-cyan-400 to-cyan-500 text-white border-cyan-300 shadow-[0_0_30px_rgba(0,212,255,0.5),0_0_60px_rgba(0,212,255,0.3)]" 
-                          : "bg-gradient-to-br from-cyan-500 to-cyan-600 text-white border-cyan-400/60 shadow-[0_4px_20px_rgba(0,212,255,0.4)] group-hover:shadow-[0_0_30px_rgba(0,212,255,0.5)]"
+                          ? "bg-gradient-to-br from-accent to-accent text-white border-accent shadow-[0_0_30px_hsl(var(--accent)/0.5),0_0_60px_hsl(var(--accent)/0.3)]" 
+                          : "bg-gradient-to-br from-accent to-accent text-white border-accent/60 shadow-[0_4px_20px_hsl(var(--accent)/0.4)] group-hover:shadow-[0_0_30px_hsl(var(--accent)/0.5)]"
                       )}
                       animate={isActive ? { scale: [1, 1.08, 1] } : {}}
                       transition={{ duration: 1.5, repeat: Infinity, delay: 0.5 }}
@@ -360,8 +360,8 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
                     className={cn(
                       "text-[9px] font-semibold uppercase tracking-widest mt-2 transition-all duration-300",
                       isActive 
-                        ? "text-cyan-400 drop-shadow-[0_0_8px_rgba(0,212,255,0.8)]" 
-                        : "text-muted-foreground group-hover:text-cyan-300"
+                        ? "text-accent drop-shadow-[0_0_8px_hsl(var(--accent)/0.8)]" 
+                        : "text-muted-foreground group-hover:text-accent"
                     )}
                     animate={isActive ? { y: [-2, 0] } : {}}
                     transition={{ duration: 0.4, delay: 0.1 }}
@@ -399,7 +399,7 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
                   {isActive && (
                     <motion.div 
                       layoutId="mobile-nav-indicator"
-                      className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_12px_rgba(0,212,255,0.9)]"
+                      className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-accent shadow-[0_0_12px_hsl(var(--accent)/0.9)]"
                       initial={{ scale: 0, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0, opacity: 0 }}
@@ -412,8 +412,8 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
                   className={cn(
                     "relative p-2 rounded-xl transition-colors duration-300 flex-shrink-0",
                     isActive 
-                      ? "text-cyan-300 drop-shadow-[0_0_12px_rgba(0,212,255,0.8)]" 
-                      : "text-muted-foreground group-hover:text-cyan-300 group-hover:drop-shadow-[0_0_8px_rgba(0,212,255,0.5)]"
+                      ? "text-accent drop-shadow-[0_0_12px_hsl(var(--accent)/0.8)]" 
+                      : "text-muted-foreground group-hover:text-accent group-hover:drop-shadow-[0_0_8px_hsl(var(--accent)/0.5)]"
                   )}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.85 }}
@@ -427,11 +427,11 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
                   className={cn(
                     "text-[9px] font-medium uppercase tracking-wider transition-colors duration-300",
                     isActive 
-                      ? "text-cyan-400 font-semibold" 
-                      : "text-muted-foreground/80 group-hover:text-cyan-300/80"
+                      ? "text-accent font-semibold" 
+                      : "text-muted-foreground/80 group-hover:text-accent/80"
                   )}
                   initial={false}
-                  animate={{ y: isActive ? -1 : 0, color: isActive ? 'rgb(34, 211, 238)' : 'inherit' }}
+                  animate={{ y: isActive ? -1 : 0 }}
                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
                 >
                   {item.label}

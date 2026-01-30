@@ -172,52 +172,52 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
             className="md:hidden relative group min-h-11 min-w-11"
             data-testid="button-mobile-menu"
           >
-            <div className="absolute inset-0 rounded-lg bg-cyan-500/0 group-hover:bg-cyan-500/10 transition-all duration-300" />
+            <div className="absolute inset-0 rounded-lg bg-accent/0 group-hover:bg-accent/10 transition-all duration-300" />
             <Menu className="w-5 h-5 relative z-10 transition-transform duration-300 group-active:scale-90" />
           </Button>
         </motion.div>
       </SheetTrigger>
-      <SheetContent side="left" className="w-[300px] p-0 mobile-drawer-glass border-r border-cyan-500/10 overflow-hidden">
+      <SheetContent side="left" className="w-[300px] p-0 mobile-drawer-glass border-r border-accent/10 overflow-hidden">
         <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
         <SheetDescription className="sr-only">Access all app features from this menu</SheetDescription>
         
         {/* Ambient glow effect */}
-        <div className="absolute top-0 left-0 w-full h-48 bg-gradient-to-b from-cyan-500/[0.06] to-transparent pointer-events-none" />
-        <div className="absolute top-20 -left-20 w-40 h-40 bg-cyan-500/[0.08] rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 left-0 w-full h-48 bg-gradient-to-b from-accent/[0.06] to-transparent pointer-events-none" />
+        <div className="absolute top-20 -left-20 w-40 h-40 bg-accent/[0.08] rounded-full blur-3xl pointer-events-none" />
         
         <div className="flex flex-col h-full relative z-10">
           {/* Premium header with gradient */}
-          <div className="p-5 border-b border-cyan-500/10 bg-gradient-to-r from-cyan-500/[0.04] to-transparent">
+          <div className="p-5 border-b border-accent/10 bg-gradient-to-r from-accent/[0.04] to-transparent">
             <div className="flex items-center gap-4">
               <div className="relative">
-                <div className="absolute inset-[-3px] rounded-xl bg-gradient-to-br from-cyan-400/40 to-cyan-600/20 blur-sm" />
-                <img src={caliberLogo} alt="Caliber" className="relative w-11 h-11 rounded-xl shadow-lg shadow-cyan-500/20 object-contain" width={44} height={44} />
+                <div className="absolute inset-[-3px] rounded-xl bg-gradient-to-br from-accent/40 to-accent/20 blur-sm" />
+                <img src={caliberLogo} alt="Caliber" className="relative w-11 h-11 rounded-xl shadow-lg shadow-accent/20 object-contain" width={44} height={44} />
               </div>
               <div>
                 <h2 className="font-display font-bold text-white text-xl uppercase tracking-wider">Caliber</h2>
-                <p className="text-[10px] text-cyan-400/80 uppercase tracking-[0.2em] font-medium">{userRole} Mode</p>
+                <p className="text-[10px] text-accent/80 uppercase tracking-[0.2em] font-medium">{userRole} Mode</p>
               </div>
             </div>
           </div>
 
           {/* Mode switching and sport toggle */}
-          <div className="p-4 border-b border-cyan-500/10 space-y-4 bg-gradient-to-b from-white/[0.01] to-transparent">
+          <div className="p-4 border-b border-accent/10 space-y-4 bg-gradient-to-b from-white/[0.01] to-transparent">
             <motion.div whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }} transition={prefersReducedMotion ? undefined : { type: "spring", stiffness: 400, damping: 25 }}>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleRoleSwitch}
                 disabled={isSwitchingRole}
-                className="w-full text-xs border-cyan-500/20 bg-cyan-500/5 min-h-11 touch-target"
+                className="w-full text-xs border-accent/20 bg-accent/5 min-h-11 touch-target"
                 data-testid="button-mobile-role-switch"
               >
-                <ArrowLeftRight className="w-3.5 h-3.5 mr-2 text-cyan-400" />
+                <ArrowLeftRight className="w-3.5 h-3.5 mr-2 text-accent" />
                 Switch to {isPlayer ? 'Coach' : 'Player'} Mode
               </Button>
             </motion.div>
             
             <div className="flex flex-col gap-2">
-              <span className="text-[10px] uppercase font-semibold text-cyan-400/60 tracking-[0.2em] px-1">
+              <span className="text-[10px] uppercase font-semibold text-accent/60 tracking-[0.2em] px-1">
                 Sport Mode
               </span>
               <SportToggle size="sm" showLabels={true} className="w-full justify-center" />
@@ -240,8 +240,8 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
                       ease: "easeOut"
                     }}
                   >
-                    <h3 className="text-[10px] uppercase font-semibold text-cyan-400/50 tracking-[0.2em] px-3 mb-2 flex items-center gap-2">
-                      <span className="w-2 h-px bg-gradient-to-r from-cyan-500/40 to-transparent" />
+                    <h3 className="text-[10px] uppercase font-semibold text-accent/50 tracking-[0.2em] px-3 mb-2 flex items-center gap-2">
+                      <span className="w-2 h-px bg-gradient-to-r from-accent/40 to-transparent" />
                       {section.title}
                     </h3>
                     <div className="space-y-1">
@@ -272,9 +272,9 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
                                 "transition-all duration-200",
                                 isActive && "mobile-menu-item-active",
                                 isActive 
-                                  ? "text-cyan-400 bg-cyan-500/15 shadow-[0_0_16px_rgba(0,212,255,0.4)]" 
+                                  ? "text-accent bg-accent/15 shadow-[0_0_16px_hsl(var(--accent)/0.4)]" 
                                   : isFeatured
-                                  ? "text-cyan-400 bg-cyan-500/5 hover:bg-cyan-500/10"
+                                  ? "text-accent bg-accent/5 hover:bg-accent/10"
                                   : needsUpgrade
                                   ? "text-muted-foreground/60"
                                   : "text-muted-foreground hover:text-white hover:bg-white/5"
@@ -285,7 +285,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
                                 className={cn(
                                   "p-1.5 rounded-lg transition-all duration-300 flex-shrink-0",
                                   isActive 
-                                    ? "bg-cyan-500/30 shadow-[0_0_16px_rgba(0,212,255,0.4)]" 
+                                    ? "bg-accent/30 shadow-[0_0_16px_hsl(var(--accent)/0.4)]" 
                                     : "bg-white/[0.04]"
                                 )}
                                 animate={isActive && !prefersReducedMotion ? { scale: [1, 1.1, 1] } : {}}
@@ -293,13 +293,13 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
                               >
                                 <item.icon className={cn(
                                   "w-4 h-4 transition-all duration-300",
-                                  isActive && "text-cyan-300 drop-shadow-[0_0_8px_rgba(0,212,255,0.7)]"
+                                  isActive && "text-accent drop-shadow-[0_0_8px_hsl(var(--accent)/0.7)]"
                                 )} />
                               </motion.div>
                               <span className="flex-1 truncate">{item.label}</span>
                               {isFeatured && (
                                 <motion.span 
-                                  className="text-[9px] bg-gradient-to-r from-cyan-500 to-cyan-400 text-white px-2 py-0.5 rounded-full font-bold uppercase tracking-wide shadow-lg shadow-cyan-500/30 whitespace-nowrap"
+                                  className="text-[9px] bg-accent text-accent-foreground px-2 py-0.5 rounded-full font-bold uppercase tracking-wide shadow-lg shadow-accent/30 whitespace-nowrap"
                                   initial={prefersReducedMotion ? { scale: 1, opacity: 1 } : { scale: 0.8, opacity: 0 }}
                                   animate={{ scale: 1, opacity: 1 }}
                                   transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3, delay: 0.2 }}
@@ -325,7 +325,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
 
           {/* Footer with sign out */}
           <motion.div 
-            className="p-4 border-t border-cyan-500/10 bg-gradient-to-t from-black/20 to-transparent"
+            className="p-4 border-t border-accent/10 bg-gradient-to-t from-black/20 to-transparent"
             initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.4, delay: 0.3 }}

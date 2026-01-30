@@ -23,6 +23,7 @@ import { HighlightsGallery } from "@/components/HighlightsGallery";
 import { PlayerRatingsSection } from "@/components/PlayerRatingsSection";
 import { useAuth } from "@/hooks/use-auth";
 import { useEquippedItems } from "@/contexts/EquippedItemsContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useRoute, Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { StatCard } from "@/components/StatCard";
@@ -405,7 +406,7 @@ function PlayerDetailSkeleton() {
           </div>
           
           <div className="flex justify-center md:hidden">
-            <div className="flex flex-col items-center gap-2 p-4 rounded-xl border border-cyan-500/[0.08]">
+            <div className="flex flex-col items-center gap-2 p-4 rounded-xl border border-accent/[0.08]">
               <Skeleton className="h-3 w-20 rounded" />
               <Skeleton className="h-12 w-12 rounded-full skeleton-cyan" />
             </div>
@@ -1100,7 +1101,8 @@ export default function PlayerDetail() {
   const { mutate: updatePlayer, isPending: isUpdating } = useUpdatePlayer();
   const { toast } = useToast();
   const { user, isAuthenticated } = useAuth();
-  const { getProfileSkinStyle, getBadgeStyle, getEffectConfig, equippedProfileSkin, equippedEffect, equippedBadgeStyle } = useEquippedItems();
+  const { getProfileSkinStyle, getBadgeStyle, getEffectConfig, equippedProfileSkin, equippedEffect, equippedBadgeStyle, equippedTheme } = useEquippedItems();
+  const { themeName } = useTheme();
   const [location, navigate] = useLocation();
   const [showAllGames, setShowAllGames] = useState(false);
   const [expandedGameId, setExpandedGameId] = useState<number | null>(null);
@@ -1524,15 +1526,15 @@ export default function PlayerDetail() {
             : "linear-gradient(to bottom right, rgba(0,0,0,0.6), rgba(8,51,68,0.2), rgba(0,0,0,0.6))",
           borderColor: isOwnProfile && getProfileSkinStyle()?.borderColor 
             ? getProfileSkinStyle()?.borderColor 
-            : "rgba(0, 212, 255, 0.2)",
+            : "hsl(var(--accent) / 0.2)",
           boxShadow: isOwnProfile && getProfileSkinStyle()?.boxShadow 
             ? getProfileSkinStyle()?.boxShadow 
-            : "0 0 40px rgba(0, 212, 255, 0.1)" 
+            : "0 0 40px hsl(var(--accent) / 0.1)" 
         }}
       >
         <div className="absolute inset-0 cyber-grid opacity-30" />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 blur-[100px] rounded-full pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 blur-[80px] rounded-full pointer-events-none" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-accent/10 blur-[100px] rounded-full pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent/5 blur-[80px] rounded-full pointer-events-none" />
         {isOwnProfile && getEffectConfig() ? (
           <>
             {getEffectConfig()?.layers.map((layer, index) => (
@@ -1551,23 +1553,22 @@ export default function PlayerDetail() {
             ))}
           </>
         ) : (
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-cyan-400/5 blur-[120px] rounded-full pointer-events-none" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-accent/5 blur-[120px] rounded-full pointer-events-none" />
         )}
         
         <div className="relative z-10 p-6 md:p-8">
           <div className="flex flex-col md:flex-row md:items-start gap-6 md:gap-8">
             <div className="relative group/avatar shrink-0 mx-auto md:mx-0">
               <div 
-                className="absolute inset-0 rounded-full blur-xl transition-all duration-300"
+                className="absolute inset-0 rounded-full blur-xl transition-all duration-300 bg-accent/30"
                 style={{ 
-                  background: `radial-gradient(circle, rgba(0, 212, 255, 0.4) 0%, rgba(0, 212, 255, 0.1) 50%, transparent 70%)`,
                   transform: "scale(1.3)"
                 }}
               />
-              <div className="relative p-1 rounded-full bg-gradient-to-br from-cyan-400/50 via-cyan-500/30 to-cyan-600/50">
-                <Avatar className="w-24 h-24 md:w-32 md:h-32 border-2 border-cyan-400/40">
+              <div className="relative p-1 rounded-full bg-gradient-to-br from-accent/50 via-accent/30 to-accent/50">
+                <Avatar className="w-24 h-24 md:w-32 md:h-32 border-2 border-accent/40">
                   {player.photoUrl && <AvatarImage src={player.photoUrl} alt={player.name} width={128} height={128} loading="eager" />}
-                  <AvatarFallback className="bg-gradient-to-br from-cyan-500/40 to-cyan-700/30 text-3xl md:text-4xl font-display font-bold text-white">
+                  <AvatarFallback className="bg-gradient-to-br from-accent/40 to-accent/30 text-3xl md:text-4xl font-display font-bold text-white">
                     {getInitials(player.name)}
                   </AvatarFallback>
                 </Avatar>
@@ -1576,10 +1577,10 @@ export default function PlayerDetail() {
                 <Button
                   size="icon"
                   onClick={() => setIsEditDialogOpen(true)}
-                  className="absolute -bottom-1 -right-1 w-8 h-8 md:w-9 md:h-9 rounded-full opacity-0 group-hover/avatar:opacity-100 md:opacity-100 transition-all duration-300 bg-cyan-500/30 border border-cyan-400/50 hover:bg-cyan-500/50 hover:scale-110"
+                  className="absolute -bottom-1 -right-1 w-8 h-8 md:w-9 md:h-9 rounded-full opacity-0 group-hover/avatar:opacity-100 md:opacity-100 transition-all duration-300 bg-accent/30 border border-accent/50 hover:bg-accent/50 hover:scale-110"
                   data-testid="button-edit-profile-avatar"
                 >
-                  <Camera className="w-4 h-4 text-cyan-300" />
+                  <Camera className="w-4 h-4 text-accent-foreground" />
                 </Button>
               )}
             </div>
@@ -1590,17 +1591,17 @@ export default function PlayerDetail() {
                   <span 
                     className="text-2xl md:text-4xl font-display font-black"
                     style={{ 
-                      background: "linear-gradient(135deg, #00D4FF 0%, #00B4E6 50%, #0099CC 100%)",
+                      background: `linear-gradient(135deg, hsl(var(--accent)) 0%, hsl(var(--accent) / 0.8) 50%, hsl(var(--accent) / 0.6) 100%)`,
                       WebkitBackgroundClip: "text",
                       WebkitTextFillColor: "transparent",
-                      filter: "drop-shadow(0 0 20px rgba(0, 212, 255, 0.5))"
+                      filter: "drop-shadow(0 0 20px hsl(var(--accent) / 0.5))"
                     }}
                   >
                     #{player.jerseyNumber}
                   </span>
                 )}
                 {player.position && (
-                  <span className="px-3 py-1 rounded-full text-xs md:text-sm font-bold uppercase tracking-wider bg-gradient-to-r from-cyan-500/20 to-cyan-600/10 border border-cyan-400/30 text-cyan-300">
+                  <span className="px-3 py-1 rounded-full text-xs md:text-sm font-bold uppercase tracking-wider bg-gradient-to-r from-accent/20 to-accent/10 border border-accent/30 text-accent">
                     {player.position.split(',').map(p => p.trim()).map(pos => 
                       isFootball && FOOTBALL_POSITIONS.includes(pos as FootballPosition)
                         ? FOOTBALL_POSITION_LABELS[pos as FootballPosition]
@@ -1614,7 +1615,7 @@ export default function PlayerDetail() {
                 <h1 
                   className="text-2xl md:text-4xl lg:text-5xl font-display font-black uppercase tracking-tight"
                   style={{
-                    background: "linear-gradient(135deg, #FFFFFF 0%, #E0F7FF 40%, #00D4FF 100%)",
+                    background: `linear-gradient(135deg, #FFFFFF 0%, hsl(var(--accent) / 0.3) 40%, hsl(var(--accent)) 100%)`,
                     WebkitBackgroundClip: "text",
                     WebkitTextFillColor: "transparent",
                   }}
@@ -1640,6 +1641,12 @@ export default function PlayerDetail() {
                     rank={player.countryRank} 
                   />
                 )}
+                {isOwnProfile && themeName && (
+                  <div className="theme-badge" data-testid="active-theme-indicator" title={`Theme: ${themeName}`}>
+                    <Palette className="w-3 h-3" />
+                    <span>{themeName}</span>
+                  </div>
+                )}
                 {isOwnProfile && (equippedProfileSkin || equippedEffect || equippedBadgeStyle) && (
                   <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-400/30" data-testid="equipped-cosmetics-indicator">
                     {equippedProfileSkin && (
@@ -1654,7 +1661,7 @@ export default function PlayerDetail() {
                     )}
                     {equippedBadgeStyle && (
                       <div className="flex items-center gap-1" title={`Badge: ${equippedBadgeStyle.item.name}`}>
-                        <Gem className="w-3 h-3 text-cyan-400" />
+                        <Gem className="w-3 h-3 text-accent" />
                       </div>
                     )}
                   </div>
@@ -1664,12 +1671,12 @@ export default function PlayerDetail() {
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 text-xs md:text-sm text-muted-foreground mb-4">
                 {player.height && (
                   <span className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/5 border border-white/10">
-                    <User className="w-3.5 h-3.5 text-cyan-400" /> {player.height}
+                    <User className="w-3.5 h-3.5 text-accent" /> {player.height}
                   </span>
                 )}
                 {player.team && (
                   <span className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/5 border border-white/10 font-medium">
-                    <Shield className="w-3.5 h-3.5 text-cyan-400" /> {player.team}
+                    <Shield className="w-3.5 h-3.5 text-accent" /> {player.team}
                   </span>
                 )}
                 {player.gpa && (
@@ -1678,7 +1685,7 @@ export default function PlayerDetail() {
                   </span>
                 )}
                 <span className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/5 border border-white/10">
-                  <Activity className="w-3.5 h-3.5 text-cyan-400" /> {games.length} Games
+                  <Activity className="w-3.5 h-3.5 text-accent" /> {games.length} Games
                 </span>
               </div>
               
@@ -1692,10 +1699,10 @@ export default function PlayerDetail() {
                 >
                   {isFootball ? (
                     <>
-                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-cyan-500/20 to-cyan-600/10 border border-cyan-500/30" style={{ boxShadow: "0 0 15px rgba(0, 212, 255, 0.2)" }}>
-                        <Zap className="w-4 h-4 text-cyan-400" style={{ filter: "drop-shadow(0 0 6px rgba(0, 212, 255, 0.6))" }} />
-                        <span className="text-xs text-cyan-300/80 uppercase font-medium">YDS/G</span>
-                        <span className="text-sm font-bold text-cyan-300">{games.length ? (totalYards / games.length).toFixed(0) : "—"}</span>
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-accent/20 to-accent/10 border border-accent/30" style={{ boxShadow: "0 0 15px hsl(var(--accent) / 0.2)" }}>
+                        <Zap className="w-4 h-4 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(var(--accent) / 0.6))" }} />
+                        <span className="text-xs text-accent/80 uppercase font-medium">YDS/G</span>
+                        <span className="text-sm font-bold text-accent">{games.length ? (totalYards / games.length).toFixed(0) : "—"}</span>
                       </div>
                       <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-green-500/20 to-green-600/10 border border-green-500/30" style={{ boxShadow: "0 0 15px rgba(34, 197, 94, 0.2)" }}>
                         <Target className="w-4 h-4 text-green-400" style={{ filter: "drop-shadow(0 0 6px rgba(34, 197, 94, 0.6))" }} />
@@ -1733,10 +1740,10 @@ export default function PlayerDetail() {
                     </>
                   ) : (
                     <>
-                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-cyan-500/20 to-cyan-600/10 border border-cyan-500/30" style={{ boxShadow: "0 0 15px rgba(0, 212, 255, 0.2)" }}>
-                        <Target className="w-4 h-4 text-cyan-400" style={{ filter: "drop-shadow(0 0 6px rgba(0, 212, 255, 0.6))" }} />
-                        <span className="text-xs text-cyan-300/80 uppercase font-medium">PPG</span>
-                        <span className="text-sm font-bold text-cyan-300">{avgPoints}</span>
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-accent/20 to-accent/10 border border-accent/30" style={{ boxShadow: "0 0 15px hsl(var(--accent) / 0.2)" }}>
+                        <Target className="w-4 h-4 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(var(--accent) / 0.6))" }} />
+                        <span className="text-xs text-accent/80 uppercase font-medium">PPG</span>
+                        <span className="text-sm font-bold text-accent">{avgPoints}</span>
                       </div>
                       <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-green-500/20 to-green-600/10 border border-green-500/30" style={{ boxShadow: "0 0 15px rgba(34, 197, 94, 0.2)" }}>
                         <TrendingUp className="w-4 h-4 text-green-400" style={{ filter: "drop-shadow(0 0 6px rgba(34, 197, 94, 0.6))" }} />
@@ -1792,7 +1799,7 @@ export default function PlayerDetail() {
                   <Button 
                     onClick={() => setIsEditDialogOpen(true)} 
                     size="sm"
-                    className="gap-1.5 bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-white border-0 shadow-lg shadow-cyan-500/25"
+                    className="gap-1.5 bg-accent hover:bg-accent/90 text-white border-0 shadow-lg shadow-accent/25"
                     data-testid="button-edit-profile"
                   >
                     <Pencil className="w-3.5 h-3.5" /> Edit Profile
@@ -1802,7 +1809,7 @@ export default function PlayerDetail() {
                   onClick={handleShareProfile} 
                   variant="outline" 
                   size="sm"
-                  className="gap-1.5 border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10 hover:border-cyan-400/50"
+                  className="gap-1.5 border-accent/30 text-accent hover:bg-accent/10 hover:border-accent/50"
                   data-testid="button-share-profile"
                 >
                   <Share2 className="w-3.5 h-3.5" /> Share
@@ -1814,7 +1821,7 @@ export default function PlayerDetail() {
                 </Link>
                 {isOwnProfile && (
                   <Link href={`/analyze?playerId=${player.id}`}>
-                    <Button size="sm" className="gap-1.5 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white border-0 shadow-lg shadow-cyan-500/25" data-testid="button-log-game">
+                    <Button size="sm" className="gap-1.5 bg-accent hover:bg-accent/90 text-white border-0 shadow-lg shadow-accent/25" data-testid="button-log-game">
                       <Plus className="w-3.5 h-3.5" /> Log Game
                     </Button>
                   </Link>
@@ -1823,12 +1830,12 @@ export default function PlayerDetail() {
             </div>
 
             <div className="hidden md:flex flex-col items-center gap-3 shrink-0">
-              <span className="text-xs font-bold text-cyan-400/70 uppercase tracking-[0.15em]">Overall Grade</span>
+              <span className="text-xs font-bold text-accent/70 uppercase tracking-[0.15em]">Overall Grade</span>
               <div 
                 className="relative p-1 rounded-2xl"
                 style={{ 
-                  background: "linear-gradient(135deg, rgba(0, 212, 255, 0.3) 0%, rgba(0, 212, 255, 0.1) 100%)",
-                  boxShadow: "0 0 30px rgba(0, 212, 255, 0.3)"
+                  background: `linear-gradient(135deg, hsl(var(--accent) / 0.3) 0%, hsl(var(--accent) / 0.1) 100%)`,
+                  boxShadow: "0 0 30px hsl(var(--accent) / 0.3)"
                 }}
               >
                 <GradeBadge grade={averageGrade} size="xl" />
@@ -1838,13 +1845,13 @@ export default function PlayerDetail() {
 
           <div className="flex md:hidden justify-center mt-4">
             <div 
-              className="flex flex-col items-center gap-2 p-4 rounded-xl border border-cyan-500/20"
+              className="flex flex-col items-center gap-2 p-4 rounded-xl border border-accent/20"
               style={{ 
-                background: "linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(0, 212, 255, 0.02) 100%)",
-                boxShadow: "0 0 20px rgba(0, 212, 255, 0.15)"
+                background: `linear-gradient(135deg, hsl(var(--accent) / 0.1) 0%, hsl(var(--accent) / 0.02) 100%)`,
+                boxShadow: "0 0 20px hsl(var(--accent) / 0.15)"
               }}
             >
-              <span className="text-[10px] font-bold text-cyan-400/70 uppercase tracking-[0.2em]">Overall Grade</span>
+              <span className="text-[10px] font-bold text-accent/70 uppercase tracking-[0.2em]">Overall Grade</span>
               <GradeBadge grade={averageGrade} size="lg" />
             </div>
           </div>
@@ -1861,28 +1868,28 @@ export default function PlayerDetail() {
           <TabsList className="w-max md:w-auto inline-flex bg-black/40 backdrop-blur-sm border border-white/10 p-1 rounded-xl">
             <TabsTrigger 
               value="overview" 
-              className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-600 data-[state=active]:to-cyan-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-cyan-500/25 text-muted-foreground hover:text-white" 
+              className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-white" 
               data-testid="tab-overview"
             >
               <BarChart3 className="w-4 h-4" /> Overview
             </TabsTrigger>
             <TabsTrigger 
               value="highlights" 
-              className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-600 data-[state=active]:to-cyan-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-cyan-500/25 text-muted-foreground hover:text-white" 
+              className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-white" 
               data-testid="tab-highlights"
             >
               <Film className="w-4 h-4" /> Highlights
             </TabsTrigger>
             <TabsTrigger 
               value="accolades" 
-              className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-600 data-[state=active]:to-cyan-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-cyan-500/25 text-muted-foreground hover:text-white" 
+              className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-white" 
               data-testid="tab-accolades"
             >
               <Trophy className="w-4 h-4" /> Accolades
             </TabsTrigger>
             <TabsTrigger 
               value="coach" 
-              className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-600 data-[state=active]:to-cyan-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-cyan-500/25 text-muted-foreground hover:text-white" 
+              className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-white" 
               data-testid="tab-coach"
             >
               <Phone className="w-4 h-4" /> Coach
@@ -1890,7 +1897,7 @@ export default function PlayerDetail() {
             {isFootball && (
               <TabsTrigger 
                 value="scouting" 
-                className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-600 data-[state=active]:to-cyan-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-cyan-500/25 text-muted-foreground hover:text-white" 
+                className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-white" 
                 data-testid="tab-scouting"
               >
                 <Crosshair className="w-4 h-4" /> Scouting
@@ -1899,7 +1906,7 @@ export default function PlayerDetail() {
             {isOwnProfile && (
               <TabsTrigger 
                 value="inventory" 
-                className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-600 data-[state=active]:to-cyan-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-cyan-500/25 text-muted-foreground hover:text-white" 
+                className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-white" 
                 data-testid="tab-inventory"
               >
                 <Package className="w-4 h-4" /> Inventory
@@ -1968,35 +1975,35 @@ export default function PlayerDetail() {
             <PlayerProgression playerId={player.id} />
             
             <div 
-              className="relative overflow-hidden rounded-xl border border-cyan-500/20 p-5"
+              className="relative overflow-hidden rounded-xl border border-accent/20 p-5"
               style={{ 
-                background: "linear-gradient(135deg, rgba(0, 212, 255, 0.05) 0%, rgba(0, 0, 0, 0.4) 100%)",
-                boxShadow: "0 0 30px rgba(0, 212, 255, 0.08)"
+                background: `linear-gradient(135deg, hsl(var(--accent) / 0.05) 0%, rgba(0, 0, 0, 0.4) 100%)`,
+                boxShadow: "0 0 30px hsl(var(--accent) / 0.08)"
               }}
             >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 blur-[60px] rounded-full pointer-events-none" />
+              <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 blur-[60px] rounded-full pointer-events-none" />
               <h4 className="text-sm font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-cyan-500/20 border border-cyan-500/30">
-                  <Zap className="w-4 h-4 text-cyan-400" style={{ filter: "drop-shadow(0 0 6px rgba(0, 212, 255, 0.6))" }} />
+                <div className="p-1.5 rounded-lg bg-accent/20 border border-accent/30">
+                  <Zap className="w-4 h-4 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(var(--accent) / 0.6))" }} />
                 </div>
-                <span className="bg-gradient-to-r from-white to-cyan-300 bg-clip-text text-transparent">XP Rewards</span>
+                <span className="bg-gradient-to-r from-white to-accent bg-clip-text text-transparent">XP Rewards</span>
               </h4>
               <div className="grid grid-cols-2 gap-2 text-sm relative z-10">
-                <div className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 border border-white/5 hover:border-cyan-500/20 transition-colors">
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 border border-white/5 hover:border-accent/20 transition-colors">
                   <span className="text-muted-foreground">Log a Game</span>
-                  <span className="font-bold text-cyan-400">+50 XP</span>
+                  <span className="font-bold text-accent">+50 XP</span>
                 </div>
-                <div className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 border border-white/5 hover:border-cyan-500/20 transition-colors">
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 border border-white/5 hover:border-accent/20 transition-colors">
                   <span className="text-muted-foreground">Earn Badge</span>
-                  <span className="font-bold text-cyan-400">+25 XP</span>
+                  <span className="font-bold text-accent">+25 XP</span>
                 </div>
-                <div className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 border border-white/5 hover:border-cyan-500/20 transition-colors">
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 border border-white/5 hover:border-accent/20 transition-colors">
                   <span className="text-muted-foreground">A Grade</span>
-                  <span className="font-bold text-cyan-400">+30 XP</span>
+                  <span className="font-bold text-accent">+30 XP</span>
                 </div>
-                <div className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 border border-white/5 hover:border-cyan-500/20 transition-colors">
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 border border-white/5 hover:border-accent/20 transition-colors">
                   <span className="text-muted-foreground">A+ Grade</span>
-                  <span className="font-bold text-cyan-400">+50 XP</span>
+                  <span className="font-bold text-accent">+50 XP</span>
                 </div>
                 <div className="flex items-center justify-between p-2.5 rounded-lg bg-gradient-to-r from-orange-500/10 to-amber-500/5 border border-orange-500/20 hover:border-orange-500/40 transition-colors">
                   <span className="text-orange-400">3-Day Streak</span>
@@ -2017,10 +2024,10 @@ export default function PlayerDetail() {
             className="mb-6"
           >
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
-                <Medal className="w-5 h-5 text-cyan-400" style={{ filter: "drop-shadow(0 0 6px rgba(0, 212, 255, 0.6))" }} />
+              <div className="p-2 rounded-lg bg-accent/10 border border-accent/20">
+                <Medal className="w-5 h-5 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(var(--accent) / 0.6))" }} />
               </div>
-              <h3 className="text-lg font-bold font-display bg-gradient-to-r from-white to-cyan-300 bg-clip-text text-transparent">
+              <h3 className="text-lg font-bold font-display bg-gradient-to-r from-white to-accent bg-clip-text text-transparent">
                 Skill Badges
               </h3>
             </div>
@@ -2035,10 +2042,10 @@ export default function PlayerDetail() {
           >
             <div className="lg:col-span-2">
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
-                  <BarChart3 className="w-5 h-5 text-cyan-400" style={{ filter: "drop-shadow(0 0 6px rgba(0, 212, 255, 0.6))" }} />
+                <div className="p-2 rounded-lg bg-accent/10 border border-accent/20">
+                  <BarChart3 className="w-5 h-5 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(var(--accent) / 0.6))" }} />
                 </div>
-                <h3 className="text-lg font-bold font-display bg-gradient-to-r from-white to-cyan-300 bg-clip-text text-transparent">
+                <h3 className="text-lg font-bold font-display bg-gradient-to-r from-white to-accent bg-clip-text text-transparent">
                   Season Statistics
                 </h3>
               </div>
@@ -2167,7 +2174,7 @@ export default function PlayerDetail() {
                   <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
                     <defs>
                       <linearGradient id="playerRadarGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" stopColor="#00D4FF" stopOpacity={0.4} />
+                        <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity={0.4} />
                         <stop offset="100%" stopColor="#3B82F6" stopOpacity={0.1} />
                       </linearGradient>
                     </defs>
@@ -2185,11 +2192,11 @@ export default function PlayerDetail() {
                     <Radar
                       name="Rating"
                       dataKey="value"
-                      stroke="#00D4FF"
+                      stroke="hsl(var(--accent))"
                       fill="url(#playerRadarGradient)"
                       strokeWidth={2.5}
                       isAnimationActive
-                      filter="drop-shadow(0 0 8px rgba(0,212,255,0.3))"
+                      filter="drop-shadow(0 0 8px hsl(var(--accent) / 0.3))"
                     />
                   </RadarChart>
                 </ResponsiveContainer>
@@ -2240,8 +2247,8 @@ export default function PlayerDetail() {
             </div>
         
         {topGames.length === 0 ? (
-          <Card className="relative overflow-hidden border-cyan-500/[0.08]">
-            <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent" />
+          <Card className="relative overflow-hidden border-accent/[0.08]">
+            <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
             <EmptyState
               icon={PlayCircle}
               title="No Games Logged Yet"
@@ -2535,14 +2542,14 @@ export default function PlayerDetail() {
               <TabsList className="grid w-full grid-cols-2 mb-4 bg-black/40 backdrop-blur-sm border border-white/10 p-1 rounded-xl">
                 <TabsTrigger 
                   value="history" 
-                  className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-600 data-[state=active]:to-cyan-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-cyan-500/25 text-muted-foreground hover:text-white" 
+                  className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-white" 
                   data-testid="tab-game-history"
                 >
                   <ClipboardList className="w-4 h-4" /> Game History
                 </TabsTrigger>
                 <TabsTrigger 
                   value="highlights" 
-                  className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-600 data-[state=active]:to-cyan-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-cyan-500/25 text-muted-foreground hover:text-white" 
+                  className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-white" 
                   data-testid="tab-highlights"
                 >
                   <Film className="w-4 h-4" /> Highlights
@@ -2573,9 +2580,9 @@ export default function PlayerDetail() {
               {games.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 text-center">
                   <div className="relative mb-4">
-                    <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-2xl blur-xl" />
-                    <div className="relative w-12 h-12 flex items-center justify-center rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-cyan-500/10">
-                      <ClipboardList className="w-6 h-6 text-cyan-400/60" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-accent/20 to-blue-500/20 rounded-2xl blur-xl" />
+                    <div className="relative w-12 h-12 flex items-center justify-center rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-accent/10">
+                      <ClipboardList className="w-6 h-6 text-accent/60" />
                     </div>
                   </div>
                   <h4 className="font-display font-medium text-white text-sm mb-1">No Game History</h4>
