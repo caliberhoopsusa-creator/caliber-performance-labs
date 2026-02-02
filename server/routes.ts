@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, headToHeadChallenges, statVerifications, playerCollegeMatches, playerCollegeInterests, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema, insertWearableConnectionSchema } from "@shared/schema";
+import { players, games, headToHeadChallenges, statVerifications, playerCollegeMatches, playerCollegeInterests, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema, insertWearableConnectionSchema, recruitingEvents, insertRecruitingEventSchema, type RecruitingEvent, playerEventRegistrations, insertPlayerEventRegistrationSchema, colleges, ncaaEligibilityProgress, insertNcaaEligibilityProgressSchema, coachRecommendations, insertCoachRecommendationSchema } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { calculateAIRating, calculateProjection, type GameStats, type PlayerMetrics, type PeerStats, type AIRatingResult, type ProjectionResult } from "@shared/ai-rating-engine";
 import type { Sport } from "@shared/sports-config";
@@ -13170,6 +13170,516 @@ Respond in this exact JSON format:
     } catch (error) {
       console.error('Error getting wearable connections:', error);
       res.status(500).json({ message: "Failed to get wearable connections" });
+    }
+  });
+
+  // === RECRUITING EVENTS API ===
+
+  // GET /api/recruiting-events - List all recruiting events with filters
+  app.get("/api/recruiting-events", async (req, res) => {
+    try {
+      const { sport, state, eventType, startDate, endDate } = req.query;
+      
+      let query = db.select({
+        event: recruitingEvents,
+        college: colleges,
+      })
+        .from(recruitingEvents)
+        .leftJoin(colleges, eq(recruitingEvents.collegeId, colleges.id))
+        .orderBy(recruitingEvents.startDate);
+
+      const conditions: any[] = [];
+      
+      if (typeof sport === 'string' && sport) {
+        conditions.push(eq(recruitingEvents.sport, sport));
+      }
+      if (typeof state === 'string' && state) {
+        conditions.push(eq(recruitingEvents.state, state));
+      }
+      if (typeof eventType === 'string' && eventType) {
+        conditions.push(eq(recruitingEvents.eventType, eventType));
+      }
+      if (typeof startDate === 'string' && startDate) {
+        conditions.push(sql`${recruitingEvents.startDate} >= ${startDate}`);
+      }
+      if (typeof endDate === 'string' && endDate) {
+        conditions.push(sql`${recruitingEvents.startDate} <= ${endDate}`);
+      }
+
+      let results;
+      if (conditions.length > 0) {
+        results = await db.select({
+          event: recruitingEvents,
+          college: colleges,
+        })
+          .from(recruitingEvents)
+          .leftJoin(colleges, eq(recruitingEvents.collegeId, colleges.id))
+          .where(and(...conditions))
+          .orderBy(recruitingEvents.startDate);
+      } else {
+        results = await db.select({
+          event: recruitingEvents,
+          college: colleges,
+        })
+          .from(recruitingEvents)
+          .leftJoin(colleges, eq(recruitingEvents.collegeId, colleges.id))
+          .orderBy(recruitingEvents.startDate);
+      }
+
+      const eventsWithCollege = results.map(r => ({
+        ...r.event,
+        college: r.college,
+      }));
+
+      res.json(eventsWithCollege);
+    } catch (error) {
+      console.error('Error getting recruiting events:', error);
+      res.status(500).json({ message: "Failed to get recruiting events" });
+    }
+  });
+
+  // GET /api/recruiting-events/:id - Get a single event by ID
+  app.get("/api/recruiting-events/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid event ID" });
+      }
+
+      const results = await db.select({
+        event: recruitingEvents,
+        college: colleges,
+      })
+        .from(recruitingEvents)
+        .leftJoin(colleges, eq(recruitingEvents.collegeId, colleges.id))
+        .where(eq(recruitingEvents.id, id))
+        .limit(1);
+
+      if (results.length === 0) {
+        return res.status(404).json({ message: "Recruiting event not found" });
+      }
+
+      const result = results[0];
+      res.json({
+        ...result.event,
+        college: result.college,
+      });
+    } catch (error) {
+      console.error('Error getting recruiting event:', error);
+      res.status(500).json({ message: "Failed to get recruiting event" });
+    }
+  });
+
+  // POST /api/recruiting-events - Create a new event (admin only)
+  app.post("/api/recruiting-events", isAdmin, async (req, res) => {
+    try {
+      const validatedData = insertRecruitingEventSchema.parse(req.body);
+      
+      const [newEvent] = await db.insert(recruitingEvents)
+        .values(validatedData)
+        .returning();
+      
+      res.status(201).json(newEvent);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid request body", errors: error.errors });
+      }
+      console.error('Error creating recruiting event:', error);
+      res.status(500).json({ message: "Failed to create recruiting event" });
+    }
+  });
+
+  // GET /api/players/:playerId/event-registrations - Get player's event registrations
+  app.get("/api/players/:playerId/event-registrations", isAuthenticated, async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.playerId);
+      if (isNaN(playerId)) {
+        return res.status(400).json({ message: "Invalid player ID" });
+      }
+
+      // Verify user owns this player data
+      const userPlayerId = (req.user as any)?.playerId;
+      if (!userPlayerId || userPlayerId !== playerId) {
+        return res.status(403).json({ error: 'Forbidden: Not authorized to access this player data' });
+      }
+
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+
+      const registrations = await db.select({
+        registration: playerEventRegistrations,
+        event: recruitingEvents,
+        college: colleges,
+      })
+        .from(playerEventRegistrations)
+        .innerJoin(recruitingEvents, eq(playerEventRegistrations.eventId, recruitingEvents.id))
+        .leftJoin(colleges, eq(recruitingEvents.collegeId, colleges.id))
+        .where(eq(playerEventRegistrations.playerId, playerId))
+        .orderBy(recruitingEvents.startDate);
+
+      const result = registrations.map(r => ({
+        ...r.registration,
+        event: {
+          ...r.event,
+          college: r.college,
+        },
+      }));
+
+      res.json(result);
+    } catch (error) {
+      console.error('Error getting player event registrations:', error);
+      res.status(500).json({ message: "Failed to get event registrations" });
+    }
+  });
+
+  // POST /api/players/:playerId/event-registrations - Register interest in an event
+  app.post("/api/players/:playerId/event-registrations", isAuthenticated, async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.playerId);
+      if (isNaN(playerId)) {
+        return res.status(400).json({ message: "Invalid player ID" });
+      }
+
+      // Verify user owns this player data
+      const userPlayerId = (req.user as any)?.playerId;
+      if (!userPlayerId || userPlayerId !== playerId) {
+        return res.status(403).json({ error: 'Forbidden: Not authorized to access this player data' });
+      }
+
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+
+      const { eventId, status, notes } = req.body;
+      
+      if (!eventId || typeof eventId !== 'number') {
+        return res.status(400).json({ message: "eventId is required and must be a number" });
+      }
+
+      const [event] = await db.select()
+        .from(recruitingEvents)
+        .where(eq(recruitingEvents.id, eventId))
+        .limit(1);
+      
+      if (!event) {
+        return res.status(404).json({ message: "Recruiting event not found" });
+      }
+
+      const existing = await db.select()
+        .from(playerEventRegistrations)
+        .where(and(
+          eq(playerEventRegistrations.playerId, playerId),
+          eq(playerEventRegistrations.eventId, eventId)
+        ))
+        .limit(1);
+
+      if (existing.length > 0) {
+        return res.status(409).json({ message: "Already registered for this event" });
+      }
+
+      const registrationData = {
+        playerId,
+        eventId,
+        status: status || 'interested',
+        notes: notes || null,
+      };
+
+      const validatedData = insertPlayerEventRegistrationSchema.parse(registrationData);
+
+      const [newRegistration] = await db.insert(playerEventRegistrations)
+        .values(validatedData)
+        .returning();
+
+      res.status(201).json(newRegistration);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid request body", errors: error.errors });
+      }
+      console.error('Error creating event registration:', error);
+      res.status(500).json({ message: "Failed to register for event" });
+    }
+  });
+
+  // DELETE /api/players/:playerId/event-registrations/:eventId - Remove registration
+  app.delete("/api/players/:playerId/event-registrations/:eventId", isAuthenticated, async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.playerId);
+      const eventId = parseInt(req.params.eventId);
+      
+      if (isNaN(playerId)) {
+        return res.status(400).json({ message: "Invalid player ID" });
+      }
+      if (isNaN(eventId)) {
+        return res.status(400).json({ message: "Invalid event ID" });
+      }
+
+      // Verify user owns this player data
+      const userPlayerId = (req.user as any)?.playerId;
+      if (!userPlayerId || userPlayerId !== playerId) {
+        return res.status(403).json({ error: 'Forbidden: Not authorized to access this player data' });
+      }
+
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+
+      const existing = await db.select()
+        .from(playerEventRegistrations)
+        .where(and(
+          eq(playerEventRegistrations.playerId, playerId),
+          eq(playerEventRegistrations.eventId, eventId)
+        ))
+        .limit(1);
+
+      if (existing.length === 0) {
+        return res.status(404).json({ message: "Registration not found" });
+      }
+
+      await db.delete(playerEventRegistrations)
+        .where(and(
+          eq(playerEventRegistrations.playerId, playerId),
+          eq(playerEventRegistrations.eventId, eventId)
+        ));
+
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting event registration:', error);
+      res.status(500).json({ message: "Failed to delete registration" });
+    }
+  });
+
+  // GET /api/players/:playerId/ncaa-eligibility - Get player's NCAA eligibility progress
+  app.get("/api/players/:playerId/ncaa-eligibility", isAuthenticated, async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.playerId);
+      if (isNaN(playerId)) {
+        return res.status(400).json({ message: "Invalid player ID" });
+      }
+
+      // Verify user owns this player data
+      const userPlayerId = (req.user as any)?.playerId;
+      if (!userPlayerId || userPlayerId !== playerId) {
+        return res.status(403).json({ error: 'Forbidden: Not authorized to access this player data' });
+      }
+
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+
+      const [eligibilityProgress] = await db.select()
+        .from(ncaaEligibilityProgress)
+        .where(eq(ncaaEligibilityProgress.playerId, playerId))
+        .limit(1);
+
+      res.json(eligibilityProgress || null);
+    } catch (error) {
+      console.error('Error getting NCAA eligibility progress:', error);
+      res.status(500).json({ message: "Failed to get NCAA eligibility progress" });
+    }
+  });
+
+  // POST /api/players/:playerId/ncaa-eligibility - Create/Update player's NCAA eligibility progress
+  app.post("/api/players/:playerId/ncaa-eligibility", isAuthenticated, async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.playerId);
+      if (isNaN(playerId)) {
+        return res.status(400).json({ message: "Invalid player ID" });
+      }
+
+      // Verify user owns this player data
+      const userPlayerId = (req.user as any)?.playerId;
+      if (!userPlayerId || userPlayerId !== playerId) {
+        return res.status(403).json({ error: 'Forbidden: Not authorized to access this player data' });
+      }
+
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+
+      // Validate request body with schema
+      const validatedData = insertNcaaEligibilityProgressSchema.parse({
+        playerId,
+        ...req.body,
+      });
+
+      // Check if record already exists
+      const [existing] = await db.select()
+        .from(ncaaEligibilityProgress)
+        .where(eq(ncaaEligibilityProgress.playerId, playerId))
+        .limit(1);
+
+      let result;
+      if (existing) {
+        // Update existing record
+        const [updated] = await db.update(ncaaEligibilityProgress)
+          .set({
+            ...validatedData,
+            updatedAt: new Date(),
+          })
+          .where(eq(ncaaEligibilityProgress.playerId, playerId))
+          .returning();
+        result = updated;
+      } else {
+        // Create new record
+        const [created] = await db.insert(ncaaEligibilityProgress)
+          .values(validatedData)
+          .returning();
+        result = created;
+      }
+
+      res.status(existing ? 200 : 201).json(result);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid request body", errors: error.errors });
+      }
+      console.error('Error creating/updating NCAA eligibility progress:', error);
+      res.status(500).json({ message: "Failed to create/update NCAA eligibility progress" });
+    }
+  });
+
+  // === COACH RECOMMENDATIONS API ===
+  
+  // GET public recommendations for a player
+  app.get('/api/players/:playerId/recommendations', async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.playerId, 10);
+      if (isNaN(playerId)) {
+        return res.status(400).json({ message: "Invalid player ID" });
+      }
+      
+      const recommendations = await db
+        .select()
+        .from(coachRecommendations)
+        .where(and(
+          eq(coachRecommendations.playerId, playerId),
+          eq(coachRecommendations.isPublic, true)
+        ))
+        .orderBy(desc(coachRecommendations.createdAt));
+      
+      res.json(recommendations);
+    } catch (error) {
+      console.error('Error fetching public recommendations:', error);
+      res.status(500).json({ message: "Failed to fetch recommendations" });
+    }
+  });
+  
+  // GET all recommendations (including private) for player - only accessible to the player themselves
+  app.get('/api/players/:playerId/recommendations/all', isAuthenticated, async (req: any, res) => {
+    try {
+      const playerId = parseInt(req.params.playerId, 10);
+      if (isNaN(playerId)) {
+        return res.status(400).json({ message: "Invalid player ID" });
+      }
+      
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
+      
+      // Only allow the player themselves to view all recommendations
+      if (user.role !== 'player' || user.playerId !== playerId) {
+        return res.status(403).json({ message: "Only the player can view all their recommendations" });
+      }
+      
+      const recommendations = await db
+        .select()
+        .from(coachRecommendations)
+        .where(eq(coachRecommendations.playerId, playerId))
+        .orderBy(desc(coachRecommendations.createdAt));
+      
+      res.json(recommendations);
+    } catch (error) {
+      console.error('Error fetching all recommendations:', error);
+      res.status(500).json({ message: "Failed to fetch recommendations" });
+    }
+  });
+  
+  // POST create a new recommendation (coaches only)
+  app.post('/api/players/:playerId/recommendations', isCoach, async (req: any, res) => {
+    try {
+      const playerId = parseInt(req.params.playerId, 10);
+      if (isNaN(playerId)) {
+        return res.status(400).json({ message: "Invalid player ID" });
+      }
+      
+      // Verify player exists
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+      
+      const user = (req as any).caliberUser;
+      
+      // Build recommendation data with coach info from session
+      const recommendationData = {
+        ...req.body,
+        playerId,
+        coachUserId: req.user.claims.sub,
+        coachName: user.firstName && user.lastName 
+          ? `${user.firstName} ${user.lastName}` 
+          : user.firstName || user.lastName || 'Coach',
+      };
+      
+      // Validate request body
+      const validatedData = insertCoachRecommendationSchema.parse(recommendationData);
+      
+      const [created] = await db
+        .insert(coachRecommendations)
+        .values(validatedData)
+        .returning();
+      
+      res.status(201).json(created);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid request body", errors: error.errors });
+      }
+      console.error('Error creating recommendation:', error);
+      res.status(500).json({ message: "Failed to create recommendation" });
+    }
+  });
+  
+  // DELETE a recommendation (only the coach who wrote it can delete)
+  app.delete('/api/players/:playerId/recommendations/:recommendationId', isAuthenticated, async (req: any, res) => {
+    try {
+      const playerId = parseInt(req.params.playerId, 10);
+      const recommendationId = parseInt(req.params.recommendationId, 10);
+      
+      if (isNaN(playerId) || isNaN(recommendationId)) {
+        return res.status(400).json({ message: "Invalid player ID or recommendation ID" });
+      }
+      
+      // Get the recommendation
+      const [recommendation] = await db
+        .select()
+        .from(coachRecommendations)
+        .where(and(
+          eq(coachRecommendations.id, recommendationId),
+          eq(coachRecommendations.playerId, playerId)
+        ));
+      
+      if (!recommendation) {
+        return res.status(404).json({ message: "Recommendation not found" });
+      }
+      
+      // Only allow the coach who wrote it to delete
+      if (recommendation.coachUserId !== req.user.claims.sub) {
+        return res.status(403).json({ message: "Only the coach who wrote this recommendation can delete it" });
+      }
+      
+      await db
+        .delete(coachRecommendations)
+        .where(eq(coachRecommendations.id, recommendationId));
+      
+      res.status(200).json({ message: "Recommendation deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting recommendation:', error);
+      res.status(500).json({ message: "Failed to delete recommendation" });
     }
   });
 

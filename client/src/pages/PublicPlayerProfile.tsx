@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS, type FootballPosition } from "@shared/sports-config";
 import { cn } from "@/lib/utils";
+import { CoachRecommendations } from "@/components/CoachRecommendations";
 
 interface PublicPlayerData {
   player: {
@@ -616,6 +617,15 @@ export default function PublicPlayerProfile() {
             </Button>
           </Link>
         </div>
+
+        {/* Coach Recommendations Section */}
+        <section className="py-12 border-t border-cyan-500/10">
+          <CoachRecommendations 
+            playerId={player.id}
+            isCoachViewing={false}
+            showWriteForm={false}
+          />
+        </section>
       </main>
 
       <footer className="relative z-10 border-t border-cyan-500/10 py-6 text-center text-sm text-muted-foreground">

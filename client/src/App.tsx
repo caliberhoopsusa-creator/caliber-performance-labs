@@ -65,6 +65,7 @@ import LeagueHub from "./pages/LeagueHub";
 import LeagueDetail from "./pages/LeagueDetail";
 import CollegeRecruiting from "./pages/CollegeRecruiting";
 import MyRecruiting from "./pages/MyRecruiting";
+import CampShowcaseFinder from "./pages/CampShowcaseFinder";
 import FitnessDashboard from "./pages/FitnessDashboard";
 import PublicPlayerProfile from "./pages/PublicPlayerProfile";
 import NotFound from "./pages/not-found";
@@ -314,6 +315,7 @@ function MainRouter() {
                 <Route path="/leagues/:id" component={LeagueDetail} />
                 <Route path="/recruiting" component={MyRecruiting} />
                 <Route path="/college-recruiting" component={CollegeRecruiting} />
+                <Route path="/camps-showcases" component={CampShowcaseFinder} />
                 <Route path="/fitness" component={FitnessDashboard} />
                 <Route component={NotFound} />
               </Switch>

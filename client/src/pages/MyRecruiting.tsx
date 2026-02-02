@@ -4,6 +4,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { useSport } from "@/components/SportToggle";
 import { RecruitingTimeline } from "@/components/RecruitingTimeline";
+import { NcaaEligibilityChecklist } from "@/components/NcaaEligibilityChecklist";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -467,6 +468,8 @@ export default function MyRecruiting() {
               </CardContent>
             </Card>
           )}
+
+          <NcaaEligibilityChecklist playerId={playerId} />
         </div>
 
         <div className="lg:col-span-3">
@@ -651,6 +654,16 @@ export default function MyRecruiting() {
                 >
                   <School className="w-4 h-4 mr-2" />
                   Browse More Schools
+                </Button>
+              </Link>
+              <Link href="/camps-showcases">
+                <Button
+                  variant="outline"
+                  className="border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10"
+                  data-testid="button-find-camps"
+                >
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Find Camps & Showcases
                 </Button>
               </Link>
             </div>
