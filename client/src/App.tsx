@@ -61,6 +61,7 @@ import ReportCardPage from "./pages/ReportCardPage";
 import SocialHub from "./pages/SocialHub";
 import Shop from "./pages/Shop";
 import CoachVerify from "./pages/CoachVerify";
+import CoachEndorsements from "./pages/CoachEndorsements";
 import LeagueHub from "./pages/LeagueHub";
 import LeagueDetail from "./pages/LeagueDetail";
 import CollegeRecruiting from "./pages/CollegeRecruiting";
@@ -302,6 +303,7 @@ function MainRouter() {
                 <Route path="/coach/scouting" component={OpponentScouting} />
                 <Route path="/coach/alerts" component={CoachAlertsPage} />
                 <Route path="/coach/verify" component={CoachVerify} />
+                <Route path="/coach/endorsements" component={CoachEndorsements} />
                 <Route path="/pricing" component={Pricing} />
                 <Route path="/workouts" component={WorkoutTracker} />
                 <Route path="/schedule" component={ScheduleCalendar} />

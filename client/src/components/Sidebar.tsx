@@ -147,6 +147,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
     {
       title: "Coach Tools",
       items: [
+        { href: "/coach/endorsements", label: "Endorse Players", icon: Medal, featured: true },
         { href: "/coach/verify", label: "Verify Games", icon: ClipboardCheck, featured: pendingCount > 0, badgeCount: pendingCount },
         { href: "/coach/hub", label: "Team Hub", icon: ClipboardList, premium: "coach_pro" },
         { href: "/coach/practices", label: "Practices", icon: CalendarCheck, premium: "coach_pro" },
