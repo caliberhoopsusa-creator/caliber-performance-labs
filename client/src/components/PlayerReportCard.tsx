@@ -1,4 +1,5 @@
 import { usePlayerReportCard, usePlayer, type ReportCardCoachGoal, type ReportCardCoachNote, type ReportCardTrends, type PlayerReportCardData } from "@/hooks/use-basketball";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,7 +25,12 @@ import {
   Activity,
   Calendar,
   Percent,
-  Crosshair
+  Crosshair,
+  Medal,
+  Users,
+  Heart,
+  Brain,
+  Zap
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
@@ -190,6 +196,86 @@ function CoachNoteItem({ note }: { note: ReportCardCoachNote }) {
   );
 }
 
+interface CoachEndorsement {
+  id: number;
+  coachName: string;
+  coachTitle: string | null;
+  coachOrganization: string | null;
+  relationship: string | null;
+  recommendation: string;
+  overallRating: number;
+  athleticAbility: number;
+  workEthic: number;
+  coachability: number;
+  leadership: number;
+  character: number;
+  createdAt: string;
+}
+
+const RATING_CATEGORIES = [
+  { key: "athleticAbility", label: "Athletic", icon: Zap },
+  { key: "workEthic", label: "Work Ethic", icon: Award },
+  { key: "coachability", label: "Coachability", icon: Users },
+  { key: "leadership", label: "Leadership", icon: Brain },
+  { key: "character", label: "Character", icon: Heart },
+] as const;
+
+function EndorsementStars({ value }: { value: number }) {
+  const stars = Math.round(value / 2);
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Star
+          key={star}
+          className={cn(
+            "w-3 h-3",
+            star <= stars ? "fill-amber-400 text-amber-400" : "text-slate-600"
+          )}
+        />
+      ))}
+    </div>
+  );
+}
+
+function EndorsementItem({ endorsement }: { endorsement: CoachEndorsement }) {
+  return (
+    <div 
+      className="p-4 rounded-lg bg-gradient-to-br from-amber-500/5 to-orange-500/5 border border-amber-500/20 print:bg-amber-50 print:border-amber-200"
+      data-testid={`endorsement-item-${endorsement.id}`}
+    >
+      <div className="flex items-start gap-3">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center border border-amber-500/30 flex-shrink-0 print:bg-amber-100">
+          <Medal className="w-5 h-5 text-amber-400 print:text-amber-600" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-semibold text-white print:text-black">{endorsement.coachName}</span>
+            <EndorsementStars value={endorsement.overallRating} />
+          </div>
+          {(endorsement.coachTitle || endorsement.coachOrganization) && (
+            <p className="text-xs text-muted-foreground print:text-gray-600">
+              {[endorsement.coachTitle, endorsement.coachOrganization].filter(Boolean).join(" • ")}
+            </p>
+          )}
+          <p className="text-sm mt-2 text-muted-foreground print:text-gray-700 line-clamp-3">"{endorsement.recommendation}"</p>
+          <div className="flex flex-wrap gap-3 mt-3">
+            {RATING_CATEGORIES.map(({ key, label }) => {
+              const value = endorsement[key as keyof CoachEndorsement] as number;
+              const stars = Math.round(value / 2);
+              return (
+                <div key={key} className="flex items-center gap-1 text-xs">
+                  <span className="text-muted-foreground print:text-gray-600">{label}:</span>
+                  <span className="text-amber-400 print:text-amber-600 font-medium">{stars}/5</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function GradeTrendTable({ gradeDistribution }: { gradeDistribution: Record<string, number> }) {
   const total = Object.values(gradeDistribution).reduce((a, b) => a + b, 0);
   if (total === 0) return <p className="text-sm text-muted-foreground print:text-gray-600">No graded games yet</p>;
@@ -262,6 +348,9 @@ function GradeTrendTable({ gradeDistribution }: { gradeDistribution: Record<stri
 export function PlayerReportCard({ playerId, dateRange, showActions = true }: PlayerReportCardProps) {
   const { data: reportCard, isLoading: reportLoading, isError: reportError, refetch: refetchReport } = usePlayerReportCard(playerId);
   const { data: player, isLoading: playerLoading } = usePlayer(playerId);
+  const { data: endorsements } = useQuery<CoachEndorsement[]>({
+    queryKey: ['/api/players', playerId, 'recommendations'],
+  });
   const [copied, setCopied] = useState(false);
   
   const isFootball = player?.sport === 'football';
@@ -624,6 +713,21 @@ export function PlayerReportCard({ playerId, dateRange, showActions = true }: Pl
               {publicCoachNotes.slice(0, 5).map((note, idx) => (
                 <CoachNoteItem key={idx} note={note} />
               ))}
+            </div>
+          </ReportSummarySection>
+        )}
+
+        {endorsements && endorsements.length > 0 && (
+          <ReportSummarySection title="Coach Endorsements" icon={Medal} breakBefore>
+            <div className="space-y-3" data-testid="endorsements-section">
+              {endorsements.slice(0, 3).map((endorsement) => (
+                <EndorsementItem key={endorsement.id} endorsement={endorsement} />
+              ))}
+              {endorsements.length > 3 && (
+                <p className="text-xs text-muted-foreground text-center pt-2 print:text-gray-500">
+                  + {endorsements.length - 3} more endorsement{endorsements.length - 3 > 1 ? 's' : ''}
+                </p>
+              )}
             </div>
           </ReportSummarySection>
         )}
