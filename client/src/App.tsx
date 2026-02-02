@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { Sidebar, MobileNav } from "@/components/Sidebar";
 import { MobileDrawer } from "@/components/MobileDrawer";
+import { FloatingActionButton } from "@/components/FloatingActionButton";
 import { NotificationBell } from "@/components/NotificationBell";
 import { OfflineBanner, OfflineIndicator } from "@/components/OfflineBanner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -325,6 +326,7 @@ function MainRouter() {
           </main>
         </div>
         <MobileNav userRole={extendedUser.role} playerId={extendedUser.playerId} />
+        <FloatingActionButton userRole={extendedUser.role} playerId={extendedUser.playerId} />
       </div>
     </>
   );
