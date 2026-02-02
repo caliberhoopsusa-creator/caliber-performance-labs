@@ -61,6 +61,7 @@ interface CollegeMatch {
 interface CollegeMatchesProps {
   playerId: number;
   divisionFilter?: string;
+  sportFilter?: string;
 }
 
 const DIVISION_COLORS: Record<string, string> = {
@@ -361,7 +362,7 @@ function CollegeMatchSkeleton() {
   );
 }
 
-export function CollegeMatches({ playerId, divisionFilter = 'all' }: CollegeMatchesProps) {
+export function CollegeMatches({ playerId, divisionFilter = 'all', sportFilter }: CollegeMatchesProps) {
   const { data: matches, isLoading, error } = useQuery<CollegeMatch[]>({
     queryKey: ['/api/players', playerId, 'college-matches'],
     enabled: !!playerId,
@@ -399,9 +400,11 @@ export function CollegeMatches({ playerId, divisionFilter = 'all' }: CollegeMatc
     );
   }
 
-  const filteredMatches = matches?.filter(m => 
-    divisionFilter === 'all' || m.college.division === divisionFilter
-  ).slice(0, 10) ?? [];
+  const filteredMatches = matches?.filter(m => {
+    const divisionMatch = divisionFilter === 'all' || m.college.division === divisionFilter;
+    const sportMatch = !sportFilter || m.college.sport === sportFilter;
+    return divisionMatch && sportMatch;
+  }).slice(0, 10) ?? [];
 
   if (filteredMatches.length === 0) {
     return null;

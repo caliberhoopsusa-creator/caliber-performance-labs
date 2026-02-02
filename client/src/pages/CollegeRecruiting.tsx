@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSport } from "@/components/SportToggle";
 import { 
   GraduationCap, 
   Sparkles, 
@@ -15,7 +16,9 @@ import {
   MapPin, 
   User, 
   BookOpen,
-  RefreshCw
+  RefreshCw,
+  Dribbble,
+  Trophy
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -47,6 +50,7 @@ const DIVISIONS = [
 export default function CollegeRecruiting() {
   const { user } = useAuth();
   const playerId = (user as any)?.playerId;
+  const currentSport = useSport();
   const [divisionFilter, setDivisionFilter] = useState('all');
 
   const { data: player, isLoading: playerLoading } = useQuery<Player>({
@@ -91,12 +95,29 @@ export default function CollegeRecruiting() {
     <div className="space-y-6 pb-8">
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl md:text-4xl font-bold text-white tracking-tight flex items-center gap-3">
-            <GraduationCap className="w-8 h-8 text-cyan-400" />
-            College Recruiting
-          </h1>
+          <div className="flex items-center gap-3 mb-1">
+            <h1 className="font-display text-3xl md:text-4xl font-bold text-white tracking-tight flex items-center gap-3">
+              <GraduationCap className="w-8 h-8 text-cyan-400" />
+              College Recruiting
+            </h1>
+            <Badge 
+              variant="outline" 
+              className={cn(
+                "text-xs uppercase font-semibold",
+                currentSport === 'basketball' 
+                  ? "border-orange-500/50 text-orange-400 bg-orange-500/10" 
+                  : "border-amber-700/50 text-amber-500 bg-amber-700/10"
+              )}
+            >
+              {currentSport === 'basketball' ? (
+                <><Dribbble className="w-3 h-3 mr-1" /> Basketball</>
+              ) : (
+                <><Trophy className="w-3 h-3 mr-1" /> Football</>
+              )}
+            </Badge>
+          </div>
           <p className="text-muted-foreground mt-1">
-            Find your perfect college fit based on your skills and preferences
+            Find your perfect {currentSport} program based on your skills and preferences
           </p>
         </div>
         
@@ -218,7 +239,7 @@ export default function CollegeRecruiting() {
           ))}
         </div>
       ) : hasMatches ? (
-        <CollegeMatches playerId={playerId} divisionFilter={divisionFilter} />
+        <CollegeMatches playerId={playerId} divisionFilter={divisionFilter} sportFilter={currentSport} />
       ) : (
         <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
           <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/20 flex items-center justify-center mb-6">
