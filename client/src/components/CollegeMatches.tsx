@@ -68,6 +68,8 @@ interface College {
   headCoachName: string | null;
   headCoachYears: number | null;
   headCoachRecord: string | null;
+  statsLastUpdated: string | null;
+  statsSource: string | null;
 }
 
 interface CollegeMatch {
