@@ -8279,6 +8279,22 @@ Respond in this exact JSON format:
     }
   });
 
+  // Get player's games (for linking highlights to games)
+  app.get('/api/players/:playerId/games', async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.playerId);
+      if (isNaN(playerId)) {
+        return res.status(400).json({ message: "Invalid player ID" });
+      }
+      const games = await storage.getGamesByPlayerId(playerId);
+      games.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      res.json(games);
+    } catch (error) {
+      console.error('Error getting player games:', error);
+      res.status(500).json({ message: "Failed to get player games" });
+    }
+  });
+
   // Get player's highlight clips
   app.get('/api/players/:playerId/highlight-clips', isAuthenticated, async (req, res) => {
     try {

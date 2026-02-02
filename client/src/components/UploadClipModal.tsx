@@ -227,17 +227,23 @@ export function UploadClipModal({
             <Select
               value={selectedGameId}
               onValueChange={setSelectedGameId}
-              disabled={isLoading}
+              disabled={isLoading || games.length === 0}
             >
               <SelectTrigger data-testid="select-game">
-                <SelectValue placeholder="Select a game" />
+                <SelectValue placeholder={games.length === 0 ? "No games available" : "Select a game"} />
               </SelectTrigger>
               <SelectContent>
-                {games.map((game) => (
-                  <SelectItem key={game.id} value={game.id.toString()}>
-                    vs {game.opponent} - {game.date}
-                  </SelectItem>
-                ))}
+                {games.length === 0 ? (
+                  <div className="px-2 py-4 text-center text-sm text-muted-foreground">
+                    No games logged yet. Log a game first to link highlights.
+                  </div>
+                ) : (
+                  games.map((game) => (
+                    <SelectItem key={game.id} value={game.id.toString()}>
+                      vs {game.opponent} - {game.date}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
