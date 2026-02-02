@@ -7,6 +7,7 @@ import { getStripeSync } from './stripeClient';
 import { WebhookHandlers } from './webhookHandlers';
 import { seedColleges } from './seeds/colleges';
 import { updateCollegeStats } from './seeds/updateCollegeStats';
+import { seedRecruitingContacts, seedAdditionalLowerDivisionColleges } from './seeds/recruitingContacts';
 import type Stripe from 'stripe';
 
 const app = express();
@@ -176,6 +177,8 @@ app.use((req, res, next) => {
   try {
     await seedColleges();
     await updateCollegeStats();
+    await seedAdditionalLowerDivisionColleges();
+    await seedRecruitingContacts();
   } catch (error) {
     console.error('Failed to seed colleges:', error);
   }
