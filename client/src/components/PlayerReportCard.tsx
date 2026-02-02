@@ -203,22 +203,33 @@ interface CoachEndorsement {
   coachOrganization: string | null;
   relationship: string | null;
   recommendation: string;
-  overallRating: number;
-  athleticAbility: number;
-  workEthic: number;
-  coachability: number;
-  leadership: number;
-  character: number;
+  athleticAbilityRating: number | null;
+  workEthicRating: number | null;
+  coachabilityRating: number | null;
+  leadershipRating: number | null;
+  characterRating: number | null;
   createdAt: string;
 }
 
 const RATING_CATEGORIES = [
-  { key: "athleticAbility", label: "Athletic", icon: Zap },
-  { key: "workEthic", label: "Work Ethic", icon: Award },
-  { key: "coachability", label: "Coachability", icon: Users },
-  { key: "leadership", label: "Leadership", icon: Brain },
-  { key: "character", label: "Character", icon: Heart },
+  { key: "athleticAbilityRating", label: "Athletic" },
+  { key: "workEthicRating", label: "Work Ethic" },
+  { key: "coachabilityRating", label: "Coachability" },
+  { key: "leadershipRating", label: "Leadership" },
+  { key: "characterRating", label: "Character" },
 ] as const;
+
+function getAverageRating(endorsement: CoachEndorsement): number {
+  const ratings = [
+    endorsement.athleticAbilityRating,
+    endorsement.workEthicRating,
+    endorsement.coachabilityRating,
+    endorsement.leadershipRating,
+    endorsement.characterRating,
+  ].filter((r): r is number => r !== null && r !== undefined);
+  if (ratings.length === 0) return 0;
+  return ratings.reduce((a, b) => a + b, 0) / ratings.length;
+}
 
 function EndorsementStars({ value }: { value: number }) {
   const stars = Math.round(value / 2);
@@ -238,6 +249,8 @@ function EndorsementStars({ value }: { value: number }) {
 }
 
 function EndorsementItem({ endorsement }: { endorsement: CoachEndorsement }) {
+  const avgRating = getAverageRating(endorsement);
+  
   return (
     <div 
       className="p-4 rounded-lg bg-gradient-to-br from-amber-500/5 to-orange-500/5 border border-amber-500/20 print:bg-amber-50 print:border-amber-200"
@@ -250,7 +263,7 @@ function EndorsementItem({ endorsement }: { endorsement: CoachEndorsement }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-semibold text-white print:text-black">{endorsement.coachName}</span>
-            <EndorsementStars value={endorsement.overallRating} />
+            <EndorsementStars value={avgRating} />
           </div>
           {(endorsement.coachTitle || endorsement.coachOrganization) && (
             <p className="text-xs text-muted-foreground print:text-gray-600">
@@ -260,7 +273,8 @@ function EndorsementItem({ endorsement }: { endorsement: CoachEndorsement }) {
           <p className="text-sm mt-2 text-muted-foreground print:text-gray-700 line-clamp-3">"{endorsement.recommendation}"</p>
           <div className="flex flex-wrap gap-3 mt-3">
             {RATING_CATEGORIES.map(({ key, label }) => {
-              const value = endorsement[key as keyof CoachEndorsement] as number;
+              const value = endorsement[key as keyof CoachEndorsement] as number | null;
+              if (value === null || value === undefined) return null;
               const stars = Math.round(value / 2);
               return (
                 <div key={key} className="flex items-center gap-1 text-xs">
