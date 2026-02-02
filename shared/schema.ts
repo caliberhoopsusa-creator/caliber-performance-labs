@@ -2170,6 +2170,10 @@ export const colleges = pgTable("colleges", {
   recruitingContactEmail: text("recruiting_contact_email"),
   recruitingUrl: text("recruiting_url"),
   
+  // Data freshness tracking
+  statsLastUpdated: timestamp("stats_last_updated"), // When stats were last synced from API
+  statsSource: text("stats_source"), // 'manual', 'cfb_api', 'espn_api'
+  
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

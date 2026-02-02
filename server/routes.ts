@@ -12116,6 +12116,25 @@ Respond in this exact JSON format:
     }
   });
 
+  // POST /api/colleges/sync-stats - Sync college stats from external APIs
+  app.post("/api/colleges/sync-stats", async (req, res) => {
+    try {
+      const { syncAllCollegeStats } = await import('./services/sportsDataApi');
+      
+      const result = await syncAllCollegeStats();
+      
+      res.json({
+        message: "Stats sync completed",
+        football: result.football,
+        basketball: result.basketball,
+        syncedAt: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Error syncing college stats:', error);
+      res.status(500).json({ message: "Failed to sync college stats" });
+    }
+  });
+
   // GET /api/players/:id/college-matches - Get player's college matches with college details
   app.get("/api/players/:id/college-matches", async (req, res) => {
     try {
