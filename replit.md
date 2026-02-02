@@ -16,6 +16,11 @@ Preferred communication style: Simple, everyday language.
 - **Charts**: Recharts
 - **Forms**: React Hook Form with Zod validation
 - **UI/UX**: Features a sleek, futuristic dark theme with sci-fi inspired aesthetics, including cyber-grid backgrounds, gradient text, glowing elements, and Framer-motion animations. It utilizes custom utility classes like `cyber-grid`, `neon-border`, and `tech-panel`. Typography uses Teko for headings and Inter for body text. The design is mobile-optimized with PWA support.
+- **Mobile Components**: 
+  - `FloatingActionButton`: Expandable FAB with role-specific quick actions (players: Log Game, Highlights, Goals; coaches: Scout, Endorse, Lineup). Hidden on /analyze, /video, /role-selection, / routes.
+  - `PullToRefreshIndicator`: Visual pull-to-refresh UI component with animated spinner.
+  - `CollapsibleStatCard`: Collapsible stat sections with accessible button-based header, keyboard navigation, and aria-expanded state.
+  - `MobileStatGrid`: Grid layout optimized for mobile stat displays.
 - **Error Boundary**: A custom React Error Boundary provides a futuristic error UI with graceful handling and debugging information.
 
 ### Backend
