@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, headToHeadChallenges, statVerifications, playerCollegeMatches, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema, insertWearableConnectionSchema } from "@shared/schema";
+import { players, games, headToHeadChallenges, statVerifications, playerCollegeMatches, playerCollegeInterests, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema, insertWearableConnectionSchema } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { calculateAIRating, calculateProjection, type GameStats, type PlayerMetrics, type PeerStats, type AIRatingResult, type ProjectionResult } from "@shared/ai-rating-engine";
 import type { Sport } from "@shared/sports-config";
@@ -12252,6 +12252,141 @@ Respond in this exact JSON format:
     } catch (error) {
       console.error('Error toggling save status:', error);
       res.status(500).json({ message: "Failed to toggle save status" });
+    }
+  });
+
+  // ============ PLAYER COLLEGE INTERESTS ROUTES ============
+
+  // GET /api/players/:id/interests - Get player's college interests
+  app.get("/api/players/:id/interests", async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      if (isNaN(playerId)) {
+        return res.status(400).json({ message: "Invalid player ID" });
+      }
+
+      const interests = await db.select()
+        .from(playerCollegeInterests)
+        .where(eq(playerCollegeInterests.playerId, playerId))
+        .orderBy(playerCollegeInterests.createdAt);
+
+      // Get college details for each interest
+      const interestsWithColleges = await Promise.all(
+        interests.map(async (interest) => {
+          const college = await storage.getCollege(interest.collegeId);
+          return { ...interest, college };
+        })
+      );
+
+      res.json(interestsWithColleges);
+    } catch (error) {
+      console.error('Error getting player interests:', error);
+      res.status(500).json({ message: "Failed to get player interests" });
+    }
+  });
+
+  // POST /api/players/:id/interests - Express interest in a college
+  app.post("/api/players/:id/interests", async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      if (isNaN(playerId)) {
+        return res.status(400).json({ message: "Invalid player ID" });
+      }
+
+      const { collegeId, interestLevel, notes } = req.body;
+      if (!collegeId) {
+        return res.status(400).json({ message: "College ID is required" });
+      }
+
+      // Check if interest already exists
+      const existing = await db.select()
+        .from(playerCollegeInterests)
+        .where(and(
+          eq(playerCollegeInterests.playerId, playerId),
+          eq(playerCollegeInterests.collegeId, collegeId)
+        ));
+
+      if (existing.length > 0) {
+        return res.status(400).json({ message: "Interest already exists for this college" });
+      }
+
+      const [interest] = await db.insert(playerCollegeInterests)
+        .values({
+          playerId,
+          collegeId,
+          interestLevel: interestLevel || 'interested',
+          notes: notes || null,
+        })
+        .returning();
+
+      const college = await storage.getCollege(collegeId);
+      res.status(201).json({ ...interest, college });
+    } catch (error) {
+      console.error('Error creating interest:', error);
+      res.status(500).json({ message: "Failed to express interest" });
+    }
+  });
+
+  // DELETE /api/players/:id/interests/:collegeId - Remove interest in a college
+  app.delete("/api/players/:id/interests/:collegeId", async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      const collegeId = parseInt(req.params.collegeId);
+      
+      if (isNaN(playerId) || isNaN(collegeId)) {
+        return res.status(400).json({ message: "Invalid IDs" });
+      }
+
+      await db.delete(playerCollegeInterests)
+        .where(and(
+          eq(playerCollegeInterests.playerId, playerId),
+          eq(playerCollegeInterests.collegeId, collegeId)
+        ));
+
+      res.json({ message: "Interest removed" });
+    } catch (error) {
+      console.error('Error removing interest:', error);
+      res.status(500).json({ message: "Failed to remove interest" });
+    }
+  });
+
+  // PATCH /api/players/:id/interests/:collegeId - Update interest (mark as contacted, etc.)
+  app.patch("/api/players/:id/interests/:collegeId", async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      const collegeId = parseInt(req.params.collegeId);
+      
+      if (isNaN(playerId) || isNaN(collegeId)) {
+        return res.status(400).json({ message: "Invalid IDs" });
+      }
+
+      const { interestLevel, notes, contacted } = req.body;
+      const updates: any = {};
+      
+      if (interestLevel) updates.interestLevel = interestLevel;
+      if (notes !== undefined) updates.notes = notes;
+      if (contacted !== undefined) {
+        updates.contacted = contacted;
+        if (contacted) updates.contactedAt = new Date();
+      }
+
+      const [updated] = await db.update(playerCollegeInterests)
+        .set(updates)
+        .where(and(
+          eq(playerCollegeInterests.playerId, playerId),
+          eq(playerCollegeInterests.collegeId, collegeId)
+        ))
+        .returning();
+
+      if (!updated) {
+        return res.status(404).json({ message: "Interest not found" });
+      }
+
+      const college = await storage.getCollege(collegeId);
+      res.json({ ...updated, college });
+    } catch (error) {
+      console.error('Error updating interest:', error);
+      res.status(500).json({ message: "Failed to update interest" });
     }
   });
 

@@ -2341,6 +2341,26 @@ export const insertPlayerCollegeMatchSchema = createInsertSchema(playerCollegeMa
 export type InsertPlayerCollegeMatch = z.infer<typeof insertPlayerCollegeMatchSchema>;
 export type PlayerCollegeMatch = typeof playerCollegeMatches.$inferSelect;
 
+// === PLAYER COLLEGE INTERESTS ===
+export const playerCollegeInterests = pgTable("player_college_interests", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull(),
+  collegeId: integer("college_id").notNull(),
+  interestLevel: text("interest_level").default("interested"), // 'interested', 'very_interested', 'committed'
+  notes: text("notes"),
+  contacted: boolean("contacted").default(false),
+  contactedAt: timestamp("contacted_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  playerIdIdx: index("player_college_interests_player_idx").on(table.playerId),
+  collegeIdIdx: index("player_college_interests_college_idx").on(table.collegeId),
+  uniqueInterest: index("player_college_interests_unique").on(table.playerId, table.collegeId),
+}));
+
+export const insertPlayerCollegeInterestSchema = createInsertSchema(playerCollegeInterests).omit({ id: true, createdAt: true });
+export type InsertPlayerCollegeInterest = z.infer<typeof insertPlayerCollegeInterestSchema>;
+export type PlayerCollegeInterest = typeof playerCollegeInterests.$inferSelect;
+
 // === FITNESS DATA SCHEMAS & TYPES ===
 export const insertFitnessDataSchema = createInsertSchema(fitnessData).omit({ id: true, createdAt: true });
 export type InsertFitnessData = z.infer<typeof insertFitnessDataSchema>;

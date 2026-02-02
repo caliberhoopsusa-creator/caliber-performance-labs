@@ -26,10 +26,31 @@ import {
   Clock,
   BarChart3,
   Star,
-  Award
+  Award,
+  Heart
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+
+interface PlayerInfo {
+  id: number;
+  name: string;
+  position: string;
+  school: string | null;
+  graduationYear: number | null;
+  gpa: string | null;
+}
+
+interface PlayerCollegeInterest {
+  id: number;
+  playerId: number;
+  collegeId: number;
+  interestLevel: string | null;
+  notes: string | null;
+  contacted: boolean | null;
+  contactedAt: string | null;
+  createdAt: string;
+}
 
 interface College {
   id: number;
@@ -181,7 +202,51 @@ function ScoreBar({ label, value, icon: Icon }: { label: string; value: number |
   );
 }
 
-function CollegeMatchCard({ match, onToggleSave }: { match: CollegeMatch; onToggleSave: (matchId: number) => void }) {
+interface CollegeMatchCardProps {
+  match: CollegeMatch;
+  onToggleSave: (matchId: number) => void;
+  isInterested: boolean;
+  onToggleInterest: (collegeId: number, isInterested: boolean) => void;
+  isInterestPending: boolean;
+  playerInfo?: PlayerInfo;
+}
+
+function generateMailtoLink(college: College, playerInfo?: PlayerInfo): string {
+  if (!college.recruitingContactEmail) return '';
+  
+  const playerName = playerInfo?.name || 'Prospective Student-Athlete';
+  const position = playerInfo?.position || 'Athlete';
+  const year = playerInfo?.graduationYear || new Date().getFullYear() + 1;
+  const school = playerInfo?.school || 'My School';
+  const gpa = playerInfo?.gpa ? `${playerInfo.gpa}` : 'N/A';
+  
+  const subject = encodeURIComponent(`Recruiting Interest - ${playerName} - ${position} - Class of ${year}`);
+  
+  const body = encodeURIComponent(
+`Dear ${college.name} Coaching Staff,
+
+My name is ${playerName}, and I am a ${position} in the Class of ${year} from ${school}.
+
+I am very interested in your ${college.sport} program and would love the opportunity to learn more about ${college.shortName || college.name} and how I can contribute to your team.
+
+Here are some quick facts about me:
+- Position: ${position}
+- School: ${school}
+- Graduation Year: ${year}
+- GPA: ${gpa}
+
+I would greatly appreciate the opportunity to discuss my potential fit with your program. Please let me know if there are upcoming camps, visits, or other ways I can get on your radar.
+
+Thank you for your time and consideration.
+
+Sincerely,
+${playerName}`
+  );
+  
+  return `mailto:${college.recruitingContactEmail}?subject=${subject}&body=${body}`;
+}
+
+function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest, isInterestPending, playerInfo }: CollegeMatchCardProps) {
   const [isOpen, setIsOpen] = useState(false);
   const college = match.college;
   const colorIndex = college.id % LOGO_COLORS.length;
@@ -517,9 +582,9 @@ function CollegeMatchCard({ match, onToggleSave }: { match: CollegeMatch; onTogg
                       className="border-cyan-500/30"
                       asChild
                     >
-                      <a href={`mailto:${college.recruitingContactEmail}`} data-testid={`link-contact-${match.id}`}>
+                      <a href={generateMailtoLink(college, playerInfo)} data-testid={`button-contact-coach-${match.id}`}>
                         <Mail className="w-4 h-4 mr-2" />
-                        Contact
+                        Contact Coach
                       </a>
                     </Button>
                   )}
@@ -541,22 +606,38 @@ function CollegeMatchCard({ match, onToggleSave }: { match: CollegeMatch; onTogg
             </CollapsibleContent>
           </Collapsible>
           
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onToggleSave(match.id)}
-            className={cn(
-              "flex-shrink-0",
-              match.isSaved ? "text-amber-400 hover:text-amber-300" : "text-muted-foreground hover:text-white"
-            )}
-            data-testid={`button-save-${match.id}`}
-          >
-            {match.isSaved ? (
-              <BookmarkCheck className="w-5 h-5" />
-            ) : (
-              <Bookmark className="w-5 h-5" />
-            )}
-          </Button>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onToggleInterest(college.id, isInterested)}
+              disabled={isInterestPending}
+              className={cn(
+                "transition-colors",
+                isInterested ? "text-rose-500 hover:text-rose-400" : "text-muted-foreground hover:text-rose-400"
+              )}
+              data-testid={`button-interest-${match.id}`}
+            >
+              <Heart className={cn("w-5 h-5", isInterested && "fill-current")} />
+            </Button>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onToggleSave(match.id)}
+              className={cn(
+                "transition-colors",
+                match.isSaved ? "text-amber-400 hover:text-amber-300" : "text-muted-foreground hover:text-white"
+              )}
+              data-testid={`button-save-${match.id}`}
+            >
+              {match.isSaved ? (
+                <BookmarkCheck className="w-5 h-5" />
+              ) : (
+                <Bookmark className="w-5 h-5" />
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     </Card>
@@ -596,6 +677,18 @@ export function CollegeMatches({ playerId, divisionFilter = 'all', sportFilter }
     enabled: !!playerId,
   });
 
+  const { data: playerInfo } = useQuery<PlayerInfo>({
+    queryKey: ['/api/players', playerId],
+    enabled: !!playerId,
+  });
+
+  const { data: interests } = useQuery<PlayerCollegeInterest[]>({
+    queryKey: ['/api/players', playerId, 'interests'],
+    enabled: !!playerId,
+  });
+
+  const interestedCollegeIds = new Set(interests?.map(i => i.collegeId) || []);
+
   const saveMutation = useMutation({
     mutationFn: async (matchId: number) => {
       return apiRequest('PATCH', `/api/college-matches/${matchId}/toggle-save`);
@@ -605,8 +698,25 @@ export function CollegeMatches({ playerId, divisionFilter = 'all', sportFilter }
     },
   });
 
+  const interestMutation = useMutation({
+    mutationFn: async ({ collegeId, isInterested }: { collegeId: number; isInterested: boolean }) => {
+      if (isInterested) {
+        return apiRequest('DELETE', `/api/players/${playerId}/interests/${collegeId}`);
+      } else {
+        return apiRequest('POST', `/api/players/${playerId}/interests`, { collegeId });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/players', playerId, 'interests'] });
+    },
+  });
+
   const handleToggleSave = (matchId: number) => {
     saveMutation.mutate(matchId);
+  };
+
+  const handleToggleInterest = (collegeId: number, isInterested: boolean) => {
+    interestMutation.mutate({ collegeId, isInterested });
   };
 
   if (isLoading) {
@@ -645,6 +755,10 @@ export function CollegeMatches({ playerId, divisionFilter = 'all', sportFilter }
           key={match.id} 
           match={match} 
           onToggleSave={handleToggleSave}
+          isInterested={interestedCollegeIds.has(match.college.id)}
+          onToggleInterest={handleToggleInterest}
+          isInterestPending={interestMutation.isPending}
+          playerInfo={playerInfo}
         />
       ))}
     </div>
