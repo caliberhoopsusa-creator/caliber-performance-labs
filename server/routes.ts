@@ -1,9 +1,10 @@
 import type { Express } from "express";
 import type { Server } from "http";
+import crypto from "crypto";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, headToHeadChallenges, statVerifications, playerCollegeMatches, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema } from "@shared/schema";
+import { players, games, headToHeadChallenges, statVerifications, playerCollegeMatches, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema, insertWearableConnectionSchema } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { calculateAIRating, calculateProjection, type GameStats, type PlayerMetrics, type PeerStats, type AIRatingResult, type ProjectionResult } from "@shared/ai-rating-engine";
 import type { Sport } from "@shared/sports-config";
@@ -12434,6 +12435,412 @@ Respond in this exact JSON format:
     } catch (error) {
       console.error('Error syncing fitness data:', error);
       res.status(500).json({ message: "Failed to sync fitness data" });
+    }
+  });
+
+  // === FITBIT WEARABLE INTEGRATION ROUTES ===
+
+  // Helper function to generate PKCE code verifier
+  function generateCodeVerifier(): string {
+    return crypto.randomBytes(32).toString('base64url');
+  }
+
+  // Helper function to generate PKCE code challenge from verifier
+  function generateCodeChallenge(verifier: string): string {
+    return crypto.createHash('sha256').update(verifier).digest('base64url');
+  }
+
+  // Check if Fitbit is configured
+  function isFitbitConfigured(): boolean {
+    return !!(process.env.FITBIT_CLIENT_ID && process.env.FITBIT_CLIENT_SECRET);
+  }
+
+  // GET /api/wearables/fitbit/connect - Initiate Fitbit OAuth flow
+  app.get("/api/wearables/fitbit/connect", isAuthenticated, async (req: any, res) => {
+    try {
+      if (!isFitbitConfigured()) {
+        return res.status(503).json({ 
+          message: "Fitbit integration is not configured. Please set FITBIT_CLIENT_ID and FITBIT_CLIENT_SECRET environment variables." 
+        });
+      }
+
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Get the player ID for the user
+      const user = await authStorage.getUser(userId);
+      if (!user || !user.playerId) {
+        return res.status(400).json({ message: "No player profile linked to this account" });
+      }
+
+      // Generate PKCE code verifier and challenge
+      const codeVerifier = generateCodeVerifier();
+      const codeChallenge = generateCodeChallenge(codeVerifier);
+
+      // Store code verifier in session
+      req.session.fitbitCodeVerifier = codeVerifier;
+      req.session.fitbitPlayerId = user.playerId;
+
+      // Build Fitbit authorization URL
+      const clientId = process.env.FITBIT_CLIENT_ID;
+      const redirectUri = `${req.protocol}://${req.get('host')}/api/wearables/fitbit/callback`;
+      const scope = 'activity heartrate sleep profile';
+      
+      const authUrl = new URL('https://www.fitbit.com/oauth2/authorize');
+      authUrl.searchParams.set('response_type', 'code');
+      authUrl.searchParams.set('client_id', clientId!);
+      authUrl.searchParams.set('redirect_uri', redirectUri);
+      authUrl.searchParams.set('scope', scope);
+      authUrl.searchParams.set('code_challenge', codeChallenge);
+      authUrl.searchParams.set('code_challenge_method', 'S256');
+
+      res.redirect(authUrl.toString());
+    } catch (error) {
+      console.error('Error initiating Fitbit OAuth:', error);
+      res.status(500).json({ message: "Failed to initiate Fitbit connection" });
+    }
+  });
+
+  // GET /api/wearables/fitbit/callback - Handle Fitbit OAuth callback
+  app.get("/api/wearables/fitbit/callback", async (req: any, res) => {
+    try {
+      if (!isFitbitConfigured()) {
+        return res.status(503).json({ 
+          message: "Fitbit integration is not configured" 
+        });
+      }
+
+      const { code, error } = req.query;
+
+      if (error) {
+        console.error('Fitbit OAuth error:', error);
+        return res.redirect('/?fitbit_error=' + encodeURIComponent(String(error)));
+      }
+
+      if (!code) {
+        return res.status(400).json({ message: "No authorization code received" });
+      }
+
+      const codeVerifier = req.session.fitbitCodeVerifier;
+      const playerId = req.session.fitbitPlayerId;
+
+      if (!codeVerifier || !playerId) {
+        return res.status(400).json({ message: "Invalid session state - please try connecting again" });
+      }
+
+      // Exchange code for tokens
+      const clientId = process.env.FITBIT_CLIENT_ID!;
+      const clientSecret = process.env.FITBIT_CLIENT_SECRET!;
+      const redirectUri = `${req.protocol}://${req.get('host')}/api/wearables/fitbit/callback`;
+
+      const tokenResponse = await fetch('https://api.fitbit.com/oauth2/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': 'Basic ' + Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
+        },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          code: String(code),
+          redirect_uri: redirectUri,
+          code_verifier: codeVerifier
+        }).toString()
+      });
+
+      if (!tokenResponse.ok) {
+        const errorData = await tokenResponse.text();
+        console.error('Fitbit token exchange failed:', errorData);
+        return res.redirect('/?fitbit_error=token_exchange_failed');
+      }
+
+      const tokenData = await tokenResponse.json() as {
+        access_token: string;
+        refresh_token: string;
+        expires_in: number;
+        token_type: string;
+        user_id: string;
+      };
+
+      // Calculate token expiration time
+      const tokenExpiresAt = new Date(Date.now() + tokenData.expires_in * 1000);
+
+      // Check if connection already exists
+      const existingConnection = await storage.getWearableConnectionByPlayerAndProvider(playerId, 'fitbit');
+
+      if (existingConnection) {
+        // Update existing connection
+        await storage.updateWearableConnection(existingConnection.id, {
+          accessToken: tokenData.access_token,
+          refreshToken: tokenData.refresh_token,
+          tokenExpiresAt,
+          isActive: true
+        });
+      } else {
+        // Create new connection
+        await storage.createWearableConnection({
+          playerId,
+          provider: 'fitbit',
+          accessToken: tokenData.access_token,
+          refreshToken: tokenData.refresh_token,
+          tokenExpiresAt,
+          isActive: true
+        });
+      }
+
+      // Clear session data
+      delete req.session.fitbitCodeVerifier;
+      delete req.session.fitbitPlayerId;
+
+      // Redirect to success page
+      res.redirect('/fitness?connected=fitbit');
+    } catch (error) {
+      console.error('Error in Fitbit callback:', error);
+      res.redirect('/?fitbit_error=callback_failed');
+    }
+  });
+
+  // POST /api/wearables/fitbit/sync - Sync data from Fitbit
+  app.post("/api/wearables/fitbit/sync", isAuthenticated, async (req: any, res) => {
+    try {
+      if (!isFitbitConfigured()) {
+        return res.status(503).json({ 
+          message: "Fitbit integration is not configured" 
+        });
+      }
+
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const user = await authStorage.getUser(userId);
+      if (!user || !user.playerId) {
+        return res.status(400).json({ message: "No player profile linked to this account" });
+      }
+
+      // Get the Fitbit connection
+      const connection = await storage.getWearableConnectionByPlayerAndProvider(user.playerId, 'fitbit');
+      if (!connection || !connection.isActive) {
+        return res.status(400).json({ message: "Fitbit is not connected. Please connect first." });
+      }
+
+      // Check if token needs refresh
+      let accessToken = connection.accessToken;
+      if (connection.tokenExpiresAt && new Date(connection.tokenExpiresAt) < new Date()) {
+        // Token expired, try to refresh
+        if (!connection.refreshToken) {
+          return res.status(400).json({ message: "Token expired. Please reconnect Fitbit." });
+        }
+
+        const clientId = process.env.FITBIT_CLIENT_ID!;
+        const clientSecret = process.env.FITBIT_CLIENT_SECRET!;
+
+        const refreshResponse = await fetch('https://api.fitbit.com/oauth2/token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': 'Basic ' + Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
+          },
+          body: new URLSearchParams({
+            grant_type: 'refresh_token',
+            refresh_token: connection.refreshToken
+          }).toString()
+        });
+
+        if (!refreshResponse.ok) {
+          await storage.updateWearableConnection(connection.id, { isActive: false });
+          return res.status(400).json({ message: "Failed to refresh token. Please reconnect Fitbit." });
+        }
+
+        const refreshData = await refreshResponse.json() as {
+          access_token: string;
+          refresh_token: string;
+          expires_in: number;
+        };
+
+        accessToken = refreshData.access_token;
+        const tokenExpiresAt = new Date(Date.now() + refreshData.expires_in * 1000);
+
+        await storage.updateWearableConnection(connection.id, {
+          accessToken: refreshData.access_token,
+          refreshToken: refreshData.refresh_token,
+          tokenExpiresAt
+        });
+      }
+
+      // Get today's date for fetching data
+      const today = new Date().toISOString().split('T')[0];
+
+      // Fetch activity data from Fitbit
+      const activityResponse = await fetch(`https://api.fitbit.com/1/user/-/activities/date/${today}.json`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+
+      // Fetch sleep data from Fitbit
+      const sleepResponse = await fetch(`https://api.fitbit.com/1.2/user/-/sleep/date/${today}.json`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+
+      // Fetch heart rate data from Fitbit
+      const heartResponse = await fetch(`https://api.fitbit.com/1/user/-/activities/heart/date/${today}/1d.json`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+
+      const syncedData: any = {
+        playerId: user.playerId,
+        source: 'fitbit',
+        date: today,
+        syncedAt: new Date()
+      };
+
+      // Process activity data
+      if (activityResponse.ok) {
+        const activityData = await activityResponse.json() as any;
+        if (activityData.summary) {
+          syncedData.stepCount = activityData.summary.steps || 0;
+          syncedData.caloriesBurned = activityData.summary.caloriesOut || 0;
+          syncedData.activeMinutes = (activityData.summary.veryActiveMinutes || 0) + 
+                                     (activityData.summary.fairlyActiveMinutes || 0);
+          syncedData.distanceMeters = (activityData.summary.distances?.find((d: any) => d.activity === 'total')?.distance || 0) * 1609.34;
+        }
+      }
+
+      // Process sleep data
+      if (sleepResponse.ok) {
+        const sleepData = await sleepResponse.json() as any;
+        if (sleepData.summary) {
+          syncedData.sleepHours = (sleepData.summary.totalMinutesAsleep || 0) / 60;
+          syncedData.deepSleepMinutes = sleepData.summary.stages?.deep || 0;
+          syncedData.remSleepMinutes = sleepData.summary.stages?.rem || 0;
+          
+          // Calculate simple sleep quality score
+          const sleepEfficiency = sleepData.summary.totalMinutesAsleep / 
+                                   (sleepData.summary.totalTimeInBed || 1) * 100;
+          syncedData.sleepQualityScore = Math.min(100, Math.round(sleepEfficiency));
+        }
+      }
+
+      // Process heart rate data
+      if (heartResponse.ok) {
+        const heartData = await heartResponse.json() as any;
+        if (heartData['activities-heart']?.[0]?.value) {
+          syncedData.restingHeartRate = heartData['activities-heart'][0].value.restingHeartRate || null;
+        }
+      }
+
+      // Check if data exists for today
+      const existingData = await storage.getFitnessDataByDate(user.playerId, today);
+
+      let result;
+      if (existingData && existingData.source === 'fitbit') {
+        result = await storage.updateFitnessData(existingData.id, syncedData);
+      } else {
+        result = await storage.createFitnessData(syncedData);
+      }
+
+      // Update last sync time
+      await storage.updateWearableConnection(connection.id, { lastSyncAt: new Date() });
+
+      res.json({
+        message: "Fitbit data synced successfully",
+        data: result
+      });
+    } catch (error) {
+      console.error('Error syncing Fitbit data:', error);
+      res.status(500).json({ message: "Failed to sync Fitbit data" });
+    }
+  });
+
+  // DELETE /api/wearables/fitbit/disconnect - Disconnect Fitbit
+  app.delete("/api/wearables/fitbit/disconnect", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const user = await authStorage.getUser(userId);
+      if (!user || !user.playerId) {
+        return res.status(400).json({ message: "No player profile linked to this account" });
+      }
+
+      const connection = await storage.getWearableConnectionByPlayerAndProvider(user.playerId, 'fitbit');
+      if (!connection) {
+        return res.status(404).json({ message: "Fitbit is not connected" });
+      }
+
+      // Revoke the token with Fitbit (best effort)
+      if (isFitbitConfigured() && connection.accessToken) {
+        try {
+          await fetch('https://api.fitbit.com/oauth2/revoke', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Authorization': 'Basic ' + Buffer.from(`${process.env.FITBIT_CLIENT_ID}:${process.env.FITBIT_CLIENT_SECRET}`).toString('base64')
+            },
+            body: new URLSearchParams({
+              token: connection.accessToken
+            }).toString()
+          });
+        } catch (revokeError) {
+          console.error('Error revoking Fitbit token (continuing):', revokeError);
+        }
+      }
+
+      // Delete the connection
+      await storage.deleteWearableConnection(connection.id);
+
+      res.json({ message: "Fitbit disconnected successfully" });
+    } catch (error) {
+      console.error('Error disconnecting Fitbit:', error);
+      res.status(500).json({ message: "Failed to disconnect Fitbit" });
+    }
+  });
+
+  // GET /api/wearables/connections - Get all wearable connections for current user
+  app.get("/api/wearables/connections", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const user = await authStorage.getUser(userId);
+      if (!user || !user.playerId) {
+        return res.status(400).json({ message: "No player profile linked to this account" });
+      }
+
+      const connections = await storage.getPlayerWearableConnections(user.playerId);
+
+      // Return connections without sensitive tokens
+      const safeConnections = connections.map(c => ({
+        id: c.id,
+        provider: c.provider,
+        isActive: c.isActive,
+        lastSyncAt: c.lastSyncAt,
+        createdAt: c.createdAt
+      }));
+
+      res.json({
+        connections: safeConnections,
+        availableProviders: {
+          fitbit: { configured: isFitbitConfigured() },
+          google_fit: { configured: false },
+          whoop: { configured: false },
+          apple_health: { configured: false }
+        }
+      });
+    } catch (error) {
+      console.error('Error getting wearable connections:', error);
+      res.status(500).json({ message: "Failed to get wearable connections" });
     }
   });
 

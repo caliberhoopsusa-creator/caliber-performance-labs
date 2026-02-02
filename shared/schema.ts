@@ -2220,6 +2220,22 @@ export const fitnessData = pgTable("fitness_data", {
   sourceIdx: index("fitness_data_source_idx").on(table.source),
 }));
 
+// === WEARABLE CONNECTIONS (OAuth connections for fitness wearables) ===
+export const wearableConnections = pgTable("wearable_connections", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  provider: text("provider").notNull(), // 'fitbit', 'google_fit', 'whoop', 'apple_health'
+  accessToken: text("access_token").notNull(), // Encrypted in production
+  refreshToken: text("refresh_token"), // Nullable
+  tokenExpiresAt: timestamp("token_expires_at"),
+  lastSyncAt: timestamp("last_sync_at"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  playerIdIdx: index("wearable_connections_player_id_idx").on(table.playerId),
+  providerIdx: index("wearable_connections_provider_idx").on(table.provider),
+}));
+
 // === SCHEMAS FOR NEW TABLES ===
 export const insertPlayerRatingSchema = createInsertSchema(playerRatings).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertPlayerRating = z.infer<typeof insertPlayerRatingSchema>;
@@ -2291,6 +2307,11 @@ export type PlayerCollegeMatch = typeof playerCollegeMatches.$inferSelect;
 export const insertFitnessDataSchema = createInsertSchema(fitnessData).omit({ id: true, createdAt: true });
 export type InsertFitnessData = z.infer<typeof insertFitnessDataSchema>;
 export type FitnessData = typeof fitnessData.$inferSelect;
+
+// === WEARABLE CONNECTIONS SCHEMAS & TYPES ===
+export const insertWearableConnectionSchema = createInsertSchema(wearableConnections).omit({ id: true, createdAt: true });
+export type InsertWearableConnection = z.infer<typeof insertWearableConnectionSchema>;
+export type WearableConnection = typeof wearableConnections.$inferSelect;
 
 // === MILESTONE DEFINITIONS ===
 export const MILESTONE_DEFINITIONS = {

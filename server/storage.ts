@@ -14,7 +14,7 @@ import {
   recruitPosts, recruitInterests,
   playerRatings, statVerifications, skillChallenges, challengeResults, performanceMilestones, aiProjections, highlightVerifications, eventIntegrations, eventGameLinks,
   leagues, leagueTeams, leagueTeamRosters, leagueGames, leagueRivalries,
-  colleges, playerCollegeMatches, fitnessData,
+  colleges, playerCollegeMatches, fitnessData, wearableConnections,
   type Player, type InsertPlayer,
   type Game, type InsertGame,
   type UpdateGameRequest,
@@ -95,7 +95,8 @@ import {
   type LeagueRivalry, type InsertLeagueRivalry,
   type College, type InsertCollege,
   type PlayerCollegeMatch, type InsertPlayerCollegeMatch,
-  type FitnessData, type InsertFitnessData
+  type FitnessData, type InsertFitnessData,
+  type WearableConnection, type InsertWearableConnection
 } from "@shared/schema";
 import { eq, desc, and, count, gte, lte, sql, or, isNull, inArray } from "drizzle-orm";
 
@@ -599,6 +600,13 @@ export interface IStorage {
   deleteFitnessData(id: number): Promise<void>;
   getLatestFitnessData(playerId: number): Promise<FitnessData | undefined>;
   getFitnessDataSummary(playerId: number, days: number): Promise<{ avgSleep: number, avgRecovery: number, avgHrv: number, totalWorkouts: number }>;
+
+  // Wearable Connections (OAuth integrations)
+  createWearableConnection(connection: InsertWearableConnection): Promise<WearableConnection>;
+  getWearableConnectionByPlayerAndProvider(playerId: number, provider: string): Promise<WearableConnection | undefined>;
+  getPlayerWearableConnections(playerId: number): Promise<WearableConnection[]>;
+  updateWearableConnection(id: number, updates: Partial<WearableConnection>): Promise<WearableConnection | undefined>;
+  deleteWearableConnection(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3371,6 +3379,41 @@ export class DatabaseStorage implements IStorage {
       avgHrv: hrvCount > 0 ? Math.round(totalHrv / hrvCount) : 0,
       totalWorkouts
     };
+  }
+
+  // === Wearable Connections ===
+  async createWearableConnection(connection: InsertWearableConnection): Promise<WearableConnection> {
+    const [created] = await db.insert(wearableConnections).values(connection).returning();
+    return created;
+  }
+
+  async getWearableConnectionByPlayerAndProvider(playerId: number, provider: string): Promise<WearableConnection | undefined> {
+    const [connection] = await db.select()
+      .from(wearableConnections)
+      .where(and(
+        eq(wearableConnections.playerId, playerId),
+        eq(wearableConnections.provider, provider)
+      ));
+    return connection;
+  }
+
+  async getPlayerWearableConnections(playerId: number): Promise<WearableConnection[]> {
+    return await db.select()
+      .from(wearableConnections)
+      .where(eq(wearableConnections.playerId, playerId))
+      .orderBy(desc(wearableConnections.createdAt));
+  }
+
+  async updateWearableConnection(id: number, updates: Partial<WearableConnection>): Promise<WearableConnection | undefined> {
+    const [updated] = await db.update(wearableConnections)
+      .set(updates)
+      .where(eq(wearableConnections.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteWearableConnection(id: number): Promise<void> {
+    await db.delete(wearableConnections).where(eq(wearableConnections.id, id));
   }
 }
 

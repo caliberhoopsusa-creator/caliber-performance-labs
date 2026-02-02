@@ -83,34 +83,45 @@ interface FitnessSummary {
   peakPerformanceInsight: string | null;
 }
 
-interface WearableConnection {
+interface WearableConfig {
   id: string;
   name: string;
   icon: React.ReactNode;
-  connected: boolean;
   comingSoon: boolean;
+  connectEndpoint?: string;
 }
 
-const wearables: WearableConnection[] = [
+interface WearableConnectionResponse {
+  id: number;
+  provider: string;
+  isActive: boolean;
+  lastSyncAt: string | null;
+}
+
+const wearableConfigs: WearableConfig[] = [
+  {
+    id: "fitbit",
+    name: "Fitbit",
+    icon: <Watch className="w-6 h-6" />,
+    comingSoon: false,
+    connectEndpoint: "/api/wearables/fitbit/connect",
+  },
   {
     id: "apple_health",
     name: "Apple Health",
     icon: <SiApple className="w-6 h-6" />,
-    connected: false,
     comingSoon: true,
   },
   {
     id: "google_fit",
     name: "Google Fit",
     icon: <Activity className="w-6 h-6" />,
-    connected: false,
     comingSoon: true,
   },
   {
     id: "whoop",
     name: "WHOOP",
     icon: <Watch className="w-6 h-6" />,
-    connected: false,
     comingSoon: true,
   },
 ];
@@ -263,7 +274,16 @@ export default function FitnessDashboard() {
   const submitMutation = useMutation({
     mutationFn: async (data: ManualEntryForm) => {
       if (!playerId) throw new Error("No player ID");
-      return apiRequest("POST", `/api/players/${playerId}/fitness`, data);
+      // Transform form data to match backend schema
+      const fitnessPayload = {
+        source: "manual",
+        date: new Date().toISOString().split("T")[0], // Today's date in YYYY-MM-DD format
+        sleepHours: data.sleepHours.toString(), // Schema expects decimal as string
+        sleepQualityScore: data.sleepQuality * 10, // Convert 1-10 scale to 1-100
+        recoveryScore: data.recoveryFeeling * 10, // Convert 1-10 scale to 1-100
+        workoutCount: data.workoutCount,
+      };
+      return apiRequest("POST", `/api/players/${playerId}/fitness`, fitnessPayload);
     },
     onSuccess: () => {
       toast({
@@ -285,7 +305,72 @@ export default function FitnessDashboard() {
     submitMutation.mutate(data);
   };
 
-  const hasWearableConnected = wearables.some((w) => w.connected);
+  // Fetch wearable connections from API
+  const { data: wearableConnectionsData } = useQuery<WearableConnectionResponse[]>({
+    queryKey: ["/api/wearables/connections"],
+    enabled: !!playerId,
+  });
+
+  // Safely ensure wearableConnections is always an array
+  const wearableConnections = Array.isArray(wearableConnectionsData) ? wearableConnectionsData : [];
+
+  // Helper to check if a provider is connected
+  const isProviderConnected = (providerId: string) => {
+    return wearableConnections.some((c) => c.provider === providerId && c.isActive);
+  };
+
+  const hasWearableConnected = wearableConnections.length > 0;
+
+  // Handle connect wearable
+  const handleConnectWearable = (wearable: WearableConfig) => {
+    if (wearable.connectEndpoint) {
+      // Redirect to OAuth flow
+      window.location.href = wearable.connectEndpoint;
+    }
+  };
+
+  // Disconnect mutation
+  const disconnectMutation = useMutation({
+    mutationFn: async (provider: string) => {
+      return apiRequest("DELETE", `/api/wearables/${provider}/disconnect`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Disconnected",
+        description: "Wearable has been disconnected successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/wearables/connections"] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to disconnect wearable. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Sync mutation
+  const syncMutation = useMutation({
+    mutationFn: async (provider: string) => {
+      return apiRequest("POST", `/api/wearables/${provider}/sync`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Synced",
+        description: "Your fitness data has been synced successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/players", playerId, "fitness"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/wearables/connections"] });
+    },
+    onError: () => {
+      toast({
+        title: "Sync Failed",
+        description: "Could not sync data. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
   if (!playerId) {
     return (
@@ -314,21 +399,24 @@ export default function FitnessDashboard() {
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">
-          {wearables.map((wearable) => (
-            <Badge
-              key={wearable.id}
-              variant={wearable.connected ? "default" : "outline"}
-              className={
-                wearable.connected
-                  ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
-                  : "text-muted-foreground"
-              }
-              data-testid={`badge-wearable-${wearable.id}`}
-            >
-              {wearable.name}
-              {wearable.connected ? " Connected" : " Not Connected"}
-            </Badge>
-          ))}
+          {wearableConfigs.map((wearable) => {
+            const connected = isProviderConnected(wearable.id);
+            return (
+              <Badge
+                key={wearable.id}
+                variant={connected ? "default" : "outline"}
+                className={
+                  connected
+                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                    : "text-muted-foreground"
+                }
+                data-testid={`badge-wearable-${wearable.id}`}
+              >
+                {wearable.name}
+                {connected ? " Connected" : wearable.comingSoon ? " Coming Soon" : " Not Connected"}
+              </Badge>
+            );
+          })}
 
           <Select value={dateRange} onValueChange={(v) => setDateRange(v as "7" | "30" | "90")}>
             <SelectTrigger className="w-[140px]" data-testid="select-date-range">
@@ -745,40 +833,71 @@ export default function FitnessDashboard() {
             <h3 className="text-xl font-display font-bold text-white mb-4 uppercase tracking-tight">
               Connect Wearables
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {wearables.map((wearable) => (
-                <Card
-                  key={wearable.id}
-                  className="glass-card hover-elevate cursor-pointer"
-                  data-testid={`card-wearable-${wearable.id}`}
-                >
-                  <CardContent className="p-6 flex flex-col items-center text-center">
-                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center mb-4 text-cyan-400">
-                      {wearable.icon}
-                    </div>
-                    <h4 className="font-display font-bold text-white text-lg mb-2">
-                      {wearable.name}
-                    </h4>
-                    {wearable.comingSoon ? (
-                      <Badge variant="outline" className="text-yellow-400 border-yellow-400/30">
-                        Coming Soon
-                      </Badge>
-                    ) : wearable.connected ? (
-                      <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
-                        Connected
-                      </Badge>
-                    ) : (
-                      <Button size="sm" variant="outline" data-testid={`button-connect-${wearable.id}`}>
-                        Connect
-                      </Button>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {wearableConfigs.map((wearable) => {
+                const connected = isProviderConnected(wearable.id);
+                return (
+                  <Card
+                    key={wearable.id}
+                    className="glass-card hover-elevate cursor-pointer"
+                    data-testid={`card-wearable-${wearable.id}`}
+                  >
+                    <CardContent className="p-6 flex flex-col items-center text-center">
+                      <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-accent/20 to-blue-500/20 flex items-center justify-center mb-4 text-accent">
+                        {wearable.icon}
+                      </div>
+                      <h4 className="font-display font-bold text-white text-lg mb-2">
+                        {wearable.name}
+                      </h4>
+                      {wearable.comingSoon ? (
+                        <Badge variant="outline" className="text-yellow-400 border-yellow-400/30">
+                          Coming Soon
+                        </Badge>
+                      ) : connected ? (
+                        <div className="flex flex-col gap-2">
+                          <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+                            Connected
+                          </Badge>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => syncMutation.mutate(wearable.id)}
+                              disabled={syncMutation.isPending}
+                              data-testid={`button-sync-${wearable.id}`}
+                            >
+                              {syncMutation.isPending ? "Syncing..." : "Sync"}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-red-400 hover:text-red-300"
+                              onClick={() => disconnectMutation.mutate(wearable.id)}
+                              disabled={disconnectMutation.isPending}
+                              data-testid={`button-disconnect-${wearable.id}`}
+                            >
+                              Disconnect
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleConnectWearable(wearable)}
+                          data-testid={`button-connect-${wearable.id}`}
+                        >
+                          Connect
+                        </Button>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
             <p className="text-xs text-muted-foreground text-center mt-4">
               <Smartphone className="w-4 h-4 inline mr-1" />
-              Wearable data sync will be available in the Caliber mobile app
+              Connect your fitness wearable to automatically sync your health data
             </p>
           </div>
         </>
