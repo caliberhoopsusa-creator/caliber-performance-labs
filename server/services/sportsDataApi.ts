@@ -139,57 +139,67 @@ interface NCAABasketballTeam {
   conferenceRecord: string;
 }
 
+// ESPN team IDs for D1 basketball programs
+const espnTeamIds: Record<string, string> = {
+  "Duke University": "150",
+  "University of Kentucky": "96",
+  "University of Kansas": "2305",
+  "University of North Carolina": "153",
+  "UCLA": "26",
+  "Michigan State University": "127",
+  "University of Connecticut": "41",
+  "Gonzaga University": "2250",
+  "Villanova University": "222",
+  "Syracuse University": "183",
+  "Arizona State University": "9",
+  "University of Houston": "248",
+  "San Diego State University": "21",
+};
+
 class NCAABasketballAPI {
   private baseUrl = "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball";
 
-  async getTeamStats(teamId: string): Promise<NCAATeamStats | null> {
+  async getTeamById(teamId: string): Promise<{ wins: number; losses: number; confWins: number; confLosses: number } | null> {
     try {
-      const response = await fetch(`${this.baseUrl}/teams/${teamId}/statistics`);
-      if (!response.ok) return null;
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error("NCAA Basketball API error:", error);
-      return null;
-    }
-  }
-
-  async getTeamRecord(teamName: string): Promise<{ wins: number; losses: number } | null> {
-    try {
-      const response = await fetch(`${this.baseUrl}/scoreboard`);
-      if (!response.ok) return null;
-      return null;
-    } catch (error) {
-      console.error("NCAA Basketball API error:", error);
-      return null;
-    }
-  }
-
-  async searchTeam(schoolName: string): Promise<any | null> {
-    try {
-      const searchUrl = `https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/teams?limit=100`;
-      const response = await fetch(searchUrl);
-      if (!response.ok) return null;
+      const response = await fetch(`${this.baseUrl}/teams/${teamId}`);
+      if (!response.ok) {
+        console.log(`ESPN API returned ${response.status} for team ${teamId}`);
+        return null;
+      }
       
       const data = await response.json();
-      const teams = data.sports?.[0]?.leagues?.[0]?.teams || [];
+      const team = data.team;
       
-      const normalizedSearch = schoolName.toLowerCase().replace(/university|college|of|the/gi, '').trim();
+      if (!team?.record?.items) {
+        console.log(`No record data found for team ${teamId}`);
+        return null;
+      }
       
-      for (const teamWrapper of teams) {
-        const team = teamWrapper.team;
-        const teamName = team.displayName?.toLowerCase() || '';
-        const shortName = team.shortDisplayName?.toLowerCase() || '';
-        
-        if (teamName.includes(normalizedSearch) || shortName.includes(normalizedSearch) || 
-            normalizedSearch.includes(teamName) || normalizedSearch.includes(shortName)) {
-          return team;
+      // Parse overall record
+      const overallRecord = team.record.items.find((r: any) => r.type === "total" || r.name === "overall");
+      const confRecord = team.record.items.find((r: any) => r.type === "vsconf" || r.name === "vsconf");
+      
+      let wins = 0, losses = 0, confWins = 0, confLosses = 0;
+      
+      if (overallRecord?.summary) {
+        const parts = overallRecord.summary.split('-');
+        if (parts.length >= 2) {
+          wins = parseInt(parts[0]) || 0;
+          losses = parseInt(parts[1]) || 0;
         }
       }
       
-      return null;
+      if (confRecord?.summary) {
+        const parts = confRecord.summary.split('-');
+        if (parts.length >= 2) {
+          confWins = parseInt(parts[0]) || 0;
+          confLosses = parseInt(parts[1]) || 0;
+        }
+      }
+      
+      return { wins, losses, confWins, confLosses };
     } catch (error) {
-      console.error("NCAA Basketball search error:", error);
+      console.error("ESPN Basketball API error:", error);
       return null;
     }
   }
@@ -287,36 +297,41 @@ export async function syncBasketballStats(): Promise<{ updated: number; errors: 
   let errors = 0;
   
   const basketballColleges = await db.select().from(colleges).where(eq(colleges.sport, "basketball"));
+  const d1Colleges = basketballColleges.filter(c => c.division === "D1");
+  console.log(`Processing ${d1Colleges.length} D1 basketball colleges`);
   
-  for (const college of basketballColleges) {
-    if (college.division !== "D1") {
+  for (const college of d1Colleges) {
+    const espnId = espnTeamIds[college.name];
+    
+    if (!espnId) {
+      console.log(`No ESPN ID mapping for ${college.name}, skipping`);
       continue;
     }
     
     try {
-      const team = await ncaaBasketballApi.searchTeam(college.name);
+      console.log(`Fetching ESPN stats for ${college.name} (ID: ${espnId})...`);
+      const record = await ncaaBasketballApi.getTeamById(espnId);
       
-      if (team && team.record) {
-        const recordParts = team.record.items?.[0]?.summary?.split('-') || [];
-        if (recordParts.length === 2) {
-          const wins = parseInt(recordParts[0]) || 0;
-          const losses = parseInt(recordParts[1]) || 0;
-          
-          await db.update(colleges)
-            .set({
-              winsLastSeason: wins,
-              lossesLastSeason: losses,
-              statsLastUpdated: new Date(),
-              statsSource: "espn_api",
-            })
-            .where(eq(colleges.id, college.id));
-          
-          console.log(`Updated ${college.name}: ${wins}-${losses}`);
-          updated++;
-        }
+      if (record && (record.wins > 0 || record.losses > 0)) {
+        await db.update(colleges)
+          .set({
+            winsLastSeason: record.wins,
+            lossesLastSeason: record.losses,
+            conferenceRecord: record.confWins > 0 || record.confLosses > 0 
+              ? `${record.confWins}-${record.confLosses}` 
+              : null,
+            statsLastUpdated: new Date(),
+            statsSource: "espn_api",
+          })
+          .where(eq(colleges.id, college.id));
+        
+        console.log(`Updated ${college.name}: ${record.wins}-${record.losses} (conf: ${record.confWins}-${record.confLosses})`);
+        updated++;
+      } else {
+        console.log(`No record data for ${college.name}`);
       }
       
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise(resolve => setTimeout(resolve, 150));
       
     } catch (error) {
       console.error(`Error syncing ${college.name}:`, error);
