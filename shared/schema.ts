@@ -2361,6 +2361,180 @@ export const insertPlayerCollegeInterestSchema = createInsertSchema(playerColleg
 export type InsertPlayerCollegeInterest = z.infer<typeof insertPlayerCollegeInterestSchema>;
 export type PlayerCollegeInterest = typeof playerCollegeInterests.$inferSelect;
 
+// === RECRUITING EVENTS (Camps & Showcases) ===
+export const recruitingEvents = pgTable("recruiting_events", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  sport: text("sport").notNull(), // 'basketball' or 'football'
+  eventType: text("event_type").notNull(), // 'camp', 'showcase', 'combine', 'tournament', 'prospect_day'
+  description: text("description"),
+  hostOrganization: text("host_organization"), // College name or organization
+  collegeId: integer("college_id").references(() => colleges.id, { onDelete: "set null" }),
+  location: text("location").notNull(),
+  city: text("city"),
+  state: text("state"),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date"),
+  registrationDeadline: date("registration_deadline"),
+  cost: integer("cost"), // Cost in cents
+  isFree: boolean("is_free").default(false),
+  registrationUrl: text("registration_url"),
+  contactEmail: text("contact_email"),
+  ageGroups: text("age_groups"), // JSON: ["high_school", "middle_school", "college"]
+  positions: text("positions"), // JSON: ["QB", "RB", "WR"] or ["Guard", "Wing", "Big"]
+  maxParticipants: integer("max_participants"),
+  spotsRemaining: integer("spots_remaining"),
+  isVerified: boolean("is_verified").default(false), // Admin verified
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  sportIdx: index("recruiting_events_sport_idx").on(table.sport),
+  stateIdx: index("recruiting_events_state_idx").on(table.state),
+  startDateIdx: index("recruiting_events_start_date_idx").on(table.startDate),
+  collegeIdIdx: index("recruiting_events_college_id_idx").on(table.collegeId),
+}));
+
+export const insertRecruitingEventSchema = createInsertSchema(recruitingEvents).omit({ id: true, createdAt: true });
+export type InsertRecruitingEvent = z.infer<typeof insertRecruitingEventSchema>;
+export type RecruitingEvent = typeof recruitingEvents.$inferSelect;
+
+// === PLAYER EVENT REGISTRATIONS ===
+export const playerEventRegistrations = pgTable("player_event_registrations", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  eventId: integer("event_id").notNull().references(() => recruitingEvents.id, { onDelete: "cascade" }),
+  status: text("status").notNull().default("interested"), // 'interested', 'registered', 'attended', 'cancelled'
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  playerIdIdx: index("player_event_registrations_player_idx").on(table.playerId),
+  eventIdIdx: index("player_event_registrations_event_idx").on(table.eventId),
+}));
+
+export const insertPlayerEventRegistrationSchema = createInsertSchema(playerEventRegistrations).omit({ id: true, createdAt: true });
+export type InsertPlayerEventRegistration = z.infer<typeof insertPlayerEventRegistrationSchema>;
+export type PlayerEventRegistration = typeof playerEventRegistrations.$inferSelect;
+
+// === NCAA ELIGIBILITY CHECKLIST ===
+export const ncaaEligibilityProgress = pgTable("ncaa_eligibility_progress", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  
+  // NCAA Eligibility Center Registration
+  ncaaIdNumber: text("ncaa_id_number"),
+  registeredWithNcaa: boolean("registered_with_ncaa").default(false),
+  
+  // Academic Requirements
+  coreCoursesCompleted: integer("core_courses_completed").default(0), // Out of 16 for D1
+  coreGpa: decimal("core_gpa", { precision: 3, scale: 2 }),
+  slidingScaleEligible: boolean("sliding_scale_eligible"), // Based on GPA + test score
+  
+  // Test Scores
+  satScore: integer("sat_score"),
+  actScore: integer("act_score"),
+  testScoresSent: boolean("test_scores_sent").default(false),
+  
+  // Transcript
+  transcriptSent: boolean("transcript_sent").default(false),
+  finalTranscriptSent: boolean("final_transcript_sent").default(false),
+  
+  // Amateurism
+  amateurismCertified: boolean("amateurism_certified").default(false),
+  amateurismQuestionnaireDone: boolean("amateurism_questionnaire_done").default(false),
+  
+  // Overall Status
+  eligibilityStatus: text("eligibility_status").default("in_progress"), // 'in_progress', 'pending_review', 'certified', 'not_eligible'
+  targetDivision: text("target_division").default("D1"), // 'D1', 'D2', 'D3', 'NAIA', 'JUCO'
+  
+  notes: text("notes"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  playerIdIdx: index("ncaa_eligibility_progress_player_idx").on(table.playerId),
+}));
+
+export const insertNcaaEligibilityProgressSchema = createInsertSchema(ncaaEligibilityProgress).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertNcaaEligibilityProgress = z.infer<typeof insertNcaaEligibilityProgressSchema>;
+export type NcaaEligibilityProgress = typeof ncaaEligibilityProgress.$inferSelect;
+
+// === COACH RECOMMENDATIONS ===
+export const coachRecommendations = pgTable("coach_recommendations", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  coachUserId: text("coach_user_id").notNull(), // The user ID of the coach writing the recommendation
+  coachName: text("coach_name").notNull(),
+  coachTitle: text("coach_title"), // "Head Coach", "Assistant Coach", "Trainer"
+  coachOrganization: text("coach_organization"), // School or team name
+  coachEmail: text("coach_email"),
+  coachPhone: text("coach_phone"),
+  
+  // Recommendation Content
+  recommendation: text("recommendation").notNull(), // The actual recommendation text
+  relationship: text("relationship"), // "Head Coach", "Position Coach", "Trainer", "AAU Coach"
+  yearsKnown: integer("years_known"),
+  
+  // Ratings (1-10 scale)
+  athleticAbilityRating: integer("athletic_ability_rating"),
+  workEthicRating: integer("work_ethic_rating"),
+  coachabilityRating: integer("coachability_rating"),
+  leadershipRating: integer("leadership_rating"),
+  characterRating: integer("character_rating"),
+  
+  // Verification
+  isVerified: boolean("is_verified").default(false), // Admin/system verified
+  isPublic: boolean("is_public").default(true), // Show on public profile
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  playerIdIdx: index("coach_recommendations_player_idx").on(table.playerId),
+  coachUserIdIdx: index("coach_recommendations_coach_idx").on(table.coachUserId),
+}));
+
+export const insertCoachRecommendationSchema = createInsertSchema(coachRecommendations).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertCoachRecommendation = z.infer<typeof insertCoachRecommendationSchema>;
+export type CoachRecommendation = typeof coachRecommendations.$inferSelect;
+
+// === NCAA ELIGIBILITY CONSTANTS ===
+export const NCAA_CORE_COURSE_REQUIREMENTS = {
+  D1: {
+    totalCourses: 16,
+    english: 4,
+    math: 3,
+    science: 2,
+    socialScience: 2,
+    additionalEnglishMathScience: 1,
+    additionalFromAbove: 4,
+    minCoreGpa: 2.3,
+  },
+  D2: {
+    totalCourses: 16,
+    english: 3,
+    math: 2,
+    science: 2,
+    socialScience: 2,
+    additionalEnglishMathScience: 3,
+    additionalFromAbove: 4,
+    minCoreGpa: 2.2,
+  },
+  D3: {
+    note: "D3 schools do not offer athletic scholarships and have their own admission requirements",
+  },
+  NAIA: {
+    requirements: "Graduate from high school, meet 2 of 3: GPA 2.0+, ACT 18+ or SAT 970+, or top 50% of class",
+  },
+  JUCO: {
+    requirements: "High school diploma or GED required",
+  },
+} as const;
+
+export const RECRUITING_EVENT_TYPES = {
+  camp: { name: "Camp", description: "Multi-day skill development camp" },
+  showcase: { name: "Showcase", description: "Competitive event for exposure to college coaches" },
+  combine: { name: "Combine", description: "Athletic testing and evaluation event" },
+  tournament: { name: "Tournament", description: "Competitive tournament with college scouts" },
+  prospect_day: { name: "Prospect Day", description: "Campus visit and evaluation day" },
+} as const;
+
 // === FITNESS DATA SCHEMAS & TYPES ===
 export const insertFitnessDataSchema = createInsertSchema(fitnessData).omit({ id: true, createdAt: true });
 export type InsertFitnessData = z.infer<typeof insertFitnessDataSchema>;
