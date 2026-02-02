@@ -27,8 +27,11 @@ import {
   BarChart3,
   Star,
   Award,
-  Heart
+  Heart,
+  Copy,
+  Check
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
@@ -248,8 +251,37 @@ ${playerName}`
 
 function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest, isInterestPending, playerInfo }: CollegeMatchCardProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [copiedEmail, setCopiedEmail] = useState(false);
+  const { toast } = useToast();
   const college = match.college;
   const colorIndex = college.id % LOGO_COLORS.length;
+
+  const handleEmailCoach = () => {
+    const mailtoLink = generateMailtoLink(college, playerInfo);
+    if (mailtoLink) {
+      window.location.href = mailtoLink;
+    }
+  };
+
+  const handleCopyEmail = async () => {
+    if (college.recruitingContactEmail) {
+      try {
+        await navigator.clipboard.writeText(college.recruitingContactEmail);
+        setCopiedEmail(true);
+        toast({
+          title: "Email Copied",
+          description: `${college.recruitingContactEmail} copied to clipboard`,
+        });
+        setTimeout(() => setCopiedEmail(false), 2000);
+      } catch {
+        toast({
+          title: "Copy Failed",
+          description: "Could not copy email to clipboard",
+          variant: "destructive",
+        });
+      }
+    }
+  };
 
   return (
     <Card className={cn(
@@ -576,17 +608,31 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
               {(college.recruitingContactEmail || college.recruitingUrl) && (
                 <div className="flex flex-wrap gap-2">
                   {college.recruitingContactEmail && (
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="border-cyan-500/30"
-                      asChild
-                    >
-                      <a href={generateMailtoLink(college, playerInfo)} data-testid={`button-contact-coach-${match.id}`}>
+                    <>
+                      <Button 
+                        size="sm" 
+                        onClick={handleEmailCoach}
+                        className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white"
+                        data-testid={`button-contact-coach-${match.id}`}
+                      >
                         <Mail className="w-4 h-4 mr-2" />
-                        Contact Coach
-                      </a>
-                    </Button>
+                        Email Coach
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="border-cyan-500/30"
+                        onClick={handleCopyEmail}
+                        data-testid={`button-copy-email-${match.id}`}
+                      >
+                        {copiedEmail ? (
+                          <Check className="w-4 h-4 mr-2 text-green-400" />
+                        ) : (
+                          <Copy className="w-4 h-4 mr-2" />
+                        )}
+                        {copiedEmail ? 'Copied!' : 'Copy Email'}
+                      </Button>
+                    </>
                   )}
                   {college.recruitingUrl && (
                     <Button 
