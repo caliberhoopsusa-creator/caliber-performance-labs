@@ -18,7 +18,15 @@ import {
   Target,
   BookOpen,
   Zap,
-  Navigation
+  Navigation,
+  TrendingUp,
+  Users,
+  DollarSign,
+  Medal,
+  Clock,
+  BarChart3,
+  Star,
+  Award
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -39,6 +47,27 @@ interface College {
   programStrength: number | null;
   recruitingContactEmail: string | null;
   recruitingUrl: string | null;
+  winsLastSeason: number | null;
+  lossesLastSeason: number | null;
+  conferenceRecord: string | null;
+  nationalChampionships: number | null;
+  conferenceChampionships: number | null;
+  tournamentAppearances: number | null;
+  finalFourAppearances: number | null;
+  nbaPlayersProduced: number | null;
+  nflPlayersProduced: number | null;
+  draftPicksLast5Years: number | null;
+  averageMinutesForFreshmen: number | null;
+  athleteGraduationRate: number | null;
+  academicAllAmericans: number | null;
+  athleticBudget: string | null;
+  averageAttendance: number | null;
+  niLOpportunities: string | null;
+  currentRosterSize: number | null;
+  incomingRecruitingClass: number | null;
+  headCoachName: string | null;
+  headCoachYears: number | null;
+  headCoachRecord: string | null;
 }
 
 interface CollegeMatch {
@@ -159,7 +188,7 @@ function CollegeMatchCard({ match, onToggleSave }: { match: CollegeMatch; onTogg
     <Card className={cn(
       "relative overflow-hidden transition-all duration-300",
       "bg-gradient-to-br from-[hsl(220,25%,10%)] via-[hsl(220,20%,8%)] to-[hsl(220,25%,6%)]",
-      "border-cyan-500/10 hover:border-cyan-400/20",
+      "border-cyan-500/10",
       "shadow-[0_4px_24px_rgba(0,0,0,0.4)]"
     )}>
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
@@ -212,6 +241,51 @@ function CollegeMatchCard({ match, onToggleSave }: { match: CollegeMatch; onTogg
           <ScoreBar label="Location" value={match.locationMatchScore} icon={Navigation} />
         </div>
         
+        {(() => {
+          const hasRecord = college.winsLastSeason !== null && college.lossesLastSeason !== null;
+          const hasTitles = college.nationalChampionships !== null && college.nationalChampionships > 0;
+          const hasDraftPicks = college.draftPicksLast5Years !== null && college.draftPicksLast5Years > 0;
+          const hasGradRate = college.athleteGraduationRate !== null;
+          
+          const visibleStats = [hasRecord, hasTitles, hasDraftPicks, hasGradRate].filter(Boolean).length;
+          
+          if (visibleStats === 0) return null;
+          
+          return (
+            <div className={cn(
+              "grid gap-2 mt-4 p-3 rounded-lg bg-white/5 border border-white/10",
+              visibleStats === 1 ? "grid-cols-1" :
+              visibleStats === 2 ? "grid-cols-2" :
+              visibleStats === 3 ? "grid-cols-3" : "grid-cols-4"
+            )}>
+              {hasRecord && (
+                <div className="text-center">
+                  <div className="text-lg font-bold text-white">{college.winsLastSeason}-{college.lossesLastSeason}</div>
+                  <div className="text-[10px] text-muted-foreground uppercase">Record</div>
+                </div>
+              )}
+              {hasTitles && (
+                <div className="text-center">
+                  <div className="text-lg font-bold text-amber-400">{college.nationalChampionships}</div>
+                  <div className="text-[10px] text-muted-foreground uppercase">Titles</div>
+                </div>
+              )}
+              {hasDraftPicks && (
+                <div className="text-center">
+                  <div className="text-lg font-bold text-cyan-400">{college.draftPicksLast5Years}</div>
+                  <div className="text-[10px] text-muted-foreground uppercase">Draft Picks (5yr)</div>
+                </div>
+              )}
+              {hasGradRate && (
+                <div className="text-center">
+                  <div className="text-lg font-bold text-emerald-400">{college.athleteGraduationRate}%</div>
+                  <div className="text-[10px] text-muted-foreground uppercase">Grad Rate</div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
         {match.matchReasoning && (
           <p className="text-sm text-muted-foreground mt-4 line-clamp-2">
             {match.matchReasoning}
@@ -224,7 +298,7 @@ function CollegeMatchCard({ match, onToggleSave }: { match: CollegeMatch; onTogg
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="w-full border-cyan-500/20 hover:border-cyan-400/40 hover:bg-cyan-500/10"
+                className="w-full border-cyan-500/20"
                 data-testid={`button-view-details-${match.id}`}
               >
                 {isOpen ? (
@@ -241,6 +315,155 @@ function CollegeMatchCard({ match, onToggleSave }: { match: CollegeMatch; onTogg
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent className="mt-4 space-y-4">
+              {(college.headCoachName || college.tournamentAppearances || college.conferenceRecord) && (
+                <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20">
+                  <h4 className="text-xs font-semibold text-cyan-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <BarChart3 className="w-3.5 h-3.5" />
+                    Program Statistics
+                  </h4>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                    {college.headCoachName && (
+                      <div className="flex items-center gap-2">
+                        <Users className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="text-muted-foreground">Coach:</span>
+                        <span className="text-white/90 truncate">{college.headCoachName}</span>
+                      </div>
+                    )}
+                    {college.headCoachRecord && (
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="text-muted-foreground">Record:</span>
+                        <span className="text-white/90">{college.headCoachRecord}</span>
+                      </div>
+                    )}
+                    {college.conferenceRecord && (
+                      <div className="flex items-center gap-2">
+                        <Medal className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="text-muted-foreground">Conf:</span>
+                        <span className="text-white/90">{college.conferenceRecord}</span>
+                      </div>
+                    )}
+                    {college.tournamentAppearances !== null && (
+                      <div className="flex items-center gap-2">
+                        <Trophy className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="text-muted-foreground">{college.sport === 'basketball' ? 'March Madness' : 'Bowl Games'}:</span>
+                        <span className="text-white/90">{college.tournamentAppearances}</span>
+                      </div>
+                    )}
+                    {college.finalFourAppearances !== null && college.finalFourAppearances > 0 && (
+                      <div className="flex items-center gap-2">
+                        <Star className="w-3.5 h-3.5 text-amber-400" />
+                        <span className="text-muted-foreground">{college.sport === 'basketball' ? 'Final Fours' : 'Playoffs'}:</span>
+                        <span className="text-amber-400 font-medium">{college.finalFourAppearances}</span>
+                      </div>
+                    )}
+                    {college.conferenceChampionships !== null && college.conferenceChampionships > 0 && (
+                      <div className="flex items-center gap-2">
+                        <Award className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="text-muted-foreground">Conf Titles:</span>
+                        <span className="text-white/90">{college.conferenceChampionships}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {((college.sport === 'basketball' && college.nbaPlayersProduced) || 
+                (college.sport === 'football' && college.nflPlayersProduced) ||
+                college.averageMinutesForFreshmen) && (
+                <div className="p-3 rounded-lg bg-gradient-to-br from-emerald-500/10 to-teal-500/5 border border-emerald-500/20">
+                  <h4 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <TrendingUp className="w-3.5 h-3.5" />
+                    Player Development
+                  </h4>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                    {college.sport === 'basketball' && college.nbaPlayersProduced !== null && (
+                      <div className="flex items-center gap-2">
+                        <Star className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="text-muted-foreground">NBA Players:</span>
+                        <span className="text-white/90">{college.nbaPlayersProduced}</span>
+                      </div>
+                    )}
+                    {college.sport === 'football' && college.nflPlayersProduced !== null && (
+                      <div className="flex items-center gap-2">
+                        <Star className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="text-muted-foreground">NFL Players:</span>
+                        <span className="text-white/90">{college.nflPlayersProduced}</span>
+                      </div>
+                    )}
+                    {college.averageMinutesForFreshmen !== null && (
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="text-muted-foreground">Freshman Minutes:</span>
+                        <span className="text-white/90">{college.averageMinutesForFreshmen} avg</span>
+                      </div>
+                    )}
+                    {college.currentRosterSize !== null && (
+                      <div className="flex items-center gap-2">
+                        <Users className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="text-muted-foreground">Roster:</span>
+                        <span className="text-white/90">{college.currentRosterSize} players</span>
+                      </div>
+                    )}
+                    {college.incomingRecruitingClass !== null && (
+                      <div className="flex items-center gap-2">
+                        <Users className="w-3.5 h-3.5 text-cyan-400" />
+                        <span className="text-muted-foreground">Incoming Class:</span>
+                        <span className="text-cyan-400 font-medium">{college.incomingRecruitingClass} recruits</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {(college.niLOpportunities || college.athleticBudget || college.averageAttendance) && (
+                <div className="p-3 rounded-lg bg-gradient-to-br from-purple-500/10 to-violet-500/5 border border-purple-500/20">
+                  <h4 className="text-xs font-semibold text-purple-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <DollarSign className="w-3.5 h-3.5" />
+                    Resources & Support
+                  </h4>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                    {college.niLOpportunities && (
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="text-muted-foreground">NIL Market:</span>
+                        <Badge variant="outline" className={cn(
+                          "text-[10px] ml-1",
+                          college.niLOpportunities === 'High' 
+                            ? "border-emerald-500/50 text-emerald-400" 
+                            : college.niLOpportunities === 'Medium'
+                            ? "border-amber-500/50 text-amber-400"
+                            : "border-gray-500/50 text-gray-400"
+                        )}>
+                          {college.niLOpportunities}
+                        </Badge>
+                      </div>
+                    )}
+                    {college.athleticBudget && (
+                      <div className="flex items-center gap-2">
+                        <BarChart3 className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="text-muted-foreground">Budget:</span>
+                        <span className="text-white/90">{college.athleticBudget}</span>
+                      </div>
+                    )}
+                    {college.averageAttendance !== null && (
+                      <div className="flex items-center gap-2">
+                        <Users className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="text-muted-foreground">Avg Attendance:</span>
+                        <span className="text-white/90">{college.averageAttendance.toLocaleString()}</span>
+                      </div>
+                    )}
+                    {college.academicAllAmericans !== null && college.academicAllAmericans > 0 && (
+                      <div className="flex items-center gap-2">
+                        <BookOpen className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="text-muted-foreground">Academic All-Americans:</span>
+                        <span className="text-white/90">{college.academicAllAmericans}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {match.strengthsForProgram && (
                 <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
                   <h4 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-2">
@@ -277,6 +500,9 @@ function CollegeMatchCard({ match, onToggleSave }: { match: CollegeMatch; onTogg
                   {college.academicRating && (
                     <p className="text-muted-foreground">Academic Rating: {college.academicRating}/100</p>
                   )}
+                  {college.avgGpaRequired && (
+                    <p className="text-muted-foreground">Min GPA Required: {college.avgGpaRequired}</p>
+                  )}
                 </div>
               </div>
               
@@ -286,7 +512,7 @@ function CollegeMatchCard({ match, onToggleSave }: { match: CollegeMatch; onTogg
                     <Button 
                       size="sm" 
                       variant="outline" 
-                      className="border-cyan-500/30 hover:bg-cyan-500/10"
+                      className="border-cyan-500/30"
                       asChild
                     >
                       <a href={`mailto:${college.recruitingContactEmail}`} data-testid={`link-contact-${match.id}`}>
@@ -299,7 +525,7 @@ function CollegeMatchCard({ match, onToggleSave }: { match: CollegeMatch; onTogg
                     <Button 
                       size="sm" 
                       variant="outline" 
-                      className="border-cyan-500/30 hover:bg-cyan-500/10"
+                      className="border-cyan-500/30"
                       asChild
                     >
                       <a href={college.recruitingUrl} target="_blank" rel="noopener noreferrer" data-testid={`link-recruiting-${match.id}`}>

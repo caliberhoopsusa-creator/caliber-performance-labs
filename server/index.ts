@@ -6,6 +6,7 @@ import { runMigrations } from 'stripe-replit-sync';
 import { getStripeSync } from './stripeClient';
 import { WebhookHandlers } from './webhookHandlers';
 import { seedColleges } from './seeds/colleges';
+import { updateCollegeStats } from './seeds/updateCollegeStats';
 import type Stripe from 'stripe';
 
 const app = express();
@@ -174,6 +175,7 @@ app.use((req, res, next) => {
 
   try {
     await seedColleges();
+    await updateCollegeStats();
   } catch (error) {
     console.error('Failed to seed colleges:', error);
   }

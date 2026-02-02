@@ -2123,6 +2123,40 @@ export const colleges = pgTable("colleges", {
   coachingRating: integer("coaching_rating"), // 1-100
   facilitiesRating: integer("facilities_rating"), // 1-100
   
+  // === REAL PROGRAM STATISTICS ===
+  // Overall record
+  winsLastSeason: integer("wins_last_season"), // Total wins last season
+  lossesLastSeason: integer("losses_last_season"), // Total losses last season
+  conferenceRecord: text("conference_record"), // e.g., "14-4" or "8-1"
+  
+  // Historical success
+  nationalChampionships: integer("national_championships").default(0), // Total program championships
+  conferenceChampionships: integer("conference_championships").default(0), // Total conference titles
+  tournamentAppearances: integer("tournament_appearances").default(0), // March Madness or Bowl games
+  finalFourAppearances: integer("final_four_appearances").default(0), // Basketball: Final Four / Football: CFP
+  
+  // Player development metrics
+  nbaPlayersProduced: integer("nba_players_produced").default(0), // Basketball: NBA draft picks all-time
+  nflPlayersProduced: integer("nfl_players_produced").default(0), // Football: NFL draft picks all-time
+  draftPicksLast5Years: integer("draft_picks_last_5_years").default(0), // Recent pro success
+  averageMinutesForFreshmen: integer("avg_minutes_freshmen"), // Playing time opportunity
+  
+  // Academic success for athletes
+  athleteGraduationRate: integer("athlete_graduation_rate"), // % of athletes who graduate
+  academicAllAmericans: integer("academic_all_americans").default(0), // Academic honors
+  
+  // Program resources & support
+  athleticBudget: text("athletic_budget"), // e.g., "$150M" annual budget
+  averageAttendance: integer("average_attendance"), // Home game attendance
+  niLOpportunities: text("nil_opportunities"), // NIL market size: "High", "Medium", "Low"
+  
+  // Current roster info
+  currentRosterSize: integer("current_roster_size"),
+  incomingRecruitingClass: integer("incoming_recruiting_class"), // Size of next year's class
+  headCoachName: text("head_coach_name"),
+  headCoachYears: integer("head_coach_years"), // Years at this program
+  headCoachRecord: text("head_coach_record"), // e.g., "234-87"
+  
   // Play style (for matching algorithm)
   tempoRating: integer("tempo_rating"), // 1-100 (100 = fast pace)
   defensiveStyle: text("defensive_style"), // 'man', 'zone', 'switching', 'pressure'

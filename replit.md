@@ -39,6 +39,7 @@ Preferred communication style: Simple, everyday language.
 - **Social & Engagement**: Player following, in-app notifications, goal sharing, highlight clips, and shareable achievements.
 - **Player Discovery**: Public directory with search and filters, allowing players to be discoverable by coaches and scouts.
 - **Scout Hub**: Dedicated page with advanced filtering and sorting for scouting players across sports.
+- **College Recruiting**: AI-powered college matching with real program statistics including win/loss records, national championships, pro draft picks, graduation rates, NIL opportunities, coach records, attendance figures, and athletic budgets. Sport-specific filtering displays basketball programs (NBA players, March Madness appearances) or football programs (NFL players, Bowl games) based on player's sport.
 - **Performance Tools**: Live game mode for real-time stat entry, interactive shot charts, and advanced metric calculations.
 - **Scheduling**: Practice scheduler and calendar.
 - **Coach Features**: Team dashboard, game notes, lineup analysis, practice tracking with live mode, AI-generated drill recommendations, and one-click game verification queue with sport filtering.
