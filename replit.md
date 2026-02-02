@@ -45,6 +45,9 @@ Preferred communication style: Simple, everyday language.
   - **Public Profile**: Shareable player profile at `/profile/:id/public` for coaches/recruiters (no auth required)
   - **Recruiting Timeline**: Visual timeline showing key milestones (NCAA eligibility, contact periods, signing dates) based on graduation year and sport
   - **My Recruiting Dashboard**: Centralized view at `/recruiting` showing interested schools, contact history, timeline progress, and profile completeness
+  - **Camp & Showcase Finder**: Searchable directory at `/camps-showcases` with filters by sport, state, event type (camps, showcases, combines), and date range. Players can save events to their interest list. 10 sample events seeded covering basketball and football.
+  - **NCAA Eligibility Checklist**: Component on My Recruiting dashboard tracking progress across 5 categories: NCAA Registration, Academic Requirements, Test Scores, Transcripts, and Amateurism Status. Division-specific requirements (D1, D2, D3, NAIA, JUCO).
+  - **Coach Recommendations**: Coaches can write endorsements for players with 5-star ratings across Athletic Ability, Work Ethic, Coachability, Leadership, and Character. Recommendations display on public player profiles for recruiters.
 - **Performance Tools**: Live game mode for real-time stat entry, interactive shot charts, and advanced metric calculations.
 - **Scheduling**: Practice scheduler and calendar.
 - **Coach Features**: Team dashboard, game notes, lineup analysis, practice tracking with live mode, AI-generated drill recommendations, and one-click game verification queue with sport filtering.
