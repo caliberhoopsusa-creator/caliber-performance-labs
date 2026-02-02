@@ -2140,6 +2140,165 @@ export async function registerRoutes(
 
   // --- Sharing Endpoints ---
 
+  // GET /api/players/:id/public - Public player profile for coaches/recruiters (no auth required)
+  app.get('/api/players/:id/public', async (req, res) => {
+    try {
+      const playerId = Number(req.params.id);
+      const player = await storage.getPlayer(playerId);
+      
+      if (!player) {
+        return res.status(404).json({ message: 'Player not found' });
+      }
+      
+      const games = await storage.getGamesByPlayerId(playerId);
+      const badges = await storage.getPlayerBadges(playerId);
+      const skillBadges = await storage.getPlayerSkillBadges(playerId);
+      const accolades = await storage.getPlayerAccolades(playerId);
+      
+      // Calculate averages
+      const gamesPlayed = games.length;
+      const avgPoints = gamesPlayed ? games.reduce((acc, g) => acc + g.points, 0) / gamesPlayed : 0;
+      const avgRebounds = gamesPlayed ? games.reduce((acc, g) => acc + g.rebounds, 0) / gamesPlayed : 0;
+      const avgAssists = gamesPlayed ? games.reduce((acc, g) => acc + g.assists, 0) / gamesPlayed : 0;
+      
+      // Football stats
+      const avgPassingYards = gamesPlayed ? games.reduce((acc, g) => acc + (g.passingYards || 0), 0) / gamesPlayed : 0;
+      const avgRushingYards = gamesPlayed ? games.reduce((acc, g) => acc + (g.rushingYards || 0), 0) / gamesPlayed : 0;
+      const avgReceivingYards = gamesPlayed ? games.reduce((acc, g) => acc + (g.receivingYards || 0), 0) / gamesPlayed : 0;
+      const totalTDs = games.reduce((acc, g) => acc + (g.passingTouchdowns || 0) + (g.rushingTouchdowns || 0) + (g.receivingTouchdowns || 0), 0);
+      const avgTackles = gamesPlayed ? games.reduce((acc, g) => acc + (g.tackles || 0), 0) / gamesPlayed : 0;
+      
+      // Calculate average grade
+      const GRADE_VALUES: Record<string, number> = {
+        'A+': 100, 'A': 95, 'A-': 90,
+        'B+': 88, 'B': 85, 'B-': 80,
+        'C+': 78, 'C': 75, 'C-': 70,
+        'D+': 68, 'D': 65, 'D-': 60,
+        'F': 50,
+      };
+      
+      let averageGrade = '—';
+      if (gamesPlayed > 0) {
+        const totalValue = games.reduce((acc, g) => {
+          const grade = g.grade?.trim().toUpperCase() || '';
+          return acc + (GRADE_VALUES[grade] || 0);
+        }, 0);
+        const avgValue = totalValue / gamesPlayed;
+        
+        if (avgValue >= 97) averageGrade = 'A+';
+        else if (avgValue >= 92) averageGrade = 'A';
+        else if (avgValue >= 87) averageGrade = 'A-';
+        else if (avgValue >= 84) averageGrade = 'B+';
+        else if (avgValue >= 81) averageGrade = 'B';
+        else if (avgValue >= 77) averageGrade = 'B-';
+        else if (avgValue >= 74) averageGrade = 'C+';
+        else if (avgValue >= 71) averageGrade = 'C';
+        else if (avgValue >= 67) averageGrade = 'C-';
+        else if (avgValue >= 64) averageGrade = 'D+';
+        else if (avgValue >= 61) averageGrade = 'D';
+        else if (avgValue >= 55) averageGrade = 'D-';
+        else averageGrade = 'F';
+      }
+      
+      // Calculate performance trend (comparing recent 3 games vs previous 3)
+      let performanceTrend = 'stable';
+      const sortedGames = [...games].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      if (sortedGames.length >= 6) {
+        const recentAvg = sortedGames.slice(0, 3).reduce((acc, g) => acc + (GRADE_VALUES[g.grade?.trim().toUpperCase() || ''] || 0), 0) / 3;
+        const previousAvg = sortedGames.slice(3, 6).reduce((acc, g) => acc + (GRADE_VALUES[g.grade?.trim().toUpperCase() || ''] || 0), 0) / 3;
+        if (recentAvg > previousAvg + 3) performanceTrend = 'improving';
+        else if (recentAvg < previousAvg - 3) performanceTrend = 'declining';
+      }
+      
+      // Recent games (last 3 for highlights)
+      const recentGames = sortedGames.slice(0, 3).map(g => ({
+        id: g.id,
+        date: g.date,
+        opponent: g.opponent,
+        grade: g.grade,
+        points: g.points,
+        rebounds: g.rebounds,
+        assists: g.assists,
+        passingYards: g.passingYards,
+        rushingYards: g.rushingYards,
+        receivingYards: g.receivingYards,
+        passingTouchdowns: g.passingTouchdowns,
+        rushingTouchdowns: g.rushingTouchdowns,
+        receivingTouchdowns: g.receivingTouchdowns,
+        tackles: g.tackles,
+      }));
+      
+      // Get unlocked skill badges
+      const unlockedSkillBadges = skillBadges
+        .filter(b => b.currentLevel !== 'none')
+        .map(b => ({
+          skillType: b.skillType,
+          level: b.currentLevel,
+        }));
+      
+      // Earned badges (recent 6)
+      const earnedBadges = badges.slice(0, 6).map(b => ({
+        type: b.badgeType,
+        earnedAt: b.earnedAt,
+      }));
+      
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      
+      // Filter to only public-safe fields (no exact location, GPA only shows if player opted in)
+      res.json({
+        player: {
+          id: player.id,
+          name: player.name,
+          position: player.position,
+          jerseyNumber: player.jerseyNumber,
+          photoUrl: player.photoUrl,
+          bannerUrl: player.bannerUrl,
+          sport: player.sport,
+          currentTier: player.currentTier,
+          totalXp: player.totalXp,
+          school: player.school,
+          graduationYear: player.graduationYear,
+          state: player.state, // Only state, not city for privacy
+          gpa: player.isPublic ? player.gpa : null, // Only show GPA if profile is public
+          height: player.height,
+          level: player.level,
+          bio: player.isPublic ? player.bio : null, // Only show bio if profile is public
+        },
+        stats: {
+          gamesPlayed,
+          averageGrade,
+          performanceTrend,
+          basketball: {
+            ppg: Number(avgPoints.toFixed(1)),
+            rpg: Number(avgRebounds.toFixed(1)),
+            apg: Number(avgAssists.toFixed(1)),
+          },
+          football: {
+            passingYpg: Number(avgPassingYards.toFixed(1)),
+            rushingYpg: Number(avgRushingYards.toFixed(1)),
+            receivingYpg: Number(avgReceivingYards.toFixed(1)),
+            totalTDs,
+            tacklesPerGame: Number(avgTackles.toFixed(1)),
+          },
+        },
+        recentGames,
+        badges: earnedBadges,
+        skillBadges: unlockedSkillBadges,
+        accolades: accolades.slice(0, 5).map(a => ({
+          id: a.id,
+          type: a.type,
+          title: a.title,
+          season: a.season,
+        })),
+        shareUrl: `${baseUrl}/profile/${playerId}/public`,
+        ogImage: player.photoUrl || `${baseUrl}/og-image.png`,
+      });
+    } catch (err) {
+      console.error('Error fetching public player profile:', err);
+      res.status(500).json({ message: 'Failed to fetch player profile' });
+    }
+  });
+
   // GET /api/players/:id/share-card - Generate shareable stat card data
   app.get('/api/players/:id/share-card', async (req, res) => {
     try {

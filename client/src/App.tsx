@@ -64,7 +64,9 @@ import CoachVerify from "./pages/CoachVerify";
 import LeagueHub from "./pages/LeagueHub";
 import LeagueDetail from "./pages/LeagueDetail";
 import CollegeRecruiting from "./pages/CollegeRecruiting";
+import MyRecruiting from "./pages/MyRecruiting";
 import FitnessDashboard from "./pages/FitnessDashboard";
+import PublicPlayerProfile from "./pages/PublicPlayerProfile";
 import NotFound from "./pages/not-found";
 
 interface ExtendedUser {
@@ -310,7 +312,8 @@ function MainRouter() {
                 <Route path="/shop" component={Shop} />
                 <Route path="/leagues" component={LeagueHub} />
                 <Route path="/leagues/:id" component={LeagueDetail} />
-                <Route path="/recruiting" component={CollegeRecruiting} />
+                <Route path="/recruiting" component={MyRecruiting} />
+                <Route path="/college-recruiting" component={CollegeRecruiting} />
                 <Route path="/fitness" component={FitnessDashboard} />
                 <Route component={NotFound} />
               </Switch>
@@ -335,6 +338,7 @@ function App() {
                 <InstallPrompt />
                 <Switch>
                 <Route path="/admin" component={Admin} />
+                <Route path="/profile/:id/public" component={PublicPlayerProfile} />
                 <Route>
                   <MainRouter />
                 </Route>
