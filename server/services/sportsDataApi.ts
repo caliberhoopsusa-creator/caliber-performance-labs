@@ -105,8 +105,9 @@ class CollegeFootballDataAPI {
   }
 
   async getTeamRecord(team: string, year?: number): Promise<CollegeFootballRecord[] | null> {
-    const currentYear = year || new Date().getFullYear();
-    return this.fetch<CollegeFootballRecord[]>(`/records?year=${currentYear}&team=${encodeURIComponent(team)}`);
+    // Use previous year since current season may not have started/finished
+    const seasonYear = year || new Date().getFullYear() - 1;
+    return this.fetch<CollegeFootballRecord[]>(`/records?year=${seasonYear}&team=${encodeURIComponent(team)}`);
   }
 
   async getCoaches(team: string, year?: number): Promise<CollegeFootballCoach[] | null> {
@@ -231,21 +232,25 @@ function getApiTeamName(collegeName: string): string {
 
 export async function syncFootballStats(): Promise<{ updated: number; errors: number }> {
   console.log("Starting football stats sync from CollegeFootballData.com...");
+  console.log("CFB API key present:", !!process.env.CFB_API_KEY);
   
   let updated = 0;
   let errors = 0;
   
   const footballColleges = await db.select().from(colleges).where(eq(colleges.sport, "football"));
+  console.log(`Found ${footballColleges.length} football colleges, filtering for D1...`);
   
-  for (const college of footballColleges) {
-    if (college.division !== "D1") {
-      continue;
-    }
-    
+  const d1Colleges = footballColleges.filter(c => c.division === "D1");
+  console.log(`Processing ${d1Colleges.length} D1 football colleges`);
+  
+  for (const college of d1Colleges) {
     try {
       const apiTeamName = getApiTeamName(college.name);
+      console.log(`Fetching stats for ${college.name} (API name: ${apiTeamName})...`);
       
       const records = await cfbApi.getTeamRecord(apiTeamName);
+      console.log(`API response for ${apiTeamName}:`, records ? `${records.length} records` : 'null');
+      
       if (records && records.length > 0) {
         const record = records[0];
         
