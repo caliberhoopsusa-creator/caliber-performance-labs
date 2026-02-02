@@ -44,6 +44,7 @@ Preferred communication style: Simple, everyday language.
 - **Coach Features**: Team dashboard, game notes, lineup analysis, practice tracking with live mode, AI-generated drill recommendations, and one-click game verification queue with sport filtering.
 - **Trust & Verification**: Player ratings system by coaches, stat verifications with digital signatures and quick-verify workflow, skill challenges with leaderboards, AI analysis for highlight verification, and secure cross-team verification prevention.
 - **Subscription & Monetization**: Tiered subscription model (Free, Pro, Coach Pro) integrated with Stripe, protected by frontend components and backend middleware.
+- **Wearable Integration**: Fitness dashboard with manual entry and wearable device connections. Fitbit OAuth integration with PKCE for secure token handling. Supports syncing activity, sleep, and heart rate data. Additional wearables (Apple Health, Google Fit, WHOOP) are prepared for future integration.
 
 ## External Dependencies
 
