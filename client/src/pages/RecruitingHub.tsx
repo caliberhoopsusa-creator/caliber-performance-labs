@@ -15,6 +15,11 @@ import CollegeRecruitingContent from "./CollegeRecruitingContent";
 import CampShowcaseContent from "./CampShowcaseContent";
 
 type TabValue = "journey" | "schools" | "events";
+const VALID_TABS: TabValue[] = ["journey", "schools", "events"];
+
+function isValidTab(tab: string | null): tab is TabValue {
+  return tab !== null && VALID_TABS.includes(tab as TabValue);
+}
 
 export default function RecruitingHub() {
   const { user } = useAuth();
@@ -22,19 +27,22 @@ export default function RecruitingHub() {
   const [, setLocation] = useLocation();
   
   const searchParams = new URLSearchParams(search);
-  const tabFromUrl = searchParams.get("tab") as TabValue | null;
-  const [activeTab, setActiveTab] = useState<TabValue>(tabFromUrl || "journey");
+  const tabFromUrl = searchParams.get("tab");
+  const validatedTab = isValidTab(tabFromUrl) ? tabFromUrl : "journey";
+  const [activeTab, setActiveTab] = useState<TabValue>(validatedTab);
 
   useEffect(() => {
-    if (tabFromUrl && ["journey", "schools", "events"].includes(tabFromUrl)) {
+    if (isValidTab(tabFromUrl)) {
       setActiveTab(tabFromUrl);
+    } else if (tabFromUrl !== null) {
+      setLocation("/recruiting?tab=journey", { replace: true });
     }
-  }, [tabFromUrl]);
+  }, [tabFromUrl, setLocation]);
 
   const handleTabChange = (value: string) => {
-    const tab = value as TabValue;
-    setActiveTab(tab);
-    setLocation(`/recruiting?tab=${tab}`, { replace: true });
+    if (!isValidTab(value)) return;
+    setActiveTab(value);
+    setLocation(`/recruiting?tab=${value}`, { replace: true });
   };
 
   return (
