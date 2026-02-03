@@ -29,7 +29,8 @@ import {
   Award,
   Heart,
   Copy,
-  Check
+  Check,
+  Search
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -117,6 +118,7 @@ interface CollegeMatchesProps {
   playerId: number;
   divisionFilter?: string;
   sportFilter?: string;
+  searchQuery?: string;
 }
 
 const DIVISION_COLORS: Record<string, string> = {
@@ -717,7 +719,7 @@ function CollegeMatchSkeleton() {
   );
 }
 
-export function CollegeMatches({ playerId, divisionFilter = 'all', sportFilter }: CollegeMatchesProps) {
+export function CollegeMatches({ playerId, divisionFilter = 'all', sportFilter, searchQuery = '' }: CollegeMatchesProps) {
   const { data: matches, isLoading, error } = useQuery<CollegeMatch[]>({
     queryKey: ['/api/players', playerId, 'college-matches'],
     enabled: !!playerId,
@@ -787,10 +789,30 @@ export function CollegeMatches({ playerId, divisionFilter = 'all', sportFilter }
   const filteredMatches = matches?.filter(m => {
     const divisionMatch = divisionFilter === 'all' || m.college.division === divisionFilter;
     const sportMatch = !sportFilter || m.college.sport === sportFilter;
-    return divisionMatch && sportMatch;
+    const searchLower = searchQuery.toLowerCase().trim();
+    const searchMatch = !searchLower || 
+      m.college.name.toLowerCase().includes(searchLower) ||
+      (m.college.shortName && m.college.shortName.toLowerCase().includes(searchLower)) ||
+      m.college.city.toLowerCase().includes(searchLower) ||
+      m.college.state.toLowerCase().includes(searchLower) ||
+      (m.college.conference && m.college.conference.toLowerCase().includes(searchLower));
+    return divisionMatch && sportMatch && searchMatch;
   }).slice(0, 10) ?? [];
 
   if (filteredMatches.length === 0) {
+    if (searchQuery) {
+      return (
+        <div className="text-center py-12" data-testid="no-search-results">
+          <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+          <p className="text-muted-foreground">
+            No schools found matching "{searchQuery}"
+          </p>
+          <p className="text-sm text-muted-foreground/70 mt-1">
+            Try a different school name, city, or state
+          </p>
+        </div>
+      );
+    }
     return null;
   }
 

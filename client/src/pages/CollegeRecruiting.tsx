@@ -18,8 +18,11 @@ import {
   BookOpen,
   RefreshCw,
   Dribbble,
-  Trophy
+  Trophy,
+  Search,
+  X
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 interface Player {
@@ -52,6 +55,7 @@ export default function CollegeRecruiting() {
   const playerId = (user as any)?.playerId;
   const currentSport = useSport();
   const [divisionFilter, setDivisionFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { data: player, isLoading: playerLoading } = useQuery<Player>({
     queryKey: ['/api/players', playerId],
@@ -202,23 +206,46 @@ export default function CollegeRecruiting() {
       ) : null}
 
       {hasMatches && (
-        <div className="flex flex-wrap items-center gap-2" data-testid="division-filters">
-          {DIVISIONS.map((div) => (
-            <Button
-              key={div.value}
-              variant={divisionFilter === div.value ? "default" : "outline"}
-              size="sm"
-              onClick={() => setDivisionFilter(div.value)}
-              className={cn(
-                divisionFilter === div.value 
-                  ? "bg-cyan-500 hover:bg-cyan-400 text-white" 
-                  : "border-cyan-500/20 hover:border-cyan-400/40 hover:bg-cyan-500/10"
-              )}
-              data-testid={`filter-division-${div.value}`}
-            >
-              {div.label}
-            </Button>
-          ))}
+        <div className="space-y-4">
+          <div className="relative max-w-md" data-testid="school-search-container">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search schools by name, city, state, or conference..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-10 bg-white/5 border-cyan-500/20 focus:border-cyan-400/50 placeholder:text-muted-foreground/60"
+              data-testid="input-school-search"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-colors"
+                aria-label="Clear search"
+                data-testid="button-clear-search"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-2" data-testid="division-filters">
+            {DIVISIONS.map((div) => (
+              <Button
+                key={div.value}
+                variant={divisionFilter === div.value ? "default" : "outline"}
+                size="sm"
+                onClick={() => setDivisionFilter(div.value)}
+                className={cn(
+                  divisionFilter === div.value 
+                    ? "bg-cyan-500 hover:bg-cyan-400 text-white" 
+                    : "border-cyan-500/20 hover:border-cyan-400/40 hover:bg-cyan-500/10"
+                )}
+                data-testid={`filter-division-${div.value}`}
+              >
+                {div.label}
+              </Button>
+            ))}
+          </div>
         </div>
       )}
 
@@ -239,7 +266,7 @@ export default function CollegeRecruiting() {
           ))}
         </div>
       ) : hasMatches ? (
-        <CollegeMatches playerId={playerId} divisionFilter={divisionFilter} sportFilter={currentSport} />
+        <CollegeMatches playerId={playerId} divisionFilter={divisionFilter} sportFilter={currentSport} searchQuery={searchQuery} />
       ) : (
         <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
           <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/20 flex items-center justify-center mb-6">
