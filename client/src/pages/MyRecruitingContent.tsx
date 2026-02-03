@@ -170,7 +170,7 @@ function calculateProfileCompleteness(player: Player | undefined): number {
   return Math.round((filledFields / fields.length) * 100);
 }
 
-export default function MyRecruiting() {
+export default function MyRecruitingContent() {
   const { user } = useAuth();
   const { toast } = useToast();
   const playerId = (user as any)?.playerId;
@@ -261,55 +261,44 @@ export default function MyRecruiting() {
   };
 
   return (
-    <div className="space-y-6 pb-8" data-testid="my-recruiting-page">
-      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            <h1 
-              className="font-display text-3xl md:text-4xl font-bold text-white tracking-tight flex items-center gap-3"
-              data-testid="page-title"
-            >
-              <GraduationCap className="w-8 h-8 text-cyan-400" />
-              My Recruiting Dashboard
-            </h1>
-          </div>
-          <div className="flex items-center gap-3 mt-2 flex-wrap">
-            {playerLoading ? (
-              <Skeleton className="h-7 w-32" />
-            ) : player?.graduationYear ? (
-              <Badge 
-                variant="outline" 
-                className="text-lg px-4 py-1 border-cyan-500/50 text-cyan-300 bg-cyan-500/10"
-                data-testid="graduation-year-badge"
-              >
-                Class of {player.graduationYear}
-              </Badge>
-            ) : (
-              <Badge 
-                variant="outline" 
-                className="text-sm border-amber-500/50 text-amber-400"
-                data-testid="no-graduation-year"
-              >
-                Set your graduation year
-              </Badge>
-            )}
+    <div className="space-y-6" data-testid="my-recruiting-page">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex items-center gap-3 flex-wrap">
+          {playerLoading ? (
+            <Skeleton className="h-7 w-32" />
+          ) : player?.graduationYear ? (
             <Badge 
               variant="outline" 
-              className={cn(
-                "text-xs uppercase font-semibold",
-                sport === 'basketball' 
-                  ? "border-orange-500/50 text-orange-400 bg-orange-500/10" 
-                  : "border-amber-700/50 text-amber-500 bg-amber-700/10"
-              )}
-              data-testid="sport-badge"
+              className="text-lg px-4 py-1 border-cyan-500/50 text-cyan-300 bg-cyan-500/10"
+              data-testid="graduation-year-badge"
             >
-              {sport === 'basketball' ? (
-                <><Dribbble className="w-3 h-3 mr-1" /> Basketball</>
-              ) : (
-                <><Trophy className="w-3 h-3 mr-1" /> Football</>
-              )}
+              Class of {player.graduationYear}
             </Badge>
-          </div>
+          ) : (
+            <Badge 
+              variant="outline" 
+              className="text-sm border-amber-500/50 text-amber-400"
+              data-testid="no-graduation-year"
+            >
+              Set your graduation year
+            </Badge>
+          )}
+          <Badge 
+            variant="outline" 
+            className={cn(
+              "text-xs uppercase font-semibold",
+              sport === 'basketball' 
+                ? "border-orange-500/50 text-orange-400 bg-orange-500/10" 
+                : "border-amber-700/50 text-amber-500 bg-amber-700/10"
+            )}
+            data-testid="sport-badge"
+          >
+            {sport === 'basketball' ? (
+              <><Dribbble className="w-3 h-3 mr-1" /> Basketball</>
+            ) : (
+              <><Trophy className="w-3 h-3 mr-1" /> Football</>
+            )}
+          </Badge>
         </div>
         
         <div className="flex items-center gap-2">
@@ -479,7 +468,7 @@ export default function MyRecruiting() {
                 <Target className="w-5 h-5 text-cyan-400" />
                 My Interested Schools
               </CardTitle>
-              <Link href="/college-recruiting">
+              <Link href="/recruiting?tab=schools">
                 <Button 
                   variant="outline" 
                   size="sm"
