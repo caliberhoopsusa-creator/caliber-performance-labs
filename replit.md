@@ -73,6 +73,10 @@ Preferred communication style: Simple, everyday language.
 - **Coach Features**: Team dashboard, game notes, lineup analysis, practice tracking with live mode, AI-generated drill recommendations, and one-click game verification queue with sport filtering.
 - **Trust & Verification**: Player ratings system by coaches, stat verifications with digital signatures and quick-verify workflow, skill challenges with leaderboards, AI analysis for highlight verification, and secure cross-team verification prevention.
 - **Subscription & Monetization**: Tiered subscription model (Free, Pro, Coach Pro) integrated with Stripe, protected by frontend components and backend middleware.
+- **Performance Hub** (`/performance`): A unified tabbed interface consolidating workout and fitness tracking. Uses URL parameters for tab navigation (?tab=workouts|fitness). Old routes redirect for backwards compatibility.
+  - **Workouts Tab** (`?tab=workouts`): Training log with workout history, intensity tracking, and duration stats
+  - **Fitness Tab** (`?tab=fitness`): Wearable data dashboard with recovery score, sleep, HRV, activity tracking, and manual entry
+  - **Backwards Compatibility**: `/workouts`, `/fitness` redirect to appropriate Performance Hub tabs
 - **Wearable Integration**: Fitness dashboard with manual entry and wearable device connections. Fitbit OAuth integration with PKCE for secure token handling. Supports syncing activity, sleep, and heart rate data. Additional wearables (Apple Health, Google Fit, WHOOP) are prepared for future integration.
 
 ## External Dependencies

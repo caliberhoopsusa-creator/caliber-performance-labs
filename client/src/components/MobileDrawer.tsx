@@ -95,7 +95,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
         { href: playerId ? `/players/${playerId}` : "/", label: "Player Profile", icon: UserCircle },
         { href: "/analyze", label: "Log Game", icon: PlusCircle },
         { href: "/schedule", label: "Schedule", icon: CalendarDays },
-        { href: "/workouts", label: "Workouts", icon: Dumbbell },
+        { href: "/performance", label: "Performance", icon: Activity },
         { href: "/recruiting", label: "Recruiting", icon: GraduationCap },
       ],
     },

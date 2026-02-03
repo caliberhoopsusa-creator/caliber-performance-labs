@@ -44,7 +44,7 @@ import CommunityHub from "./pages/CommunityHub";
 import CoachHub from "./pages/CoachHub";
 import Pricing from "./pages/Pricing";
 import Admin from "./pages/Admin";
-import WorkoutTracker from "./pages/WorkoutTracker";
+import PerformanceHub from "./pages/PerformanceHub";
 import ScheduleCalendar from "./pages/ScheduleCalendar";
 import HighlightClipsPage from "./pages/HighlightClipsPage";
 import Highlights from "./pages/Highlights";
@@ -55,7 +55,6 @@ import Shop from "./pages/Shop";
 import LeagueHub from "./pages/LeagueHub";
 import LeagueDetail from "./pages/LeagueDetail";
 import RecruitingHub from "./pages/RecruitingHub";
-import FitnessDashboard from "./pages/FitnessDashboard";
 import PublicPlayerProfile from "./pages/PublicPlayerProfile";
 import NotFound from "./pages/not-found";
 
@@ -316,7 +315,10 @@ function MainRouter() {
                   <Redirect to="/coach?tab=alerts" />
                 </Route>
                 <Route path="/pricing" component={Pricing} />
-                <Route path="/workouts" component={WorkoutTracker} />
+                <Route path="/performance" component={PerformanceHub} />
+                <Route path="/workouts">
+                  <Redirect to="/performance?tab=workouts" />
+                </Route>
                 <Route path="/schedule" component={ScheduleCalendar} />
                 <Route path="/highlights" component={Highlights} />
                 <Route path="/reels/:playerId" component={ReelPage} />
@@ -335,7 +337,9 @@ function MainRouter() {
                 <Route path="/camps-showcases">
                   <Redirect to="/recruiting?tab=events" />
                 </Route>
-                <Route path="/fitness" component={FitnessDashboard} />
+                <Route path="/fitness">
+                  <Redirect to="/performance?tab=fitness" />
+                </Route>
                 <Route component={NotFound} />
               </Switch>
             </PageTransition>
