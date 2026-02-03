@@ -16,7 +16,7 @@ import { registerObjectStorageRoutes } from "./replit_integrations/object_storag
 import { setupAuth, registerAuthRoutes, isAuthenticated, authStorage } from "./replit_integrations/auth";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 import { users } from "@shared/models/auth";
-import { eq, sql, and, desc } from "drizzle-orm";
+import { eq, sql, and, desc, or, inArray } from "drizzle-orm";
 import { db } from "./db";
 import type { RequestHandler } from "express";
 
@@ -13175,19 +13175,14 @@ Respond in this exact JSON format:
 
   // === RECRUITING EVENTS API ===
 
-  // GET /api/recruiting-events - List all recruiting events with filters
+  // GET /api/recruiting-events - List recruiting events with visibility filtering
+  // Public events are visible to everyone
+  // Team events are only visible to team members
   app.get("/api/recruiting-events", async (req, res) => {
     try {
       const { sport, state, eventType, startDate, endDate } = req.query;
       
-      let query = db.select({
-        event: recruitingEvents,
-        college: colleges,
-      })
-        .from(recruitingEvents)
-        .leftJoin(colleges, eq(recruitingEvents.collegeId, colleges.id))
-        .orderBy(recruitingEvents.startDate);
-
+      // Build base conditions
       const conditions: any[] = [];
       
       if (typeof sport === 'string' && sport) {
@@ -13206,25 +13201,42 @@ Respond in this exact JSON format:
         conditions.push(sql`${recruitingEvents.startDate} <= ${endDate}`);
       }
 
-      let results;
-      if (conditions.length > 0) {
-        results = await db.select({
-          event: recruitingEvents,
-          college: colleges,
-        })
-          .from(recruitingEvents)
-          .leftJoin(colleges, eq(recruitingEvents.collegeId, colleges.id))
-          .where(and(...conditions))
-          .orderBy(recruitingEvents.startDate);
-      } else {
-        results = await db.select({
-          event: recruitingEvents,
-          college: colleges,
-        })
-          .from(recruitingEvents)
-          .leftJoin(colleges, eq(recruitingEvents.collegeId, colleges.id))
-          .orderBy(recruitingEvents.startDate);
+      // Get user's team IDs if authenticated
+      let userTeamIds: number[] = [];
+      if ((req as any).isAuthenticated?.() && (req as any).user?.claims?.sub) {
+        const userId = (req as any).user.claims.sub;
+        const user = await authStorage.getUser(userId);
+        if (user?.playerId) {
+          const memberships = await db.select({ teamId: teamMembers.teamId })
+            .from(teamMembers)
+            .where(eq(teamMembers.playerId, user.playerId));
+          userTeamIds = memberships.map(m => m.teamId);
+        }
       }
+
+      // Visibility filter: public events OR team events for user's teams
+      let visibilityCondition;
+      if (userTeamIds.length > 0) {
+        visibilityCondition = or(
+          eq(recruitingEvents.visibility, 'public'),
+          and(
+            eq(recruitingEvents.visibility, 'team'),
+            inArray(recruitingEvents.teamId, userTeamIds)
+          )
+        );
+      } else {
+        visibilityCondition = eq(recruitingEvents.visibility, 'public');
+      }
+      conditions.push(visibilityCondition);
+
+      const results = await db.select({
+        event: recruitingEvents,
+        college: colleges,
+      })
+        .from(recruitingEvents)
+        .leftJoin(colleges, eq(recruitingEvents.collegeId, colleges.id))
+        .where(and(...conditions))
+        .orderBy(recruitingEvents.startDate);
 
       const eventsWithCollege = results.map(r => ({
         ...r.event,
@@ -13270,13 +13282,16 @@ Respond in this exact JSON format:
     }
   });
 
-  // POST /api/recruiting-events - Create a new event (admin only)
+  // POST /api/recruiting-events - Create a new public event (admin only)
   app.post("/api/recruiting-events", isAdmin, async (req, res) => {
     try {
       const validatedData = insertRecruitingEventSchema.parse(req.body);
       
       const [newEvent] = await db.insert(recruitingEvents)
-        .values(validatedData)
+        .values({
+          ...validatedData,
+          visibility: 'public', // Admin events are always public
+        })
         .returning();
       
       res.status(201).json(newEvent);
@@ -13285,6 +13300,45 @@ Respond in this exact JSON format:
         return res.status(400).json({ message: "Invalid request body", errors: error.errors });
       }
       console.error('Error creating recruiting event:', error);
+      res.status(500).json({ message: "Failed to create recruiting event" });
+    }
+  });
+
+  // POST /api/teams/:teamId/recruiting-events - Coach creates team-only event
+  app.post("/api/teams/:teamId/recruiting-events", isCoach, async (req: any, res) => {
+    try {
+      const teamId = parseInt(req.params.teamId);
+      if (isNaN(teamId)) {
+        return res.status(400).json({ message: "Invalid team ID" });
+      }
+
+      // Verify coach owns this team
+      const userId = req.user.claims.sub;
+      const team = await db.select().from(teams).where(eq(teams.id, teamId)).limit(1);
+      if (team.length === 0) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+      if (team[0].createdBy !== userId) {
+        return res.status(403).json({ message: "You can only create events for your own team" });
+      }
+
+      const validatedData = insertRecruitingEventSchema.parse(req.body);
+      
+      const [newEvent] = await db.insert(recruitingEvents)
+        .values({
+          ...validatedData,
+          visibility: 'team',
+          teamId: teamId,
+          createdBy: userId,
+        })
+        .returning();
+      
+      res.status(201).json(newEvent);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid request body", errors: error.errors });
+      }
+      console.error('Error creating team recruiting event:', error);
       res.status(500).json({ message: "Failed to create recruiting event" });
     }
   });
