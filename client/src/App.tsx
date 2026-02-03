@@ -41,12 +41,7 @@ import ScoutHub from "./pages/ScoutHub";
 import Challenges from "./pages/Challenges";
 import Teams from "./pages/Teams";
 import CommunityHub from "./pages/CommunityHub";
-import TeamDashboard from "./pages/TeamDashboard";
-import TeamHub from "./pages/TeamHub";
-import LineupAnalysis from "./pages/LineupAnalysis";
-import PracticeTracker from "./pages/PracticeTracker";
-import OpponentScouting from "./pages/OpponentScouting";
-import CoachAlertsPage from "./pages/CoachAlertsPage";
+import CoachHub from "./pages/CoachHub";
 import Pricing from "./pages/Pricing";
 import Admin from "./pages/Admin";
 import WorkoutTracker from "./pages/WorkoutTracker";
@@ -57,8 +52,6 @@ import ReelPage from "./pages/ReelPage";
 import TeamComparison from "./pages/TeamComparison";
 import ReportCardPage from "./pages/ReportCardPage";
 import Shop from "./pages/Shop";
-import CoachVerify from "./pages/CoachVerify";
-import CoachEndorsements from "./pages/CoachEndorsements";
 import LeagueHub from "./pages/LeagueHub";
 import LeagueDetail from "./pages/LeagueDetail";
 import RecruitingHub from "./pages/RecruitingHub";
@@ -297,14 +290,31 @@ function MainRouter() {
                 <Route path="/grading" component={GradingSystem} />
                                 <Route path="/scout" component={ScoutHub} />
                 <Route path="/analyze" component={AnalyzeGame} />
-                <Route path="/coach/dashboard" component={TeamDashboard} />
-                <Route path="/coach/hub" component={TeamHub} />
-                <Route path="/coach/lineups" component={LineupAnalysis} />
-                <Route path="/coach/practices" component={PracticeTracker} />
-                <Route path="/coach/scouting" component={OpponentScouting} />
-                <Route path="/coach/alerts" component={CoachAlertsPage} />
-                <Route path="/coach/verify" component={CoachVerify} />
-                <Route path="/coach/endorsements" component={CoachEndorsements} />
+                <Route path="/coach" component={CoachHub} />
+                <Route path="/coach/dashboard">
+                  <Redirect to="/coach?tab=dashboard" />
+                </Route>
+                <Route path="/coach/hub">
+                  <Redirect to="/coach?tab=dashboard" />
+                </Route>
+                <Route path="/coach/verify">
+                  <Redirect to="/coach?tab=verify" />
+                </Route>
+                <Route path="/coach/endorsements">
+                  <Redirect to="/coach?tab=endorse" />
+                </Route>
+                <Route path="/coach/practices">
+                  <Redirect to="/coach?tab=practices" />
+                </Route>
+                <Route path="/coach/lineups">
+                  <Redirect to="/coach?tab=lineups" />
+                </Route>
+                <Route path="/coach/scouting">
+                  <Redirect to="/coach?tab=scouting" />
+                </Route>
+                <Route path="/coach/alerts">
+                  <Redirect to="/coach?tab=alerts" />
+                </Route>
                 <Route path="/pricing" component={Pricing} />
                 <Route path="/workouts" component={WorkoutTracker} />
                 <Route path="/schedule" component={ScheduleCalendar} />
