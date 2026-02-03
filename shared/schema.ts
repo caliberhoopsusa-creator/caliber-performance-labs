@@ -2385,12 +2385,18 @@ export const recruitingEvents = pgTable("recruiting_events", {
   maxParticipants: integer("max_participants"),
   spotsRemaining: integer("spots_remaining"),
   isVerified: boolean("is_verified").default(false), // Admin verified
+  // Visibility and ownership
+  visibility: text("visibility").notNull().default("public"), // 'public' or 'team'
+  teamId: integer("team_id").references(() => teams.id, { onDelete: "cascade" }), // For team-only events
+  createdBy: text("created_by"), // userId of who created this event
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
   sportIdx: index("recruiting_events_sport_idx").on(table.sport),
   stateIdx: index("recruiting_events_state_idx").on(table.state),
   startDateIdx: index("recruiting_events_start_date_idx").on(table.startDate),
   collegeIdIdx: index("recruiting_events_college_id_idx").on(table.collegeId),
+  teamIdIdx: index("recruiting_events_team_id_idx").on(table.teamId),
+  visibilityIdx: index("recruiting_events_visibility_idx").on(table.visibility),
 }));
 
 export const insertRecruitingEventSchema = createInsertSchema(recruitingEvents).omit({ id: true, createdAt: true });
