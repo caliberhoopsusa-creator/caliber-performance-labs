@@ -6,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { 
   Menu, LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, 
-  Binoculars, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, 
+  Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, 
   UsersRound, CalendarCheck, Eye, UserCircle, LogOut, CreditCard, Lock, Dumbbell, 
   CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, Bell, ShoppingBag, GraduationCap
 } from "lucide-react";
@@ -102,7 +102,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
     {
       title: "Explore",
       items: [
-        { href: "/discover", label: "Find Players", icon: Binoculars },
+        { href: "/scout", label: "Scout Hub", icon: Eye },
         { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
         { href: "/stories", label: "Stories", icon: Camera },
         { href: "/social-hub", label: "Social Hub", icon: UsersRound },
@@ -131,7 +131,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
     {
       title: "Explore",
       items: [
-        { href: "/discover", label: "Find Players", icon: Binoculars },
+        { href: "/scout", label: "Scout Hub", icon: Eye },
         { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
         { href: "/stories", label: "Stories", icon: Camera },
         { href: "/social-hub", label: "Social Hub", icon: UsersRound },

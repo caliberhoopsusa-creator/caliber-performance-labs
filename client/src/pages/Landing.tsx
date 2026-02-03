@@ -274,7 +274,7 @@ export default function Landing() {
             <span>&copy; 2026 Caliber Performance Labs</span>
           </div>
           <div className="flex items-center gap-8">
-            <Link href="/discover" className="hover:text-cyan-400 transition-colors">Find Players</Link>
+            <Link href="/scout" className="hover:text-cyan-400 transition-colors">Scout Hub</Link>
             <Link href="/pricing" className="hover:text-cyan-400 transition-colors">Pricing</Link>
             <a href="/api/login" className="hover:text-cyan-400 transition-colors">Sign In</a>
           </div>
