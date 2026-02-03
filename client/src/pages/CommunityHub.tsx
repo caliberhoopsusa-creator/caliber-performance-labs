@@ -8,7 +8,6 @@ import {
   BarChart3,
   UserPlus
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 import FeedContent from "./FeedContent";
 import StoriesContent from "./StoriesContent";
@@ -46,7 +45,7 @@ export default function CommunityHub() {
   };
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="space-y-6 pb-8" data-testid="page-community-hub">
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-500/5 border border-purple-500/20 flex items-center justify-center">
@@ -64,14 +63,13 @@ export default function CommunityHub() {
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="w-full justify-start bg-white/5 border border-purple-500/10 p-1 rounded-xl overflow-x-auto flex-nowrap">
+        <TabsList 
+          className="w-full justify-start bg-card border border-white/10 p-1 rounded-xl overflow-x-auto flex-nowrap"
+          data-testid="tabs-community"
+        >
           <TabsTrigger 
             value="feed" 
-            className={cn(
-              "flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all whitespace-nowrap",
-              "data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500/20 data-[state=active]:to-purple-500/10",
-              "data-[state=active]:text-purple-400 data-[state=active]:border-purple-500/30"
-            )}
+            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             data-testid="tab-feed"
           >
             <Rss className="w-4 h-4" />
@@ -80,11 +78,7 @@ export default function CommunityHub() {
           </TabsTrigger>
           <TabsTrigger 
             value="stories" 
-            className={cn(
-              "flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all whitespace-nowrap",
-              "data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500/20 data-[state=active]:to-purple-500/10",
-              "data-[state=active]:text-purple-400 data-[state=active]:border-purple-500/30"
-            )}
+            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             data-testid="tab-stories"
           >
             <Camera className="w-4 h-4" />
@@ -92,11 +86,7 @@ export default function CommunityHub() {
           </TabsTrigger>
           <TabsTrigger 
             value="polls" 
-            className={cn(
-              "flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all whitespace-nowrap",
-              "data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500/20 data-[state=active]:to-purple-500/10",
-              "data-[state=active]:text-purple-400 data-[state=active]:border-purple-500/30"
-            )}
+            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             data-testid="tab-polls"
           >
             <BarChart3 className="w-4 h-4" />
@@ -105,11 +95,7 @@ export default function CommunityHub() {
           </TabsTrigger>
           <TabsTrigger 
             value="connect" 
-            className={cn(
-              "flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all whitespace-nowrap",
-              "data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500/20 data-[state=active]:to-purple-500/10",
-              "data-[state=active]:text-purple-400 data-[state=active]:border-purple-500/30"
-            )}
+            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             data-testid="tab-connect"
           >
             <UserPlus className="w-4 h-4" />
