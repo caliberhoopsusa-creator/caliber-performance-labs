@@ -26,6 +26,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
@@ -713,6 +714,9 @@ export default function CampShowcaseFinder() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-[hsl(220,25%,12%)] to-[hsl(220,25%,8%)] border-cyan-500/20">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold text-white">Create Recruiting Event</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Add a new camp, showcase, or combine for your team.
+            </DialogDescription>
           </DialogHeader>
 
           <Form {...form}>
