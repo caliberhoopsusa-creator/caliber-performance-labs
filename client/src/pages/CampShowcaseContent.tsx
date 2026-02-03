@@ -391,7 +391,7 @@ function EventCardSkeleton() {
   );
 }
 
-export default function CampShowcaseFinder() {
+export default function CampShowcaseContent() {
   const { user } = useAuth();
   const { toast } = useToast();
   const playerId = (user as any)?.playerId;
@@ -558,35 +558,29 @@ export default function CampShowcaseFinder() {
   const hasActiveFilters = stateFilter !== "all" || eventTypeFilter !== "all";
 
   return (
-    <div className="space-y-6 pb-8">
-      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            <h1 className="font-display text-3xl md:text-4xl font-bold text-white tracking-tight flex items-center gap-3">
-              <Target className="w-8 h-8 text-cyan-400" />
-              Camps & Showcases
-            </h1>
-            <Badge
-              variant="outline"
-              className={cn(
-                "text-xs uppercase font-semibold",
-                currentSport === "basketball"
-                  ? "border-orange-500/50 text-orange-400 bg-orange-500/10"
-                  : "border-amber-700/50 text-amber-500 bg-amber-700/10"
-              )}
-            >
-              {currentSport === "basketball" ? (
-                <>
-                  <Dribbble className="w-3 h-3 mr-1" /> Basketball
-                </>
-              ) : (
-                <>
-                  <Trophy className="w-3 h-3 mr-1" /> Football
-                </>
-              )}
-            </Badge>
-          </div>
-          <p className="text-muted-foreground mt-1">
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex items-center gap-3 flex-wrap">
+          <Badge
+            variant="outline"
+            className={cn(
+              "text-xs uppercase font-semibold",
+              currentSport === "basketball"
+                ? "border-orange-500/50 text-orange-400 bg-orange-500/10"
+                : "border-amber-700/50 text-amber-500 bg-amber-700/10"
+            )}
+          >
+            {currentSport === "basketball" ? (
+              <>
+                <Dribbble className="w-3 h-3 mr-1" /> Basketball
+              </>
+            ) : (
+              <>
+                <Trophy className="w-3 h-3 mr-1" /> Football
+              </>
+            )}
+          </Badge>
+          <p className="text-muted-foreground text-sm">
             Find {currentSport} camps, showcases, and combines to get recruited
           </p>
         </div>
