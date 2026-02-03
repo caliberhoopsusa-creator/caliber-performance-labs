@@ -1,0 +1,675 @@
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
+import { useSport } from "@/components/SportToggle";
+import { RecruitingTimeline } from "@/components/RecruitingTimeline";
+import { NcaaEligibilityChecklist } from "@/components/NcaaEligibilityChecklist";
+import { EmptyState } from "@/components/EmptyState";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
+import { useToast } from "@/hooks/use-toast";
+import { Link } from "wouter";
+import { 
+  GraduationCap,
+  Share2,
+  Copy,
+  Check,
+  Mail,
+  Trash2,
+  School,
+  Target,
+  Eye,
+  User,
+  MapPin,
+  Trophy,
+  Calendar,
+  ChevronRight,
+  Sparkles,
+  ExternalLink,
+  Dribbble
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface Player {
+  id: number;
+  name: string;
+  position: string;
+  sport: 'basketball' | 'football';
+  gpa: string | null;
+  city: string | null;
+  state: string | null;
+  graduationYear: number | null;
+  school: string | null;
+  height: string | null;
+  photoUrl: string | null;
+  bio: string | null;
+}
+
+interface College {
+  id: number;
+  name: string;
+  shortName: string | null;
+  logoUrl: string | null;
+  city: string;
+  state: string;
+  division: string;
+  conference: string | null;
+  recruitingContactEmail: string | null;
+}
+
+interface PlayerInterest {
+  id: number;
+  playerId: number;
+  collegeId: number;
+  interestLevel: string | null;
+  notes: string | null;
+  contacted: boolean | null;
+  contactedAt: string | null;
+  createdAt: string;
+  college: College | null;
+}
+
+interface CollegeMatch {
+  id: number;
+  collegeId: number;
+  overallMatchScore: number;
+}
+
+interface Milestone {
+  id: string;
+  year: number;
+  month: number;
+  period: string;
+  title: string;
+  description: string;
+}
+
+function getBasketballMilestones(graduationYear: number): Milestone[] {
+  const freshmanYear = graduationYear - 3;
+  const sophomoreYear = graduationYear - 2;
+  const juniorYear = graduationYear - 1;
+  const seniorYear = graduationYear;
+
+  return [
+    { id: 'freshman-highlights', year: freshmanYear, month: 9, period: `Fall ${freshmanYear}`, title: 'Create Highlight Tape', description: 'Start recording game footage and creating your first highlight reel' },
+    { id: 'freshman-camps', year: freshmanYear, month: 6, period: `Summer ${freshmanYear}`, title: 'Start Attending Camps', description: 'Attend local and regional basketball camps to develop skills and get exposure' },
+    { id: 'sophomore-ncaa', year: sophomoreYear, month: 9, period: `Fall ${sophomoreYear}`, title: 'NCAA Eligibility Center', description: 'Register with the NCAA Eligibility Center to begin the certification process' },
+    { id: 'sophomore-showcases', year: sophomoreYear, month: 6, period: `Summer ${sophomoreYear}`, title: 'Attend Showcases', description: 'Participate in AAU tournaments and showcases to gain college scout visibility' },
+    { id: 'junior-contact', year: juniorYear, month: 6, period: `June 15, ${juniorYear}`, title: 'Coach Contact Allowed', description: 'College coaches can begin calling, texting, and contacting you directly' },
+    { id: 'junior-visits', year: juniorYear, month: 9, period: `Sept 1, ${juniorYear}`, title: 'Official Visits Begin', description: 'You can start taking official visits to college campuses (up to 5 total)' },
+    { id: 'senior-early', year: seniorYear, month: 11, period: `November ${seniorYear - 1}`, title: 'Early Signing Period', description: 'Sign your National Letter of Intent during the early signing period' },
+    { id: 'senior-late', year: seniorYear, month: 4, period: `April ${seniorYear}`, title: 'Late Signing Period', description: 'Final opportunity to sign NLI if you haven\'t committed yet' },
+  ];
+}
+
+function getFootballMilestones(graduationYear: number): Milestone[] {
+  const freshmanYear = graduationYear - 3;
+  const sophomoreYear = graduationYear - 2;
+  const juniorYear = graduationYear - 1;
+  const seniorYear = graduationYear;
+
+  return [
+    { id: 'freshman-film', year: freshmanYear, month: 9, period: `Fall ${freshmanYear}`, title: 'Film Training', description: 'Learn to break down film and understand what coaches look for' },
+    { id: 'freshman-camps', year: freshmanYear, month: 6, period: `Summer ${freshmanYear}`, title: 'Start Attending Camps', description: 'Attend college camps and combines to get evaluated and learn techniques' },
+    { id: 'sophomore-profile', year: sophomoreYear, month: 9, period: `Fall ${sophomoreYear}`, title: 'Build Recruiting Profile', description: 'Create profiles on recruiting services and start building your highlight tape' },
+    { id: 'sophomore-combines', year: sophomoreYear, month: 6, period: `Summer ${sophomoreYear}`, title: 'Attend Combines', description: 'Participate in regional combines to get measurables and performance data' },
+    { id: 'junior-contact', year: juniorYear, month: 9, period: `Sept 1, ${juniorYear}`, title: 'Coach Contact Allowed', description: 'College coaches can begin calling and initiating contact with you' },
+    { id: 'junior-unofficials', year: juniorYear, month: 10, period: `Fall ${juniorYear}`, title: 'Unofficial Visits', description: 'Take unofficial visits to schools you\'re interested in at your own expense' },
+    { id: 'senior-officials', year: seniorYear, month: 8, period: `August ${seniorYear - 1}`, title: 'Official Visits Begin', description: 'Start taking official visits (expenses paid by schools, up to 5 total)' },
+    { id: 'senior-early', year: seniorYear, month: 12, period: `December ${seniorYear - 1}`, title: 'Early Signing Period', description: 'Sign your National Letter of Intent during the early signing period' },
+    { id: 'senior-nsd', year: seniorYear, month: 2, period: `February ${seniorYear}`, title: 'National Signing Day', description: 'Traditional National Signing Day for those who haven\'t signed early' },
+  ];
+}
+
+function getNextMilestone(graduationYear: number, sport: 'basketball' | 'football'): Milestone | null {
+  const milestones = sport === 'basketball' 
+    ? getBasketballMilestones(graduationYear) 
+    : getFootballMilestones(graduationYear);
+  
+  const currentDate = new Date();
+  const currentMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+  
+  for (const milestone of milestones) {
+    const milestoneDate = new Date(milestone.year, milestone.month - 1, 1);
+    if (milestoneDate >= currentMonth) {
+      return milestone;
+    }
+  }
+  return null;
+}
+
+const DIVISION_COLORS: Record<string, string> = {
+  'D1': 'bg-gradient-to-r from-amber-500 to-orange-500 text-white',
+  'D2': 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white',
+  'D3': 'bg-gradient-to-r from-emerald-500 to-green-500 text-white',
+  'NAIA': 'bg-gradient-to-r from-purple-500 to-violet-500 text-white',
+  'JUCO': 'bg-gradient-to-r from-rose-500 to-pink-500 text-white',
+};
+
+function calculateProfileCompleteness(player: Player | undefined): number {
+  if (!player) return 0;
+  
+  const fields = [
+    player.name,
+    player.position,
+    player.height,
+    player.city,
+    player.state,
+    player.school,
+    player.graduationYear,
+    player.gpa,
+    player.photoUrl,
+    player.bio,
+  ];
+  
+  const filledFields = fields.filter(f => f !== null && f !== undefined && f !== '').length;
+  return Math.round((filledFields / fields.length) * 100);
+}
+
+export default function MyRecruiting() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const playerId = (user as any)?.playerId;
+  const currentSport = useSport();
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  const { data: player, isLoading: playerLoading } = useQuery<Player>({
+    queryKey: ['/api/players', playerId],
+    enabled: !!playerId,
+  });
+
+  const { data: interests, isLoading: interestsLoading } = useQuery<PlayerInterest[]>({
+    queryKey: ['/api/players', playerId, 'interests'],
+    enabled: !!playerId,
+  });
+
+  const { data: matches } = useQuery<CollegeMatch[]>({
+    queryKey: ['/api/players', playerId, 'college-matches'],
+    enabled: !!playerId,
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: async (collegeId: number) => {
+      return apiRequest('DELETE', `/api/players/${playerId}/interests/${collegeId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/players', playerId, 'interests'] });
+      toast({
+        title: "School Removed",
+        description: "The school has been removed from your interested list.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to remove school. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleCopyLink = () => {
+    const profileUrl = `${window.location.origin}/profile/${playerId}/public`;
+    navigator.clipboard.writeText(profileUrl);
+    setCopiedLink(true);
+    toast({
+      title: "Link Copied",
+      description: "Your public profile link has been copied to clipboard.",
+    });
+    setTimeout(() => setCopiedLink(false), 2000);
+  };
+
+  const handleEmailCoach = (college: College, playerInfo: Player) => {
+    if (!college.recruitingContactEmail) return;
+    
+    const subject = encodeURIComponent(
+      `Recruiting Interest - ${playerInfo.name} - ${playerInfo.position} - Class of ${playerInfo.graduationYear}`
+    );
+    const body = encodeURIComponent(
+      `Dear ${college.name} Coaching Staff,\n\nI am writing to express my interest in your ${currentSport} program.\n\nAbout me:\n- Name: ${playerInfo.name}\n- Position: ${playerInfo.position}\n- School: ${playerInfo.school || 'N/A'}\n- Class of: ${playerInfo.graduationYear}\n- GPA: ${playerInfo.gpa || 'N/A'}\n- Location: ${[playerInfo.city, playerInfo.state].filter(Boolean).join(', ') || 'N/A'}\n\nI would love to learn more about your program and discuss potential opportunities.\n\nThank you for your time,\n${playerInfo.name}`
+    );
+    
+    window.open(`mailto:${college.recruitingContactEmail}?subject=${subject}&body=${body}`, '_blank');
+  };
+
+  if (!playerId) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <EmptyState
+          icon={GraduationCap}
+          title="No Player Profile"
+          description="Create a player profile to access your recruiting dashboard."
+        />
+      </div>
+    );
+  }
+
+  const sport = (player?.sport as 'basketball' | 'football') || currentSport;
+  const graduationYear = player?.graduationYear || new Date().getFullYear() + 1;
+  const nextMilestone = getNextMilestone(graduationYear, sport);
+  const profileCompleteness = calculateProfileCompleteness(player);
+  const schoolsCount = interests?.length || 0;
+  const contactedCount = interests?.filter(i => i.contacted)?.length || 0;
+
+  const getMatchScore = (collegeId: number): number | null => {
+    const match = matches?.find(m => m.collegeId === collegeId);
+    return match?.overallMatchScore || null;
+  };
+
+  return (
+    <div className="space-y-6 pb-8" data-testid="my-recruiting-page">
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-3 mb-1">
+            <h1 
+              className="font-display text-3xl md:text-4xl font-bold text-white tracking-tight flex items-center gap-3"
+              data-testid="page-title"
+            >
+              <GraduationCap className="w-8 h-8 text-cyan-400" />
+              My Recruiting Dashboard
+            </h1>
+          </div>
+          <div className="flex items-center gap-3 mt-2 flex-wrap">
+            {playerLoading ? (
+              <Skeleton className="h-7 w-32" />
+            ) : player?.graduationYear ? (
+              <Badge 
+                variant="outline" 
+                className="text-lg px-4 py-1 border-cyan-500/50 text-cyan-300 bg-cyan-500/10"
+                data-testid="graduation-year-badge"
+              >
+                Class of {player.graduationYear}
+              </Badge>
+            ) : (
+              <Badge 
+                variant="outline" 
+                className="text-sm border-amber-500/50 text-amber-400"
+                data-testid="no-graduation-year"
+              >
+                Set your graduation year
+              </Badge>
+            )}
+            <Badge 
+              variant="outline" 
+              className={cn(
+                "text-xs uppercase font-semibold",
+                sport === 'basketball' 
+                  ? "border-orange-500/50 text-orange-400 bg-orange-500/10" 
+                  : "border-amber-700/50 text-amber-500 bg-amber-700/10"
+              )}
+              data-testid="sport-badge"
+            >
+              {sport === 'basketball' ? (
+                <><Dribbble className="w-3 h-3 mr-1" /> Basketball</>
+              ) : (
+                <><Trophy className="w-3 h-3 mr-1" /> Football</>
+              )}
+            </Badge>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Link href={`/profile/${playerId}/public`}>
+            <Button
+              variant="outline"
+              className="border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10"
+              data-testid="button-share-profile"
+            >
+              <Share2 className="w-4 h-4 mr-2" />
+              View Public Profile
+            </Button>
+          </Link>
+          <Button
+            variant="outline"
+            onClick={handleCopyLink}
+            className="border-white/20 text-white/80 hover:bg-white/10"
+            data-testid="button-copy-link"
+          >
+            {copiedLink ? (
+              <Check className="w-4 h-4 mr-2 text-emerald-400" />
+            ) : (
+              <Copy className="w-4 h-4 mr-2" />
+            )}
+            {copiedLink ? 'Copied!' : 'Copy Link'}
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4" data-testid="quick-stats-panel">
+        <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-cyan-500/10">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center">
+                <School className="w-5 h-5 text-cyan-400" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-white" data-testid="stat-schools-count">{schoolsCount}</p>
+                <p className="text-xs text-muted-foreground">Schools Interested</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-cyan-500/10">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                <Mail className="w-5 h-5 text-emerald-400" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-white" data-testid="stat-contacted-count">{contactedCount}</p>
+                <p className="text-xs text-muted-foreground">Schools Contacted</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-cyan-500/10">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                <Eye className="w-5 h-5 text-purple-400" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-white" data-testid="stat-profile-views">0</p>
+                <p className="text-xs text-muted-foreground">Profile Views</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-cyan-500/10">
+          <CardContent className="pt-6">
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4 text-amber-400" />
+                  <p className="text-xs text-muted-foreground">Profile Complete</p>
+                </div>
+                <p className="text-sm font-bold text-white" data-testid="stat-profile-completeness">{profileCompleteness}%</p>
+              </div>
+              <Progress 
+                value={profileCompleteness} 
+                className="h-2 bg-white/10"
+                data-testid="progress-profile-completeness"
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid lg:grid-cols-5 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-cyan-500/10">
+            <CardHeader>
+              <CardTitle className="text-lg font-display text-white flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-cyan-400" />
+                Recruiting Timeline
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {playerLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-20 w-full" />
+                  ))}
+                </div>
+              ) : player?.graduationYear ? (
+                <RecruitingTimeline
+                  graduationYear={player.graduationYear}
+                  sport={sport}
+                  className="max-h-[500px] overflow-y-auto pr-2"
+                />
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground mb-4">
+                    Set your graduation year to see your recruiting timeline
+                  </p>
+                  <Link href={`/players/${playerId}`}>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="border-cyan-500/30 text-cyan-300"
+                      data-testid="button-set-graduation-year"
+                    >
+                      Update Profile
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {nextMilestone && player?.graduationYear && (
+            <Card 
+              className="bg-gradient-to-br from-cyan-500/10 via-[hsl(220,25%,8%)] to-[hsl(220,25%,6%)] border-cyan-500/20 shadow-[0_0_30px_rgba(6,182,212,0.1)]"
+              data-testid="whats-next-card"
+            >
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-cyan-400 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4" />
+                  What's Next
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <h3 className="text-xl font-display font-bold text-white mb-1" data-testid="next-milestone-title">
+                  {nextMilestone.title}
+                </h3>
+                <p className="text-sm text-cyan-300 mb-2" data-testid="next-milestone-period">
+                  {nextMilestone.period}
+                </p>
+                <p className="text-sm text-muted-foreground" data-testid="next-milestone-description">
+                  {nextMilestone.description}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          <NcaaEligibilityChecklist playerId={playerId} />
+        </div>
+
+        <div className="lg:col-span-3">
+          <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-cyan-500/10">
+            <CardHeader className="flex flex-row items-center justify-between gap-4 flex-wrap">
+              <CardTitle className="text-lg font-display text-white flex items-center gap-2">
+                <Target className="w-5 h-5 text-cyan-400" />
+                My Interested Schools
+              </CardTitle>
+              <Link href="/college-recruiting">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10"
+                  data-testid="button-browse-schools"
+                >
+                  Browse Schools
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              </Link>
+            </CardHeader>
+            <CardContent>
+              {interestsLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-24 w-full" />
+                  ))}
+                </div>
+              ) : interests && interests.length > 0 ? (
+                <div className="space-y-3">
+                  {interests.map((interest) => {
+                    if (!interest.college) return null;
+                    const matchScore = getMatchScore(interest.collegeId);
+                    
+                    return (
+                      <div
+                        key={interest.id}
+                        className="group relative p-4 rounded-xl bg-white/5 border border-white/10 hover:border-cyan-500/30 transition-all duration-300"
+                        data-testid={`interest-card-${interest.collegeId}`}
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-start gap-3 flex-1 min-w-0">
+                            <div 
+                              className={cn(
+                                "w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 text-white font-bold text-sm",
+                                "bg-gradient-to-br from-cyan-500 to-blue-600"
+                              )}
+                            >
+                              {interest.college.shortName || interest.college.name.slice(0, 2).toUpperCase()}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h4 className="font-semibold text-white truncate" data-testid={`college-name-${interest.collegeId}`}>
+                                  {interest.college.name}
+                                </h4>
+                                <Badge 
+                                  className={cn(
+                                    "text-xs px-2 py-0.5",
+                                    DIVISION_COLORS[interest.college.division] || "bg-gray-500"
+                                  )}
+                                  data-testid={`division-badge-${interest.collegeId}`}
+                                >
+                                  {interest.college.division}
+                                </Badge>
+                                {interest.contacted && (
+                                  <Badge 
+                                    variant="outline" 
+                                    className="text-xs border-emerald-500/50 text-emerald-400 bg-emerald-500/10"
+                                    data-testid={`contacted-badge-${interest.collegeId}`}
+                                  >
+                                    <Mail className="w-3 h-3 mr-1" />
+                                    Contacted
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                  <MapPin className="w-3 h-3" />
+                                  {interest.college.city}, {interest.college.state}
+                                </span>
+                                {matchScore && (
+                                  <span className="flex items-center gap-1 text-cyan-400">
+                                    <Target className="w-3 h-3" />
+                                    {matchScore}% match
+                                  </span>
+                                )}
+                              </div>
+                              {interest.college.conference && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {interest.college.conference}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            {interest.college.recruitingContactEmail && player && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleEmailCoach(interest.college!, player)}
+                                className="border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10"
+                                data-testid={`button-email-coach-${interest.collegeId}`}
+                              >
+                                <Mail className="w-4 h-4 mr-1" />
+                                Email
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => removeMutation.mutate(interest.collegeId)}
+                              disabled={removeMutation.isPending}
+                              className="text-rose-400 hover:text-rose-300 hover:bg-rose-500/10"
+                              data-testid={`button-remove-interest-${interest.collegeId}`}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-12" data-testid="empty-interests">
+                  <School className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-white mb-2">No Schools Saved Yet</h3>
+                  <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+                    Start building your college list by browsing schools that match your skills and preferences.
+                  </p>
+                  <Link href="/college-recruiting">
+                    <Button 
+                      className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white"
+                      data-testid="button-browse-colleges-cta"
+                    >
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Browse Colleges
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-cyan-500/10" data-testid="cta-section">
+        <CardContent className="py-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="text-center md:text-left">
+              <h3 className="text-xl font-display font-bold text-white mb-2">
+                {profileCompleteness < 80 
+                  ? "Complete Your Profile to Stand Out"
+                  : "Keep Building Your Recruiting Profile"
+                }
+              </h3>
+              <p className="text-muted-foreground max-w-lg">
+                {profileCompleteness < 80
+                  ? "A complete profile helps college coaches learn more about you. Add your stats, highlights, and academic information."
+                  : "Great job on your profile! Continue updating your stats and reaching out to coaches."
+                }
+              </p>
+            </div>
+            <div className="flex items-center gap-3 flex-wrap justify-center">
+              {profileCompleteness < 80 && (
+                <Link href={`/players/${playerId}`}>
+                  <Button
+                    variant="outline"
+                    className="border-amber-500/30 text-amber-300 hover:bg-amber-500/10"
+                    data-testid="button-complete-profile"
+                  >
+                    <User className="w-4 h-4 mr-2" />
+                    Complete Profile
+                  </Button>
+                </Link>
+              )}
+              <Link href="/college-recruiting">
+                <Button
+                  className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white"
+                  data-testid="button-browse-more-schools"
+                >
+                  <School className="w-4 h-4 mr-2" />
+                  Browse More Schools
+                </Button>
+              </Link>
+              <Link href="/camps-showcases">
+                <Button
+                  variant="outline"
+                  className="border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10"
+                  data-testid="button-find-camps"
+                >
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Find Camps & Showcases
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
