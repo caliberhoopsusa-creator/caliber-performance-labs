@@ -103,7 +103,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
       title: "Explore",
       items: [
         { href: "/scout", label: "Scout Hub", icon: Eye },
-        { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
+        { href: "/analytics", label: "Analytics", icon: BarChart3 },
         { href: "/community", label: "Community", icon: UsersRound },
         { href: "/teams", label: "Teams", icon: Users },
       ],
@@ -131,7 +131,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
       title: "Explore",
       items: [
         { href: "/scout", label: "Scout Hub", icon: Eye },
-        { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
+        { href: "/analytics", label: "Analytics", icon: BarChart3 },
         { href: "/community", label: "Community", icon: UsersRound },
         { href: "/teams", label: "Teams", icon: MessageSquare },
       ],
@@ -146,7 +146,6 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
         { href: "/coach/alerts", label: "Alerts", icon: Bell, premium: "coach_pro" },
         { href: "/report-card", label: "Report Cards", icon: FileText },
         { href: "/video", label: "Video Analysis", icon: Video, premium: "pro" },
-        { href: "/team-comparison", label: "Team Compare", icon: BarChart3, premium: "coach_pro" },
       ],
     },
     {

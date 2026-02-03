@@ -51,6 +51,7 @@ import Highlights from "./pages/Highlights";
 import ReelPage from "./pages/ReelPage";
 import TeamComparison from "./pages/TeamComparison";
 import ReportCardPage from "./pages/ReportCardPage";
+import AnalyticsHub from "./pages/AnalyticsHub";
 import Shop from "./pages/Shop";
 import LeagueHub from "./pages/LeagueHub";
 import LeagueDetail from "./pages/LeagueDetail";
@@ -271,7 +272,10 @@ function MainRouter() {
                 <Route path="/players" component={PlayersList} />
                 <Route path="/players/:id/card" component={PlayerCard} />
                 <Route path="/players/:id" component={PlayerDetail} />
-                <Route path="/challenges" component={Challenges} />
+                <Route path="/analytics" component={AnalyticsHub} />
+                <Route path="/challenges">
+                  <Redirect to="/analytics?tab=challenges" />
+                </Route>
                 <Route path="/teams" component={Teams} />
                 <Route path="/community" component={CommunityHub} />
                 <Route path="/feed">
@@ -283,10 +287,16 @@ function MainRouter() {
                 <Route path="/stories">
                   <Redirect to="/community?tab=stories" />
                 </Route>
-                <Route path="/leaderboard" component={Leaderboard} />
-                <Route path="/compare" component={ComparePlayers} />
+                <Route path="/leaderboard">
+                  <Redirect to="/analytics?tab=leaderboard" />
+                </Route>
+                <Route path="/compare">
+                  <Redirect to="/analytics?tab=compare" />
+                </Route>
                 <Route path="/video" component={VideoAnalysis} />
-                <Route path="/grading" component={GradingSystem} />
+                <Route path="/grading">
+                  <Redirect to="/analytics?tab=grading" />
+                </Route>
                                 <Route path="/scout" component={ScoutHub} />
                 <Route path="/analyze" component={AnalyzeGame} />
                 <Route path="/coach" component={CoachHub} />
@@ -322,7 +332,9 @@ function MainRouter() {
                 <Route path="/schedule" component={ScheduleCalendar} />
                 <Route path="/highlights" component={Highlights} />
                 <Route path="/reels/:playerId" component={ReelPage} />
-                <Route path="/team-comparison" component={TeamComparison} />
+                <Route path="/team-comparison">
+                  <Redirect to="/analytics?tab=teams" />
+                </Route>
                 <Route path="/report-card" component={ReportCardPage} />
                 <Route path="/social-hub">
                   <Redirect to="/community?tab=connect" />

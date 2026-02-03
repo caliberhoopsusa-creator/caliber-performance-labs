@@ -78,6 +78,13 @@ Preferred communication style: Simple, everyday language.
   - **Fitness Tab** (`?tab=fitness`): Wearable data dashboard with recovery score, sleep, HRV, activity tracking, and manual entry
   - **Backwards Compatibility**: `/workouts`, `/fitness` redirect to appropriate Performance Hub tabs
 - **Wearable Integration**: Fitness dashboard with manual entry and wearable device connections. Fitbit OAuth integration with PKCE for secure token handling. Supports syncing activity, sleep, and heart rate data. Additional wearables (Apple Health, Google Fit, WHOOP) are prepared for future integration.
+- **Analytics Hub** (`/analytics`): A unified tabbed interface consolidating all competitive analytics and ranking features. Uses URL parameters for tab navigation (?tab=leaderboard|compare|teams|challenges|grading). Old routes redirect for backwards compatibility.
+  - **Leaderboard Tab** (`?tab=leaderboard`): Player rankings with filters by state, position, level, and sport
+  - **Compare Tab** (`?tab=compare`): Head-to-head player comparison with statistical breakdowns (Pro feature)
+  - **Teams Tab** (`?tab=teams`): Team comparison with aggregate stats, best performers, and roster lists
+  - **Challenges Tab** (`?tab=challenges`): Skill challenges with leaderboards, progress tracking, and coach-created challenges
+  - **Grading Tab** (`?tab=grading`): Grading system explanation with grade scale, stat weights, position adjustments, and bonuses
+  - **Backwards Compatibility**: `/leaderboard`, `/compare`, `/team-comparison`, `/challenges`, `/grading` all redirect to appropriate Analytics Hub tabs
 
 ## External Dependencies
 

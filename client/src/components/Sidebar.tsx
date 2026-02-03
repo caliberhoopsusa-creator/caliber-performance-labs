@@ -104,7 +104,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
       title: "Explore",
       items: [
         { href: "/scout", label: "Scout Hub", icon: Eye },
-        { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
+        { href: "/analytics", label: "Analytics", icon: BarChart3 },
         { href: "/leagues", label: "League Hub", icon: Medal },
         { href: "/community", label: "Community", icon: UsersRound },
         { href: "/teams", label: "Teams", icon: Users },
@@ -133,7 +133,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
       title: "Explore",
       items: [
         { href: "/scout", label: "Scout Hub", icon: Eye },
-        { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
+        { href: "/analytics", label: "Analytics", icon: BarChart3 },
         { href: "/leagues", label: "League Hub", icon: Medal },
         { href: "/community", label: "Community", icon: UsersRound },
         { href: "/teams", label: "Teams", icon: MessageSquare },
@@ -145,7 +145,6 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         { href: "/coach", label: "Coach Hub", icon: ClipboardList, featured: pendingCount > 0, badgeCount: pendingCount },
         { href: "/report-card", label: "Report Cards", icon: FileText },
         { href: "/video", label: "Video Analysis", icon: Video, premium: "pro" },
-        { href: "/team-comparison", label: "Team Compare", icon: BarChart3, premium: "coach_pro" },
       ],
     },
     {
@@ -263,7 +262,7 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
     { href: playerId ? `/players/${playerId}` : "/", icon: UserCircle, label: "Profile" },
     { href: "/analyze", icon: PlusCircle, label: "Log", featured: true },
     { href: "/recruiting", icon: GraduationCap, label: "Recruit" },
-    { href: "/leaderboard", icon: Trophy, label: "Rank" },
+    { href: "/analytics", icon: BarChart3, label: "Analytics" },
     { href: "/community", icon: UsersRound, label: "Social" },
   ] : [
     { href: "/", icon: LayoutDashboard, label: "Home" },
