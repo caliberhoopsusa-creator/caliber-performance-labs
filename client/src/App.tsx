@@ -65,9 +65,7 @@ import CoachVerify from "./pages/CoachVerify";
 import CoachEndorsements from "./pages/CoachEndorsements";
 import LeagueHub from "./pages/LeagueHub";
 import LeagueDetail from "./pages/LeagueDetail";
-import CollegeRecruiting from "./pages/CollegeRecruiting";
-import MyRecruiting from "./pages/MyRecruiting";
-import CampShowcaseFinder from "./pages/CampShowcaseFinder";
+import RecruitingHub from "./pages/RecruitingHub";
 import FitnessDashboard from "./pages/FitnessDashboard";
 import PublicPlayerProfile from "./pages/PublicPlayerProfile";
 import NotFound from "./pages/not-found";
@@ -316,9 +314,13 @@ function MainRouter() {
                 <Route path="/shop" component={Shop} />
                 <Route path="/leagues" component={LeagueHub} />
                 <Route path="/leagues/:id" component={LeagueDetail} />
-                <Route path="/recruiting" component={MyRecruiting} />
-                <Route path="/college-recruiting" component={CollegeRecruiting} />
-                <Route path="/camps-showcases" component={CampShowcaseFinder} />
+                <Route path="/recruiting" component={RecruitingHub} />
+                <Route path="/college-recruiting">
+                  <Redirect to="/recruiting?tab=schools" />
+                </Route>
+                <Route path="/camps-showcases">
+                  <Redirect to="/recruiting?tab=events" />
+                </Route>
                 <Route path="/fitness" component={FitnessDashboard} />
                 <Route component={NotFound} />
               </Switch>
