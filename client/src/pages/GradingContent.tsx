@@ -30,7 +30,7 @@ const baseWeights = [
 const positionAdjustments = [
   {
     position: "Guard",
-    color: "bg-primary",
+    color: "bg-cyan-600",
     icon: Zap,
     adjustments: [
       { stat: "Assists", change: "+2.0", note: "Playmaking is key" },
@@ -40,7 +40,7 @@ const positionAdjustments = [
   },
   {
     position: "Wing",
-    color: "bg-accent",
+    color: "bg-cyan-600",
     icon: Activity,
     adjustments: [
       { stat: "Steals", change: "+3.0", note: "Perimeter defense priority" },
@@ -50,7 +50,7 @@ const positionAdjustments = [
   },
   {
     position: "Big",
-    color: "bg-secondary",
+    color: "bg-cyan-600",
     icon: Shield,
     adjustments: [
       { stat: "Rebounds", change: "+2.0", note: "Dominate the glass" },
