@@ -170,7 +170,11 @@ function calculateProfileCompleteness(player: Player | undefined): number {
   return Math.round((filledFields / fields.length) * 100);
 }
 
-export default function MyRecruitingContent() {
+interface MyRecruitingContentProps {
+  onTabChange?: (tab: string) => void;
+}
+
+export default function MyRecruitingContent({ onTabChange }: MyRecruitingContentProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const playerId = (user as any)?.playerId;
@@ -468,17 +472,16 @@ export default function MyRecruitingContent() {
                 <Target className="w-5 h-5 text-cyan-400" />
                 My Interested Schools
               </CardTitle>
-              <Link href="/recruiting?tab=schools">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10"
-                  data-testid="button-browse-schools"
-                >
-                  Browse Schools
-                  <ChevronRight className="w-4 h-4 ml-1" />
-                </Button>
-              </Link>
+              <Button 
+                onClick={() => onTabChange?.("schools")}
+                variant="outline" 
+                size="sm"
+                className="border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10"
+                data-testid="button-browse-schools"
+              >
+                Browse Schools
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
             </CardHeader>
             <CardContent>
               {interestsLoading ? (
@@ -590,15 +593,14 @@ export default function MyRecruitingContent() {
                   <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
                     Start building your college list by browsing schools that match your skills and preferences.
                   </p>
-                  <Link href="/college-recruiting">
-                    <Button 
-                      className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white"
-                      data-testid="button-browse-colleges-cta"
-                    >
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Browse Colleges
-                    </Button>
-                  </Link>
+                  <Button 
+                    onClick={() => onTabChange?.("schools")}
+                    className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white"
+                    data-testid="button-browse-colleges-cta"
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Browse Colleges
+                  </Button>
                 </div>
               )}
             </CardContent>
@@ -636,25 +638,23 @@ export default function MyRecruitingContent() {
                   </Button>
                 </Link>
               )}
-              <Link href="/college-recruiting">
-                <Button
-                  className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white"
-                  data-testid="button-browse-more-schools"
-                >
-                  <School className="w-4 h-4 mr-2" />
-                  Browse More Schools
-                </Button>
-              </Link>
-              <Link href="/camps-showcases">
-                <Button
-                  variant="outline"
-                  className="border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10"
-                  data-testid="button-find-camps"
-                >
-                  <Calendar className="w-4 h-4 mr-2" />
-                  Find Camps & Showcases
-                </Button>
-              </Link>
+              <Button
+                onClick={() => onTabChange?.("schools")}
+                className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white"
+                data-testid="button-browse-more-schools"
+              >
+                <School className="w-4 h-4 mr-2" />
+                Browse More Schools
+              </Button>
+              <Button
+                onClick={() => onTabChange?.("events")}
+                variant="outline"
+                className="border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10"
+                data-testid="button-find-camps"
+              >
+                <Calendar className="w-4 h-4 mr-2" />
+                Find Camps & Showcases
+              </Button>
             </div>
           </div>
         </CardContent>

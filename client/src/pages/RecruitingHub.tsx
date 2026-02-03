@@ -99,7 +99,7 @@ export default function RecruitingHub() {
         </TabsList>
 
         <TabsContent value="journey" className="mt-6">
-          <MyRecruitingContent />
+          <MyRecruitingContent onTabChange={handleTabChange} />
         </TabsContent>
 
         <TabsContent value="schools" className="mt-6">
