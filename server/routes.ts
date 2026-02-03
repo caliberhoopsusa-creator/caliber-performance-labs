@@ -13239,7 +13239,7 @@ Respond in this exact JSON format:
         .orderBy(recruitingEvents.startDate);
 
       const eventsWithCollege = results.map(r => ({
-        ...r.event,
+        event: r.event,
         college: r.college,
       }));
 

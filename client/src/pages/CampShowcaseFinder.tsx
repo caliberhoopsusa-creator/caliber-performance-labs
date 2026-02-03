@@ -673,15 +673,17 @@ export default function CampShowcaseFinder() {
         </div>
       ) : eventsData && eventsData.length > 0 ? (
         <div className="grid gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {eventsData.map((eventData) => (
-            <EventCard
-              key={eventData.event.id}
-              eventData={eventData}
-              isSaved={savedEventIds.has(eventData.event.id)}
-              onToggleSave={handleToggleSave}
-              isPending={saveEventMutation.isPending}
-            />
-          ))}
+          {eventsData
+            .filter((eventData) => eventData?.event?.id)
+            .map((eventData) => (
+              <EventCard
+                key={eventData.event.id}
+                eventData={eventData}
+                isSaved={savedEventIds.has(eventData.event.id)}
+                onToggleSave={handleToggleSave}
+                isPending={saveEventMutation.isPending}
+              />
+            ))}
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
