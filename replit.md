@@ -42,6 +42,12 @@ Preferred communication style: Simple, everyday language.
 - **AI Integration**: Gemini AI for video analysis to extract game statistics and AI Projections for future performance.
 - **Authentication**: Replit Auth with session management and role-based access control (Player/Coach), including robust error handling for session expiry, network issues, and profile validation.
 - **Social & Engagement**: Player following, in-app notifications, goal sharing, highlight clips, and shareable achievements.
+- **Community Hub** (`/community`): A unified tabbed interface consolidating all social features. Uses URL parameters for tab navigation (?tab=feed|stories|polls|connect). Old routes redirect for backwards compatibility.
+  - **Feed Tab** (`?tab=feed`): Activity feed showing latest updates from players and teams with All/Following/Team filters
+  - **Stories Tab** (`?tab=stories`): Instagram-style 24-hour stories with creation, viewing, and player grouping
+  - **Polls Tab** (`?tab=polls`): Community polls and matchup predictions with voting and results
+  - **Connect Tab** (`?tab=connect`): Find and follow players with discovery and following activity views
+  - **Backwards Compatibility**: `/feed`, `/newsfeed`, `/stories`, `/social-hub` all redirect to appropriate Community Hub tabs
 - **Scout Hub**: Dedicated page with advanced filtering and sorting for scouting players across sports. Includes search, sport/position/state/graduation year filters, and public player profiles.
 - **Recruiting Hub** (`/recruiting`): A unified tabbed interface consolidating all recruiting-related features. Uses URL parameters for tab navigation (?tab=journey|schools|events). Old routes redirect for backwards compatibility.
   - **My Journey Tab** (`?tab=journey`): Recruiting dashboard showing timeline, NCAA eligibility checklist, interested schools, contact history, and profile completeness
