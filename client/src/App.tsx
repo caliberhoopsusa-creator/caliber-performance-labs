@@ -40,9 +40,7 @@ import VideoAnalysis from "./pages/VideoAnalysis";
 import ScoutHub from "./pages/ScoutHub";
 import Challenges from "./pages/Challenges";
 import Teams from "./pages/Teams";
-import Newsfeed from "./pages/Newsfeed";
-import CommunityContent from "./pages/CommunityContent";
-import Stories from "./pages/Stories";
+import CommunityHub from "./pages/CommunityHub";
 import TeamDashboard from "./pages/TeamDashboard";
 import TeamHub from "./pages/TeamHub";
 import LineupAnalysis from "./pages/LineupAnalysis";
@@ -58,7 +56,6 @@ import Highlights from "./pages/Highlights";
 import ReelPage from "./pages/ReelPage";
 import TeamComparison from "./pages/TeamComparison";
 import ReportCardPage from "./pages/ReportCardPage";
-import SocialHub from "./pages/SocialHub";
 import Shop from "./pages/Shop";
 import CoachVerify from "./pages/CoachVerify";
 import CoachEndorsements from "./pages/CoachEndorsements";
@@ -284,9 +281,16 @@ function MainRouter() {
                 <Route path="/players/:id" component={PlayerDetail} />
                 <Route path="/challenges" component={Challenges} />
                 <Route path="/teams" component={Teams} />
-                <Route path="/feed" component={Newsfeed} />
-                <Route path="/community" component={CommunityContent} />
-                <Route path="/stories" component={Stories} />
+                <Route path="/community" component={CommunityHub} />
+                <Route path="/feed">
+                  <Redirect to="/community?tab=feed" />
+                </Route>
+                <Route path="/newsfeed">
+                  <Redirect to="/community?tab=feed" />
+                </Route>
+                <Route path="/stories">
+                  <Redirect to="/community?tab=stories" />
+                </Route>
                 <Route path="/leaderboard" component={Leaderboard} />
                 <Route path="/compare" component={ComparePlayers} />
                 <Route path="/video" component={VideoAnalysis} />
@@ -308,7 +312,9 @@ function MainRouter() {
                 <Route path="/reels/:playerId" component={ReelPage} />
                 <Route path="/team-comparison" component={TeamComparison} />
                 <Route path="/report-card" component={ReportCardPage} />
-                <Route path="/social-hub" component={SocialHub} />
+                <Route path="/social-hub">
+                  <Redirect to="/community?tab=connect" />
+                </Route>
                 <Route path="/shop" component={Shop} />
                 <Route path="/leagues" component={LeagueHub} />
                 <Route path="/leagues/:id" component={LeagueDetail} />
