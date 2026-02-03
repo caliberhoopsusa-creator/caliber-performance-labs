@@ -48,6 +48,15 @@ Preferred communication style: Simple, everyday language.
   - **Polls Tab** (`?tab=polls`): Community polls and matchup predictions with voting and results
   - **Connect Tab** (`?tab=connect`): Find and follow players with discovery and following activity views
   - **Backwards Compatibility**: `/feed`, `/newsfeed`, `/stories`, `/social-hub` all redirect to appropriate Community Hub tabs
+- **Coach Hub** (`/coach`): A unified tabbed interface consolidating all coach-related features. Uses URL parameters for tab navigation (?tab=dashboard|verify|endorse|practices|lineups|scouting|alerts). Old routes redirect for backwards compatibility.
+  - **Dashboard Tab** (`?tab=dashboard`): Team overview with roster stats, position distribution, best performers, and recent activity
+  - **Verify Tab** (`?tab=verify`): Game verification queue for reviewing player-submitted statistics
+  - **Endorse Tab** (`?tab=endorse`): Player endorsements with search/filter and recommendation writing
+  - **Practices Tab** (`?tab=practices`): Practice tracking with attendance, live sessions, and drill scoring (Coach Pro)
+  - **Lineups Tab** (`?tab=lineups`): Lineup management, depth chart, and lineup comparison tools (Coach Pro)
+  - **Scouting Tab** (`?tab=scouting`): Opponent scouting with team/player notes and game preparation (Coach Pro)
+  - **Alerts Tab** (`?tab=alerts`): Performance alerts and trend notifications for team players (Coach Pro)
+  - **Backwards Compatibility**: `/coach/dashboard`, `/coach/hub`, `/coach/verify`, `/coach/endorsements`, `/coach/practices`, `/coach/lineups`, `/coach/scouting`, `/coach/alerts` all redirect to appropriate Coach Hub tabs
 - **Scout Hub**: Dedicated page with advanced filtering and sorting for scouting players across sports. Includes search, sport/position/state/graduation year filters, and public player profiles.
 - **Recruiting Hub** (`/recruiting`): A unified tabbed interface consolidating all recruiting-related features. Uses URL parameters for tab navigation (?tab=journey|schools|events). Old routes redirect for backwards compatibility.
   - **My Journey Tab** (`?tab=journey`): Recruiting dashboard showing timeline, NCAA eligibility checklist, interested schools, contact history, and profile completeness
