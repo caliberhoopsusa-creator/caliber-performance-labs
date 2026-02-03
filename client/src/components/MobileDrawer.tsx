@@ -104,8 +104,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
       items: [
         { href: "/scout", label: "Scout Hub", icon: Eye },
         { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
-        { href: "/stories", label: "Stories", icon: Camera },
-        { href: "/social-hub", label: "Social Hub", icon: UsersRound },
+        { href: "/community", label: "Community", icon: UsersRound },
         { href: "/teams", label: "Teams", icon: Users },
       ],
     },
@@ -133,8 +132,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
       items: [
         { href: "/scout", label: "Scout Hub", icon: Eye },
         { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
-        { href: "/stories", label: "Stories", icon: Camera },
-        { href: "/social-hub", label: "Social Hub", icon: UsersRound },
+        { href: "/community", label: "Community", icon: UsersRound },
         { href: "/teams", label: "Teams", icon: MessageSquare },
       ],
     },
