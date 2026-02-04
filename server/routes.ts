@@ -9080,6 +9080,44 @@ Respond in this exact JSON format:
   });
 
   // ========================================
+  // COACH ROSTER API (Players in coach's teams)
+  // ========================================
+
+  // Get roster of players from coach's teams
+  app.get('/api/roster', isCoach, async (req: any, res) => {
+    try {
+      const coachUserId = req.user.claims.sub;
+      
+      // Get teams created by this coach
+      const coachTeams = await db.select().from(teams).where(eq(teams.createdBy, coachUserId));
+      if (coachTeams.length === 0) {
+        return res.json([]);
+      }
+      
+      const teamIds = coachTeams.map(t => t.id);
+      
+      // Get all team members in coach's teams
+      const members = await db.select().from(teamMembers)
+        .where(inArray(teamMembers.teamId, teamIds));
+      
+      // Get unique player IDs (filtering out nulls)
+      const playerIds = Array.from(new Set(members.map(m => m.playerId).filter((id): id is number => id !== null)));
+      
+      if (playerIds.length === 0) {
+        return res.json([]);
+      }
+      
+      // Get player data
+      const rosterPlayers = await db.select().from(players).where(inArray(players.id, playerIds));
+      
+      res.json(rosterPlayers);
+    } catch (error) {
+      console.error('Error fetching roster:', error);
+      res.status(500).json({ message: "Failed to fetch roster" });
+    }
+  });
+
+  // ========================================
   // LIVE GAME MODE ROUTES (Team-based stat tracking)
   // ========================================
 
