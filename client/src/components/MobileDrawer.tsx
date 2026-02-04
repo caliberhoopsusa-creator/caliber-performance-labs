@@ -8,7 +8,7 @@ import {
   Menu, LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, 
   Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, 
   UsersRound, CalendarCheck, Eye, UserCircle, LogOut, CreditCard, Lock, Dumbbell, 
-  CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, Bell, ShoppingBag, GraduationCap
+  CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, Bell, ShoppingBag, GraduationCap, Radio
 } from "lucide-react";
 import caliberLogo from "@assets/caliber-logo-cyan.png";
 import { cn } from "@/lib/utils";
@@ -140,6 +140,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
       title: "Coach Tools",
       items: [
         { href: "/coach/hub", label: "Team Hub", icon: ClipboardList, premium: "coach_pro" },
+        { href: "/live-game", label: "Live Game", icon: Radio },
         { href: "/coach/practices", label: "Practices", icon: CalendarCheck, premium: "coach_pro" },
         { href: "/coach/lineups", label: "Lineups", icon: UsersRound, premium: "coach_pro" },
         { href: "/coach/scouting", label: "Scouting", icon: Eye, premium: "coach_pro" },

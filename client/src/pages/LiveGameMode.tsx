@@ -1,409 +1,544 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
-import { Button } from "@/components/ui/button";
+import { useLocation } from "wouter";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { LiveGameStats } from "@/components/LiveGameStats";
-import { LiveGameEventLog } from "@/components/LiveGameEventLog";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { useLocation } from "wouter";
-import { Paywall } from "@/components/Paywall";
 import { 
-  Play, 
-  Square, 
-  Circle, 
-  Target,
-  CircleDot,
-  Grab,
-  HandHelping,
-  Zap,
-  Shield,
-  RotateCcw,
-  AlertTriangle,
-  Timer,
-  Minus,
-  Plus
+  Play, Square, Undo2, ChevronLeft, Users, 
+  Trophy, AlertCircle, Loader2, X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type StatEventType = 
-  | "made_2pt" | "missed_2pt" 
-  | "made_3pt" | "missed_3pt"
-  | "made_ft" | "missed_ft"
-  | "rebound" | "assist" | "steal" | "block" | "turnover" | "foul";
-
-interface StatButton {
-  eventType: StatEventType;
-  label: string;
-  icon: React.ReactNode;
-  variant: "made" | "missed" | "neutral" | "negative";
-  statKey?: string;
+interface Player {
+  id: number;
+  name: string;
+  position: string;
+  jerseyNumber: number | null;
+  sport: string;
 }
 
-const STAT_BUTTONS: StatButton[] = [
-  { eventType: "made_2pt", label: "Made 2PT", icon: <Circle className="w-5 h-5 fill-current" />, variant: "made", statKey: "points" },
-  { eventType: "missed_2pt", label: "Missed 2PT", icon: <Circle className="w-5 h-5" />, variant: "missed" },
-  { eventType: "made_3pt", label: "Made 3PT", icon: <Target className="w-5 h-5" />, variant: "made", statKey: "points" },
-  { eventType: "missed_3pt", label: "Missed 3PT", icon: <CircleDot className="w-5 h-5" />, variant: "missed" },
-  { eventType: "made_ft", label: "Made FT", icon: <Plus className="w-5 h-5" />, variant: "made", statKey: "points" },
-  { eventType: "missed_ft", label: "Missed FT", icon: <Minus className="w-5 h-5" />, variant: "missed" },
-  { eventType: "rebound", label: "Rebound", icon: <Grab className="w-5 h-5" />, variant: "neutral", statKey: "rebounds" },
-  { eventType: "assist", label: "Assist", icon: <HandHelping className="w-5 h-5" />, variant: "neutral", statKey: "assists" },
-  { eventType: "steal", label: "Steal", icon: <Zap className="w-5 h-5" />, variant: "neutral", statKey: "steals" },
-  { eventType: "block", label: "Block", icon: <Shield className="w-5 h-5" />, variant: "neutral", statKey: "blocks" },
-  { eventType: "turnover", label: "Turnover", icon: <RotateCcw className="w-5 h-5" />, variant: "negative", statKey: "turnovers" },
-  { eventType: "foul", label: "Foul", icon: <AlertTriangle className="w-5 h-5" />, variant: "negative", statKey: "fouls" },
-];
+interface LiveGameSession {
+  id: number;
+  coachUserId: string;
+  selectedPlayerIds: string;
+  opponent: string | null;
+  sport: string;
+  status: string;
+  startedAt: string | null;
+  endedAt: string | null;
+}
+
+interface LiveGameEvent {
+  id: number;
+  sessionId: number;
+  playerId: number;
+  eventType: string;
+  value: number;
+  createdAt: string;
+}
+
+interface PlayerStats {
+  points: number;
+  rebounds: number;
+  assists: number;
+  steals: number;
+  blocks: number;
+  turnovers: number;
+  fouls: number;
+}
+
+type StatType = 'points_1' | 'points_2' | 'points_3' | 'rebound' | 'assist' | 'steal' | 'block' | 'turnover' | 'foul';
+
+const STAT_CONFIG: Record<StatType, { label: string; shortLabel: string; color: string; bgColor: string }> = {
+  points_1: { label: '1 PT', shortLabel: '1', color: 'text-green-400', bgColor: 'bg-green-600 hover:bg-green-500' },
+  points_2: { label: '2 PT', shortLabel: '2', color: 'text-cyan-400', bgColor: 'bg-cyan-600 hover:bg-cyan-500' },
+  points_3: { label: '3 PT', shortLabel: '3', color: 'text-blue-400', bgColor: 'bg-blue-600 hover:bg-blue-500' },
+  rebound: { label: 'REB', shortLabel: 'R', color: 'text-orange-400', bgColor: 'bg-orange-600/20 border-orange-500/50' },
+  assist: { label: 'AST', shortLabel: 'A', color: 'text-purple-400', bgColor: 'bg-purple-600/20 border-purple-500/50' },
+  steal: { label: 'STL', shortLabel: 'S', color: 'text-yellow-400', bgColor: 'bg-yellow-600/20 border-yellow-500/50' },
+  block: { label: 'BLK', shortLabel: 'B', color: 'text-red-400', bgColor: 'bg-red-600/20 border-red-500/50' },
+  turnover: { label: 'TO', shortLabel: 'TO', color: 'text-rose-400', bgColor: 'bg-rose-600/20 border-rose-500/50' },
+  foul: { label: 'FOUL', shortLabel: 'F', color: 'text-amber-400', bgColor: 'bg-amber-600/20 border-amber-500/50' },
+};
 
 export default function LiveGameMode() {
-  const { toast } = useToast();
   const [, navigate] = useLocation();
-  const [currentQuarter, setCurrentQuarter] = useState(1);
-  const [elapsedTime, setElapsedTime] = useState(0);
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
-  const [showEndDialog, setShowEndDialog] = useState(false);
+  const { toast } = useToast();
+  const [selectedPlayers, setSelectedPlayers] = useState<number[]>([]);
   const [opponent, setOpponent] = useState("");
-  const [result, setResult] = useState("");
-  const [minutes, setMinutes] = useState("");
-  const [animatingStats, setAnimatingStats] = useState<Set<string>>(new Set());
+  const [activePlayerId, setActivePlayerId] = useState<number | null>(null);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
 
-  const { data: activeSession, isLoading: sessionLoading } = useQuery<{
-    id: number;
-    playerId: number;
-    status: string;
-    startedAt: string;
-  } | null>({
-    queryKey: ["/api/live-game/active"],
+  const { data: user } = useQuery<{ role: string | null }>({
+    queryKey: ['/api/users/me'],
   });
 
-  const sessionId = activeSession?.id;
-
-  const { data: events = [], refetch: refetchEvents } = useQuery<{
-    id: number;
-    eventType: string;
-    quarter: number;
-    gameTime: string | null;
-    createdAt: string | null;
-  }[]>({
-    queryKey: ["/api/live-game", sessionId, "events"],
-    enabled: !!sessionId,
+  const { data: rosterPlayers, isLoading: rosterLoading } = useQuery<Player[]>({
+    queryKey: ['/api/roster'],
+    enabled: user?.role === 'coach',
   });
 
-  const stats = useCallback(() => {
-    const result = {
-      points: 0,
-      rebounds: 0,
-      assists: 0,
-      steals: 0,
-      blocks: 0,
-      turnovers: 0,
-      fouls: 0,
-      fgMade: 0,
-      fgAttempted: 0,
-      threeMade: 0,
-      threeAttempted: 0,
-      ftMade: 0,
-      ftAttempted: 0,
-    };
+  const { data: activeSession, isLoading: sessionLoading, refetch: refetchSession } = useQuery<LiveGameSession | null>({
+    queryKey: ['/api/live-game/active'],
+    enabled: user?.role === 'coach',
+  });
 
-    for (const event of events) {
-      switch (event.eventType) {
-        case "made_2pt": result.points += 2; result.fgMade++; result.fgAttempted++; break;
-        case "missed_2pt": result.fgAttempted++; break;
-        case "made_3pt": result.points += 3; result.threeMade++; result.threeAttempted++; result.fgMade++; result.fgAttempted++; break;
-        case "missed_3pt": result.threeAttempted++; result.fgAttempted++; break;
-        case "made_ft": result.points += 1; result.ftMade++; result.ftAttempted++; break;
-        case "missed_ft": result.ftAttempted++; break;
-        case "rebound": result.rebounds++; break;
-        case "assist": result.assists++; break;
-        case "steal": result.steals++; break;
-        case "block": result.blocks++; break;
-        case "turnover": result.turnovers++; break;
-        case "foul": result.fouls++; break;
-      }
-    }
+  const { data: sessionEvents = [], refetch: refetchEvents } = useQuery<LiveGameEvent[]>({
+    queryKey: ['/api/live-game', activeSession?.id, 'events'],
+    enabled: !!activeSession?.id,
+  });
 
-    return result;
-  }, [events]);
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isTimerRunning && activeSession) {
-      interval = setInterval(() => {
-        setElapsedTime((prev) => prev + 1);
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isTimerRunning, activeSession]);
-
-  useEffect(() => {
-    if (activeSession && activeSession.status === "active") {
-      const startTime = new Date(activeSession.startedAt).getTime();
-      const now = Date.now();
-      setElapsedTime(Math.floor((now - startTime) / 1000));
-      setIsTimerRunning(true);
-    }
-  }, [activeSession]);
-
-  const startGameMutation = useMutation({
-    mutationFn: () => apiRequest("POST", "/api/live-game/start", {}),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/live-game/active"] });
-      setElapsedTime(0);
-      setIsTimerRunning(true);
-      toast({ title: "Game Started", description: "Start logging your stats!" });
+  const startSessionMutation = useMutation({
+    mutationFn: async (data: { selectedPlayerIds: number[]; opponent?: string; sport: string }) => {
+      const res = await apiRequest('POST', '/api/live-game/start', data);
+      return res.json();
     },
-    onError: (error: any) => {
-      toast({ title: "Error", description: error.message || "Failed to start game", variant: "destructive" });
+    onSuccess: () => {
+      refetchSession();
+      toast({ title: "Game started!", description: "Tracking stats for your team." });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Failed to start game", description: error.message, variant: "destructive" });
     },
   });
 
   const logEventMutation = useMutation({
-    mutationFn: (eventType: StatEventType) => 
-      apiRequest("POST", `/api/live-game/${sessionId}/event`, {
-        eventType,
-        quarter: currentQuarter,
-        gameTime: formatTime(elapsedTime),
-      }),
-    onSuccess: (_, eventType) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/live-game", sessionId, "events"] });
-      const button = STAT_BUTTONS.find(b => b.eventType === eventType);
-      if (button?.statKey) {
-        setAnimatingStats(prev => new Set(prev).add(button.statKey!));
-        setTimeout(() => {
-          setAnimatingStats(prev => {
-            const next = new Set(prev);
-            next.delete(button.statKey!);
-            return next;
-          });
-        }, 300);
-      }
+    mutationFn: async (data: { playerId: number; eventType: string }) => {
+      const res = await apiRequest('POST', `/api/live-game/${activeSession?.id}/event`, data);
+      return res.json();
     },
-    onError: (error: any) => {
-      toast({ title: "Error", description: error.message || "Failed to log event", variant: "destructive" });
-    },
-  });
-
-  const deleteEventMutation = useMutation({
-    mutationFn: (eventId: number) => 
-      apiRequest("DELETE", `/api/live-game/${sessionId}/events/${eventId}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/live-game", sessionId, "events"] });
-      toast({ title: "Event Undone" });
+      refetchEvents();
     },
-    onError: (error: any) => {
-      toast({ title: "Error", description: error.message || "Failed to undo event", variant: "destructive" });
+    onError: (error: Error) => {
+      toast({ title: "Failed to log stat", description: error.message, variant: "destructive" });
     },
   });
 
-  const completeGameMutation = useMutation({
-    mutationFn: () => 
-      apiRequest("POST", `/api/live-game/${sessionId}/complete`, {
-        opponent: opponent || "Unknown",
-        result: result || null,
-        minutes: parseInt(minutes) || Math.floor(elapsedTime / 60),
-      }),
+  const undoEventMutation = useMutation({
+    mutationFn: async (eventId: number) => {
+      await apiRequest('DELETE', `/api/live-game/${activeSession?.id}/events/${eventId}`);
+    },
+    onSuccess: () => {
+      refetchEvents();
+      toast({ title: "Undone", description: "Last stat removed" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Failed to undo", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const completeSessionMutation = useMutation({
+    mutationFn: async (data: { result?: string }) => {
+      const res = await apiRequest('POST', `/api/live-game/${activeSession?.id}/complete`, data);
+      return res.json();
+    },
     onSuccess: (data: any) => {
-      setShowEndDialog(false);
-      setIsTimerRunning(false);
-      queryClient.invalidateQueries({ queryKey: ["/api/live-game/active"] });
-      toast({ title: "Game Complete!", description: "Your stats have been saved." });
-      if (data.game?.id) {
-        navigate(`/players/${data.game.playerId}`);
-      }
+      queryClient.invalidateQueries({ queryKey: ['/api/live-game/active'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/games'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/roster'] });
+      toast({ 
+        title: "Game completed!", 
+        description: `Stats saved for ${data.playerCount} players.` 
+      });
+      navigate('/coach?tab=dashboard');
     },
-    onError: (error: any) => {
-      toast({ title: "Error", description: error.message || "Failed to complete game", variant: "destructive" });
+    onError: (error: Error) => {
+      toast({ title: "Failed to end game", description: error.message, variant: "destructive" });
     },
   });
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  const calculatePlayerStats = useCallback((playerId: number): PlayerStats => {
+    const playerEvents = sessionEvents.filter(e => e.playerId === playerId);
+    const stats: PlayerStats = { points: 0, rebounds: 0, assists: 0, steals: 0, blocks: 0, turnovers: 0, fouls: 0 };
+    
+    for (const event of playerEvents) {
+      switch (event.eventType) {
+        case 'points_1': stats.points += 1; break;
+        case 'points_2': stats.points += 2; break;
+        case 'points_3': stats.points += 3; break;
+        case 'rebound': stats.rebounds++; break;
+        case 'assist': stats.assists++; break;
+        case 'steal': stats.steals++; break;
+        case 'block': stats.blocks++; break;
+        case 'turnover': stats.turnovers++; break;
+        case 'foul': stats.fouls++; break;
+      }
+    }
+    return stats;
+  }, [sessionEvents]);
+
+  const handleStartGame = () => {
+    if (selectedPlayers.length === 0) {
+      toast({ title: "Select players", description: "Choose at least one player to track", variant: "destructive" });
+      return;
+    }
+    startSessionMutation.mutate({
+      selectedPlayerIds: selectedPlayers,
+      opponent: opponent || undefined,
+      sport: "basketball",
+    });
   };
 
-  if (sessionLoading) {
+  const handleLogStat = (playerId: number, statType: StatType) => {
+    logEventMutation.mutate({ playerId, eventType: statType });
+  };
+
+  const handleUndo = () => {
+    if (sessionEvents.length > 0) {
+      const lastEvent = sessionEvents[sessionEvents.length - 1];
+      undoEventMutation.mutate(lastEvent.id);
+    }
+  };
+
+  const handleEndGame = (result?: string) => {
+    completeSessionMutation.mutate({ result });
+    setShowEndConfirm(false);
+  };
+
+  const togglePlayerSelection = (playerId: number) => {
+    setSelectedPlayers(prev => 
+      prev.includes(playerId) 
+        ? prev.filter(id => id !== playerId)
+        : [...prev, playerId]
+    );
+  };
+
+  if (user?.role !== 'coach') {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-muted-foreground">Loading...</div>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <AlertCircle className="w-12 h-12 text-muted-foreground" />
+        <h2 className="text-xl font-semibold">Coach Access Only</h2>
+        <p className="text-muted-foreground text-center">
+          Live Game Mode is available for coaches to track team stats during games.
+        </p>
+        <Button variant="outline" onClick={() => navigate('/')}>
+          Go Back
+        </Button>
       </div>
     );
   }
+
+  if (sessionLoading || rosterLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-cyan-400" />
+      </div>
+    );
+  }
+
+  const sessionPlayerIds = activeSession ? JSON.parse(activeSession.selectedPlayerIds) as number[] : [];
+  const sessionPlayers = rosterPlayers?.filter(p => sessionPlayerIds.includes(p.id)) || [];
 
   if (!activeSession) {
     return (
-      <Paywall requiredTier="pro" featureName="Live Game Mode">
-        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
-          <div className="text-center space-y-2">
-            <h1 className="text-4xl font-bold font-display text-primary">LIVE GAME MODE</h1>
-            <p className="text-muted-foreground">Track your stats in real-time during a game</p>
-          </div>
-          <Button
-            size="lg"
-            className="h-16 px-12 text-xl font-bold pulse-glow"
-            onClick={() => startGameMutation.mutate()}
-            disabled={startGameMutation.isPending}
-            data-testid="button-start-game"
-          >
-            <Play className="w-6 h-6 mr-3" />
-            {startGameMutation.isPending ? "Starting..." : "Start Game"}
-          </Button>
-        </div>
-      </Paywall>
-    );
-  }
-
-  const currentStats = stats();
-
-  return (
-    <Paywall requiredTier="pro" featureName="Live Game Mode">
-    <div className="space-y-4 pb-6">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 bg-primary/20 px-4 py-2 rounded-lg border border-primary/30">
-            <Timer className="w-5 h-5 text-primary" />
-            <span className="text-2xl font-mono font-bold text-primary" data-testid="game-timer">
-              {formatTime(elapsedTime)}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Label className="text-sm text-muted-foreground">Quarter:</Label>
-            <div className="flex items-center gap-1">
-              {[1, 2, 3, 4].map((q) => (
-                <Button
-                  key={q}
-                  size="sm"
-                  variant={currentQuarter === q ? "default" : "outline"}
-                  className="w-8 h-8"
-                  onClick={() => setCurrentQuarter(q)}
-                  data-testid={`button-quarter-${q}`}
-                >
-                  {q}
-                </Button>
-              ))}
-            </div>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => navigate('/coach')}
+            data-testid="button-back"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-cyan-400 font-display">LIVE GAME MODE</h1>
+            <p className="text-muted-foreground">Track stats in real-time during a game</p>
           </div>
         </div>
-        <Button
-          variant="destructive"
-          onClick={() => setShowEndDialog(true)}
-          data-testid="button-end-game"
-        >
-          <Square className="w-4 h-4 mr-2" />
-          End Game
-        </Button>
-      </div>
 
-      <Card className="glass-card">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg">Live Stats</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <LiveGameStats stats={currentStats} animatingStats={animatingStats} />
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-3">
-        {STAT_BUTTONS.map((button) => (
-          <Button
-            key={button.eventType}
-            className={cn(
-              "h-20 md:h-24 flex flex-col gap-1 text-sm font-medium transition-all active:scale-95",
-              button.variant === "made" && "bg-green-600/80 hover:bg-green-600 text-white border-green-500",
-              button.variant === "missed" && "bg-slate-600/50 hover:bg-slate-600/70 text-slate-300 border-slate-500",
-              button.variant === "neutral" && "bg-blue-600/50 hover:bg-blue-600/70 text-blue-100 border-blue-500",
-              button.variant === "negative" && "bg-red-600/50 hover:bg-red-600/70 text-red-100 border-red-500",
-            )}
-            onClick={() => logEventMutation.mutate(button.eventType)}
-            disabled={logEventMutation.isPending}
-            data-testid={`button-${button.eventType}`}
-          >
-            {button.icon}
-            <span className="text-xs md:text-sm">{button.label}</span>
-          </Button>
-        ))}
-      </div>
-
-      <Card className="glass-card">
-        <CardHeader className="pb-2 flex flex-row items-center justify-between">
-          <CardTitle className="text-lg">Event Log</CardTitle>
-          <span className="text-sm text-muted-foreground">{events.length} events</span>
-        </CardHeader>
-        <CardContent>
-          <LiveGameEventLog 
-            events={events} 
-            onUndo={(eventId) => deleteEventMutation.mutate(eventId)}
-            isUndoing={deleteEventMutation.isPending}
-          />
-        </CardContent>
-      </Card>
-
-      <Dialog open={showEndDialog} onOpenChange={setShowEndDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Complete Game</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="opponent">Opponent</Label>
-              <Input
-                id="opponent"
-                placeholder="e.g., Lakers, Team B"
+        <Card className="border-cyan-500/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-cyan-400" />
+              Select Players
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>Opponent (optional)</Label>
+              <Input 
+                placeholder="Enter opponent name"
                 value={opponent}
                 onChange={(e) => setOpponent(e.target.value)}
+                className="mt-1"
                 data-testid="input-opponent"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="result">Result (optional)</Label>
-              <Input
-                id="result"
-                placeholder="e.g., W 85-72"
-                value={result}
-                onChange={(e) => setResult(e.target.value)}
-                data-testid="input-result"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="minutes">Minutes Played</Label>
-              <Input
-                id="minutes"
-                type="number"
-                placeholder={Math.floor(elapsedTime / 60).toString()}
-                value={minutes}
-                onChange={(e) => setMinutes(e.target.value)}
-                data-testid="input-minutes"
-              />
-            </div>
-            <div className="bg-card/50 p-3 rounded-lg border border-border/50">
-              <p className="text-sm text-muted-foreground mb-2">Game Summary:</p>
-              <div className="grid grid-cols-4 gap-2 text-center text-sm">
-                <div><span className="font-bold text-primary">{currentStats.points}</span> PTS</div>
-                <div><span className="font-bold">{currentStats.rebounds}</span> REB</div>
-                <div><span className="font-bold">{currentStats.assists}</span> AST</div>
-                <div><span className="font-bold">{currentStats.steals}</span> STL</div>
+
+            {!rosterPlayers || rosterPlayers.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <AlertCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <p>No players in your roster yet.</p>
+                <p className="text-sm">Add players to your team first.</p>
               </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEndDialog(false)} data-testid="button-cancel-end">
-              Cancel
-            </Button>
+            ) : (
+              <div className="grid gap-2">
+                {rosterPlayers.map(player => (
+                  <div
+                    key={player.id}
+                    className={cn(
+                      "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
+                      selectedPlayers.includes(player.id)
+                        ? "border-cyan-500/50 bg-cyan-500/10"
+                        : "border-border hover-elevate"
+                    )}
+                    onClick={() => togglePlayerSelection(player.id)}
+                    data-testid={`player-select-${player.id}`}
+                  >
+                    <Checkbox 
+                      checked={selectedPlayers.includes(player.id)}
+                      onCheckedChange={() => togglePlayerSelection(player.id)}
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium">{player.name}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {player.position} {player.jerseyNumber && `#${player.jerseyNumber}`}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <Button 
-              onClick={() => completeGameMutation.mutate()} 
-              disabled={completeGameMutation.isPending}
-              data-testid="button-confirm-end"
+              className="w-full"
+              onClick={handleStartGame}
+              disabled={selectedPlayers.length === 0 || startSessionMutation.isPending}
+              data-testid="button-start-game"
             >
-              {completeGameMutation.isPending ? "Saving..." : "Save Game"}
+              {startSessionMutation.isPending ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Play className="w-4 h-4 mr-2" />
+              )}
+              Start Game ({selectedPlayers.length} players)
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-2 sticky top-0 z-20 bg-background/80 backdrop-blur-sm py-2 -mx-4 px-4 border-b border-cyan-500/10">
+        <div>
+          <h1 className="text-lg font-bold text-cyan-400 font-display">
+            {activeSession.opponent ? `VS ${activeSession.opponent.toUpperCase()}` : 'LIVE GAME'}
+          </h1>
+          <p className="text-xs text-muted-foreground">{sessionPlayers.length} players tracked</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleUndo}
+            disabled={sessionEvents.length === 0 || undoEventMutation.isPending}
+            data-testid="button-undo"
+          >
+            <Undo2 className="w-4 h-4" />
+          </Button>
+          <Button 
+            variant="destructive"
+            size="sm"
+            onClick={() => setShowEndConfirm(true)}
+            data-testid="button-end-game"
+          >
+            <Square className="w-4 h-4 mr-1" />
+            End
+          </Button>
+        </div>
+      </div>
+
+      {showEndConfirm && (
+        <Card className="border-red-500/30 bg-red-500/5">
+          <CardContent className="p-4 space-y-3">
+            <p className="font-medium">End this game?</p>
+            <p className="text-sm text-muted-foreground">Stats will be saved for all {sessionPlayers.length} players.</p>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handleEndGame('W')}
+                className="flex-1"
+                disabled={completeSessionMutation.isPending}
+                data-testid="button-end-win"
+              >
+                <Trophy className="w-4 h-4 mr-1" /> Win
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handleEndGame('L')}
+                className="flex-1"
+                disabled={completeSessionMutation.isPending}
+                data-testid="button-end-loss"
+              >
+                <X className="w-4 h-4 mr-1" /> Loss
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setShowEndConfirm(false)}
+                data-testid="button-cancel-end"
+              >
+                Cancel
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="grid gap-3">
+        {sessionPlayers.map(player => {
+          const stats = calculatePlayerStats(player.id);
+          const isActive = activePlayerId === player.id;
+          
+          return (
+            <Card 
+              key={player.id}
+              className={cn(
+                "transition-all border-cyan-500/20",
+                isActive && "ring-2 ring-cyan-500/50"
+              )}
+              data-testid={`player-card-${player.id}`}
+            >
+              <CardContent className="p-3">
+                <button
+                  className="w-full flex items-center justify-between mb-3"
+                  onClick={() => setActivePlayerId(isActive ? null : player.id)}
+                  data-testid={`button-toggle-player-${player.id}`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-cyan-600 flex items-center justify-center text-sm font-bold">
+                      {player.jerseyNumber || player.name[0]}
+                    </div>
+                    <div className="text-left">
+                      <div className="font-medium text-sm">{player.name}</div>
+                      <div className="text-xs text-muted-foreground">{player.position}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm">
+                    <span className="font-bold text-cyan-400">{stats.points} PTS</span>
+                    <span className="text-muted-foreground">
+                      {stats.rebounds}R {stats.assists}A
+                    </span>
+                  </div>
+                </button>
+
+                {isActive && (
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-3 gap-2">
+                      {(['points_1', 'points_2', 'points_3'] as StatType[]).map(stat => (
+                        <Button
+                          key={stat}
+                          className={cn("h-14 text-lg font-bold", STAT_CONFIG[stat].bgColor)}
+                          onClick={() => handleLogStat(player.id, stat)}
+                          disabled={logEventMutation.isPending}
+                          data-testid={`button-stat-${stat}-${player.id}`}
+                        >
+                          {STAT_CONFIG[stat].label}
+                        </Button>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {(['rebound', 'assist', 'steal'] as StatType[]).map(stat => (
+                        <Button
+                          key={stat}
+                          variant="outline"
+                          className={cn("h-12 font-medium", STAT_CONFIG[stat].color, STAT_CONFIG[stat].bgColor)}
+                          onClick={() => handleLogStat(player.id, stat)}
+                          disabled={logEventMutation.isPending}
+                          data-testid={`button-stat-${stat}-${player.id}`}
+                        >
+                          {STAT_CONFIG[stat].label}
+                        </Button>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {(['block', 'turnover', 'foul'] as StatType[]).map(stat => (
+                        <Button
+                          key={stat}
+                          variant="outline"
+                          className={cn("h-12 font-medium", STAT_CONFIG[stat].color, STAT_CONFIG[stat].bgColor)}
+                          onClick={() => handleLogStat(player.id, stat)}
+                          disabled={logEventMutation.isPending}
+                          data-testid={`button-stat-${stat}-${player.id}`}
+                        >
+                          {STAT_CONFIG[stat].label}
+                        </Button>
+                      ))}
+                    </div>
+                    <div className="pt-2 border-t border-border/50 grid grid-cols-7 gap-1 text-center text-xs">
+                      <div>
+                        <div className="font-bold text-cyan-400">{stats.points}</div>
+                        <div className="text-muted-foreground">PTS</div>
+                      </div>
+                      <div>
+                        <div className="font-bold">{stats.rebounds}</div>
+                        <div className="text-muted-foreground">REB</div>
+                      </div>
+                      <div>
+                        <div className="font-bold">{stats.assists}</div>
+                        <div className="text-muted-foreground">AST</div>
+                      </div>
+                      <div>
+                        <div className="font-bold">{stats.steals}</div>
+                        <div className="text-muted-foreground">STL</div>
+                      </div>
+                      <div>
+                        <div className="font-bold">{stats.blocks}</div>
+                        <div className="text-muted-foreground">BLK</div>
+                      </div>
+                      <div>
+                        <div className="font-bold text-rose-400">{stats.turnovers}</div>
+                        <div className="text-muted-foreground">TO</div>
+                      </div>
+                      <div>
+                        <div className="font-bold text-amber-400">{stats.fouls}</div>
+                        <div className="text-muted-foreground">FLS</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {sessionEvents.length > 0 && (
+        <Card className="border-cyan-500/20">
+          <CardHeader className="py-3">
+            <CardTitle className="text-sm">Recent ({sessionEvents.length} events)</CardTitle>
+          </CardHeader>
+          <CardContent className="py-2">
+            <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
+              {sessionEvents.slice(-15).reverse().map(event => {
+                const player = sessionPlayers.find(p => p.id === event.playerId);
+                const config = STAT_CONFIG[event.eventType as StatType];
+                return (
+                  <Badge 
+                    key={event.id} 
+                    variant="outline" 
+                    className={cn("text-xs", config?.color)}
+                  >
+                    {player?.name?.split(' ')[0] || '?'} {config?.shortLabel || event.eventType}
+                  </Badge>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
-    </Paywall>
   );
 }

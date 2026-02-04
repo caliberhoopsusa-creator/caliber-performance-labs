@@ -57,6 +57,7 @@ import LeagueHub from "./pages/LeagueHub";
 import LeagueDetail from "./pages/LeagueDetail";
 import RecruitingHub from "./pages/RecruitingHub";
 import PublicPlayerProfile from "./pages/PublicPlayerProfile";
+import LiveGameMode from "./pages/LiveGameMode";
 import NotFound from "./pages/not-found";
 
 interface ExtendedUser {
@@ -352,6 +353,7 @@ function MainRouter() {
                 <Route path="/fitness">
                   <Redirect to="/performance?tab=fitness" />
                 </Route>
+                <Route path="/live-game" component={LiveGameMode} />
                 <Route component={NotFound} />
               </Switch>
             </PageTransition>
