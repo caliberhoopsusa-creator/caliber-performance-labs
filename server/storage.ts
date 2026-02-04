@@ -423,7 +423,7 @@ export interface IStorage {
   // Live Game Sessions
   createLiveGameSession(session: InsertLiveGameSession): Promise<LiveGameSession>;
   getLiveGameSession(id: number): Promise<LiveGameSession | undefined>;
-  getActivePlayerSession(playerId: number): Promise<LiveGameSession | undefined>;
+  getActiveCoachSession(coachUserId: string): Promise<LiveGameSession | undefined>;
   updateLiveGameSession(id: number, updates: Partial<LiveGameSession>): Promise<LiveGameSession>;
 
   // Live Game Events
@@ -2235,9 +2235,9 @@ export class DatabaseStorage implements IStorage {
     return session;
   }
 
-  async getActivePlayerSession(playerId: number): Promise<LiveGameSession | undefined> {
+  async getActiveCoachSession(coachUserId: string): Promise<LiveGameSession | undefined> {
     const [session] = await db.select().from(liveGameSessions).where(
-      and(eq(liveGameSessions.playerId, playerId), eq(liveGameSessions.status, "active"))
+      and(eq(liveGameSessions.coachUserId, coachUserId), eq(liveGameSessions.status, "active"))
     );
     return session;
   }

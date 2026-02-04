@@ -9080,41 +9080,50 @@ Respond in this exact JSON format:
   });
 
   // ========================================
-  // LIVE GAME MODE ROUTES
+  // LIVE GAME MODE ROUTES (Team-based stat tracking)
   // ========================================
 
-  // Start a live game session - Premium Feature
-  app.post('/api/live-game/start', requiresSubscription, async (req: any, res) => {
+  // Start a live game session - Coach only
+  app.post('/api/live-game/start', isCoach, async (req: any, res) => {
     try {
-      const user = await authStorage.getUser(req.user.claims.sub);
-      if (!user || !user.playerId) {
-        return res.status(400).json({ message: "You must have a player profile" });
-      }
-      const existingSession = await storage.getActivePlayerSession(user.playerId);
+      const userId = req.user.claims.sub;
+      
+      // Check for existing active session
+      const existingSession = await storage.getActiveCoachSession(userId);
       if (existingSession) {
         return res.status(400).json({ message: "You already have an active game session" });
       }
-      const validatedData = insertLiveGameSessionSchema.parse({
-        ...req.body,
-        playerId: user.playerId,
+      
+      // Validate request
+      const startSessionSchema = z.object({
+        selectedPlayerIds: z.array(z.number()).min(1, "Select at least one player"),
+        opponent: z.string().optional(),
+        sport: z.enum(["basketball", "football"]).default("basketball"),
+      });
+      const validated = startSessionSchema.parse(req.body);
+      
+      const session = await storage.createLiveGameSession({
+        coachUserId: userId,
+        selectedPlayerIds: JSON.stringify(validated.selectedPlayerIds),
+        opponent: validated.opponent || null,
+        sport: validated.sport,
         status: 'active'
       });
-      const session = await storage.createLiveGameSession(validatedData);
       res.json(session);
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors[0].message });
+      }
       console.error('Error starting live game session:', error);
       res.status(500).json({ message: "Failed to start live game session" });
     }
   });
 
-  // Get current active session - Premium Feature
-  app.get('/api/live-game/active', requiresSubscription, async (req: any, res) => {
+  // Get current active session - Coach only
+  app.get('/api/live-game/active', isCoach, async (req: any, res) => {
     try {
-      const user = await authStorage.getUser(req.user.claims.sub);
-      if (!user || !user.playerId) {
-        return res.status(400).json({ message: "You must have a player profile" });
-      }
-      const session = await storage.getActivePlayerSession(user.playerId);
+      const userId = req.user.claims.sub;
+      const session = await storage.getActiveCoachSession(userId);
       res.json(session || null);
     } catch (error) {
       console.error('Error getting active session:', error);
@@ -9122,32 +9131,53 @@ Respond in this exact JSON format:
     }
   });
 
-  // Log a live game event - Premium Feature
-  app.post('/api/live-game/:sessionId/event', requiresSubscription, async (req: any, res) => {
+  // Log a live game event (stat) - Coach only
+  app.post('/api/live-game/:sessionId/event', isCoach, async (req: any, res) => {
     try {
       const sessionId = parseInt(req.params.sessionId);
       const session = await storage.getLiveGameSession(sessionId);
       if (!session) {
         return res.status(404).json({ message: "Session not found" });
       }
-      const user = await authStorage.getUser(req.user.claims.sub);
-      if (!user || (user.role !== 'coach' && user.playerId !== session.playerId)) {
+      
+      // Verify coach owns this session
+      const userId = req.user.claims.sub;
+      if (session.coachUserId !== userId) {
         return res.status(403).json({ message: "Not authorized to add events to this session" });
       }
-      const validatedData = insertLiveGameEventSchema.parse({
-        ...req.body,
-        sessionId
+      
+      // Validate event - must include playerId now
+      const eventSchema = z.object({
+        playerId: z.number().int().positive(),
+        eventType: z.string(),
+        value: z.number().int().default(1),
       });
-      const event = await storage.createLiveGameEvent(validatedData);
+      const validated = eventSchema.parse(req.body);
+      
+      // Verify player is in the session
+      const playerIds = JSON.parse(session.selectedPlayerIds) as number[];
+      if (!playerIds.includes(validated.playerId)) {
+        return res.status(400).json({ message: "Player not in this session" });
+      }
+      
+      const event = await storage.createLiveGameEvent({
+        sessionId,
+        playerId: validated.playerId,
+        eventType: validated.eventType,
+        value: validated.value,
+      });
       res.json(event);
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: error.errors[0].message });
+      }
       console.error('Error logging live game event:', error);
       res.status(500).json({ message: "Failed to log live game event" });
     }
   });
 
-  // Get session events - Premium Feature
-  app.get('/api/live-game/:sessionId/events', requiresSubscription, async (req: any, res) => {
+  // Get session events
+  app.get('/api/live-game/:sessionId/events', isAuthenticated, async (req: any, res) => {
     try {
       const sessionId = parseInt(req.params.sessionId);
       const events = await storage.getSessionEvents(sessionId);
@@ -9158,8 +9188,8 @@ Respond in this exact JSON format:
     }
   });
 
-  // Delete a live game event (undo) - Premium Feature
-  app.delete('/api/live-game/:sessionId/events/:eventId', requiresSubscription, async (req: any, res) => {
+  // Delete a live game event (undo) - Coach only
+  app.delete('/api/live-game/:sessionId/events/:eventId', isCoach, async (req: any, res) => {
     try {
       const sessionId = parseInt(req.params.sessionId);
       const eventId = parseInt(req.params.eventId);
@@ -9167,10 +9197,13 @@ Respond in this exact JSON format:
       if (!session) {
         return res.status(404).json({ message: "Session not found" });
       }
-      const user = await authStorage.getUser(req.user.claims.sub);
-      if (!user || (user.role !== 'coach' && user.playerId !== session.playerId)) {
+      
+      // Verify coach owns this session
+      const userId = req.user.claims.sub;
+      if (session.coachUserId !== userId) {
         return res.status(403).json({ message: "Not authorized to delete events from this session" });
       }
+      
       await storage.deleteLiveGameEvent(eventId);
       res.json({ success: true });
     } catch (error) {
@@ -9179,51 +9212,66 @@ Respond in this exact JSON format:
     }
   });
 
-  // Complete session and create game - Premium Feature
-  app.post('/api/live-game/:sessionId/complete', requiresSubscription, async (req: any, res) => {
+  // Complete session and create games for all players - Coach only
+  app.post('/api/live-game/:sessionId/complete', isCoach, async (req: any, res) => {
     try {
       const sessionId = parseInt(req.params.sessionId);
       const session = await storage.getLiveGameSession(sessionId);
       if (!session) {
         return res.status(404).json({ message: "Session not found" });
       }
-      const user = await authStorage.getUser(req.user.claims.sub);
-      if (!user || (user.role !== 'coach' && user.playerId !== session.playerId)) {
+      
+      // Verify coach owns this session
+      const userId = req.user.claims.sub;
+      if (session.coachUserId !== userId) {
         return res.status(403).json({ message: "Not authorized to complete this session" });
       }
       
       // Validate request body
       const completeSessionSchema = z.object({
-        opponent: z.string().min(1),
         result: z.string().optional().nullable(),
-        minutes: z.number().int().nonnegative().optional(),
       });
       const validatedData = completeSessionSchema.parse(req.body);
       
+      // Get all events for this session
       const events = await storage.getSessionEvents(sessionId);
-      const stats = {
-        points: 0,
-        rebounds: 0,
-        assists: 0,
-        steals: 0,
-        blocks: 0,
-        turnovers: 0,
-        fouls: 0,
-        fgMade: 0,
-        fgAttempted: 0,
-        threeMade: 0,
-        threeAttempted: 0,
-        ftMade: 0,
-        ftAttempted: 0,
-      };
+      const playerIds = JSON.parse(session.selectedPlayerIds) as number[];
+      
+      // Aggregate stats per player
+      const playerStats: Record<number, {
+        points: number;
+        rebounds: number;
+        assists: number;
+        steals: number;
+        blocks: number;
+        turnovers: number;
+        fouls: number;
+        fgMade: number;
+        fgAttempted: number;
+        threeMade: number;
+        threeAttempted: number;
+        ftMade: number;
+        ftAttempted: number;
+      }> = {};
+      
+      // Initialize stats for all players
+      for (const playerId of playerIds) {
+        playerStats[playerId] = {
+          points: 0, rebounds: 0, assists: 0, steals: 0, blocks: 0,
+          turnovers: 0, fouls: 0, fgMade: 0, fgAttempted: 0,
+          threeMade: 0, threeAttempted: 0, ftMade: 0, ftAttempted: 0,
+        };
+      }
+      
+      // Process events
       for (const event of events) {
+        const stats = playerStats[event.playerId];
+        if (!stats) continue;
+        
         switch (event.eventType) {
-          case 'made_2pt': stats.points += 2; stats.fgMade++; stats.fgAttempted++; break;
-          case 'missed_2pt': stats.fgAttempted++; break;
-          case 'made_3pt': stats.points += 3; stats.threeMade++; stats.threeAttempted++; stats.fgMade++; stats.fgAttempted++; break;
-          case 'missed_3pt': stats.threeAttempted++; stats.fgAttempted++; break;
-          case 'made_ft': stats.points += 1; stats.ftMade++; stats.ftAttempted++; break;
-          case 'missed_ft': stats.ftAttempted++; break;
+          case 'points_1': stats.points += 1; stats.ftMade++; stats.ftAttempted++; break;
+          case 'points_2': stats.points += 2; stats.fgMade++; stats.fgAttempted++; break;
+          case 'points_3': stats.points += 3; stats.threeMade++; stats.threeAttempted++; stats.fgMade++; stats.fgAttempted++; break;
           case 'rebound': stats.rebounds++; break;
           case 'assist': stats.assists++; break;
           case 'steal': stats.steals++; break;
@@ -9232,20 +9280,36 @@ Respond in this exact JSON format:
           case 'foul': stats.fouls++; break;
         }
       }
-      const game = await storage.createGame({
-        playerId: session.playerId,
-        date: new Date().toISOString().split('T')[0],
-        opponent: validatedData.opponent,
-        result: validatedData.result || null,
-        minutes: validatedData.minutes || 0,
-        ...stats
-      });
+      
+      // Create game records for each player
+      const createdGames = [];
+      const gameDate = new Date().toISOString().split('T')[0];
+      
+      for (const playerId of playerIds) {
+        const stats = playerStats[playerId];
+        const game = await storage.createGame({
+          playerId,
+          sport: session.sport,
+          date: gameDate,
+          opponent: session.opponent || "Unknown",
+          result: validatedData.result || null,
+          minutes: 0,
+          ...stats
+        });
+        createdGames.push(game);
+      }
+      
+      // Mark session as completed
       await storage.updateLiveGameSession(sessionId, {
         status: 'completed',
         endedAt: new Date(),
-        gameId: game.id
       });
-      res.json({ session: await storage.getLiveGameSession(sessionId), game });
+      
+      res.json({ 
+        session: await storage.getLiveGameSession(sessionId), 
+        games: createdGames,
+        playerCount: playerIds.length
+      });
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: error.errors[0].message });
@@ -9281,19 +9345,7 @@ Respond in this exact JSON format:
         leftAt: null,
       });
 
-      // Create notification for the player being spectated
-      const player = await storage.getPlayer(session.playerId);
-      if (player && user.playerId !== session.playerId) {
-        const spectatorName = user.playerId ? (await storage.getPlayer(user.playerId))?.name || "Someone" : "A visitor";
-        await storage.createNotification({
-          playerId: session.playerId,
-          notificationType: "game_spectating",
-          title: `${spectatorName} is watching your game!`,
-          message: `${spectatorName} joined to watch your live game`,
-          isRead: false,
-        });
-      }
-
+      // Session is now team-based, no single player to notify
       res.json(spectator);
     } catch (error) {
       console.error('Error joining spectator session:', error);
@@ -9352,15 +9404,16 @@ Respond in this exact JSON format:
 
       const spectatorSessions = await storage.getActiveSpectatorSessions(user.id, user.playerId || null);
       
-      // Get the full session and game details for each spectating session
+      // Get the full session details for each spectating session
       const sessionsWithDetails = await Promise.all(
         spectatorSessions.map(async (spectator) => {
           const session = await storage.getLiveGameSession(spectator.sessionId);
-          const player = session ? await storage.getPlayer(session.playerId) : null;
+          // For team-based sessions, get the player IDs from selectedPlayerIds
+          const playerIds = session ? JSON.parse(session.selectedPlayerIds) as number[] : [];
           return {
             spectator,
             session,
-            player,
+            playerIds,
           };
         })
       );
