@@ -68,7 +68,15 @@ Preferred communication style: Simple, everyday language.
   - **Recruiting Timeline**: Visual timeline showing key milestones (NCAA eligibility, contact periods, signing dates) based on graduation year and sport
   - **NCAA Eligibility Checklist**: Tracking progress across 5 categories: NCAA Registration, Academic Requirements, Test Scores, Transcripts, and Amateurism Status. Division-specific requirements (D1, D2, D3, NAIA, JUCO).
   - **Coach Recommendations**: Coaches can write endorsements for players with 5-star ratings across Athletic Ability, Work Ethic, Coachability, Leadership, and Character. Recommendations display on public player profiles for recruiters.
-- **Performance Tools**: Live game mode for real-time stat entry, interactive shot charts, and advanced metric calculations.
+- **Performance Tools**: Interactive shot charts and advanced metric calculations.
+- **Live Game Mode** (`/live-game`): Coach-only real-time stat tracking for team games. Features include:
+  - Multi-player selection from team roster before game start
+  - Large tap-target buttons optimized for single-person sideline operation
+  - Stat tracking: 1pt/2pt/3pt scoring, rebounds, assists, steals, blocks, turnovers, fouls
+  - Running totals per player displayed in real-time
+  - Undo functionality for stat corrections
+  - Automatic individual game record creation for each player on completion
+  - Database tables: `live_game_sessions` (coachUserId, selectedPlayerIds JSON), `live_game_events` (per-player stat entries)
 - **Scheduling**: Practice scheduler and calendar.
 - **Coach Features**: Team dashboard, game notes, lineup analysis, practice tracking with live mode, AI-generated drill recommendations, and one-click game verification queue with sport filtering.
 - **Trust & Verification**: Player ratings system by coaches, stat verifications with digital signatures and quick-verify workflow, skill challenges with leaderboards, AI analysis for highlight verification, and secure cross-team verification prevention.
