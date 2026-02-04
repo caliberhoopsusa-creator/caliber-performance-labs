@@ -57,9 +57,9 @@ interface PlayerStats {
 type StatType = 'points_1' | 'points_2' | 'points_3' | 'rebound' | 'assist' | 'steal' | 'block' | 'turnover' | 'foul';
 
 const STAT_CONFIG: Record<StatType, { label: string; shortLabel: string; color: string; bgColor: string }> = {
-  points_1: { label: '1 PT', shortLabel: '1', color: 'text-green-400', bgColor: 'bg-green-600 hover:bg-green-500' },
-  points_2: { label: '2 PT', shortLabel: '2', color: 'text-cyan-400', bgColor: 'bg-cyan-600 hover:bg-cyan-500' },
-  points_3: { label: '3 PT', shortLabel: '3', color: 'text-blue-400', bgColor: 'bg-blue-600 hover:bg-blue-500' },
+  points_1: { label: '1 PT', shortLabel: '1', color: 'text-green-400', bgColor: 'bg-green-600' },
+  points_2: { label: '2 PT', shortLabel: '2', color: 'text-cyan-400', bgColor: 'bg-cyan-600' },
+  points_3: { label: '3 PT', shortLabel: '3', color: 'text-blue-400', bgColor: 'bg-blue-600' },
   rebound: { label: 'REB', shortLabel: 'R', color: 'text-orange-400', bgColor: 'bg-orange-600/20 border-orange-500/50' },
   assist: { label: 'AST', shortLabel: 'A', color: 'text-purple-400', bgColor: 'bg-purple-600/20 border-purple-500/50' },
   steal: { label: 'STL', shortLabel: 'S', color: 'text-yellow-400', bgColor: 'bg-yellow-600/20 border-yellow-500/50' },
@@ -343,19 +343,18 @@ export default function LiveGameMode() {
           </h1>
           <p className="text-xs text-muted-foreground">{sessionPlayers.length} players tracked</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <Button 
-            variant="outline" 
-            size="sm"
+            variant="outline"
             onClick={handleUndo}
             disabled={sessionEvents.length === 0 || undoEventMutation.isPending}
             data-testid="button-undo"
           >
-            <Undo2 className="w-4 h-4" />
+            <Undo2 className="w-4 h-4 mr-1" />
+            Undo
           </Button>
           <Button 
             variant="destructive"
-            size="sm"
             onClick={() => setShowEndConfirm(true)}
             data-testid="button-end-game"
           >
@@ -370,30 +369,30 @@ export default function LiveGameMode() {
           <CardContent className="p-4 space-y-3">
             <p className="font-medium">End this game?</p>
             <p className="text-sm text-muted-foreground">Stats will be saved for all {sessionPlayers.length} players.</p>
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <Button 
                 variant="outline" 
-                size="sm"
+                size="lg"
                 onClick={() => handleEndGame('W')}
                 className="flex-1"
                 disabled={completeSessionMutation.isPending}
                 data-testid="button-end-win"
               >
-                <Trophy className="w-4 h-4 mr-1" /> Win
+                <Trophy className="w-5 h-5 mr-2" /> Win
               </Button>
               <Button 
                 variant="outline" 
-                size="sm"
+                size="lg"
                 onClick={() => handleEndGame('L')}
                 className="flex-1"
                 disabled={completeSessionMutation.isPending}
                 data-testid="button-end-loss"
               >
-                <X className="w-4 h-4 mr-1" /> Loss
+                <X className="w-5 h-5 mr-2" /> Loss
               </Button>
               <Button 
                 variant="ghost" 
-                size="sm"
+                size="lg"
                 onClick={() => setShowEndConfirm(false)}
                 data-testid="button-cancel-end"
               >
@@ -420,20 +419,20 @@ export default function LiveGameMode() {
             >
               <CardContent className="p-3">
                 <button
-                  className="w-full flex items-center justify-between mb-3"
+                  className="w-full flex items-center justify-between flex-wrap gap-2 py-2 min-h-[56px]"
                   onClick={() => setActivePlayerId(isActive ? null : player.id)}
                   data-testid={`button-toggle-player-${player.id}`}
                 >
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-cyan-600 flex items-center justify-center text-sm font-bold">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-cyan-600 flex items-center justify-center text-base font-bold shrink-0">
                       {player.jerseyNumber || player.name[0]}
                     </div>
                     <div className="text-left">
-                      <div className="font-medium text-sm">{player.name}</div>
-                      <div className="text-xs text-muted-foreground">{player.position}</div>
+                      <div className="font-medium">{player.name}</div>
+                      <div className="text-sm text-muted-foreground">{player.position}</div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 text-sm">
+                  <div className="flex items-center gap-4 text-base">
                     <span className="font-bold text-cyan-400">{stats.points} PTS</span>
                     <span className="text-muted-foreground">
                       {stats.rebounds}R {stats.assists}A
@@ -442,12 +441,13 @@ export default function LiveGameMode() {
                 </button>
 
                 {isActive && (
-                  <div className="space-y-2">
-                    <div className="grid grid-cols-3 gap-2">
+                  <div className="space-y-3 mt-3 pt-3 border-t border-border/30">
+                    <div className="grid grid-cols-3 gap-3">
                       {(['points_1', 'points_2', 'points_3'] as StatType[]).map(stat => (
                         <Button
                           key={stat}
-                          className={cn("h-14 text-lg font-bold", STAT_CONFIG[stat].bgColor)}
+                          size="xl"
+                          className={cn("font-bold", STAT_CONFIG[stat].bgColor)}
                           onClick={() => handleLogStat(player.id, stat)}
                           disabled={logEventMutation.isPending}
                           data-testid={`button-stat-${stat}-${player.id}`}
@@ -456,12 +456,13 @@ export default function LiveGameMode() {
                         </Button>
                       ))}
                     </div>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-3 gap-3">
                       {(['rebound', 'assist', 'steal'] as StatType[]).map(stat => (
                         <Button
                           key={stat}
+                          size="xl"
                           variant="outline"
-                          className={cn("h-12 font-medium", STAT_CONFIG[stat].color, STAT_CONFIG[stat].bgColor)}
+                          className={cn("font-medium", STAT_CONFIG[stat].color, STAT_CONFIG[stat].bgColor)}
                           onClick={() => handleLogStat(player.id, stat)}
                           disabled={logEventMutation.isPending}
                           data-testid={`button-stat-${stat}-${player.id}`}
@@ -470,12 +471,13 @@ export default function LiveGameMode() {
                         </Button>
                       ))}
                     </div>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-3 gap-3">
                       {(['block', 'turnover', 'foul'] as StatType[]).map(stat => (
                         <Button
                           key={stat}
+                          size="xl"
                           variant="outline"
-                          className={cn("h-12 font-medium", STAT_CONFIG[stat].color, STAT_CONFIG[stat].bgColor)}
+                          className={cn("font-medium", STAT_CONFIG[stat].color, STAT_CONFIG[stat].bgColor)}
                           onClick={() => handleLogStat(player.id, stat)}
                           disabled={logEventMutation.isPending}
                           data-testid={`button-stat-${stat}-${player.id}`}
