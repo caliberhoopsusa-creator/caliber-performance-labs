@@ -11,10 +11,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Play, Square, Undo2, ChevronLeft, Users, 
-  Trophy, AlertCircle, Loader2, X, HelpCircle
+  Trophy, AlertCircle, Loader2, X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { HelpTooltip } from "@/components/HelpTooltip";
 
 interface Player {
   id: number;
@@ -260,16 +260,12 @@ export default function LiveGameMode() {
             <CardTitle className="flex items-center gap-2">
               <Users className="w-5 h-5 text-cyan-400" />
               Select Players
-              <Tooltip delayDuration={200}>
-                <TooltipTrigger asChild>
-                  <button type="button" className="text-muted-foreground hover:text-foreground ml-1" aria-label="Help">
-                    <HelpCircle className="w-4 h-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right" className="max-w-xs text-sm">
-                  Tap players to select them for tracking. Only selected players will have their stats recorded.
-                </TooltipContent>
-              </Tooltip>
+              <HelpTooltip
+                content="Tap players to select them for tracking. Only selected players will have their stats recorded."
+                side="right"
+                iconSize="md"
+                testId="button-help-live-game-select"
+              />
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">

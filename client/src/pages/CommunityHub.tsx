@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation, useSearch } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { HelpTooltip } from "@/components/HelpTooltip";
 import { 
   Users, 
   Rss,
@@ -52,9 +53,17 @@ export default function CommunityHub() {
             <Users className="w-6 h-6 text-purple-400" />
           </div>
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-white via-purple-100 to-purple-400 bg-clip-text text-transparent">
-              Community
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-white via-purple-100 to-purple-400 bg-clip-text text-transparent">
+                Community
+              </h1>
+              <HelpTooltip
+                content="Share updates, post stories, vote in polls, and connect with other players and coaches in the Caliber community."
+                side="right"
+                iconSize="md"
+                testId="button-help-community-hub"
+              />
+            </div>
             <p className="text-sm text-muted-foreground">
               Stay connected with the Caliber community
             </p>

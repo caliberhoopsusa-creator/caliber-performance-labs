@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation, useSearch } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { HelpTooltip } from "@/components/HelpTooltip";
 import { 
   GraduationCap, 
   School, 
@@ -53,9 +54,17 @@ export default function RecruitingHub() {
             <GraduationCap className="w-6 h-6 text-cyan-400" />
           </div>
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-white via-cyan-100 to-cyan-400 bg-clip-text text-transparent">
-              Recruiting Hub
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-white via-cyan-100 to-cyan-400 bg-clip-text text-transparent">
+                Recruiting Hub
+              </h1>
+              <HelpTooltip
+                content="Track your recruiting timeline, find matching colleges with real program stats, and discover camps and showcases near you."
+                side="right"
+                iconSize="md"
+                testId="button-help-recruiting-hub"
+              />
+            </div>
             <p className="text-sm text-muted-foreground">
               Your complete recruiting journey in one place
             </p>

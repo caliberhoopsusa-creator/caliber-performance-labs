@@ -7,9 +7,10 @@ interface HelpTooltipProps {
   side?: "top" | "bottom" | "left" | "right";
   className?: string;
   iconSize?: "sm" | "md" | "lg";
+  testId?: string;
 }
 
-export function HelpTooltip({ content, side = "top", className, iconSize = "sm" }: HelpTooltipProps) {
+export function HelpTooltip({ content, side = "top", className, iconSize = "sm", testId = "button-help-tooltip" }: HelpTooltipProps) {
   const sizeClasses = {
     sm: "w-3.5 h-3.5",
     md: "w-4 h-4",
@@ -22,11 +23,11 @@ export function HelpTooltip({ content, side = "top", className, iconSize = "sm" 
         <button 
           type="button" 
           className={cn(
-            "inline-flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors cursor-help",
+            "inline-flex items-center justify-center text-muted-foreground cursor-help hover-elevate",
             className
           )}
           aria-label="Help"
-          data-testid="button-help-tooltip"
+          data-testid={testId}
         >
           <HelpCircle className={sizeClasses[iconSize]} />
         </button>

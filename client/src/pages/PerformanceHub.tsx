@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation, useSearch } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { HelpTooltip } from "@/components/HelpTooltip";
 import { 
   Zap, 
   Dumbbell,
@@ -48,9 +49,17 @@ export default function PerformanceHub() {
             <Zap className="w-6 h-6 text-orange-400" />
           </div>
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-white via-orange-100 to-orange-400 bg-clip-text text-transparent">
-              Performance Hub
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-white via-orange-100 to-orange-400 bg-clip-text text-transparent">
+                Performance Hub
+              </h1>
+              <HelpTooltip
+                content="Log your workouts and track fitness data from wearables. Monitor sleep, recovery, and training intensity."
+                side="right"
+                iconSize="md"
+                testId="button-help-performance-hub"
+              />
+            </div>
             <p className="text-sm text-muted-foreground">
               Track your training, workouts, and fitness metrics
             </p>

@@ -22,6 +22,10 @@ Preferred communication style: Simple, everyday language.
   - `CollapsibleStatCard`: Collapsible stat sections with accessible button-based header, keyboard navigation, and aria-expanded state.
   - `MobileStatGrid`: Grid layout optimized for mobile stat displays.
 - **Error Boundary**: A custom React Error Boundary provides a futuristic error UI with graceful handling and debugging information.
+- **Contextual Help**: 
+  - `HelpTooltip`: Reusable help icon button with tooltip for contextual explanations
+  - `FeatureTip`: Tooltip wrapper for existing elements to explain features on hover
+  - Help tooltips are present on all major hub pages (Coach Hub, Recruiting Hub, Analytics Hub, Performance Hub, Community Hub) to explain available features
 
 ### Backend
 - **Runtime**: Node.js with Express

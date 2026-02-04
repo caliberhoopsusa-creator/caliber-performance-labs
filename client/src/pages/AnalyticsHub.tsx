@@ -1,5 +1,6 @@
 import { useLocation, useSearch } from "wouter";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { HelpTooltip } from "@/components/HelpTooltip";
 import { BarChart3 } from "lucide-react";
 import LeaderboardContent from "./LeaderboardContent";
 import CompareContent from "./CompareContent";
@@ -27,9 +28,17 @@ export default function AnalyticsHub() {
           <BarChart3 className="w-6 h-6 text-cyan-400" />
         </div>
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-white via-cyan-100 to-cyan-400 bg-clip-text text-transparent">
-            Analytics Hub
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-white via-cyan-100 to-cyan-400 bg-clip-text text-transparent">
+              Analytics Hub
+            </h1>
+            <HelpTooltip
+              content="View leaderboards, compare players head-to-head, see how your stats are graded, and take on skill challenges."
+              side="right"
+              iconSize="md"
+              testId="button-help-analytics-hub"
+            />
+          </div>
           <p className="text-sm text-muted-foreground">
             Rankings, comparisons, and competitive insights
           </p>

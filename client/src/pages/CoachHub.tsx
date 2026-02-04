@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation, useSearch } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { HelpTooltip } from "@/components/HelpTooltip";
 import { 
   LayoutDashboard,
   ClipboardCheck,
@@ -58,9 +59,17 @@ export default function CoachHub() {
             <Briefcase className="w-6 h-6 text-cyan-400" />
           </div>
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-white via-cyan-100 to-cyan-400 bg-clip-text text-transparent">
-              Coach Hub
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-white via-cyan-100 to-cyan-400 bg-clip-text text-transparent">
+                Coach Hub
+              </h1>
+              <HelpTooltip
+                content="Your coaching command center. Verify player-submitted stats, write endorsements, manage practices and lineups, and track team performance."
+                side="right"
+                iconSize="md"
+                testId="button-help-coach-hub"
+              />
+            </div>
             <p className="text-sm text-muted-foreground">
               Manage your team, verify stats, and develop players
             </p>
