@@ -1310,33 +1310,32 @@ export const scheduleEvents = pgTable("schedule_events", {
   teamIdIdx: index("schedule_events_team_id_idx").on(table.teamId),
 }));
 
-// === LIVE GAME SESSIONS ===
+// === LIVE GAME SESSIONS (Team-based real-time stat tracking) ===
 export const liveGameSessions = pgTable("live_game_sessions", {
   id: serial("id").primaryKey(),
-  gameId: integer("game_id").references(() => games.id, { onDelete: "cascade" }),
-  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  coachUserId: text("coach_user_id").notNull(), // Coach running the session
+  sport: text("sport").notNull().default("basketball"), // 'basketball' or 'football'
+  opponent: text("opponent"), // Optional opponent name
+  selectedPlayerIds: text("selected_player_ids").notNull(), // JSON array of player IDs
   status: text("status").notNull().default("active"), // 'active', 'paused', 'completed'
   startedAt: timestamp("started_at").defaultNow(),
   endedAt: timestamp("ended_at"),
 }, (table) => ({
-  gameIdIdx: index("live_game_sessions_game_id_idx").on(table.gameId),
-  playerIdIdx: index("live_game_sessions_player_id_idx").on(table.playerId),
+  coachUserIdIdx: index("live_game_sessions_coach_user_id_idx").on(table.coachUserId),
+  statusIdx: index("live_game_sessions_status_idx").on(table.status),
 }));
 
-// === LIVE GAME EVENTS (Real-time stat entry) ===
+// === LIVE GAME EVENTS (Real-time stat entry for team games) ===
 export const liveGameEvents = pgTable("live_game_events", {
   id: serial("id").primaryKey(),
   sessionId: integer("session_id").notNull().references(() => liveGameSessions.id, { onDelete: "cascade" }),
-  eventType: text("event_type").notNull(), // 'point', 'rebound', 'assist', 'steal', 'block', 'turnover', 'foul', 'substitution'
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }), // Which player this stat belongs to
+  eventType: text("event_type").notNull(), // 'points_1', 'points_2', 'points_3', 'rebound', 'assist', 'steal', 'block', 'turnover', 'foul'
   value: integer("value").default(1).notNull(),
-  quarter: integer("quarter").notNull(),
-  gameTime: text("game_time"), // "10:30" format
-  x: integer("x"), // court position for shot charts
-  y: integer("y"),
-  metadata: text("metadata"), // JSON for additional data
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
   sessionIdIdx: index("live_game_events_session_id_idx").on(table.sessionId),
+  playerIdIdx: index("live_game_events_player_id_idx").on(table.playerId),
 }));
 
 // === SHARE ASSETS (Social media graphics) ===
