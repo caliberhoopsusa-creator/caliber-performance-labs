@@ -63,6 +63,68 @@ export function registerObjectStorageRoutes(app: Express): void {
   });
 
   /**
+   * Request a presigned PUT URL for file upload (used by ObjectUploader component).
+   * 
+   * Request body (JSON):
+   * {
+   *   "fileName": "profile.jpg",
+   *   "contentType": "image/jpeg",
+   *   "objectDir": "public"
+   * }
+   * 
+   * Response:
+   * {
+   *   "url": "https://storage.googleapis.com/...",
+   *   "objectPath": "/objects/uploads/uuid",
+   *   "fileName": "profile.jpg"
+   * }
+   */
+  app.post("/api/object-storage/put-presigned-url", async (req, res) => {
+    try {
+      const { fileName, contentType, objectDir } = req.body;
+
+      if (!fileName) {
+        return res.status(400).json({
+          error: "Missing required field: fileName",
+        });
+      }
+
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      const objectPath = objectStorageService.normalizeObjectEntityPath(uploadURL);
+
+      res.json({
+        url: uploadURL,
+        objectPath,
+        fileName,
+      });
+    } catch (error) {
+      console.error("Error generating presigned URL:", error);
+      res.status(500).json({ error: "Failed to generate upload URL" });
+    }
+  });
+
+  /**
+   * Serve public objects.
+   * 
+   * GET /api/object-storage/public/:filePath(*)
+   */
+  app.get("/api/object-storage/public/:filePath(*)", async (req, res) => {
+    try {
+      const filePath = req.params.filePath;
+      const publicFile = await objectStorageService.searchPublicObject(filePath);
+      
+      if (!publicFile) {
+        return res.status(404).json({ error: "File not found" });
+      }
+      
+      await objectStorageService.downloadObject(publicFile, res);
+    } catch (error) {
+      console.error("Error serving public object:", error);
+      res.status(500).json({ error: "Failed to serve file" });
+    }
+  });
+
+  /**
    * Serve uploaded objects.
    *
    * GET /objects/:objectPath(*)

@@ -83,7 +83,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -1227,6 +1227,10 @@ export default function PlayerDetail() {
     }
   }, [player?.widgetPreferences]);
 
+  // Refs to track uploaded object paths
+  const lastPhotoObjectPath = useRef<string | null>(null);
+  const lastBannerObjectPath = useRef<string | null>(null);
+
   const handlePhotoUpload = async (file: { name: string; type: string }) => {
     const res = await fetch("/api/object-storage/put-presigned-url", {
       method: "POST",
@@ -1238,6 +1242,28 @@ export default function PlayerDetail() {
       }),
     });
     const data = await res.json();
+    // Store the objectPath for use in completion handler
+    lastPhotoObjectPath.current = data.objectPath;
+    return {
+      method: "PUT" as const,
+      url: data.url,
+      headers: { "Content-Type": file.type },
+    };
+  };
+
+  const handleBannerUpload = async (file: { name: string; type: string }) => {
+    const res = await fetch("/api/object-storage/put-presigned-url", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        fileName: file.name,
+        contentType: file.type,
+        objectDir: "public",
+      }),
+    });
+    const data = await res.json();
+    // Store the objectPath for use in completion handler
+    lastBannerObjectPath.current = data.objectPath;
     return {
       method: "PUT" as const,
       url: data.url,
@@ -1246,20 +1272,18 @@ export default function PlayerDetail() {
   };
 
   const handlePhotoComplete = async (result: any) => {
-    if (result.successful?.[0]) {
-      const file = result.successful[0];
-      const publicUrl = `/api/object-storage/public/${file.meta.name}`;
-      setEditForm((prev) => ({ ...prev, photoUrl: publicUrl }));
+    if (result.successful?.[0] && lastPhotoObjectPath.current) {
+      setEditForm((prev) => ({ ...prev, photoUrl: lastPhotoObjectPath.current! }));
       toast({ title: "Photo Uploaded", description: "Profile photo uploaded successfully." });
+      lastPhotoObjectPath.current = null;
     }
   };
 
   const handleBannerComplete = async (result: any) => {
-    if (result.successful?.[0]) {
-      const file = result.successful[0];
-      const publicUrl = `/api/object-storage/public/${file.meta.name}`;
-      setEditForm((prev) => ({ ...prev, bannerUrl: publicUrl }));
+    if (result.successful?.[0] && lastBannerObjectPath.current) {
+      setEditForm((prev) => ({ ...prev, bannerUrl: lastBannerObjectPath.current! }));
       toast({ title: "Banner Uploaded", description: "Banner image uploaded successfully." });
+      lastBannerObjectPath.current = null;
     }
   };
 
@@ -3005,7 +3029,7 @@ export default function PlayerDetail() {
                   <ObjectUploader
                     maxNumberOfFiles={1}
                     maxFileSize={10485760}
-                    onGetUploadParameters={handlePhotoUpload}
+                    onGetUploadParameters={handleBannerUpload}
                     onComplete={handleBannerComplete}
                     buttonClassName="gap-2 flex-1"
                   >
