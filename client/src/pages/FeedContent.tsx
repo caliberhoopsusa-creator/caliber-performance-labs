@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
@@ -7,9 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Target, Award, Repeat2, BarChart3, Users, Camera, Flame, Trophy, Zap, Rss, UserCheck, UsersRound, Activity, Heart, ThumbsUp, HandMetal } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
+import { apiRequest } from "@/lib/queryClient";
 
 function getSessionId(): string {
   const key = "caliber_session_id";
@@ -19,6 +21,19 @@ function getSessionId(): string {
     localStorage.setItem(key, sessionId);
   }
   return sessionId;
+}
+
+function getPlayerName(): string | null {
+  const playerData = localStorage.getItem("caliber_player");
+  if (playerData) {
+    try {
+      const player = JSON.parse(playerData);
+      return player?.name || null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
 }
 
 interface FeedActivity {
@@ -81,68 +96,127 @@ const ACTIVITY_GLOW: Record<string, string> = {
 };
 
 const REACTION_CONFIGS = [
-  { id: "fire", icon: Flame, label: "Fire", color: "text-orange-400" },
-  { id: "like", icon: ThumbsUp, label: "Like", color: "text-blue-400" },
-  { id: "heart", icon: Heart, label: "Love", color: "text-red-400" },
-  { id: "clap", icon: HandMetal, label: "Clap", color: "text-yellow-400" },
+  { id: "fire", icon: Flame, label: "Fire", color: "text-orange-400", activeColor: "bg-orange-500/20 border-orange-500/40" },
+  { id: "like", icon: ThumbsUp, label: "Like", color: "text-blue-400", activeColor: "bg-blue-500/20 border-blue-500/40" },
+  { id: "heart", icon: Heart, label: "Love", color: "text-red-400", activeColor: "bg-red-500/20 border-red-500/40" },
+  { id: "clap", icon: HandMetal, label: "Clap", color: "text-yellow-400", activeColor: "bg-yellow-500/20 border-yellow-500/40" },
 ];
 
+interface ReactionData {
+  counts: Record<string, number>;
+  users: Record<string, string[]>;
+  userReactions: string[];
+}
+
 function ReactionButtons({ 
-  reactions, 
-  onReaction 
+  activityId,
 }: { 
-  reactions: Record<string, number>;
-  onReaction: (reactionId: string) => void;
+  activityId: number;
 }) {
+  const queryClient = useQueryClient();
+  const sessionId = getSessionId();
+  const playerName = getPlayerName();
   const [clickedReaction, setClickedReaction] = useState<string | null>(null);
+
+  const { data: reactionData } = useQuery<{ counts: Record<string, number>; users: Record<string, string[]> }>({
+    queryKey: ['/api/feed', activityId, 'reactions'],
+    queryFn: async () => {
+      const res = await fetch(`/api/feed/${activityId}/reactions`);
+      if (!res.ok) throw new Error('Failed to fetch reactions');
+      return res.json();
+    },
+  });
+
+  const { data: userReactionsData } = useQuery<{ userReactions: string[] }>({
+    queryKey: ['/api/feed', activityId, 'user-reactions', sessionId],
+    queryFn: async () => {
+      const res = await fetch(`/api/feed/${activityId}/user-reactions?sessionId=${sessionId}`);
+      if (!res.ok) throw new Error('Failed to fetch user reactions');
+      return res.json();
+    },
+  });
+
+  const toggleReactionMutation = useMutation({
+    mutationFn: async (reactionType: string) => {
+      return await apiRequest('POST', `/api/feed/${activityId}/reactions`, {
+        sessionId,
+        reactionType,
+        playerName,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/feed', activityId, 'reactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/feed', activityId, 'user-reactions', sessionId] });
+    },
+  });
 
   const handleReactionClick = (reactionId: string) => {
     setClickedReaction(reactionId);
-    onReaction(reactionId);
+    toggleReactionMutation.mutate(reactionId);
     setTimeout(() => setClickedReaction(null), 300);
   };
 
-  return (
-    <div className="flex items-center gap-2 flex-wrap mt-3 pt-3 border-t border-white/5">
-      {REACTION_CONFIGS.map((reaction) => {
-        const Icon = reaction.icon;
-        const count = reactions[reaction.id] || 0;
-        const isClicked = clickedReaction === reaction.id;
+  const counts = reactionData?.counts || {};
+  const users = reactionData?.users || {};
+  const userReactions = userReactionsData?.userReactions || [];
 
-        return (
-          <motion.button
-            key={reaction.id}
-            onClick={() => handleReactionClick(reaction.id)}
-            className={cn(
-              "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-all",
-              "bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20",
-              count > 0 && "border-white/20 bg-white/8",
-            )}
-            data-testid={`button-reaction-${reaction.id}`}
-            whileTap={{ scale: 0.92 }}
-          >
-            <motion.div
-              animate={isClicked ? {
-                scale: [1, 1.3, 0.9, 1],
-                rotate: isClicked ? [0, 15, -15, 0] : 0,
-              } : {}}
-              transition={{ duration: 0.3 }}
-            >
-              <Icon className={cn("w-4 h-4", reaction.color)} />
-            </motion.div>
-            {count > 0 && (
-              <motion.span
-                initial={isClicked ? { scale: 0 } : {}}
-                animate={isClicked ? { scale: 1 } : {}}
-                transition={{ type: "spring", stiffness: 200, damping: 10 }}
-                className="text-white/80"
-              >
-                {count}
-              </motion.span>
-            )}
-          </motion.button>
-        );
-      })}
+  return (
+    <div className="flex flex-col gap-2 mt-3 pt-3 border-t border-white/5">
+      <div className="flex items-center gap-2 flex-wrap">
+        {REACTION_CONFIGS.map((reaction) => {
+          const Icon = reaction.icon;
+          const count = counts[reaction.id] || 0;
+          const isClicked = clickedReaction === reaction.id;
+          const hasUserReacted = userReactions.includes(reaction.id);
+          const reactedUsers = users[reaction.id] || [];
+
+          return (
+            <Tooltip key={reaction.id}>
+              <TooltipTrigger asChild>
+                <motion.button
+                  onClick={() => handleReactionClick(reaction.id)}
+                  className={cn(
+                    "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-all",
+                    "bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20",
+                    hasUserReacted && reaction.activeColor,
+                  )}
+                  data-testid={`button-reaction-${reaction.id}`}
+                  whileTap={{ scale: 0.92 }}
+                  disabled={toggleReactionMutation.isPending}
+                >
+                  <motion.div
+                    animate={isClicked ? {
+                      scale: [1, 1.3, 0.9, 1],
+                      rotate: isClicked ? [0, 15, -15, 0] : 0,
+                    } : {}}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Icon className={cn("w-4 h-4", reaction.color)} />
+                  </motion.div>
+                  {count > 0 && (
+                    <motion.span
+                      initial={isClicked ? { scale: 0 } : {}}
+                      animate={isClicked ? { scale: 1 } : {}}
+                      transition={{ type: "spring", stiffness: 200, damping: 10 }}
+                      className="text-white/80"
+                    >
+                      {count}
+                    </motion.span>
+                  )}
+                </motion.button>
+              </TooltipTrigger>
+              {reactedUsers.length > 0 && (
+                <TooltipContent side="top" className="max-w-xs">
+                  <p className="text-sm">
+                    {reactedUsers.slice(0, 5).join(', ')}
+                    {reactedUsers.length > 5 && ` and ${reactedUsers.length - 5} more`}
+                  </p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -177,7 +251,6 @@ function ActivitySkeleton({ index }: { index: number }) {
 
 function ActivityCard({ activity, index }: { activity: FeedActivity; index: number }) {
   const [, setLocation] = useLocation();
-  const [reactions, setReactions] = useState<Record<string, number>>({});
   
   const Icon = ACTIVITY_ICONS[activity.activityType] || Rss;
   const gradient = ACTIVITY_GRADIENTS[activity.activityType] || "from-gray-500/30 to-gray-600/10";
@@ -185,20 +258,12 @@ function ActivityCard({ activity, index }: { activity: FeedActivity; index: numb
   const glowColor = ACTIVITY_GLOW[activity.activityType] || "#6B7280";
 
   const handleClick = (e: React.MouseEvent) => {
-    // Don't navigate if clicking on reaction buttons
     if ((e.target as HTMLElement).closest('[data-testid^="button-reaction"]')) {
       return;
     }
     if (activity.playerId) {
       setLocation(`/players/${activity.playerId}`);
     }
-  };
-
-  const handleReaction = (reactionId: string) => {
-    setReactions((prev) => ({
-      ...prev,
-      [reactionId]: (prev[reactionId] || 0) + 1,
-    }));
   };
 
   const relativeTime = formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true });
@@ -274,8 +339,7 @@ function ActivityCard({ activity, index }: { activity: FeedActivity; index: numb
             </div>
 
             <ReactionButtons
-              reactions={reactions}
-              onReaction={handleReaction}
+              activityId={activity.id}
             />
           </div>
         </div>
