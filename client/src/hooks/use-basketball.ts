@@ -338,6 +338,8 @@ export type PlayerProgression = {
   currentStreak: number;
   longestStreak: number;
   tierThresholds: Record<string, number>;
+  streakInGracePeriod?: boolean;
+  hoursUntilStreakLost?: number;
 };
 
 export function usePlayerProgression(playerId: number) {

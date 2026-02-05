@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { CollegeMatches } from "@/components/CollegeMatches";
+import { CollegeCompare } from "@/components/CollegeCompare";
 import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +21,8 @@ import {
   Dribbble,
   Trophy,
   Search,
-  X
+  X,
+  GitCompare
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -56,6 +58,7 @@ export default function CollegeRecruitingContent() {
   const currentSport = useSport();
   const [divisionFilter, setDivisionFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [compareOpen, setCompareOpen] = useState(false);
 
   const { data: player, isLoading: playerLoading } = useQuery<Player>({
     queryKey: ['/api/players', playerId],
@@ -119,12 +122,25 @@ export default function CollegeRecruitingContent() {
           </p>
         </div>
         
-        <Button
-          onClick={handleGenerate}
-          disabled={isGenerating}
-          className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white shadow-lg shadow-cyan-500/25"
-          data-testid="button-generate-matches"
-        >
+        <div className="flex items-center gap-2">
+          {hasMatches && (
+            <Button
+              variant="outline"
+              onClick={() => setCompareOpen(true)}
+              className="border-cyan-500/30 hover:border-cyan-400/50 hover:bg-cyan-500/10"
+              data-testid="button-compare-schools"
+            >
+              <GitCompare className="w-4 h-4 mr-2" />
+              Compare Schools
+            </Button>
+          )}
+          
+          <Button
+            onClick={handleGenerate}
+            disabled={isGenerating}
+            className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white shadow-lg shadow-cyan-500/25"
+            data-testid="button-generate-matches"
+          >
           {isGenerating ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -142,6 +158,7 @@ export default function CollegeRecruitingContent() {
             </>
           )}
         </Button>
+        </div>
       </div>
 
       {playerLoading ? (
@@ -292,6 +309,8 @@ export default function CollegeRecruitingContent() {
           </Button>
         </div>
       )}
+
+      <CollegeCompare open={compareOpen} onOpenChange={setCompareOpen} />
     </div>
   );
 }

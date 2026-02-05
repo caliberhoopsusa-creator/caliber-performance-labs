@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { SkeletonChallengeCard } from "@/components/ui/skeleton-premium";
 import { Trophy, Clock, Crown, Flame, Target, Calendar, CheckCircle2, Plus } from "lucide-react";
 import type { Challenge, Player } from "@shared/schema";
 import { ChallengeCard } from "@/components/ChallengesPanel";
@@ -383,13 +384,7 @@ export default function ChallengesContent() {
             {isLoading ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {[1, 2, 3].map((i) => (
-                  <Card key={i} className="animate-pulse">
-                    <CardContent className="p-6">
-                      <div className="h-6 bg-muted rounded w-1/2 mb-4" />
-                      <div className="h-4 bg-muted rounded w-3/4 mb-4" />
-                      <div className="h-2 bg-muted rounded w-full" />
-                    </CardContent>
-                  </Card>
+                  <SkeletonChallengeCard key={i} />
                 ))}
               </div>
             ) : !activeChallenges || activeChallenges.length === 0 ? (

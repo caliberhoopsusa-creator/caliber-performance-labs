@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -8,10 +8,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { useSidelineFeedback, useOfflineGameStorage } from "@/hooks/use-sideline-feedback";
+import { useOffline } from "@/hooks/use-offline";
 import { 
   Play, Square, Undo2, ChevronLeft, Users, 
-  Trophy, AlertCircle, Loader2, X
+  Trophy, AlertCircle, Loader2, X, Volume2, VolumeX, Wifi, WifiOff, RefreshCw
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HelpTooltip } from "@/components/HelpTooltip";
@@ -75,6 +78,21 @@ export default function LiveGameMode() {
   const [opponent, setOpponent] = useState("");
   const [activePlayerId, setActivePlayerId] = useState<number | null>(null);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  
+  // Sideline feedback and offline support
+  const { triggerFeedback, setSoundEnabled: setFeedbackSound } = useSidelineFeedback();
+  const { isOffline } = useOffline();
+  const { storeEvent, getUnsyncedEvents, markEventSynced, clearSyncedEvents } = useOfflineGameStorage();
+
+  // Sync sound setting
+  useEffect(() => {
+    setFeedbackSound(soundEnabled);
+  }, [soundEnabled, setFeedbackSound]);
+
+  // Sync offline events state
+  const [isSyncing, setIsSyncing] = useState(false);
+  const prevOfflineRef = useRef(isOffline);
 
   const { data: user } = useQuery<{ role: string | null }>({
     queryKey: ['/api/users/me'],
@@ -95,6 +113,46 @@ export default function LiveGameMode() {
     enabled: !!activeSession?.id,
   });
 
+  // Sync offline events when coming back online
+  useEffect(() => {
+    const syncOfflineEvents = async () => {
+      if (prevOfflineRef.current && !isOffline && activeSession?.id) {
+        const unsyncedEvents = getUnsyncedEvents();
+        if (unsyncedEvents.length > 0) {
+          setIsSyncing(true);
+          let syncedCount = 0;
+          
+          for (const event of unsyncedEvents) {
+            try {
+              await apiRequest('POST', `/api/live-game/${activeSession.id}/event`, {
+                playerId: event.playerId,
+                eventType: event.eventType,
+              });
+              markEventSynced(event.id);
+              syncedCount++;
+            } catch (error) {
+              console.error('Failed to sync offline event:', error);
+            }
+          }
+          
+          if (syncedCount > 0) {
+            triggerFeedback("success");
+            toast({ 
+              title: "Stats synced!", 
+              description: `${syncedCount} offline stat${syncedCount > 1 ? 's' : ''} uploaded successfully.` 
+            });
+            refetchEvents();
+            clearSyncedEvents();
+          }
+          setIsSyncing(false);
+        }
+      }
+      prevOfflineRef.current = isOffline;
+    };
+    
+    syncOfflineEvents();
+  }, [isOffline, activeSession?.id, getUnsyncedEvents, markEventSynced, clearSyncedEvents, triggerFeedback, toast, refetchEvents]);
+
   const startSessionMutation = useMutation({
     mutationFn: async (data: { selectedPlayerIds: number[]; opponent?: string; sport: string }) => {
       const res = await apiRequest('POST', '/api/live-game/start', data);
@@ -111,13 +169,22 @@ export default function LiveGameMode() {
 
   const logEventMutation = useMutation({
     mutationFn: async (data: { playerId: number; eventType: string }) => {
+      // If offline, store locally
+      if (isOffline) {
+        storeEvent({ playerId: data.playerId, eventType: data.eventType });
+        return { offline: true };
+      }
       const res = await apiRequest('POST', `/api/live-game/${activeSession?.id}/event`, data);
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      // Trigger haptic/audio feedback
+      const isPoints = variables.eventType.startsWith('points');
+      triggerFeedback(isPoints ? "points" : "stat");
       refetchEvents();
     },
     onError: (error: Error) => {
+      triggerFeedback("error");
       toast({ title: "Failed to log stat", description: error.message, variant: "destructive" });
     },
   });
@@ -127,10 +194,12 @@ export default function LiveGameMode() {
       await apiRequest('DELETE', `/api/live-game/${activeSession?.id}/events/${eventId}`);
     },
     onSuccess: () => {
+      triggerFeedback("undo");
       refetchEvents();
       toast({ title: "Undone", description: "Last stat removed" });
     },
     onError: (error: Error) => {
+      triggerFeedback("error");
       toast({ title: "Failed to undo", description: error.message, variant: "destructive" });
     },
   });
@@ -141,9 +210,11 @@ export default function LiveGameMode() {
       return res.json();
     },
     onSuccess: (data: any) => {
+      triggerFeedback("success");
       queryClient.invalidateQueries({ queryKey: ['/api/live-game/active'] });
       queryClient.invalidateQueries({ queryKey: ['/api/games'] });
       queryClient.invalidateQueries({ queryKey: ['/api/roster'] });
+      clearSyncedEvents(); // Clean up any synced offline events
       toast({ 
         title: "Game completed!", 
         description: `Stats saved for ${data.playerCount} players.` 
@@ -157,8 +228,10 @@ export default function LiveGameMode() {
 
   const calculatePlayerStats = useCallback((playerId: number): PlayerStats => {
     const playerEvents = sessionEvents.filter(e => e.playerId === playerId);
+    const offlinePlayerEvents = getUnsyncedEvents().filter(e => e.playerId === playerId);
     const stats: PlayerStats = { points: 0, rebounds: 0, assists: 0, steals: 0, blocks: 0, turnovers: 0, fouls: 0 };
     
+    // Process server events
     for (const event of playerEvents) {
       switch (event.eventType) {
         case 'points_1': stats.points += 1; break;
@@ -172,8 +245,23 @@ export default function LiveGameMode() {
         case 'foul': stats.fouls++; break;
       }
     }
+    
+    // Also count offline pending events
+    for (const event of offlinePlayerEvents) {
+      switch (event.eventType) {
+        case 'points_1': stats.points += 1; break;
+        case 'points_2': stats.points += 2; break;
+        case 'points_3': stats.points += 3; break;
+        case 'rebound': stats.rebounds++; break;
+        case 'assist': stats.assists++; break;
+        case 'steal': stats.steals++; break;
+        case 'block': stats.blocks++; break;
+        case 'turnover': stats.turnovers++; break;
+        case 'foul': stats.fouls++; break;
+      }
+    }
     return stats;
-  }, [sessionEvents]);
+  }, [sessionEvents, getUnsyncedEvents]);
 
   const handleStartGame = () => {
     if (selectedPlayers.length === 0) {
@@ -337,13 +425,46 @@ export default function LiveGameMode() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2 sticky top-0 z-20 bg-background/80 backdrop-blur-sm py-2 -mx-4 px-4 border-b border-cyan-500/10">
-        <div>
-          <h1 className="text-lg font-bold text-cyan-400 font-display">
-            {activeSession.opponent ? `VS ${activeSession.opponent.toUpperCase()}` : 'LIVE GAME'}
-          </h1>
-          <p className="text-xs text-muted-foreground">{sessionPlayers.length} players tracked</p>
-        </div>
         <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-lg font-bold text-cyan-400 font-display">
+              {activeSession.opponent ? `VS ${activeSession.opponent.toUpperCase()}` : 'LIVE GAME'}
+            </h1>
+            <p className="text-xs text-muted-foreground">{sessionPlayers.length} players tracked</p>
+          </div>
+          
+          {/* Status indicators */}
+          <div className="flex items-center gap-2">
+            {isSyncing && (
+              <Badge variant="outline" className="gap-1 text-cyan-400 border-cyan-500/30">
+                <RefreshCw className="w-3 h-3 animate-spin" />
+                <span className="text-xs">Syncing...</span>
+              </Badge>
+            )}
+            {isOffline && (
+              <Badge variant="outline" className="gap-1 text-amber-400 border-amber-500/30">
+                <WifiOff className="w-3 h-3" />
+                <span className="text-xs">Offline</span>
+              </Badge>
+            )}
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          {/* Sound toggle */}
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            data-testid="button-sound-toggle"
+          >
+            {soundEnabled ? (
+              <Volume2 className="w-4 h-4 text-cyan-400" />
+            ) : (
+              <VolumeX className="w-4 h-4 text-muted-foreground" />
+            )}
+          </Button>
+          
           <Button 
             variant="outline"
             onClick={handleUndo}
@@ -524,13 +645,35 @@ export default function LiveGameMode() {
         })}
       </div>
 
-      {sessionEvents.length > 0 && (
+      {(sessionEvents.length > 0 || getUnsyncedEvents().length > 0) && (
         <Card className="border-cyan-500/20">
           <CardHeader className="py-3">
-            <CardTitle className="text-sm">Recent ({sessionEvents.length} events)</CardTitle>
+            <CardTitle className="text-sm flex items-center gap-2">
+              Recent ({sessionEvents.length} events)
+              {getUnsyncedEvents().length > 0 && (
+                <Badge variant="outline" className="text-xs text-amber-400 border-amber-500/30">
+                  +{getUnsyncedEvents().length} pending
+                </Badge>
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent className="py-2">
             <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
+              {/* Show pending offline events first */}
+              {getUnsyncedEvents().map(event => {
+                const player = sessionPlayers.find(p => p.id === event.playerId);
+                const config = STAT_CONFIG[event.eventType as StatType];
+                return (
+                  <Badge 
+                    key={`offline-${event.id}`} 
+                    variant="outline" 
+                    className={cn("text-xs opacity-70 border-dashed", config?.color)}
+                  >
+                    {player?.name?.split(' ')[0] || '?'} {config?.shortLabel || event.eventType}
+                    <WifiOff className="w-2 h-2 ml-1" />
+                  </Badge>
+                );
+              })}
               {sessionEvents.slice(-15).reverse().map(event => {
                 const player = sessionPlayers.find(p => p.id === event.playerId);
                 const config = STAT_CONFIG[event.eventType as StatType];

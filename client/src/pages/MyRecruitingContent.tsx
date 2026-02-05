@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SkeletonQuickStatsGrid, SkeletonRecruitingTimeline, SkeletonInterestCard } from "@/components/ui/skeleton-premium";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
@@ -337,68 +338,72 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4" data-testid="quick-stats-panel">
-        <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-cyan-500/10">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center">
-                <School className="w-5 h-5 text-cyan-400" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-white" data-testid="stat-schools-count">{schoolsCount}</p>
-                <p className="text-xs text-muted-foreground">Schools Interested</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-cyan-500/10">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                <Mail className="w-5 h-5 text-emerald-400" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-white" data-testid="stat-contacted-count">{contactedCount}</p>
-                <p className="text-xs text-muted-foreground">Schools Contacted</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-cyan-500/10">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
-                <Eye className="w-5 h-5 text-purple-400" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-white" data-testid="stat-profile-views">{profileViews?.totalViews || 0}</p>
-                <p className="text-xs text-muted-foreground">Profile Views</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-cyan-500/10">
-          <CardContent className="pt-6">
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <User className="w-4 h-4 text-amber-400" />
-                  <p className="text-xs text-muted-foreground">Profile Complete</p>
+      {playerLoading ? (
+        <SkeletonQuickStatsGrid data-testid="quick-stats-skeleton" />
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4" data-testid="quick-stats-panel">
+          <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-cyan-500/10">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center">
+                  <School className="w-5 h-5 text-cyan-400" />
                 </div>
-                <p className="text-sm font-bold text-white" data-testid="stat-profile-completeness">{profileCompleteness}%</p>
+                <div>
+                  <p className="text-2xl font-bold text-white" data-testid="stat-schools-count">{schoolsCount}</p>
+                  <p className="text-xs text-muted-foreground">Schools Interested</p>
+                </div>
               </div>
-              <Progress 
-                value={profileCompleteness} 
-                className="h-2 bg-white/10"
-                data-testid="progress-profile-completeness"
-              />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-cyan-500/10">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                  <Mail className="w-5 h-5 text-emerald-400" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-white" data-testid="stat-contacted-count">{contactedCount}</p>
+                  <p className="text-xs text-muted-foreground">Schools Contacted</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-cyan-500/10">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                  <Eye className="w-5 h-5 text-purple-400" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-white" data-testid="stat-profile-views">{profileViews?.totalViews || 0}</p>
+                  <p className="text-xs text-muted-foreground">Profile Views</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-cyan-500/10">
+            <CardContent className="pt-6">
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-amber-400" />
+                    <p className="text-xs text-muted-foreground">Profile Complete</p>
+                  </div>
+                  <p className="text-sm font-bold text-white" data-testid="stat-profile-completeness">{profileCompleteness}%</p>
+                </div>
+                <Progress 
+                  value={profileCompleteness} 
+                  className="h-2 bg-white/10"
+                  data-testid="progress-profile-completeness"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       <div className="grid lg:grid-cols-5 gap-6">
         <div className="lg:col-span-2 space-y-6">
@@ -411,11 +416,7 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
             </CardHeader>
             <CardContent>
               {playerLoading ? (
-                <div className="space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-20 w-full" />
-                  ))}
-                </div>
+                <SkeletonRecruitingTimeline />
               ) : player?.graduationYear ? (
                 <RecruitingTimeline
                   graduationYear={player.graduationYear}
@@ -492,7 +493,7 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
               {interestsLoading ? (
                 <div className="space-y-3">
                   {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-24 w-full" />
+                    <SkeletonInterestCard key={i} />
                   ))}
                 </div>
               ) : interests && interests.length > 0 ? (

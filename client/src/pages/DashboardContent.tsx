@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 import { BASKETBALL_POSITIONS, FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS } from "@shared/sports-config";
 
 type SortKey = 'name' | 'position' | 'avgGradeScore' | 'ppg' | 'rpg' | 'apg' | 'spg' | 'bpg' | 'gamesPlayed' | 'passYpg' | 'rushYpg' | 'recYpg' | 'tdsPerGame' | 'compPct' | 'ypc' | 'tackles' | 'sacks';
@@ -186,8 +187,88 @@ export default function DashboardContent() {
 
   if (isLoading) {
     return (
-      <div className="flex h-full items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} className="bg-gradient-to-br from-card to-card/50 border-white/5">
+              <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+                <Skeleton className="h-4 w-24 bg-muted/30" />
+                <Skeleton className="h-5 w-5 rounded-full bg-muted/30" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-10 w-16 mb-2 bg-muted/30" />
+                <Skeleton className="h-3 w-32 bg-muted/20" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <Skeleton className="h-16 w-full rounded-lg bg-muted/20" />
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className="bg-card/50 border-white/5 lg:col-span-2">
+            <CardHeader>
+              <Skeleton className="h-6 w-40 bg-muted/30" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-20 w-full bg-muted/20 rounded-lg" />
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card/50 border-white/5">
+            <CardHeader>
+              <Skeleton className="h-6 w-32 bg-muted/30" />
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center justify-between">
+                  <Skeleton className="h-4 w-24 bg-muted/20" />
+                  <Skeleton className="h-4 w-12 bg-muted/20" />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card className="bg-card/50 border-white/5">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-6 w-40 bg-muted/30" />
+              <div className="flex gap-2">
+                <Skeleton className="h-9 w-24 bg-muted/20 rounded" />
+                <Skeleton className="h-9 w-24 bg-muted/20 rounded" />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-white/5">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <th key={i} className="text-left py-3 px-4">
+                        <Skeleton className="h-4 w-16 bg-muted/20" />
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[1, 2, 3, 4, 5].map((rowIdx) => (
+                    <tr key={rowIdx} className="border-b border-white/5">
+                      {[1, 2, 3, 4, 5].map((colIdx) => (
+                        <td key={colIdx} className="py-3 px-4">
+                          <Skeleton className="h-4 w-20 bg-muted/20" />
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }

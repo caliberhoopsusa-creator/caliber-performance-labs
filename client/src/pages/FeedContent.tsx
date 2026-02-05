@@ -4,9 +4,10 @@ import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Target, Award, Repeat2, BarChart3, Users, Camera, Flame, Trophy, Zap, Rss, UserCheck, UsersRound, Activity } from "lucide-react";
+import { Target, Award, Repeat2, BarChart3, Users, Camera, Flame, Trophy, Zap, Rss, UserCheck, UsersRound, Activity, Heart, ThumbsUp, HandClap } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -79,6 +80,73 @@ const ACTIVITY_GLOW: Record<string, string> = {
   story: "#06B6D4",
 };
 
+const REACTION_CONFIGS = [
+  { id: "fire", icon: Flame, label: "Fire", color: "text-orange-400" },
+  { id: "like", icon: ThumbsUp, label: "Like", color: "text-blue-400" },
+  { id: "heart", icon: Heart, label: "Love", color: "text-red-400" },
+  { id: "clap", icon: HandClap, label: "Clap", color: "text-yellow-400" },
+];
+
+function ReactionButtons({ 
+  reactions, 
+  onReaction 
+}: { 
+  reactions: Record<string, number>;
+  onReaction: (reactionId: string) => void;
+}) {
+  const [clickedReaction, setClickedReaction] = useState<string | null>(null);
+
+  const handleReactionClick = (reactionId: string) => {
+    setClickedReaction(reactionId);
+    onReaction(reactionId);
+    setTimeout(() => setClickedReaction(null), 300);
+  };
+
+  return (
+    <div className="flex items-center gap-2 flex-wrap mt-3 pt-3 border-t border-white/5">
+      {REACTION_CONFIGS.map((reaction) => {
+        const Icon = reaction.icon;
+        const count = reactions[reaction.id] || 0;
+        const isClicked = clickedReaction === reaction.id;
+
+        return (
+          <motion.button
+            key={reaction.id}
+            onClick={() => handleReactionClick(reaction.id)}
+            className={cn(
+              "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-all",
+              "bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20",
+              count > 0 && "border-white/20 bg-white/8",
+            )}
+            data-testid={`button-reaction-${reaction.id}`}
+            whileTap={{ scale: 0.92 }}
+          >
+            <motion.div
+              animate={isClicked ? {
+                scale: [1, 1.3, 0.9, 1],
+                rotate: isClicked ? [0, 15, -15, 0] : 0,
+              } : {}}
+              transition={{ duration: 0.3 }}
+            >
+              <Icon className={cn("w-4 h-4", reaction.color)} />
+            </motion.div>
+            {count > 0 && (
+              <motion.span
+                initial={isClicked ? { scale: 0 } : {}}
+                animate={isClicked ? { scale: 1 } : {}}
+                transition={{ type: "spring", stiffness: 200, damping: 10 }}
+                className="text-white/80"
+              >
+                {count}
+              </motion.span>
+            )}
+          </motion.button>
+        );
+      })}
+    </div>
+  );
+}
+
 function ActivitySkeleton({ index }: { index: number }) {
   return (
     <motion.div
@@ -109,15 +177,28 @@ function ActivitySkeleton({ index }: { index: number }) {
 
 function ActivityCard({ activity, index }: { activity: FeedActivity; index: number }) {
   const [, setLocation] = useLocation();
+  const [reactions, setReactions] = useState<Record<string, number>>({});
+  
   const Icon = ACTIVITY_ICONS[activity.activityType] || Rss;
   const gradient = ACTIVITY_GRADIENTS[activity.activityType] || "from-gray-500/30 to-gray-600/10";
   const iconColor = ACTIVITY_COLORS[activity.activityType] || "text-gray-400";
   const glowColor = ACTIVITY_GLOW[activity.activityType] || "#6B7280";
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    // Don't navigate if clicking on reaction buttons
+    if ((e.target as HTMLElement).closest('[data-testid^="button-reaction"]')) {
+      return;
+    }
     if (activity.playerId) {
       setLocation(`/players/${activity.playerId}`);
     }
+  };
+
+  const handleReaction = (reactionId: string) => {
+    setReactions((prev) => ({
+      ...prev,
+      [reactionId]: (prev[reactionId] || 0) + 1,
+    }));
   };
 
   const relativeTime = formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true });
@@ -135,7 +216,7 @@ function ActivityCard({ activity, index }: { activity: FeedActivity; index: numb
           "hover:border-cyan-500/30",
           activity.playerId && "cursor-pointer hover:scale-[1.01]"
         )}
-        onClick={activity.playerId ? handleClick : undefined}
+        onClick={handleClick}
         data-testid={`card-activity-${activity.id}`}
       >
         <div className={cn("absolute inset-0 bg-gradient-to-br opacity-50", gradient)} />
@@ -191,6 +272,11 @@ function ActivityCard({ activity, index }: { activity: FeedActivity; index: numb
                 {relativeTime}
               </span>
             </div>
+
+            <ReactionButtons
+              reactions={reactions}
+              onReaction={handleReaction}
+            />
           </div>
         </div>
       </Card>

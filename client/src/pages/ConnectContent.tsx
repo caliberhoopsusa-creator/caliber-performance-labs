@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, differenceInMinutes } from "date-fns";
 
 interface Player {
   id: number;
@@ -22,6 +22,7 @@ interface Player {
   team: string | null;
   height: string | null;
   jerseyNumber: number | null;
+  lastActivityTime?: Date | null;
 }
 
 interface FollowStats {
@@ -193,6 +194,15 @@ function PlayerCard({ player }: { player: PlayerWithStats }) {
     ? ACTIVITY_ICONS[player.recentActivity.type] || ACTIVITY_ICONS.default
     : null;
 
+  // Calculate if player is recently active (within 15 minutes)
+  const isRecentlyActive = player.lastActivityTime
+    ? differenceInMinutes(new Date(), new Date(player.lastActivityTime)) <= 15
+    : false;
+
+  const lastSeenText = player.lastActivityTime
+    ? formatDistanceToNow(new Date(player.lastActivityTime), { addSuffix: true })
+    : null;
+
   return (
     <Card
       className="p-4 relative overflow-hidden transition-all duration-300 hover-elevate group"
@@ -201,13 +211,21 @@ function PlayerCard({ player }: { player: PlayerWithStats }) {
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
       <div className="relative z-10 flex items-center gap-4">
-        <Link href={`/players/${player.id}`}>
-          <Avatar className="w-14 h-14 border-2 border-white/10 cursor-pointer hover:border-primary/50 transition-colors">
-            <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary text-white font-display font-bold text-lg">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-        </Link>
+        <div className="relative">
+          <Link href={`/players/${player.id}`}>
+            <Avatar className="w-14 h-14 border-2 border-white/10 cursor-pointer hover:border-primary/50 transition-colors">
+              <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary text-white font-display font-bold text-lg">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+          </Link>
+          {isRecentlyActive && (
+            <div
+              className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white/90 shadow-lg"
+              data-testid={`indicator-online-${player.id}`}
+            />
+          )}
+        </div>
 
         <div className="flex-1 min-w-0">
           <Link href={`/players/${player.id}`}>
@@ -242,6 +260,15 @@ function PlayerCard({ player }: { player: PlayerWithStats }) {
               <Users className="w-3 h-3" />
               {followStats?.followersCount ?? 0} followers
             </span>
+            {lastSeenText && (
+              <span
+                className="flex items-center gap-1 text-cyan-400/70"
+                data-testid={`text-last-seen-${player.id}`}
+              >
+                <Clock className="w-3 h-3" />
+                {lastSeenText}
+              </span>
+            )}
             {player.recentActivity && ActivityIcon && (
               <span className="flex items-center gap-1 text-primary/80">
                 <ActivityIcon className="w-3 h-3" />
@@ -316,6 +343,13 @@ function DiscoverTab() {
 
   const { data: players, isLoading, error } = useQuery<Player[]>({
     queryKey: ["/api/players"],
+    select: (data: Player[]) => {
+      // Mock lastActivityTime for demo purposes (some players active recently, some not)
+      return data.map((player, index) => ({
+        ...player,
+        lastActivityTime: new Date(Date.now() - Math.random() * 60 * 60 * 1000), // Random time in last hour
+      }));
+    },
   });
 
   const filteredPlayers = players?.filter(

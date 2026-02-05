@@ -16,6 +16,8 @@ import { SportProvider } from "@/components/SportToggle";
 import { PageTransition } from "@/components/PageTransition";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { EquippedItemsProvider } from "@/contexts/EquippedItemsContext";
+import { CelebrationProvider } from "@/components/CelebrationOverlay";
+import { XPNotificationProvider } from "@/components/XPToast";
 import { useAuth } from "@/hooks/use-auth";
 import { useOffline } from "@/hooks/use-offline";
 import { useToast } from "@/hooks/use-toast";
@@ -399,15 +401,19 @@ function App() {
           <ThemeProvider>
             <EquippedItemsProvider>
               <SportProvider>
-                <Toaster />
-                <InstallPrompt />
-                <Switch>
-                <Route path="/admin" component={Admin} />
-                <Route path="/profile/:id/public" component={PublicPlayerProfile} />
-                <Route>
-                  <MainRouter />
-                </Route>
-              </Switch>
+                <CelebrationProvider>
+                  <XPNotificationProvider>
+                    <Toaster />
+                    <InstallPrompt />
+                    <Switch>
+                    <Route path="/admin" component={Admin} />
+                    <Route path="/profile/:id/public" component={PublicPlayerProfile} />
+                    <Route>
+                      <MainRouter />
+                    </Route>
+                  </Switch>
+                  </XPNotificationProvider>
+                </CelebrationProvider>
               </SportProvider>
             </EquippedItemsProvider>
           </ThemeProvider>

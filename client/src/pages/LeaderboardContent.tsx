@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SkeletonLeaderboardRow } from "@/components/ui/skeleton-premium";
+import { SkeletonLeaderboardRow, SkeletonLeaderboardHeader } from "@/components/ui/skeleton-premium";
 
 const US_STATES = [
   "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut",
@@ -125,10 +125,7 @@ export default function LeaderboardContent() {
   if (isLoading) {
     return (
       <div className="space-y-6 pb-24 md:pb-8">
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 via-yellow-950/10 to-black/60 border border-yellow-500/20 p-6">
-          <div className="h-8 w-48 skeleton-cyan rounded mb-2" />
-          <div className="h-4 w-64 skeleton-premium rounded" />
-        </div>
+        <SkeletonLeaderboardHeader />
         <div className="space-y-3">
           {[1, 2, 3, 4, 5].map((i) => (
             <SkeletonLeaderboardRow key={i} />

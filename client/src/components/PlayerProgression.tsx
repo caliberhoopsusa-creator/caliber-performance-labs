@@ -1,10 +1,13 @@
 import { usePlayerProgression } from "@/hooks/use-basketball";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Flame, Star, Trophy, Crown, Sparkles, Zap } from "lucide-react";
+import { Flame, Star, Trophy, Crown, Sparkles, Zap, AlertCircle, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEquippedItems } from "@/contexts/EquippedItemsContext";
 import { useAuth } from "@/hooks/use-auth";
+import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
+import { useCelebrationContext } from "@/components/CelebrationOverlay";
 
 const TIER_CONFIG: Record<string, { icon: typeof Star; color: string; bgGradient: string }> = {
   Rookie: { 
@@ -43,9 +46,42 @@ export function PlayerProgression({ playerId, compact = false }: PlayerProgressi
   const { data: progression, isLoading } = usePlayerProgression(playerId);
   const { getBadgeStyle, equippedBadgeStyle } = useEquippedItems();
   const { user } = useAuth();
+  const { triggerCelebration } = useCelebrationContext();
   
   const isOwnProfile = user?.playerId === playerId;
   const badgeStyle = isOwnProfile ? getBadgeStyle() : null;
+  
+  // Track previous tier and XP for animations and celebrations
+  const previousTierRef = useRef<string | null>(null);
+  const previousXpRef = useRef<number | null>(null);
+  const [xpIncreased, setXpIncreased] = useState(false);
+  
+  // Detect tier changes and trigger celebration
+  useEffect(() => {
+    if (!progression) return;
+    
+    // Tier promotion detected
+    if (previousTierRef.current && previousTierRef.current !== progression.currentTier) {
+      triggerCelebration("tier_promotion", {
+        value: progression.currentTier,
+      });
+    }
+    
+    previousTierRef.current = progression.currentTier;
+  }, [progression?.currentTier, triggerCelebration]);
+  
+  // Detect XP increases for shimmer animation
+  useEffect(() => {
+    if (!progression) return;
+    
+    if (previousXpRef.current !== null && progression.totalXp > previousXpRef.current) {
+      setXpIncreased(true);
+      const timer = setTimeout(() => setXpIncreased(false), 1500);
+      return () => clearTimeout(timer);
+    }
+    
+    previousXpRef.current = progression.totalXp;
+  }, [progression?.totalXp]);
   
   if (isLoading) {
     return (
@@ -95,18 +131,27 @@ export function PlayerProgression({ playerId, compact = false }: PlayerProgressi
     >
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-center gap-4 animate-in slide-in-from-left duration-500">
-          <div 
+          <motion.div 
             className={cn(
               "relative w-16 h-16 rounded-xl flex items-center justify-center",
               "bg-gradient-to-br from-primary/30 to-primary/10 border-2",
               badgeStyle ? "" : "border-primary/20 shadow-lg shadow-primary/20"
             )}
+            animate={{
+              scale: [1, 1.05, 1],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
             style={badgeStyle ? {
               borderColor: badgeStyle.ringColor,
               boxShadow: badgeStyle.glowColor,
               background: badgeStyle.gradient,
               animation: badgeStyle.animation,
             } : undefined}
+            data-testid="tier-icon-pulse"
           >
             {badgeStyle && (
               <div 
@@ -119,7 +164,7 @@ export function PlayerProgression({ playerId, compact = false }: PlayerProgressi
               />
             )}
             <TierIcon className={cn("w-8 h-8 relative z-10", tierConfig.color)} />
-          </div>
+          </motion.div>
           <div>
             <h3 className={cn("text-2xl font-bold font-display", tierConfig.color)}>
               {progression.currentTier}
@@ -131,15 +176,50 @@ export function PlayerProgression({ playerId, compact = false }: PlayerProgressi
           </div>
         </div>
         
-        {progression.currentStreak > 0 && (
-          <div className="animate-in slide-in-from-right duration-500 flex flex-col items-center bg-gradient-to-br from-orange-500/15 to-orange-600/5 rounded-lg px-4 py-3 border border-orange-500/30 shadow-lg shadow-orange-500/10 transition-all hover:shadow-orange-500/20 hover:border-orange-500/40">
-            <div className="flex items-center gap-1.5">
-              <Flame className="w-5 h-5 text-orange-400 animate-pulse" />
-              <span className="text-2xl font-bold text-orange-400">{progression.currentStreak}</span>
-            </div>
-            <span className="text-[10px] uppercase tracking-widest text-orange-400/70 font-semibold">Streak</span>
-          </div>
-        )}
+        <div className="flex flex-col gap-3 animate-in slide-in-from-right duration-500">
+          {progression.currentStreak > 0 && (
+            <motion.div 
+              className={cn(
+                "flex flex-col items-center bg-gradient-to-br from-orange-500/15 to-orange-600/5 rounded-lg px-4 py-3 border border-orange-500/30 shadow-lg shadow-orange-500/10 transition-all hover:shadow-orange-500/20 hover:border-orange-500/40",
+                progression.streakInGracePeriod && "border-orange-500/50 shadow-lg shadow-orange-500/30"
+              )}
+              animate={{
+                scale: progression.streakInGracePeriod ? [1, 1.02, 1] : 1,
+              }}
+              transition={{
+                duration: progression.streakInGracePeriod ? 1.5 : 0,
+                repeat: progression.streakInGracePeriod ? Infinity : 0,
+              }}
+              data-testid="streak-display"
+            >
+              <div className="flex items-center gap-1.5">
+                <Flame className={cn("w-5 h-5 text-orange-400", progression.streakInGracePeriod ? "animate-pulse" : "")} />
+                <span className="text-2xl font-bold text-orange-400">{progression.currentStreak}</span>
+              </div>
+              <span className="text-[10px] uppercase tracking-widest text-orange-400/70 font-semibold">Streak</span>
+            </motion.div>
+          )}
+          
+          {/* Grace Period Warning */}
+          {progression.streakInGracePeriod && (
+            <motion.div 
+              className="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/40 rounded-lg px-3 py-2"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              data-testid="grace-period-warning"
+            >
+              <AlertCircle className="w-4 h-4 text-yellow-400" />
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-yellow-400">Grace Period</span>
+                <div className="flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-yellow-400" />
+                  <span className="text-xs text-yellow-400">{progression.hoursUntilStreakLost}h</span>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </div>
       </div>
       
       <div className="divider-glow my-5" />
@@ -147,11 +227,30 @@ export function PlayerProgression({ playerId, compact = false }: PlayerProgressi
       <div className="space-y-3">
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground uppercase tracking-wider font-medium text-xs">XP Progress</span>
-          <span className="font-bold text-primary text-base">{progression.totalXp.toLocaleString()} XP</span>
+          <motion.span 
+            className="font-bold text-primary text-base"
+            animate={xpIncreased ? { scale: [1, 1.1, 1], color: ["#00d4ff", "#ffeb3b", "#00d4ff"] } : {}}
+            transition={{ duration: 0.6 }}
+            data-testid="xp-display"
+          >
+            {progression.totalXp.toLocaleString()} XP
+          </motion.span>
         </div>
         
-        <div className="shimmer relative rounded-lg overflow-hidden">
+        <div className="relative rounded-lg overflow-hidden">
+          {/* Animated shimmer overlay */}
+          {xpIncreased && (
+            <motion.div 
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/20 to-transparent pointer-events-none z-20"
+              initial={{ x: "-100%" }}
+              animate={{ x: "100%" }}
+              transition={{ duration: 0.8, ease: "easeInOut" }}
+            />
+          )}
+          
+          {/* Static shimmer background */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent pointer-events-none z-10" />
+          
           <Progress 
             value={progression.progressPercent} 
             className="h-3"

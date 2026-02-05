@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -22,6 +22,8 @@ import { HighlightUploader } from "@/components/HighlightUploader";
 import { useSport } from "@/components/SportToggle";
 import { FOOTBALL_POSITION_STATS, FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS, FootballPosition, BASKETBALL_POSITIONS } from "@shared/sports-config";
 import { motion } from "framer-motion";
+import { useXPNotification, XP_ACTIONS } from "@/components/XPToast";
+import { useCelebrationContext } from "@/components/CelebrationOverlay";
 
 const FOOTBALL_STAT_LABELS: Record<string, string> = {
   completions: "Completions",
@@ -1039,9 +1041,33 @@ function NumberInput({ label, name, register }: any) {
 function ReportCardView({ game, onReset }: { game: any, onReset: () => void }) {
   const [shareOpen, setShareOpen] = useState(false);
   const { data: player } = usePlayer(game.playerId);
+  const { showXPGain } = useXPNotification();
+  const { triggerCelebration } = useCelebrationContext();
   const playerName = player?.name || "Player";
   const playerPhoto = player?.photoUrl || undefined;
   const isFootball = game.sport === 'football';
+
+  // Show XP notification and celebration on mount (game successfully logged)
+  useEffect(() => {
+    // Base XP for logging a game
+    showXPGain(XP_ACTIONS.GAME_LOGGED.amount, XP_ACTIONS.GAME_LOGGED.reason);
+    
+    // Check for grade-based bonuses
+    const gradeChar = game.grade?.charAt(0);
+    if (gradeChar === 'A') {
+      setTimeout(() => {
+        if (game.grade === 'A+') {
+          showXPGain(XP_ACTIONS.A_PLUS_GRADE.amount, XP_ACTIONS.A_PLUS_GRADE.reason, { type: "grade" });
+          triggerCelebration("grade_a", { 
+            subtitle: "Outstanding performance!", 
+            value: "A+" 
+          });
+        } else {
+          showXPGain(XP_ACTIONS.A_GRADE.amount, XP_ACTIONS.A_GRADE.reason, { type: "grade" });
+        }
+      }, 1500);
+    }
+  }, [game.grade, showXPGain, triggerCelebration]);
 
   const footballStats = isFootball ? {
     passingYards: game.passingYards || 0,

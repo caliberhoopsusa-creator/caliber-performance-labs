@@ -3111,7 +3111,29 @@ export async function registerRoutes(
     const activityStreaks = await storage.getPlayerActivityStreaks(playerId);
     const dailyStreak = activityStreaks.find(s => s.streakType === 'daily_login') || 
                         activityStreaks.find(s => s.streakType === 'daily_game') || 
-                        { currentStreak: 0, longestStreak: 0 };
+                        { currentStreak: 0, longestStreak: 0, lastActivityDate: null };
+    
+    // Calculate grace period status
+    // Grace period: if player missed 1 day (activity was yesterday), they can still maintain streak
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+    
+    let streakInGracePeriod = false;
+    let hoursUntilStreakLost = 0;
+    
+    if (dailyStreak.lastActivityDate) {
+      const lastDate = new Date(dailyStreak.lastActivityDate);
+      const lastDateOnly = new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate());
+      
+      // If last activity was yesterday, we're in grace period
+      if (lastDateOnly.getTime() === yesterday.getTime() && dailyStreak.currentStreak > 0) {
+        streakInGracePeriod = true;
+        // Calculate hours until end of day (when streak will be lost if not active)
+        const endOfDay = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+        hoursUntilStreakLost = Math.floor((endOfDay.getTime() - now.getTime()) / (60 * 60 * 1000));
+      }
+    }
     
     // Use shared tier thresholds from schema
     const tiers = ['Rookie', 'Starter', 'All-Star', 'MVP', 'Hall of Fame'] as const;
@@ -3143,6 +3165,8 @@ export async function registerRoutes(
       currentStreak: dailyStreak.currentStreak,
       longestStreak: dailyStreak.longestStreak,
       tierThresholds: TIER_THRESHOLDS,
+      streakInGracePeriod,
+      hoursUntilStreakLost: streakInGracePeriod ? hoursUntilStreakLost : 0,
     });
   });
 

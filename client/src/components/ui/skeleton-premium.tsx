@@ -114,6 +114,107 @@ export function SkeletonChart({ className }: { className?: string }) {
   );
 }
 
+export function SkeletonQuickStatsGrid({ className }: { className?: string }) {
+  return (
+    <div className={cn("grid grid-cols-2 md:grid-cols-4 gap-4", className)}>
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i} className="relative rounded-xl border border-cyan-500/[0.08] bg-gradient-to-br from-[hsl(220,25%,8%)] via-[hsl(220,20%,6%)] to-[hsl(220,25%,5%)] p-6 overflow-hidden elite-card">
+          <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent" />
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-10 w-10 rounded-xl" variant="cyan" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-5 w-16" variant="cyan" />
+              <Skeleton className="h-3 w-24" />
+            </div>
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent opacity-0 animate-pulse pointer-events-none" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function SkeletonRecruitingTimeline({ className }: { className?: string }) {
+  return (
+    <div className={cn("relative rounded-xl border border-cyan-500/[0.08] bg-gradient-to-br from-[hsl(220,25%,8%)] via-[hsl(220,20%,6%)] to-[hsl(220,25%,5%)] overflow-hidden elite-card", className)}>
+      <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent" />
+      <div className="p-6 space-y-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="flex gap-4">
+            <Skeleton className="h-12 w-12 rounded-lg flex-shrink-0" variant="cyan" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-32" variant="cyan" />
+              <Skeleton className="h-3 w-64" />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent opacity-0 animate-pulse pointer-events-none" />
+    </div>
+  );
+}
+
+export function SkeletonInterestCard({ className }: { className?: string }) {
+  return (
+    <div className={cn("relative rounded-xl border border-cyan-500/[0.08] bg-gradient-to-br from-[hsl(220,25%,8%)] via-[hsl(220,20%,6%)] to-[hsl(220,25%,5%)] p-4 overflow-hidden elite-card", className)}>
+      <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent" />
+      <div className="flex items-start gap-3">
+        <Skeleton className="h-12 w-12 rounded-xl flex-shrink-0" variant="cyan" />
+        <div className="flex-1 space-y-2">
+          <Skeleton className="h-4 w-32" variant="cyan" />
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="h-3 w-48" />
+        </div>
+      </div>
+      <div className="mt-3 flex gap-2">
+        <Skeleton className="h-6 w-16 rounded-full" />
+        <Skeleton className="h-6 w-16 rounded-full" />
+      </div>
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent opacity-0 animate-pulse pointer-events-none" />
+    </div>
+  );
+}
+
+export function SkeletonChallengeCard({ className }: { className?: string }) {
+  return (
+    <div className={cn("relative rounded-xl border border-cyan-500/[0.08] bg-gradient-to-br from-[hsl(220,25%,8%)] via-[hsl(220,20%,6%)] to-[hsl(220,25%,5%)] overflow-hidden elite-card", className)}>
+      <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent" />
+      <div className="p-4 space-y-4">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-3 flex-1">
+            <Skeleton className="h-6 w-6 rounded" variant="cyan" />
+            <div className="space-y-1 flex-1">
+              <Skeleton className="h-4 w-40" variant="cyan" />
+              <Skeleton className="h-3 w-48" />
+            </div>
+          </div>
+          <Skeleton className="h-6 w-20 rounded-full" />
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-3 w-full" variant="cyan" />
+          <Skeleton className="h-6 w-24 rounded" />
+        </div>
+      </div>
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent opacity-0 animate-pulse pointer-events-none" />
+    </div>
+  );
+}
+
+export function SkeletonLeaderboardHeader({ className }: { className?: string }) {
+  return (
+    <div className={cn("relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 via-yellow-950/10 to-black/60 border border-yellow-500/20 p-6 md:p-8", className)}>
+      <div className="absolute inset-0 cyber-grid opacity-20" />
+      <div className="absolute top-0 right-0 w-80 h-80 bg-yellow-500/10 blur-[100px] rounded-full" />
+      <div className="absolute bottom-0 left-0 w-48 h-48 bg-orange-500/10 blur-[60px] rounded-full" />
+      <div className="relative z-10 space-y-2">
+        <Skeleton className="h-5 w-32" variant="cyan" />
+        <Skeleton className="h-8 w-64" variant="cyan" />
+        <Skeleton className="h-4 w-80" />
+      </div>
+    </div>
+  );
+}
+
 export function SkeletonPage() {
   return (
     <div className="space-y-6 p-6 animate-fade-in">

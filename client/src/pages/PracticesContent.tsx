@@ -23,6 +23,7 @@ import {
   Trash2, Play, Zap, Dumbbell
 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Paywall } from "@/components/Paywall";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -327,8 +328,75 @@ export default function PracticesContent() {
 
   if (practicesLoading || playersLoading) {
     return (
-      <div className="flex h-full items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-2">
+            <Skeleton className="h-5 w-64 bg-muted/30" />
+            <Skeleton className="h-4 w-48 bg-muted/20" />
+          </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <Skeleton className="h-10 w-32 rounded bg-muted/20" />
+            <Skeleton className="h-10 w-32 rounded bg-muted/20" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-4">
+            <Card className="bg-card/50 border-white/5">
+              <CardHeader>
+                <Skeleton className="h-6 w-40 bg-muted/30" />
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="rounded-lg border border-white/10 bg-secondary/20 p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="space-y-1 flex-1">
+                        <Skeleton className="h-5 w-32 bg-muted/30" />
+                        <div className="flex items-center gap-4 mt-2">
+                          <Skeleton className="h-4 w-24 bg-muted/20" />
+                          <Skeleton className="h-4 w-20 bg-muted/20" />
+                        </div>
+                      </div>
+                      <Skeleton className="h-6 w-20 rounded-full bg-muted/20" />
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="space-y-4">
+            <Card className="bg-card/50 border-white/5">
+              <CardHeader>
+                <Skeleton className="h-6 w-48 bg-muted/30" />
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="flex items-center justify-between p-2 rounded-lg">
+                    <div className="flex items-center gap-3 flex-1">
+                      <Skeleton className="h-8 w-8 rounded-full bg-muted/20" />
+                      <Skeleton className="h-4 w-24 bg-muted/20" />
+                    </div>
+                    <Skeleton className="h-4 w-12 bg-muted/20" />
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card/50 border-white/5">
+              <CardHeader>
+                <Skeleton className="h-6 w-40 bg-muted/30" />
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {[1, 2, 3, 4].map((i) => (
+                    <Skeleton key={i} className="h-8 w-24 rounded-full bg-muted/20" />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     );
   }
