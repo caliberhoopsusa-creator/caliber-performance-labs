@@ -197,13 +197,17 @@ function PublicPricing() {
 }
 
 function MainRouter() {
-  const { user: authUser, isLoading: authLoading } = useAuth();
-  const { data: extendedUser, isLoading: userLoading } = useExtendedUser();
+  const { user: authUser, isLoading: authLoading, isError: authError } = useAuth();
+  const { data: extendedUser, isLoading: userLoading, isError: userError, refetch: refetchUser } = useExtendedUser();
   const [location] = useLocation();
   
-  const isLoading = authLoading || (authUser && userLoading);
+  // Only show loading during initial auth check
+  // Don't block on extended user if auth user has no role (new user)
+  const isInitialLoading = authLoading;
+  const isLoadingExtendedUser = authUser && !authUser.role ? false : (authUser && userLoading);
+  const isLoading = isInitialLoading || isLoadingExtendedUser;
   
-  // Show loading state
+  // Show loading state with timeout protection
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -224,7 +228,8 @@ function MainRouter() {
   }
   
   // Authenticated but no role selected - show role selection
-  if (!extendedUser?.role) {
+  // Check both authUser.role and extendedUser.role for robustness
+  if (!authUser.role || !extendedUser?.role) {
     return <RoleSelection />;
   }
   

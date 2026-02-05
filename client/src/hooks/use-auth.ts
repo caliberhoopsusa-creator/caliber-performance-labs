@@ -50,15 +50,8 @@ async function fetchUser(): Promise<User | null> {
 
     const userData = await response.json();
     
-    // Ensure user has role set
-    if (!userData.role) {
-      throw {
-        status: 200,
-        message: AUTH_ERROR_MESSAGES.PROFILE_MISSING,
-        type: "profile_incomplete",
-      };
-    }
-
+    // Return user data even if role is not set
+    // The routing logic will handle redirecting to role selection
     return userData;
   } catch (error) {
     if (error instanceof TypeError) {
