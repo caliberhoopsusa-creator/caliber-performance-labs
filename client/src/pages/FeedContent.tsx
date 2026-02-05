@@ -12,6 +12,7 @@ import { Target, Award, Repeat2, BarChart3, Users, Camera, Flame, Trophy, Zap, R
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
 
 function getSessionId(): string {
   const key = "caliber_session_id";
@@ -23,18 +24,6 @@ function getSessionId(): string {
   return sessionId;
 }
 
-function getPlayerName(): string | null {
-  const playerData = localStorage.getItem("caliber_player");
-  if (playerData) {
-    try {
-      const player = JSON.parse(playerData);
-      return player?.name || null;
-    } catch {
-      return null;
-    }
-  }
-  return null;
-}
 
 interface FeedActivity {
   id: number;
@@ -110,12 +99,13 @@ interface ReactionData {
 
 function ReactionButtons({ 
   activityId,
+  playerName,
 }: { 
   activityId: number;
+  playerName: string;
 }) {
   const queryClient = useQueryClient();
   const sessionId = getSessionId();
-  const playerName = getPlayerName();
   const [clickedReaction, setClickedReaction] = useState<string | null>(null);
 
   const { data: reactionData } = useQuery<{ counts: Record<string, number>; users: Record<string, string[]> }>({
@@ -137,11 +127,11 @@ function ReactionButtons({
   });
 
   const toggleReactionMutation = useMutation({
-    mutationFn: async (reactionType: string) => {
+    mutationFn: async ({ reactionType, name }: { reactionType: string; name: string }) => {
       return await apiRequest('POST', `/api/feed/${activityId}/reactions`, {
         sessionId,
         reactionType,
-        playerName,
+        playerName: name,
       });
     },
     onSuccess: () => {
@@ -152,7 +142,7 @@ function ReactionButtons({
 
   const handleReactionClick = (reactionId: string) => {
     setClickedReaction(reactionId);
-    toggleReactionMutation.mutate(reactionId);
+    toggleReactionMutation.mutate({ reactionType: reactionId, name: playerName });
     setTimeout(() => setClickedReaction(null), 300);
   };
 
@@ -249,7 +239,7 @@ function ActivitySkeleton({ index }: { index: number }) {
   );
 }
 
-function ActivityCard({ activity, index }: { activity: FeedActivity; index: number }) {
+function ActivityCard({ activity, index, currentUserName }: { activity: FeedActivity; index: number; currentUserName: string }) {
   const [, setLocation] = useLocation();
   
   const Icon = ACTIVITY_ICONS[activity.activityType] || Rss;
@@ -340,6 +330,7 @@ function ActivityCard({ activity, index }: { activity: FeedActivity; index: numb
 
             <ReactionButtons
               activityId={activity.id}
+              playerName={currentUserName}
             />
           </div>
         </div>
@@ -355,9 +346,10 @@ interface FeedListProps {
   emptyMessage: string;
   emptyDescription: string;
   emptyIcon: typeof Rss;
+  currentUserName: string;
 }
 
-function FeedList({ activities, isLoading, error, emptyMessage, emptyDescription, emptyIcon: EmptyIcon }: FeedListProps) {
+function FeedList({ activities, isLoading, error, emptyMessage, emptyDescription, emptyIcon: EmptyIcon, currentUserName }: FeedListProps) {
   if (isLoading) {
     return (
       <AnimatePresence mode="wait">
@@ -414,7 +406,7 @@ function FeedList({ activities, isLoading, error, emptyMessage, emptyDescription
           className="space-y-3"
         >
           {activities.map((activity, idx) => (
-            <ActivityCard key={activity.id} activity={activity} index={idx} />
+            <ActivityCard key={activity.id} activity={activity} index={idx} currentUserName={currentUserName} />
           ))}
         </motion.div>
       </AnimatePresence>
@@ -481,6 +473,8 @@ const TAB_LABELS = {
 
 export default function FeedContent() {
   const [activeTab, setActiveTab] = useState("all");
+  const { user } = useAuth();
+  const currentUserName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Anonymous' : 'Anonymous';
 
   const { data: allActivities, isLoading: allLoading, error: allError } = useQuery<FeedActivity[]>({
     queryKey: ["/api/feed"],
@@ -548,6 +542,7 @@ export default function FeedContent() {
               emptyMessage="No activity yet"
               emptyDescription="Activities will appear here as players log games and earn badges"
               emptyIcon={Rss}
+              currentUserName={currentUserName}
             />
           </div>
         </TabsContent>
@@ -561,6 +556,7 @@ export default function FeedContent() {
               emptyMessage="No updates from followed players"
               emptyDescription="Follow players to see their updates here"
               emptyIcon={UserCheck}
+              currentUserName={currentUserName}
             />
           </div>
         </TabsContent>
@@ -574,6 +570,7 @@ export default function FeedContent() {
               emptyMessage="No team activity"
               emptyDescription="Team updates will appear here when teammates log games or earn badges"
               emptyIcon={UsersRound}
+              currentUserName={currentUserName}
             />
           </div>
         </TabsContent>
