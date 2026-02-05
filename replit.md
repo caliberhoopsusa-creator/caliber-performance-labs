@@ -22,6 +22,12 @@ Preferred communication style: Simple, everyday language.
   - `CollapsibleStatCard`: Collapsible stat sections with accessible button-based header, keyboard navigation, and aria-expanded state.
   - `MobileStatGrid`: Grid layout optimized for mobile stat displays.
 - **Error Boundary**: A custom React Error Boundary provides a futuristic error UI with graceful handling and debugging information.
+- **Age-Friendly UI**: Accessibility improvements for users of all ages including:
+  - Base font size 16px minimum for readability
+  - Larger navigation text (desktop: text-base, mobile labels: 11px)
+  - Enlarged touch targets (mobile nav: 64-72px min-height, icons: 24px)
+  - ARIA labels on navigation buttons for screen readers
+  - Utility classes `.text-readable` (16px) and `.text-readable-lg` (18px) for consistent sizing
 - **Contextual Help**: 
   - `HelpTooltip`: Reusable help icon button with tooltip for contextual explanations
   - `FeatureTip`: Tooltip wrapper for existing elements to explain features on hover
