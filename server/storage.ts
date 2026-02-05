@@ -4,7 +4,7 @@ import { type Sport } from "@shared/sports-config";
 import {
   players, games, badges, goals, streaks, likes, comments, challenges, challengeProgress,
   teams, teamMembers, teamPosts, teamPostComments,
-  feedActivities, reposts, polls, pollVotes, predictions, predictionVotes, storyTemplates, playerStories, storyViews, storyReactions, storyHighlights, storyTags,
+  feedActivities, feedReactions, reposts, polls, pollVotes, predictions, predictionVotes, storyTemplates, playerStories, storyViews, storyReactions, storyHighlights, storyTags,
   activityStreaks, footballMetrics,
   shots, gameNotes, practices, practiceAttendance, drills, drillScores, lineups, lineupStats,
   opponents, alerts, coachGoals, drillRecommendations,
@@ -30,6 +30,7 @@ import {
   type TeamPost, type InsertTeamPost,
   type TeamPostComment, type InsertTeamPostComment,
   type FeedActivity, type InsertFeedActivity,
+  type FeedReaction, type InsertFeedReaction,
   type Repost, type InsertRepost,
   type Poll, type InsertPoll,
   type PollVote, type InsertPollVote,
@@ -212,6 +213,13 @@ export interface IStorage {
   getPlayerFeedActivities(playerId: number): Promise<FeedActivity[]>;
   getFollowingFeedActivities(playerId: number, limit?: number): Promise<(FeedActivity & { playerName?: string })[]>;
   getTeamFeedActivities(sessionId: string, limit?: number): Promise<(FeedActivity & { playerName?: string })[]>;
+
+  // Feed Reactions
+  addReaction(reaction: InsertFeedReaction): Promise<FeedReaction>;
+  removeReaction(id: number): Promise<void>;
+  getUserReaction(activityId: number, sessionId: string, reactionType: string): Promise<FeedReaction | undefined>;
+  getUserReactionsForActivity(activityId: number, sessionId: string): Promise<FeedReaction[]>;
+  getActivityReactions(activityId: number): Promise<FeedReaction[]>;
 
   // Reposts
   createRepost(repost: InsertRepost): Promise<Repost>;
@@ -1297,6 +1305,50 @@ export class DatabaseStorage implements IStorage {
       ...r,
       playerName: r.playerName || undefined,
     }));
+  }
+
+  // Feed Reactions
+  async addReaction(reaction: InsertFeedReaction): Promise<FeedReaction> {
+    const [newReaction] = await db.insert(feedReactions).values(reaction).returning();
+    return newReaction;
+  }
+
+  async removeReaction(id: number): Promise<void> {
+    await db.delete(feedReactions).where(eq(feedReactions.id, id));
+  }
+
+  async getUserReaction(activityId: number, sessionId: string, reactionType: string): Promise<FeedReaction | undefined> {
+    const [reaction] = await db
+      .select()
+      .from(feedReactions)
+      .where(
+        and(
+          eq(feedReactions.activityId, activityId),
+          eq(feedReactions.sessionId, sessionId),
+          eq(feedReactions.reactionType, reactionType)
+        )
+      );
+    return reaction;
+  }
+
+  async getUserReactionsForActivity(activityId: number, sessionId: string): Promise<FeedReaction[]> {
+    return await db
+      .select()
+      .from(feedReactions)
+      .where(
+        and(
+          eq(feedReactions.activityId, activityId),
+          eq(feedReactions.sessionId, sessionId)
+        )
+      );
+  }
+
+  async getActivityReactions(activityId: number): Promise<FeedReaction[]> {
+    return await db
+      .select()
+      .from(feedReactions)
+      .where(eq(feedReactions.activityId, activityId))
+      .orderBy(desc(feedReactions.createdAt));
   }
 
   // Reposts

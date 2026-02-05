@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, decimal, date, index } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, decimal, date, index, unique } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -789,13 +789,27 @@ export const feedActivities = pgTable("feed_activities", {
   badgeIdIdx: index("feed_activities_badge_id_idx").on(table.badgeId),
 }));
 
+// === FEED REACTIONS ===
+export const feedReactions = pgTable("feed_reactions", {
+  id: serial("id").primaryKey(),
+  activityId: integer("activity_id").references(() => feedActivities.id, { onDelete: "cascade" }).notNull(),
+  sessionId: text("session_id").notNull(),
+  reactionType: text("reaction_type").notNull(),
+  playerName: text("player_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  activityIdIdx: index("feed_reactions_activity_id_idx").on(table.activityId),
+  sessionIdIdx: index("feed_reactions_session_id_idx").on(table.sessionId),
+  uniqueReaction: unique("unique_user_reaction_per_activity").on(table.activityId, table.sessionId, table.reactionType),
+}));
+
 // === REPOSTS ===
 export const reposts = pgTable("reposts", {
   id: serial("id").primaryKey(),
   originalActivityId: integer("original_activity_id").references(() => feedActivities.id, { onDelete: "cascade" }),
   gameId: integer("game_id").references(() => games.id, { onDelete: "cascade" }),
   sessionId: text("session_id").notNull(),
-  comment: text("comment"), // Optional comment when reposting
+  comment: text("comment"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
   originalActivityIdIdx: index("reposts_original_activity_id_idx").on(table.originalActivityId),
@@ -1134,6 +1148,10 @@ export type InsertDrillRecommendation = z.infer<typeof insertDrillRecommendation
 export type FeedActivity = typeof feedActivities.$inferSelect;
 export const insertFeedActivitySchema = createInsertSchema(feedActivities).omit({ id: true, createdAt: true });
 export type InsertFeedActivity = z.infer<typeof insertFeedActivitySchema>;
+
+export type FeedReaction = typeof feedReactions.$inferSelect;
+export const insertFeedReactionSchema = createInsertSchema(feedReactions).omit({ id: true, createdAt: true });
+export type InsertFeedReaction = z.infer<typeof insertFeedReactionSchema>;
 
 export type Repost = typeof reposts.$inferSelect;
 export const insertRepostSchema = createInsertSchema(reposts).omit({ id: true, createdAt: true });

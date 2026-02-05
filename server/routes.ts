@@ -5397,6 +5397,78 @@ Respond in this exact JSON format:
     }
   });
 
+  // === FEED REACTIONS ===
+  app.post('/api/feed/:activityId/reactions', async (req, res) => {
+    try {
+      const activityId = Number(req.params.activityId);
+      const { sessionId, reactionType, playerName } = req.body;
+      
+      if (!sessionId || !reactionType) {
+        return res.status(400).json({ message: 'SessionId and reactionType are required' });
+      }
+
+      const validReactionTypes = ['fire', 'like', 'heart', 'clap'];
+      if (!validReactionTypes.includes(reactionType)) {
+        return res.status(400).json({ message: 'Invalid reaction type' });
+      }
+
+      const existingReaction = await storage.getUserReaction(activityId, sessionId, reactionType);
+      
+      if (existingReaction) {
+        await storage.removeReaction(existingReaction.id);
+        res.json({ action: 'removed', reactionType });
+      } else {
+        await storage.addReaction({ activityId, sessionId, reactionType, playerName });
+        res.json({ action: 'added', reactionType });
+      }
+    } catch (err) {
+      console.error('Toggle reaction error:', err);
+      res.status(500).json({ message: 'Error toggling reaction' });
+    }
+  });
+
+  app.get('/api/feed/:activityId/reactions', async (req, res) => {
+    try {
+      const activityId = Number(req.params.activityId);
+      const reactions = await storage.getActivityReactions(activityId);
+      
+      const counts: Record<string, number> = {};
+      const users: Record<string, string[]> = {};
+      
+      for (const reaction of reactions) {
+        counts[reaction.reactionType] = (counts[reaction.reactionType] || 0) + 1;
+        if (!users[reaction.reactionType]) {
+          users[reaction.reactionType] = [];
+        }
+        if (reaction.playerName) {
+          users[reaction.reactionType].push(reaction.playerName);
+        }
+      }
+      
+      res.json({ counts, users, reactions });
+    } catch (err) {
+      console.error('Get reactions error:', err);
+      res.status(500).json({ message: 'Error fetching reactions' });
+    }
+  });
+
+  app.get('/api/feed/:activityId/user-reactions', async (req, res) => {
+    try {
+      const activityId = Number(req.params.activityId);
+      const sessionId = req.query.sessionId as string;
+      
+      if (!sessionId) {
+        return res.json({ userReactions: [] });
+      }
+      
+      const userReactions = await storage.getUserReactionsForActivity(activityId, sessionId);
+      res.json({ userReactions: userReactions.map(r => r.reactionType) });
+    } catch (err) {
+      console.error('Get user reactions error:', err);
+      res.status(500).json({ message: 'Error fetching user reactions' });
+    }
+  });
+
   // === REPOSTS ===
   app.post('/api/games/:id/repost', async (req, res) => {
     try {
