@@ -197,18 +197,12 @@ function PublicPricing() {
 }
 
 function MainRouter() {
-  const { user: authUser, isLoading: authLoading, isError: authError } = useAuth();
+  const { user: authUser, isLoading: authLoading } = useAuth();
   const { data: extendedUser, isLoading: userLoading, isError: userError, refetch: refetchUser } = useExtendedUser();
   const [location] = useLocation();
   
-  // Only show loading during initial auth check
-  // Don't block on extended user if auth user has no role (new user)
-  const isInitialLoading = authLoading;
-  const isLoadingExtendedUser = authUser && !authUser.role ? false : (authUser && userLoading);
-  const isLoading = isInitialLoading || isLoadingExtendedUser;
-  
-  // Show loading state with timeout protection
-  if (isLoading) {
+  // Show loading state during initial auth check
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -227,13 +221,39 @@ function MainRouter() {
     return <Landing />;
   }
   
-  // Authenticated but no role selected - show role selection
-  // Check both authUser.role and extendedUser.role for robustness
-  if (!authUser.role || !extendedUser?.role) {
+  // New user with no role - show role selection immediately (don't wait for extended user)
+  if (!authUser.role) {
     return <RoleSelection />;
   }
   
-  // Player without profile - show role selection to create profile
+  // User has a role but extended user is still loading - show loading
+  if (userLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto" />
+          <p className="text-muted-foreground">Loading your profile...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Handle extended user fetch error with retry option
+  if (userError || !extendedUser) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <AlertCircle className="w-10 h-10 text-destructive mx-auto" />
+          <p className="text-muted-foreground">Failed to load your profile</p>
+          <Button onClick={() => refetchUser()} data-testid="button-retry-profile">
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+  
+  // Player without player profile - show role selection to create profile
   if (extendedUser.role === 'player' && !extendedUser.playerId) {
     return <RoleSelection />;
   }
@@ -247,7 +267,7 @@ function MainRouter() {
       <SessionExpiryHandler />
       <OfflineBanner />
       <div className="flex min-h-screen w-full max-w-full overflow-x-hidden bg-background text-foreground font-body selection:bg-primary/30">
-        <Sidebar userRole={extendedUser.role} playerId={extendedUser.playerId} />
+        <Sidebar userRole={extendedUser.role!} playerId={extendedUser.playerId} />
         <div className="flex-1 flex flex-col min-w-0 relative bg-gradient-to-b from-[hsl(220,25%,6%)] via-[hsl(220,20%,5%)] to-[hsl(220,25%,4%)]">
           <div className="absolute inset-0 cyber-grid pointer-events-none opacity-50" />
           <div className="absolute inset-0 scan-lines pointer-events-none opacity-20" />
@@ -257,7 +277,7 @@ function MainRouter() {
           <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent pointer-events-none" />
           <header className="mobile-header-blur md:static md:backdrop-blur-none md:bg-transparent relative z-10 flex items-center justify-between gap-2 px-3 py-2 md:p-4 md:px-8 border-b border-cyan-500/[0.08] md:backdrop-blur-2xl md:bg-gradient-to-r from-[hsl(220,25%,8%)]/80 via-[hsl(220,20%,6%)]/60 to-[hsl(220,25%,8%)]/80 overflow-visible">
             <div className="flex items-center gap-2 overflow-visible">
-              <MobileDrawer userRole={extendedUser.role} playerId={extendedUser.playerId} />
+              <MobileDrawer userRole={extendedUser.role!} playerId={extendedUser.playerId} />
               <HeaderCoinDisplay />
             </div>
             <div className="flex items-center gap-2 overflow-visible">
@@ -364,8 +384,8 @@ function MainRouter() {
             </PageTransition>
           </main>
         </div>
-        <MobileNav userRole={extendedUser.role} playerId={extendedUser.playerId} />
-        <FloatingActionButton userRole={extendedUser.role} playerId={extendedUser.playerId} />
+        <MobileNav userRole={extendedUser.role!} playerId={extendedUser.playerId} />
+        <FloatingActionButton userRole={extendedUser.role!} playerId={extendedUser.playerId} />
       </div>
     </>
   );
