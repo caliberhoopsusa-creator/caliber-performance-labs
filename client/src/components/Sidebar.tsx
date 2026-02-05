@@ -169,8 +169,9 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
           <button 
             onClick={handleRoleSwitch}
             disabled={isSwitchingRole}
-            className="flex items-center gap-1.5 text-[10px] text-muted-foreground uppercase tracking-widest font-medium transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 text-xs text-muted-foreground uppercase tracking-widest font-medium transition-colors cursor-pointer"
             data-testid="button-switch-role"
+            aria-label={`Switch to ${isPlayer ? 'Coach' : 'Player'} Mode`}
           >
             {isPlayer ? "Player" : "Coach"} Mode
             <ArrowLeftRight className="w-3 h-3" />
@@ -190,7 +191,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
       <nav className="flex-1 p-3 space-y-5">
         {navSections.map((section) => (
           <div key={section.title}>
-            <h3 className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest mb-1.5 px-3">{section.title}</h3>
+            <h3 className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest mb-1.5 px-3">{section.title}</h3>
             <div className="space-y-0.5">
               {section.items.map((item) => {
                 const isActive = location === item.href || (item.href.includes('/players/') && location.includes('/players/') && location === item.href);
@@ -199,7 +200,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
                 const isFeatured = item.featured && !isActive;
                 return (
                   <Link key={item.href} href={item.href} className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 group font-medium text-sm relative overflow-hidden",
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 group font-medium text-base relative overflow-hidden",
                     isActive 
                       ? "bg-gradient-to-r from-accent/[0.12] to-transparent text-white border-l-2 border-accent shadow-[0_0_20px_hsl(var(--accent)_/_0.1)_inset]" 
                       : isFeatured
@@ -304,8 +305,9 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
               >
                 <Link 
                   href={item.href} 
-                  className="flex flex-col items-center justify-center touch-target -mt-6 transition-all duration-300 group min-h-16" 
+                  className="flex flex-col items-center justify-center touch-target -mt-6 transition-all duration-300 group min-h-18" 
                   data-testid={`mobile-nav-${item.label.toLowerCase()}`}
+                  aria-label={item.label}
                 >
                   {/* Featured button with animated ring */}
                   <motion.div 
@@ -334,7 +336,7 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
                     {/* Main button */}
                     <motion.div 
                       className={cn(
-                        "relative rounded-full p-3 border-2 transition-all duration-300",
+                        "relative rounded-full p-4 border-2 transition-all duration-300",
                         isActive 
                           ? "bg-gradient-to-br from-accent to-accent text-white border-accent shadow-[0_0_30px_hsl(var(--accent)/0.5),0_0_60px_hsl(var(--accent)/0.3)]" 
                           : "bg-gradient-to-br from-accent to-accent text-white border-accent/60 shadow-[0_4px_20px_hsl(var(--accent)/0.4)] group-hover:shadow-[0_0_30px_hsl(var(--accent)/0.5)]"
@@ -348,7 +350,7 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
                   
                   <motion.span 
                     className={cn(
-                      "text-[9px] font-semibold uppercase tracking-widest mt-2 transition-all duration-300",
+                      "text-[11px] font-semibold uppercase tracking-widest mt-2 transition-all duration-300",
                       isActive 
                         ? "text-accent drop-shadow-[0_0_8px_hsl(var(--accent)/0.8)]" 
                         : "text-muted-foreground group-hover:text-accent"
@@ -378,12 +380,13 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
               <Link 
                 href={item.href} 
                 className={cn(
-                  "relative flex flex-col items-center justify-center touch-target p-2 rounded-xl transition-all duration-300 group min-h-14",
+                  "relative flex flex-col items-center justify-center touch-target p-2 rounded-xl transition-all duration-300 group min-h-16",
                   isActive && "mobile-nav-active-bg"
                 )} 
                 data-testid={`mobile-nav-${item.label.toLowerCase()}`}
                 data-active={isActive ? "true" : undefined}
                 aria-current={isActive ? "page" : undefined}
+                aria-label={item.label}
               >
                 <AnimatePresence>
                   {isActive && (
@@ -410,12 +413,12 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
                   animate={isActive ? { scale: [1, 1.15, 1] } : {}}
                 >
-                  <Icon className="w-5 h-5" />
+                  <Icon className="w-6 h-6" />
                 </motion.div>
                 
                 <motion.span 
                   className={cn(
-                    "text-[9px] font-medium uppercase tracking-wider transition-colors duration-300",
+                    "text-[11px] font-medium uppercase tracking-wider transition-colors duration-300",
                     isActive 
                       ? "text-accent font-semibold" 
                       : "text-muted-foreground/80 group-hover:text-accent/80"

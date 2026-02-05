@@ -74,6 +74,7 @@
   html, body {
     @apply bg-background text-foreground antialiased selection:bg-primary/30;
     font-family: var(--font-body);
+    font-size: 16px;
     overflow-x: hidden;
     overscroll-behavior-x: none;
   }
@@ -95,6 +96,9 @@
 
 /* Custom Utilities */
 @layer utilities {
+  .text-readable { font-size: clamp(16px, 16px, 100%); }
+  .text-readable-lg { font-size: clamp(18px, 18px, 100%); }
+
   .text-grade-a { color: hsl(var(--grade-a)); }
   .text-grade-b { color: hsl(var(--grade-b)); }
   .text-grade-c { color: hsl(var(--grade-c)); }
