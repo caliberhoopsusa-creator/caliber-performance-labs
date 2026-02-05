@@ -196,6 +196,11 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
     enabled: !!playerId,
   });
 
+  const { data: profileViews } = useQuery<{ totalViews: number; viewsLast30Days: number }>({
+    queryKey: ['/api/players', playerId, 'profile-views'],
+    enabled: !!playerId,
+  });
+
   const removeMutation = useMutation({
     mutationFn: async (collegeId: number) => {
       return apiRequest('DELETE', `/api/players/${playerId}/interests/${collegeId}`);
@@ -368,7 +373,7 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
                 <Eye className="w-5 h-5 text-purple-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white" data-testid="stat-profile-views">0</p>
+                <p className="text-2xl font-bold text-white" data-testid="stat-profile-views">{profileViews?.totalViews || 0}</p>
                 <p className="text-xs text-muted-foreground">Profile Views</p>
               </div>
             </div>

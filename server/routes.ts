@@ -2312,10 +2312,10 @@ export async function registerRoutes(
   });
 
   // GET /api/players/:id/profile-views - Get profile view count (requires auth, player must own profile)
-  app.get('/api/players/:id/profile-views', async (req, res) => {
+  app.get('/api/players/:id/profile-views', isAuthenticated, async (req: any, res) => {
     try {
       const playerId = Number(req.params.id);
-      const userId = (req as any).user?.id;
+      const userId = req.user?.claims?.sub;
       
       const player = await storage.getPlayer(playerId);
       if (!player) {
@@ -2324,8 +2324,8 @@ export async function registerRoutes(
       
       // Only the player or a coach can see view counts
       if (player.userId !== userId) {
-        // Check if user is a coach on the player's team
-        const user = await storage.getUserByAuthId(userId);
+        // Check if user is a coach
+        const [user] = await db.select().from(users).where(eq(users.id, userId));
         if (!user || user.role !== 'coach') {
           return res.status(403).json({ message: 'Not authorized' });
         }
