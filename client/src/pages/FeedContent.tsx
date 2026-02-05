@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Target, Award, Repeat2, BarChart3, Users, Camera, Flame, Trophy, Zap, Rss, UserCheck, UsersRound, Activity, Heart, ThumbsUp, HandClap } from "lucide-react";
+import { Target, Award, Repeat2, BarChart3, Users, Camera, Flame, Trophy, Zap, Rss, UserCheck, UsersRound, Activity, Heart, ThumbsUp, HandMetal } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -84,7 +84,7 @@ const REACTION_CONFIGS = [
   { id: "fire", icon: Flame, label: "Fire", color: "text-orange-400" },
   { id: "like", icon: ThumbsUp, label: "Like", color: "text-blue-400" },
   { id: "heart", icon: Heart, label: "Love", color: "text-red-400" },
-  { id: "clap", icon: HandClap, label: "Clap", color: "text-yellow-400" },
+  { id: "clap", icon: HandMetal, label: "Clap", color: "text-yellow-400" },
 ];
 
 function ReactionButtons({ 

@@ -42,10 +42,17 @@ Preferred communication style: Simple, everyday language.
 ### Core Features
 - **Multi-Sport Support**: Configurable for basketball and football, with position-specific stats and grading.
 - **Player Management**: Comprehensive profiles, stat entry, and performance tracking.
-- **Gamification**: XP system, tier progression (Rookie to Hall of Fame), streak bonuses, and skill-based badges.
+- **Gamification**: XP system, tier progression (Rookie to Hall of Fame), streak bonuses, and skill-based badges. Enhanced with:
+  - Animated XP progress bar with shimmer effect on XP gains
+  - Pulse animation on tier icons
+  - Streak grace period warnings with countdown hours
+  - Tier promotion celebration triggers
 - **AI Integration**: Gemini AI for video analysis to extract game statistics and AI Projections for future performance.
 - **Authentication**: Replit Auth with session management and role-based access control (Player/Coach), including robust error handling for session expiry, network issues, and profile validation.
-- **Social & Engagement**: Player following, in-app notifications, goal sharing, highlight clips, and shareable achievements.
+- **Social & Engagement**: Player following, in-app notifications, goal sharing, highlight clips, and shareable achievements. Feed features quick reaction buttons (fire, like, heart, clap) with animations, and player cards show online/activity indicators.
+- **Celebration System**: Full-screen confetti/particle overlays for achievements (tier promotions, badge unlocks, A-grade games). XP gain toasts appear in top-right corner. Components: `CelebrationOverlay.tsx`, `XPToast.tsx`, contexts in App.tsx.
+- **Skeleton Loading**: Comprehensive skeleton loading states on Dashboard, Recruiting Hub, Coach Hub, and Analytics Hub pages for smoother perceived performance during data fetching.
+- **College Compare Tool**: Side-by-side comparison of 2-3 colleges in Recruiting Hub (?tab=schools). Displays division, win/loss records, championships, pro picks, NIL opportunities, and graduation rates. Component: `CollegeCompare.tsx`.
 - **Community Hub** (`/community`): A unified tabbed interface consolidating all social features. Uses URL parameters for tab navigation (?tab=feed|stories|polls|connect). Old routes redirect for backwards compatibility.
   - **Feed Tab** (`?tab=feed`): Activity feed showing latest updates from players and teams with All/Following/Team filters
   - **Stories Tab** (`?tab=stories`): Instagram-style 24-hour stories with creation, viewing, and player grouping
@@ -80,6 +87,9 @@ Preferred communication style: Simple, everyday language.
   - Running totals per player displayed in real-time
   - Undo functionality for stat corrections
   - Automatic individual game record creation for each player on completion
+  - **Haptic feedback**: Vibration patterns for stat logging, undo actions, errors, and success via `useSidelineFeedback` hook
+  - **Audio cues**: Sound effects for stat logging and game completion, toggleable with sound button
+  - **Offline capability**: Stats stored in localStorage when offline, auto-synced when reconnected with progress indicator and toast notifications
   - Database tables: `live_game_sessions` (coachUserId, selectedPlayerIds JSON), `live_game_events` (per-player stat entries)
 - **Scheduling**: Practice scheduler and calendar.
 - **Coach Features**: Team dashboard, game notes, lineup analysis, practice tracking with live mode, AI-generated drill recommendations, and one-click game verification queue with sport filtering.
