@@ -32,22 +32,22 @@ export function NotificationBell() {
   }, [isOpen]);
 
   return (
-    <div className="relative">
+    <div className="relative overflow-visible">
       <Button
         ref={buttonRef}
         variant="ghost"
         size="icon"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative"
+        className="relative overflow-visible"
         data-testid="button-notification-bell"
       >
         <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
           <span
             className={cn(
-              "absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center",
+              "absolute top-0 right-0 min-w-[18px] h-[18px] flex items-center justify-center",
               "bg-primary text-primary-foreground text-xs font-bold rounded-full",
-              "px-1 animate-in zoom-in-50 duration-200"
+              "px-1 animate-in zoom-in-50 duration-200 transform translate-x-1 -translate-y-1"
             )}
             data-testid="badge-unread-count"
           >

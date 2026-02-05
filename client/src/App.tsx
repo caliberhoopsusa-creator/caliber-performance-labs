@@ -250,17 +250,17 @@ function MainRouter() {
           <div className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-gradient-radial from-blue-500/[0.03] to-transparent rounded-full blur-[150px] pointer-events-none" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-gradient-radial from-cyan-500/[0.02] to-transparent rounded-full pointer-events-none" />
           <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent pointer-events-none" />
-          <header className="mobile-header-blur md:static md:backdrop-blur-none md:bg-transparent relative z-10 flex items-center justify-between gap-4 p-4 md:px-8 border-b border-cyan-500/[0.08] md:backdrop-blur-2xl md:bg-gradient-to-r from-[hsl(220,25%,8%)]/80 via-[hsl(220,20%,6%)]/60 to-[hsl(220,25%,8%)]/80">
-            <div className="flex items-center gap-3">
+          <header className="mobile-header-blur md:static md:backdrop-blur-none md:bg-transparent relative z-10 flex items-center justify-between gap-2 px-3 py-2 md:p-4 md:px-8 border-b border-cyan-500/[0.08] md:backdrop-blur-2xl md:bg-gradient-to-r from-[hsl(220,25%,8%)]/80 via-[hsl(220,20%,6%)]/60 to-[hsl(220,25%,8%)]/80 overflow-visible">
+            <div className="flex items-center gap-2 overflow-visible">
               <MobileDrawer userRole={extendedUser.role} playerId={extendedUser.playerId} />
               <HeaderCoinDisplay />
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 overflow-visible">
               <OfflineIndicator />
               <NotificationBell />
             </div>
           </header>
-          <main className="relative z-10 flex-1 p-4 pb-20 md:px-8 md:pb-8 w-full max-w-[1600px] mx-auto overflow-x-hidden">
+          <main className="relative z-10 flex-1 p-4 pb-24 md:px-8 md:pb-8 w-full max-w-[1600px] mx-auto overflow-x-hidden overflow-y-auto">
             <PageTransition>
               <Switch>
                 <Route path="/">
