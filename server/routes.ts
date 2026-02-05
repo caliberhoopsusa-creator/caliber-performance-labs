@@ -2149,6 +2149,18 @@ export async function registerRoutes(
       if (!player) {
         return res.status(404).json({ message: 'Player not found' });
       }
+
+      // Record the profile view (async, don't wait for it)
+      const viewerIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress;
+      const viewerUserId = (req as any).user?.id;
+      const referrer = req.headers.referer || req.headers.referrer;
+      const userAgent = req.headers['user-agent'];
+      
+      // Don't count the player viewing their own profile
+      if (!viewerUserId || viewerUserId !== player.userId) {
+        storage.recordProfileView(playerId, viewerIp, viewerUserId, referrer as string, userAgent)
+          .catch(err => console.error('Failed to record profile view:', err));
+      }
       
       const games = await storage.getGamesByPlayerId(playerId);
       const badges = await storage.getPlayerBadges(playerId);
@@ -2296,6 +2308,40 @@ export async function registerRoutes(
     } catch (err) {
       console.error('Error fetching public player profile:', err);
       res.status(500).json({ message: 'Failed to fetch player profile' });
+    }
+  });
+
+  // GET /api/players/:id/profile-views - Get profile view count (requires auth, player must own profile)
+  app.get('/api/players/:id/profile-views', async (req, res) => {
+    try {
+      const playerId = Number(req.params.id);
+      const userId = (req as any).user?.id;
+      
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: 'Player not found' });
+      }
+      
+      // Only the player or a coach can see view counts
+      if (player.userId !== userId) {
+        // Check if user is a coach on the player's team
+        const user = await storage.getUserByAuthId(userId);
+        if (!user || user.role !== 'coach') {
+          return res.status(403).json({ message: 'Not authorized' });
+        }
+      }
+      
+      const totalViews = await storage.getProfileViewCount(playerId);
+      const viewsLast30Days = await storage.getProfileViewCountLast30Days(playerId);
+      
+      res.json({
+        playerId,
+        totalViews,
+        viewsLast30Days,
+      });
+    } catch (err) {
+      console.error('Error fetching profile views:', err);
+      res.status(500).json({ message: 'Failed to fetch profile views' });
     }
   });
 
