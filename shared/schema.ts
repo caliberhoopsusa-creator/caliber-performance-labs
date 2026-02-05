@@ -2360,6 +2360,24 @@ export const insertPlayerCollegeInterestSchema = createInsertSchema(playerColleg
 export type InsertPlayerCollegeInterest = z.infer<typeof insertPlayerCollegeInterestSchema>;
 export type PlayerCollegeInterest = typeof playerCollegeInterests.$inferSelect;
 
+// === PROFILE VIEWS (Track when public profiles are viewed) ===
+export const profileViews = pgTable("profile_views", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  viewerIp: text("viewer_ip"), // Anonymized/hashed IP to prevent duplicate counting
+  viewerUserId: text("viewer_user_id"), // If viewer is logged in (optional)
+  referrer: text("referrer"), // Where the view came from
+  userAgent: text("user_agent"), // Browser/device info
+  viewedAt: timestamp("viewed_at").defaultNow().notNull(),
+}, (table) => ({
+  playerIdIdx: index("profile_views_player_idx").on(table.playerId),
+  viewedAtIdx: index("profile_views_viewed_at_idx").on(table.viewedAt),
+}));
+
+export const insertProfileViewSchema = createInsertSchema(profileViews).omit({ id: true, viewedAt: true });
+export type InsertProfileView = z.infer<typeof insertProfileViewSchema>;
+export type ProfileView = typeof profileViews.$inferSelect;
+
 // === RECRUITING EVENTS (Camps & Showcases) ===
 export const recruitingEvents = pgTable("recruiting_events", {
   id: serial("id").primaryKey(),

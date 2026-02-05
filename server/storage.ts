@@ -14,7 +14,7 @@ import {
   recruitPosts, recruitInterests,
   playerRatings, statVerifications, skillChallenges, challengeResults, performanceMilestones, aiProjections, highlightVerifications, eventIntegrations, eventGameLinks,
   leagues, leagueTeams, leagueTeamRosters, leagueGames, leagueRivalries,
-  colleges, playerCollegeMatches, fitnessData, wearableConnections,
+  colleges, playerCollegeMatches, fitnessData, wearableConnections, profileViews,
   type Player, type InsertPlayer,
   type Game, type InsertGame,
   type UpdateGameRequest,
@@ -96,7 +96,8 @@ import {
   type College, type InsertCollege,
   type PlayerCollegeMatch, type InsertPlayerCollegeMatch,
   type FitnessData, type InsertFitnessData,
-  type WearableConnection, type InsertWearableConnection
+  type WearableConnection, type InsertWearableConnection,
+  type ProfileView, type InsertProfileView
 } from "@shared/schema";
 import { eq, desc, and, count, gte, lte, sql, or, isNull, inArray } from "drizzle-orm";
 
@@ -3414,6 +3415,46 @@ export class DatabaseStorage implements IStorage {
 
   async deleteWearableConnection(id: number): Promise<void> {
     await db.delete(wearableConnections).where(eq(wearableConnections.id, id));
+  }
+
+  // === Profile Views ===
+  async recordProfileView(playerId: number, viewerIp?: string, viewerUserId?: string, referrer?: string, userAgent?: string): Promise<ProfileView> {
+    const [created] = await db.insert(profileViews).values({
+      playerId,
+      viewerIp,
+      viewerUserId,
+      referrer,
+      userAgent
+    }).returning();
+    return created;
+  }
+
+  async getProfileViewCount(playerId: number): Promise<number> {
+    const result = await db.select({ count: count() })
+      .from(profileViews)
+      .where(eq(profileViews.playerId, playerId));
+    return result[0]?.count || 0;
+  }
+
+  async getProfileViewCountLast30Days(playerId: number): Promise<number> {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const result = await db.select({ count: count() })
+      .from(profileViews)
+      .where(and(
+        eq(profileViews.playerId, playerId),
+        gte(profileViews.viewedAt, thirtyDaysAgo)
+      ));
+    return result[0]?.count || 0;
+  }
+
+  async getRecentProfileViews(playerId: number, limit: number = 10): Promise<ProfileView[]> {
+    return await db.select()
+      .from(profileViews)
+      .where(eq(profileViews.playerId, playerId))
+      .orderBy(desc(profileViews.viewedAt))
+      .limit(limit);
   }
 }
 
