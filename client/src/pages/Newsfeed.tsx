@@ -332,9 +332,15 @@ const TAB_LABELS = {
 export default function Newsfeed() {
   const [activeTab, setActiveTab] = useState("all");
 
-  const { data: allActivities, isLoading: allLoading, error: allError } = useQuery<FeedActivity[]>({
-    queryKey: ["/api/feed"],
+  const { data: allData, isLoading: allLoading, error: allError } = useQuery<{ items: FeedActivity[]; nextCursor?: number; hasMore: boolean }>({
+    queryKey: ["/api/feed", "newsfeed-page"],
+    queryFn: async () => {
+      const res = await fetch("/api/feed?limit=50");
+      if (!res.ok) throw new Error("Failed to fetch feed");
+      return res.json();
+    },
   });
+  const allActivities = allData?.items;
 
   const { data: followingActivities, isLoading: followingLoading, error: followingError } = useQuery<FeedActivity[]>({
     queryKey: ["/api/feed/following"],

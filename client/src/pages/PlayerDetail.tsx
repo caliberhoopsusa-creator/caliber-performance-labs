@@ -90,6 +90,8 @@ import { z } from "zod";
 import { AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { FootballMetrics } from "@/components/FootballMetrics";
+import { MilestonesSection } from "@/components/MilestoneCard";
+import { MemorySection } from "@/components/MemoryCard";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const BADGE_ICONS: Record<string, any> = {
@@ -1989,6 +1991,10 @@ export default function PlayerDetail() {
               />
             </motion.div>
           )}
+
+          <MilestonesSection playerId={player.id} playerName={player.name} />
+
+          <MemorySection playerId={player.id} />
 
           <motion.div 
             initial={{ opacity: 0, y: 20 }}

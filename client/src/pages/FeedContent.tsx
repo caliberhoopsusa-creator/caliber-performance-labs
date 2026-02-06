@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect, useRef } from "react";
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Target, Award, Repeat2, BarChart3, Users, Camera, Flame, Trophy, Zap, Rss, UserCheck, UsersRound, Activity, Heart, ThumbsUp, HandMetal } from "lucide-react";
+import { Target, Award, Repeat2, BarChart3, Users, Camera, Flame, Trophy, Zap, Rss, UserCheck, UsersRound, Activity, Heart, ThumbsUp, HandMetal, ArrowUp } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { apiRequest } from "@/lib/queryClient";
@@ -347,9 +347,32 @@ interface FeedListProps {
   emptyDescription: string;
   emptyIcon: typeof Rss;
   currentUserName: string;
+  hasNextPage?: boolean;
+  isFetchingNextPage?: boolean;
+  onLoadMore?: () => void;
 }
 
-function FeedList({ activities, isLoading, error, emptyMessage, emptyDescription, emptyIcon: EmptyIcon, currentUserName }: FeedListProps) {
+function FeedList({ activities, isLoading, error, emptyMessage, emptyDescription, emptyIcon: EmptyIcon, currentUserName, hasNextPage, isFetchingNextPage, onLoadMore }: FeedListProps) {
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!onLoadMore || !hasNextPage) return;
+    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isFetchingNextPage) {
+          onLoadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+    
+    return () => observer.disconnect();
+  }, [onLoadMore, hasNextPage, isFetchingNextPage]);
   if (isLoading) {
     return (
       <AnimatePresence mode="wait">
@@ -408,6 +431,31 @@ function FeedList({ activities, isLoading, error, emptyMessage, emptyDescription
           {activities.map((activity, idx) => (
             <ActivityCard key={activity.id} activity={activity} index={idx} currentUserName={currentUserName} />
           ))}
+          {onLoadMore && hasNextPage && (
+            <div ref={loadMoreRef} className="py-4 flex justify-center">
+              <Button
+                variant="outline"
+                onClick={onLoadMore}
+                disabled={isFetchingNextPage}
+                className="border-white/10 text-muted-foreground"
+                data-testid="button-load-more"
+              >
+                {isFetchingNextPage ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2" />
+                    Loading...
+                  </>
+                ) : (
+                  'Load more'
+                )}
+              </Button>
+            </div>
+          )}
+          {!hasNextPage && activities.length > 0 && (
+            <div className="py-6 text-center">
+              <p className="text-sm text-muted-foreground" data-testid="text-caught-up">You're all caught up!</p>
+            </div>
+          )}
         </motion.div>
       </AnimatePresence>
     );
@@ -474,11 +522,49 @@ const TAB_LABELS = {
 export default function FeedContent() {
   const [activeTab, setActiveTab] = useState("all");
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const currentUserName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Anonymous' : 'Anonymous';
 
-  const { data: allActivities, isLoading: allLoading, error: allError } = useQuery<FeedActivity[]>({
+  const { 
+    data: allData,
+    isLoading: allLoading, 
+    error: allError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery<{ items: FeedActivity[]; nextCursor?: number; hasMore: boolean }>({
     queryKey: ["/api/feed"],
+    queryFn: async ({ pageParam }) => {
+      const url = pageParam ? `/api/feed?cursor=${pageParam}&limit=20` : `/api/feed?limit=20`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Failed to fetch feed");
+      return res.json();
+    },
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    initialPageParam: undefined as number | undefined,
   });
+
+  const allActivities = allData?.pages.flatMap(page => page.items);
+
+  const latestId = allData?.pages[0]?.items[0]?.id;
+
+  const { data: newCountData } = useQuery<{ count: number }>({
+    queryKey: ["/api/feed/new-count", latestId],
+    queryFn: async () => {
+      if (!latestId) return { count: 0 };
+      const res = await fetch(`/api/feed/new-count?since=${latestId}`);
+      if (!res.ok) return { count: 0 };
+      return res.json();
+    },
+    refetchInterval: 30000,
+    enabled: !!latestId,
+  });
+
+  const newPostsCount = newCountData?.count || 0;
+
+  const handleLoadNewPosts = () => {
+    queryClient.resetQueries({ queryKey: ["/api/feed"] });
+  };
 
   const { data: followingActivities, isLoading: followingLoading, error: followingError } = useQuery<FeedActivity[]>({
     queryKey: ["/api/feed/following"],
@@ -535,6 +621,22 @@ export default function FeedContent() {
 
         <TabsContent value="all" className="mt-6">
           <div className="space-y-3" data-testid="container-activities-all">
+            {newPostsCount > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="sticky top-0 z-50"
+              >
+                <Button
+                  onClick={handleLoadNewPosts}
+                  className="w-full bg-gradient-to-r from-cyan-600 to-cyan-700 text-white shadow-lg shadow-cyan-500/20 rounded-xl"
+                  data-testid="button-new-posts"
+                >
+                  <ArrowUp className="w-4 h-4 mr-2" />
+                  {newPostsCount} new {newPostsCount === 1 ? 'post' : 'posts'} available
+                </Button>
+              </motion.div>
+            )}
             <FeedList
               activities={allActivities}
               isLoading={allLoading}
@@ -543,6 +645,9 @@ export default function FeedContent() {
               emptyDescription="Activities will appear here as players log games and earn badges"
               emptyIcon={Rss}
               currentUserName={currentUserName}
+              hasNextPage={hasNextPage}
+              isFetchingNextPage={isFetchingNextPage}
+              onLoadMore={() => fetchNextPage()}
             />
           </div>
         </TabsContent>

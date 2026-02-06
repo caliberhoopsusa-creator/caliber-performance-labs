@@ -209,7 +209,7 @@ export interface IStorage {
 
   // Feed Activities
   createFeedActivity(activity: InsertFeedActivity): Promise<FeedActivity>;
-  getFeedActivities(limit?: number): Promise<(FeedActivity & { playerName?: string })[]>;
+  getFeedActivities(limit?: number, cursor?: number): Promise<(FeedActivity & { playerName?: string })[]>;
   getPlayerFeedActivities(playerId: number): Promise<FeedActivity[]>;
   getFollowingFeedActivities(playerId: number, limit?: number): Promise<(FeedActivity & { playerName?: string })[]>;
   getTeamFeedActivities(sessionId: string, limit?: number): Promise<(FeedActivity & { playerName?: string })[]>;
@@ -1184,7 +1184,9 @@ export class DatabaseStorage implements IStorage {
     return newActivity;
   }
 
-  async getFeedActivities(limit: number = 50): Promise<(FeedActivity & { playerName?: string })[]> {
+  async getFeedActivities(limit: number = 20, cursor?: number): Promise<(FeedActivity & { playerName?: string })[]> {
+    const conditions = cursor ? [sql`${feedActivities.id} < ${cursor}`] : [];
+    
     const results = await db
       .select({
         id: feedActivities.id,
@@ -1201,12 +1203,13 @@ export class DatabaseStorage implements IStorage {
       })
       .from(feedActivities)
       .leftJoin(players, eq(feedActivities.playerId, players.id))
-      .orderBy(desc(feedActivities.createdAt))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(feedActivities.id))
       .limit(limit);
     
     return results.map(r => ({
       ...r,
-      playerName: r.playerName || undefined,
+      playerName: r.playerName ?? undefined,
     }));
   }
 

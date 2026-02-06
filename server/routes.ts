@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, headToHeadChallenges, statVerifications, playerCollegeMatches, playerCollegeInterests, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema, insertWearableConnectionSchema, recruitingEvents, insertRecruitingEventSchema, type RecruitingEvent, playerEventRegistrations, insertPlayerEventRegistrationSchema, colleges, ncaaEligibilityProgress, insertNcaaEligibilityProgressSchema, coachRecommendations, insertCoachRecommendationSchema, teams, teamMembers } from "@shared/schema";
+import { players, games, headToHeadChallenges, statVerifications, playerCollegeMatches, playerCollegeInterests, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema, insertWearableConnectionSchema, recruitingEvents, insertRecruitingEventSchema, type RecruitingEvent, playerEventRegistrations, insertPlayerEventRegistrationSchema, colleges, ncaaEligibilityProgress, insertNcaaEligibilityProgressSchema, coachRecommendations, insertCoachRecommendationSchema, teams, teamMembers, skillBadges, activityStreaks, feedActivities } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { calculateAIRating, calculateProjection, type GameStats, type PlayerMetrics, type PeerStats, type AIRatingResult, type ProjectionResult } from "@shared/ai-rating-engine";
 import type { Sport } from "@shared/sports-config";
@@ -16,7 +16,7 @@ import { registerObjectStorageRoutes } from "./replit_integrations/object_storag
 import { setupAuth, registerAuthRoutes, isAuthenticated, authStorage } from "./replit_integrations/auth";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 import { users } from "@shared/models/auth";
-import { eq, sql, and, desc, or, inArray } from "drizzle-orm";
+import { eq, sql, and, desc, or, inArray, gte, lte, count, max } from "drizzle-orm";
 import { db } from "./db";
 import type { RequestHandler } from "express";
 
@@ -5341,12 +5341,39 @@ Respond in this exact JSON format:
   // === NEWSFEED / ACTIVITY STREAM ===
   app.get('/api/feed', async (req, res) => {
     try {
-      const limit = Number(req.query.limit) || 50;
-      const activities = await storage.getFeedActivities(limit);
-      res.json(activities);
+      const limit = Number(req.query.limit) || 20;
+      const cursor = req.query.cursor ? Number(req.query.cursor) : undefined;
+      const activities = await storage.getFeedActivities(limit + 1, cursor);
+      
+      const hasMore = activities.length > limit;
+      const items = hasMore ? activities.slice(0, limit) : activities;
+      const nextCursor = hasMore ? items[items.length - 1].id : undefined;
+      
+      res.json({
+        items,
+        nextCursor,
+        hasMore,
+      });
     } catch (err) {
       console.error('Get feed error:', err);
       res.status(500).json({ message: 'Error fetching feed' });
+    }
+  });
+
+  app.get('/api/feed/new-count', async (req, res) => {
+    try {
+      const sinceId = Number(req.query.since);
+      if (!sinceId) return res.json({ count: 0 });
+      
+      const result = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(feedActivities)
+        .where(sql`${feedActivities.id} > ${sinceId}`);
+      
+      res.json({ count: Number(result[0]?.count || 0) });
+    } catch (err) {
+      console.error('Get new feed count error:', err);
+      res.status(500).json({ message: 'Error fetching new count' });
     }
   });
 
@@ -11321,21 +11348,309 @@ Respond in this exact JSON format:
   });
 
   // =============================================
-  // PERFORMANCE MILESTONES ROUTES
+  // PERFORMANCE MILESTONES ROUTES (Dynamic)
   // =============================================
 
-  // GET /api/players/:id/milestones - Get all milestones for a player
+  // GET /api/players/:id/milestones - Dynamically compute recent milestones for a player
   app.get('/api/players/:id/milestones', async (req, res) => {
     try {
       const playerId = parseInt(req.params.id);
       if (isNaN(playerId)) {
         return res.status(400).json({ message: "Invalid player ID" });
       }
-      const milestones = await storage.getPlayerMilestones(playerId);
-      res.json(milestones);
+
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+
+      const milestones: any[] = [];
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
+
+      const allGames = await db.select().from(games)
+        .where(eq(games.playerId, playerId))
+        .orderBy(desc(games.date));
+
+      if (allGames.length > 0) {
+        const mostRecentGame = allGames[0];
+        const sport = player.sport || 'basketball';
+
+        // a) Season Highs - check if most recent game has any stat that's the highest
+        const bbStats = ['points', 'rebounds', 'assists', 'steals', 'blocks'] as const;
+        const fbStats = ['passingYards', 'rushingYards', 'receivingYards', 'passingTouchdowns', 'rushingTouchdowns', 'receivingTouchdowns', 'tackles', 'sacks'] as const;
+        const statsToCheck = sport === 'football' ? fbStats : bbStats;
+
+        const statLabels: Record<string, string> = {
+          points: 'Points', rebounds: 'Rebounds', assists: 'Assists', steals: 'Steals', blocks: 'Blocks',
+          passingYards: 'Passing Yards', rushingYards: 'Rushing Yards', receivingYards: 'Receiving Yards',
+          passingTouchdowns: 'Passing TDs', rushingTouchdowns: 'Rushing TDs', receivingTouchdowns: 'Receiving TDs',
+          tackles: 'Tackles', sacks: 'Sacks',
+        };
+
+        for (const stat of statsToCheck) {
+          const currentVal = (mostRecentGame as any)[stat] ?? 0;
+          if (currentVal <= 0) continue;
+          const otherGames = allGames.slice(1);
+          const maxOther = otherGames.reduce((mx, g) => Math.max(mx, (g as any)[stat] ?? 0), 0);
+          if (currentVal > maxOther && allGames.length > 1) {
+            milestones.push({
+              type: 'season_high',
+              title: 'New Season High!',
+              subtitle: `${currentVal} ${statLabels[stat] || stat}`,
+              detail: `vs ${mostRecentGame.opponent} on ${mostRecentGame.date}`,
+              stat,
+              value: currentVal,
+              gameId: mostRecentGame.id,
+              createdAt: mostRecentGame.createdAt || new Date().toISOString(),
+            });
+          }
+        }
+
+        // b) Grade A Games in last 30 days
+        const gradeAGames = allGames.filter(g => {
+          const gDate = new Date(g.date);
+          return gDate >= thirtyDaysAgo && (g.grade === 'A' || g.grade === 'A+');
+        });
+        for (const g of gradeAGames) {
+          milestones.push({
+            type: 'grade_a',
+            title: g.grade === 'A+' ? 'Elite A+ Performance!' : 'A Grade Game!',
+            subtitle: `Grade: ${g.grade}`,
+            detail: `vs ${g.opponent} on ${g.date}`,
+            stat: 'grade',
+            value: g.grade,
+            gameId: g.id,
+            createdAt: g.createdAt || new Date().toISOString(),
+          });
+        }
+
+        // c) Games Milestones
+        const totalGames = allGames.length;
+        const gameMilestones = [10, 25, 50, 100, 250, 500];
+        for (const m of gameMilestones) {
+          if (totalGames >= m && totalGames < m + 5) {
+            milestones.push({
+              type: 'games_milestone',
+              title: `${m} Games Logged!`,
+              subtitle: `${totalGames} total games played`,
+              detail: `Milestone: ${m} games`,
+              stat: 'games',
+              value: totalGames,
+              gameId: null,
+              createdAt: new Date().toISOString(),
+            });
+            break;
+          }
+        }
+      }
+
+      // d) Tier Info
+      if (player.currentTier && player.currentTier !== 'Rookie') {
+        milestones.push({
+          type: 'tier_promotion',
+          title: `${player.currentTier} Tier`,
+          subtitle: `Current Rank: ${player.currentTier}`,
+          detail: `${player.totalXp || 0} Total XP`,
+          stat: 'tier',
+          value: player.currentTier,
+          gameId: null,
+          createdAt: player.createdAt || new Date().toISOString(),
+        });
+      }
+
+      // e) Badge Unlocks - recently upgraded skill badges
+      try {
+        const recentBadges = await db.select().from(skillBadges)
+          .where(and(
+            eq(skillBadges.playerId, playerId),
+            gte(skillBadges.updatedAt, thirtyDaysAgo)
+          ))
+          .orderBy(desc(skillBadges.updatedAt));
+
+        for (const badge of recentBadges) {
+          if (badge.currentLevel !== 'none') {
+            milestones.push({
+              type: 'badge_unlock',
+              title: 'Badge Unlocked!',
+              subtitle: `${badge.skillType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} - ${badge.currentLevel.charAt(0).toUpperCase() + badge.currentLevel.slice(1)}`,
+              detail: `Career value: ${badge.careerValue}`,
+              stat: badge.skillType,
+              value: badge.currentLevel,
+              gameId: null,
+              createdAt: badge.updatedAt?.toISOString() || new Date().toISOString(),
+            });
+          }
+        }
+      } catch (e) {
+        // Skill badges table might not have data
+      }
+
+      // f) Streak milestones
+      try {
+        const streaks = await db.select().from(activityStreaks)
+          .where(eq(activityStreaks.playerId, playerId));
+
+        const streakMilestones = [5, 10, 25, 50];
+        for (const streak of streaks) {
+          for (const m of streakMilestones) {
+            if (streak.currentStreak >= m && streak.currentStreak < m + 3) {
+              milestones.push({
+                type: 'streak_milestone',
+                title: `${m}-Game Streak!`,
+                subtitle: `${streak.currentStreak} ${streak.streakType.replace(/_/g, ' ')} streak`,
+                detail: `Longest: ${streak.longestStreak}`,
+                stat: streak.streakType,
+                value: streak.currentStreak,
+                gameId: null,
+                createdAt: streak.updatedAt?.toISOString() || new Date().toISOString(),
+              });
+              break;
+            }
+          }
+        }
+      } catch (e) {
+        // Streaks table might not have data
+      }
+
+      res.json({ milestones });
     } catch (error) {
-      console.error('Error fetching player milestones:', error);
-      res.status(500).json({ message: "Failed to fetch player milestones" });
+      console.error('Error computing player milestones:', error);
+      res.status(500).json({ message: "Failed to compute player milestones" });
+    }
+  });
+
+  // =============================================
+  // THIS DAY LAST YEAR MEMORIES ROUTE
+  // =============================================
+
+  app.get('/api/players/:id/memories', async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      if (isNaN(playerId)) {
+        return res.status(400).json({ message: "Invalid player ID" });
+      }
+
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+
+      const sport = player.sport || 'basketball';
+      const now = new Date();
+
+      const currentStart = new Date(now);
+      currentStart.setDate(currentStart.getDate() - 7);
+      const currentEnd = new Date(now);
+      currentEnd.setDate(currentEnd.getDate() + 7);
+
+      const lastYearCenter = new Date(now);
+      lastYearCenter.setFullYear(lastYearCenter.getFullYear() - 1);
+      const lastYearStart = new Date(lastYearCenter);
+      lastYearStart.setDate(lastYearStart.getDate() - 7);
+      const lastYearEnd = new Date(lastYearCenter);
+      lastYearEnd.setDate(lastYearEnd.getDate() + 7);
+
+      const fmt = (d: Date) => d.toISOString().split('T')[0];
+      const fmtLabel = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+      const currentGames = await db.select().from(games)
+        .where(and(
+          eq(games.playerId, playerId),
+          gte(games.date, fmt(currentStart)),
+          lte(games.date, fmt(currentEnd))
+        ));
+
+      const lastYearGames = await db.select().from(games)
+        .where(and(
+          eq(games.playerId, playerId),
+          gte(games.date, fmt(lastYearStart)),
+          lte(games.date, fmt(lastYearEnd))
+        ));
+
+      if (lastYearGames.length === 0) {
+        return res.json({ hasMemories: false });
+      }
+
+      const avgStat = (gamesList: any[], key: string) => {
+        const vals = gamesList.map(g => (g as any)[key] ?? 0);
+        return vals.length > 0 ? vals.reduce((a: number, b: number) => a + b, 0) / vals.length : 0;
+      };
+
+      const bbStats = [
+        { key: 'points', label: 'Points' },
+        { key: 'rebounds', label: 'Rebounds' },
+        { key: 'assists', label: 'Assists' },
+        { key: 'steals', label: 'Steals' },
+        { key: 'blocks', label: 'Blocks' },
+      ];
+
+      const fbStats = [
+        { key: 'passingYards', label: 'Passing Yards' },
+        { key: 'rushingYards', label: 'Rushing Yards' },
+        { key: 'receivingYards', label: 'Receiving Yards' },
+        { key: 'tackles', label: 'Tackles' },
+        { key: 'sacks', label: 'Sacks' },
+      ];
+
+      const statsToCompare = sport === 'football' ? fbStats : bbStats;
+
+      const comparisons = statsToCompare.map(({ key, label }) => {
+        const current = Math.round(avgStat(currentGames, key) * 10) / 10;
+        const lastYear = Math.round(avgStat(lastYearGames, key) * 10) / 10;
+        const change = lastYear !== 0 ? Math.round(((current - lastYear) / lastYear) * 100) : (current > 0 ? 100 : 0);
+        return { stat: label, current, lastYear, change, improved: change > 0 };
+      }).filter(c => c.current > 0 || c.lastYear > 0);
+
+      const gradeValues: Record<string, number> = {
+        'A+': 100, 'A': 95, 'A-': 90, 'B+': 88, 'B': 85, 'B-': 80,
+        'C+': 78, 'C': 75, 'C-': 70, 'D+': 68, 'D': 65, 'D-': 60, 'F': 50,
+      };
+      const valueToGrade = (v: number): string => {
+        if (v >= 97) return 'A+'; if (v >= 92) return 'A'; if (v >= 87) return 'A-';
+        if (v >= 84) return 'B+'; if (v >= 81) return 'B'; if (v >= 77) return 'B-';
+        if (v >= 74) return 'C+'; if (v >= 71) return 'C'; if (v >= 67) return 'C-';
+        if (v >= 64) return 'D+'; if (v >= 61) return 'D'; if (v >= 57) return 'D-';
+        return 'F';
+      };
+
+      let overallGrade: { current: string; lastYear: string } | undefined;
+      const currentGraded = currentGames.filter(g => g.grade && gradeValues[g.grade.trim().toUpperCase()]);
+      const lastYearGraded = lastYearGames.filter(g => g.grade && gradeValues[g.grade.trim().toUpperCase()]);
+      if (currentGraded.length > 0 && lastYearGraded.length > 0) {
+        const avgCurrent = currentGraded.reduce((a, g) => a + (gradeValues[g.grade!.trim().toUpperCase()] || 0), 0) / currentGraded.length;
+        const avgLastYear = lastYearGraded.reduce((a, g) => a + (gradeValues[g.grade!.trim().toUpperCase()] || 0), 0) / lastYearGraded.length;
+        overallGrade = { current: valueToGrade(avgCurrent), lastYear: valueToGrade(avgLastYear) };
+      }
+
+      const improved = comparisons.filter(c => c.improved).sort((a, b) => b.change - a.change);
+      let motivationalMessage = "Keep working hard and tracking your progress!";
+      if (improved.length > 0) {
+        const best = improved[0];
+        motivationalMessage = `You've improved your ${best.stat.toLowerCase()} by ${best.change}%! Keep pushing!`;
+      } else if (comparisons.length > 0) {
+        motivationalMessage = "Every game is a chance to grow. Stay focused and keep grinding!";
+      }
+
+      res.json({
+        hasMemories: true,
+        periodLabel: "This time last year",
+        currentPeriod: {
+          games: currentGames.length,
+          dateRange: `${fmtLabel(currentStart)} - ${fmtLabel(currentEnd)}`,
+        },
+        lastYearPeriod: {
+          games: lastYearGames.length,
+          dateRange: `${fmtLabel(lastYearStart)} - ${fmtLabel(lastYearEnd)}`,
+        },
+        comparisons,
+        overallGrade,
+        motivationalMessage,
+      });
+    } catch (error) {
+      console.error('Error computing player memories:', error);
+      res.status(500).json({ message: "Failed to compute player memories" });
     }
   });
 
