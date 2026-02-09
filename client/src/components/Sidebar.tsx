@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, ShoppingBag, ClipboardCheck, Medal, GraduationCap, Heart, Radio } from "lucide-react";
+import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, ShoppingBag, ClipboardCheck, Medal, GraduationCap, Heart, Radio, Wand2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import caliberLogo from "@assets/caliber-logo-monogram.png";
@@ -92,10 +92,12 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
     {
       title: "My Game",
       items: [
+        { href: "/community?tab=feed", label: "Feed", icon: Rss },
         { href: playerId ? `/players/${playerId}` : "/", label: "Player Profile", icon: UserCircle },
         { href: "/analyze", label: "Log Game", icon: PlusCircle },
         { href: "/schedule", label: "Schedule", icon: CalendarDays },
         { href: "/highlights", label: "Highlights", icon: Film },
+        { href: "/reel-builder", label: "Reel Builder", icon: Wand2 },
         { href: "/discover/highlights", label: "Discover", icon: Film },
         { href: "/performance", label: "Performance", icon: Activity },
         { href: "/recruiting", label: "Recruiting", icon: GraduationCap },
@@ -104,10 +106,10 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
     {
       title: "Explore",
       items: [
+        { href: "/community", label: "Community", icon: UsersRound },
         { href: "/scout", label: "Scout Hub", icon: Eye },
         { href: "/analytics", label: "Analytics", icon: BarChart3 },
         { href: "/leagues", label: "League Hub", icon: Medal },
-        { href: "/community", label: "Community", icon: UsersRound },
         { href: "/teams", label: "Teams", icon: Users },
       ],
     },
@@ -196,7 +198,10 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
             <h3 className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest mb-1.5 px-3">{section.title}</h3>
             <div className="space-y-0.5">
               {section.items.map((item) => {
-                const isActive = location === item.href || (item.href.includes('/players/') && location.includes('/players/') && location === item.href);
+                const baseHref = item.href.split('?')[0];
+                const isActive = location === item.href || 
+                  location === baseHref ||
+                  (item.href.includes('/players/') && location.includes('/players/') && location === item.href);
                 const needsUpgrade = item.premium && !hasAccess(item.premium);
                 const isCoachPro = item.premium === "coach_pro";
                 const isFeatured = item.featured && !isActive;
@@ -263,11 +268,11 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
   const isPlayer = userRole === 'player';
   
   const navItems = isPlayer ? [
-    { href: playerId ? `/players/${playerId}` : "/", icon: UserCircle, label: "Profile" },
+    { href: "/community", icon: Rss, label: "Feed" },
     { href: "/analyze", icon: PlusCircle, label: "Log", featured: true },
-    { href: "/recruiting", icon: GraduationCap, label: "Recruit" },
+    { href: playerId ? `/players/${playerId}` : "/players", icon: UserCircle, label: "Profile" },
     { href: "/analytics", icon: BarChart3, label: "Analytics" },
-    { href: "/community", icon: UsersRound, label: "Social" },
+    { href: "/discover/highlights", icon: Film, label: "Discover" },
   ] : [
     { href: "/", icon: LayoutDashboard, label: "Home" },
     { href: "/analyze", icon: PlusCircle, label: "Log", featured: true },

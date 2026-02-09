@@ -3043,6 +3043,140 @@ export async function registerRoutes(
     res.json(activityStreaks);
   });
 
+  app.post('/api/players/:id/check-in', isAuthenticated, async (req: any, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      if (isNaN(playerId)) return res.status(400).json({ message: "Invalid player ID" });
+
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user?.playerId || user.playerId !== playerId) {
+        return res.status(403).json({ message: "You can only check in for your own player" });
+      }
+
+      const result = await updateActivityStreak(playerId, 'daily_login');
+
+      if (result.isNewMilestone && result.milestoneReached) {
+        const xpRewards: Record<number, number> = { 3: 25, 7: 75, 14: 150, 30: 300 };
+        const xpAmount = xpRewards[result.milestoneReached] || 0;
+        if (xpAmount > 0) {
+          const player = await storage.getPlayer(playerId);
+          if (player) {
+            await storage.updatePlayer(playerId, {
+              totalXp: (player.totalXp || 0) + xpAmount
+            });
+          }
+        }
+      }
+
+      const streaks = await storage.getPlayerActivityStreaks(playerId);
+      res.json({
+        checkedIn: true,
+        streakCount: result.streakCount,
+        isNewMilestone: result.isNewMilestone,
+        milestoneReached: result.milestoneReached,
+        streaks
+      });
+    } catch (error) {
+      console.error('Error checking in:', error);
+      res.status(500).json({ message: "Failed to check in" });
+    }
+  });
+
+  app.get('/api/players/:id/weekly-recap', async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      if (isNaN(playerId)) return res.status(400).json({ message: "Invalid player ID" });
+      
+      const player = await storage.getPlayer(playerId);
+      if (!player) return res.status(404).json({ message: "Player not found" });
+      
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      
+      const allGames = await storage.getGamesByPlayerId(playerId);
+      const weekGames = allGames.filter(g => new Date(g.createdAt!) >= oneWeekAgo);
+      
+      if (weekGames.length === 0) {
+        return res.json({ 
+          hasRecap: false, 
+          playerName: player.name,
+          sport: player.sport,
+          message: "No games logged this week" 
+        });
+      }
+      
+      const sport = player.sport || 'basketball';
+      let totalPoints = 0;
+      let totalRebounds = 0;
+      let totalAssists = 0;
+      let totalTouchdowns = 0;
+      let totalYards = 0;
+      let totalGrades: number[] = [];
+      let bestGrade = '';
+      let bestGradeValue = 0;
+      
+      const gradeValues: Record<string, number> = { 'A+': 12, 'A': 11, 'A-': 10, 'B+': 9, 'B': 8, 'B-': 7, 'C+': 6, 'C': 5, 'C-': 4, 'D+': 3, 'D': 2, 'D-': 1, 'F': 0 };
+      
+      for (const game of weekGames) {
+        if (sport === 'basketball') {
+          totalPoints += (game.fgMade || 0) * 2 + (game.threeMade || 0) * 3 + (game.ftMade || 0);
+          totalRebounds += (game.rebounds || 0);
+          totalAssists += (game.assists || 0);
+        } else {
+          totalTouchdowns += (game.passingTouchdowns || 0) + (game.rushingTouchdowns || 0) + (game.receivingTouchdowns || 0);
+          totalYards += (game.passingYards || 0) + (game.rushingYards || 0) + (game.receivingYards || 0);
+        }
+        
+        const grade = game.grade || 'C';
+        const gv = gradeValues[grade] || 5;
+        totalGrades.push(gv);
+        if (gv > bestGradeValue) {
+          bestGradeValue = gv;
+          bestGrade = grade;
+        }
+      }
+      
+      const avgGradeValue = totalGrades.reduce((a, b) => a + b, 0) / totalGrades.length;
+      const gradeEntries = Object.entries(gradeValues);
+      const avgGrade = gradeEntries.reduce((closest, [grade, val]) => 
+        Math.abs(val - avgGradeValue) < Math.abs(gradeValues[closest] - avgGradeValue) ? grade : closest
+      , 'C');
+      
+      const streaks = await storage.getPlayerActivityStreaks(playerId);
+      const dailyStreak = streaks.find(s => s.streakType === 'daily_login' || s.streakType === 'daily_game');
+      
+      const allBadges = await storage.getPlayerBadges(playerId);
+      const weekBadges = allBadges.filter(b => new Date(b.earnedAt!) >= oneWeekAgo);
+      
+      res.json({
+        hasRecap: true,
+        playerName: player.name,
+        playerPhoto: player.photoUrl,
+        sport,
+        position: player.position,
+        weekStartDate: oneWeekAgo.toISOString(),
+        weekEndDate: new Date().toISOString(),
+        gamesPlayed: weekGames.length,
+        avgGrade,
+        bestGrade,
+        totalPoints,
+        avgPoints: sport === 'basketball' ? Math.round(totalPoints / weekGames.length * 10) / 10 : 0,
+        totalRebounds,
+        totalAssists,
+        totalTouchdowns,
+        totalYards,
+        currentStreak: dailyStreak?.currentStreak || 0,
+        badgesEarned: weekBadges.length,
+        gradeTrend: totalGrades.length >= 2 
+          ? totalGrades[totalGrades.length - 1] > totalGrades[0] ? 'up' : totalGrades[totalGrades.length - 1] < totalGrades[0] ? 'down' : 'stable'
+          : 'stable',
+      });
+    } catch (error) {
+      console.error('Error generating weekly recap:', error);
+      res.status(500).json({ message: "Failed to generate weekly recap" });
+    }
+  });
+
   app.post('/api/players/:id/activity', async (req, res) => {
     const playerId = Number(req.params.id);
     const { streakType = 'daily_login' } = req.body;
@@ -4570,6 +4704,98 @@ Respond in this exact JSON format:
     } catch (error) {
       console.error('Error fetching challenge leaderboard:', error);
       res.status(500).json({ message: "Failed to fetch challenge leaderboard" });
+    }
+  });
+
+  // GET /api/challenges/compare - Compare two players (must be before /:id)
+  app.get('/api/challenges/compare', async (req, res) => {
+    try {
+      const { player1, player2 } = req.query as { player1?: string; player2?: string };
+      
+      if (!player1) return res.status(400).json({ message: "Player 1 ID required" });
+      
+      const p1Id = parseInt(player1);
+      if (isNaN(p1Id)) return res.status(400).json({ message: "Invalid player 1 ID" });
+      const p1 = await storage.getPlayer(p1Id);
+      if (!p1) return res.status(404).json({ message: "Player 1 not found" });
+      
+      const sport = p1.sport || 'basketball';
+      const p1Games = await storage.getGamesByPlayerId(p1Id);
+      const p1Recent = p1Games.slice(0, 10);
+      const p1Total = p1Recent.length || 1;
+      
+      let p1Stats: Record<string, number | string> = {};
+      let p2Stats: Record<string, number | string> | null = null;
+      
+      if (sport === 'basketball') {
+        p1Stats = {
+          gamesPlayed: p1Recent.length,
+          ppg: Math.round((p1Recent.reduce((s, g) => s + ((g.fgMade || 0) * 2 + (g.threeMade || 0) * 3 + (g.ftMade || 0)), 0) / p1Total) * 10) / 10,
+          rpg: Math.round((p1Recent.reduce((s, g) => s + (g.rebounds || 0), 0) / p1Total) * 10) / 10,
+          apg: Math.round((p1Recent.reduce((s, g) => s + (g.assists || 0), 0) / p1Total) * 10) / 10,
+          spg: Math.round((p1Recent.reduce((s, g) => s + (g.steals || 0), 0) / p1Total) * 10) / 10,
+          bpg: Math.round((p1Recent.reduce((s, g) => s + (g.blocks || 0), 0) / p1Total) * 10) / 10,
+        };
+      } else {
+        p1Stats = {
+          gamesPlayed: p1Recent.length,
+          tdpg: Math.round((p1Recent.reduce((s, g) => s + (g.passingTouchdowns || 0) + (g.rushingTouchdowns || 0) + (g.receivingTouchdowns || 0), 0) / p1Total) * 10) / 10,
+          ypg: Math.round((p1Recent.reduce((s, g) => s + (g.passingYards || 0) + (g.rushingYards || 0) + (g.receivingYards || 0), 0) / p1Total) * 10) / 10,
+        };
+      }
+      
+      if (player2) {
+        const p2Id = parseInt(player2);
+        if (!isNaN(p2Id)) {
+          const p2 = await storage.getPlayer(p2Id);
+          if (p2) {
+            const p2Games = await storage.getGamesByPlayerId(p2Id);
+            const p2Recent = p2Games.slice(0, 10);
+            const p2Total = p2Recent.length || 1;
+            
+            if (sport === 'basketball') {
+              p2Stats = {
+                name: p2.name,
+                photo: p2.photoUrl || '',
+                position: p2.position,
+                team: p2.team || '',
+                gamesPlayed: p2Recent.length,
+                ppg: Math.round((p2Recent.reduce((s, g) => s + ((g.fgMade || 0) * 2 + (g.threeMade || 0) * 3 + (g.ftMade || 0)), 0) / p2Total) * 10) / 10,
+                rpg: Math.round((p2Recent.reduce((s, g) => s + (g.rebounds || 0), 0) / p2Total) * 10) / 10,
+                apg: Math.round((p2Recent.reduce((s, g) => s + (g.assists || 0), 0) / p2Total) * 10) / 10,
+                spg: Math.round((p2Recent.reduce((s, g) => s + (g.steals || 0), 0) / p2Total) * 10) / 10,
+                bpg: Math.round((p2Recent.reduce((s, g) => s + (g.blocks || 0), 0) / p2Total) * 10) / 10,
+              };
+            } else {
+              p2Stats = {
+                name: p2.name,
+                photo: p2.photoUrl || '',
+                position: p2.position,
+                team: p2.team || '',
+                gamesPlayed: p2Recent.length,
+                tdpg: Math.round((p2Recent.reduce((s, g) => s + (g.passingTouchdowns || 0) + (g.rushingTouchdowns || 0) + (g.receivingTouchdowns || 0), 0) / p2Total) * 10) / 10,
+                ypg: Math.round((p2Recent.reduce((s, g) => s + (g.passingYards || 0) + (g.rushingYards || 0) + (g.receivingYards || 0), 0) / p2Total) * 10) / 10,
+              };
+            }
+          }
+        }
+      }
+      
+      res.json({
+        player1: {
+          id: p1.id,
+          name: p1.name,
+          photo: p1.photoUrl,
+          position: p1.position,
+          team: p1.team,
+          sport,
+          stats: p1Stats,
+        },
+        player2: p2Stats ? { stats: p2Stats } : null,
+      });
+    } catch (error) {
+      console.error('Error comparing players:', error);
+      res.status(500).json({ message: "Failed to compare players" });
     }
   });
 
@@ -9136,6 +9362,64 @@ Respond in this exact JSON format:
     } catch (error) {
       console.error('Error unlinking highlight from game:', error);
       res.status(500).json({ message: "Failed to unlink highlight from game" });
+    }
+  });
+
+  // === HIGHLIGHT REEL DATA ===
+
+  // GET /api/players/:id/reel-data - Get data for generating a highlight reel
+  app.get('/api/players/:id/reel-data', async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      if (isNaN(playerId)) return res.status(400).json({ message: "Invalid player ID" });
+      
+      const player = await storage.getPlayer(playerId);
+      if (!player) return res.status(404).json({ message: "Player not found" });
+      
+      const clips = await storage.getPlayerHighlightClips(playerId);
+      
+      const topClips = [...clips]
+        .sort((a, b) => ((b.viewCount || 0) + (b.likeCount || 0) * 2) - ((a.viewCount || 0) + (a.likeCount || 0) * 2))
+        .slice(0, 10);
+      
+      const allGames = await storage.getGamesByPlayerId(playerId);
+      const totalGames = allGames.length;
+      const sport = player.sport || 'basketball';
+      
+      let statOverlay: Record<string, string | number> = {};
+      if (sport === 'basketball' && totalGames > 0) {
+        statOverlay = {
+          ppg: Math.round((allGames.reduce((s, g) => s + ((g.fgMade || 0) * 2 + (g.threeMade || 0) * 3 + (g.ftMade || 0)), 0) / totalGames) * 10) / 10,
+          rpg: Math.round((allGames.reduce((s, g) => s + (g.rebounds || 0), 0) / totalGames) * 10) / 10,
+          apg: Math.round((allGames.reduce((s, g) => s + (g.assists || 0), 0) / totalGames) * 10) / 10,
+          gamesPlayed: totalGames,
+        };
+      } else if (totalGames > 0) {
+        statOverlay = {
+          tdpg: Math.round((allGames.reduce((s, g) => s + (g.passingTouchdowns || 0) + (g.rushingTouchdowns || 0) + (g.receivingTouchdowns || 0), 0) / totalGames) * 10) / 10,
+          ypg: Math.round((allGames.reduce((s, g) => s + (g.passingYards || 0) + (g.rushingYards || 0) + (g.receivingYards || 0), 0) / totalGames) * 10) / 10,
+          gamesPlayed: totalGames,
+        };
+      }
+      
+      res.json({
+        player: {
+          id: player.id,
+          name: player.name,
+          position: player.position,
+          team: player.team,
+          photoUrl: player.photoUrl,
+          sport,
+          school: player.school,
+          graduationYear: player.graduationYear,
+        },
+        clips: topClips,
+        totalClips: clips.length,
+        statOverlay,
+      });
+    } catch (error) {
+      console.error('Error getting reel data:', error);
+      res.status(500).json({ message: "Failed to get reel data" });
     }
   });
 
@@ -14733,6 +15017,58 @@ Respond in this exact JSON format:
     } catch (error) {
       console.error('Error deleting recommendation:', error);
       res.status(500).json({ message: "Failed to delete recommendation" });
+    }
+  });
+
+  app.post('/api/challenges/create', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await authStorage.getUser(userId);
+      if (!user?.playerId) return res.status(400).json({ message: "Player profile required" });
+      
+      const player = await storage.getPlayer(user.playerId);
+      if (!player) return res.status(404).json({ message: "Player not found" });
+      
+      const allGames = await storage.getGamesByPlayerId(user.playerId);
+      const recentGames = allGames.slice(0, 10);
+      
+      const sport = player.sport || 'basketball';
+      let stats: Record<string, number> = {};
+      
+      if (sport === 'basketball') {
+        const totalGames = recentGames.length || 1;
+        stats = {
+          gamesPlayed: recentGames.length,
+          ppg: Math.round((recentGames.reduce((s, g) => s + ((g.fgMade || 0) * 2 + (g.threeMade || 0) * 3 + (g.ftMade || 0)), 0) / totalGames) * 10) / 10,
+          rpg: Math.round((recentGames.reduce((s, g) => s + (g.rebounds || 0), 0) / totalGames) * 10) / 10,
+          apg: Math.round((recentGames.reduce((s, g) => s + (g.assists || 0), 0) / totalGames) * 10) / 10,
+        };
+      } else {
+        const totalGames = recentGames.length || 1;
+        stats = {
+          gamesPlayed: recentGames.length,
+          tdpg: Math.round((recentGames.reduce((s, g) => s + (g.passingTouchdowns || 0) + (g.rushingTouchdowns || 0) + (g.receivingTouchdowns || 0), 0) / totalGames) * 10) / 10,
+          ypg: Math.round((recentGames.reduce((s, g) => s + (g.passingYards || 0) + (g.rushingYards || 0) + (g.receivingYards || 0), 0) / totalGames) * 10) / 10,
+        };
+      }
+      
+      const challengeCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+      
+      res.json({
+        challengeCode,
+        challengerId: player.id,
+        challengerName: player.name,
+        challengerPhoto: player.photoUrl,
+        challengerPosition: player.position,
+        challengerTeam: player.team,
+        challengerSport: sport,
+        challengerStats: stats,
+        shareUrl: `/challenge/${challengeCode}?p=${player.id}`,
+        shareText: `Think you can beat my stats? Challenge me on Caliber!`,
+      });
+    } catch (error) {
+      console.error('Error creating challenge:', error);
+      res.status(500).json({ message: "Failed to create challenge" });
     }
   });
 

@@ -92,6 +92,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { FootballMetrics } from "@/components/FootballMetrics";
 import { MilestonesSection } from "@/components/MilestoneCard";
 import { MemorySection } from "@/components/MemoryCard";
+import EndorsementSection from "@/components/EndorsementSection";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const BADGE_ICONS: Record<string, any> = {
@@ -2168,6 +2169,12 @@ export default function PlayerDetail() {
                 >
                   <Share2 className="w-3.5 h-3.5" /> Share
                 </Button>
+                <Link href={`/profile/${player.id}/public`}>
+                  <Button variant="outline" size="sm" className="gap-1.5" data-testid="button-view-scout-profile">
+                    <Target className="w-3 h-3" />
+                    Scout Me Profile
+                  </Button>
+                </Link>
                 <Link href={`/report-card?player=${player.id}`}>
                   <Button variant="outline" size="sm" className="gap-1.5 border-white/10 hover:bg-white/5" data-testid="button-generate-report">
                     <FileText className="w-3.5 h-3.5" /> Report
@@ -2355,6 +2362,8 @@ export default function PlayerDetail() {
           <MilestonesSection playerId={player.id} playerName={player.name} />
 
           <MemorySection playerId={player.id} />
+
+          <EndorsementSection playerId={player.id} playerName={player.name} />
 
           <motion.div 
             initial={{ opacity: 0, y: 20 }}

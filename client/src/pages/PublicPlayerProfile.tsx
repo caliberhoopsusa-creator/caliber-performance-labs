@@ -24,7 +24,10 @@ import {
   User,
   Target,
   Award,
-  Activity
+  Activity,
+  MessageSquareQuote,
+  Film,
+  Play
 } from "lucide-react";
 import { FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS, type FootballPosition } from "@shared/sports-config";
 import { cn } from "@/lib/utils";
@@ -180,6 +183,28 @@ export default function PublicPlayerProfile() {
   const { data, isLoading, error } = useQuery<PublicPlayerData>({
     queryKey: [`/api/players/${playerId}/public`],
     enabled: !!playerId,
+  });
+
+  const { data: endorsements = [] } = useQuery({
+    queryKey: ['/api/players', playerId, 'endorsements'],
+    queryFn: async () => {
+      const res = await fetch(`/api/players/${playerId}/endorsements`);
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!playerId && !isNaN(playerId),
+  });
+
+  const { data: highlights = [] } = useQuery({
+    queryKey: ['/api/players', playerId, 'highlights'],
+    queryFn: async () => {
+      try {
+        const res = await fetch(`/api/players/${playerId}/highlights`);
+        if (!res.ok) return [];
+        return res.json();
+      } catch { return []; }
+    },
+    enabled: !!playerId && !isNaN(playerId),
   });
 
   useEffect(() => {
@@ -399,6 +424,48 @@ export default function PublicPlayerProfile() {
           </div>
         </Card>
 
+        <Card className="bg-gradient-to-r from-primary/10 via-cyan-500/5 to-primary/10 border-primary/20 overflow-hidden" data-testid="card-scout-me">
+          <div className="p-4 md:p-6 flex flex-col md:flex-row items-center gap-4">
+            <div className="flex-1 text-center md:text-left">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2 justify-center md:justify-start">
+                <Target className="w-5 h-5 text-primary" />
+                Interested in Recruiting {player.name.split(' ')[0]}?
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                {player.school && `${player.school}`}
+                {player.graduationYear && ` - Class of ${player.graduationYear}`}
+                {player.state && ` - ${player.state}`}
+              </p>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              <Button
+                onClick={() => {
+                  const subject = encodeURIComponent(`Recruiting Interest - ${player.name}`);
+                  const body = encodeURIComponent(`Hi,\n\nI'm interested in learning more about ${player.name} as a potential recruit.\n\nPlayer Profile: ${window.location.href}\n\nBest regards`);
+                  window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
+                }}
+                className="gap-2"
+                data-testid="button-contact-recruit"
+              >
+                <Mail className="w-4 h-4" />
+                Contact for Recruiting
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                  toast({ title: "Profile Link Copied", description: "Share this link with coaches and recruiters." });
+                }}
+                className="gap-2"
+                data-testid="button-copy-scout-link"
+              >
+                <Copy className="w-4 h-4" />
+                Copy Link
+              </Button>
+            </div>
+          </div>
+        </Card>
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           {isFootball ? (
             <>
@@ -593,6 +660,78 @@ export default function PublicPlayerProfile() {
               )}
             </div>
           </Card>
+        )}
+
+        {endorsements.length > 0 && (
+          <div className="space-y-4" data-testid="section-public-endorsements">
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <MessageSquareQuote className="w-5 h-5 text-cyan-400" />
+              Coach Endorsements
+              <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 no-default-hover-elevate no-default-active-elevate">
+                {endorsements.length}
+              </Badge>
+            </h2>
+            <div className="grid gap-3">
+              {endorsements.map((e: any) => (
+                <Card key={e.id} className="p-4 bg-white/5 border-white/10" data-testid={`public-endorsement-${e.id}`}>
+                  <div className="flex items-start gap-3">
+                    <Avatar className="w-8 h-8 border border-white/10">
+                      <AvatarFallback className="bg-cyan-500/20 text-cyan-400 text-xs font-bold">
+                        {e.coachName?.split(" ").map((n: string) => n[0]).join("").slice(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className="text-sm font-bold text-white">{e.coachName}</span>
+                        <Badge className="text-[10px] bg-white/5 border-white/10 no-default-hover-elevate no-default-active-elevate">
+                          {e.skillCategory?.replace('_', ' ')}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-white/70">{e.content}</p>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {highlights.length > 0 && (
+          <div className="space-y-4" data-testid="section-public-highlights">
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <Film className="w-5 h-5 text-cyan-400" />
+              Highlight Clips
+              <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 no-default-hover-elevate no-default-active-elevate">
+                {highlights.length}
+              </Badge>
+            </h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {highlights.map((clip: any) => (
+                <Card key={clip.id} className="overflow-hidden border-white/10 bg-white/5" data-testid={`public-highlight-${clip.id}`}>
+                  {clip.thumbnailUrl ? (
+                    <div className="relative aspect-video bg-black/40">
+                      <img src={clip.thumbnailUrl} alt={clip.title || 'Highlight'} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-full bg-black/60 flex items-center justify-center border border-white/20">
+                          <Play className="w-5 h-5 text-white ml-0.5" />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="aspect-video bg-gradient-to-br from-cyan-500/10 to-blue-600/10 flex items-center justify-center">
+                      <Film className="w-10 h-10 text-white/20" />
+                    </div>
+                  )}
+                  <div className="p-3">
+                    <h4 className="text-sm font-bold text-white truncate">{clip.title || 'Highlight Clip'}</h4>
+                    {clip.description && (
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{clip.description}</p>
+                    )}
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
         )}
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">

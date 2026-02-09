@@ -51,6 +51,7 @@ import ScheduleCalendar from "./pages/ScheduleCalendar";
 import HighlightClipsPage from "./pages/HighlightClipsPage";
 import Highlights from "./pages/Highlights";
 import ReelPage from "./pages/ReelPage";
+import ReelGenerator from "./pages/ReelGenerator";
 import TeamComparison from "./pages/TeamComparison";
 import ReportCardPage from "./pages/ReportCardPage";
 import AnalyticsHub from "./pages/AnalyticsHub";
@@ -61,6 +62,7 @@ import RecruitingHub from "./pages/RecruitingHub";
 import PublicPlayerProfile from "./pages/PublicPlayerProfile";
 import LiveGameMode from "./pages/LiveGameMode";
 import DiscoverHighlights from "./pages/DiscoverHighlights";
+import ChallengePage from "./pages/ChallengePage";
 import NotFound from "./pages/not-found";
 
 interface ExtendedUser {
@@ -293,7 +295,7 @@ function MainRouter() {
               <Switch>
                 <Route path="/">
                   {extendedUser.role === 'player' && extendedUser.playerId ? (
-                    <Redirect to={`/players/${extendedUser.playerId}`} />
+                    <Redirect to="/community?tab=feed" />
                   ) : (
                     <Dashboard />
                   )}
@@ -361,6 +363,7 @@ function MainRouter() {
                 <Route path="/schedule" component={ScheduleCalendar} />
                 <Route path="/highlights" component={Highlights} />
                 <Route path="/discover/highlights" component={DiscoverHighlights} />
+                <Route path="/reel-builder" component={ReelGenerator} />
                 <Route path="/reels/:playerId" component={ReelPage} />
                 <Route path="/team-comparison">
                   <Redirect to="/analytics?tab=teams" />
@@ -410,6 +413,7 @@ function App() {
                     <Switch>
                     <Route path="/admin" component={Admin} />
                     <Route path="/profile/:id/public" component={PublicPlayerProfile} />
+                    <Route path="/challenge/:code" component={ChallengePage} />
                     <Route>
                       <MainRouter />
                     </Route>

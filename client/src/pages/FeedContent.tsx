@@ -18,6 +18,9 @@ import { cn } from "@/lib/utils";
 import { apiRequest, queryClient as globalQueryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import WeeklyRecapCard from "@/components/WeeklyRecapCard";
+import StreakDisplay from "@/components/StreakDisplay";
+import ChallengeButton from "@/components/ChallengeButton";
 
 function getSessionId(): string {
   const key = "caliber_session_id";
@@ -1020,6 +1023,14 @@ export default function FeedContent() {
           </p>
         </div>
       </div>
+
+      {user?.playerId && (
+        <div className="flex items-center flex-wrap gap-3">
+          <StreakDisplay playerId={user.playerId} />
+          <ChallengeButton />
+        </div>
+      )}
+      {user?.playerId && <WeeklyRecapCard playerId={user.playerId} />}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList 
