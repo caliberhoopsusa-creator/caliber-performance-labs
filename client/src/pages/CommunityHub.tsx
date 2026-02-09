@@ -7,16 +7,18 @@ import {
   Rss,
   Camera,
   BarChart3,
-  UserPlus
+  UserPlus,
+  MessageCircle
 } from "lucide-react";
 
 import FeedContent from "./FeedContent";
 import StoriesContent from "./StoriesContent";
 import PollsContent from "./PollsContent";
 import ConnectContent from "./ConnectContent";
+import MessagesPage from "./MessagesPage";
 
-type TabValue = "feed" | "stories" | "polls" | "connect";
-const VALID_TABS: TabValue[] = ["feed", "stories", "polls", "connect"];
+type TabValue = "feed" | "stories" | "polls" | "connect" | "messages";
+const VALID_TABS: TabValue[] = ["feed", "stories", "polls", "connect", "messages"];
 
 function isValidTab(tab: string | null): tab is TabValue {
   return tab !== null && VALID_TABS.includes(tab as TabValue);
@@ -103,6 +105,14 @@ export default function CommunityHub() {
             <span className="sm:hidden">Polls</span>
           </TabsTrigger>
           <TabsTrigger 
+            value="messages" 
+            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            data-testid="tab-messages"
+          >
+            <MessageCircle className="w-4 h-4" />
+            <span>Messages</span>
+          </TabsTrigger>
+          <TabsTrigger 
             value="connect" 
             className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             data-testid="tab-connect"
@@ -122,6 +132,10 @@ export default function CommunityHub() {
 
         <TabsContent value="polls" className="mt-6">
           <PollsContent />
+        </TabsContent>
+
+        <TabsContent value="messages" className="mt-6">
+          <MessagesPage />
         </TabsContent>
 
         <TabsContent value="connect" className="mt-6">

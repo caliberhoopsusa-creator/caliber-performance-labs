@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Target, Award, Repeat2, BarChart3, Users, Camera, Flame, Trophy, Zap, Rss, UserCheck, UsersRound, Activity, Heart, ThumbsUp, HandMetal, ArrowUp, MessageCircle, Send, Trash2, Reply } from "lucide-react";
+import { Target, Award, Repeat2, BarChart3, Users, Camera, Flame, Trophy, Zap, Rss, UserCheck, UsersRound, Activity, Heart, ThumbsUp, HandMetal, ArrowUp, MessageCircle, Send, Trash2, Reply, Bookmark } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { apiRequest, queryClient as globalQueryClient } from "@/lib/queryClient";
@@ -397,12 +397,14 @@ function ReactionButtons({
   headline,
   showComments,
   onToggleComments,
+  currentPlayerId,
 }: { 
   activityId: number;
   playerName: string;
   headline: string;
   showComments: boolean;
   onToggleComments: () => void;
+  currentPlayerId?: number | null;
 }) {
   const queryClient = useQueryClient();
   const sessionId = getSessionId();
@@ -415,6 +417,32 @@ function ReactionButtons({
       const res = await fetch(`/api/feed/${activityId}/comments/count`);
       if (!res.ok) return { count: 0 };
       return res.json();
+    },
+  });
+
+  const { data: savedData } = useQuery<{ saved: boolean }>({
+    queryKey: ['/api/saved-posts', 'check', activityId, currentPlayerId],
+    queryFn: async () => {
+      if (!currentPlayerId) return { saved: false };
+      const res = await fetch(`/api/saved-posts/check?activityId=${activityId}&playerId=${currentPlayerId}`);
+      if (!res.ok) return { saved: false };
+      return res.json();
+    },
+    enabled: !!currentPlayerId,
+  });
+
+  const toggleSaveMutation = useMutation({
+    mutationFn: async () => {
+      if (!currentPlayerId) return;
+      if (savedData?.saved) {
+        await apiRequest("DELETE", `/api/saved-posts?activityId=${activityId}&playerId=${currentPlayerId}`);
+      } else {
+        await apiRequest("POST", "/api/saved-posts", { activityId, playerId: currentPlayerId, sessionId });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/saved-posts', 'check', activityId, currentPlayerId] });
+      queryClient.invalidateQueries({ queryKey: ['/api/saved-posts'] });
     },
   });
 
@@ -546,6 +574,22 @@ function ReactionButtons({
         >
           <Repeat2 className="w-4 h-4 text-blue-400" />
         </motion.button>
+
+        {currentPlayerId && (
+          <motion.button
+            onClick={() => toggleSaveMutation.mutate()}
+            className={cn(
+              "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-all",
+              "bg-white/5 border border-white/10",
+              savedData?.saved && "bg-amber-500/20 border-amber-500/40",
+            )}
+            data-testid={`button-save-${activityId}`}
+            whileTap={{ scale: 0.92 }}
+            disabled={toggleSaveMutation.isPending}
+          >
+            <Bookmark className={cn("w-4 h-4", savedData?.saved ? "text-amber-400 fill-amber-400" : "text-amber-400")} />
+          </motion.button>
+        )}
       </div>
 
       <RepostDialog
@@ -587,7 +631,7 @@ function ActivitySkeleton({ index }: { index: number }) {
   );
 }
 
-function ActivityCard({ activity, index, currentUserName }: { activity: FeedActivity; index: number; currentUserName: string }) {
+function ActivityCard({ activity, index, currentUserName, currentPlayerId }: { activity: FeedActivity; index: number; currentUserName: string; currentPlayerId?: number | null }) {
   const [, setLocation] = useLocation();
   const [showComments, setShowComments] = useState(false);
   
@@ -695,6 +739,7 @@ function ActivityCard({ activity, index, currentUserName }: { activity: FeedActi
               headline={activity.headline}
               showComments={showComments}
               onToggleComments={() => setShowComments(!showComments)}
+              currentPlayerId={currentPlayerId}
             />
 
             <AnimatePresence>
@@ -724,12 +769,13 @@ interface FeedListProps {
   emptyDescription: string;
   emptyIcon: typeof Rss;
   currentUserName: string;
+  currentPlayerId?: number | null;
   hasNextPage?: boolean;
   isFetchingNextPage?: boolean;
   onLoadMore?: () => void;
 }
 
-function FeedList({ activities, isLoading, error, emptyMessage, emptyDescription, emptyIcon: EmptyIcon, currentUserName, hasNextPage, isFetchingNextPage, onLoadMore }: FeedListProps) {
+function FeedList({ activities, isLoading, error, emptyMessage, emptyDescription, emptyIcon: EmptyIcon, currentUserName, currentPlayerId, hasNextPage, isFetchingNextPage, onLoadMore }: FeedListProps) {
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -806,7 +852,7 @@ function FeedList({ activities, isLoading, error, emptyMessage, emptyDescription
           className="space-y-3"
         >
           {activities.map((activity, idx) => (
-            <ActivityCard key={activity.id} activity={activity} index={idx} currentUserName={currentUserName} />
+            <ActivityCard key={activity.id} activity={activity} index={idx} currentUserName={currentUserName} currentPlayerId={currentPlayerId} />
           ))}
           {onLoadMore && hasNextPage && (
             <div ref={loadMoreRef} className="py-4 flex justify-center">
@@ -1022,6 +1068,7 @@ export default function FeedContent() {
               emptyDescription="Activities will appear here as players log games and earn badges"
               emptyIcon={Rss}
               currentUserName={currentUserName}
+              currentPlayerId={user?.playerId}
               hasNextPage={hasNextPage}
               isFetchingNextPage={isFetchingNextPage}
               onLoadMore={() => fetchNextPage()}
@@ -1039,6 +1086,7 @@ export default function FeedContent() {
               emptyDescription="Follow players to see their updates here"
               emptyIcon={UserCheck}
               currentUserName={currentUserName}
+              currentPlayerId={user?.playerId}
             />
           </div>
         </TabsContent>
@@ -1053,6 +1101,7 @@ export default function FeedContent() {
               emptyDescription="Team updates will appear here when teammates log games or earn badges"
               emptyIcon={UsersRound}
               currentUserName={currentUserName}
+              currentPlayerId={user?.playerId}
             />
           </div>
         </TabsContent>
