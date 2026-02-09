@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
@@ -8,6 +9,91 @@ interface StatCardProps {
   trend?: "up" | "down" | "neutral";
   className?: string;
   highlight?: boolean;
+}
+
+function AnimatedValue({ value }: { value: string | number }) {
+  const [displayValue, setDisplayValue] = useState<string | number>(value);
+  const prevValueRef = useRef<string | number>(value);
+  const frameRef = useRef<number>(0);
+
+  useEffect(() => {
+    // Skip animation for special cases
+    if (value === "—" || value === "N/A") {
+      setDisplayValue(value);
+      prevValueRef.current = value;
+      return;
+    }
+
+    const numericValue = typeof value === 'string' ? parseFloat(value) : value;
+    
+    // If not a valid number, just set it directly
+    if (isNaN(numericValue) || (typeof value === 'string' && value.includes('%'))) {
+      // For percentage strings like "52.3%", animate the number part
+      const match = typeof value === 'string' ? value.match(/^([\d.]+)(.*)$/) : null;
+      if (match) {
+        const targetNum = parseFloat(match[1]);
+        const suffix = match[2];
+        const startNum = 0;
+        const startTime = performance.now();
+        const duration = 800;
+        
+        const animate = (currentTime: number) => {
+          const elapsed = currentTime - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+          
+          const current = startNum + (targetNum - startNum) * eased;
+          // Preserve decimal places from original
+          const decimals = match[1].includes('.') ? match[1].split('.')[1].length : 0;
+          setDisplayValue(current.toFixed(decimals) + suffix);
+          
+          if (progress < 1) {
+            frameRef.current = requestAnimationFrame(animate);
+          }
+        };
+        
+        frameRef.current = requestAnimationFrame(animate);
+        prevValueRef.current = value;
+        return () => cancelAnimationFrame(frameRef.current);
+      }
+      
+      setDisplayValue(value);
+      prevValueRef.current = value;
+      return;
+    }
+    
+    // Animate numeric values
+    const startTime = performance.now();
+    const duration = 800;
+    const startVal = 0;
+    
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+      
+      const current = startVal + (numericValue - startVal) * eased;
+      // If the original is an integer, show integer; otherwise match decimals
+      if (Number.isInteger(numericValue)) {
+        setDisplayValue(Math.round(current));
+      } else {
+        const originalStr = String(value);
+        const decimals = originalStr.includes('.') ? originalStr.split('.')[1].length : 1;
+        setDisplayValue(parseFloat(current.toFixed(decimals)));
+      }
+      
+      if (progress < 1) {
+        frameRef.current = requestAnimationFrame(animate);
+      }
+    };
+    
+    frameRef.current = requestAnimationFrame(animate);
+    prevValueRef.current = value;
+    
+    return () => cancelAnimationFrame(frameRef.current);
+  }, [value]);
+
+  return <>{displayValue}</>;
 }
 
 export function StatCard({ label, value, subValue, trend, className, highlight }: StatCardProps) {
@@ -49,7 +135,7 @@ export function StatCard({ label, value, subValue, trend, className, highlight }
           "bg-gradient-to-b from-white to-cyan-100/80 bg-clip-text text-transparent",
           "drop-shadow-[0_2px_10px_rgba(100,200,255,0.15)]"
         )}>
-          {value}
+          <AnimatedValue value={value} />
         </span>
         {subValue && (
           <span className="text-xs text-cyan-200/50 mb-2 font-medium">{subValue}</span>

@@ -31,7 +31,7 @@ import { GradeBadge } from "@/components/GradeBadge";
 import { PlayerArchetype } from "@/components/PlayerArchetype";
 import { EliteAchievements } from "@/components/EliteAchievements";
 import { CaliberBadge } from "@/components/CaliberBadge";
-import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Trophy, Share2, BarChart3, Medal, User, Users, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye, BookOpen, Phone, Save, Crosshair, ShieldCheck, PlayCircle, AlertTriangle, Package, Sparkles, Palette, Crown, Gem, CircleDot, Rss, MessageCircle } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Trophy, Share2, BarChart3, Medal, User, Users, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye, BookOpen, Phone, Save, Crosshair, ShieldCheck, PlayCircle, AlertTriangle, Package, Sparkles, Palette, Crown, Gem, CircleDot, Rss, MessageCircle, Sun, Cloud, Moon } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS, FOOTBALL_POSITION_STATS, type FootballPosition } from "@shared/sports-config";
 import { useSport } from "@/components/SportToggle";
@@ -1334,6 +1334,14 @@ function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: n
   );
 }
 
+function getGreeting(): { text: string; icon: typeof Sun } {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return { text: "Good morning", icon: Sun };
+  if (hour >= 12 && hour < 17) return { text: "Good afternoon", icon: Sun };
+  if (hour >= 17 && hour < 21) return { text: "Good evening", icon: Sparkles };
+  return { text: "Late night grind", icon: Moon };
+}
+
 export default function PlayerDetail() {
   const [, params] = useRoute("/players/:id");
   const id = Number(params?.id);
@@ -2203,6 +2211,31 @@ export default function PlayerDetail() {
           </div>
         </div>
       </motion.div>
+
+      {isOwnProfile && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-4"
+          data-testid="greeting-banner"
+        >
+          <div className="flex items-center gap-3 px-1">
+            {(() => {
+              const greeting = getGreeting();
+              const GreetingIcon = greeting.icon;
+              return (
+                <>
+                  <GreetingIcon className="w-5 h-5 text-amber-400" style={{ filter: "drop-shadow(0 0 6px rgba(251, 191, 36, 0.5))" }} />
+                  <span className="text-lg font-display text-white/90">
+                    {greeting.text}, <span className="bg-gradient-to-r from-white to-accent bg-clip-text text-transparent font-bold">{player.name.split(' ')[0]}</span>
+                  </span>
+                </>
+              );
+            })()}
+          </div>
+        </motion.div>
+      )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <motion.div 

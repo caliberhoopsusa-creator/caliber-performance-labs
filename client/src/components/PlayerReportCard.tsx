@@ -37,6 +37,7 @@ import { cn } from "@/lib/utils";
 import { BADGE_DEFINITIONS } from "@shared/schema";
 import { format } from "date-fns";
 import { FOOTBALL_POSITION_LABELS, type FootballPosition } from "@shared/sports-config";
+import { SportSpinner } from "@/components/SportSpinner";
 
 interface PlayerReportCardProps {
   playerId: number;
@@ -476,6 +477,9 @@ export function PlayerReportCard({ playerId, dateRange, showActions = true }: Pl
     return (
       <Card className="print:shadow-none" data-testid="report-card-loading">
         <CardContent className="p-6 space-y-6">
+          <div className="flex justify-center py-4">
+            <SportSpinner size="md" />
+          </div>
           <div className="flex items-center gap-4">
             <Skeleton className="w-20 h-20 rounded-full" />
             <div className="space-y-2">

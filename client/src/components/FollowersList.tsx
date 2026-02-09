@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { Users } from "lucide-react";
+import { SportSpinner } from "@/components/SportSpinner";
 
 interface Follower {
   id: number;
@@ -35,7 +36,7 @@ export function FollowersList({ playerId }: FollowersListProps) {
     return (
       <Card className="glass-card p-6">
         <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+          <SportSpinner size="sm" />
         </div>
       </Card>
     );

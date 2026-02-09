@@ -10,6 +10,7 @@ import { Link } from "wouter";
 import { motion } from "framer-motion";
 import type { HighlightClip, Game } from "@shared/schema";
 import { format } from "date-fns";
+import { SportSpinner } from "@/components/SportSpinner";
 
 interface HighlightsGalleryProps {
   playerId: number;
@@ -52,6 +53,9 @@ export function HighlightsGallery({ playerId, isOwner = false }: HighlightsGalle
   if (isLoading) {
     return (
       <div data-testid="highlights-gallery-loading">
+        <div className="flex justify-center py-4">
+          <SportSpinner size="md" />
+        </div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <Card key={i} className="overflow-hidden">

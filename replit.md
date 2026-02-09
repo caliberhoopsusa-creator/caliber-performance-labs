@@ -12,6 +12,7 @@ Preferred communication style: Simple, everyday language.
 - **Frameworks**: React 18 with TypeScript, Wouter for routing, TanStack React Query for state management.
 - **Styling**: Tailwind CSS with shadcn/ui (New York style), Recharts for charts, React Hook Form with Zod for forms.
 - **UI/UX**: Features a sleek, futuristic dark theme with sci-fi aesthetics, including cyber-grid backgrounds, gradient text, glowing elements, and Framer-motion animations. Typography uses Teko for headings and Inter for body text. Mobile-optimized with PWA support, including components like `FloatingActionButton`, `PullToRefreshIndicator`, `CollapsibleStatCard`, and `MobileStatGrid`. Includes a custom React Error Boundary and age-friendly accessibility features (e.g., base font size 16px, larger navigation text, enlarged touch targets, ARIA labels).
+- **Personality & Polish**: Sport-themed loading spinners (`SportSpinner` component - bouncing basketball / spinning football based on selected sport), personalized time-of-day greeting banner on player profiles, and animated count-up effect on stat card values for a dynamic feel.
 - **Contextual Help**: Integrated `HelpTooltip` and `FeatureTip` components for on-demand explanations across major hub pages.
 
 ### Backend

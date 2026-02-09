@@ -21,6 +21,7 @@ import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Responsi
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { FootballMetrics as FootballMetricsType } from "@shared/schema";
+import { SportSpinner } from "@/components/SportSpinner";
 
 interface FootballMetricsProps {
   playerId: number;
@@ -231,7 +232,7 @@ export function FootballMetrics({ playerId, canEdit }: FootballMetricsProps) {
     return (
       <Card data-testid="football-metrics-loading">
         <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
+          <SportSpinner size="md" sport="football" />
         </CardContent>
       </Card>
     );

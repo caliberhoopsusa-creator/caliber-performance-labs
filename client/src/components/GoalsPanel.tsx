@@ -30,6 +30,7 @@ import {
 } from "@shared/schema";
 import { cn } from "@/lib/utils";
 import { ShareGoalModal } from "./ShareGoalModal";
+import { SportSpinner } from "@/components/SportSpinner";
 
 interface GoalsPanelProps {
   playerId: number;
@@ -154,10 +155,8 @@ export function GoalsPanel({ playerId, games }: GoalsPanelProps) {
   if (goalsLoading || streaksLoading) {
     return (
       <Card className="p-4">
-        <div className="animate-pulse space-y-3">
-          <div className="h-5 bg-muted rounded w-32"></div>
-          <div className="h-12 bg-muted rounded"></div>
-          <div className="h-12 bg-muted rounded"></div>
+        <div className="flex items-center justify-center py-8">
+          <SportSpinner size="sm" />
         </div>
       </Card>
     );
