@@ -31,7 +31,7 @@ import { GradeBadge } from "@/components/GradeBadge";
 import { PlayerArchetype } from "@/components/PlayerArchetype";
 import { EliteAchievements } from "@/components/EliteAchievements";
 import { CaliberBadge } from "@/components/CaliberBadge";
-import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Trophy, Share2, BarChart3, Medal, User, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye, BookOpen, Phone, Save, Crosshair, ShieldCheck, PlayCircle, AlertTriangle, Package, Sparkles, Palette, Crown, Gem, CircleDot } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Trophy, Share2, BarChart3, Medal, User, Users, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye, BookOpen, Phone, Save, Crosshair, ShieldCheck, PlayCircle, AlertTriangle, Package, Sparkles, Palette, Crown, Gem, CircleDot, Rss, MessageCircle } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS, FOOTBALL_POSITION_STATS, type FootballPosition } from "@shared/sports-config";
 import { useSport } from "@/components/SportToggle";
@@ -80,7 +80,7 @@ import {
 } from "@/components/ui/collapsible";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useMemo, useRef } from "react";
@@ -1094,6 +1094,222 @@ interface FollowingPlayer {
   name: string;
 }
 
+function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: number; playerName: string; isOwnProfile: boolean }) {
+  const { user } = useAuth();
+  const [, setLocation] = useLocation();
+
+  const { data: feedActivities = [], isLoading: feedLoading } = useQuery<any[]>({
+    queryKey: ['/api/players', playerId, 'feed'],
+  });
+
+  const { data: followStats } = useQuery<{ followerCount: number; followingCount: number; isFollowing: boolean }>({
+    queryKey: ['/api/players', playerId, 'follow-stats'],
+  });
+
+  const { data: workouts = [], isLoading: workoutsLoading } = useQuery<any[]>({
+    queryKey: ['/api/players', playerId, 'workouts'],
+    enabled: isOwnProfile,
+  });
+
+  const recentActivities = feedActivities.slice(0, 10);
+  const recentWorkouts = workouts.slice(0, 5);
+
+  const ACTIVITY_TYPE_ICONS: Record<string, any> = {
+    game: Target,
+    badge: Award,
+    streak: Flame,
+    workout: Dumbbell,
+    goal: Trophy,
+    challenge: Zap,
+    repost: Share2,
+    poll: BarChart3,
+    prediction: Eye,
+  };
+
+  const ACTIVITY_TYPE_COLORS: Record<string, string> = {
+    game: 'text-accent',
+    badge: 'text-purple-400',
+    streak: 'text-orange-400',
+    workout: 'text-emerald-400',
+    goal: 'text-blue-400',
+    challenge: 'text-amber-400',
+    repost: 'text-cyan-400',
+    poll: 'text-pink-400',
+    prediction: 'text-indigo-400',
+  };
+
+  return (
+    <div className="space-y-6">
+      {!isOwnProfile && user && (
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={() => setLocation('/community?tab=messages')}
+            variant="outline"
+            size="sm"
+            className="gap-2 border-white/10"
+            data-testid="button-message-player"
+          >
+            <MessageCircle className="w-4 h-4" /> Message
+          </Button>
+        </div>
+      )}
+
+      <Card className="p-5 bg-gradient-to-br from-black/60 to-black/30 border-white/10">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-1.5 rounded-lg bg-purple-500/20 border border-purple-500/30">
+            <Users className="w-4 h-4 text-purple-400" />
+          </div>
+          <h3 className="text-sm font-bold uppercase tracking-wider bg-gradient-to-r from-white to-purple-300 bg-clip-text text-transparent">
+            Social Overview
+          </h3>
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="text-center" data-testid="stat-followers-activity">
+            <div className="text-2xl font-bold text-white">{followStats?.followerCount ?? 0}</div>
+            <div className="text-xs text-muted-foreground">Followers</div>
+          </div>
+          <div className="text-center" data-testid="stat-following-activity">
+            <div className="text-2xl font-bold text-white">{followStats?.followingCount ?? 0}</div>
+            <div className="text-xs text-muted-foreground">Following</div>
+          </div>
+          <div className="text-center" data-testid="stat-posts-activity">
+            <div className="text-2xl font-bold text-white">{feedActivities.length}</div>
+            <div className="text-xs text-muted-foreground">Posts</div>
+          </div>
+        </div>
+      </Card>
+
+      <div>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-1.5 rounded-lg bg-accent/20 border border-accent/30">
+            <Rss className="w-4 h-4 text-accent" />
+          </div>
+          <h3 className="text-sm font-bold uppercase tracking-wider bg-gradient-to-r from-white to-accent bg-clip-text text-transparent">
+            Recent Activity
+          </h3>
+        </div>
+        
+        {feedLoading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map(i => (
+              <Card key={i} className="p-4 animate-pulse border-white/10">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-muted" />
+                  <div className="flex-1">
+                    <div className="h-4 bg-muted rounded w-3/4 mb-1" />
+                    <div className="h-3 bg-muted rounded w-1/2" />
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : recentActivities.length === 0 ? (
+          <Card className="p-8 text-center border-white/10">
+            <Rss className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">No activity yet</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">
+              Activities will appear here as {isOwnProfile ? 'you log' : `${playerName} logs`} games and earns badges
+            </p>
+          </Card>
+        ) : (
+          <div className="space-y-2">
+            {recentActivities.map((activity: any) => {
+              const Icon = ACTIVITY_TYPE_ICONS[activity.activityType] || Rss;
+              const colorClass = ACTIVITY_TYPE_COLORS[activity.activityType] || 'text-accent';
+              return (
+                <Card 
+                  key={activity.id} 
+                  className="p-3 border-white/10 hover-elevate"
+                  data-testid={`activity-item-${activity.id}`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`p-1.5 rounded-lg bg-white/5 border border-white/10 flex-shrink-0`}>
+                      <Icon className={`w-4 h-4 ${colorClass}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-white truncate">{activity.headline}</p>
+                      {activity.subtext && (
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">{activity.subtext}</p>
+                      )}
+                      <p className="text-xs text-muted-foreground/60 mt-1">
+                        {activity.createdAt ? formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true }) : ''}
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {isOwnProfile && (
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/30">
+              <Dumbbell className="w-4 h-4 text-emerald-400" />
+            </div>
+            <h3 className="text-sm font-bold uppercase tracking-wider bg-gradient-to-r from-white to-emerald-300 bg-clip-text text-transparent">
+              Recent Workouts
+            </h3>
+          </div>
+
+          {workoutsLoading ? (
+            <div className="space-y-3">
+              {[1, 2].map(i => (
+                <Card key={i} className="p-4 animate-pulse border-white/10">
+                  <div className="h-4 bg-muted rounded w-3/4 mb-1" />
+                  <div className="h-3 bg-muted rounded w-1/2" />
+                </Card>
+              ))}
+            </div>
+          ) : recentWorkouts.length === 0 ? (
+            <Card className="p-6 text-center border-white/10">
+              <Dumbbell className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">No workouts logged yet</p>
+              <p className="text-xs text-muted-foreground/60 mt-1">Log workouts to track your training</p>
+            </Card>
+          ) : (
+            <div className="space-y-2">
+              {recentWorkouts.map((workout: any) => (
+                <Card 
+                  key={workout.id} 
+                  className="p-3 border-white/10 hover-elevate"
+                  data-testid={`workout-item-${workout.id}`}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="p-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex-shrink-0">
+                        <Dumbbell className="w-4 h-4 text-emerald-400" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-white truncate">{workout.title}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-xs text-muted-foreground">{workout.duration} min</span>
+                          {workout.intensity && (
+                            <>
+                              <span className="text-xs text-muted-foreground">&middot;</span>
+                              <span className="text-xs text-muted-foreground">Intensity {workout.intensity}/10</span>
+                            </>
+                          )}
+                          <span className="text-xs text-muted-foreground">&middot;</span>
+                          <span className="text-xs text-muted-foreground/60">
+                            {workout.date ? format(new Date(workout.date), 'MMM d') : ''}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function PlayerDetail() {
   const [, params] = useRoute("/players/:id");
   const id = Number(params?.id);
@@ -1994,6 +2210,13 @@ export default function PlayerDetail() {
               <Trophy className="w-4 h-4" /> Accolades
             </TabsTrigger>
             <TabsTrigger 
+              value="activity" 
+              className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-white" 
+              data-testid="tab-activity"
+            >
+              <Rss className="w-4 h-4" /> Activity
+            </TabsTrigger>
+            <TabsTrigger 
               value="coach" 
               className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-white" 
               data-testid="tab-coach"
@@ -2842,6 +3065,10 @@ export default function PlayerDetail() {
 
         <TabsContent value="accolades">
           <AccoladesSection playerId={player.id} isOwnProfile={isOwnProfile} />
+        </TabsContent>
+
+        <TabsContent value="activity">
+          <PlayerActivityTab playerId={id} playerName={player.name} isOwnProfile={isOwnProfile} />
         </TabsContent>
 
         <TabsContent value="coach">
