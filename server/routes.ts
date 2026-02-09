@@ -5704,6 +5704,187 @@ Respond in this exact JSON format:
     }
   });
 
+  // === DIRECT MESSAGES ===
+  
+  // Get all DM threads for the current player
+  app.get('/api/dm/threads', async (req, res) => {
+    try {
+      const sessionId = req.query.sessionId as string;
+      const playerId = Number(req.query.playerId);
+      if (!playerId) {
+        return res.status(400).json({ message: 'playerId required' });
+      }
+      const threads = await storage.getPlayerDmThreads(playerId);
+      res.json(threads);
+    } catch (err) {
+      console.error('Get DM threads error:', err);
+      res.status(500).json({ message: 'Error fetching threads' });
+    }
+  });
+
+  // Get unread DM count for a player
+  app.get('/api/dm/unread-count', async (req, res) => {
+    try {
+      const playerId = Number(req.query.playerId);
+      if (!playerId) {
+        return res.status(400).json({ message: 'playerId required' });
+      }
+      const count = await storage.getUnreadDmCount(playerId);
+      res.json({ count });
+    } catch (err) {
+      console.error('Get unread DM count error:', err);
+      res.status(500).json({ message: 'Error fetching unread count' });
+    }
+  });
+
+  // Start or find a DM thread with another player
+  app.post('/api/dm/threads', async (req, res) => {
+    try {
+      const { participantIds } = req.body; // array of player IDs
+      if (!participantIds || !Array.isArray(participantIds) || participantIds.length < 2) {
+        return res.status(400).json({ message: 'At least 2 participantIds required' });
+      }
+      
+      // Check if thread already exists between these players
+      const existingThread = await storage.findExistingDmThread(participantIds);
+      if (existingThread) {
+        const participants = await storage.getDmParticipants(existingThread.id);
+        return res.json({ thread: existingThread, participants, isExisting: true });
+      }
+      
+      // Create new thread
+      const thread = await storage.createDmThread();
+      
+      // Add all participants
+      for (const pid of participantIds) {
+        await storage.addDmParticipant({ threadId: thread.id, playerId: pid });
+      }
+      
+      const participants = await storage.getDmParticipants(thread.id);
+      res.status(201).json({ thread, participants, isExisting: false });
+    } catch (err) {
+      console.error('Create DM thread error:', err);
+      res.status(500).json({ message: 'Error creating thread' });
+    }
+  });
+
+  // Get messages in a thread
+  app.get('/api/dm/threads/:threadId/messages', async (req, res) => {
+    try {
+      const threadId = Number(req.params.threadId);
+      const limit = Number(req.query.limit) || 50;
+      const before = req.query.before ? Number(req.query.before) : undefined;
+      const messages = await storage.getDmMessages(threadId, limit, before);
+      res.json(messages);
+    } catch (err) {
+      console.error('Get DM messages error:', err);
+      res.status(500).json({ message: 'Error fetching messages' });
+    }
+  });
+
+  // Send a message in a thread
+  app.post('/api/dm/threads/:threadId/messages', async (req, res) => {
+    try {
+      const threadId = Number(req.params.threadId);
+      const { senderPlayerId, content } = req.body;
+      if (!content || !senderPlayerId) {
+        return res.status(400).json({ message: 'content and senderPlayerId required' });
+      }
+      const message = await storage.sendDmMessage({
+        threadId,
+        senderPlayerId,
+        content,
+      });
+      res.status(201).json(message);
+    } catch (err) {
+      console.error('Send DM message error:', err);
+      res.status(500).json({ message: 'Error sending message' });
+    }
+  });
+
+  // Mark thread as read
+  app.post('/api/dm/threads/:threadId/read', async (req, res) => {
+    try {
+      const threadId = Number(req.params.threadId);
+      const { playerId } = req.body;
+      if (!playerId) {
+        return res.status(400).json({ message: 'playerId required' });
+      }
+      await storage.markDmThreadRead(threadId, playerId);
+      res.json({ success: true });
+    } catch (err) {
+      console.error('Mark thread read error:', err);
+      res.status(500).json({ message: 'Error marking thread read' });
+    }
+  });
+
+  // === SAVED POSTS ===
+  
+  // Get saved posts for a player
+  app.get('/api/saved-posts', async (req, res) => {
+    try {
+      const playerId = Number(req.query.playerId);
+      if (!playerId) {
+        return res.status(400).json({ message: 'playerId required' });
+      }
+      const savedPosts = await storage.getSavedPosts(playerId);
+      res.json(savedPosts);
+    } catch (err) {
+      console.error('Get saved posts error:', err);
+      res.status(500).json({ message: 'Error fetching saved posts' });
+    }
+  });
+
+  // Save/bookmark a post
+  app.post('/api/saved-posts', async (req, res) => {
+    try {
+      const { activityId, playerId, sessionId } = req.body;
+      if (!activityId || !playerId) {
+        return res.status(400).json({ message: 'activityId and playerId required' });
+      }
+      const saved = await storage.savePost(activityId, playerId, sessionId);
+      res.status(201).json(saved);
+    } catch (err: any) {
+      if (err.message?.includes('duplicate') || err.code === '23505') {
+        return res.status(409).json({ message: 'Post already saved' });
+      }
+      console.error('Save post error:', err);
+      res.status(500).json({ message: 'Error saving post' });
+    }
+  });
+
+  // Unsave/unbookmark a post
+  app.delete('/api/saved-posts', async (req, res) => {
+    try {
+      const activityId = Number(req.query.activityId);
+      const playerId = Number(req.query.playerId);
+      if (!activityId || !playerId) {
+        return res.status(400).json({ message: 'activityId and playerId required' });
+      }
+      await storage.unsavePost(activityId, playerId);
+      res.json({ success: true });
+    } catch (err) {
+      console.error('Unsave post error:', err);
+      res.status(500).json({ message: 'Error unsaving post' });
+    }
+  });
+
+  // Check if a post is saved
+  app.get('/api/saved-posts/check', async (req, res) => {
+    try {
+      const activityId = Number(req.query.activityId);
+      const playerId = Number(req.query.playerId);
+      if (!activityId || !playerId) {
+        return res.json({ saved: false });
+      }
+      const saved = await storage.hasPlayerSavedPost(activityId, playerId);
+      res.json({ saved });
+    } catch (err) {
+      console.error('Check saved post error:', err);
+      res.status(500).json({ message: 'Error checking saved post' });
+    }
+  });
+
   // === POLLS ===
   app.get('/api/polls', async (req, res) => {
     try {
