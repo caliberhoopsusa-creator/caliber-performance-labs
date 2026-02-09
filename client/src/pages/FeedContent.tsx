@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Target, Award, Repeat2, BarChart3, Users, Camera, Flame, Trophy, Zap, Rss, UserCheck, UsersRound, Activity, Heart, ThumbsUp, HandMetal, ArrowUp, MessageCircle, Send, Trash2, Reply, Bookmark } from "lucide-react";
+import { Target, Award, Repeat2, BarChart3, Users, Camera, Flame, Trophy, Zap, Rss, UserCheck, UsersRound, Activity, Heart, ThumbsUp, HandMetal, ArrowUp, MessageCircle, Send, Trash2, Reply, Bookmark, Dumbbell } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { apiRequest, queryClient as globalQueryClient } from "@/lib/queryClient";
@@ -51,6 +51,7 @@ const ACTIVITY_ICONS: Record<string, typeof Target> = {
   poll: BarChart3,
   prediction: Users,
   story: Camera,
+  workout: Dumbbell,
 };
 
 const ACTIVITY_GRADIENTS: Record<string, string> = {
@@ -63,6 +64,7 @@ const ACTIVITY_GRADIENTS: Record<string, string> = {
   poll: "from-indigo-500/30 to-blue-600/10",
   prediction: "from-pink-500/30 to-rose-600/10",
   story: "from-cyan-500/30 to-teal-600/10",
+  workout: "from-emerald-500/30 to-emerald-600/10",
 };
 
 const ACTIVITY_COLORS: Record<string, string> = {
@@ -75,6 +77,7 @@ const ACTIVITY_COLORS: Record<string, string> = {
   poll: "text-indigo-400",
   prediction: "text-pink-400",
   story: "text-cyan-400",
+  workout: "text-emerald-400",
 };
 
 const ACTIVITY_GLOW: Record<string, string> = {
@@ -87,6 +90,7 @@ const ACTIVITY_GLOW: Record<string, string> = {
   poll: "#6366F1",
   prediction: "#EC4899",
   story: "#06B6D4",
+  workout: "#10B981",
 };
 
 const REACTION_CONFIGS = [

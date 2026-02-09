@@ -216,6 +216,7 @@ export interface IStorage {
   getPlayerFeedActivities(playerId: number): Promise<FeedActivity[]>;
   getFollowingFeedActivities(playerId: number, limit?: number): Promise<(FeedActivity & { playerName?: string })[]>;
   getTeamFeedActivities(sessionId: string, limit?: number): Promise<(FeedActivity & { playerName?: string })[]>;
+  isWorkoutShared(workoutId: number): Promise<boolean>;
 
   // Feed Reactions
   addReaction(reaction: InsertFeedReaction): Promise<FeedReaction>;
@@ -1212,6 +1213,13 @@ export class DatabaseStorage implements IStorage {
   async createFeedActivity(activity: InsertFeedActivity): Promise<FeedActivity> {
     const [newActivity] = await db.insert(feedActivities).values(activity).returning();
     return newActivity;
+  }
+
+  async isWorkoutShared(workoutId: number): Promise<boolean> {
+    const result = await db.select().from(feedActivities)
+      .where(and(eq(feedActivities.activityType, 'workout'), eq(feedActivities.relatedId, workoutId)))
+      .limit(1);
+    return result.length > 0;
   }
 
   async getFeedActivities(limit: number = 20, cursor?: number): Promise<(FeedActivity & { playerName?: string })[]> {

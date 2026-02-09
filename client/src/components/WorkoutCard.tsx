@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { Dumbbell, Target, Zap, Heart, Footprints, Clock, Trash2, ChevronDown, ChevronUp, Play } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Dumbbell, Target, Zap, Heart, Footprints, Clock, Trash2, ChevronDown, ChevronUp, Play, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
@@ -16,6 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { apiRequest } from "@/lib/queryClient";
 import type { Workout } from "@/hooks/use-basketball";
 
 type WorkoutCardProps = {
@@ -39,6 +42,43 @@ const workoutColors: Record<string, string> = {
   skills: "text-purple-400",
   recovery: "text-pink-400",
 };
+
+function ShareWorkoutButton({ workoutId }: { workoutId: number }) {
+  const qc = useQueryClient();
+
+  const { data: isShared } = useQuery<boolean>({
+    queryKey: ['/api/workouts', workoutId, 'shared'],
+  });
+
+  const shareMutation = useMutation({
+    mutationFn: () => apiRequest('POST', `/api/workouts/${workoutId}/share`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['/api/feed'] });
+      qc.invalidateQueries({ queryKey: ['/api/workouts', workoutId, 'shared'] });
+    },
+  });
+
+  if (isShared) {
+    return (
+      <Badge variant="secondary" data-testid={`badge-shared-workout-${workoutId}`}>
+        <Share2 className="w-3 h-3 mr-1" /> Shared
+      </Badge>
+    );
+  }
+
+  return (
+    <Button
+      size="sm"
+      variant="outline"
+      onClick={(e) => { e.stopPropagation(); shareMutation.mutate(); }}
+      disabled={shareMutation.isPending}
+      data-testid={`button-share-workout-${workoutId}`}
+    >
+      <Share2 className="w-3.5 h-3.5 mr-1" />
+      {shareMutation.isPending ? "Sharing..." : "Share to Feed"}
+    </Button>
+  );
+}
 
 export function WorkoutCard({ workout, onDelete, isDeleting }: WorkoutCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -108,7 +148,8 @@ export function WorkoutCard({ workout, onDelete, isDeleting }: WorkoutCardProps)
           </div>
         </div>
         
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          <ShareWorkoutButton workoutId={workout.id} />
           {workout.notes && workout.notes.length > 80 && (
             <Button
               size="icon"

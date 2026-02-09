@@ -8,7 +8,8 @@ import {
   Camera,
   BarChart3,
   UserPlus,
-  MessageCircle
+  MessageCircle,
+  Compass
 } from "lucide-react";
 
 import FeedContent from "./FeedContent";
@@ -16,9 +17,10 @@ import StoriesContent from "./StoriesContent";
 import PollsContent from "./PollsContent";
 import ConnectContent from "./ConnectContent";
 import MessagesPage from "./MessagesPage";
+import DiscoverContent from "./DiscoverContent";
 
-type TabValue = "feed" | "stories" | "polls" | "connect" | "messages";
-const VALID_TABS: TabValue[] = ["feed", "stories", "polls", "connect", "messages"];
+type TabValue = "feed" | "stories" | "polls" | "connect" | "messages" | "discover";
+const VALID_TABS: TabValue[] = ["feed", "stories", "polls", "connect", "messages", "discover"];
 
 function isValidTab(tab: string | null): tab is TabValue {
   return tab !== null && VALID_TABS.includes(tab as TabValue);
@@ -113,6 +115,14 @@ export default function CommunityHub() {
             <span>Messages</span>
           </TabsTrigger>
           <TabsTrigger 
+            value="discover" 
+            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            data-testid="tab-discover"
+          >
+            <Compass className="w-4 h-4" />
+            <span>Discover</span>
+          </TabsTrigger>
+          <TabsTrigger 
             value="connect" 
             className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             data-testid="tab-connect"
@@ -136,6 +146,10 @@ export default function CommunityHub() {
 
         <TabsContent value="messages" className="mt-6">
           <MessagesPage />
+        </TabsContent>
+
+        <TabsContent value="discover" className="mt-6">
+          <DiscoverContent />
         </TabsContent>
 
         <TabsContent value="connect" className="mt-6">

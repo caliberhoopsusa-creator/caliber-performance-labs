@@ -30,6 +30,10 @@ Preferred communication style: Simple, everyday language.
 - **AI Integration**: Gemini AI for video analysis and performance projections.
 - **Authentication**: Replit Auth with session management and role-based access control (Player/Coach).
 - **Social & Engagement**: Player following, in-app notifications, goal sharing, highlight clips, shareable achievements, quick reaction buttons, and online/activity indicators. Includes "This Day Last Year" memories and auto-generated shareable milestone cards.
+- **Direct Messages**: Full DM system with inbox, threaded conversations, unread counts, and real-time polling. Tables: `directMessageThreads`, `directMessages`, `threadParticipants`. APIs: `GET/POST /api/messages/threads`, `GET/POST /api/messages/threads/:id/messages`, `POST /api/messages/threads/:id/read`.
+- **Saved Posts**: Bookmark/save any feed activity for later viewing. Table: `savedPosts`. APIs: `GET /api/saved-posts`, `POST/DELETE /api/feed/:activityId/save`.
+- **Discover/Explore**: Instagram-style discover page with search, trending players (from leaderboard), suggested follows, and top performances of the week.
+- **Training Social Sharing**: Strava-style workout sharing to the activity feed. Share workouts with auto-generated summaries. APIs: `POST /api/workouts/:id/share`, `GET /api/workouts/:id/shared`.
 - **Smart Feed**: Cursor-based pagination with infinite scroll, "New posts available" banner, and auto-loading via IntersectionObserver.
 - **Feed Comments & Replies**: Threaded commenting on all feed activity items with nested replies, comment likes, and delete. Tables: `feed_comments`, `feed_comment_likes`. APIs: `GET/POST /api/feed/:activityId/comments`, `POST /api/feed/comments/:id/like`.
 - **Feed Repost with Caption**: Share any feed activity to your own feed with optional caption. API: `POST /api/feed/:activityId/repost`.
@@ -43,7 +47,7 @@ Preferred communication style: Simple, everyday language.
 - **Subscription & Monetization**: Tiered subscription model (Free, Pro, Coach Pro) integrated with Stripe.
 - **Wearable Integration**: Fitness dashboard with manual entry and Fitbit OAuth integration, with preparations for Apple Health, Google Fit, and WHOOP.
 - **Unified Hubs**: Consolidated tabbed interfaces for Community, Coach, Recruiting, Performance, and Analytics features, with URL parameter navigation and backwards compatibility for old routes.
-  - **Community Hub**: Activity feed, Instagram-style stories, polls, and player connection features.
+  - **Community Hub**: Activity feed, Instagram-style stories, polls, player connection, direct messages, discover/explore, and saved posts features.
   - **Coach Hub**: Team overview, game verification, player endorsements, practice tracking, lineup management, scouting, and performance alerts.
   - **Recruiting Hub**: Player recruiting journey dashboard, AI-powered college matching with real program statistics (including NCAA eligibility checklist), searchable camps/events directory, and coach recommendation system.
   - **Performance Hub**: Training log with workout history and fitness data dashboard (wearable integration).

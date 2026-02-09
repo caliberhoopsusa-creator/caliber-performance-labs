@@ -9280,6 +9280,65 @@ Respond in this exact JSON format:
     }
   });
 
+  app.post('/api/workouts/:id/share', isAuthenticated, async (req: any, res) => {
+    try {
+      const workoutId = parseInt(req.params.id);
+      const workout = await storage.getWorkout(workoutId);
+      if (!workout) {
+        return res.status(404).json({ message: "Workout not found" });
+      }
+
+      const userId = req.user?.claims?.sub;
+      const [player] = await db.select().from(players).where(eq(players.userId, userId));
+      if (!player || workout.playerId !== player.id) {
+        return res.status(403).json({ message: 'Not authorized to share this workout' });
+      }
+
+      const alreadyShared = await storage.isWorkoutShared(workoutId);
+      if (alreadyShared) {
+        return res.status(400).json({ message: "Workout already shared" });
+      }
+
+      const sessionId = req.headers['x-session-id'] as string || '';
+
+      const activity = await storage.createFeedActivity({
+        activityType: 'workout',
+        playerId: workout.playerId,
+        headline: `${player?.name || 'Player'} completed a ${workout.duration}-min ${workout.workoutType} workout: ${workout.title}`,
+        subtext: workout.notes || `Intensity: ${workout.intensity}/10`,
+        sessionId,
+        relatedId: workout.id,
+      });
+
+      res.json(activity);
+    } catch (error) {
+      console.error('Error sharing workout:', error);
+      res.status(500).json({ message: "Failed to share workout" });
+    }
+  });
+
+  app.get('/api/workouts/:id/shared', isAuthenticated, async (req: any, res) => {
+    try {
+      const workoutId = parseInt(req.params.id);
+      const workout = await storage.getWorkout(workoutId);
+      if (!workout) {
+        return res.status(404).json({ message: "Workout not found" });
+      }
+
+      const userId = req.user?.claims?.sub;
+      const [player] = await db.select().from(players).where(eq(players.userId, userId));
+      if (!player || workout.playerId !== player.id) {
+        return res.status(403).json({ message: 'Not authorized to share this workout' });
+      }
+
+      const shared = await storage.isWorkoutShared(workoutId);
+      res.json(shared);
+    } catch (error) {
+      console.error('Error checking shared status:', error);
+      res.status(500).json({ message: "Failed to check shared status" });
+    }
+  });
+
   // ========================================
   // ACCOLADE ROUTES
   // ========================================
