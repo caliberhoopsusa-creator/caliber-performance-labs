@@ -153,52 +153,133 @@ export function CelebrationOverlay({
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          className="fixed inset-0 z-[100] pointer-events-none overflow-hidden"
+          initial={{ opacity: 0, x: 80, y: -20 }}
+          animate={{ opacity: 1, x: 0, y: 0 }}
+          exit={{ opacity: 0, x: 80 }}
+          transition={{ type: "spring", stiffness: 350, damping: 25 }}
+          className="fixed top-4 right-4 z-[100] pointer-events-none"
           data-testid="celebration-overlay"
         >
-          {/* Particles */}
-          {particles.map((particle) => (
+          <div
+            className={cn(
+              "relative px-4 py-3 rounded-xl backdrop-blur-xl border border-white/20",
+              "bg-gradient-to-br",
+              config.bgColor,
+              "shadow-lg max-w-[280px]"
+            )}
+          >
+            <motion.div
+              className={cn(
+                "absolute inset-0 rounded-xl opacity-40 blur-lg -z-10",
+                "bg-gradient-to-br",
+                config.bgColor
+              )}
+              animate={{
+                scale: [1, 1.1, 1],
+                opacity: [0.4, 0.6, 0.4],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
+
+            <div className="flex items-center gap-3">
+              <motion.div
+                animate={{
+                  scale: [1, 1.15, 1],
+                  rotate: [0, 5, -5, 0],
+                }}
+                transition={{
+                  duration: 0.6,
+                  repeat: 2,
+                  ease: "easeInOut",
+                }}
+                className={cn(
+                  "w-10 h-10 shrink-0 rounded-full flex items-center justify-center",
+                  "bg-gradient-to-br from-white/10 to-white/5 border",
+                  config.color.replace("text-", "border-")
+                )}
+              >
+                <Icon className={cn("w-5 h-5", config.color)} />
+              </motion.div>
+
+              <div className="flex flex-col min-w-0">
+                <motion.span
+                  initial={{ y: 8, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.1 }}
+                  className={cn(
+                    "text-sm font-display font-bold tracking-wider leading-tight",
+                    config.color
+                  )}
+                >
+                  {config.title}
+                </motion.span>
+
+                {value && (
+                  <motion.span
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.2, type: "spring" }}
+                    className="text-2xl font-display font-bold text-white leading-tight"
+                  >
+                    {value}
+                  </motion.span>
+                )}
+
+                {(subtitle || config.subtitle) && (
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="text-xs text-white/60 truncate"
+                  >
+                    {subtitle || config.subtitle}
+                  </motion.span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {particles.slice(0, 12).map((particle) => (
             <motion.div
               key={particle.id}
               initial={{
-                x: `${particle.x}vw`,
-                y: `${particle.y}vh`,
-                rotate: 0,
+                x: 0,
+                y: 0,
                 scale: 0,
+                opacity: 1,
               }}
               animate={{
-                y: "120vh",
-                rotate: particle.rotation + 720,
-                scale: [0, 1, 1, 0.5],
+                x: (Math.random() - 0.5) * 120,
+                y: (Math.random() - 0.5) * 80,
+                scale: [0, 1, 0],
+                opacity: [1, 1, 0],
               }}
               transition={{
-                duration: particle.duration,
-                delay: particle.delay,
+                duration: 1.2,
+                delay: particle.delay * 0.5,
                 ease: "easeOut",
               }}
-              className="absolute"
+              className="absolute top-1/2 left-1/2"
               style={{
-                width: particle.size,
-                height: particle.size,
+                width: particle.size * 0.6,
+                height: particle.size * 0.6,
               }}
             >
-              {particle.type === "circle" && (
+              {particle.type === "circle" ? (
                 <div
                   className="w-full h-full rounded-full"
                   style={{ backgroundColor: particle.color }}
                 />
-              )}
-              {particle.type === "star" && (
+              ) : particle.type === "star" ? (
                 <Sparkles
                   className="w-full h-full"
                   style={{ color: particle.color }}
                 />
-              )}
-              {particle.type === "square" && (
+              ) : (
                 <div
                   className="w-full h-full"
                   style={{ backgroundColor: particle.color }}
@@ -206,114 +287,6 @@ export function CelebrationOverlay({
               )}
             </motion.div>
           ))}
-
-          {/* Central celebration card */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <motion.div
-              initial={{ scale: 0, rotate: -10 }}
-              animate={{ scale: 1, rotate: 0 }}
-              exit={{ scale: 0, opacity: 0 }}
-              transition={{
-                type: "spring",
-                stiffness: 300,
-                damping: 20,
-              }}
-              className={cn(
-                "relative p-8 rounded-2xl backdrop-blur-xl border border-white/20",
-                "bg-gradient-to-br",
-                config.bgColor,
-                "shadow-2xl"
-              )}
-            >
-              {/* Glow effect */}
-              <motion.div
-                className={cn(
-                  "absolute inset-0 rounded-2xl opacity-50 blur-xl -z-10",
-                  "bg-gradient-to-br",
-                  config.bgColor
-                )}
-                animate={{
-                  scale: [1, 1.2, 1],
-                  opacity: [0.5, 0.8, 0.5],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
-
-              <div className="flex flex-col items-center gap-4 text-center">
-                {/* Icon with animation */}
-                <motion.div
-                  animate={{
-                    scale: [1, 1.2, 1],
-                    rotate: [0, 5, -5, 0],
-                  }}
-                  transition={{
-                    duration: 0.6,
-                    repeat: 3,
-                    ease: "easeInOut",
-                  }}
-                  className={cn(
-                    "w-20 h-20 rounded-full flex items-center justify-center",
-                    "bg-gradient-to-br from-white/10 to-white/5 border-2",
-                    config.color.replace("text-", "border-")
-                  )}
-                >
-                  <Icon className={cn("w-10 h-10", config.color)} />
-                </motion.div>
-
-                {/* Title */}
-                <motion.h2
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.2 }}
-                  className={cn(
-                    "text-3xl font-display font-bold tracking-wider",
-                    config.color
-                  )}
-                >
-                  {config.title}
-                </motion.h2>
-
-                {/* Value (XP amount, tier name, etc) */}
-                {value && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.3, type: "spring" }}
-                    className="text-5xl font-display font-bold text-white"
-                  >
-                    {value}
-                  </motion.div>
-                )}
-
-                {/* Subtitle */}
-                {(subtitle || config.subtitle) && (
-                  <motion.p
-                    initial={{ y: 10, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.4 }}
-                    className="text-sm text-white/70 max-w-[200px]"
-                  >
-                    {subtitle || config.subtitle}
-                  </motion.p>
-                )}
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Edge glow effects */}
-          <motion.div
-            className={cn(
-              "absolute top-0 left-0 right-0 h-32",
-              "bg-gradient-to-b from-primary/20 to-transparent"
-            )}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 1, 0] }}
-            transition={{ duration: 1.5 }}
-          />
         </motion.div>
       )}
     </AnimatePresence>
