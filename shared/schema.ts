@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, decimal, date, index, unique } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, decimal, date, index, unique, uniqueIndex } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -1508,6 +1508,19 @@ export const dmMessages = pgTable("dm_messages", {
   senderPlayerIdIdx: index("dm_messages_sender_player_id_idx").on(table.senderPlayerId),
 }));
 
+// === SAVED/BOOKMARKED POSTS ===
+export const savedPosts = pgTable("saved_posts", {
+  id: serial("id").primaryKey(),
+  activityId: integer("activity_id").notNull().references(() => feedActivities.id, { onDelete: "cascade" }),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  sessionId: text("session_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  activityIdIdx: index("saved_posts_activity_id_idx").on(table.activityId),
+  playerIdIdx: index("saved_posts_player_id_idx").on(table.playerId),
+  uniqueSave: uniqueIndex("saved_posts_unique_idx").on(table.activityId, table.playerId),
+}));
+
 // === MENTORSHIP ===
 export const mentorshipProfiles = pgTable("mentorship_profiles", {
   id: serial("id").primaryKey(),
@@ -1591,6 +1604,7 @@ export const insertMentorshipRequestSchema = createInsertSchema(mentorshipReques
 export const insertLiveGameSpectatorSchema = createInsertSchema(liveGameSpectators).omit({ id: true, joinedAt: true });
 export const insertRecruitPostSchema = createInsertSchema(recruitPosts).omit({ id: true, createdAt: true });
 export const insertRecruitInterestSchema = createInsertSchema(recruitInterests).omit({ id: true, createdAt: true });
+export const insertSavedPostSchema = createInsertSchema(savedPosts).omit({ id: true, createdAt: true });
 export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true });
 export const insertHighlightClipSchema = createInsertSchema(highlightClips).omit({ id: true, createdAt: true, viewCount: true });
 export const linkHighlightToGameSchema = z.object({
@@ -1674,6 +1688,9 @@ export type InsertRecruitPost = z.infer<typeof insertRecruitPostSchema>;
 
 export type RecruitInterest = typeof recruitInterests.$inferSelect;
 export type InsertRecruitInterest = z.infer<typeof insertRecruitInterestSchema>;
+
+export type SavedPost = typeof savedPosts.$inferSelect;
+export type InsertSavedPost = z.infer<typeof insertSavedPostSchema>;
 
 // === CONSTANTS FOR NEW FEATURES ===
 export const NOTIFICATION_TYPES = {

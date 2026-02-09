@@ -9,7 +9,7 @@ import {
   shots, gameNotes, practices, practiceAttendance, drills, drillScores, lineups, lineupStats,
   opponents, alerts, coachGoals, drillRecommendations,
   follows, notifications, highlightClips, workouts, accolades, goalShares, scheduleEvents, liveGameSessions, liveGameEvents, liveGameSpectators, shareAssets, endorsements, headToHeadChallenges, trainingGroups, trainingGroupMembers,
-  dmThreads, dmParticipants, dmMessages,
+  dmThreads, dmParticipants, dmMessages, savedPosts,
   mentorshipProfiles, mentorshipRequests,
   recruitPosts, recruitInterests,
   playerRatings, statVerifications, skillChallenges, challengeResults, performanceMilestones, aiProjections, highlightVerifications, eventIntegrations, eventGameLinks,
@@ -76,6 +76,7 @@ import {
   type DmThread, type InsertDmThread,
   type DmParticipant, type InsertDmParticipant,
   type DmMessage, type InsertDmMessage,
+  type SavedPost, type InsertSavedPost,
   type MentorshipProfile, type InsertMentorshipProfile,
   type MentorshipRequest, type InsertMentorshipRequest,
   type RecruitPost, type InsertRecruitPost,
@@ -102,7 +103,7 @@ import {
   type WearableConnection, type InsertWearableConnection,
   type ProfileView, type InsertProfileView
 } from "@shared/schema";
-import { eq, desc, and, count, gte, lte, sql, or, isNull, inArray } from "drizzle-orm";
+import { eq, desc, and, count, gte, lte, lt, sql, or, isNull, inArray } from "drizzle-orm";
 
 export interface IStorage {
   // Players
@@ -237,6 +238,24 @@ export interface IStorage {
   getFeedCommentCount(activityId: number): Promise<number>;
   toggleFeedCommentLike(commentId: number, sessionId: string): Promise<{ liked: boolean }>;
   hasLikedFeedComment(commentId: number, sessionId: string): Promise<boolean>;
+
+  // Direct Messages
+  createDmThread(): Promise<DmThread>;
+  getDmThread(id: number): Promise<DmThread | undefined>;
+  addDmParticipant(participant: InsertDmParticipant): Promise<DmParticipant>;
+  getDmParticipants(threadId: number): Promise<DmParticipant[]>;
+  getPlayerDmThreads(playerId: number): Promise<{ thread: DmThread; participants: DmParticipant[]; lastMessage: DmMessage | null; unreadCount: number }[]>;
+  findExistingDmThread(playerIds: number[]): Promise<DmThread | undefined>;
+  sendDmMessage(message: InsertDmMessage): Promise<DmMessage>;
+  getDmMessages(threadId: number, limit?: number, before?: number): Promise<DmMessage[]>;
+  markDmThreadRead(threadId: number, playerId: number): Promise<void>;
+  getUnreadDmCount(playerId: number): Promise<number>;
+
+  // Saved Posts
+  savePost(activityId: number, playerId: number, sessionId: string): Promise<SavedPost>;
+  unsavePost(activityId: number, playerId: number): Promise<void>;
+  getSavedPosts(playerId: number): Promise<(SavedPost & { activity: FeedActivity & { playerName?: string } })[]>;
+  hasPlayerSavedPost(activityId: number, playerId: number): Promise<boolean>;
 
   // Polls
   createPoll(poll: InsertPoll): Promise<Poll>;
@@ -3563,6 +3582,215 @@ export class DatabaseStorage implements IStorage {
       .where(eq(profileViews.playerId, playerId))
       .orderBy(desc(profileViews.viewedAt))
       .limit(limit);
+  }
+
+  // === Direct Messages ===
+
+  async createDmThread(): Promise<DmThread> {
+    const [thread] = await db.insert(dmThreads).values({}).returning();
+    return thread;
+  }
+
+  async getDmThread(id: number): Promise<DmThread | undefined> {
+    const [thread] = await db.select().from(dmThreads).where(eq(dmThreads.id, id));
+    return thread;
+  }
+
+  async addDmParticipant(participant: InsertDmParticipant): Promise<DmParticipant> {
+    const [result] = await db.insert(dmParticipants).values(participant).returning();
+    return result;
+  }
+
+  async getDmParticipants(threadId: number): Promise<DmParticipant[]> {
+    return await db.select().from(dmParticipants).where(eq(dmParticipants.threadId, threadId));
+  }
+
+  async getPlayerDmThreads(playerId: number): Promise<{ thread: DmThread; participants: DmParticipant[]; lastMessage: DmMessage | null; unreadCount: number }[]> {
+    const playerParticipations = await db.select()
+      .from(dmParticipants)
+      .where(eq(dmParticipants.playerId, playerId));
+
+    const results: { thread: DmThread; participants: DmParticipant[]; lastMessage: DmMessage | null; unreadCount: number }[] = [];
+
+    for (const participation of playerParticipations) {
+      const [thread] = await db.select().from(dmThreads).where(eq(dmThreads.id, participation.threadId));
+      if (!thread) continue;
+
+      const participants = await db.select().from(dmParticipants).where(eq(dmParticipants.threadId, thread.id));
+
+      const [lastMessage] = await db.select()
+        .from(dmMessages)
+        .where(eq(dmMessages.threadId, thread.id))
+        .orderBy(desc(dmMessages.createdAt))
+        .limit(1);
+
+      let unreadCount = 0;
+      if (participation.lastReadAt) {
+        const [result] = await db.select({ count: count() })
+          .from(dmMessages)
+          .where(and(
+            eq(dmMessages.threadId, thread.id),
+            gte(dmMessages.createdAt, participation.lastReadAt)
+          ));
+        unreadCount = result?.count || 0;
+      } else {
+        const [result] = await db.select({ count: count() })
+          .from(dmMessages)
+          .where(eq(dmMessages.threadId, thread.id));
+        unreadCount = result?.count || 0;
+      }
+
+      results.push({
+        thread,
+        participants,
+        lastMessage: lastMessage || null,
+        unreadCount,
+      });
+    }
+
+    results.sort((a, b) => {
+      const aTime = a.lastMessage?.createdAt?.getTime() || a.thread.updatedAt?.getTime() || 0;
+      const bTime = b.lastMessage?.createdAt?.getTime() || b.thread.updatedAt?.getTime() || 0;
+      return bTime - aTime;
+    });
+
+    return results;
+  }
+
+  async findExistingDmThread(playerIds: number[]): Promise<DmThread | undefined> {
+    const allThreadIds = await db.select({ threadId: dmParticipants.threadId })
+      .from(dmParticipants)
+      .where(inArray(dmParticipants.playerId, playerIds));
+
+    const threadIdCounts: Record<number, number> = {};
+    for (const row of allThreadIds) {
+      threadIdCounts[row.threadId] = (threadIdCounts[row.threadId] || 0) + 1;
+    }
+
+    for (const [threadIdStr, matchCount] of Object.entries(threadIdCounts)) {
+      if (matchCount === playerIds.length) {
+        const threadId = parseInt(threadIdStr);
+        const allParticipants = await db.select()
+          .from(dmParticipants)
+          .where(eq(dmParticipants.threadId, threadId));
+
+        if (allParticipants.length === playerIds.length) {
+          const [thread] = await db.select().from(dmThreads).where(eq(dmThreads.id, threadId));
+          return thread;
+        }
+      }
+    }
+
+    return undefined;
+  }
+
+  async sendDmMessage(message: InsertDmMessage): Promise<DmMessage> {
+    const [result] = await db.insert(dmMessages).values(message).returning();
+    await db.update(dmThreads)
+      .set({ updatedAt: new Date() })
+      .where(eq(dmThreads.id, message.threadId));
+    return result;
+  }
+
+  async getDmMessages(threadId: number, limit: number = 50, before?: number): Promise<DmMessage[]> {
+    const conditions = [eq(dmMessages.threadId, threadId)];
+    if (before) {
+      conditions.push(lt(dmMessages.id, before));
+    }
+    return await db.select()
+      .from(dmMessages)
+      .where(and(...conditions))
+      .orderBy(desc(dmMessages.createdAt))
+      .limit(limit);
+  }
+
+  async markDmThreadRead(threadId: number, playerId: number): Promise<void> {
+    await db.update(dmParticipants)
+      .set({ lastReadAt: new Date() })
+      .where(and(
+        eq(dmParticipants.threadId, threadId),
+        eq(dmParticipants.playerId, playerId)
+      ));
+  }
+
+  async getUnreadDmCount(playerId: number): Promise<number> {
+    const participations = await db.select()
+      .from(dmParticipants)
+      .where(eq(dmParticipants.playerId, playerId));
+
+    let totalUnread = 0;
+    for (const participation of participations) {
+      let result;
+      if (participation.lastReadAt) {
+        [result] = await db.select({ count: count() })
+          .from(dmMessages)
+          .where(and(
+            eq(dmMessages.threadId, participation.threadId),
+            gte(dmMessages.createdAt, participation.lastReadAt)
+          ));
+      } else {
+        [result] = await db.select({ count: count() })
+          .from(dmMessages)
+          .where(eq(dmMessages.threadId, participation.threadId));
+      }
+      totalUnread += result?.count || 0;
+    }
+
+    return totalUnread;
+  }
+
+  // === Saved Posts ===
+
+  async savePost(activityId: number, playerId: number, sessionId: string): Promise<SavedPost> {
+    const [result] = await db.insert(savedPosts).values({ activityId, playerId, sessionId }).returning();
+    return result;
+  }
+
+  async unsavePost(activityId: number, playerId: number): Promise<void> {
+    await db.delete(savedPosts).where(and(
+      eq(savedPosts.activityId, activityId),
+      eq(savedPosts.playerId, playerId)
+    ));
+  }
+
+  async getSavedPosts(playerId: number): Promise<(SavedPost & { activity: FeedActivity & { playerName?: string } })[]> {
+    const saved = await db.select()
+      .from(savedPosts)
+      .where(eq(savedPosts.playerId, playerId))
+      .orderBy(desc(savedPosts.createdAt));
+
+    const results: (SavedPost & { activity: FeedActivity & { playerName?: string } })[] = [];
+    for (const sp of saved) {
+      const [activity] = await db.select()
+        .from(feedActivities)
+        .where(eq(feedActivities.id, sp.activityId));
+      if (!activity) continue;
+
+      let playerName: string | undefined;
+      if (activity.playerId) {
+        const [player] = await db.select({ name: players.name })
+          .from(players)
+          .where(eq(players.id, activity.playerId));
+        playerName = player?.name;
+      }
+
+      results.push({
+        ...sp,
+        activity: { ...activity, playerName },
+      });
+    }
+
+    return results;
+  }
+
+  async hasPlayerSavedPost(activityId: number, playerId: number): Promise<boolean> {
+    const [result] = await db.select({ count: count() })
+      .from(savedPosts)
+      .where(and(
+        eq(savedPosts.activityId, activityId),
+        eq(savedPosts.playerId, playerId)
+      ));
+    return (result?.count || 0) > 0;
   }
 }
 
