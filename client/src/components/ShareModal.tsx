@@ -7,7 +7,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Download, Copy, Share2, X } from "lucide-react";
+import { Download, Copy, Share2, X, Smartphone } from "lucide-react";
+import { PlatformExportModal } from "./PlatformExportModal";
 import { SiX, SiFacebook, SiInstagram, SiTiktok } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
 
@@ -18,6 +19,7 @@ interface ShareModalProps {
   shareUrl?: string;
   shareText?: string;
   assetId?: string;
+  playerName?: string;
   children: ReactNode;
 }
 
@@ -28,10 +30,12 @@ export function ShareModal({
   shareUrl,
   shareText = "Check out my stats on Caliber!",
   assetId,
+  playerName,
   children,
 }: ShareModalProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showPlatformExport, setShowPlatformExport] = useState(false);
   const { toast } = useToast();
 
   const handleDownload = async () => {
@@ -156,6 +160,16 @@ export function ShareModal({
         <div className="p-4 pt-2 border-t border-white/10 bg-secondary/20">
           <div className="flex flex-wrap gap-2 justify-center">
             <Button
+              onClick={() => setShowPlatformExport(true)}
+              variant="outline"
+              className="gap-2 border-primary/30 text-primary"
+              data-testid="button-platform-export"
+            >
+              <Smartphone className="w-4 h-4" />
+              Export for Social
+            </Button>
+            
+            <Button
               onClick={handleDownload}
               disabled={isGenerating}
               className="gap-2"
@@ -232,6 +246,14 @@ export function ShareModal({
           </p>
         </div>
       </DialogContent>
+
+      <PlatformExportModal
+        open={showPlatformExport}
+        onOpenChange={setShowPlatformExport}
+        playerName={playerName || title || "player"}
+      >
+        {children}
+      </PlatformExportModal>
     </Dialog>
   );
 }

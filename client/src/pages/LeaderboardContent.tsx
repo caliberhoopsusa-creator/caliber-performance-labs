@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { api } from "@shared/routes";
@@ -6,7 +6,7 @@ import { GradeBadge } from "@/components/GradeBadge";
 import { useSport } from "@/components/SportToggle";
 import { 
   Trophy, Medal, Filter, X, Users, Search, Crown, 
-  TrendingUp, Star, ChevronRight, Flame, Target
+  TrendingUp, Star, ChevronRight, Flame, Target, Share2
 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
@@ -22,7 +22,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { SkeletonLeaderboardRow, SkeletonLeaderboardHeader } from "@/components/ui/skeleton-premium";
+import { ShareableRankingCard } from "@/components/ShareableCard";
+import html2canvas from "html2canvas";
 
 const US_STATES = [
   "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut",
@@ -84,18 +87,25 @@ export default function LeaderboardContent() {
   const [stateFilter, setStateFilter] = useState<string>("");
   const [positionFilter, setPositionFilter] = useState<string>("");
   const [levelFilter, setLevelFilter] = useState<string>("");
+  const [cityFilter, setCityFilter] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [shareRanking, setShareRanking] = useState<{
+    rank: number;
+    entry: any;
+  } | null>(null);
+  const rankCardRef = useRef<HTMLDivElement>(null);
 
   const positions = currentSport === 'football' ? FOOTBALL_POSITIONS : BASKETBALL_POSITIONS;
 
   const { data: leaderboard, isLoading } = useQuery({
-    queryKey: [api.analytics.leaderboard.path, currentSport, stateFilter, positionFilter, levelFilter],
+    queryKey: [api.analytics.leaderboard.path, currentSport, stateFilter, positionFilter, levelFilter, cityFilter],
     queryFn: async () => {
       const params = new URLSearchParams();
       params.append("sport", currentSport);
       if (stateFilter) params.append("state", stateFilter);
       if (positionFilter) params.append("position", positionFilter);
       if (levelFilter) params.append("level", levelFilter);
+      if (cityFilter) params.append("city", cityFilter);
       
       const url = `${api.analytics.leaderboard.path}?${params.toString()}`;
       
@@ -105,12 +115,13 @@ export default function LeaderboardContent() {
     }
   });
 
-  const hasFilters = stateFilter || positionFilter || levelFilter || searchQuery;
+  const hasFilters = stateFilter || positionFilter || levelFilter || cityFilter || searchQuery;
 
   const clearFilters = () => {
     setStateFilter("");
     setPositionFilter("");
     setLevelFilter("");
+    setCityFilter("");
     setSearchQuery("");
   };
 
@@ -121,6 +132,23 @@ export default function LeaderboardContent() {
   }) || [];
 
   const isBasketball = currentSport === 'basketball';
+
+  const handleDownloadRankCard = async () => {
+    if (!rankCardRef.current) return;
+    try {
+      const canvas = await html2canvas(rankCardRef.current, {
+        backgroundColor: null,
+        scale: 2,
+        useCORS: true,
+      });
+      const link = document.createElement("a");
+      link.download = `caliber-ranking-${shareRanking?.entry.name?.replace(/\s+/g, "-").toLowerCase()}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    } catch (error) {
+      console.error("Error generating image:", error);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -210,7 +238,7 @@ export default function LeaderboardContent() {
             )}
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -233,6 +261,14 @@ export default function LeaderboardContent() {
                 ))}
               </SelectContent>
             </Select>
+
+            <Input
+              placeholder="Filter by city..."
+              value={cityFilter}
+              onChange={(e) => setCityFilter(e.target.value)}
+              className="bg-black/20 border-white/10 focus:border-cyan-500/50"
+              data-testid="input-city-filter"
+            />
 
             <Select value={positionFilter || "all"} onValueChange={(v) => setPositionFilter(v === "all" ? "" : v)}>
               <SelectTrigger className="bg-black/20 border-white/10" data-testid="select-position-filter">
@@ -273,6 +309,7 @@ export default function LeaderboardContent() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
+                className="group relative"
               >
                 <Link href={`/players/${entry.playerId}`} data-testid={`link-top-player-${index}`}>
                   <Card className={cn(
@@ -312,6 +349,9 @@ export default function LeaderboardContent() {
                           <h3 className="font-bold text-lg text-white truncate">{entry.name}</h3>
                           <p className="text-sm text-muted-foreground">{entry.team || "No Team"}</p>
                           <p className="text-xs text-muted-foreground">{formatPositions(entry.position)}</p>
+                          {(entry.city || entry.state) && (
+                            <p className="text-xs text-cyan-400/60">{[entry.city, entry.state].filter(Boolean).join(', ')}</p>
+                          )}
                         </div>
                       </div>
                       
@@ -325,6 +365,15 @@ export default function LeaderboardContent() {
                     </CardContent>
                   </Card>
                 </Link>
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  className="absolute top-3 left-3 invisible group-hover:visible transition-opacity z-10"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShareRanking({ rank: index + 1, entry }); }}
+                  data-testid={`button-share-ranking-${index + 1}`}
+                >
+                  <Share2 className="w-4 h-4" />
+                </Button>
               </motion.div>
             );
           })}
@@ -357,12 +406,13 @@ export default function LeaderboardContent() {
                   </>
                 )}
                 <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-cyan-300/60">Games</th>
+                <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-cyan-300/60"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
               {filteredLeaderboard.length === 0 ? (
                 <tr>
-                  <td colSpan={isBasketball ? 8 : 8} className="px-6 py-4">
+                  <td colSpan={isBasketball ? 9 : 9} className="px-6 py-4">
                     <EmptyState
                       icon={hasFilters ? Trophy : Users}
                       title={hasFilters ? "No Matches Found" : "No Players Yet"}
@@ -408,6 +458,7 @@ export default function LeaderboardContent() {
                                 </p>
                                 <p className="text-xs text-muted-foreground">
                                   {entry.team || "No Team"} • {formatPositions(entry.position)}
+                                  {(entry.city || entry.state) && ` • ${[entry.city, entry.state].filter(Boolean).join(', ')}`}
                                 </p>
                               </div>
                             </div>
@@ -432,6 +483,17 @@ export default function LeaderboardContent() {
                           </>
                         )}
                         <td className="px-4 md:px-6 py-4 text-cyan-200/50">{entry.gamesPlayed}</td>
+                        <td className="px-4 md:px-6 py-4">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="invisible group-hover:visible"
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShareRanking({ rank, entry }); }}
+                            data-testid={`button-share-ranking-${rank}`}
+                          >
+                            <Share2 className="w-4 h-4" />
+                          </Button>
+                        </td>
                       </motion.tr>
                     );
                   })}
@@ -441,6 +503,31 @@ export default function LeaderboardContent() {
           </table>
         </div>
       </Card>
+
+      {shareRanking && (
+        <Dialog open={!!shareRanking} onOpenChange={() => setShareRanking(null)}>
+          <DialogContent className="max-w-[450px] bg-card border-white/10">
+            <div className="flex flex-col items-center gap-4">
+              <div ref={rankCardRef}>
+                <ShareableRankingCard
+                  playerName={shareRanking.entry.name}
+                  playerPhoto={shareRanking.entry.photoUrl}
+                  rank={shareRanking.rank}
+                  totalPlayers={filteredLeaderboard.length}
+                  avgGrade={shareRanking.entry.avgGrade}
+                  sport={currentSport}
+                  position={formatPositions(shareRanking.entry.position)}
+                  city={shareRanking.entry.city}
+                  state={shareRanking.entry.state}
+                />
+              </div>
+              <Button onClick={handleDownloadRankCard} data-testid="button-download-ranking-card">
+                Download Card
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

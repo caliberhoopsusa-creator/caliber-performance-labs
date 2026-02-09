@@ -52,7 +52,9 @@ Preferred communication style: Simple, everyday language.
   - **Coach Hub**: Team overview, game verification, player endorsements, practice tracking, lineup management, scouting, and performance alerts.
   - **Recruiting Hub**: Player recruiting journey dashboard, AI-powered college matching with real program statistics (including NCAA eligibility checklist), searchable camps/events directory, and coach recommendation system.
   - **Performance Hub**: Training log with workout history and fitness data dashboard (wearable integration).
-  - **Analytics Hub**: Player leaderboards, head-to-head player comparison, team comparison, skill challenges, and detailed grading system explanation.
+  - **Analytics Hub**: Player leaderboards (with city/region filtering and shareable ranking cards), head-to-head player comparison, team comparison, skill challenges, and detailed grading system explanation.
+- **Cross-Platform Export**: PlatformExportModal component for exporting shareable cards in Instagram Story (9:16), Instagram Post (1:1), TikTok (9:16), and Twitter/X (16:9) formats with Caliber branding. Integrated into ShareModal as "Export for Social" button.
+- **Discover Highlights Feed**: TikTok-style public vertical-scroll video feed at `/discover/highlights` with snap scrolling, like/view counts, player info overlays, sort options (recent/popular/liked), and sport filtering. Public API at `GET /api/discover/highlights`.
 
 ## External Dependencies
 

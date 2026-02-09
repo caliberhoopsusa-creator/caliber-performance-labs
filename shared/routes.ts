@@ -116,6 +116,7 @@ export const api = {
         state: z.string().optional(),
         position: z.string().optional(),
         level: z.string().optional(),
+        city: z.string().optional(),
       }).optional(),
       responses: {
         200: z.array(z.object({

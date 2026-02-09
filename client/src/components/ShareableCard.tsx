@@ -322,6 +322,97 @@ interface ShareableStreakCardProps {
   streakType: "games" | "wins" | "practices";
 }
 
+interface ShareableRankingCardProps {
+  playerName: string;
+  playerPhoto?: string;
+  rank: number;
+  totalPlayers: number;
+  avgGrade: string;
+  sport: string;
+  position: string;
+  city?: string;
+  state?: string;
+  statLine?: string;
+}
+
+export function ShareableRankingCard({ playerName, playerPhoto, rank, totalPlayers, avgGrade, sport, position, city, state, statLine }: ShareableRankingCardProps) {
+  const gradeColors = getGradeColor(avgGrade);
+  const location = [city, state].filter(Boolean).join(', ');
+
+  return (
+    <div 
+      className="w-[400px] h-[500px] rounded-3xl overflow-hidden relative"
+      style={{ 
+        background: "linear-gradient(135deg, #1a1a2e 0%, #1e3a2e 50%, #0f0f23 100%)",
+      }}
+      data-testid="shareable-ranking-card"
+    >
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-20 -left-20 w-64 h-64 rounded-full bg-yellow-500/20 blur-3xl" />
+        <div className="absolute -bottom-20 -right-20 w-72 h-72 rounded-full bg-primary/20 blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full bg-green-500/10 blur-3xl" />
+      </div>
+
+      <div className="relative z-10 h-full flex flex-col p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-orange-500 flex items-center justify-center">
+              <Activity className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-sm font-black uppercase tracking-widest text-primary">Caliber</span>
+          </div>
+          <span className="text-xs text-white/60 font-medium bg-white/10 px-3 py-1 rounded-full">
+            {sport === 'football' ? 'Football' : 'Basketball'}
+          </span>
+        </div>
+
+        <div className="text-center mb-2">
+          <span className="text-xs font-bold uppercase tracking-widest text-yellow-400/80 bg-yellow-500/10 px-4 py-1 rounded-full inline-flex items-center gap-1">
+            <Trophy className="w-3 h-3" />
+            Leaderboard Ranking
+          </span>
+        </div>
+
+        <div className="flex-1 flex flex-col items-center justify-center">
+          {playerPhoto ? (
+            <img src={playerPhoto} alt={playerName} className="w-20 h-20 rounded-2xl object-cover border-2 border-yellow-500/40 mb-3" loading="lazy" width={80} height={80} />
+          ) : (
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-yellow-500/30 to-orange-500/30 flex items-center justify-center border-2 border-yellow-500/40 mb-3">
+              <span className="text-3xl font-bold text-white">{playerName.charAt(0)}</span>
+            </div>
+          )}
+          
+          <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-1">{playerName}</h2>
+          <p className="text-sm text-white/60 mb-1">{position}</p>
+          {location && <p className="text-xs text-cyan-400/70 mb-4">{location}</p>}
+          
+          <div className="text-8xl font-black text-yellow-400 mb-1" style={{ textShadow: "0 0 40px rgba(234, 179, 8, 0.5)" }}>
+            #{rank}
+          </div>
+          <p className="text-sm text-white/50 mb-4">
+            out of {totalPlayers} players
+          </p>
+          
+          <div className="flex items-center gap-4">
+            <div className={cn(
+              "px-4 py-2 rounded-xl border",
+              gradeColors.bgLight ? `bg-gradient-to-br ${gradeColors.bgLight}` : "",
+              gradeColors.border
+            )}>
+              <span className={cn("text-2xl font-black", gradeColors.text)}>{avgGrade}</span>
+              <p className="text-[10px] text-white/50 uppercase">Avg Grade</p>
+            </div>
+          </div>
+          
+          {statLine && (
+            <p className="text-xs text-white/40 mt-3">{statLine}</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ShareableStreakCard({ playerName, playerPhoto, streakCount, streakType }: ShareableStreakCardProps) {
   const streakLabel = streakType === "games" ? "Game Streak" : streakType === "wins" ? "Win Streak" : "Practice Streak";
 

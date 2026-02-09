@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, headToHeadChallenges, statVerifications, playerCollegeMatches, playerCollegeInterests, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema, insertWearableConnectionSchema, recruitingEvents, insertRecruitingEventSchema, type RecruitingEvent, playerEventRegistrations, insertPlayerEventRegistrationSchema, colleges, ncaaEligibilityProgress, insertNcaaEligibilityProgressSchema, coachRecommendations, insertCoachRecommendationSchema, teams, teamMembers, skillBadges, activityStreaks, feedActivities, feedComments, feedCommentLikes, type InsertFeedComment, type FeedComment } from "@shared/schema";
+import { players, games, headToHeadChallenges, statVerifications, playerCollegeMatches, playerCollegeInterests, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema, insertWearableConnectionSchema, recruitingEvents, insertRecruitingEventSchema, type RecruitingEvent, playerEventRegistrations, insertPlayerEventRegistrationSchema, colleges, ncaaEligibilityProgress, insertNcaaEligibilityProgressSchema, coachRecommendations, insertCoachRecommendationSchema, teams, teamMembers, skillBadges, activityStreaks, feedActivities, feedComments, feedCommentLikes, type InsertFeedComment, type FeedComment, highlightClips } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { calculateAIRating, calculateProjection, type GameStats, type PlayerMetrics, type PeerStats, type AIRatingResult, type ProjectionResult } from "@shared/ai-rating-engine";
 import type { Sport } from "@shared/sports-config";
@@ -3883,7 +3883,7 @@ export async function registerRoutes(
   });
 
   app.get(api.analytics.leaderboard.path, async (req, res) => {
-    const { state, position, level, sport } = req.query as { state?: string; position?: string; level?: string; sport?: string };
+    const { state, position, level, sport, city } = req.query as { state?: string; position?: string; level?: string; sport?: string; city?: string };
     
     let playersList = await storage.getPlayers();
     
@@ -3893,6 +3893,9 @@ export async function registerRoutes(
     }
     if (state) {
       playersList = playersList.filter(p => p.state === state);
+    }
+    if (city) {
+      playersList = playersList.filter(p => p.city?.toLowerCase() === city.toLowerCase());
     }
     if (position) {
       // Support comma-separated positions - match if player has ANY of the specified positions
@@ -3959,7 +3962,9 @@ export async function registerRoutes(
           position: p.position,
           sport: playerSport,
           state: p.state,
+          city: p.city,
           level: p.level,
+          photoUrl: p.photoUrl,
           avgGrade,
           avgGradeScore,
           gamesPlayed: sportGames.length,
@@ -3989,7 +3994,9 @@ export async function registerRoutes(
           position: p.position,
           sport: playerSport,
           state: p.state,
+          city: p.city,
           level: p.level,
+          photoUrl: p.photoUrl,
           avgGrade,
           avgGradeScore,
           gamesPlayed: sportGames.length,
@@ -8991,6 +8998,68 @@ Respond in this exact JSON format:
     } catch (error) {
       console.error('Error deleting highlight clip:', error);
       res.status(500).json({ message: "Failed to delete highlight clip" });
+    }
+  });
+
+  // GET /api/discover/highlights - Public feed of all highlight clips
+  app.get('/api/discover/highlights', async (req, res) => {
+    try {
+      const { sport, sort, limit: limitStr, offset: offsetStr } = req.query as { 
+        sport?: string; sort?: string; limit?: string; offset?: string 
+      };
+      const limit = Math.min(parseInt(limitStr || '20'), 50);
+      const offset = parseInt(offsetStr || '0');
+      
+      let query = db.select({
+        clip: highlightClips,
+        playerName: players.name,
+        playerPhoto: players.photoUrl,
+        playerPosition: players.position,
+        playerTeam: players.team,
+        playerCity: players.city,
+        playerState: players.state,
+        playerSport: players.sport,
+      })
+      .from(highlightClips)
+      .innerJoin(players, eq(highlightClips.playerId, players.id));
+
+      if (sport) {
+        query = query.where(eq(players.sport, sport)) as typeof query;
+      }
+
+      const orderCol = sort === 'popular' ? highlightClips.viewCount : sort === 'liked' ? highlightClips.likeCount : highlightClips.createdAt;
+      const allClips = await query.orderBy(desc(orderCol)).limit(limit).offset(offset);
+      
+      const result = allClips.map(c => ({
+        ...c.clip,
+        playerName: c.playerName,
+        playerPhoto: c.playerPhoto,
+        playerPosition: c.playerPosition,
+        playerTeam: c.playerTeam,
+        playerCity: c.playerCity,
+        playerState: c.playerState,
+      }));
+      
+      res.json({ items: result, hasMore: result.length === limit });
+    } catch (error) {
+      console.error('Error fetching discover highlights:', error);
+      res.status(500).json({ message: "Failed to fetch highlights" });
+    }
+  });
+
+  // POST /api/highlight-clips/:id/like - Like a clip (toggle)
+  app.post('/api/highlight-clips/:id/like', isAuthenticated, async (req: any, res) => {
+    try {
+      const clipId = parseInt(req.params.id);
+      const clip = await storage.getHighlightClip(clipId);
+      if (!clip) {
+        return res.status(404).json({ message: "Clip not found" });
+      }
+      await storage.incrementClipLikeCount(clipId);
+      res.json({ success: true, likeCount: (clip.likeCount || 0) + 1 });
+    } catch (error) {
+      console.error('Error liking clip:', error);
+      res.status(500).json({ message: "Failed to like clip" });
     }
   });
 

@@ -96,6 +96,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         { href: "/analyze", label: "Log Game", icon: PlusCircle },
         { href: "/schedule", label: "Schedule", icon: CalendarDays },
         { href: "/highlights", label: "Highlights", icon: Film },
+        { href: "/discover/highlights", label: "Discover", icon: Film },
         { href: "/performance", label: "Performance", icon: Activity },
         { href: "/recruiting", label: "Recruiting", icon: GraduationCap },
       ],
@@ -132,6 +133,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
     {
       title: "Explore",
       items: [
+        { href: "/discover/highlights", label: "Discover", icon: Film },
         { href: "/scout", label: "Scout Hub", icon: Eye },
         { href: "/analytics", label: "Analytics", icon: BarChart3 },
         { href: "/leagues", label: "League Hub", icon: Medal },

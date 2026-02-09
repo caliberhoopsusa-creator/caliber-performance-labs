@@ -60,6 +60,7 @@ import LeagueDetail from "./pages/LeagueDetail";
 import RecruitingHub from "./pages/RecruitingHub";
 import PublicPlayerProfile from "./pages/PublicPlayerProfile";
 import LiveGameMode from "./pages/LiveGameMode";
+import DiscoverHighlights from "./pages/DiscoverHighlights";
 import NotFound from "./pages/not-found";
 
 interface ExtendedUser {
@@ -359,6 +360,7 @@ function MainRouter() {
                 </Route>
                 <Route path="/schedule" component={ScheduleCalendar} />
                 <Route path="/highlights" component={Highlights} />
+                <Route path="/discover/highlights" component={DiscoverHighlights} />
                 <Route path="/reels/:playerId" component={ReelPage} />
                 <Route path="/team-comparison">
                   <Redirect to="/analytics?tab=teams" />
