@@ -290,7 +290,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
   const threePercent = threeAttempted > 0 ? ((threeMade / threeAttempted) * 100).toFixed(1) : '—';
   const ftPercent = ftAttempted > 0 ? ((ftMade / ftAttempted) * 100).toFixed(1) : '—';
   
-  const calculatedPoints = ((fgMade - threeMade) * 2) + (threeMade * 3) + ftMade;
+  const calculatedPoints = (fgMade * 2) + (threeMade * 3) + (ftMade * 1);
   const tsa = fgAttempted + (0.44 * ftAttempted);
   const tsPercent = tsa > 0 ? ((calculatedPoints / (2 * tsa)) * 100).toFixed(1) : '—';
 
