@@ -816,6 +816,39 @@ export const reposts = pgTable("reposts", {
   gameIdIdx: index("reposts_game_id_idx").on(table.gameId),
 }));
 
+// === FEED COMMENTS ===
+export const feedComments = pgTable("feed_comments", {
+  id: serial("id").primaryKey(),
+  activityId: integer("activity_id").notNull().references(() => feedActivities.id, { onDelete: "cascade" }),
+  parentId: integer("parent_id"),
+  sessionId: text("session_id").notNull(),
+  authorName: text("author_name").notNull(),
+  content: text("content").notNull(),
+  likeCount: integer("like_count").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  activityIdIdx: index("feed_comments_activity_id_idx").on(table.activityId),
+  parentIdIdx: index("feed_comments_parent_id_idx").on(table.parentId),
+}));
+
+export const feedCommentLikes = pgTable("feed_comment_likes", {
+  id: serial("id").primaryKey(),
+  commentId: integer("comment_id").notNull().references(() => feedComments.id, { onDelete: "cascade" }),
+  sessionId: text("session_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  commentIdIdx: index("feed_comment_likes_comment_id_idx").on(table.commentId),
+  uniqueLike: unique("unique_comment_like").on(table.commentId, table.sessionId),
+}));
+
+export const insertFeedCommentSchema = createInsertSchema(feedComments).omit({ id: true, likeCount: true, createdAt: true });
+export type InsertFeedComment = z.infer<typeof insertFeedCommentSchema>;
+export type FeedComment = typeof feedComments.$inferSelect;
+
+export const insertFeedCommentLikeSchema = createInsertSchema(feedCommentLikes).omit({ id: true, createdAt: true });
+export type InsertFeedCommentLike = z.infer<typeof insertFeedCommentLikeSchema>;
+export type FeedCommentLike = typeof feedCommentLikes.$inferSelect;
+
 // === POLLS ===
 export const polls = pgTable("polls", {
   id: serial("id").primaryKey(),

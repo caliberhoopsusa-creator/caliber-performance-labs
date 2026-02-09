@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, headToHeadChallenges, statVerifications, playerCollegeMatches, playerCollegeInterests, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema, insertWearableConnectionSchema, recruitingEvents, insertRecruitingEventSchema, type RecruitingEvent, playerEventRegistrations, insertPlayerEventRegistrationSchema, colleges, ncaaEligibilityProgress, insertNcaaEligibilityProgressSchema, coachRecommendations, insertCoachRecommendationSchema, teams, teamMembers, skillBadges, activityStreaks, feedActivities } from "@shared/schema";
+import { players, games, headToHeadChallenges, statVerifications, playerCollegeMatches, playerCollegeInterests, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema, insertWearableConnectionSchema, recruitingEvents, insertRecruitingEventSchema, type RecruitingEvent, playerEventRegistrations, insertPlayerEventRegistrationSchema, colleges, ncaaEligibilityProgress, insertNcaaEligibilityProgressSchema, coachRecommendations, insertCoachRecommendationSchema, teams, teamMembers, skillBadges, activityStreaks, feedActivities, feedComments, feedCommentLikes, type InsertFeedComment, type FeedComment } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { calculateAIRating, calculateProjection, type GameStats, type PlayerMetrics, type PeerStats, type AIRatingResult, type ProjectionResult } from "@shared/ai-rating-engine";
 import type { Sport } from "@shared/sports-config";
@@ -5493,6 +5493,148 @@ Respond in this exact JSON format:
     } catch (err) {
       console.error('Get user reactions error:', err);
       res.status(500).json({ message: 'Error fetching user reactions' });
+    }
+  });
+
+  // === FEED COMMENTS ===
+  app.get('/api/feed/:activityId/comments', async (req, res) => {
+    try {
+      const activityId = Number(req.params.activityId);
+      const comments = await storage.getFeedComments(activityId);
+      res.json(comments);
+    } catch (err) {
+      console.error('Get feed comments error:', err);
+      res.status(500).json({ message: 'Error fetching comments' });
+    }
+  });
+
+  app.post('/api/feed/:activityId/comments', async (req, res) => {
+    try {
+      const activityId = Number(req.params.activityId);
+      const { sessionId, authorName, content, parentId } = req.body;
+
+      if (!sessionId || !authorName || !content) {
+        return res.status(400).json({ message: 'sessionId, authorName, and content are required' });
+      }
+
+      const comment = await storage.createFeedComment({
+        activityId,
+        sessionId,
+        authorName,
+        content,
+        parentId: parentId || null,
+      });
+      res.status(201).json(comment);
+    } catch (err) {
+      console.error('Create feed comment error:', err);
+      res.status(500).json({ message: 'Error creating comment' });
+    }
+  });
+
+  app.delete('/api/feed/comments/:id', async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const sessionId = req.query.sessionId as string;
+
+      if (!sessionId) {
+        return res.status(400).json({ message: 'sessionId is required' });
+      }
+
+      const comment = await storage.getFeedComment(id);
+      if (!comment) {
+        return res.status(404).json({ message: 'Comment not found' });
+      }
+
+      if (comment.sessionId !== sessionId) {
+        return res.status(403).json({ message: 'Not authorized to delete this comment' });
+      }
+
+      await storage.deleteFeedComment(id);
+      res.json({ message: 'Comment deleted' });
+    } catch (err) {
+      console.error('Delete feed comment error:', err);
+      res.status(500).json({ message: 'Error deleting comment' });
+    }
+  });
+
+  app.get('/api/feed/:activityId/comments/count', async (req, res) => {
+    try {
+      const activityId = Number(req.params.activityId);
+      const count = await storage.getFeedCommentCount(activityId);
+      res.json({ count });
+    } catch (err) {
+      console.error('Get feed comment count error:', err);
+      res.status(500).json({ message: 'Error fetching comment count' });
+    }
+  });
+
+  app.post('/api/feed/comments/:id/like', async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const { sessionId } = req.body;
+
+      if (!sessionId) {
+        return res.status(400).json({ message: 'sessionId is required' });
+      }
+
+      const result = await storage.toggleFeedCommentLike(id, sessionId);
+      res.json(result);
+    } catch (err) {
+      console.error('Toggle feed comment like error:', err);
+      res.status(500).json({ message: 'Error toggling comment like' });
+    }
+  });
+
+  app.get('/api/feed/comments/:id/liked', async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const sessionId = req.query.sessionId as string;
+
+      if (!sessionId) {
+        return res.json({ liked: false });
+      }
+
+      const liked = await storage.hasLikedFeedComment(id, sessionId);
+      res.json({ liked });
+    } catch (err) {
+      console.error('Check feed comment liked error:', err);
+      res.status(500).json({ message: 'Error checking comment like status' });
+    }
+  });
+
+  // === FEED ACTIVITY REPOST ===
+  app.post('/api/feed/:activityId/repost', async (req, res) => {
+    try {
+      const activityId = Number(req.params.activityId);
+      const { sessionId, playerName, caption } = req.body;
+
+      if (!sessionId || !playerName) {
+        return res.status(400).json({ message: 'sessionId and playerName are required' });
+      }
+
+      const originalActivity = await storage.getFeedActivities(1, undefined);
+      const activity = originalActivity.find(a => a.id === activityId);
+
+      const repost = await storage.createRepost({
+        sessionId,
+        originalActivityId: activityId,
+        gameId: activity?.gameId || null,
+        comment: caption || null,
+      });
+
+      const newActivity = await storage.createFeedActivity({
+        activityType: 'repost',
+        playerId: activity?.playerId || null,
+        gameId: activity?.gameId || null,
+        headline: `${playerName} shared a post`,
+        subtext: caption || activity?.headline || '',
+        sessionId,
+      });
+
+      res.status(201).json(newActivity);
+    } catch (err) {
+      console.error('Feed repost error:', err);
+      res.status(500).json({ message: 'Error creating repost' });
     }
   });
 

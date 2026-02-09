@@ -31,6 +31,9 @@ Preferred communication style: Simple, everyday language.
 - **Authentication**: Replit Auth with session management and role-based access control (Player/Coach).
 - **Social & Engagement**: Player following, in-app notifications, goal sharing, highlight clips, shareable achievements, quick reaction buttons, and online/activity indicators. Includes "This Day Last Year" memories and auto-generated shareable milestone cards.
 - **Smart Feed**: Cursor-based pagination with infinite scroll, "New posts available" banner, and auto-loading via IntersectionObserver.
+- **Feed Comments & Replies**: Threaded commenting on all feed activity items with nested replies, comment likes, and delete. Tables: `feed_comments`, `feed_comment_likes`. APIs: `GET/POST /api/feed/:activityId/comments`, `POST /api/feed/comments/:id/like`.
+- **Feed Repost with Caption**: Share any feed activity to your own feed with optional caption. API: `POST /api/feed/:activityId/repost`.
+- **Enhanced Social Profiles**: Bio display with "add bio" prompt, profile completion bar (8 fields tracked), activity summary (badges, games this month) alongside follower/following counts.
 - **Celebration System**: Full-screen confetti/particle overlays for achievements and XP gain toasts.
 - **Skeleton Loading**: Comprehensive skeleton loading states on key pages for improved perceived performance.
 - **Live Game Mode**: Coach-only real-time stat tracking with multi-player selection, large tap-target buttons, undo functionality, haptic feedback, audio cues, and offline capability with data syncing.

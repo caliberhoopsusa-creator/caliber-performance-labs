@@ -1714,7 +1714,61 @@ export default function PlayerDetail() {
                   <Activity className="w-3.5 h-3.5 text-accent" /> {games.length} Games
                 </span>
               </div>
-              
+
+              {player.bio && (
+                <p 
+                  className="text-sm text-muted-foreground max-w-lg mb-4 text-center md:text-left leading-relaxed"
+                  data-testid="text-player-bio"
+                >
+                  {player.bio}
+                </p>
+              )}
+
+              {isOwnProfile && !player.bio && (
+                <button 
+                  onClick={() => setIsEditDialogOpen(true)}
+                  className="text-sm text-muted-foreground/60 mb-4 text-center md:text-left italic flex items-center gap-1.5 hover-elevate rounded-lg px-2 py-1"
+                  data-testid="button-add-bio"
+                >
+                  <Pencil className="w-3 h-3" /> Add a bio to tell people about yourself
+                </button>
+              )}
+
+              {isOwnProfile && (() => {
+                const fields = [
+                  { done: !!player.name, label: "Name" },
+                  { done: !!player.photoUrl, label: "Photo" },
+                  { done: !!player.bio, label: "Bio" },
+                  { done: !!player.team, label: "Team" },
+                  { done: !!player.height, label: "Height" },
+                  { done: !!player.school, label: "School" },
+                  { done: !!player.city && !!player.state, label: "Location" },
+                  { done: games.length > 0, label: "First Game" },
+                ];
+                const completed = fields.filter(f => f.done).length;
+                const pct = Math.round((completed / fields.length) * 100);
+                if (pct >= 100) return null;
+                const missing = fields.filter(f => !f.done).map(f => f.label);
+                return (
+                  <div className="mb-4 max-w-md" data-testid="profile-completion">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs font-medium text-muted-foreground">Profile {pct}% complete</span>
+                      <span className="text-xs text-muted-foreground/60">
+                        {missing.length > 0 && `Add: ${missing.slice(0, 3).join(', ')}${missing.length > 3 ? '...' : ''}`}
+                      </span>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                      <motion.div
+                        className="h-full rounded-full bg-gradient-to-r from-accent to-cyan-400"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${pct}%` }}
+                        transition={{ duration: 1, delay: 0.5 }}
+                      />
+                    </div>
+                  </div>
+                );
+              })()}
+
               {games.length > 0 && (
                 <motion.div 
                   initial={{ opacity: 0, x: -10 }}
@@ -1800,12 +1854,38 @@ export default function PlayerDetail() {
               )}
               
               {isAuthenticated && (
-                <div className="flex justify-center md:justify-start mb-4">
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mb-4">
                   <FollowStats 
                     playerId={id} 
                     onFollowersClick={() => setShowFollowersSheet(true)}
                     onFollowingClick={() => setShowFollowingSheet(true)}
                   />
+                  <div className="w-px h-8 bg-border/50 hidden md:block" />
+                  <div className="flex items-center gap-4">
+                    {badges.length > 0 && (
+                      <div className="flex flex-col items-center" data-testid="stat-badges-count">
+                        <span className="stat-value text-2xl text-white">{badges.length}</span>
+                        <span className="stat-label flex items-center gap-1">
+                          <Award className="w-3 h-3" /> Badges
+                        </span>
+                      </div>
+                    )}
+                    {(() => {
+                      const now = new Date();
+                      const thisMonth = games.filter(g => {
+                        const d = new Date(g.date);
+                        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                      });
+                      return thisMonth.length > 0 ? (
+                        <div className="flex flex-col items-center" data-testid="stat-games-this-month">
+                          <span className="stat-value text-2xl text-white">{thisMonth.length}</span>
+                          <span className="stat-label flex items-center gap-1">
+                            <Target className="w-3 h-3" /> This Month
+                          </span>
+                        </div>
+                      ) : null;
+                    })()}
+                  </div>
                 </div>
               )}
 
@@ -1825,7 +1905,7 @@ export default function PlayerDetail() {
                   <Button 
                     onClick={() => setIsEditDialogOpen(true)} 
                     size="sm"
-                    className="gap-1.5 bg-accent hover:bg-accent/90 text-white border-0 shadow-lg shadow-accent/25"
+                    className="gap-1.5 bg-accent text-white border-0 shadow-lg shadow-accent/25"
                     data-testid="button-edit-profile"
                   >
                     <Pencil className="w-3.5 h-3.5" /> Edit Profile

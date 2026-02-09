@@ -4,7 +4,7 @@ import { type Sport } from "@shared/sports-config";
 import {
   players, games, badges, goals, streaks, likes, comments, challenges, challengeProgress,
   teams, teamMembers, teamPosts, teamPostComments,
-  feedActivities, feedReactions, reposts, polls, pollVotes, predictions, predictionVotes, storyTemplates, playerStories, storyViews, storyReactions, storyHighlights, storyTags,
+  feedActivities, feedReactions, reposts, feedComments, feedCommentLikes, polls, pollVotes, predictions, predictionVotes, storyTemplates, playerStories, storyViews, storyReactions, storyHighlights, storyTags,
   activityStreaks, footballMetrics,
   shots, gameNotes, practices, practiceAttendance, drills, drillScores, lineups, lineupStats,
   opponents, alerts, coachGoals, drillRecommendations,
@@ -32,6 +32,8 @@ import {
   type FeedActivity, type InsertFeedActivity,
   type FeedReaction, type InsertFeedReaction,
   type Repost, type InsertRepost,
+  type FeedComment, type InsertFeedComment,
+  type FeedCommentLike, type InsertFeedCommentLike,
   type Poll, type InsertPoll,
   type PollVote, type InsertPollVote,
   type Prediction, type InsertPrediction,
@@ -226,6 +228,15 @@ export interface IStorage {
   getReposts(activityId?: number, gameId?: number): Promise<Repost[]>;
   hasUserReposted(gameId: number, sessionId: string): Promise<boolean>;
   getGameReposts(gameId: number): Promise<number>;
+
+  // Feed Comments
+  createFeedComment(comment: InsertFeedComment): Promise<FeedComment>;
+  getFeedComments(activityId: number): Promise<FeedComment[]>;
+  getFeedComment(id: number): Promise<FeedComment | undefined>;
+  deleteFeedComment(id: number): Promise<void>;
+  getFeedCommentCount(activityId: number): Promise<number>;
+  toggleFeedCommentLike(commentId: number, sessionId: string): Promise<{ liked: boolean }>;
+  hasLikedFeedComment(commentId: number, sessionId: string): Promise<boolean>;
 
   // Polls
   createPoll(poll: InsertPoll): Promise<Poll>;
@@ -1378,6 +1389,48 @@ export class DatabaseStorage implements IStorage {
   async getGameReposts(gameId: number): Promise<number> {
     const [result] = await db.select({ count: count() }).from(reposts).where(eq(reposts.gameId, gameId));
     return result?.count || 0;
+  }
+
+  // Feed Comments
+  async createFeedComment(comment: InsertFeedComment): Promise<FeedComment> {
+    const [newComment] = await db.insert(feedComments).values(comment).returning();
+    return newComment;
+  }
+
+  async getFeedComments(activityId: number): Promise<FeedComment[]> {
+    return await db.select().from(feedComments).where(eq(feedComments.activityId, activityId)).orderBy(feedComments.createdAt);
+  }
+
+  async getFeedComment(id: number): Promise<FeedComment | undefined> {
+    const [comment] = await db.select().from(feedComments).where(eq(feedComments.id, id));
+    return comment;
+  }
+
+  async deleteFeedComment(id: number): Promise<void> {
+    await db.delete(feedComments).where(eq(feedComments.id, id));
+  }
+
+  async getFeedCommentCount(activityId: number): Promise<number> {
+    const [result] = await db.select({ count: count() }).from(feedComments).where(eq(feedComments.activityId, activityId));
+    return result?.count || 0;
+  }
+
+  async toggleFeedCommentLike(commentId: number, sessionId: string): Promise<{ liked: boolean }> {
+    const [existing] = await db.select().from(feedCommentLikes).where(and(eq(feedCommentLikes.commentId, commentId), eq(feedCommentLikes.sessionId, sessionId)));
+    if (existing) {
+      await db.delete(feedCommentLikes).where(eq(feedCommentLikes.id, existing.id));
+      await db.update(feedComments).set({ likeCount: sql`${feedComments.likeCount} - 1` }).where(eq(feedComments.id, commentId));
+      return { liked: false };
+    } else {
+      await db.insert(feedCommentLikes).values({ commentId, sessionId });
+      await db.update(feedComments).set({ likeCount: sql`${feedComments.likeCount} + 1` }).where(eq(feedComments.id, commentId));
+      return { liked: true };
+    }
+  }
+
+  async hasLikedFeedComment(commentId: number, sessionId: string): Promise<boolean> {
+    const [existing] = await db.select().from(feedCommentLikes).where(and(eq(feedCommentLikes.commentId, commentId), eq(feedCommentLikes.sessionId, sessionId)));
+    return !!existing;
   }
 
   // Polls

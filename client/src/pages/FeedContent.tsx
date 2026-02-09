@@ -8,11 +8,16 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Target, Award, Repeat2, BarChart3, Users, Camera, Flame, Trophy, Zap, Rss, UserCheck, UsersRound, Activity, Heart, ThumbsUp, HandMetal, ArrowUp } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Target, Award, Repeat2, BarChart3, Users, Camera, Flame, Trophy, Zap, Rss, UserCheck, UsersRound, Activity, Heart, ThumbsUp, HandMetal, ArrowUp, MessageCircle, Send, Trash2, Reply } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient as globalQueryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 
 function getSessionId(): string {
   const key = "caliber_session_id";
@@ -97,16 +102,323 @@ interface ReactionData {
   userReactions: string[];
 }
 
+interface FeedComment {
+  id: number;
+  activityId: number;
+  parentId: number | null;
+  sessionId: string;
+  authorName: string;
+  content: string;
+  likeCount: number;
+  createdAt: string;
+}
+
+function getInitials(name: string): string {
+  return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+}
+
+function FeedComments({ activityId }: { activityId: number }) {
+  const qc = useQueryClient();
+  const sessionId = getSessionId();
+  const [authorName, setAuthorName] = useState(() => localStorage.getItem("caliber_author_name") || "");
+  const [commentText, setCommentText] = useState("");
+  const [replyingTo, setReplyingTo] = useState<number | null>(null);
+  const [replyText, setReplyText] = useState("");
+
+  const { data: comments = [] } = useQuery<FeedComment[]>({
+    queryKey: ['/api/feed', activityId, 'comments'],
+    queryFn: async () => {
+      const res = await fetch(`/api/feed/${activityId}/comments`);
+      if (!res.ok) throw new Error('Failed to fetch comments');
+      return res.json();
+    },
+  });
+
+  const addCommentMutation = useMutation({
+    mutationFn: async ({ content, parentId }: { content: string; parentId?: number }) => {
+      localStorage.setItem("caliber_author_name", authorName);
+      return apiRequest('POST', `/api/feed/${activityId}/comments`, {
+        sessionId,
+        authorName,
+        content,
+        ...(parentId ? { parentId } : {}),
+      });
+    },
+    onSuccess: () => {
+      setCommentText("");
+      setReplyText("");
+      setReplyingTo(null);
+      qc.invalidateQueries({ queryKey: ['/api/feed', activityId, 'comments'] });
+      qc.invalidateQueries({ queryKey: ['/api/feed', activityId, 'comments', 'count'] });
+    },
+  });
+
+  const deleteCommentMutation = useMutation({
+    mutationFn: async (commentId: number) => {
+      const res = await fetch(`/api/feed/comments/${commentId}?sessionId=${sessionId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete comment');
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['/api/feed', activityId, 'comments'] });
+      qc.invalidateQueries({ queryKey: ['/api/feed', activityId, 'comments', 'count'] });
+    },
+  });
+
+  const likeCommentMutation = useMutation({
+    mutationFn: async (commentId: number) => {
+      return apiRequest('POST', `/api/feed/comments/${commentId}/like`, { sessionId });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['/api/feed', activityId, 'comments'] });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!authorName.trim() || !commentText.trim()) return;
+    addCommentMutation.mutate({ content: commentText });
+  };
+
+  const handleReplySubmit = (parentId: number) => {
+    if (!authorName.trim() || !replyText.trim()) return;
+    addCommentMutation.mutate({ content: replyText, parentId });
+  };
+
+  const topLevel = comments.filter((c) => !c.parentId);
+  const replies = comments.filter((c) => c.parentId);
+  const repliesByParent: Record<number, FeedComment[]> = {};
+  replies.forEach((r) => {
+    if (r.parentId) {
+      if (!repliesByParent[r.parentId]) repliesByParent[r.parentId] = [];
+      repliesByParent[r.parentId].push(r);
+    }
+  });
+
+  const renderComment = (comment: FeedComment, isReply = false) => (
+    <motion.div
+      key={comment.id}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      className={cn("flex gap-2.5 group", isReply && "ml-8")}
+      data-testid={`comment-${comment.id}`}
+    >
+      <Avatar className="w-7 h-7 shrink-0">
+        <AvatarFallback className="text-[10px] bg-white/10 text-white/70">
+          {getInitials(comment.authorName)}
+        </AvatarFallback>
+      </Avatar>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs font-semibold text-white" data-testid={`comment-author-${comment.id}`}>{comment.authorName}</span>
+          <span className="text-[10px] text-muted-foreground">
+            {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+          </span>
+        </div>
+        <p className="text-xs text-white/80 mt-0.5" data-testid={`comment-content-${comment.id}`}>{comment.content}</p>
+        <div className="flex items-center gap-3 mt-1">
+          <button
+            onClick={() => likeCommentMutation.mutate(comment.id)}
+            className="flex items-center gap-1 text-[10px] text-muted-foreground transition-colors"
+            data-testid={`button-like-comment-${comment.id}`}
+          >
+            <Heart className="w-3 h-3" />
+            {comment.likeCount > 0 && <span>{comment.likeCount}</span>}
+          </button>
+          {!isReply && (
+            <button
+              onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+              className="flex items-center gap-1 text-[10px] text-muted-foreground transition-colors"
+              data-testid={`button-reply-${comment.id}`}
+            >
+              <Reply className="w-3 h-3" />
+              Reply
+            </button>
+          )}
+          {comment.sessionId === sessionId && (
+            <button
+              onClick={() => deleteCommentMutation.mutate(comment.id)}
+              className="flex items-center gap-1 text-[10px] text-muted-foreground transition-colors invisible group-hover:visible"
+              data-testid={`button-delete-comment-${comment.id}`}
+            >
+              <Trash2 className="w-3 h-3" />
+            </button>
+          )}
+        </div>
+        {replyingTo === comment.id && (
+          <div className="flex gap-2 mt-2">
+            <Input
+              placeholder="Your name"
+              value={authorName}
+              onChange={(e) => setAuthorName(e.target.value)}
+              className="max-w-[120px] bg-white/5 border-white/10 text-xs"
+              data-testid={`reply-author-input-${comment.id}`}
+            />
+            <Input
+              placeholder="Write a reply..."
+              value={replyText}
+              onChange={(e) => setReplyText(e.target.value)}
+              className="flex-1 bg-white/5 border-white/10 text-xs"
+              data-testid={`reply-text-input-${comment.id}`}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleReplySubmit(comment.id); }}
+            />
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => handleReplySubmit(comment.id)}
+              disabled={!authorName.trim() || !replyText.trim() || addCommentMutation.isPending}
+              data-testid={`button-submit-reply-${comment.id}`}
+            >
+              <Send className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+
+  return (
+    <div className="space-y-3 mt-3 pt-3 border-t border-white/5" data-testid={`comments-section-${activityId}`}>
+      <form onSubmit={handleSubmit} className="flex gap-2">
+        <Input
+          placeholder="Your name"
+          value={authorName}
+          onChange={(e) => setAuthorName(e.target.value)}
+          className="max-w-[120px] bg-white/5 border-white/10 text-xs"
+          data-testid={`comment-author-input-${activityId}`}
+        />
+        <Input
+          placeholder="Add a comment..."
+          value={commentText}
+          onChange={(e) => setCommentText(e.target.value)}
+          className="flex-1 bg-white/5 border-white/10 text-xs"
+          data-testid={`comment-text-input-${activityId}`}
+        />
+        <Button
+          type="submit"
+          size="icon"
+          variant="ghost"
+          disabled={!authorName.trim() || !commentText.trim() || addCommentMutation.isPending}
+          data-testid={`button-submit-comment-${activityId}`}
+        >
+          <Send className="w-4 h-4" />
+        </Button>
+      </form>
+
+      {comments.length > 0 ? (
+        <AnimatePresence mode="popLayout">
+          <div className="space-y-3">
+            {topLevel.map((comment) => (
+              <div key={comment.id}>
+                {renderComment(comment)}
+                {repliesByParent[comment.id]?.map((reply) => renderComment(reply, true))}
+              </div>
+            ))}
+          </div>
+        </AnimatePresence>
+      ) : (
+        <p className="text-xs text-muted-foreground text-center py-2" data-testid={`text-no-comments-${activityId}`}>
+          No comments yet. Be the first!
+        </p>
+      )}
+    </div>
+  );
+}
+
+function RepostDialog({
+  activityId,
+  headline,
+  playerName,
+  open,
+  onOpenChange,
+}: {
+  activityId: number;
+  headline: string;
+  playerName: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const sessionId = getSessionId();
+  const [caption, setCaption] = useState("");
+
+  const repostMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('POST', `/api/feed/${activityId}/repost`, {
+        sessionId,
+        playerName,
+        ...(caption.trim() ? { caption: caption.trim() } : {}),
+      });
+    },
+    onSuccess: () => {
+      onOpenChange(false);
+      setCaption("");
+      qc.invalidateQueries({ queryKey: ['/api/feed'] });
+      toast({ title: "Shared to feed!", description: "Your repost is now visible in the feed." });
+    },
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="bg-gradient-to-br from-black/95 to-black/80 border-white/10" data-testid={`dialog-repost-${activityId}`}>
+        <DialogHeader>
+          <DialogTitle className="text-white">Share to Feed</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+            <p className="text-sm text-muted-foreground" data-testid={`text-repost-original-${activityId}`}>{headline}</p>
+          </div>
+          <Textarea
+            placeholder="Add a caption (optional)..."
+            value={caption}
+            onChange={(e) => setCaption(e.target.value)}
+            className="bg-white/5 border-white/10 resize-none text-sm"
+            rows={3}
+            data-testid={`textarea-repost-caption-${activityId}`}
+          />
+          <Button
+            onClick={() => repostMutation.mutate()}
+            disabled={repostMutation.isPending}
+            className="w-full bg-gradient-to-r from-cyan-600 to-cyan-700"
+            data-testid={`button-submit-repost-${activityId}`}
+          >
+            {repostMutation.isPending ? "Sharing..." : "Share to Feed"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function ReactionButtons({ 
   activityId,
   playerName,
+  headline,
+  showComments,
+  onToggleComments,
 }: { 
   activityId: number;
   playerName: string;
+  headline: string;
+  showComments: boolean;
+  onToggleComments: () => void;
 }) {
   const queryClient = useQueryClient();
   const sessionId = getSessionId();
   const [clickedReaction, setClickedReaction] = useState<string | null>(null);
+  const [repostOpen, setRepostOpen] = useState(false);
+
+  const { data: commentCountData } = useQuery<{ count: number }>({
+    queryKey: ['/api/feed', activityId, 'comments', 'count'],
+    queryFn: async () => {
+      const res = await fetch(`/api/feed/${activityId}/comments/count`);
+      if (!res.ok) return { count: 0 };
+      return res.json();
+    },
+  });
+
+  const commentCount = commentCountData?.count || 0;
 
   const { data: reactionData } = useQuery<{ counts: Record<string, number>; users: Record<string, string[]> }>({
     queryKey: ['/api/feed', activityId, 'reactions'],
@@ -206,7 +518,43 @@ function ReactionButtons({
             </Tooltip>
           );
         })}
+
+        <motion.button
+          onClick={onToggleComments}
+          className={cn(
+            "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-all",
+            "bg-white/5 border border-white/10",
+            showComments && "bg-cyan-500/20 border-cyan-500/40",
+          )}
+          data-testid={`button-comments-${activityId}`}
+          whileTap={{ scale: 0.92 }}
+        >
+          <MessageCircle className="w-4 h-4 text-cyan-400" />
+          {commentCount > 0 && (
+            <span className="text-white/80">{commentCount}</span>
+          )}
+        </motion.button>
+
+        <motion.button
+          onClick={() => setRepostOpen(true)}
+          className={cn(
+            "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-all",
+            "bg-white/5 border border-white/10",
+          )}
+          data-testid={`button-repost-${activityId}`}
+          whileTap={{ scale: 0.92 }}
+        >
+          <Repeat2 className="w-4 h-4 text-blue-400" />
+        </motion.button>
       </div>
+
+      <RepostDialog
+        activityId={activityId}
+        headline={headline}
+        playerName={playerName}
+        open={repostOpen}
+        onOpenChange={setRepostOpen}
+      />
     </div>
   );
 }
@@ -241,6 +589,7 @@ function ActivitySkeleton({ index }: { index: number }) {
 
 function ActivityCard({ activity, index, currentUserName }: { activity: FeedActivity; index: number; currentUserName: string }) {
   const [, setLocation] = useLocation();
+  const [showComments, setShowComments] = useState(false);
   
   const Icon = ACTIVITY_ICONS[activity.activityType] || Rss;
   const gradient = ACTIVITY_GRADIENTS[activity.activityType] || "from-gray-500/30 to-gray-600/10";
@@ -248,7 +597,19 @@ function ActivityCard({ activity, index, currentUserName }: { activity: FeedActi
   const glowColor = ACTIVITY_GLOW[activity.activityType] || "#6B7280";
 
   const handleClick = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('[data-testid^="button-reaction"]')) {
+    const target = e.target as HTMLElement;
+    if (target.closest('[data-testid^="button-reaction"]') ||
+        target.closest('[data-testid^="button-comments"]') ||
+        target.closest('[data-testid^="button-repost"]') ||
+        target.closest('[data-testid^="comments-section"]') ||
+        target.closest('[data-testid^="comment-"]') ||
+        target.closest('[data-testid^="button-like-comment"]') ||
+        target.closest('[data-testid^="button-reply"]') ||
+        target.closest('[data-testid^="button-delete-comment"]') ||
+        target.closest('[data-testid^="button-submit"]') ||
+        target.closest('[data-testid^="reply-"]') ||
+        target.closest('input') ||
+        target.closest('textarea')) {
       return;
     }
     if (activity.playerId) {
@@ -331,7 +692,23 @@ function ActivityCard({ activity, index, currentUserName }: { activity: FeedActi
             <ReactionButtons
               activityId={activity.id}
               playerName={currentUserName}
+              headline={activity.headline}
+              showComments={showComments}
+              onToggleComments={() => setShowComments(!showComments)}
             />
+
+            <AnimatePresence>
+              {showComments && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <FeedComments activityId={activity.id} />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </Card>
