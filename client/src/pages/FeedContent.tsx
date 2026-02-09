@@ -12,7 +12,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Target, Award, Repeat2, BarChart3, Users, Camera, Flame, Trophy, Zap, Rss, UserCheck, UsersRound, Activity, Heart, ThumbsUp, HandMetal, ArrowUp, MessageCircle, Send, Trash2, Reply, Bookmark, Dumbbell } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Target, Award, Repeat2, BarChart3, Users, Camera, Flame, Trophy, Zap, Rss, UserCheck, UsersRound, Activity, Heart, ThumbsUp, HandMetal, ArrowUp, MessageCircle, Send, Trash2, Reply, Bookmark, Dumbbell, Clock, Swords, Quote } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { apiRequest, queryClient as globalQueryClient } from "@/lib/queryClient";
@@ -499,104 +500,108 @@ function ReactionButtons({
 
   return (
     <div className="flex flex-col gap-2 mt-3 pt-3 border-t border-white/5">
-      <div className="flex items-center gap-2 flex-wrap">
-        {REACTION_CONFIGS.map((reaction) => {
-          const Icon = reaction.icon;
-          const count = counts[reaction.id] || 0;
-          const isClicked = clickedReaction === reaction.id;
-          const hasUserReacted = userReactions.includes(reaction.id);
-          const reactedUsers = users[reaction.id] || [];
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {REACTION_CONFIGS.map((reaction) => {
+            const Icon = reaction.icon;
+            const count = counts[reaction.id] || 0;
+            const isClicked = clickedReaction === reaction.id;
+            const hasUserReacted = userReactions.includes(reaction.id);
+            const reactedUsers = users[reaction.id] || [];
 
-          return (
-            <Tooltip key={reaction.id}>
-              <TooltipTrigger asChild>
-                <motion.button
-                  onClick={() => handleReactionClick(reaction.id)}
-                  className={cn(
-                    "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-all",
-                    "bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20",
-                    hasUserReacted && reaction.activeColor,
-                  )}
-                  data-testid={`button-reaction-${reaction.id}`}
-                  whileTap={{ scale: 0.92 }}
-                  disabled={toggleReactionMutation.isPending}
-                >
-                  <motion.div
-                    animate={isClicked ? {
-                      scale: [1, 1.3, 0.9, 1],
-                      rotate: isClicked ? [0, 15, -15, 0] : 0,
-                    } : {}}
-                    transition={{ duration: 0.3 }}
+            return (
+              <Tooltip key={reaction.id}>
+                <TooltipTrigger asChild>
+                  <motion.button
+                    onClick={() => handleReactionClick(reaction.id)}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-all min-w-[36px] min-h-[36px] justify-center",
+                      "bg-white/5 border border-white/10",
+                      hasUserReacted && reaction.activeColor,
+                    )}
+                    data-testid={`button-reaction-${reaction.id}`}
+                    whileTap={{ scale: 0.92 }}
+                    disabled={toggleReactionMutation.isPending}
                   >
-                    <Icon className={cn("w-4 h-4", reaction.color)} />
-                  </motion.div>
-                  {count > 0 && (
-                    <motion.span
-                      initial={isClicked ? { scale: 0 } : {}}
-                      animate={isClicked ? { scale: 1 } : {}}
-                      transition={{ type: "spring", stiffness: 200, damping: 10 }}
-                      className="text-white/80"
+                    <motion.div
+                      animate={isClicked ? {
+                        scale: [1, 1.3, 0.9, 1],
+                        rotate: isClicked ? [0, 15, -15, 0] : 0,
+                      } : {}}
+                      transition={{ duration: 0.3 }}
                     >
-                      {count}
-                    </motion.span>
-                  )}
-                </motion.button>
-              </TooltipTrigger>
-              {reactedUsers.length > 0 && (
-                <TooltipContent side="top" className="max-w-xs">
-                  <p className="text-sm">
-                    {reactedUsers.slice(0, 5).join(', ')}
-                    {reactedUsers.length > 5 && ` and ${reactedUsers.length - 5} more`}
-                  </p>
-                </TooltipContent>
-              )}
-            </Tooltip>
-          );
-        })}
+                      <Icon className={cn("w-5 h-5", reaction.color)} />
+                    </motion.div>
+                    {count > 0 && (
+                      <motion.span
+                        initial={isClicked ? { scale: 0 } : {}}
+                        animate={isClicked ? { scale: 1 } : {}}
+                        transition={{ type: "spring", stiffness: 200, damping: 10 }}
+                        className="text-white/80 text-xs"
+                      >
+                        {count}
+                      </motion.span>
+                    )}
+                  </motion.button>
+                </TooltipTrigger>
+                {reactedUsers.length > 0 && (
+                  <TooltipContent side="top" className="max-w-xs">
+                    <p className="text-sm">
+                      {reactedUsers.slice(0, 5).join(', ')}
+                      {reactedUsers.length > 5 && ` and ${reactedUsers.length - 5} more`}
+                    </p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            );
+          })}
+        </div>
 
-        <motion.button
-          onClick={onToggleComments}
-          className={cn(
-            "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-all",
-            "bg-white/5 border border-white/10",
-            showComments && "bg-cyan-500/20 border-cyan-500/40",
-          )}
-          data-testid={`button-comments-${activityId}`}
-          whileTap={{ scale: 0.92 }}
-        >
-          <MessageCircle className="w-4 h-4 text-cyan-400" />
-          {commentCount > 0 && (
-            <span className="text-white/80">{commentCount}</span>
-          )}
-        </motion.button>
-
-        <motion.button
-          onClick={() => setRepostOpen(true)}
-          className={cn(
-            "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-all",
-            "bg-white/5 border border-white/10",
-          )}
-          data-testid={`button-repost-${activityId}`}
-          whileTap={{ scale: 0.92 }}
-        >
-          <Repeat2 className="w-4 h-4 text-blue-400" />
-        </motion.button>
-
-        {currentPlayerId && (
+        <div className="flex items-center gap-1.5 flex-wrap">
           <motion.button
-            onClick={() => toggleSaveMutation.mutate()}
+            onClick={onToggleComments}
             className={cn(
-              "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium transition-all",
+              "flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-all min-w-[36px] min-h-[36px] justify-center",
               "bg-white/5 border border-white/10",
-              savedData?.saved && "bg-amber-500/20 border-amber-500/40",
+              showComments && "bg-cyan-500/20 border-cyan-500/40",
             )}
-            data-testid={`button-save-${activityId}`}
+            data-testid={`button-comments-${activityId}`}
             whileTap={{ scale: 0.92 }}
-            disabled={toggleSaveMutation.isPending}
           >
-            <Bookmark className={cn("w-4 h-4", savedData?.saved ? "text-amber-400 fill-amber-400" : "text-amber-400")} />
+            <MessageCircle className="w-5 h-5 text-cyan-400" />
+            {commentCount > 0 && (
+              <span className="text-white/80 text-xs">{commentCount}</span>
+            )}
           </motion.button>
-        )}
+
+          <motion.button
+            onClick={() => setRepostOpen(true)}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-all min-w-[36px] min-h-[36px] justify-center",
+              "bg-white/5 border border-white/10",
+            )}
+            data-testid={`button-repost-${activityId}`}
+            whileTap={{ scale: 0.92 }}
+          >
+            <Repeat2 className="w-5 h-5 text-blue-400" />
+          </motion.button>
+
+          {currentPlayerId && (
+            <motion.button
+              onClick={() => toggleSaveMutation.mutate()}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium transition-all min-w-[36px] min-h-[36px] justify-center",
+                "bg-white/5 border border-white/10",
+                savedData?.saved && "bg-amber-500/20 border-amber-500/40",
+              )}
+              data-testid={`button-save-${activityId}`}
+              whileTap={{ scale: 0.92 }}
+              disabled={toggleSaveMutation.isPending}
+            >
+              <Bookmark className={cn("w-5 h-5", savedData?.saved ? "text-amber-400 fill-amber-400" : "text-amber-400")} />
+            </motion.button>
+          )}
+        </div>
       </div>
 
       <RepostDialog
@@ -638,6 +643,273 @@ function ActivitySkeleton({ index }: { index: number }) {
   );
 }
 
+function formatShortTime(dateStr: string): string {
+  const now = new Date();
+  const date = new Date(dateStr);
+  const diffMs = now.getTime() - date.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return "now";
+  if (diffMin < 60) return `${diffMin}m`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h`;
+  const diffDay = Math.floor(diffHr / 24);
+  if (diffDay < 7) return `${diffDay}d`;
+  const diffWeek = Math.floor(diffDay / 7);
+  return `${diffWeek}w`;
+}
+
+function parseGameHeadline(headline: string) {
+  const match = headline.match(/^(.+?)\s+dropped\s+(\d+)\s+PTS\s+vs\s+(.+)$/i);
+  if (match) return { name: match[1], pts: parseInt(match[2]), opponent: match[3] };
+  return null;
+}
+
+function parseGameSubtext(subtext: string | null) {
+  if (!subtext) return null;
+  const gradeMatch = subtext.match(/Grade:\s*([A-F][+-]?)/i);
+  const rebMatch = subtext.match(/(\d+)\s*REB/i);
+  const astMatch = subtext.match(/(\d+)\s*AST/i);
+  return {
+    grade: gradeMatch?.[1] || null,
+    reb: rebMatch ? parseInt(rebMatch[1]) : null,
+    ast: astMatch ? parseInt(astMatch[1]) : null,
+  };
+}
+
+function parseBadgeHeadline(headline: string) {
+  const match = headline.match(/^(.+?)\s+earned\s+the\s+(.+?)\s+badge!?$/i);
+  if (match) return { name: match[1], badgeName: match[2] };
+  return null;
+}
+
+function parseWorkoutHeadline(headline: string) {
+  const match = headline.match(/^(.+?)\s+completed\s+a\s+(\d+)-min\s+(\w+)\s+Workout:\s+(.+)$/i);
+  if (match) return { name: match[1], duration: match[2], workoutType: match[3], workoutName: match[4] };
+  return null;
+}
+
+function parseWorkoutSubtext(subtext: string | null) {
+  if (!subtext) return null;
+  const match = subtext.match(/Intensity:\s*(\d+)\/(\d+)/i);
+  if (match) return { intensity: parseInt(match[1]), max: parseInt(match[2]) };
+  return null;
+}
+
+function parseStreakHeadline(headline: string) {
+  const match = headline.match(/(\d+)/);
+  return match ? parseInt(match[1]) : null;
+}
+
+function parsePollSubtext(subtext: string | null) {
+  if (!subtext) return null;
+  const match = subtext.match(/(\d+)\s+options/i);
+  return match ? parseInt(match[1]) : null;
+}
+
+const GRADE_COLORS: Record<string, string> = {
+  "A+": "text-emerald-400", "A": "text-emerald-400", "A-": "text-emerald-400",
+  "B+": "text-blue-400", "B": "text-blue-400", "B-": "text-blue-400",
+  "C+": "text-yellow-400", "C": "text-yellow-400", "C-": "text-yellow-400",
+  "D+": "text-orange-400", "D": "text-orange-400", "D-": "text-orange-400",
+  "F": "text-red-400",
+};
+
+const GRADE_BG: Record<string, string> = {
+  "A+": "bg-emerald-500/15", "A": "bg-emerald-500/15", "A-": "bg-emerald-500/15",
+  "B+": "bg-blue-500/15", "B": "bg-blue-500/15", "B-": "bg-blue-500/15",
+  "C+": "bg-yellow-500/15", "C": "bg-yellow-500/15", "C-": "bg-yellow-500/15",
+  "D+": "bg-orange-500/15", "D": "bg-orange-500/15", "D-": "bg-orange-500/15",
+  "F": "bg-red-500/15",
+};
+
+function GameContent({ activity }: { activity: FeedActivity }) {
+  const game = parseGameHeadline(activity.headline);
+  const stats = parseGameSubtext(activity.subtext);
+  if (!game) return <p className="text-sm text-muted-foreground" data-testid={`text-headline-${activity.id}`}>{activity.headline}</p>;
+
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-white/80" data-testid={`text-headline-${activity.id}`}>
+        Dropped <span className="font-bold text-white">{game.pts} PTS</span> vs <span className="font-semibold text-white">{game.opponent}</span>
+      </p>
+      {activity.subtext && <p className="sr-only" data-testid={`text-subtext-${activity.id}`}>{activity.subtext}</p>}
+      <div className="rounded-md bg-white/5 border border-white/10 p-3">
+        <div className="flex items-center gap-2 mb-3">
+          <Swords className="w-4 h-4 text-orange-400" />
+          <span className="text-xs text-muted-foreground">vs {game.opponent}</span>
+        </div>
+        <div className="grid grid-cols-4 gap-3 text-center">
+          <div>
+            <p className="text-2xl font-bold text-white">{game.pts}</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">PTS</p>
+          </div>
+          {stats?.reb != null && (
+            <div>
+              <p className="text-2xl font-bold text-white">{stats.reb}</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">REB</p>
+            </div>
+          )}
+          {stats?.ast != null && (
+            <div>
+              <p className="text-2xl font-bold text-white">{stats.ast}</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">AST</p>
+            </div>
+          )}
+          {stats?.grade && (
+            <div className={cn("rounded-md flex flex-col items-center justify-center", GRADE_BG[stats.grade] || "bg-white/5")}>
+              <p className={cn("text-2xl font-bold", GRADE_COLORS[stats.grade] || "text-white")}>{stats.grade}</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Grade</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BadgeContent({ activity }: { activity: FeedActivity }) {
+  const parsed = parseBadgeHeadline(activity.headline);
+  return (
+    <div className="space-y-3">
+      <p className="sr-only" data-testid={`text-headline-${activity.id}`}>{activity.headline}</p>
+      {activity.subtext && <p className="sr-only" data-testid={`text-subtext-${activity.id}`}>{activity.subtext}</p>}
+      <div className="relative rounded-md bg-gradient-to-br from-amber-500/20 via-yellow-500/10 to-amber-600/5 border border-amber-500/20 p-4">
+        <div
+          className="absolute inset-0 rounded-md opacity-30"
+          style={{
+            background: "linear-gradient(110deg, transparent 30%, rgba(251,191,36,0.15) 45%, transparent 55%)",
+            animation: "shimmer 3s ease-in-out infinite",
+          }}
+        />
+        <div className="relative flex items-center gap-3">
+          <div className="w-12 h-12 rounded-md bg-amber-500/20 flex items-center justify-center shrink-0">
+            <Trophy className="w-6 h-6 text-amber-400" style={{ filter: "drop-shadow(0 0 6px #FBBF24)" }} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-base font-bold text-amber-300">{parsed?.badgeName || "Achievement"}</p>
+            {activity.subtext && (
+              <p className="text-xs text-amber-200/60 mt-0.5">{activity.subtext}</p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WorkoutContent({ activity }: { activity: FeedActivity }) {
+  const parsed = parseWorkoutHeadline(activity.headline);
+  const intensity = parseWorkoutSubtext(activity.subtext);
+  return (
+    <div className="space-y-3">
+      <p className="sr-only" data-testid={`text-headline-${activity.id}`}>{activity.headline}</p>
+      {activity.subtext && <p className="sr-only" data-testid={`text-subtext-${activity.id}`}>{activity.subtext}</p>}
+      <div className="rounded-md bg-emerald-500/5 border border-emerald-500/15 p-3 space-y-3">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Dumbbell className="w-4 h-4 text-emerald-400" />
+            <span className="text-sm font-semibold text-white">{parsed?.workoutName || "Workout"}</span>
+          </div>
+          {parsed?.duration && (
+            <div className="flex items-center gap-1.5 text-emerald-400">
+              <Clock className="w-3.5 h-3.5" />
+              <span className="text-sm font-bold">{parsed.duration} min</span>
+            </div>
+          )}
+        </div>
+        {parsed?.workoutType && (
+          <Badge variant="secondary" className="text-xs bg-emerald-500/10 border-emerald-500/20">{parsed.workoutType}</Badge>
+        )}
+        {intensity && (
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs text-muted-foreground">Intensity</span>
+              <span className="text-xs font-semibold text-emerald-400">{intensity.intensity}/{intensity.max}</span>
+            </div>
+            <Progress value={(intensity.intensity / intensity.max) * 100} className="h-2 bg-white/5 [&>div]:bg-gradient-to-r [&>div]:from-emerald-500 [&>div]:to-emerald-400" />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function StreakContent({ activity }: { activity: FeedActivity }) {
+  const streakCount = parseStreakHeadline(activity.headline);
+  return (
+    <div className="space-y-2">
+      <p className="sr-only" data-testid={`text-headline-${activity.id}`}>{activity.headline}</p>
+      {activity.subtext && <p className="sr-only" data-testid={`text-subtext-${activity.id}`}>{activity.subtext}</p>}
+      <div className="rounded-md bg-gradient-to-br from-orange-500/15 to-red-500/10 border border-orange-500/20 p-3">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1">
+            <Flame className="w-7 h-7 text-orange-400" style={{ filter: "drop-shadow(0 0 6px #F97316)" }} />
+            {streakCount && (
+              <span className="text-3xl font-bold text-orange-300">{streakCount}</span>
+            )}
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-white">Day Streak</p>
+            {activity.subtext && (
+              <p className="text-xs text-muted-foreground">{activity.subtext}</p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PollContent({ activity }: { activity: FeedActivity }) {
+  const optionCount = parsePollSubtext(activity.subtext);
+  return (
+    <div className="space-y-2">
+      <p className="text-sm text-white/80" data-testid={`text-headline-${activity.id}`}>{activity.headline}</p>
+      {activity.subtext && <p className="sr-only" data-testid={`text-subtext-${activity.id}`}>{activity.subtext}</p>}
+      <div className="rounded-md bg-indigo-500/5 border border-indigo-500/15 p-3">
+        <div className="flex items-center gap-2">
+          <BarChart3 className="w-5 h-5 text-indigo-400" />
+          <span className="text-sm font-medium text-white">Poll</span>
+          {optionCount && (
+            <Badge variant="secondary" className="text-xs bg-indigo-500/10 border-indigo-500/20">{optionCount} options</Badge>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RepostContent({ activity }: { activity: FeedActivity }) {
+  return (
+    <div className="space-y-2">
+      <p className="sr-only" data-testid={`text-headline-${activity.id}`}>{activity.headline}</p>
+      {activity.subtext && <p className="sr-only" data-testid={`text-subtext-${activity.id}`}>{activity.subtext}</p>}
+      <div className="rounded-md bg-blue-500/5 border border-blue-500/20 p-3">
+        <div className="flex items-start gap-2">
+          <Quote className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+          <div className="min-w-0">
+            <p className="text-sm text-white/80">{activity.headline}</p>
+            {activity.subtext && (
+              <p className="text-xs text-muted-foreground mt-1">{activity.subtext}</p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DefaultContent({ activity }: { activity: FeedActivity }) {
+  return (
+    <div className="space-y-1">
+      <p className="text-sm text-white/90" data-testid={`text-headline-${activity.id}`}>{activity.headline}</p>
+      {activity.subtext && (
+        <p className="text-xs text-muted-foreground" data-testid={`text-subtext-${activity.id}`}>{activity.subtext}</p>
+      )}
+    </div>
+  );
+}
+
 function ActivityCard({ activity, index, currentUserName, currentPlayerId }: { activity: FeedActivity; index: number; currentUserName: string; currentPlayerId?: number | null }) {
   const [, setLocation] = useLocation();
   const [showComments, setShowComments] = useState(false);
@@ -652,6 +924,7 @@ function ActivityCard({ activity, index, currentUserName, currentPlayerId }: { a
     if (target.closest('[data-testid^="button-reaction"]') ||
         target.closest('[data-testid^="button-comments"]') ||
         target.closest('[data-testid^="button-repost"]') ||
+        target.closest('[data-testid^="button-save"]') ||
         target.closest('[data-testid^="comments-section"]') ||
         target.closest('[data-testid^="comment-"]') ||
         target.closest('[data-testid^="button-like-comment"]') ||
@@ -668,7 +941,21 @@ function ActivityCard({ activity, index, currentUserName, currentPlayerId }: { a
     }
   };
 
-  const relativeTime = formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true });
+  const shortTime = formatShortTime(activity.createdAt);
+  const displayName = activity.playerName || "Unknown";
+  const typeLabel = activity.activityType.charAt(0).toUpperCase() + activity.activityType.slice(1);
+
+  const renderContent = () => {
+    switch (activity.activityType) {
+      case "game": return <GameContent activity={activity} />;
+      case "badge": return <BadgeContent activity={activity} />;
+      case "workout": return <WorkoutContent activity={activity} />;
+      case "streak": return <StreakContent activity={activity} />;
+      case "poll": return <PollContent activity={activity} />;
+      case "repost": return <RepostContent activity={activity} />;
+      default: return <DefaultContent activity={activity} />;
+    }
+  };
 
   return (
     <motion.div
@@ -680,88 +967,67 @@ function ActivityCard({ activity, index, currentUserName, currentPlayerId }: { a
         className={cn(
           "p-4 relative overflow-hidden transition-all duration-300",
           "bg-gradient-to-br from-black/60 to-black/30 border-white/10",
-          "hover:border-cyan-500/30",
-          activity.playerId && "cursor-pointer hover:scale-[1.01]"
+          activity.playerId && "cursor-pointer"
         )}
         onClick={handleClick}
         data-testid={`card-activity-${activity.id}`}
       >
-        <div className={cn("absolute inset-0 bg-gradient-to-br opacity-50", gradient)} />
+        <div className={cn("absolute inset-0 bg-gradient-to-br opacity-30", gradient)} />
         <div 
-          className="absolute top-0 right-0 w-32 h-32 rounded-full blur-[60px] opacity-20"
+          className="absolute top-0 right-0 w-32 h-32 rounded-full blur-[60px] opacity-10"
           style={{ backgroundColor: glowColor }}
         />
         
-        <div className="relative z-10 flex items-start gap-4">
-          <div 
-            className={cn(
-              "w-12 h-12 rounded-xl flex items-center justify-center shrink-0",
-              "bg-gradient-to-br from-white/10 to-white/5 border border-white/10"
-            )}
-          >
-            <Icon 
-              className={cn("w-6 h-6", iconColor)} 
-              style={{ filter: `drop-shadow(0 0 8px ${glowColor})` }}
-            />
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <h3 
-              className="text-base font-bold text-white leading-tight mb-1"
-              data-testid={`text-headline-${activity.id}`}
-            >
-              {activity.headline}
-            </h3>
-            
-            {activity.subtext && (
-              <p 
-                className="text-sm text-muted-foreground line-clamp-2 mb-2"
-                data-testid={`text-subtext-${activity.id}`}
+        <div className="relative z-10 space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="relative shrink-0">
+              <Avatar className="w-10 h-10">
+                <AvatarFallback className="text-sm font-semibold bg-white/10 text-white/80">
+                  {getInitials(displayName)}
+                </AvatarFallback>
+              </Avatar>
+              <div
+                className={cn(
+                  "absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center border-2 border-black/60",
+                  "bg-gradient-to-br from-white/15 to-white/5"
+                )}
               >
-                {activity.subtext}
-              </p>
-            )}
-
-            <div className="flex flex-wrap items-center gap-2">
-              {activity.playerName && (
-                <Badge 
-                  variant="secondary" 
-                  className="text-xs bg-white/10 border-white/10 hover:bg-white/20"
-                  data-testid={`badge-player-${activity.id}`}
-                >
-                  {activity.playerName}
-                </Badge>
-              )}
-              <span 
-                className="text-xs text-muted-foreground"
-                data-testid={`text-time-${activity.id}`}
-              >
-                {relativeTime}
-              </span>
+                <Icon className={cn("w-3 h-3", iconColor)} />
+              </div>
             </div>
 
-            <ReactionButtons
-              activityId={activity.id}
-              playerName={currentUserName}
-              headline={activity.headline}
-              showComments={showComments}
-              onToggleComments={() => setShowComments(!showComments)}
-              currentPlayerId={currentPlayerId}
-            />
-
-            <AnimatePresence>
-              {showComments && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <FeedComments activityId={activity.id} />
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm font-bold text-white" data-testid={`badge-player-${activity.id}`}>{displayName}</span>
+                <span className="text-xs text-muted-foreground" data-testid={`text-time-${activity.id}`}>{shortTime}</span>
+              </div>
+              <Badge variant="secondary" className="text-[10px] mt-0.5 bg-white/5 border-white/10">{typeLabel}</Badge>
+            </div>
           </div>
+
+          {renderContent()}
+
+          <ReactionButtons
+            activityId={activity.id}
+            playerName={currentUserName}
+            headline={activity.headline}
+            showComments={showComments}
+            onToggleComments={() => setShowComments(!showComments)}
+            currentPlayerId={currentPlayerId}
+          />
+
+          <AnimatePresence>
+            {showComments && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <FeedComments activityId={activity.id} />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </Card>
     </motion.div>
@@ -1014,14 +1280,9 @@ export default function FeedContent() {
 
   return (
     <div className="space-y-6" data-testid="feed-content">
-      <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-purple-500/15 to-purple-600/5 border border-purple-500/30 backdrop-blur-sm">
-        <Rss className="w-6 h-6 text-purple-400" />
-        <div>
-          <p className="text-xs text-purple-400/80 uppercase tracking-wide">Live Feed</p>
-          <p className="text-lg font-bold text-purple-400">
-            {allActivities?.length || 0} Updates
-          </p>
-        </div>
+      <div className="flex items-center gap-3">
+        <Activity className="w-5 h-5 text-muted-foreground" />
+        <h2 className="text-lg font-bold text-white">Activity Feed</h2>
       </div>
 
       {user?.playerId && (
