@@ -5,6 +5,7 @@ import { z } from "zod";
 import { useCreateGame, usePlayers, usePlayer } from "@/hooks/use-basketball";
 import { insertGameSchema } from "@shared/schema";
 import { useLocation, useRoute } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -90,6 +91,12 @@ export default function AnalyzeGame() {
   const [location, setLocation] = useLocation();
   const searchParams = new URLSearchParams(window.location.search);
   const preselectedPlayerId = searchParams.get('playerId');
+  const { user } = useAuth();
+  
+  const isCoach = user?.role === 'coach';
+  const userPlayerId = user?.playerId;
+  
+  const effectivePlayerId = isCoach ? preselectedPlayerId : (userPlayerId ? String(userPlayerId) : preselectedPlayerId);
   
   const { data: players } = usePlayers();
   const { mutate, isPending, data: resultGame } = useCreateGame();
@@ -154,15 +161,16 @@ export default function AnalyzeGame() {
 
       <GameForm 
         players={players || []} 
-        preselectedPlayerId={preselectedPlayerId} 
+        preselectedPlayerId={effectivePlayerId} 
         onSubmit={mutate} 
-        isPending={isPending} 
+        isPending={isPending}
+        isCoach={isCoach}
       />
     </div>
   );
 }
 
-function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
+function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }: any) {
   const [autoCalcPoints, setAutoCalcPoints] = useState(true);
   const [selectedFootballPositions, setSelectedFootballPositions] = useState<FootballPosition[]>([]);
   const sport = useSport();
@@ -420,26 +428,36 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending }: any) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Player</label>
-              <Select 
-                onValueChange={(val) => form.setValue("playerId", Number(val))} 
-                defaultValue={preselectedPlayerId}
-              >
-                <SelectTrigger className="bg-black/20 border-white/10 text-white h-11 focus:border-cyan-500/50 transition-colors">
-                  <SelectValue placeholder="Select a player..." />
-                </SelectTrigger>
-                <SelectContent className="bg-card border-white/10 text-white">
-                  {players
-                    .filter((p: any) => p.sport === sport || String(p.id) === preselectedPlayerId)
-                    .map((p: any) => {
-                      const positionLabel = p.sport === 'football' && FOOTBALL_POSITION_LABELS[p.position as FootballPosition]
-                        ? FOOTBALL_POSITION_LABELS[p.position as FootballPosition]
-                        : p.position;
-                      return (
-                        <SelectItem key={p.id} value={String(p.id)}>{p.name} (#{p.jerseyNumber}) - {positionLabel}</SelectItem>
-                      );
-                    })}
-                </SelectContent>
-              </Select>
+              {isCoach ? (
+                <Select 
+                  onValueChange={(val) => form.setValue("playerId", Number(val))} 
+                  defaultValue={preselectedPlayerId}
+                >
+                  <SelectTrigger className="bg-black/20 border-white/10 text-white h-11 focus:border-cyan-500/50 transition-colors" data-testid="select-player">
+                    <SelectValue placeholder="Select a player..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card border-white/10 text-white">
+                    {players
+                      .filter((p: any) => p.sport === sport || String(p.id) === preselectedPlayerId)
+                      .map((p: any) => {
+                        const positionLabel = p.sport === 'football' && FOOTBALL_POSITION_LABELS[p.position as FootballPosition]
+                          ? FOOTBALL_POSITION_LABELS[p.position as FootballPosition]
+                          : p.position;
+                        return (
+                          <SelectItem key={p.id} value={String(p.id)}>{p.name} (#{p.jerseyNumber}) - {positionLabel}</SelectItem>
+                        );
+                      })}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="flex items-center h-11 px-3 rounded-md bg-black/20 border border-white/10 text-white" data-testid="text-player-name">
+                  {selectedPlayer ? (
+                    <span>{selectedPlayer.name} (#{selectedPlayer.jerseyNumber}) - {selectedPlayer.sport === 'football' && FOOTBALL_POSITION_LABELS[selectedPlayer.position as FootballPosition] ? FOOTBALL_POSITION_LABELS[selectedPlayer.position as FootballPosition] : selectedPlayer.position}</span>
+                  ) : (
+                    <span className="text-muted-foreground">Loading your profile...</span>
+                  )}
+                </div>
+              )}
               {form.formState.errors.playerId && <p className="text-red-400 text-xs">Player is required</p>}
             </div>
             
