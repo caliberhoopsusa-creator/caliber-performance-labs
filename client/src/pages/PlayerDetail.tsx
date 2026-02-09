@@ -56,7 +56,7 @@ import {
 } from "@/components/ui/select";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { BADGE_DEFINITIONS, type Badge, type Game, type Player } from "@shared/schema";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Label } from "@/components/ui/label";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 import { Button } from "@/components/ui/button";
@@ -1097,6 +1097,7 @@ interface FollowingPlayer {
 function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: number; playerName: string; isOwnProfile: boolean }) {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
 
   const { data: feedActivities = [], isLoading: feedLoading } = useQuery<any[]>({
     queryKey: ['/api/players', playerId, 'feed'],
@@ -1151,10 +1152,11 @@ function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: n
           >
             <MessageCircle className="w-4 h-4" /> Message
           </Button>
+          <FollowButton playerId={playerId} initialIsFollowing={followStats?.isFollowing ?? false} />
         </div>
       )}
 
-      <Card className="p-5 bg-gradient-to-br from-black/60 to-black/30 border-white/10">
+      <Card className="p-5 bg-gradient-to-br from-black/60 to-black/30 border-white/10" data-testid="section-social-overview">
         <div className="flex items-center gap-3 mb-4">
           <div className="p-1.5 rounded-lg bg-purple-500/20 border border-purple-500/30">
             <Users className="w-4 h-4 text-purple-400" />
@@ -1179,7 +1181,7 @@ function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: n
         </div>
       </Card>
 
-      <div>
+      <div data-testid="section-recent-activity">
         <div className="flex items-center gap-3 mb-4">
           <div className="p-1.5 rounded-lg bg-accent/20 border border-accent/30">
             <Rss className="w-4 h-4 text-accent" />
@@ -1244,7 +1246,7 @@ function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: n
       </div>
 
       {isOwnProfile && (
-        <div>
+        <div data-testid="section-recent-workouts">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/30">
               <Dumbbell className="w-4 h-4 text-emerald-400" />
@@ -1299,6 +1301,28 @@ function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: n
                         </div>
                       </div>
                     </div>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="flex-shrink-0"
+                      onClick={async () => {
+                        try {
+                          await apiRequest('POST', `/api/workouts/${workout.id}/share`);
+                          queryClient.invalidateQueries({ queryKey: ['/api/players', playerId, 'feed'] });
+                          toast({ title: "Shared!", description: "Workout shared to your feed" });
+                        } catch (err: any) {
+                          const msg = err?.message || 'Failed to share';
+                          if (msg.includes('already shared')) {
+                            toast({ title: "Already shared", description: "This workout is already on your feed", variant: "destructive" });
+                          } else {
+                            toast({ title: "Error", description: msg, variant: "destructive" });
+                          }
+                        }
+                      }}
+                      data-testid={`button-share-workout-${workout.id}`}
+                    >
+                      <Share2 className="w-4 h-4 text-emerald-400" />
+                    </Button>
                   </div>
                 </Card>
               ))}
