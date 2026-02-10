@@ -212,10 +212,10 @@ export interface IStorage {
 
   // Feed Activities
   createFeedActivity(activity: InsertFeedActivity): Promise<FeedActivity>;
-  getFeedActivities(limit?: number, cursor?: number): Promise<(FeedActivity & { playerName?: string })[]>;
+  getFeedActivities(limit?: number, cursor?: number): Promise<(FeedActivity & { playerName?: string; playerUsername?: string })[]>;
   getPlayerFeedActivities(playerId: number): Promise<FeedActivity[]>;
-  getFollowingFeedActivities(playerId: number, limit?: number): Promise<(FeedActivity & { playerName?: string })[]>;
-  getTeamFeedActivities(sessionId: string, limit?: number): Promise<(FeedActivity & { playerName?: string })[]>;
+  getFollowingFeedActivities(playerId: number, limit?: number): Promise<(FeedActivity & { playerName?: string; playerUsername?: string })[]>;
+  getTeamFeedActivities(sessionId: string, limit?: number): Promise<(FeedActivity & { playerName?: string; playerUsername?: string })[]>;
   isWorkoutShared(workoutId: number): Promise<boolean>;
 
   // Feed Reactions
@@ -1222,7 +1222,7 @@ export class DatabaseStorage implements IStorage {
     return result.length > 0;
   }
 
-  async getFeedActivities(limit: number = 20, cursor?: number): Promise<(FeedActivity & { playerName?: string })[]> {
+  async getFeedActivities(limit: number = 20, cursor?: number): Promise<(FeedActivity & { playerName?: string; playerUsername?: string })[]> {
     const conditions = cursor ? [sql`${feedActivities.id} < ${cursor}`] : [];
     
     const results = await db
@@ -1238,6 +1238,7 @@ export class DatabaseStorage implements IStorage {
         sessionId: feedActivities.sessionId,
         createdAt: feedActivities.createdAt,
         playerName: players.name,
+        playerUsername: players.username,
       })
       .from(feedActivities)
       .leftJoin(players, eq(feedActivities.playerId, players.id))
@@ -1248,6 +1249,7 @@ export class DatabaseStorage implements IStorage {
     return results.map(r => ({
       ...r,
       playerName: r.playerName ?? undefined,
+      playerUsername: r.playerUsername ?? undefined,
     }));
   }
 
@@ -1259,7 +1261,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(feedActivities.createdAt));
   }
 
-  async getFollowingFeedActivities(playerId: number, limit: number = 50): Promise<(FeedActivity & { playerName?: string })[]> {
+  async getFollowingFeedActivities(playerId: number, limit: number = 50): Promise<(FeedActivity & { playerName?: string; playerUsername?: string })[]> {
     const followedPlayers = await db
       .select({ followeePlayerId: follows.followeePlayerId })
       .from(follows)
@@ -1284,6 +1286,7 @@ export class DatabaseStorage implements IStorage {
         sessionId: feedActivities.sessionId,
         createdAt: feedActivities.createdAt,
         playerName: players.name,
+        playerUsername: players.username,
       })
       .from(feedActivities)
       .leftJoin(players, eq(feedActivities.playerId, players.id))
@@ -1294,10 +1297,11 @@ export class DatabaseStorage implements IStorage {
     return results.map(r => ({
       ...r,
       playerName: r.playerName || undefined,
+      playerUsername: r.playerUsername ?? undefined,
     }));
   }
 
-  async getTeamFeedActivities(sessionId: string, limit: number = 50): Promise<(FeedActivity & { playerName?: string })[]> {
+  async getTeamFeedActivities(sessionId: string, limit: number = 50): Promise<(FeedActivity & { playerName?: string; playerUsername?: string })[]> {
     const userTeamMemberships = await db
       .select({ teamId: teamMembers.teamId })
       .from(teamMembers)
@@ -1335,6 +1339,7 @@ export class DatabaseStorage implements IStorage {
         sessionId: feedActivities.sessionId,
         createdAt: feedActivities.createdAt,
         playerName: players.name,
+        playerUsername: players.username,
       })
       .from(feedActivities)
       .leftJoin(players, eq(feedActivities.playerId, players.id))
@@ -1345,6 +1350,7 @@ export class DatabaseStorage implements IStorage {
     return results.map(r => ({
       ...r,
       playerName: r.playerName || undefined,
+      playerUsername: r.playerUsername ?? undefined,
     }));
   }
 

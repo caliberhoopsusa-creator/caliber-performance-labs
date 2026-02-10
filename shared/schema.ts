@@ -37,10 +37,12 @@ export const players = pgTable("players", {
   widgetPreferences: text("widget_preferences"), // JSON: ["trends", "grades", "radar", "averages"]
   // Coach-assigned roster role
   rosterRole: text("roster_role").default("rotation"), // 'starter', 'rotation', 'bench', 'development'
+  username: text("username").unique(),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
   userIdIdx: index("players_user_id_idx").on(table.userId),
   sportIdx: index("players_sport_idx").on(table.sport),
+  usernameIdx: uniqueIndex("players_username_idx").on(table.username),
 }));
 
 // === ACTIVITY STREAKS (for daily login/activity tracking) ===

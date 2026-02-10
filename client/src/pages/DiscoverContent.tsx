@@ -23,6 +23,7 @@ import { useAuth } from "@/hooks/use-auth";
 interface Player {
   id: number;
   name: string;
+  username?: string | null;
   position: string;
   team: string | null;
   sport?: string;
@@ -153,6 +154,9 @@ function SuggestedPlayerCard({ player }: { player: Player }) {
               {player.name}
             </p>
           </Link>
+          {player.username && (
+            <p className="text-xs text-muted-foreground truncate" data-testid={`text-suggested-username-${player.id}`}>@{player.username}</p>
+          )}
           <p className="text-xs text-muted-foreground truncate">
             {player.position}
             {player.team ? ` · ${player.team}` : ""}
@@ -214,7 +218,8 @@ export default function DiscoverContent() {
 
   const filteredPlayers = searchQuery.trim()
     ? allPlayers.filter((p) =>
-        p.name.toLowerCase().includes(searchQuery.toLowerCase())
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (p.username && p.username.toLowerCase().includes(searchQuery.toLowerCase()))
       )
     : [];
 

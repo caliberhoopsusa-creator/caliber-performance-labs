@@ -16,7 +16,7 @@ import { registerObjectStorageRoutes } from "./replit_integrations/object_storag
 import { setupAuth, registerAuthRoutes, isAuthenticated, authStorage } from "./replit_integrations/auth";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 import { users } from "@shared/models/auth";
-import { eq, sql, and, desc, or, inArray, gte, lte, count, max } from "drizzle-orm";
+import { eq, sql, and, desc, or, inArray, gte, lte, count, max, ne } from "drizzle-orm";
 import { db } from "./db";
 import type { RequestHandler } from "express";
 
@@ -2004,6 +2004,19 @@ export async function registerRoutes(
     res.status(204).send();
   });
 
+  app.get('/api/players/check-username/:username', async (req, res) => {
+    try {
+      const username = req.params.username.toLowerCase();
+      if (username.length < 3 || username.length > 20 || !/^[a-zA-Z0-9_]+$/.test(username)) {
+        return res.json({ available: false, reason: 'Username must be 3-20 characters, letters, numbers, and underscores only' });
+      }
+      const existing = await db.select({ id: players.id }).from(players).where(eq(players.username, username)).limit(1);
+      res.json({ available: existing.length === 0 });
+    } catch (err) {
+      res.status(500).json({ message: 'Error checking username' });
+    }
+  });
+
   // Update player - coaches OR player can update their own profile
   app.patch('/api/players/:id', isAuthenticated, async (req: any, res) => {
     try {
@@ -2037,6 +2050,7 @@ export async function registerRoutes(
         level: z.enum(['middle_school', 'high_school', 'college']).optional(),
         gpa: z.number().min(0).max(4).optional(),
         widgetPreferences: z.string().optional(),
+        username: z.string().min(3).max(20).regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores").optional(),
       });
       
       const input = updateSchema.parse(req.body);
@@ -2062,6 +2076,13 @@ export async function registerRoutes(
       const updateData: any = { ...input };
       if (input.gpa !== undefined) {
         updateData.gpa = input.gpa.toFixed(2);
+      }
+      if (input.username) {
+        const existing = await db.select().from(players).where(and(eq(players.username, input.username.toLowerCase()), ne(players.id, playerId))).limit(1);
+        if (existing.length > 0) {
+          return res.status(400).json({ message: 'This username is already taken' });
+        }
+        updateData.username = input.username.toLowerCase();
       }
       const updated = await storage.updatePlayer(playerId, updateData);
       res.json(updated);

@@ -42,6 +42,7 @@ interface FeedActivity {
   headline: string;
   subtext: string | null;
   playerName?: string;
+  playerUsername?: string;
   createdAt: string;
 }
 
@@ -999,6 +1000,9 @@ function ActivityCard({ activity, index, currentUserName, currentPlayerId }: { a
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-sm font-bold text-white" data-testid={`badge-player-${activity.id}`}>{displayName}</span>
+                {activity.playerUsername && (
+                  <span className="text-xs text-muted-foreground">@{activity.playerUsername}</span>
+                )}
                 <span className="text-xs text-muted-foreground" data-testid={`text-time-${activity.id}`}>{shortTime}</span>
               </div>
               <Badge variant="secondary" className="text-[10px] mt-0.5 bg-white/5 border-white/10">{typeLabel}</Badge>

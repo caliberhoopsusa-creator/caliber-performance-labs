@@ -59,6 +59,7 @@ export const api = {
       path: '/api/players/:id',
       input: z.object({
         name: z.string().min(1).optional(),
+        username: z.string().min(3).max(20).regex(/^[a-zA-Z0-9_]+$/).optional(),
         position: z.string().optional(), // Comma-separated positions for multi-position support
         height: z.string().optional(),
         team: z.string().optional(),

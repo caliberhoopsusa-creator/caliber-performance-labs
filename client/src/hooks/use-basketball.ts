@@ -105,6 +105,7 @@ export type PlayerUpdate = {
   graduationYear?: number;
   gpa?: number;
   widgetPreferences?: string;
+  username?: string;
 };
 
 export function useUpdatePlayer() {

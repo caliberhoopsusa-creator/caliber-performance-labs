@@ -1406,6 +1406,7 @@ export default function PlayerDetail() {
       setEditPositions(positionsList);
       setEditForm({
         name: player.name,
+        username: player.username || "",
         position: player.position,
         height: player.height || "",
         team: player.team || "",
@@ -1435,8 +1436,10 @@ export default function PlayerDetail() {
   };
 
   const handleSaveProfile = () => {
-    // Ensure position is set from editPositions
     const updatedForm = { ...editForm, position: editPositions.join(',') };
+    if (updatedForm.username === '') {
+      delete updatedForm.username;
+    }
     updatePlayer(
       { id, updates: updatedForm },
       {
@@ -1897,6 +1900,9 @@ export default function PlayerDetail() {
                 >
                   {player.name}
                 </h1>
+                {player.username && (
+                  <p className="text-sm text-muted-foreground" data-testid="text-player-username">@{player.username}</p>
+                )}
                 <CaliberBadge 
                   playerId={id} 
                   isOwner={(user as any)?.isOwner} 
@@ -1973,6 +1979,16 @@ export default function PlayerDetail() {
                 </p>
               )}
 
+              {isOwnProfile && !player.username && (
+                <button 
+                  onClick={() => setIsEditDialogOpen(true)}
+                  className="text-sm text-muted-foreground/60 mb-2 text-center md:text-left italic flex items-center gap-1.5 hover-elevate rounded-lg px-2 py-1"
+                  data-testid="button-add-username"
+                >
+                  <Pencil className="w-3 h-3" /> Set a username so others can find you
+                </button>
+              )}
+
               {isOwnProfile && !player.bio && (
                 <button 
                   onClick={() => setIsEditDialogOpen(true)}
@@ -1986,6 +2002,7 @@ export default function PlayerDetail() {
               {isOwnProfile && (() => {
                 const fields = [
                   { done: !!player.name, label: "Name" },
+                  { done: !!player.username, label: "Username" },
                   { done: !!player.photoUrl, label: "Photo" },
                   { done: !!player.bio, label: "Bio" },
                   { done: !!player.team, label: "Team" },
@@ -3212,6 +3229,25 @@ export default function PlayerDetail() {
                   className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20"
                   data-testid="input-edit-name"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Username</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
+                  <Input
+                    value={editForm.username || ""}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^a-zA-Z0-9_]/g, '').toLowerCase();
+                      setEditForm((prev) => ({ ...prev, username: val }));
+                    }}
+                    placeholder="hoopstar23"
+                    maxLength={20}
+                    className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20 pl-8"
+                    data-testid="input-edit-username"
+                  />
+                </div>
+                <p className="text-[10px] text-muted-foreground">3-20 characters. Letters, numbers, and underscores only.</p>
               </div>
 
               <div className="space-y-2">
