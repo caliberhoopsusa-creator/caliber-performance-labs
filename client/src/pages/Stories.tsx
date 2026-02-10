@@ -596,18 +596,29 @@ function CreateStoryDialog({
 
     setIsUploading(true);
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const res = await fetch('/api/object-storage/upload', {
+      const urlRes = await fetch('/api/uploads/request-url', {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: file.name,
+          size: file.size,
+          contentType: file.type || 'application/octet-stream',
+        }),
       });
 
-      if (!res.ok) throw new Error('Upload failed');
+      if (!urlRes.ok) throw new Error('Failed to get upload URL');
 
-      const data = await res.json();
-      setMediaUrl(data.url);
+      const { uploadURL, objectPath } = await urlRes.json();
+
+      const uploadRes = await fetch(uploadURL, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type || 'application/octet-stream' },
+      });
+
+      if (!uploadRes.ok) throw new Error('Upload failed');
+
+      setMediaUrl(objectPath);
       setMediaType(file.type.startsWith('video/') ? 'video' : 'image');
       toast({ title: "Uploaded!", description: "Media uploaded successfully" });
     } catch (err) {
