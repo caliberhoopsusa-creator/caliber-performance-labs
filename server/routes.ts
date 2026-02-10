@@ -5597,7 +5597,9 @@ Respond in this exact JSON format:
     try {
       const limit = Number(req.query.limit) || 20;
       const cursor = req.query.cursor ? Number(req.query.cursor) : undefined;
-      const activities = await storage.getFeedActivities(limit + 1, cursor);
+      const typeParam = req.query.type as string | undefined;
+      const typeFilter = (typeParam === 'social' || typeParam === 'alerts') ? typeParam : 'all' as const;
+      const activities = await storage.getFeedActivities(limit + 1, cursor, typeFilter);
       
       const hasMore = activities.length > limit;
       const items = hasMore ? activities.slice(0, limit) : activities;
@@ -5618,11 +5620,22 @@ Respond in this exact JSON format:
     try {
       const sinceId = Number(req.query.since);
       if (!sinceId) return res.json({ count: 0 });
-      
+
+      const socialTypes = ['game', 'workout', 'repost', 'poll', 'story', 'prediction'];
+      const alertTypes = ['badge', 'streak', 'goal', 'challenge'];
+      const typeParam = req.query.type as string | undefined;
+
+      const countConditions = [sql`${feedActivities.id} > ${sinceId}`];
+      if (typeParam === 'social') {
+        countConditions.push(inArray(feedActivities.activityType, socialTypes));
+      } else if (typeParam === 'alerts') {
+        countConditions.push(inArray(feedActivities.activityType, alertTypes));
+      }
+
       const result = await db
         .select({ count: sql<number>`count(*)` })
         .from(feedActivities)
-        .where(sql`${feedActivities.id} > ${sinceId}`);
+        .where(and(...countConditions));
       
       res.json({ count: Number(result[0]?.count || 0) });
     } catch (err) {

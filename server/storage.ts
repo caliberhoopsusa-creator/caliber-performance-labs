@@ -212,7 +212,7 @@ export interface IStorage {
 
   // Feed Activities
   createFeedActivity(activity: InsertFeedActivity): Promise<FeedActivity>;
-  getFeedActivities(limit?: number, cursor?: number): Promise<(FeedActivity & { playerName?: string; playerUsername?: string })[]>;
+  getFeedActivities(limit?: number, cursor?: number, typeFilter?: 'social' | 'alerts' | 'all'): Promise<(FeedActivity & { playerName?: string; playerUsername?: string })[]>;
   getPlayerFeedActivities(playerId: number): Promise<FeedActivity[]>;
   getFollowingFeedActivities(playerId: number, limit?: number): Promise<(FeedActivity & { playerName?: string; playerUsername?: string })[]>;
   getTeamFeedActivities(sessionId: string, limit?: number): Promise<(FeedActivity & { playerName?: string; playerUsername?: string })[]>;
@@ -1222,8 +1222,17 @@ export class DatabaseStorage implements IStorage {
     return result.length > 0;
   }
 
-  async getFeedActivities(limit: number = 20, cursor?: number): Promise<(FeedActivity & { playerName?: string; playerUsername?: string })[]> {
+  async getFeedActivities(limit: number = 20, cursor?: number, typeFilter: 'social' | 'alerts' | 'all' = 'all'): Promise<(FeedActivity & { playerName?: string; playerUsername?: string })[]> {
     const conditions = cursor ? [sql`${feedActivities.id} < ${cursor}`] : [];
+
+    const socialTypes = ['game', 'workout', 'repost', 'poll', 'story', 'prediction'];
+    const alertTypes = ['badge', 'streak', 'goal', 'challenge'];
+
+    if (typeFilter === 'social') {
+      conditions.push(inArray(feedActivities.activityType, socialTypes));
+    } else if (typeFilter === 'alerts') {
+      conditions.push(inArray(feedActivities.activityType, alertTypes));
+    }
     
     const results = await db
       .select({
