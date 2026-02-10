@@ -60,6 +60,7 @@ import LeagueHub from "./pages/LeagueHub";
 import LeagueDetail from "./pages/LeagueDetail";
 import RecruitingHub from "./pages/RecruitingHub";
 import PublicPlayerProfile from "./pages/PublicPlayerProfile";
+import PublicRecruitProfile from "./pages/PublicRecruitProfile";
 import LiveGameMode from "./pages/LiveGameMode";
 import DiscoverHighlights from "./pages/DiscoverHighlights";
 import ChallengePage from "./pages/ChallengePage";
@@ -413,6 +414,7 @@ function App() {
                     <Switch>
                     <Route path="/admin" component={Admin} />
                     <Route path="/profile/:id/public" component={PublicPlayerProfile} />
+                    <Route path="/recruit/:id" component={PublicRecruitProfile} />
                     <Route path="/challenge/:code" component={ChallengePage} />
                     <Route>
                       <MainRouter />

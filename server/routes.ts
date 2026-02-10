@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, headToHeadChallenges, statVerifications, playerCollegeMatches, playerCollegeInterests, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema, insertWearableConnectionSchema, recruitingEvents, insertRecruitingEventSchema, type RecruitingEvent, playerEventRegistrations, insertPlayerEventRegistrationSchema, colleges, ncaaEligibilityProgress, insertNcaaEligibilityProgressSchema, coachRecommendations, insertCoachRecommendationSchema, teams, teamMembers, skillBadges, activityStreaks, feedActivities, feedComments, feedCommentLikes, type InsertFeedComment, type FeedComment, highlightClips } from "@shared/schema";
+import { players, games, badges, headToHeadChallenges, statVerifications, playerCollegeMatches, playerCollegeInterests, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema, insertWearableConnectionSchema, recruitingEvents, insertRecruitingEventSchema, type RecruitingEvent, playerEventRegistrations, insertPlayerEventRegistrationSchema, colleges, ncaaEligibilityProgress, insertNcaaEligibilityProgressSchema, coachRecommendations, insertCoachRecommendationSchema, teams, teamMembers, skillBadges, activityStreaks, feedActivities, feedComments, feedCommentLikes, type InsertFeedComment, type FeedComment, highlightClips } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { calculateAIRating, calculateProjection, type GameStats, type PlayerMetrics, type PeerStats, type AIRatingResult, type ProjectionResult } from "@shared/ai-rating-engine";
 import type { Sport } from "@shared/sports-config";
@@ -15051,6 +15051,123 @@ Respond in this exact JSON format:
     } catch (error) {
       console.error('Error deleting recommendation:', error);
       res.status(500).json({ message: "Failed to delete recommendation" });
+    }
+  });
+
+  // === PUBLIC RECRUITING PROFILE (No auth required) ===
+  app.get('/api/public/players/:id/profile', async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      if (isNaN(playerId)) {
+        return res.status(400).json({ message: "Invalid player ID" });
+      }
+
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+
+      const allGames = await storage.getGamesByPlayerId(playerId);
+      const recentGames = allGames
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 5);
+
+      const playerBadges = await db.select().from(badges).where(eq(badges.playerId, playerId));
+      const badgeCount = playerBadges.length;
+
+      const totalGames = allGames.length || 1;
+      const sport = player.sport || 'basketball';
+
+      let averages: Record<string, number> = {};
+      if (sport === 'basketball') {
+        averages = {
+          ppg: Math.round((allGames.reduce((s, g) => s + (g.points || 0), 0) / totalGames) * 10) / 10,
+          rpg: Math.round((allGames.reduce((s, g) => s + (g.rebounds || 0), 0) / totalGames) * 10) / 10,
+          apg: Math.round((allGames.reduce((s, g) => s + (g.assists || 0), 0) / totalGames) * 10) / 10,
+          spg: Math.round((allGames.reduce((s, g) => s + (g.steals || 0), 0) / totalGames) * 10) / 10,
+          bpg: Math.round((allGames.reduce((s, g) => s + (g.blocks || 0), 0) / totalGames) * 10) / 10,
+        };
+      } else {
+        averages = {
+          passingYPG: Math.round((allGames.reduce((s, g) => s + (g.passingYards || 0), 0) / totalGames) * 10) / 10,
+          rushingYPG: Math.round((allGames.reduce((s, g) => s + (g.rushingYards || 0), 0) / totalGames) * 10) / 10,
+          receivingYPG: Math.round((allGames.reduce((s, g) => s + (g.receivingYards || 0), 0) / totalGames) * 10) / 10,
+          totalTDs: allGames.reduce((s, g) => s + (g.passingTouchdowns || 0) + (g.rushingTouchdowns || 0) + (g.receivingTouchdowns || 0), 0),
+          tackles: allGames.reduce((s, g) => s + (g.tackles || 0), 0),
+        };
+      }
+
+      const overallGrade = allGames.length > 0
+        ? (() => {
+            const GRADE_VALUES: Record<string, number> = {
+              'A+': 100, 'A': 95, 'A-': 90, 'B+': 88, 'B': 85, 'B-': 80,
+              'C+': 78, 'C': 75, 'C-': 70, 'D+': 68, 'D': 65, 'D-': 60, 'F': 50,
+            };
+            const graded = allGames.filter(g => g.grade);
+            if (graded.length === 0) return null;
+            const avg = graded.reduce((s, g) => s + (GRADE_VALUES[g.grade!.trim().toUpperCase()] || 0), 0) / graded.length;
+            if (avg >= 97) return 'A+';
+            if (avg >= 92) return 'A';
+            if (avg >= 87) return 'A-';
+            if (avg >= 84) return 'B+';
+            if (avg >= 81) return 'B';
+            if (avg >= 77) return 'B-';
+            if (avg >= 74) return 'C+';
+            if (avg >= 71) return 'C';
+            if (avg >= 67) return 'C-';
+            if (avg >= 64) return 'D+';
+            if (avg >= 61) return 'D';
+            if (avg >= 55) return 'D-';
+            return 'F';
+          })()
+        : null;
+
+      res.json({
+        player: {
+          id: player.id,
+          name: player.name,
+          photoUrl: player.photoUrl,
+          sport: player.sport,
+          position: player.position,
+          team: player.team,
+          city: player.city,
+          state: player.state,
+          height: player.height,
+          school: player.school,
+          graduationYear: player.graduationYear,
+          level: player.level,
+          currentTier: player.currentTier,
+          totalXp: player.totalXp,
+          jerseyNumber: player.jerseyNumber,
+        },
+        overallGrade,
+        gamesPlayed: allGames.length,
+        averages,
+        recentGames: recentGames.map(g => ({
+          id: g.id,
+          date: g.date,
+          opponent: g.opponent,
+          result: g.result,
+          grade: g.grade,
+          points: g.points,
+          rebounds: g.rebounds,
+          assists: g.assists,
+          steals: g.steals,
+          blocks: g.blocks,
+          passingYards: g.passingYards,
+          rushingYards: g.rushingYards,
+          receivingYards: g.receivingYards,
+          passingTouchdowns: g.passingTouchdowns,
+          rushingTouchdowns: g.rushingTouchdowns,
+          receivingTouchdowns: g.receivingTouchdowns,
+          tackles: g.tackles,
+        })),
+        badgeCount,
+        shareUrl: `/recruit/${playerId}`,
+      });
+    } catch (error) {
+      console.error('Error fetching public player profile:', error);
+      res.status(500).json({ message: "Failed to fetch public profile" });
     }
   });
 

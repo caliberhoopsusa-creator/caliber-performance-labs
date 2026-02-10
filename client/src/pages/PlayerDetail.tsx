@@ -1709,7 +1709,51 @@ export default function PlayerDetail() {
   const totalPenalties = games.reduce((acc, g) => acc + (g.penalties || 0), 0);
   
   const averageGrade = getAverageGrade(games);
-  
+
+  const recentGames = [...games]
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .slice(-8);
+
+  const getSparkline = (extractor: (g: Game) => number) =>
+    recentGames.length >= 2 ? recentGames.map(extractor) : undefined;
+
+  const sparklines = {
+    points: getSparkline(g => g.points),
+    rebounds: getSparkline(g => g.rebounds),
+    assists: getSparkline(g => g.assists),
+    steals: getSparkline(g => g.steals),
+    blocks: getSparkline(g => g.blocks),
+    per: getSparkline(g => g.points + g.rebounds + g.assists),
+    fgPct: getSparkline(g => (g.fgAttempted || 0) > 0 ? ((g.fgMade || 0) / (g.fgAttempted || 1)) * 100 : 0),
+    threePct: getSparkline(g => (g.threeAttempted || 0) > 0 ? ((g.threeMade || 0) / (g.threeAttempted || 1)) * 100 : 0),
+    ftPct: getSparkline(g => (g.ftAttempted || 0) > 0 ? ((g.ftMade || 0) / (g.ftAttempted || 1)) * 100 : 0),
+    passingYards: getSparkline(g => g.passingYards || 0),
+    passingTDs: getSparkline(g => g.passingTouchdowns || 0),
+    rushingYards: getSparkline(g => g.rushingYards || 0),
+    rushingTDs: getSparkline(g => g.rushingTouchdowns || 0),
+    receivingYards: getSparkline(g => g.receivingYards || 0),
+    receivingTDs: getSparkline(g => g.receivingTouchdowns || 0),
+    receptions: getSparkline(g => g.receptions || 0),
+    targets: getSparkline(g => g.targets || 0),
+    carries: getSparkline(g => g.carries || 0),
+    tackles: getSparkline(g => g.tackles || 0),
+    soloTackles: getSparkline(g => g.soloTackles || 0),
+    sacks: getSparkline(g => g.sacks || 0),
+    defensiveINTs: getSparkline(g => g.defensiveInterceptions || 0),
+    passDeflections: getSparkline(g => g.passDeflections || 0),
+    forcedFumbles: getSparkline(g => g.forcedFumbles || 0),
+    fgMade: getSparkline(g => g.fieldGoalsMade || 0),
+    fgAttempted: getSparkline(g => g.fieldGoalsAttempted || 0),
+    xpMade: getSparkline(g => g.extraPointsMade || 0),
+    xpAttempted: getSparkline(g => g.extraPointsAttempted || 0),
+    punts: getSparkline(g => g.punts || 0),
+    puntYards: getSparkline(g => g.puntYards || 0),
+    pancakeBlocks: getSparkline(g => g.pancakeBlocks || 0),
+    sacksAllowed: getSparkline(g => g.sacksAllowed || 0),
+    penalties: getSparkline(g => g.penalties || 0),
+    completions: getSparkline(g => g.completions || 0),
+  };
+
   const topGames = [...games]
     .sort((a, b) => getGradeValue(b.grade) - getGradeValue(a.grade))
     .slice(0, 5);
@@ -2212,6 +2256,28 @@ export default function PlayerDetail() {
                       Scout Me Profile
                     </Button>
                   </Link>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="gap-1.5"
+                    data-testid="button-share-recruit-profile"
+                    onClick={() => {
+                      const url = `${window.location.origin}/recruit/${player.id}`;
+                      navigator.clipboard.writeText(url).then(() => {
+                        toast({
+                          title: "Link Copied",
+                          description: "Recruiting profile link copied to clipboard",
+                        });
+                      }).catch(() => {
+                        toast({
+                          title: "Share URL",
+                          description: url,
+                        });
+                      });
+                    }}
+                  >
+                    <Rss className="w-3.5 h-3.5" /> Share Recruiting Profile
+                  </Button>
                   <Link href={`/report-card?player=${player.id}`}>
                     <Button variant="outline" size="sm" className="gap-1.5" data-testid="button-generate-report">
                       <FileText className="w-3.5 h-3.5" /> Report
@@ -2534,71 +2600,71 @@ export default function PlayerDetail() {
               {/* QB Stats */}
               {hasPosition(player.position, ['QB']) && (
                 <>
-                  <StatCard label="Pass YDS" value={totalPassingYards} highlight={true} />
-                  <StatCard label="Pass TDs" value={totalPassingTDs} highlight={true} />
-                  <StatCard label="COMP%" value={compPercent !== "—" ? `${compPercent}%` : "—"} />
-                  <StatCard label="INTs" value={totalDefensiveINTs} />
-                  <StatCard label="Rush YDS" value={totalRushingYards} />
-                  <StatCard label="Rush TDs" value={totalRushingTDs} />
+                  <StatCard label="Pass YDS" value={totalPassingYards} highlight={true} sparklineData={sparklines.passingYards} />
+                  <StatCard label="Pass TDs" value={totalPassingTDs} highlight={true} sparklineData={sparklines.passingTDs} />
+                  <StatCard label="COMP%" value={compPercent !== "—" ? `${compPercent}%` : "—"} sparklineData={sparklines.completions} />
+                  <StatCard label="INTs" value={totalDefensiveINTs} sparklineData={sparklines.defensiveINTs} />
+                  <StatCard label="Rush YDS" value={totalRushingYards} sparklineData={sparklines.rushingYards} />
+                  <StatCard label="Rush TDs" value={totalRushingTDs} sparklineData={sparklines.rushingTDs} />
                 </>
               )}
               {/* RB Stats */}
               {hasPosition(player.position, ['RB']) && (
                 <>
-                  <StatCard label="Rush YDS" value={totalRushingYards} highlight={true} />
-                  <StatCard label="Rush TDs" value={totalRushingTDs} highlight={true} />
-                  <StatCard label="YPC" value={yardsPerCarry} />
-                  <StatCard label="Carries" value={totalCarries} />
-                  <StatCard label="Rec YDS" value={totalReceivingYards} />
-                  <StatCard label="Rec TDs" value={totalReceivingTDs} />
-                  <StatCard label="Receptions" value={totalReceptions} />
+                  <StatCard label="Rush YDS" value={totalRushingYards} highlight={true} sparklineData={sparklines.rushingYards} />
+                  <StatCard label="Rush TDs" value={totalRushingTDs} highlight={true} sparklineData={sparklines.rushingTDs} />
+                  <StatCard label="YPC" value={yardsPerCarry} sparklineData={sparklines.carries} />
+                  <StatCard label="Carries" value={totalCarries} sparklineData={sparklines.carries} />
+                  <StatCard label="Rec YDS" value={totalReceivingYards} sparklineData={sparklines.receivingYards} />
+                  <StatCard label="Rec TDs" value={totalReceivingTDs} sparklineData={sparklines.receivingTDs} />
+                  <StatCard label="Receptions" value={totalReceptions} sparklineData={sparklines.receptions} />
                 </>
               )}
               {/* WR/TE Stats */}
               {hasPosition(player.position, ['WR', 'TE']) && (
                 <>
-                  <StatCard label="Rec YDS" value={totalReceivingYards} highlight={true} />
-                  <StatCard label="Rec TDs" value={totalReceivingTDs} highlight={true} />
-                  <StatCard label="Receptions" value={totalReceptions} />
-                  <StatCard label="Targets" value={totalTargets} />
-                  <StatCard label="YPR" value={yardsPerReception} />
+                  <StatCard label="Rec YDS" value={totalReceivingYards} highlight={true} sparklineData={sparklines.receivingYards} />
+                  <StatCard label="Rec TDs" value={totalReceivingTDs} highlight={true} sparklineData={sparklines.receivingTDs} />
+                  <StatCard label="Receptions" value={totalReceptions} sparklineData={sparklines.receptions} />
+                  <StatCard label="Targets" value={totalTargets} sparklineData={sparklines.targets} />
+                  <StatCard label="YPR" value={yardsPerReception} sparklineData={sparklines.receptions} />
                 </>
               )}
               {/* Defensive Stats (DL, LB, DB) */}
               {hasPosition(player.position, ['DL', 'LB', 'DB']) && (
                 <>
-                  <StatCard label="Tackles" value={totalTackles} highlight={true} />
-                  <StatCard label="Solo Tackles" value={totalSoloTackles} />
-                  <StatCard label="Sacks" value={totalSacks} highlight={hasPosition(player.position, ['DL'])} />
-                  <StatCard label="INTs" value={totalDefensiveINTs} highlight={hasPosition(player.position, ['DB'])} />
-                  <StatCard label="Pass Def" value={totalPassDeflections} />
-                  <StatCard label="FF" value={totalForcedFumbles} />
+                  <StatCard label="Tackles" value={totalTackles} highlight={true} sparklineData={sparklines.tackles} />
+                  <StatCard label="Solo Tackles" value={totalSoloTackles} sparklineData={sparklines.soloTackles} />
+                  <StatCard label="Sacks" value={totalSacks} highlight={hasPosition(player.position, ['DL'])} sparklineData={sparklines.sacks} />
+                  <StatCard label="INTs" value={totalDefensiveINTs} highlight={hasPosition(player.position, ['DB'])} sparklineData={sparklines.defensiveINTs} />
+                  <StatCard label="Pass Def" value={totalPassDeflections} sparklineData={sparklines.passDeflections} />
+                  <StatCard label="FF" value={totalForcedFumbles} sparklineData={sparklines.forcedFumbles} />
                 </>
               )}
               {/* Kicker Stats */}
               {hasPosition(player.position, ['K']) && (
                 <>
-                  <StatCard label="FG Made" value={totalFGMade} highlight={true} />
-                  <StatCard label="FG Att" value={totalFGAttempted} />
-                  <StatCard label="FG%" value={fgKickPercent !== "—" ? `${fgKickPercent}%` : "—"} />
-                  <StatCard label="XP Made" value={totalXPMade} />
-                  <StatCard label="XP Att" value={totalXPAttempted} />
+                  <StatCard label="FG Made" value={totalFGMade} highlight={true} sparklineData={sparklines.fgMade} />
+                  <StatCard label="FG Att" value={totalFGAttempted} sparklineData={sparklines.fgAttempted} />
+                  <StatCard label="FG%" value={fgKickPercent !== "—" ? `${fgKickPercent}%` : "—"} sparklineData={sparklines.fgMade} />
+                  <StatCard label="XP Made" value={totalXPMade} sparklineData={sparklines.xpMade} />
+                  <StatCard label="XP Att" value={totalXPAttempted} sparklineData={sparklines.xpAttempted} />
                 </>
               )}
               {/* Punter Stats */}
               {hasPosition(player.position, ['P']) && (
                 <>
-                  <StatCard label="Punts" value={totalPunts} highlight={true} />
-                  <StatCard label="Punt YDS" value={totalPuntYards} />
-                  <StatCard label="Avg Punt" value={avgPuntYards} />
+                  <StatCard label="Punts" value={totalPunts} highlight={true} sparklineData={sparklines.punts} />
+                  <StatCard label="Punt YDS" value={totalPuntYards} sparklineData={sparklines.puntYards} />
+                  <StatCard label="Avg Punt" value={avgPuntYards} sparklineData={sparklines.puntYards} />
                 </>
               )}
               {/* OL - blocking stats */}
               {hasPosition(player.position, ['OL']) && (
                 <>
-                  <StatCard label="Pancakes" value={totalPancakeBlocks} highlight={true} />
-                  <StatCard label="Sacks Allowed" value={totalSacksAllowed} />
-                  <StatCard label="Penalties" value={totalPenalties} />
+                  <StatCard label="Pancakes" value={totalPancakeBlocks} highlight={true} sparklineData={sparklines.pancakeBlocks} />
+                  <StatCard label="Sacks Allowed" value={totalSacksAllowed} sparklineData={sparklines.sacksAllowed} />
+                  <StatCard label="Penalties" value={totalPenalties} sparklineData={sparklines.penalties} />
                 </>
               )}
               <div className="glass-card rounded-xl p-5 flex flex-col justify-between relative overflow-hidden group hover:border-primary/30 transition-colors duration-300">
@@ -2611,15 +2677,15 @@ export default function PlayerDetail() {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
               <StatCard label="Games" value={games.length} />
-              <StatCard label="PPG" value={avgPoints} highlight={true} />
-              <StatCard label="RPG" value={avgReb} />
-              <StatCard label="APG" value={avgAst} />
-              <StatCard label="PER" value={avgPER} highlight={true} />
-              <StatCard label="SPG" value={avgSteals} />
-              <StatCard label="BPG" value={avgBlocks} />
-              <StatCard label="FG%" value={fgPercent !== "—" ? `${fgPercent}%` : "—"} />
-              <StatCard label="3P%" value={threePercent !== "—" ? `${threePercent}%` : "—"} />
-              <StatCard label="FT%" value={ftPercent !== "—" ? `${ftPercent}%` : "—"} />
+              <StatCard label="PPG" value={avgPoints} highlight={true} sparklineData={sparklines.points} />
+              <StatCard label="RPG" value={avgReb} sparklineData={sparklines.rebounds} />
+              <StatCard label="APG" value={avgAst} sparklineData={sparklines.assists} />
+              <StatCard label="PER" value={avgPER} highlight={true} sparklineData={sparklines.per} />
+              <StatCard label="SPG" value={avgSteals} sparklineData={sparklines.steals} />
+              <StatCard label="BPG" value={avgBlocks} sparklineData={sparklines.blocks} />
+              <StatCard label="FG%" value={fgPercent !== "—" ? `${fgPercent}%` : "—"} sparklineData={sparklines.fgPct} />
+              <StatCard label="3P%" value={threePercent !== "—" ? `${threePercent}%` : "—"} sparklineData={sparklines.threePct} />
+              <StatCard label="FT%" value={ftPercent !== "—" ? `${ftPercent}%` : "—"} sparklineData={sparklines.ftPct} />
               <div className="glass-card rounded-xl p-5 flex flex-col justify-between relative overflow-hidden group hover:border-primary/30 transition-colors duration-300">
                 <span className="stat-label text-muted-foreground/80">Avg Grade</span>
                 <div className="flex items-center justify-center mt-2">
