@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { Target, Award, Repeat2, BarChart3, Users, Camera, Flame, Trophy, Zap, Rss, UserCheck, UsersRound, Heart, ArrowUp, MessageCircle, Send, Trash2, Reply, Bookmark, Dumbbell, Clock, Swords, Quote, Bell, MoreHorizontal, Share2 } from "lucide-react";
+import { Target, Award, Repeat2, BarChart3, Users, Camera, Flame, Trophy, Zap, Rss, UserCheck, UsersRound, Heart, ArrowUp, MessageCircle, Send, Trash2, Reply, Bookmark, Dumbbell, Clock, Swords, Quote, Bell, MoreHorizontal, Share2, Plus } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { apiRequest, queryClient as globalQueryClient } from "@/lib/queryClient";
@@ -22,6 +22,97 @@ import { useToast } from "@/hooks/use-toast";
 import WeeklyRecapCard from "@/components/WeeklyRecapCard";
 import StreakDisplay from "@/components/StreakDisplay";
 import ChallengeButton from "@/components/ChallengeButton";
+import type { PlayerStory } from "@shared/schema";
+
+type StoryWithPlayer = PlayerStory & { playerName: string };
+
+interface StoryPlayer {
+  playerId: number;
+  playerName: string;
+  hasActiveStory: boolean;
+}
+
+function StoriesRow({ currentPlayerId, currentUserName }: { currentPlayerId?: number | null; currentUserName: string }) {
+  const [, setLocation] = useLocation();
+
+  const { data: activeStories = [], isLoading } = useQuery<StoryWithPlayer[]>({
+    queryKey: ["/api/stories/active"],
+    queryFn: async () => {
+      const res = await fetch("/api/stories/active?limit=30");
+      if (!res.ok) return [];
+      return res.json();
+    },
+  });
+
+  const storyPlayers: StoryPlayer[] = [];
+  const seenIds = new Set<number>();
+  for (const story of activeStories) {
+    if (!seenIds.has(story.playerId)) {
+      seenIds.add(story.playerId);
+      storyPlayers.push({
+        playerId: story.playerId,
+        playerName: story.playerName,
+        hasActiveStory: true,
+      });
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex gap-4 pb-2 overflow-x-auto scrollbar-hide" data-testid="stories-row">
+        {[0, 1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className="flex flex-col items-center gap-1.5 shrink-0">
+            <Skeleton className="w-16 h-16 rounded-full" />
+            <Skeleton className="h-3 w-12" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (storyPlayers.length === 0 && !currentPlayerId) return null;
+
+  return (
+    <div className="flex gap-4 pb-2 overflow-x-auto scrollbar-hide" data-testid="stories-row">
+      {currentPlayerId && (
+        <button
+          onClick={() => setLocation("/community?tab=stories")}
+          className="flex flex-col items-center gap-1.5 shrink-0"
+          data-testid="story-avatar-your"
+        >
+          <div className="relative">
+            <Avatar className="w-16 h-16">
+              <AvatarFallback className="text-sm font-semibold bg-muted text-muted-foreground">
+                {getInitials(currentUserName)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-accent flex items-center justify-center border-2 border-background">
+              <Plus className="w-3 h-3 text-accent-foreground" />
+            </div>
+          </div>
+          <span className="text-[11px] text-muted-foreground truncate max-w-[64px]">Your Story</span>
+        </button>
+      )}
+      {storyPlayers.map((sp) => (
+        <button
+          key={sp.playerId}
+          onClick={() => setLocation(`/players/${sp.playerId}`)}
+          className="flex flex-col items-center gap-1.5 shrink-0"
+          data-testid={`story-avatar-${sp.playerId}`}
+        >
+          <Avatar className={cn("w-16 h-16", sp.hasActiveStory && "ring-2 ring-accent ring-offset-2 ring-offset-background")}>
+            <AvatarFallback className="text-sm font-semibold bg-muted text-muted-foreground">
+              {getInitials(sp.playerName)}
+            </AvatarFallback>
+          </Avatar>
+          <span className="text-[11px] text-muted-foreground truncate max-w-[64px]">
+            {sp.playerName.split(" ")[0]}
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+}
 
 function getSessionId(): string {
   const key = "caliber_session_id";
@@ -1050,7 +1141,18 @@ function AlertCard({ activity, index }: { activity: FeedActivity; index: number 
             <span className="text-muted-foreground ml-1">@{activity.playerUsername}</span>
           )}
         </p>
-        <p className="text-xs text-muted-foreground truncate">{getAlertDescription()}</p>
+        <div className="flex items-center gap-2">
+          <p className="text-xs text-muted-foreground truncate">{getAlertDescription()}</p>
+          {activity.activityType === 'streak' && (() => {
+            const streakCount = parseStreakHeadline(activity.headline);
+            return streakCount ? (
+              <Badge variant="secondary" className="text-[10px] gap-1 shrink-0" data-testid={`badge-streak-${activity.id}`}>
+                <Flame className="w-3 h-3 text-orange-400" />
+                {streakCount}
+              </Badge>
+            ) : null;
+          })()}
+        </div>
       </div>
 
       <span className="text-xs text-muted-foreground shrink-0">
@@ -1181,10 +1283,13 @@ function FeedList({ activities, isLoading, error, emptyMessage, emptyDescription
   }
 
   return (
-    <Card className="p-10 text-center" data-testid="empty-container">
+    <Card className="p-10 text-center" data-testid={`empty-state-feed`}>
       <div className="flex flex-col items-center gap-5">
-        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-          <EmptyIcon className="w-8 h-8 text-muted-foreground" />
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-2xl blur-xl animate-pulse" />
+          <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-cyan-500/10 flex items-center justify-center">
+            <EmptyIcon className="w-8 h-8 text-cyan-400/60" />
+          </div>
         </div>
         <div className="space-y-2">
           <p className="text-foreground font-bold text-lg">{emptyMessage}</p>
@@ -1298,6 +1403,7 @@ export default function FeedContent() {
 
   return (
     <div className="space-y-5" data-testid="feed-content">
+      <StoriesRow currentPlayerId={user?.playerId} currentUserName={currentUserName} />
       {user?.playerId && (
         <div className="flex items-center flex-wrap gap-3">
           <StreakDisplay playerId={user.playerId} />
@@ -1352,8 +1458,8 @@ export default function FeedContent() {
               activities={allActivities}
               isLoading={allLoading}
               error={allError}
-              emptyMessage="No posts yet"
-              emptyDescription="Game recaps, workouts, and shared content will appear here"
+              emptyMessage="Your feed is quiet"
+              emptyDescription="Follow players or log a game to see activity here!"
               emptyIcon={Rss}
               currentUserName={currentUserName}
               currentPlayerId={user?.playerId}
@@ -1370,8 +1476,8 @@ export default function FeedContent() {
               activities={followingActivities}
               isLoading={followingLoading}
               error={followingError}
-              emptyMessage="No updates from followed players"
-              emptyDescription="Follow players to see their updates here"
+              emptyMessage="No updates yet"
+              emptyDescription="Follow players to see their game recaps, badges, and highlights here!"
               emptyIcon={UserCheck}
               currentUserName={currentUserName}
               currentPlayerId={user?.playerId}
@@ -1385,8 +1491,8 @@ export default function FeedContent() {
               activities={teamActivities}
               isLoading={teamLoading}
               error={teamError}
-              emptyMessage="No team activity"
-              emptyDescription="Team updates will appear here when teammates log games or earn badges"
+              emptyMessage="No team activity yet"
+              emptyDescription="When teammates log games or earn badges, their updates will show up here!"
               emptyIcon={UsersRound}
               currentUserName={currentUserName}
               currentPlayerId={user?.playerId}
@@ -1401,7 +1507,7 @@ export default function FeedContent() {
               isLoading={alertsLoading}
               error={alertsError}
               emptyMessage="No alerts yet"
-              emptyDescription="Badge unlocks, streak milestones, and achievements will show up here"
+              emptyDescription="Earn badges and hit streaks to see updates here!"
               emptyIcon={Bell}
               currentUserName={currentUserName}
               currentPlayerId={user?.playerId}

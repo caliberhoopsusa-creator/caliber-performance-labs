@@ -1797,443 +1797,450 @@ export default function PlayerDetail() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="relative overflow-hidden rounded-2xl border"
-        style={{ 
-          background: isOwnProfile && getProfileSkinStyle()?.background 
-            ? getProfileSkinStyle()?.background 
-            : "linear-gradient(to bottom right, rgba(0,0,0,0.6), rgba(8,51,68,0.2), rgba(0,0,0,0.6))",
-          borderColor: isOwnProfile && getProfileSkinStyle()?.borderColor 
-            ? getProfileSkinStyle()?.borderColor 
-            : "hsl(var(--accent) / 0.2)",
-          boxShadow: isOwnProfile && getProfileSkinStyle()?.boxShadow 
-            ? getProfileSkinStyle()?.boxShadow 
-            : "0 0 40px hsl(var(--accent) / 0.1)" 
-        }}
       >
-        <div className="absolute inset-0 cyber-grid opacity-30" />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-accent/10 blur-[100px] rounded-full pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent/5 blur-[80px] rounded-full pointer-events-none" />
-        {isOwnProfile && getEffectConfig() ? (
-          <>
-            {getEffectConfig()?.layers.map((layer, index) => (
-              <div 
-                key={index}
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none"
-                style={{ 
-                  background: layer.gradient,
-                  animation: layer.animation,
-                  width: layer.size || '400px',
-                  height: layer.size || '400px',
-                  opacity: layer.opacity || 1,
-                  filter: layer.blur ? `blur(${layer.blur})` : undefined,
-                }}
-              />
-            ))}
-          </>
-        ) : (
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-accent/5 blur-[120px] rounded-full pointer-events-none" />
-        )}
-        
-        <div className="relative z-10 p-6 md:p-8">
-          <div className="flex flex-col md:flex-row md:items-start gap-6 md:gap-8">
-            <div className="relative group/avatar shrink-0 mx-auto md:mx-0">
-              <div 
-                className="absolute inset-0 rounded-full blur-xl transition-all duration-300 bg-accent/30"
-                style={{ 
-                  transform: "scale(1.3)"
-                }}
-              />
-              <div className="relative p-1 rounded-full bg-gradient-to-br from-accent/50 via-accent/30 to-accent/50">
-                <Avatar className="w-24 h-24 md:w-32 md:h-32 border-2 border-accent/40">
+        <Card
+          className="relative overflow-hidden"
+          style={isOwnProfile && getProfileSkinStyle()?.background ? {
+            background: getProfileSkinStyle()?.background,
+            borderColor: getProfileSkinStyle()?.borderColor || undefined,
+          } : undefined}
+        >
+          {isOwnProfile && getEffectConfig() && (
+            <>
+              {getEffectConfig()?.layers.map((layer, index) => (
+                <div 
+                  key={index}
+                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none"
+                  style={{ 
+                    background: layer.gradient,
+                    animation: layer.animation,
+                    width: layer.size || '400px',
+                    height: layer.size || '400px',
+                    opacity: layer.opacity || 1,
+                    filter: layer.blur ? `blur(${layer.blur})` : undefined,
+                  }}
+                />
+              ))}
+            </>
+          )}
+
+          <div className="relative h-32 md:h-40 overflow-hidden">
+            {player.bannerUrl ? (
+              <img src={player.bannerUrl} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-accent/30 via-accent/10 to-accent/5" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+          </div>
+
+          <div className="relative z-10 px-6 md:px-8 pb-6 md:pb-8">
+            <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-8">
+              <div className="relative group/avatar shrink-0 mx-auto md:mx-0 -mt-12 md:-mt-16">
+                <Avatar className="w-24 h-24 md:w-32 md:h-32 border-4 border-background">
                   {player.photoUrl && <AvatarImage src={player.photoUrl} alt={player.name} width={128} height={128} loading="eager" />}
-                  <AvatarFallback className="bg-gradient-to-br from-accent/40 to-accent/30 text-3xl md:text-4xl font-display font-bold text-white">
+                  <AvatarFallback className="bg-muted text-3xl md:text-4xl font-display font-bold text-foreground">
                     {getInitials(player.name)}
                   </AvatarFallback>
                 </Avatar>
-              </div>
-              {isOwnProfile && (
-                <Button
-                  size="icon"
-                  onClick={() => setIsEditDialogOpen(true)}
-                  className="absolute -bottom-1 -right-1 w-8 h-8 md:w-9 md:h-9 rounded-full opacity-0 group-hover/avatar:opacity-100 md:opacity-100 transition-all duration-300 bg-accent/30 border border-accent/50 hover:bg-accent/50 hover:scale-110"
-                  data-testid="button-edit-profile-avatar"
-                >
-                  <Camera className="w-4 h-4 text-accent-foreground" />
-                </Button>
-              )}
-            </div>
-            
-            <div className="flex-1 min-w-0 text-center md:text-left">
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 md:gap-3 mb-2">
-                {player.jerseyNumber && (
-                  <span 
-                    className="text-2xl md:text-4xl font-display font-black"
-                    style={{ 
-                      background: `linear-gradient(135deg, hsl(var(--accent)) 0%, hsl(var(--accent) / 0.8) 50%, hsl(var(--accent) / 0.6) 100%)`,
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                      filter: "drop-shadow(0 0 20px hsl(var(--accent) / 0.5))"
-                    }}
+                {isOwnProfile && (
+                  <Button
+                    size="icon"
+                    onClick={() => setIsEditDialogOpen(true)}
+                    className="absolute -bottom-1 -right-1 rounded-full opacity-0 group-hover/avatar:opacity-100 md:opacity-100 transition-opacity duration-300"
+                    data-testid="button-edit-profile-avatar"
                   >
-                    #{player.jerseyNumber}
-                  </span>
-                )}
-                {player.position && (
-                  <span className="px-3 py-1 rounded-full text-xs md:text-sm font-bold uppercase tracking-wider bg-gradient-to-r from-accent/20 to-accent/10 border border-accent/30 text-accent">
-                    {player.position.split(',').map(p => p.trim()).map(pos => 
-                      isFootball && FOOTBALL_POSITIONS.includes(pos as FootballPosition)
-                        ? FOOTBALL_POSITION_LABELS[pos as FootballPosition]
-                        : pos
-                    ).join(' / ')}
-                  </span>
+                    <Camera className="w-4 h-4" />
+                  </Button>
                 )}
               </div>
               
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 md:gap-3 mb-3">
-                <h1 
-                  className="text-2xl md:text-4xl lg:text-5xl font-display font-black uppercase tracking-tight"
-                  style={{
-                    background: `linear-gradient(135deg, #FFFFFF 0%, hsl(var(--accent) / 0.3) 40%, hsl(var(--accent)) 100%)`,
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                  }}
-                >
-                  {player.name}
-                </h1>
-                {player.username && (
-                  <p className="text-sm text-muted-foreground" data-testid="text-player-username">@{player.username}</p>
-                )}
-                <CaliberBadge 
-                  playerId={id} 
-                  isOwner={(user as any)?.isOwner} 
-                  showControls={isAuthenticated}
-                  size="md" 
-                />
-                {!isFootball && player.stateRank && player.state && (
-                  <AnimatedRankBadge 
-                    type="state" 
-                    rank={player.stateRank} 
-                    state={player.state} 
-                  />
-                )}
-                {!isFootball && player.countryRank && (
-                  <AnimatedRankBadge 
-                    type="country" 
-                    rank={player.countryRank} 
-                  />
-                )}
-                {isOwnProfile && themeName && (
-                  <div className="theme-badge" data-testid="active-theme-indicator" title={`Theme: ${themeName}`}>
-                    <Palette className="w-3 h-3" />
-                    <span>{themeName}</span>
-                  </div>
-                )}
-                {isOwnProfile && (equippedProfileSkin || equippedEffect || equippedBadgeStyle) && (
-                  <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-400/30" data-testid="equipped-cosmetics-indicator">
-                    {equippedProfileSkin && (
-                      <div className="flex items-center gap-1" title={`Skin: ${equippedProfileSkin.item.name}`}>
-                        <User className="w-3 h-3 text-purple-400" />
-                      </div>
-                    )}
-                    {equippedEffect && (
-                      <div className="flex items-center gap-1" title={`Effect: ${equippedEffect.item.name}`}>
-                        <Sparkles className="w-3 h-3 text-pink-400" />
-                      </div>
-                    )}
-                    {equippedBadgeStyle && (
-                      <div className="flex items-center gap-1" title={`Badge: ${equippedBadgeStyle.item.name}`}>
-                        <Gem className="w-3 h-3 text-accent" />
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-              
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 text-xs md:text-sm text-muted-foreground mb-4">
-                {player.height && (
-                  <span className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/5 border border-white/10">
-                    <User className="w-3.5 h-3.5 text-accent" /> {player.height}
-                  </span>
-                )}
-                {player.team && (
-                  <span className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/5 border border-white/10 font-medium">
-                    <Shield className="w-3.5 h-3.5 text-accent" /> {player.team}
-                  </span>
-                )}
-                {player.gpa && (
-                  <span className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400">
-                    <BookOpen className="w-3.5 h-3.5" /> {parseFloat(player.gpa).toFixed(2)} GPA
-                  </span>
-                )}
-                <span className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/5 border border-white/10">
-                  <Activity className="w-3.5 h-3.5 text-accent" /> {games.length} Games
-                </span>
-              </div>
-
-              {player.bio && (
-                <p 
-                  className="text-sm text-muted-foreground max-w-lg mb-4 text-center md:text-left leading-relaxed"
-                  data-testid="text-player-bio"
-                >
-                  {player.bio}
-                </p>
-              )}
-
-              {isOwnProfile && !player.username && (
-                <button 
-                  onClick={() => setIsEditDialogOpen(true)}
-                  className="text-sm text-muted-foreground/60 mb-2 text-center md:text-left italic flex items-center gap-1.5 hover-elevate rounded-lg px-2 py-1"
-                  data-testid="button-add-username"
-                >
-                  <Pencil className="w-3 h-3" /> Set a username so others can find you
-                </button>
-              )}
-
-              {isOwnProfile && !player.bio && (
-                <button 
-                  onClick={() => setIsEditDialogOpen(true)}
-                  className="text-sm text-muted-foreground/60 mb-4 text-center md:text-left italic flex items-center gap-1.5 hover-elevate rounded-lg px-2 py-1"
-                  data-testid="button-add-bio"
-                >
-                  <Pencil className="w-3 h-3" /> Add a bio to tell people about yourself
-                </button>
-              )}
-
-              {isOwnProfile && (() => {
-                const fields = [
-                  { done: !!player.name, label: "Name" },
-                  { done: !!player.username, label: "Username" },
-                  { done: !!player.photoUrl, label: "Photo" },
-                  { done: !!player.bio, label: "Bio" },
-                  { done: !!player.team, label: "Team" },
-                  { done: !!player.height, label: "Height" },
-                  { done: !!player.school, label: "School" },
-                  { done: !!player.city && !!player.state, label: "Location" },
-                  { done: games.length > 0, label: "First Game" },
-                ];
-                const completed = fields.filter(f => f.done).length;
-                const pct = Math.round((completed / fields.length) * 100);
-                if (pct >= 100) return null;
-                const missing = fields.filter(f => !f.done).map(f => f.label);
-                return (
-                  <div className="mb-4 max-w-md" data-testid="profile-completion">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs font-medium text-muted-foreground">Profile {pct}% complete</span>
-                      <span className="text-xs text-muted-foreground/60">
-                        {missing.length > 0 && `Add: ${missing.slice(0, 3).join(', ')}${missing.length > 3 ? '...' : ''}`}
-                      </span>
-                    </div>
-                    <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
-                      <motion.div
-                        className="h-full rounded-full bg-gradient-to-r from-accent to-cyan-400"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${pct}%` }}
-                        transition={{ duration: 1, delay: 0.5 }}
-                      />
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {games.length > 0 && (
-                <motion.div 
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="flex flex-wrap items-center justify-center md:justify-start gap-2 md:gap-3 mb-4" 
-                  data-testid="player-averages-header"
-                >
-                  {isFootball ? (
-                    <>
-                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-accent/20 to-accent/10 border border-accent/30" style={{ boxShadow: "0 0 15px hsl(var(--accent) / 0.2)" }}>
-                        <Zap className="w-4 h-4 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(var(--accent) / 0.6))" }} />
-                        <span className="text-xs text-accent/80 uppercase font-medium">YDS/G</span>
-                        <span className="text-sm font-bold text-accent">{games.length ? (totalYards / games.length).toFixed(0) : "—"}</span>
-                      </div>
-                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-green-500/20 to-green-600/10 border border-green-500/30" style={{ boxShadow: "0 0 15px rgba(34, 197, 94, 0.2)" }}>
-                        <Target className="w-4 h-4 text-green-400" style={{ filter: "drop-shadow(0 0 6px rgba(34, 197, 94, 0.6))" }} />
-                        <span className="text-xs text-green-300/80 uppercase font-medium">TD/G</span>
-                        <span className="text-sm font-bold text-green-300">{avgTDs}</span>
-                      </div>
-                      {hasPosition(player.position, ['QB']) && (
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500/20 to-amber-600/10 border border-amber-500/30" style={{ boxShadow: "0 0 15px rgba(245, 158, 11, 0.2)" }}>
-                          <Crosshair className="w-4 h-4 text-amber-400" style={{ filter: "drop-shadow(0 0 6px rgba(245, 158, 11, 0.6))" }} />
-                          <span className="text-xs text-amber-300/80 uppercase font-medium">COMP%</span>
-                          <span className="text-sm font-bold text-amber-300">{compPercent}%</span>
-                        </div>
-                      )}
-                      {hasPosition(player.position, ['RB']) && (
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500/20 to-amber-600/10 border border-amber-500/30" style={{ boxShadow: "0 0 15px rgba(245, 158, 11, 0.2)" }}>
-                          <Zap className="w-4 h-4 text-amber-400" style={{ filter: "drop-shadow(0 0 6px rgba(245, 158, 11, 0.6))" }} />
-                          <span className="text-xs text-amber-300/80 uppercase font-medium">YPC</span>
-                          <span className="text-sm font-bold text-amber-300">{yardsPerCarry}</span>
-                        </div>
-                      )}
-                      {hasPosition(player.position, ['WR', 'TE']) && (
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500/20 to-amber-600/10 border border-amber-500/30" style={{ boxShadow: "0 0 15px rgba(245, 158, 11, 0.2)" }}>
-                          <Target className="w-4 h-4 text-amber-400" style={{ filter: "drop-shadow(0 0 6px rgba(245, 158, 11, 0.6))" }} />
-                          <span className="text-xs text-amber-300/80 uppercase font-medium">REC</span>
-                          <span className="text-sm font-bold text-amber-300">{totalReceptions}</span>
-                        </div>
-                      )}
-                      {hasPosition(player.position, ['DL', 'LB', 'DB']) && (
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500/20 to-amber-600/10 border border-amber-500/30" style={{ boxShadow: "0 0 15px rgba(245, 158, 11, 0.2)" }}>
-                          <Shield className="w-4 h-4 text-amber-400" style={{ filter: "drop-shadow(0 0 6px rgba(245, 158, 11, 0.6))" }} />
-                          <span className="text-xs text-amber-300/80 uppercase font-medium">TCK/G</span>
-                          <span className="text-sm font-bold text-amber-300">{avgTackles}</span>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-accent/20 to-accent/10 border border-accent/30" style={{ boxShadow: "0 0 15px hsl(var(--accent) / 0.2)" }}>
-                        <Target className="w-4 h-4 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(var(--accent) / 0.6))" }} />
-                        <span className="text-xs text-accent/80 uppercase font-medium">PPG</span>
-                        <span className="text-sm font-bold text-accent">{avgPoints}</span>
-                      </div>
-                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-green-500/20 to-green-600/10 border border-green-500/30" style={{ boxShadow: "0 0 15px rgba(34, 197, 94, 0.2)" }}>
-                        <TrendingUp className="w-4 h-4 text-green-400" style={{ filter: "drop-shadow(0 0 6px rgba(34, 197, 94, 0.6))" }} />
-                        <span className="text-xs text-green-300/80 uppercase font-medium">RPG</span>
-                        <span className="text-sm font-bold text-green-300">{avgReb}</span>
-                      </div>
-                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500/20 to-amber-600/10 border border-amber-500/30" style={{ boxShadow: "0 0 15px rgba(245, 158, 11, 0.2)" }}>
-                        <Zap className="w-4 h-4 text-amber-400" style={{ filter: "drop-shadow(0 0 6px rgba(245, 158, 11, 0.6))" }} />
-                        <span className="text-xs text-amber-300/80 uppercase font-medium">APG</span>
-                        <span className="text-sm font-bold text-amber-300">{avgAst}</span>
-                      </div>
-                    </>
+              <div className="flex-1 min-w-0 text-center md:text-left pt-2">
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 md:gap-3 mb-2">
+                  {player.jerseyNumber && (
+                    <span className="text-2xl md:text-4xl font-display font-black text-accent">
+                      #{player.jerseyNumber}
+                    </span>
                   )}
-                </motion.div>
-              )}
-              
-              {games.length > 0 && (
-                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-4">
-                  <EliteAchievements 
-                    ppg={parseFloat(avgPoints) || 0}
-                    rpg={parseFloat(avgReb) || 0}
-                    apg={parseFloat(avgAst) || 0}
-                    ydsPerGame={parseFloat(String(totalYards / games.length)) || 0}
-                    tdsPerGame={parseFloat(String(totalTDs / games.length)) || 0}
-                    tacklesPerGame={parseFloat(avgTackles) || 0}
-                  />
+                  {player.position && (
+                    <span className="px-3 py-1 rounded-full text-xs md:text-sm font-bold uppercase tracking-wider bg-accent/10 border border-accent/20 text-accent">
+                      {player.position.split(',').map(p => p.trim()).map(pos => 
+                        isFootball && FOOTBALL_POSITIONS.includes(pos as FootballPosition)
+                          ? FOOTBALL_POSITION_LABELS[pos as FootballPosition]
+                          : pos
+                      ).join(' / ')}
+                    </span>
+                  )}
                 </div>
-              )}
-              
-              {isAuthenticated && (
-                <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mb-4">
-                  <FollowStats 
+                
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 md:gap-3 mb-3">
+                  <h1 className="text-2xl md:text-4xl lg:text-5xl font-display font-bold text-foreground">
+                    {player.name}
+                  </h1>
+                  {player.username && (
+                    <p className="text-sm text-muted-foreground" data-testid="text-player-username">@{player.username}</p>
+                  )}
+                  <CaliberBadge 
                     playerId={id} 
-                    onFollowersClick={() => setShowFollowersSheet(true)}
-                    onFollowingClick={() => setShowFollowingSheet(true)}
+                    isOwner={(user as any)?.isOwner} 
+                    showControls={isAuthenticated}
+                    size="md" 
                   />
-                  <div className="w-px h-8 bg-border/50 hidden md:block" />
-                  <div className="flex items-center gap-4">
-                    {badges.length > 0 && (
-                      <div className="flex flex-col items-center" data-testid="stat-badges-count">
-                        <span className="stat-value text-2xl text-white">{badges.length}</span>
-                        <span className="stat-label flex items-center gap-1">
-                          <Award className="w-3 h-3" /> Badges
+                  {!isFootball && player.stateRank && player.state && (
+                    <AnimatedRankBadge 
+                      type="state" 
+                      rank={player.stateRank} 
+                      state={player.state} 
+                    />
+                  )}
+                  {!isFootball && player.countryRank && (
+                    <AnimatedRankBadge 
+                      type="country" 
+                      rank={player.countryRank} 
+                    />
+                  )}
+                  {isOwnProfile && themeName && (
+                    <div className="theme-badge" data-testid="active-theme-indicator" title={`Theme: ${themeName}`}>
+                      <Palette className="w-3 h-3" />
+                      <span>{themeName}</span>
+                    </div>
+                  )}
+                  {isOwnProfile && (equippedProfileSkin || equippedEffect || equippedBadgeStyle) && (
+                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-muted/50 border border-border" data-testid="equipped-cosmetics-indicator">
+                      {equippedProfileSkin && (
+                        <div className="flex items-center gap-1" title={`Skin: ${equippedProfileSkin.item.name}`}>
+                          <User className="w-3 h-3 text-purple-400" />
+                        </div>
+                      )}
+                      {equippedEffect && (
+                        <div className="flex items-center gap-1" title={`Effect: ${equippedEffect.item.name}`}>
+                          <Sparkles className="w-3 h-3 text-pink-400" />
+                        </div>
+                      )}
+                      {equippedBadgeStyle && (
+                        <div className="flex items-center gap-1" title={`Badge: ${equippedBadgeStyle.item.name}`}>
+                          <Gem className="w-3 h-3 text-accent" />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 text-xs md:text-sm text-muted-foreground mb-4">
+                  {player.height && (
+                    <span className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-muted/50 border border-border">
+                      <User className="w-3.5 h-3.5 text-muted-foreground" /> {player.height}
+                    </span>
+                  )}
+                  {player.team && (
+                    <span className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-muted/50 border border-border font-medium">
+                      <Shield className="w-3.5 h-3.5 text-muted-foreground" /> {player.team}
+                    </span>
+                  )}
+                  {player.gpa && (
+                    <span className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-muted/50 border border-border">
+                      <BookOpen className="w-3.5 h-3.5 text-muted-foreground" /> {parseFloat(player.gpa).toFixed(2)} GPA
+                    </span>
+                  )}
+                  <span className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-muted/50 border border-border">
+                    <Activity className="w-3.5 h-3.5 text-muted-foreground" /> {games.length} Games
+                  </span>
+                </div>
+
+                {player.bio && (
+                  <p 
+                    className="text-sm text-muted-foreground max-w-lg mb-4 text-center md:text-left leading-relaxed"
+                    data-testid="text-player-bio"
+                  >
+                    {player.bio}
+                  </p>
+                )}
+
+                {isOwnProfile && !player.username && (
+                  <button 
+                    onClick={() => setIsEditDialogOpen(true)}
+                    className="text-sm text-muted-foreground/60 mb-2 text-center md:text-left italic flex items-center gap-1.5 hover-elevate rounded-lg px-2 py-1"
+                    data-testid="button-add-username"
+                  >
+                    <Pencil className="w-3 h-3" /> Set a username so others can find you
+                  </button>
+                )}
+
+                {isOwnProfile && !player.bio && (
+                  <button 
+                    onClick={() => setIsEditDialogOpen(true)}
+                    className="text-sm text-muted-foreground/60 mb-4 text-center md:text-left italic flex items-center gap-1.5 hover-elevate rounded-lg px-2 py-1"
+                    data-testid="button-add-bio"
+                  >
+                    <Pencil className="w-3 h-3" /> Add a bio to tell people about yourself
+                  </button>
+                )}
+
+                {isOwnProfile && (() => {
+                  const fields = [
+                    { done: !!player.name, label: "Name" },
+                    { done: !!player.username, label: "Username" },
+                    { done: !!player.photoUrl, label: "Photo" },
+                    { done: !!player.bio, label: "Bio" },
+                    { done: !!player.team, label: "Team" },
+                    { done: !!player.height, label: "Height" },
+                    { done: !!player.school, label: "School" },
+                    { done: !!player.city && !!player.state, label: "Location" },
+                    { done: games.length > 0, label: "First Game" },
+                  ];
+                  const completed = fields.filter(f => f.done).length;
+                  const pct = Math.round((completed / fields.length) * 100);
+                  if (pct >= 100) return null;
+                  const missing = fields.filter(f => !f.done).map(f => f.label);
+                  return (
+                    <div className="mb-4 max-w-md" data-testid="profile-completion">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-xs font-medium text-muted-foreground">Profile {pct}% complete</span>
+                        <span className="text-xs text-muted-foreground/60">
+                          {missing.length > 0 && `Add: ${missing.slice(0, 3).join(', ')}${missing.length > 3 ? '...' : ''}`}
                         </span>
                       </div>
+                      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                        <motion.div
+                          className="h-full rounded-full bg-accent"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${pct}%` }}
+                          transition={{ duration: 1, delay: 0.5 }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {games.length > 0 && (
+                  <motion.div 
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="flex flex-wrap items-center justify-center md:justify-start gap-2 md:gap-3 mb-4" 
+                    data-testid="player-averages-header"
+                  >
+                    {isFootball ? (
+                      <>
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border">
+                          <Zap className="w-4 h-4 text-accent" />
+                          <span className="text-xs text-muted-foreground uppercase font-medium">YDS/G</span>
+                          <span className="text-sm font-bold text-foreground">{games.length ? (totalYards / games.length).toFixed(0) : "—"}</span>
+                        </div>
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border">
+                          <Target className="w-4 h-4 text-green-500" />
+                          <span className="text-xs text-muted-foreground uppercase font-medium">TD/G</span>
+                          <span className="text-sm font-bold text-foreground">{avgTDs}</span>
+                        </div>
+                        {hasPosition(player.position, ['QB']) && (
+                          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border">
+                            <Crosshair className="w-4 h-4 text-amber-500" />
+                            <span className="text-xs text-muted-foreground uppercase font-medium">COMP%</span>
+                            <span className="text-sm font-bold text-foreground">{compPercent}%</span>
+                          </div>
+                        )}
+                        {hasPosition(player.position, ['RB']) && (
+                          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border">
+                            <Zap className="w-4 h-4 text-amber-500" />
+                            <span className="text-xs text-muted-foreground uppercase font-medium">YPC</span>
+                            <span className="text-sm font-bold text-foreground">{yardsPerCarry}</span>
+                          </div>
+                        )}
+                        {hasPosition(player.position, ['WR', 'TE']) && (
+                          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border">
+                            <Target className="w-4 h-4 text-amber-500" />
+                            <span className="text-xs text-muted-foreground uppercase font-medium">REC</span>
+                            <span className="text-sm font-bold text-foreground">{totalReceptions}</span>
+                          </div>
+                        )}
+                        {hasPosition(player.position, ['DL', 'LB', 'DB']) && (
+                          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border">
+                            <Shield className="w-4 h-4 text-amber-500" />
+                            <span className="text-xs text-muted-foreground uppercase font-medium">TCK/G</span>
+                            <span className="text-sm font-bold text-foreground">{avgTackles}</span>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border">
+                          <Target className="w-4 h-4 text-accent" />
+                          <span className="text-xs text-muted-foreground uppercase font-medium">PPG</span>
+                          <span className="text-sm font-bold text-foreground">{avgPoints}</span>
+                        </div>
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border">
+                          <TrendingUp className="w-4 h-4 text-green-500" />
+                          <span className="text-xs text-muted-foreground uppercase font-medium">RPG</span>
+                          <span className="text-sm font-bold text-foreground">{avgReb}</span>
+                        </div>
+                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border">
+                          <Zap className="w-4 h-4 text-amber-500" />
+                          <span className="text-xs text-muted-foreground uppercase font-medium">APG</span>
+                          <span className="text-sm font-bold text-foreground">{avgAst}</span>
+                        </div>
+                      </>
                     )}
-                    {(() => {
-                      const now = new Date();
-                      const thisMonth = games.filter(g => {
-                        const d = new Date(g.date);
-                        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-                      });
-                      return thisMonth.length > 0 ? (
-                        <div className="flex flex-col items-center" data-testid="stat-games-this-month">
-                          <span className="stat-value text-2xl text-white">{thisMonth.length}</span>
+                  </motion.div>
+                )}
+                
+                {games.length > 0 && (
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-4">
+                    <EliteAchievements 
+                      ppg={parseFloat(avgPoints) || 0}
+                      rpg={parseFloat(avgReb) || 0}
+                      apg={parseFloat(avgAst) || 0}
+                      ydsPerGame={parseFloat(String(totalYards / games.length)) || 0}
+                      tdsPerGame={parseFloat(String(totalTDs / games.length)) || 0}
+                      tacklesPerGame={parseFloat(avgTackles) || 0}
+                    />
+                  </div>
+                )}
+                
+                {isAuthenticated && (
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mb-4">
+                    <FollowStats 
+                      playerId={id} 
+                      onFollowersClick={() => setShowFollowersSheet(true)}
+                      onFollowingClick={() => setShowFollowingSheet(true)}
+                    />
+                    <div className="w-px h-8 bg-border/50 hidden md:block" />
+                    <div className="flex items-center gap-4">
+                      {badges.length > 0 && (
+                        <div className="flex flex-col items-center" data-testid="stat-badges-count">
+                          <span className="stat-value text-2xl text-foreground">{badges.length}</span>
                           <span className="stat-label flex items-center gap-1">
-                            <Target className="w-3 h-3" /> This Month
+                            <Award className="w-3 h-3" /> Badges
                           </span>
                         </div>
-                      ) : null;
-                    })()}
+                      )}
+                      {(() => {
+                        const now = new Date();
+                        const thisMonth = games.filter(g => {
+                          const d = new Date(g.date);
+                          return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+                        });
+                        return thisMonth.length > 0 ? (
+                          <div className="flex flex-col items-center" data-testid="stat-games-this-month">
+                            <span className="stat-value text-2xl text-foreground">{thisMonth.length}</span>
+                            <span className="stat-label flex items-center gap-1">
+                              <Target className="w-3 h-3" /> This Month
+                            </span>
+                          </div>
+                        ) : null;
+                      })()}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="flex flex-wrap justify-center md:justify-start gap-2 md:gap-3"
-              >
-                {isAuthenticated && !isOwnProfile && (
-                  <FollowButton 
-                    playerId={id} 
-                    initialIsFollowing={isFollowingPlayer}
-                  />
+                {isOwnProfile && progression && (
+                  <div className="max-w-sm mb-4" data-testid="hero-xp-progress">
+                    <div className="flex items-center gap-2 mb-1">
+                      {(() => {
+                        const tierIcons: Record<string, any> = {
+                          Rookie: Star,
+                          Starter: Zap,
+                          "All-Star": Sparkles,
+                          MVP: Trophy,
+                          "Hall of Fame": Crown,
+                        };
+                        const TierIconComponent = tierIcons[progression.currentTier] || Star;
+                        return <TierIconComponent className="w-4 h-4 text-accent" />;
+                      })()}
+                      <span className="text-sm font-bold text-foreground">{progression.currentTier}</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden mb-1">
+                      <div
+                        className="h-full bg-accent rounded-full transition-all duration-500"
+                        style={{ width: `${progression.progressPercent ?? 0}%` }}
+                      />
+                    </div>
+                    {progression.nextTier ? (
+                      <span className="text-xs text-muted-foreground">
+                        {progression.totalXp.toLocaleString()} / {(progression.totalXp + progression.xpToNextTier).toLocaleString()} XP to {progression.nextTier}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">
+                        {progression.totalXp.toLocaleString()} XP — Max tier reached
+                      </span>
+                    )}
+                  </div>
                 )}
-                {isOwnProfile && (
-                  <Button 
-                    onClick={() => setIsEditDialogOpen(true)} 
-                    size="sm"
-                    className="gap-1.5 bg-accent text-white border-0 shadow-lg shadow-accent/25"
-                    data-testid="button-edit-profile"
-                  >
-                    <Pencil className="w-3.5 h-3.5" /> Edit Profile
-                  </Button>
+
+                {progression && progression.currentStreak > 0 && (
+                  <div className="flex items-center gap-2 text-sm" data-testid="streak-indicator">
+                    <Flame className="w-4 h-4 text-orange-400" />
+                    <span className="text-foreground font-semibold">{progression.currentStreak}-day streak</span>
+                    {progression.longestStreak > 0 && (
+                      <span className="text-muted-foreground">Best: {progression.longestStreak} days</span>
+                    )}
+                  </div>
                 )}
-                <Button 
-                  onClick={handleShareProfile} 
-                  variant="outline" 
-                  size="sm"
-                  className="gap-1.5 border-accent/30 text-accent hover:bg-accent/10 hover:border-accent/50"
-                  data-testid="button-share-profile"
+
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="flex flex-wrap justify-center md:justify-start gap-2 md:gap-3"
                 >
-                  <Share2 className="w-3.5 h-3.5" /> Share
-                </Button>
-                <Link href={`/profile/${player.id}/public`}>
-                  <Button variant="outline" size="sm" className="gap-1.5" data-testid="button-view-scout-profile">
-                    <Target className="w-3 h-3" />
-                    Scout Me Profile
+                  {isAuthenticated && !isOwnProfile && (
+                    <FollowButton 
+                      playerId={id} 
+                      initialIsFollowing={isFollowingPlayer}
+                    />
+                  )}
+                  {isOwnProfile && (
+                    <Button 
+                      onClick={() => setIsEditDialogOpen(true)} 
+                      size="sm"
+                      className="gap-1.5"
+                      data-testid="button-edit-profile"
+                    >
+                      <Pencil className="w-3.5 h-3.5" /> Edit Profile
+                    </Button>
+                  )}
+                  <Button 
+                    onClick={handleShareProfile} 
+                    variant="outline" 
+                    size="sm"
+                    className="gap-1.5"
+                    data-testid="button-share-profile"
+                  >
+                    <Share2 className="w-3.5 h-3.5" /> Share
                   </Button>
-                </Link>
-                <Link href={`/report-card?player=${player.id}`}>
-                  <Button variant="outline" size="sm" className="gap-1.5 border-white/10 hover:bg-white/5" data-testid="button-generate-report">
-                    <FileText className="w-3.5 h-3.5" /> Report
-                  </Button>
-                </Link>
-                {isOwnProfile && (
-                  <Link href={`/analyze?playerId=${player.id}`}>
-                    <Button size="sm" className="gap-1.5 bg-accent hover:bg-accent/90 text-white border-0 shadow-lg shadow-accent/25" data-testid="button-log-game">
-                      <Plus className="w-3.5 h-3.5" /> Log Game
+                  <Link href={`/profile/${player.id}/public`}>
+                    <Button variant="outline" size="sm" className="gap-1.5" data-testid="button-view-scout-profile">
+                      <Target className="w-3 h-3" />
+                      Scout Me Profile
                     </Button>
                   </Link>
-                )}
-              </motion.div>
-            </div>
+                  <Link href={`/report-card?player=${player.id}`}>
+                    <Button variant="outline" size="sm" className="gap-1.5" data-testid="button-generate-report">
+                      <FileText className="w-3.5 h-3.5" /> Report
+                    </Button>
+                  </Link>
+                  {isOwnProfile && (
+                    <Link href={`/analyze?playerId=${player.id}`}>
+                      <Button size="sm" className="gap-1.5" data-testid="button-log-game">
+                        <Plus className="w-3.5 h-3.5" /> Log Game
+                      </Button>
+                    </Link>
+                  )}
+                </motion.div>
+              </div>
 
-            <div className="hidden md:flex flex-col items-center gap-3 shrink-0">
-              <span className="text-xs font-bold text-accent/70 uppercase tracking-[0.15em]">Overall Grade</span>
-              <div 
-                className="relative p-1 rounded-2xl"
-                style={{ 
-                  background: `linear-gradient(135deg, hsl(var(--accent) / 0.3) 0%, hsl(var(--accent) / 0.1) 100%)`,
-                  boxShadow: "0 0 30px hsl(var(--accent) / 0.3)"
-                }}
-              >
+              <div className="hidden md:flex flex-col items-center gap-3 shrink-0 pt-2">
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-[0.15em]">Overall Grade</span>
                 <GradeBadge grade={averageGrade} size="xl" />
               </div>
             </div>
-          </div>
 
-          <div className="flex md:hidden justify-center mt-4">
-            <div 
-              className="flex flex-col items-center gap-2 p-4 rounded-xl border border-accent/20"
-              style={{ 
-                background: `linear-gradient(135deg, hsl(var(--accent) / 0.1) 0%, hsl(var(--accent) / 0.02) 100%)`,
-                boxShadow: "0 0 20px hsl(var(--accent) / 0.15)"
-              }}
-            >
-              <span className="text-[10px] font-bold text-accent/70 uppercase tracking-[0.2em]">Overall Grade</span>
-              <GradeBadge grade={averageGrade} size="lg" />
+            <div className="flex md:hidden justify-center mt-4">
+              <div className="flex flex-col items-center gap-2 p-4 rounded-xl bg-muted/50 border border-border">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Overall Grade</span>
+                <GradeBadge grade={averageGrade} size="lg" />
+              </div>
             </div>
           </div>
-        </div>
+        </Card>
       </motion.div>
 
       {isOwnProfile && (
@@ -2431,6 +2438,62 @@ export default function PlayerDetail() {
                 </div>
               </div>
             </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.22, duration: 0.4 }}
+          >
+            <Card className="p-6" data-testid="badge-showcase">
+              <div className="flex items-center gap-2 mb-4">
+                <Award className="w-5 h-5 text-accent" />
+                <h3 className="text-lg font-bold font-display">Badges</h3>
+              </div>
+              {badges.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No badges earned yet. Log games to start earning!
+                </p>
+              )}
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                {Object.entries(BADGE_DEFINITIONS).map(([badgeKey, def]) => {
+                  const earned = badges.find((b: Badge) => b.badgeType === badgeKey);
+                  const IconComponent = BADGE_ICONS[badgeKey] || Award;
+                  return (
+                    <div
+                      key={badgeKey}
+                      className={cn(
+                        "flex flex-col items-center gap-1.5 p-2",
+                        !earned && "opacity-30"
+                      )}
+                      data-testid={`badge-item-${badgeKey}`}
+                    >
+                      <div
+                        className={cn(
+                          "w-10 h-10 rounded-lg flex items-center justify-center",
+                          earned ? "bg-accent/10" : "bg-muted"
+                        )}
+                      >
+                        <IconComponent
+                          className={cn(
+                            "w-5 h-5",
+                            earned ? "text-accent" : "text-muted-foreground"
+                          )}
+                        />
+                      </div>
+                      <span className="text-xs text-center font-medium leading-tight">
+                        {def.name}
+                      </span>
+                      {earned && earned.earnedAt && (
+                        <span className="text-[10px] text-muted-foreground">
+                          {format(new Date(earned.earnedAt), "MMM d")}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
           </motion.div>
 
           <motion.div 
@@ -2663,7 +2726,7 @@ export default function PlayerDetail() {
             </div>
         
         {topGames.length === 0 ? (
-          <Card className="relative overflow-hidden border-accent/[0.08]">
+          <Card className="relative overflow-hidden border-accent/[0.08]" data-testid="empty-state-top-games">
             <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
             <EmptyState
               icon={PlayCircle}
@@ -2994,15 +3057,14 @@ export default function PlayerDetail() {
             
             <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
               {games.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-10 text-center">
-                  <div className="relative mb-4">
-                    <div className="absolute inset-0 bg-gradient-to-br from-accent/20 to-blue-500/20 rounded-2xl blur-xl" />
-                    <div className="relative w-12 h-12 flex items-center justify-center rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-accent/10">
-                      <ClipboardList className="w-6 h-6 text-accent/60" />
-                    </div>
-                  </div>
-                  <h4 className="font-display font-medium text-white text-sm mb-1">No Game History</h4>
-                  <p className="text-xs text-muted-foreground max-w-[200px]">Log games to build a complete performance record</p>
+                <div data-testid="empty-state-game-history">
+                  <EmptyState
+                    icon={ClipboardList}
+                    title="No Game History"
+                    description="Log games to build a complete performance record and track your progress over time."
+                    action={{ label: "Log a Game", href: "/analyze" }}
+                    variant="compact"
+                  />
                 </div>
               ) : (
                 displayedGames.map(game => (

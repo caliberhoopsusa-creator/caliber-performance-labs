@@ -282,165 +282,76 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
   ];
   
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 pb-safe">
-      {/* Premium glassmorphic navbar with enhanced depth and glow */}
-      <div className="absolute inset-0 mobile-nav-glass" />
-      
-      {/* Subtle top border glow line */}
-      <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
-      
-      {/* Navigation container with proper spacing and touch targets */}
-      <div className="relative flex justify-around items-center min-h-[72px] px-3 gap-1 pl-safe pr-safe">
-        {navItems.map((item, index) => {
-          // Enhanced active state detection - profile link should match any /players/:id path
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border pb-safe pl-safe pr-safe">
+      <div className="flex justify-around items-end min-h-[64px] px-1">
+        {navItems.map((item) => {
           const isActive = location === item.href || 
             (item.href.includes('/players/') && location.startsWith('/players/'));
           const Icon = item.icon;
           
           if (item.featured) {
             return (
-              <motion.div 
+              <Link 
                 key={item.href}
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ 
-                  delay: index * 0.05,
-                  type: "spring",
-                  stiffness: 400,
-                  damping: 25
-                }}
+                href={item.href} 
+                className="flex flex-col items-center justify-center -mt-4 px-2 pb-1"
+                data-testid={`mobile-nav-${item.label.toLowerCase()}`}
+                aria-label={item.label}
               >
-                <Link 
-                  href={item.href} 
-                  className="flex flex-col items-center justify-center touch-target -mt-6 transition-all duration-300 group min-h-18" 
-                  data-testid={`mobile-nav-${item.label.toLowerCase()}`}
-                  aria-label={item.label}
-                >
-                  {/* Featured button with animated ring */}
-                  <motion.div 
-                    className="relative"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.92 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                  >
-                    {/* Animated outer ring */}
-                    <motion.div 
-                      className={cn(
-                        "absolute inset-[-4px] rounded-full transition-all duration-500",
-                        isActive 
-                          ? "bg-gradient-to-r from-accent via-accent to-accent opacity-100" 
-                          : "bg-gradient-to-r from-accent/50 via-accent/50 to-accent/50 opacity-0 group-hover:opacity-100"
-                      )}
-                      animate={isActive ? { rotate: 360 } : {}}
-                      transition={{ duration: 3, repeat: Infinity, linear: true }}
-                    />
-                    
-                    {/* Inner glow */}
-                    <div className={cn(
-                      "absolute inset-[-2px] rounded-full bg-background transition-all duration-300",
-                    )} />
-                    
-                    {/* Main button */}
-                    <motion.div 
-                      className={cn(
-                        "relative rounded-full p-4 border-2 transition-all duration-300",
-                        isActive 
-                          ? "bg-gradient-to-br from-accent to-accent text-white border-accent shadow-[0_0_30px_hsl(var(--accent)/0.5),0_0_60px_hsl(var(--accent)/0.3)]" 
-                          : "bg-gradient-to-br from-accent to-accent text-white border-accent/60 shadow-[0_4px_20px_hsl(var(--accent)/0.4)] group-hover:shadow-[0_0_30px_hsl(var(--accent)/0.5)]"
-                      )}
-                      animate={isActive ? { scale: [1, 1.08, 1] } : {}}
-                      transition={{ duration: 1.5, repeat: Infinity, delay: 0.5 }}
-                    >
-                      <Icon className="w-6 h-6 drop-shadow-lg" />
-                    </motion.div>
-                  </motion.div>
-                  
-                  <motion.span 
-                    className={cn(
-                      "text-[11px] font-semibold uppercase tracking-widest mt-2 transition-all duration-300",
-                      isActive 
-                        ? "text-accent drop-shadow-[0_0_8px_hsl(var(--accent)/0.8)]" 
-                        : "text-muted-foreground group-hover:text-accent"
-                    )}
-                    animate={isActive ? { y: [-2, 0] } : {}}
-                    transition={{ duration: 0.4, delay: 0.1 }}
-                  >
-                    {item.label}
-                  </motion.span>
-                </Link>
-              </motion.div>
+                <div className={cn(
+                  "rounded-full p-3 bg-accent text-white",
+                  isActive && "ring-2 ring-accent/30 ring-offset-2 ring-offset-background"
+                )}>
+                  <Icon className="w-5 h-5" />
+                </div>
+                <span className={cn(
+                  "text-[10px] font-medium mt-1",
+                  isActive ? "text-accent" : "text-muted-foreground"
+                )}>
+                  {item.label}
+                </span>
+              </Link>
             );
           }
           
           return (
-            <motion.div
+            <Link 
               key={item.href}
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ 
-                delay: index * 0.05,
-                type: "spring",
-                stiffness: 400,
-                damping: 25
-              }}
+              href={item.href} 
+              className="relative flex flex-col items-center justify-center px-3 py-2 min-w-[48px]"
+              data-testid={`mobile-nav-${item.label.toLowerCase()}`}
+              data-active={isActive ? "true" : undefined}
+              aria-current={isActive ? "page" : undefined}
+              aria-label={item.label}
             >
-              <Link 
-                href={item.href} 
-                className={cn(
-                  "relative flex flex-col items-center justify-center touch-target p-2 rounded-xl transition-all duration-300 group min-h-16",
-                  isActive && "mobile-nav-active-bg"
-                )} 
-                data-testid={`mobile-nav-${item.label.toLowerCase()}`}
-                data-active={isActive ? "true" : undefined}
-                aria-current={isActive ? "page" : undefined}
-                aria-label={item.label}
-              >
-                <AnimatePresence>
-                  {isActive && (
-                    <motion.div 
-                      layoutId="mobile-nav-indicator"
-                      className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-accent shadow-[0_0_12px_hsl(var(--accent)/0.9)]"
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0, opacity: 0 }}
-                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                    />
-                  )}
-                </AnimatePresence>
-                
-                <motion.div 
-                  className={cn(
-                    "relative p-2 rounded-xl transition-colors duration-300 flex-shrink-0",
-                    isActive 
-                      ? "text-accent drop-shadow-[0_0_12px_hsl(var(--accent)/0.8)]" 
-                      : "text-muted-foreground group-hover:text-accent group-hover:drop-shadow-[0_0_8px_hsl(var(--accent)/0.5)]"
-                  )}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.85 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                  animate={isActive ? { scale: [1, 1.15, 1] } : {}}
-                >
-                  <Icon className="w-6 h-6" />
-                </motion.div>
-                
-                <motion.span 
-                  className={cn(
-                    "text-[11px] font-medium uppercase tracking-wider transition-colors duration-300",
-                    isActive 
-                      ? "text-accent font-semibold" 
-                      : "text-muted-foreground/80 group-hover:text-accent/80"
-                  )}
-                  initial={false}
-                  animate={{ y: isActive ? -1 : 0 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                >
-                  {item.label}
-                </motion.span>
-              </Link>
-            </motion.div>
+              <AnimatePresence>
+                {isActive && (
+                  <motion.div 
+                    layoutId="mobile-nav-indicator"
+                    className="absolute top-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-accent"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  />
+                )}
+              </AnimatePresence>
+              
+              <Icon className={cn(
+                "w-5 h-5",
+                isActive ? "text-accent" : "text-muted-foreground"
+              )} />
+              
+              <span className={cn(
+                "text-[10px] font-medium mt-1",
+                isActive ? "text-accent" : "text-muted-foreground"
+              )}>
+                {item.label}
+              </span>
+            </Link>
           );
         })}
       </div>
-    </div>
+    </nav>
   );
 }
