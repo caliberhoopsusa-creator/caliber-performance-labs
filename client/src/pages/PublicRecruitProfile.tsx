@@ -4,16 +4,25 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Loader2, MapPin, GraduationCap, Trophy, Award, Share2, ExternalLink, ChevronLeft, Star, Target, Shield, Zap, Activity } from "lucide-react";
+import { Loader2, MapPin, GraduationCap, Trophy, Award, Share2, ExternalLink, Star, Target, Activity, TrendingUp, TrendingDown, Minus, Flame, Mail, Copy, Shield, Zap, Clock, CheckCircle, Eye, BookOpen } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import caliberLogo from "@assets/caliber-logo-cyan.png";
+
+interface PublicBadge {
+  type: string;
+  name: string;
+  earnedAt: string | null;
+}
 
 interface PublicProfileData {
   player: {
     id: number;
     name: string;
+    username: string | null;
     photoUrl: string | null;
+    bannerUrl: string | null;
+    bio: string | null;
     sport: string;
     position: string;
     team: string | null;
@@ -23,9 +32,13 @@ interface PublicProfileData {
     school: string | null;
     graduationYear: number | null;
     level: string | null;
+    gpa: number | null;
     currentTier: string;
     totalXp: number;
     jerseyNumber: number | null;
+    stateRank: number | null;
+    countryRank: number | null;
+    openToOpportunities: boolean | null;
   };
   overallGrade: string | null;
   gamesPlayed: number;
@@ -50,42 +63,138 @@ interface PublicProfileData {
     tackles: number | null;
   }[];
   badgeCount: number;
+  badges: PublicBadge[];
+  streak: { type: string; current: number; longest: number } | null;
+  bestGame: {
+    id: number;
+    date: string;
+    opponent: string;
+    result: string | null;
+    grade: string | null;
+    points: number;
+    rebounds: number;
+    assists: number;
+    steals: number;
+    blocks: number;
+    passingYards: number | null;
+    rushingYards: number | null;
+    receivingYards: number | null;
+    passingTouchdowns: number | null;
+    rushingTouchdowns: number | null;
+    receivingTouchdowns: number | null;
+    tackles: number | null;
+  } | null;
+  trend: string | null;
   shareUrl: string;
 }
 
-const TIER_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  Rookie: { bg: "bg-gray-500/20", text: "text-gray-300", border: "border-gray-500/30" },
-  Starter: { bg: "bg-green-500/20", text: "text-green-400", border: "border-green-500/30" },
-  "All-Star": { bg: "bg-blue-500/20", text: "text-blue-400", border: "border-blue-500/30" },
-  MVP: { bg: "bg-purple-500/20", text: "text-purple-400", border: "border-purple-500/30" },
-  "Hall of Fame": { bg: "bg-amber-500/20", text: "text-amber-400", border: "border-amber-500/30" },
+const TIER_CONFIG: Record<string, { gradient: string; text: string; icon: string }> = {
+  Rookie: { gradient: "from-gray-600 to-gray-700", text: "text-gray-300", icon: "text-gray-400" },
+  Starter: { gradient: "from-emerald-600 to-emerald-700", text: "text-emerald-300", icon: "text-emerald-400" },
+  "All-Star": { gradient: "from-blue-600 to-blue-700", text: "text-blue-300", icon: "text-blue-400" },
+  MVP: { gradient: "from-purple-600 to-purple-700", text: "text-purple-300", icon: "text-purple-400" },
+  "Hall of Fame": { gradient: "from-amber-600 to-amber-700", text: "text-amber-300", icon: "text-amber-400" },
 };
 
-const GRADE_COLORS: Record<string, string> = {
-  'A+': 'text-amber-400', 'A': 'text-amber-400', 'A-': 'text-amber-400',
-  'B+': 'text-slate-300', 'B': 'text-slate-300', 'B-': 'text-slate-300',
-  'C+': 'text-orange-400', 'C': 'text-orange-400', 'C-': 'text-orange-400',
-  'D+': 'text-red-400', 'D': 'text-red-400', 'D-': 'text-red-400',
-  'F': 'text-red-500',
+const XP_THRESHOLDS: Record<string, number> = {
+  Rookie: 500,
+  Starter: 2000,
+  "All-Star": 5000,
+  MVP: 10000,
+  "Hall of Fame": 25000,
+};
+
+const GRADE_CONFIG: Record<string, { bg: string; text: string; ring: string }> = {
+  'A+': { bg: 'bg-emerald-500', text: 'text-white', ring: 'ring-emerald-400/30' },
+  'A': { bg: 'bg-emerald-500', text: 'text-white', ring: 'ring-emerald-400/30' },
+  'A-': { bg: 'bg-emerald-500/90', text: 'text-white', ring: 'ring-emerald-400/20' },
+  'B+': { bg: 'bg-blue-500', text: 'text-white', ring: 'ring-blue-400/30' },
+  'B': { bg: 'bg-blue-500', text: 'text-white', ring: 'ring-blue-400/30' },
+  'B-': { bg: 'bg-blue-500/90', text: 'text-white', ring: 'ring-blue-400/20' },
+  'C+': { bg: 'bg-amber-500', text: 'text-white', ring: 'ring-amber-400/30' },
+  'C': { bg: 'bg-amber-500', text: 'text-white', ring: 'ring-amber-400/30' },
+  'C-': { bg: 'bg-amber-500/90', text: 'text-white', ring: 'ring-amber-400/20' },
+  'D+': { bg: 'bg-orange-500', text: 'text-white', ring: 'ring-orange-400/30' },
+  'D': { bg: 'bg-orange-500', text: 'text-white', ring: 'ring-orange-400/30' },
+  'D-': { bg: 'bg-orange-500/90', text: 'text-white', ring: 'ring-orange-400/20' },
+  'F': { bg: 'bg-red-500', text: 'text-white', ring: 'ring-red-400/30' },
+};
+
+const BADGE_ICONS: Record<string, typeof Target> = {
+  twenty_piece: Target,
+  thirty_bomb: Target,
+  double_double: Award,
+  triple_double: Award,
+  ironman: Clock,
+  efficiency_master: Star,
+  lockdown: Shield,
+  hustle_king: Zap,
+  clean_sheet: CheckCircle,
+  hot_streak_3: Flame,
+  hot_streak_5: Flame,
+  sharpshooter: Target,
+  most_improved: TrendingUp,
+  hustle_champion: Zap,
+  scoring_machine: Target,
+  consistency_king: Star,
+  tier_starter: Trophy,
+  tier_allstar: Trophy,
+  tier_mvp: Trophy,
+  tier_hof: Trophy,
+  streak_3: Flame,
+  streak_7: Flame,
+  streak_14: Flame,
+  streak_30: Flame,
+  xp_100: Star,
+  xp_500: Star,
+  xp_1000: Star,
+  xp_5000: Star,
 };
 
 function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .map(n => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
+  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 }
 
-function getGradeColor(grade: string | null): string {
-  if (!grade) return 'text-muted-foreground';
-  return GRADE_COLORS[grade.trim().toUpperCase()] || 'text-muted-foreground';
+function getGradeConfig(grade: string | null) {
+  if (!grade) return null;
+  return GRADE_CONFIG[grade.trim().toUpperCase()] || null;
+}
+
+function GradeCircle({ grade, size = "lg" }: { grade: string | null; size?: "sm" | "lg" }) {
+  if (!grade) return null;
+  const config = getGradeConfig(grade);
+  if (!config) return null;
+  const sizeClasses = size === "lg" ? "w-16 h-16 text-2xl" : "w-10 h-10 text-sm";
+  return (
+    <div className={`${sizeClasses} rounded-full ${config.bg} ${config.text} ring-4 ${config.ring} flex items-center justify-center font-bold font-display`} data-testid="grade-circle">
+      {grade}
+    </div>
+  );
+}
+
+function StatBar({ label, value, max, suffix = "" }: { label: string; value: number; max: number; suffix?: string }) {
+  const pct = Math.min((value / (max || 1)) * 100, 100);
+  const testIdBase = label.toLowerCase().replace(/\s+/g, '-');
+  return (
+    <div className="space-y-1" data-testid={`stat-bar-${testIdBase}`}>
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs text-white/50 uppercase tracking-wider">{label}</span>
+        <span className="text-sm font-bold text-white" data-testid={`stat-value-${testIdBase}`}>{value}{suffix}</span>
+      </div>
+      <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-700"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
 }
 
 export default function PublicRecruitProfile() {
   const [, params] = useRoute("/recruit/:id");
-  const id = params?.id;
+  const routeParams2 = useRoute("/profile/:id/public");
+  const id = params?.id || routeParams2[1]?.id;
   const { toast } = useToast();
 
   const { data, isLoading, error } = useQuery<PublicProfileData>({
@@ -101,25 +210,38 @@ export default function PublicRecruitProfile() {
   const handleShare = async () => {
     const url = `${window.location.origin}/recruit/${id}`;
     try {
-      await navigator.clipboard.writeText(url);
-      toast({
-        title: "Link Copied",
-        description: "Recruiting profile link copied to clipboard",
-      });
+      if (navigator.share) {
+        await navigator.share({ title: `${data?.player.name} - Caliber Profile`, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast({ title: "Link Copied", description: "Recruiting profile link copied to clipboard" });
+      }
     } catch {
-      toast({
-        title: "Share URL",
-        description: url,
-      });
+      try {
+        await navigator.clipboard.writeText(url);
+        toast({ title: "Link Copied", description: "Recruiting profile link copied to clipboard" });
+      } catch {
+        toast({ title: "Share URL", description: url });
+      }
+    }
+  };
+
+  const handleCopyLink = async () => {
+    const url = `${window.location.origin}/recruit/${id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast({ title: "Link Copied", description: "Recruiting profile link copied to clipboard" });
+    } catch {
+      toast({ title: "Share URL", description: url });
     }
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(220,25%,6%)] via-[hsl(220,20%,5%)] to-[hsl(220,25%,4%)] flex items-center justify-center">
+      <div className="min-h-screen bg-[hsl(220,15%,8%)] flex items-center justify-center">
         <div className="text-center space-y-4">
-          <Loader2 className="w-10 h-10 text-cyan-400 animate-spin mx-auto" />
-          <p className="text-white/60">Loading profile...</p>
+          <Loader2 className="w-8 h-8 text-cyan-400 animate-spin mx-auto" />
+          <p className="text-white/40 text-sm">Loading profile...</p>
         </div>
       </div>
     );
@@ -127,32 +249,32 @@ export default function PublicRecruitProfile() {
 
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(220,25%,6%)] via-[hsl(220,20%,5%)] to-[hsl(220,25%,4%)] flex items-center justify-center">
-        <div className="text-center space-y-4">
+      <div className="min-h-screen bg-[hsl(220,15%,8%)] flex items-center justify-center px-4">
+        <div className="text-center space-y-4 max-w-sm">
           <Target className="w-10 h-10 text-red-400 mx-auto" />
           <h2 className="text-xl font-bold text-white" data-testid="text-error-title">Player Not Found</h2>
-          <p className="text-white/60">This recruiting profile doesn't exist or has been removed.</p>
+          <p className="text-white/50 text-sm">This recruiting profile doesn't exist or has been removed.</p>
           <Link href="/">
-            <Button variant="outline" className="mt-4" data-testid="button-back-home">
-              <ChevronLeft className="w-4 h-4 mr-1" /> Back to Home
-            </Button>
+            <Button variant="outline" className="mt-4" data-testid="button-back-home">Back to Home</Button>
           </Link>
         </div>
       </div>
     );
   }
 
-  const { player, overallGrade, gamesPlayed, averages, recentGames, badgeCount } = data;
-  const tierStyle = TIER_COLORS[player.currentTier] || TIER_COLORS.Rookie;
+  const { player, overallGrade, gamesPlayed, averages, recentGames, badges, badgeCount, streak, bestGame, trend } = data;
+  const tierConfig = TIER_CONFIG[player.currentTier] || TIER_CONFIG.Rookie;
   const isBasketball = player.sport === 'basketball';
+  const nextTierXp = XP_THRESHOLDS[player.currentTier] || 500;
+  const xpProgress = Math.min((player.totalXp / nextTierXp) * 100, 100);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[hsl(220,25%,6%)] via-[hsl(220,20%,5%)] to-[hsl(220,25%,4%)] text-white">
-      <div className="absolute inset-0 cyber-grid pointer-events-none opacity-20" />
-
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-[hsl(220,25%,6%)]/80 border-b border-cyan-500/10">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          <img src={caliberLogo} alt="Caliber" className="h-8" data-testid="img-caliber-logo" />
+    <div className="min-h-screen bg-[hsl(220,15%,8%)] text-white">
+      <header className="sticky top-0 z-50 backdrop-blur-xl bg-[hsl(220,15%,8%)]/90 border-b border-white/[0.06]">
+        <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <img src={caliberLogo} alt="Caliber" className="h-7" data-testid="img-caliber-logo" />
+          </div>
           <Button
             variant="outline"
             size="sm"
@@ -165,50 +287,83 @@ export default function PublicRecruitProfile() {
         </div>
       </header>
 
-      <main className="relative z-10 max-w-4xl mx-auto px-4 py-6 space-y-6">
-        <Card className="p-6 md:p-8 relative overflow-visible">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-            <Avatar className="w-24 h-24 md:w-28 md:h-28 border-2 border-cyan-500/30">
-              {player.photoUrl ? (
-                <AvatarImage src={player.photoUrl} alt={player.name} />
-              ) : null}
-              <AvatarFallback className="text-2xl bg-cyan-500/10 text-cyan-400">
-                {getInitials(player.name)}
-              </AvatarFallback>
-            </Avatar>
+      <main className="max-w-2xl mx-auto">
+        <div className="relative">
+          {player.bannerUrl ? (
+            <div className="h-36 sm:h-44 w-full overflow-hidden">
+              <img
+                src={player.bannerUrl}
+                alt="Cover"
+                className="w-full h-full object-cover"
+                data-testid="img-cover-photo"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[hsl(220,15%,8%)]" />
+            </div>
+          ) : (
+            <div className="h-36 sm:h-44 w-full bg-gradient-to-br from-cyan-900/40 via-blue-900/30 to-[hsl(220,15%,8%)]">
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[hsl(220,15%,8%)]" />
+            </div>
+          )}
 
-            <div className="flex-1 text-center sm:text-left space-y-2">
-              <div className="flex flex-wrap justify-center sm:justify-start items-center gap-2">
-                {player.jerseyNumber && (
-                  <span className="text-cyan-400 font-bold text-lg" data-testid="text-jersey-number">#{player.jerseyNumber}</span>
-                )}
-                <h1 className="text-2xl md:text-3xl font-bold font-display tracking-tight" data-testid="text-player-name">
+          <div className="relative px-4 -mt-14 sm:-mt-16">
+            <div className="flex items-end gap-4">
+              <Avatar className="w-24 h-24 sm:w-28 sm:h-28 border-4 border-[hsl(220,15%,8%)] ring-2 ring-white/10">
+                {player.photoUrl ? (
+                  <AvatarImage src={player.photoUrl} alt={player.name} />
+                ) : null}
+                <AvatarFallback className="text-2xl bg-cyan-900/40 text-cyan-300 font-display">
+                  {getInitials(player.name)}
+                </AvatarFallback>
+              </Avatar>
+
+              <div className="flex-1 pb-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  {player.jerseyNumber != null && (
+                    <span className="text-cyan-400 font-bold text-base font-display" data-testid="text-jersey-number">#{player.jerseyNumber}</span>
+                  )}
+                  <Badge variant="secondary" className="text-xs" data-testid="badge-position">{player.position}</Badge>
+                  <Badge variant="outline" className="text-xs" data-testid="badge-sport">
+                    {isBasketball ? 'Basketball' : 'Football'}
+                  </Badge>
+                </div>
+              </div>
+
+              {overallGrade && (
+                <div className="pb-1">
+                  <GradeCircle grade={overallGrade} size="lg" />
+                </div>
+              )}
+            </div>
+
+            <div className="mt-3 space-y-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-2xl sm:text-3xl font-bold font-display tracking-tight" data-testid="text-player-name">
                   {player.name}
                 </h1>
-              </div>
-
-              <div className="flex flex-wrap justify-center sm:justify-start items-center gap-2">
-                <Badge variant="secondary" className="text-xs" data-testid="badge-position">
-                  <span data-testid="text-player-position">{player.position}</span>
-                </Badge>
-                <Badge variant="outline" className="text-xs" data-testid="badge-sport">
-                  {player.sport === 'basketball' ? 'Basketball' : 'Football'}
-                </Badge>
-                {player.team && (
-                  <span className="text-sm text-white/60" data-testid="text-team">{player.team}</span>
+                {player.openToOpportunities && (
+                  <Badge variant="secondary" className="bg-emerald-500/15 text-emerald-400 text-xs" data-testid="badge-open">
+                    <Eye className="w-3 h-3 mr-1" /> Open to Offers
+                  </Badge>
                 )}
               </div>
+              {player.username && (
+                <p className="text-sm text-white/40" data-testid="text-username">@{player.username}</p>
+              )}
 
-              <div className="flex flex-wrap justify-center sm:justify-start items-center gap-3 text-sm text-white/50">
+              {player.bio && (
+                <p className="text-sm text-white/60 leading-relaxed" data-testid="text-bio">{player.bio}</p>
+              )}
+
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-white/40">
                 {(player.city || player.state) && (
                   <span className="flex items-center gap-1" data-testid="text-location">
-                    <MapPin className="w-3.5 h-3.5" />
+                    <MapPin className="w-3 h-3" />
                     {[player.city, player.state].filter(Boolean).join(', ')}
                   </span>
                 )}
                 {player.school && (
                   <span className="flex items-center gap-1" data-testid="text-school">
-                    <GraduationCap className="w-3.5 h-3.5" />
+                    <GraduationCap className="w-3 h-3" />
                     {player.school}
                   </span>
                 )}
@@ -218,144 +373,277 @@ export default function PublicRecruitProfile() {
                 {player.height && (
                   <span data-testid="text-height">{player.height}</span>
                 )}
+                {player.gpa != null && (
+                  <span className="flex items-center gap-1" data-testid="text-gpa">
+                    <BookOpen className="w-3 h-3" /> {player.gpa.toFixed(2)} GPA
+                  </span>
+                )}
+                {player.team && (
+                  <span data-testid="text-team">{player.team}</span>
+                )}
               </div>
             </div>
-
-            {overallGrade && (
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-xs uppercase tracking-wider text-white/40">Overall</span>
-                <div className={`text-4xl font-bold font-display ${getGradeColor(overallGrade)}`} data-testid="text-overall-grade">
-                  {overallGrade}
-                </div>
-              </div>
-            )}
           </div>
-        </Card>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Card className="p-4 text-center">
-            <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Games</p>
-            <p className="text-2xl font-bold text-white" data-testid="text-games-played">{gamesPlayed}</p>
-          </Card>
-          <Card className="p-4 text-center">
-            <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Tier</p>
-            <div className="flex items-center justify-center gap-1.5">
-              <Trophy className={`w-4 h-4 ${tierStyle.text}`} />
-              <p className={`text-lg font-bold ${tierStyle.text}`} data-testid="text-tier">{player.currentTier}</p>
-            </div>
-          </Card>
-          <Card className="p-4 text-center">
-            <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Badges</p>
-            <div className="flex items-center justify-center gap-1.5">
-              <Award className="w-4 h-4 text-cyan-400" />
-              <p className="text-2xl font-bold text-white" data-testid="text-badge-count">{badgeCount}</p>
-            </div>
-          </Card>
-          <Card className="p-4 text-center">
-            <p className="text-xs text-white/40 uppercase tracking-wider mb-1">XP</p>
-            <p className="text-2xl font-bold text-cyan-400" data-testid="text-xp">{player.totalXp.toLocaleString()}</p>
-          </Card>
         </div>
 
-        <Card className="p-6">
-          <h2 className="text-lg font-bold font-display uppercase tracking-wide mb-4 flex items-center gap-2">
-            <Activity className="w-5 h-5 text-cyan-400" /> Season Averages
-          </h2>
-          {isBasketball ? (
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-              {[
-                { label: 'PPG', key: 'ppg', value: averages.ppg ?? 0 },
-                { label: 'RPG', key: 'rpg', value: averages.rpg ?? 0 },
-                { label: 'APG', key: 'apg', value: averages.apg ?? 0 },
-                { label: 'SPG', key: 'spg', value: averages.spg ?? 0 },
-                { label: 'BPG', key: 'bpg', value: averages.bpg ?? 0 },
-              ].map(stat => (
-                <div key={stat.label} className="text-center p-3 rounded-lg bg-white/[0.03] border border-white/[0.06]">
-                  <p className="text-xs text-white/40 uppercase tracking-wider mb-1">{stat.label}</p>
-                  <p className="text-xl font-bold text-white" data-testid={`text-season-avg-${stat.key}`}>{stat.value}</p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-              {[
-                { label: 'Pass YPG', key: 'passingYPG', value: averages.passingYPG ?? 0 },
-                { label: 'Rush YPG', key: 'rushingYPG', value: averages.rushingYPG ?? 0 },
-                { label: 'Rec YPG', key: 'receivingYPG', value: averages.receivingYPG ?? 0 },
-                { label: 'Total TDs', key: 'totalTDs', value: averages.totalTDs ?? 0 },
-                { label: 'Tackles', key: 'tackles', value: averages.tackles ?? 0 },
-              ].map(stat => (
-                <div key={stat.label} className="text-center p-3 rounded-lg bg-white/[0.03] border border-white/[0.06]">
-                  <p className="text-xs text-white/40 uppercase tracking-wider mb-1">{stat.label}</p>
-                  <p className="text-xl font-bold text-white" data-testid={`text-season-avg-${stat.key}`}>{stat.value}</p>
-                </div>
-              ))}
+        <div className="px-4 mt-5 space-y-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <Card className="p-3 text-center">
+              <p className="text-[10px] text-white/40 uppercase tracking-widest mb-0.5">Games</p>
+              <p className="text-xl font-bold text-white font-display" data-testid="text-games-played">{gamesPlayed}</p>
+            </Card>
+            <Card className="p-3 text-center">
+              <p className="text-[10px] text-white/40 uppercase tracking-widest mb-0.5">Tier</p>
+              <div className="flex items-center justify-center gap-1">
+                <Trophy className={`w-3.5 h-3.5 ${tierConfig.icon}`} />
+                <p className={`text-sm font-bold ${tierConfig.text} font-display`} data-testid="text-tier">{player.currentTier}</p>
+              </div>
+            </Card>
+            <Card className="p-3 text-center">
+              <p className="text-[10px] text-white/40 uppercase tracking-widest mb-0.5">Badges</p>
+              <div className="flex items-center justify-center gap-1">
+                <Award className="w-3.5 h-3.5 text-cyan-400" />
+                <p className="text-xl font-bold text-white font-display" data-testid="text-badge-count">{badgeCount}</p>
+              </div>
+            </Card>
+            <Card className="p-3 text-center">
+              <p className="text-[10px] text-white/40 uppercase tracking-widest mb-0.5">Trend</p>
+              <div className="flex items-center justify-center gap-1">
+                {trend === 'improving' ? (
+                  <TrendingUp className="w-4 h-4 text-emerald-400" />
+                ) : trend === 'declining' ? (
+                  <TrendingDown className="w-4 h-4 text-red-400" />
+                ) : (
+                  <Minus className="w-4 h-4 text-white/40" />
+                )}
+                <p className={`text-sm font-bold font-display ${trend === 'improving' ? 'text-emerald-400' : trend === 'declining' ? 'text-red-400' : 'text-white/50'}`} data-testid="text-trend">
+                  {trend ? trend.charAt(0).toUpperCase() + trend.slice(1) : 'Stable'}
+                </p>
+              </div>
+            </Card>
+          </div>
+
+          {(player.stateRank || player.countryRank) && (
+            <div className="flex items-center gap-2 flex-wrap">
+              {player.stateRank && (
+                <Badge variant="secondary" className="bg-amber-500/15 text-amber-400 gap-1" data-testid="badge-state-rank">
+                  <Trophy className="w-3 h-3" /> #{player.stateRank} in {player.state || 'State'}
+                </Badge>
+              )}
+              {player.countryRank && (
+                <Badge variant="secondary" className="bg-purple-500/15 text-purple-400 gap-1" data-testid="badge-country-rank">
+                  <Trophy className="w-3 h-3" /> #{player.countryRank} in USA
+                </Badge>
+              )}
             </div>
           )}
-        </Card>
 
-        {recentGames.length > 0 && (
-          <Card className="p-6">
-            <h2 className="text-lg font-bold font-display uppercase tracking-wide mb-4 flex items-center gap-2">
-              <Star className="w-5 h-5 text-cyan-400" /> Recent Performance
-            </h2>
-            <div className="space-y-3">
-              {recentGames.map(game => (
-                <div
-                  key={game.id}
-                  className="flex items-center gap-4 p-3 rounded-lg bg-white/[0.03] border border-white/[0.06]"
-                  data-testid={`card-recent-game-${game.id}`}
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-white truncate">vs {game.opponent}</p>
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-white/40">
-                      <span>{format(new Date(game.date), 'MMM d, yyyy')}</span>
-                      {game.result && <span>{game.result}</span>}
-                    </div>
-                  </div>
-                  {isBasketball ? (
-                    <div className="flex items-center gap-3 text-xs text-white/60">
-                      <span>{game.points}pts</span>
-                      <span>{game.rebounds}reb</span>
-                      <span>{game.assists}ast</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-3 text-xs text-white/60">
-                      {(game.passingYards || 0) > 0 && <span>{game.passingYards}pass</span>}
-                      {(game.rushingYards || 0) > 0 && <span>{game.rushingYards}rush</span>}
-                      {(game.receivingYards || 0) > 0 && <span>{game.receivingYards}rec</span>}
-                    </div>
-                  )}
-                  {game.grade && (
-                    <div className={`text-lg font-bold font-display ${getGradeColor(game.grade)}`} data-testid={`text-game-grade-${game.id}`}>
-                      {game.grade}
-                    </div>
-                  )}
-                </div>
-              ))}
+          <Card className="p-3">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Star className={`w-4 h-4 ${tierConfig.icon}`} />
+                <span className="text-xs text-white/50 uppercase tracking-wider">XP Progress</span>
+              </div>
+              <span className="text-xs text-white/40" data-testid="text-xp-progress">{player.totalXp.toLocaleString()} / {nextTierXp.toLocaleString()} XP</span>
+            </div>
+            <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
+              <div
+                className={`h-full rounded-full bg-gradient-to-r ${tierConfig.gradient} transition-all duration-700`}
+                style={{ width: `${xpProgress}%` }}
+              />
             </div>
           </Card>
-        )}
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4 pb-8">
-          <Button
-            onClick={handleShare}
-            variant="outline"
-            className="gap-2 w-full sm:w-auto"
-            data-testid="button-share-bottom"
-          >
-            <Share2 className="w-4 h-4" /> Copy Profile Link
-          </Button>
-          <Link href={`/players/${player.id}`}>
-            <Button className="gap-2 w-full sm:w-auto" data-testid="button-view-full-profile">
-              <ExternalLink className="w-4 h-4" /> View Full Profile
-            </Button>
-          </Link>
-        </div>
+          {streak && streak.current > 0 && (
+            <Card className="p-3 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-orange-500/15 flex items-center justify-center">
+                <Flame className="w-5 h-5 text-orange-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-white" data-testid="text-streak-current">{streak.current}-day streak</p>
+                <p className="text-xs text-white/40">Best: {streak.longest} days</p>
+              </div>
+            </Card>
+          )}
 
-        <div className="text-center pb-8">
-          <img src={caliberLogo} alt="Caliber" className="h-6 mx-auto opacity-40" />
-          <p className="text-xs text-white/20 mt-2">Powered by Caliber</p>
+          <Card className="p-4">
+            <h2 className="text-sm font-bold font-display uppercase tracking-wider mb-3 flex items-center gap-2 text-white/70">
+              <Activity className="w-4 h-4 text-cyan-400" /> Season Averages
+            </h2>
+            {isBasketball ? (
+              <div className="space-y-3">
+                <StatBar label="Points" value={averages.ppg ?? 0} max={35} suffix="/g" />
+                <StatBar label="Rebounds" value={averages.rpg ?? 0} max={15} suffix="/g" />
+                <StatBar label="Assists" value={averages.apg ?? 0} max={12} suffix="/g" />
+                <StatBar label="Steals" value={averages.spg ?? 0} max={5} suffix="/g" />
+                <StatBar label="Blocks" value={averages.bpg ?? 0} max={5} suffix="/g" />
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <StatBar label="Pass YPG" value={averages.passingYPG ?? 0} max={400} />
+                <StatBar label="Rush YPG" value={averages.rushingYPG ?? 0} max={200} />
+                <StatBar label="Rec YPG" value={averages.receivingYPG ?? 0} max={200} />
+                <StatBar label="Total TDs" value={averages.totalTDs ?? 0} max={30} />
+                <StatBar label="Tackles" value={averages.tackles ?? 0} max={100} />
+              </div>
+            )}
+          </Card>
+
+          {bestGame && (
+            <Card className="p-4">
+              <h2 className="text-sm font-bold font-display uppercase tracking-wider mb-3 flex items-center gap-2 text-white/70">
+                <Star className="w-4 h-4 text-amber-400" /> Best Performance
+              </h2>
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <div>
+                  <p className="text-sm font-medium text-white">vs {bestGame.opponent}</p>
+                  <p className="text-xs text-white/40">{format(new Date(bestGame.date), 'MMM d, yyyy')}</p>
+                </div>
+                <GradeCircle grade={bestGame.grade} size="sm" />
+              </div>
+              {isBasketball ? (
+                <div className="grid grid-cols-5 gap-2">
+                  {[
+                    { label: 'PTS', value: bestGame.points },
+                    { label: 'REB', value: bestGame.rebounds },
+                    { label: 'AST', value: bestGame.assists },
+                    { label: 'STL', value: bestGame.steals },
+                    { label: 'BLK', value: bestGame.blocks },
+                  ].map(s => (
+                    <div key={s.label} className="text-center p-2 rounded-md bg-white/[0.03]">
+                      <p className="text-[10px] text-white/40 uppercase">{s.label}</p>
+                      <p className="text-base font-bold text-white font-display" data-testid={`text-best-${s.label.toLowerCase()}`}>{s.value}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { label: 'Pass', value: bestGame.passingYards || 0, suffix: 'yds' },
+                    { label: 'Rush', value: bestGame.rushingYards || 0, suffix: 'yds' },
+                    { label: 'Rec', value: bestGame.receivingYards || 0, suffix: 'yds' },
+                  ].filter(s => s.value > 0).map(s => (
+                    <div key={s.label} className="text-center p-2 rounded-md bg-white/[0.03]">
+                      <p className="text-[10px] text-white/40 uppercase">{s.label}</p>
+                      <p className="text-base font-bold text-white font-display" data-testid={`text-best-${s.label.toLowerCase()}`}>{s.value} <span className="text-xs text-white/40">{s.suffix}</span></p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          )}
+
+          {badges && badges.length > 0 && (
+            <Card className="p-4">
+              <h2 className="text-sm font-bold font-display uppercase tracking-wider mb-3 flex items-center gap-2 text-white/70">
+                <Award className="w-4 h-4 text-cyan-400" /> Badges Earned
+              </h2>
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                {badges.slice(0, 8).map((badge, i) => {
+                  const IconComp = BADGE_ICONS[badge.type] || Award;
+                  return (
+                    <div
+                      key={`${badge.type}-${i}`}
+                      className="flex flex-col items-center gap-1.5 p-3 rounded-lg bg-white/[0.03] border border-white/[0.06]"
+                      data-testid={`card-badge-${badge.type}`}
+                    >
+                      <div className="w-8 h-8 rounded-full bg-cyan-500/10 flex items-center justify-center">
+                        <IconComp className="w-4 h-4 text-cyan-400" />
+                      </div>
+                      <p className="text-[10px] text-white/60 text-center leading-tight font-medium">{badge.name}</p>
+                    </div>
+                  );
+                })}
+              </div>
+              {badges.length > 8 && (
+                <p className="text-xs text-white/30 text-center mt-2">+{badges.length - 8} more badges</p>
+              )}
+            </Card>
+          )}
+
+          {recentGames.length > 0 && (
+            <Card className="p-4">
+              <h2 className="text-sm font-bold font-display uppercase tracking-wider mb-3 flex items-center gap-2 text-white/70">
+                <Activity className="w-4 h-4 text-cyan-400" /> Recent Games
+              </h2>
+              <div className="space-y-2">
+                {recentGames.map(game => (
+                  <div
+                    key={game.id}
+                    className="flex items-center gap-3 p-3 rounded-lg bg-white/[0.03] border border-white/[0.06]"
+                    data-testid={`card-recent-game-${game.id}`}
+                  >
+                    <GradeCircle grade={game.grade} size="sm" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-white truncate">vs {game.opponent}</p>
+                      <div className="flex flex-wrap items-center gap-2 text-[11px] text-white/40">
+                        <span>{format(new Date(game.date), 'MMM d')}</span>
+                        {game.result && <span>{game.result}</span>}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-white/50 shrink-0" data-testid={`text-game-stats-${game.id}`}>
+                      {isBasketball ? (
+                        <>
+                          <span className="font-medium text-white">{game.points}</span>
+                          <span className="text-white/30">/</span>
+                          <span>{game.rebounds}</span>
+                          <span className="text-white/30">/</span>
+                          <span>{game.assists}</span>
+                        </>
+                      ) : (
+                        <>
+                          {(game.passingYards || 0) > 0 && <span>{game.passingYards}p</span>}
+                          {(game.rushingYards || 0) > 0 && <span>{game.rushingYards}r</span>}
+                          {(game.receivingYards || 0) > 0 && <span>{game.receivingYards}rc</span>}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          <Card className="p-5 border-cyan-500/20 bg-gradient-to-br from-cyan-950/30 to-blue-950/20">
+            <div className="text-center space-y-3">
+              <h3 className="text-lg font-bold font-display" data-testid="text-recruiting-cta">
+                Interested in recruiting {player.name.split(' ')[0]}?
+              </h3>
+              <p className="text-sm text-white/50">
+                Get in touch or share this profile with your coaching staff.
+              </p>
+              <div className="flex flex-wrap flex-col sm:flex-row items-center justify-center gap-2">
+                <Button
+                  onClick={handleShare}
+                  className="gap-2 w-full sm:w-auto"
+                  data-testid="button-contact-recruiting"
+                >
+                  <Mail className="w-4 h-4" /> Contact for Recruiting
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleCopyLink}
+                  className="gap-2 w-full sm:w-auto"
+                  data-testid="button-copy-link"
+                >
+                  <Copy className="w-4 h-4" /> Copy Link
+                </Button>
+              </div>
+            </div>
+          </Card>
+
+          <div className="flex items-center justify-center pt-2 pb-4">
+            <Link href={`/players/${player.id}`}>
+              <Button variant="outline" className="gap-2" data-testid="button-view-full-profile">
+                <ExternalLink className="w-4 h-4" /> View Full Profile on Caliber
+              </Button>
+            </Link>
+          </div>
+
+          <div className="text-center pb-8">
+            <img src={caliberLogo} alt="Caliber" className="h-5 mx-auto opacity-30" />
+            <p className="text-[10px] text-white/15 mt-1.5">Powered by Caliber Performance Labs</p>
+          </div>
         </div>
       </main>
     </div>

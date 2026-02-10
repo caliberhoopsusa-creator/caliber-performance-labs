@@ -15075,6 +15075,75 @@ Respond in this exact JSON format:
       const playerBadges = await db.select().from(badges).where(eq(badges.playerId, playerId));
       const badgeCount = playerBadges.length;
 
+      // Get activity streaks for the player
+      const playerStreaks = await db.select().from(activityStreaks).where(eq(activityStreaks.playerId, playerId));
+      
+      // Find the best streak (highest currentStreak)
+      let streak = null;
+      if (playerStreaks.length > 0) {
+        const bestStreak = playerStreaks.reduce((best, current) => 
+          (current.currentStreak || 0) > (best.currentStreak || 0) ? current : best
+        );
+        streak = {
+          type: bestStreak.streakType,
+          current: bestStreak.currentStreak || 0,
+          longest: bestStreak.longestStreak || 0,
+        };
+      }
+
+      // Find the best game (highest grade value)
+      const GRADE_VALUES: Record<string, number> = {
+        'A+': 100, 'A': 95, 'A-': 90, 'B+': 88, 'B': 85, 'B-': 80,
+        'C+': 78, 'C': 75, 'C-': 70, 'D+': 68, 'D': 65, 'D-': 60, 'F': 50,
+      };
+      let bestGame = null;
+      if (allGames.length > 0) {
+        const gamesWithGradeValues = allGames
+          .filter(g => g.grade)
+          .map(g => ({
+            ...g,
+            gradeValue: GRADE_VALUES[g.grade!.trim().toUpperCase()] || 0,
+          }));
+        if (gamesWithGradeValues.length > 0) {
+          bestGame = gamesWithGradeValues.reduce((best, current) => 
+            current.gradeValue > best.gradeValue ? current : best
+          );
+        }
+      }
+
+      // Calculate trend from last 5 games
+      let trend: "improving" | "declining" | "stable" | null = null;
+      const sortedGames = allGames
+        .filter(g => g.grade)
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      if (sortedGames.length >= 3) {
+        const last3 = sortedGames.slice(0, 3);
+        const last3Avg = last3.reduce((s, g) => s + (GRADE_VALUES[g.grade!.trim().toUpperCase()] || 0), 0) / 3;
+        
+        if (sortedGames.length >= 6) {
+          const prev3 = sortedGames.slice(3, 6);
+          const prev3Avg = prev3.reduce((s, g) => s + (GRADE_VALUES[g.grade!.trim().toUpperCase()] || 0), 0) / 3;
+          
+          if (last3Avg > prev3Avg + 2) {
+            trend = "improving";
+          } else if (last3Avg < prev3Avg - 2) {
+            trend = "declining";
+          } else {
+            trend = "stable";
+          }
+        } else {
+          // Less than 6 games, determine based on recent games trend
+          trend = "stable";
+        }
+      }
+
+      // Map badge details with names from BADGE_DEFINITIONS
+      const badgesWithDetails = playerBadges.map(badge => ({
+        type: badge.badgeType,
+        name: BADGE_DEFINITIONS[badge.badgeType as keyof typeof BADGE_DEFINITIONS]?.name || badge.badgeType,
+        earnedAt: badge.earnedAt,
+      }));
+
       const totalGames = allGames.length || 1;
       const sport = player.sport || 'basketball';
 
@@ -15099,10 +15168,6 @@ Respond in this exact JSON format:
 
       const overallGrade = allGames.length > 0
         ? (() => {
-            const GRADE_VALUES: Record<string, number> = {
-              'A+': 100, 'A': 95, 'A-': 90, 'B+': 88, 'B': 85, 'B-': 80,
-              'C+': 78, 'C': 75, 'C-': 70, 'D+': 68, 'D': 65, 'D-': 60, 'F': 50,
-            };
             const graded = allGames.filter(g => g.grade);
             if (graded.length === 0) return null;
             const avg = graded.reduce((s, g) => s + (GRADE_VALUES[g.grade!.trim().toUpperCase()] || 0), 0) / graded.length;
@@ -15126,7 +15191,10 @@ Respond in this exact JSON format:
         player: {
           id: player.id,
           name: player.name,
+          username: player.username,
           photoUrl: player.photoUrl,
+          bannerUrl: player.bannerUrl,
+          bio: player.bio,
           sport: player.sport,
           position: player.position,
           team: player.team,
@@ -15136,9 +15204,13 @@ Respond in this exact JSON format:
           school: player.school,
           graduationYear: player.graduationYear,
           level: player.level,
+          gpa: player.gpa ? parseFloat(player.gpa.toString()) : null,
           currentTier: player.currentTier,
           totalXp: player.totalXp,
           jerseyNumber: player.jerseyNumber,
+          stateRank: player.stateRank,
+          countryRank: player.countryRank,
+          openToOpportunities: player.openToOpportunities,
         },
         overallGrade,
         gamesPlayed: allGames.length,
@@ -15162,7 +15234,29 @@ Respond in this exact JSON format:
           receivingTouchdowns: g.receivingTouchdowns,
           tackles: g.tackles,
         })),
+        badges: badgesWithDetails,
         badgeCount,
+        streak,
+        bestGame: bestGame ? {
+          id: bestGame.id,
+          date: bestGame.date,
+          opponent: bestGame.opponent,
+          result: bestGame.result,
+          grade: bestGame.grade,
+          points: bestGame.points,
+          rebounds: bestGame.rebounds,
+          assists: bestGame.assists,
+          steals: bestGame.steals,
+          blocks: bestGame.blocks,
+          passingYards: bestGame.passingYards,
+          rushingYards: bestGame.rushingYards,
+          receivingYards: bestGame.receivingYards,
+          passingTouchdowns: bestGame.passingTouchdowns,
+          rushingTouchdowns: bestGame.rushingTouchdowns,
+          receivingTouchdowns: bestGame.receivingTouchdowns,
+          tackles: bestGame.tackles,
+        } : null,
+        trend,
         shareUrl: `/recruit/${playerId}`,
       });
     } catch (error) {
