@@ -49,7 +49,7 @@ interface EffectLayer {
 const PROFILE_SKIN_STYLES: Record<string, ProfileSkinStyle> = {
   "grid-pattern": {
     background: `
-      linear-gradient(135deg, rgba(234, 88, 12, 0.08) 0%, rgba(0, 100, 150, 0.05) 100%),
+      linear-gradient(135deg, rgba(234, 88, 12, 0.08) 0%, rgba(200, 120, 40, 0.05) 100%),
       repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(234, 88, 12, 0.15) 40px, rgba(234, 88, 12, 0.15) 41px),
       repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(234, 88, 12, 0.15) 40px, rgba(234, 88, 12, 0.15) 41px),
       linear-gradient(180deg, rgba(0, 10, 20, 0.95) 0%, rgba(0, 20, 35, 0.9) 100%)
@@ -85,12 +85,12 @@ const PROFILE_SKIN_STYLES: Record<string, ProfileSkinStyle> = {
   "galaxy-swirl": {
     background: `
       radial-gradient(ellipse at 30% 30%, rgba(138, 43, 226, 0.2) 0%, transparent 40%),
-      radial-gradient(ellipse at 70% 70%, rgba(52, 152, 219, 0.15) 0%, transparent 45%),
+      radial-gradient(ellipse at 70% 70%, rgba(249, 116, 21, 0.15) 0%, transparent 45%),
       radial-gradient(ellipse at 50% 50%, rgba(100, 50, 150, 0.1) 0%, transparent 50%),
       radial-gradient(circle at 50% 50%, rgba(10, 5, 25, 0.95) 0%, rgba(5, 5, 15, 1) 100%)
     `,
     borderColor: "rgba(138, 43, 226, 0.4)",
-    boxShadow: "0 0 40px rgba(138, 43, 226, 0.2), 0 0 70px rgba(52, 152, 219, 0.1)",
+    boxShadow: "0 0 40px rgba(138, 43, 226, 0.2), 0 0 70px rgba(249, 116, 21, 0.1)",
     animation: "galaxyBreath 8s ease-in-out infinite",
   },
 };
@@ -128,7 +128,7 @@ const EFFECTS: Record<string, EffectConfig> = {
       },
       // Gentle outer halo
       {
-        gradient: "radial-gradient(circle at 50% 50%, transparent 30%, rgba(0, 180, 255, 0.08) 50%, transparent 70%)",
+        gradient: "radial-gradient(circle at 50% 50%, transparent 30%, rgba(249, 116, 21, 0.08) 50%, transparent 70%)",
         animation: "haloBreath 5s ease-in-out infinite",
         size: "450px",
         opacity: 0.5,

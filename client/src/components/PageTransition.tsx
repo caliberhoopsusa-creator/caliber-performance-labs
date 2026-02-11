@@ -52,37 +52,6 @@ export function PageTransition({ children }: PageTransitionProps) {
         variants={variants}
         className="w-full relative"
       >
-        {/* Scan line overlay effect - only show when motion is preferred */}
-        {!prefersReducedMotion && (
-          <motion.div
-            className="absolute inset-0 pointer-events-none z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 1, 0] }}
-            transition={{
-              duration: 0.25,
-              times: [0, 0.5, 1],
-              ease: "easeInOut",
-            }}
-          >
-
-          </motion.div>
-        )}
-
-        {/* Cyan glow pulse effect - only show when motion is preferred */}
-        {!prefersReducedMotion && (
-          <motion.div
-            className="absolute inset-0 pointer-events-none z-40"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0.4, 0] }}
-            transition={{
-              duration: 0.3,
-              ease: "easeOut",
-            }}
-          >
-            <div className="absolute inset-0 bg-accent/5 opacity-0" />
-          </motion.div>
-        )}
-
         {children}
       </motion.div>
     </AnimatePresence>
@@ -146,30 +115,6 @@ const slideInRight = {
   },
 };
 
-// Page transition effect variant
-const scanLineEffect = {
-  initial: { opacity: 0 },
-  animate: {
-    opacity: [0, 1, 0],
-    transition: {
-      duration: 0.25,
-      times: [0, 0.5, 1],
-      ease: "easeInOut",
-    },
-  },
-};
-
-// Cyan glow pulse variant
-const glowPulseEffect = {
-  initial: { opacity: 0 },
-  animate: {
-    opacity: [0.4, 0],
-    transition: {
-      duration: 0.3,
-      ease: "easeOut",
-    },
-  },
-};
 
 // Page enter (fast variant under 300ms total)
 const pageEnter = {
@@ -226,8 +171,6 @@ export const animations = {
   scaleIn,
   slideInLeft,
   slideInRight,
-  scanLineEffect,
-  glowPulseEffect,
   pageEnter,
   pageExit,
   staggerContainerFast,
