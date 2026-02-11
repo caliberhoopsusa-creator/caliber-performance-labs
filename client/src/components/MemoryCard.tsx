@@ -35,18 +35,18 @@ export function MemoryCard({ data }: MemoryCardProps) {
       transition={{ duration: 0.5, ease: "easeOut" }}
     >
       <Card
-        className="relative overflow-visible border-amber-500/20"
+        className="relative overflow-visible border-accent/20"
         style={{
           background: "linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(249, 115, 22, 0.04) 50%, rgba(0,0,0,0.3) 100%)",
         }}
       >
         <div className="p-5">
           <div className="flex items-center gap-2.5 mb-4 flex-wrap">
-            <div className="p-2 rounded-lg bg-amber-500/15 border border-amber-500/25">
-              <Calendar className="w-4 h-4 text-amber-400" style={{ filter: "drop-shadow(0 0 6px rgba(245, 158, 11, 0.5))" }} />
+            <div className="p-2 rounded-lg bg-accent/15 border border-accent/25">
+              <Calendar className="w-4 h-4 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(24 95% 53%))" }} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-amber-300/90">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-accent/90">
                 This Day Last Year
               </h3>
               <p className="text-xs text-muted-foreground mt-0.5">
@@ -109,12 +109,12 @@ export function MemoryCard({ data }: MemoryCardProps) {
           </div>
 
           {data.overallGrade && (
-            <div className="flex items-center justify-between mt-4 py-2.5 px-3 rounded-lg bg-amber-500/5 border border-amber-500/10">
+            <div className="flex items-center justify-between mt-4 py-2.5 px-3 rounded-lg bg-accent/5 border border-accent/10">
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Overall Grade</span>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">{data.overallGrade.lastYear}</span>
                 <span className="text-muted-foreground/40 text-xs">&rarr;</span>
-                <span className="text-lg font-bold text-amber-300" data-testid="text-current-grade">
+                <span className="text-lg font-bold text-accent" data-testid="text-current-grade">
                   {data.overallGrade.current}
                 </span>
               </div>
@@ -130,8 +130,8 @@ export function MemoryCard({ data }: MemoryCardProps) {
               background: "linear-gradient(135deg, rgba(245, 158, 11, 0.06) 0%, transparent 100%)",
             }}
           >
-            <Sparkles className="w-4 h-4 text-amber-400/60 mt-0.5 flex-shrink-0" />
-            <p className="text-sm text-amber-200/70 italic" data-testid="text-motivational-message">
+            <Sparkles className="w-4 h-4 text-accent/60 mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-accent/70 italic" data-testid="text-motivational-message">
               {data.motivationalMessage}
             </p>
           </motion.div>

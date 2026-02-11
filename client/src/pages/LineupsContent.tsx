@@ -173,7 +173,7 @@ export default function LineupsContent() {
                       key={player.id}
                       className={`flex items-center justify-between p-2 rounded cursor-pointer transition-colors ${
                         selectedPlayers.includes(player.id) 
-                          ? "bg-primary/20 border border-primary/50" 
+                          ? "bg-accent/20 border border-accent/50" 
                           : "hover-elevate"
                       }`}
                       onClick={() => togglePlayerSelection(player.id)}
@@ -204,7 +204,7 @@ export default function LineupsContent() {
       </div>
 
       <section>
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+        <h2 className="text-xl font-semibold font-display mb-4 flex items-center gap-2">
           <Users className="h-5 w-5" />
           Saved Lineups
         </h2>
@@ -230,7 +230,7 @@ export default function LineupsContent() {
       </section>
 
       <section>
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+        <h2 className="text-xl font-semibold font-display mb-4 flex items-center gap-2">
           <Target className="h-5 w-5" />
           Position Depth Chart
           <Settings2 className="h-4 w-4 text-muted-foreground ml-1" />
@@ -240,7 +240,7 @@ export default function LineupsContent() {
           {(["Guard", "Wing", "Big"] as const).map(position => (
             <Card key={position} data-testid={`card-depth-${position.toLowerCase()}`}>
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center gap-2">
+                <CardTitle className="text-lg font-display flex items-center gap-2">
                   {position}
                   <span className="text-xs text-muted-foreground font-normal">
                     {POSITION_ICONS[position]}
@@ -309,7 +309,7 @@ export default function LineupsContent() {
       </section>
 
       <section>
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+        <h2 className="text-xl font-semibold font-display mb-4 flex items-center gap-2">
           <ArrowLeftRight className="h-5 w-5" />
           Lineup Comparison
         </h2>
@@ -409,7 +409,7 @@ function LineupCard({
     <Card data-testid={`card-lineup-${lineup.id}`}>
       <CardHeader className="pb-2 flex flex-row items-start justify-between gap-2">
         <div>
-          <CardTitle className="text-lg">{lineup.name || `Lineup #${lineup.id}`}</CardTitle>
+          <CardTitle className="text-lg font-display">{lineup.name || `Lineup #${lineup.id}`}</CardTitle>
           <CardDescription>5 Players</CardDescription>
         </div>
         <Button
@@ -506,7 +506,7 @@ function LineupComparisonView({
     <div className="grid md:grid-cols-2 gap-4 mt-4" data-testid="lineup-comparison-view">
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">{lineup1.name || `Lineup #${lineup1.id}`}</CardTitle>
+          <CardTitle className="text-base font-display">{lineup1.name || `Lineup #${lineup1.id}`}</CardTitle>
           <CardDescription className="text-xs truncate">{getPlayersNames(lineup1)}</CardDescription>
         </CardHeader>
         <CardContent>
@@ -520,7 +520,7 @@ function LineupComparisonView({
       </Card>
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">{lineup2.name || `Lineup #${lineup2.id}`}</CardTitle>
+          <CardTitle className="text-base font-display">{lineup2.name || `Lineup #${lineup2.id}`}</CardTitle>
           <CardDescription className="text-xs truncate">{getPlayersNames(lineup2)}</CardDescription>
         </CardHeader>
         <CardContent>

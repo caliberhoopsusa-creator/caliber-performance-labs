@@ -121,12 +121,12 @@ export function ZoneStats({ stats, showTrends = false, compact = false }: ZoneSt
     <Card data-testid="zone-stats">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base">
-          <Target className="h-4 w-4 text-primary" />
+          <Target className="h-4 w-4 text-accent" />
           Zone Statistics
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center justify-between p-3 bg-primary/10 rounded-md border border-primary/20">
+        <div className="flex items-center justify-between p-3 bg-accent/10 rounded-md border border-accent/20">
           <div>
             <div className="text-sm font-medium">Overall</div>
             <div className="text-xs text-muted-foreground">{totalMade}/{totalAttempts} attempts</div>

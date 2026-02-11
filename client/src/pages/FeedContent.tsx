@@ -151,7 +151,7 @@ const ACTIVITY_ICONS: Record<string, typeof Target> = {
 };
 
 const ACTIVITY_COLORS: Record<string, string> = {
-  game: "text-orange-400",
+  game: "text-accent",
   badge: "text-yellow-400",
   streak: "text-red-400",
   goal: "text-emerald-400",
@@ -639,7 +639,7 @@ function ActionBar({
               aria-label="Comments"
               data-testid={`button-comments-${activityId}`}
             >
-              <MessageCircle className={cn("w-5 h-5", showComments ? "text-primary" : "")} />
+              <MessageCircle className={cn("w-5 h-5", showComments ? "text-accent" : "")} />
             </Button>
 
             <Button
@@ -809,7 +809,7 @@ function GameContent({ activity }: { activity: FeedActivity }) {
       {activity.subtext && <p className="sr-only" data-testid={`text-subtext-${activity.id}`}>{activity.subtext}</p>}
       <div className="rounded-md bg-muted/50 p-3">
         <div className="flex items-center gap-2 mb-3">
-          <Swords className="w-4 h-4 text-orange-400" />
+          <Swords className="w-4 h-4 text-accent" />
           <span className="text-xs text-muted-foreground">vs {game.opponent}</span>
         </div>
         <div className="grid grid-cols-4 gap-3 text-center">
@@ -847,13 +847,13 @@ function BadgeContent({ activity }: { activity: FeedActivity }) {
     <div className="px-4 pb-3 space-y-3">
       <p className="sr-only" data-testid={`text-headline-${activity.id}`}>{activity.headline}</p>
       {activity.subtext && <p className="sr-only" data-testid={`text-subtext-${activity.id}`}>{activity.subtext}</p>}
-      <div className="relative rounded-md bg-amber-500/10 p-4">
+      <div className="relative rounded-md bg-accent/10 p-4">
         <div className="relative flex items-center gap-3">
-          <div className="w-12 h-12 rounded-md bg-amber-500/20 flex items-center justify-center shrink-0">
-            <Trophy className="w-6 h-6 text-amber-400" />
+          <div className="w-12 h-12 rounded-md bg-accent/20 flex items-center justify-center shrink-0">
+            <Trophy className="w-6 h-6 text-accent" />
           </div>
           <div className="min-w-0">
-            <p className="text-base font-bold text-amber-400">{parsed?.badgeName || "Achievement"}</p>
+            <p className="text-base font-bold text-accent">{parsed?.badgeName || "Achievement"}</p>
             {activity.subtext && (
               <p className="text-xs text-muted-foreground mt-0.5">{activity.subtext}</p>
             )}
@@ -907,12 +907,12 @@ function StreakContent({ activity }: { activity: FeedActivity }) {
     <div className="px-4 pb-3 space-y-2">
       <p className="sr-only" data-testid={`text-headline-${activity.id}`}>{activity.headline}</p>
       {activity.subtext && <p className="sr-only" data-testid={`text-subtext-${activity.id}`}>{activity.subtext}</p>}
-      <div className="rounded-md bg-orange-500/10 p-3">
+      <div className="rounded-md bg-accent/10 p-3">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1">
-            <Flame className="w-7 h-7 text-orange-400" />
+            <Flame className="w-7 h-7 text-accent" />
             {streakCount && (
-              <span className="text-3xl font-bold text-orange-400">{streakCount}</span>
+              <span className="text-3xl font-bold text-accent">{streakCount}</span>
             )}
           </div>
           <div className="min-w-0">
@@ -1126,8 +1126,8 @@ function AlertCard({ activity, index }: { activity: FeedActivity; index: number 
     >
       <div className={cn(
         "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
-        activity.activityType === 'badge' && "bg-amber-500/10",
-        activity.activityType === 'streak' && "bg-orange-500/10",
+        activity.activityType === 'badge' && "bg-accent/10",
+        activity.activityType === 'streak' && "bg-accent/10",
         activity.activityType === 'goal' && "bg-emerald-500/10",
         activity.activityType === 'challenge' && "bg-purple-500/10",
       )}>
@@ -1147,7 +1147,7 @@ function AlertCard({ activity, index }: { activity: FeedActivity; index: number 
             const streakCount = parseStreakHeadline(activity.headline);
             return streakCount ? (
               <Badge variant="secondary" className="text-[10px] gap-1 shrink-0" data-testid={`badge-streak-${activity.id}`}>
-                <Flame className="w-3 h-3 text-orange-400" />
+                <Flame className="w-3 h-3 text-accent" />
                 {streakCount}
               </Badge>
             ) : null;
@@ -1292,7 +1292,7 @@ function FeedList({ activities, isLoading, error, emptyMessage, emptyDescription
           </div>
         </div>
         <div className="space-y-2">
-          <p className="text-foreground font-bold text-lg">{emptyMessage}</p>
+          <p className="text-foreground font-display font-bold text-lg">{emptyMessage}</p>
           <p className="text-sm text-muted-foreground max-w-sm mx-auto">
             {emptyDescription}
           </p>
@@ -1414,7 +1414,7 @@ export default function FeedContent() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList 
-          className="w-full h-auto p-1 bg-muted/50 border border-border rounded-md grid grid-cols-4 gap-1" 
+          className="w-full h-auto p-1 bg-card border border-white/10 rounded-xl grid grid-cols-4 gap-1" 
           data-testid="tabs-feed"
         >
           {(["all", "following", "team", "alerts"] as const).map((tab) => {
@@ -1425,7 +1425,7 @@ export default function FeedContent() {
                 value={tab}
                 className={cn(
                   "flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-md transition-all text-sm",
-                  "data-[state=active]:bg-background data-[state=active]:shadow-sm",
+                  "data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-sm",
                 )}
                 data-testid={`tab-${tab}`}
               >

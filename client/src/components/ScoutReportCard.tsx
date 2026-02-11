@@ -50,23 +50,23 @@ interface Props {
 }
 
 function getRatingColor(rating: number): string {
-  if (rating >= 90) return "text-amber-400";
+  if (rating >= 90) return "text-accent";
   if (rating >= 80) return "text-purple-400";
-  if (rating >= 70) return "text-accent";
+  if (rating >= 70) return "text-accent/80";
   if (rating >= 60) return "text-blue-400";
   return "text-zinc-400";
 }
 
 function getRatingBgColor(rating: number): string {
-  if (rating >= 90) return "from-amber-500/20 to-yellow-600/20 border-amber-500/30";
+  if (rating >= 90) return "from-accent/20 to-accent/10 border-accent/30";
   if (rating >= 80) return "from-purple-500/20 to-purple-600/20 border-purple-500/30";
-  if (rating >= 70) return "from-accent/20 to-accent/20 border-accent/30";
+  if (rating >= 70) return "from-accent/15 to-accent/10 border-accent/20";
   if (rating >= 60) return "from-blue-500/20 to-blue-600/20 border-blue-500/30";
   return "from-zinc-500/20 to-zinc-600/20 border-zinc-500/30";
 }
 
 function getRatingBadgeStyle(rating: number): string {
-  if (rating >= 90) return "bg-gradient-to-r from-amber-500 to-yellow-500 text-black";
+  if (rating >= 90) return "bg-gradient-to-r from-accent to-accent/90 text-accent-foreground";
   if (rating >= 80) return "bg-gradient-to-r from-purple-500 to-purple-600 text-white";
   if (rating >= 70) return "bg-accent text-white";
   if (rating >= 60) return "bg-gradient-to-r from-blue-500 to-blue-600 text-white";
@@ -88,7 +88,7 @@ function calculateTrustScore(verificationCount: number, ratingCount: number): nu
 function getTrustLevel(score: number): { label: string; color: string } {
   if (score >= 80) return { label: "Highly Trusted", color: "text-emerald-400" };
   if (score >= 60) return { label: "Trusted", color: "text-accent" };
-  if (score >= 40) return { label: "Building Trust", color: "text-amber-400" };
+  if (score >= 40) return { label: "Building Trust", color: "text-accent" };
   return { label: "New Profile", color: "text-zinc-400" };
 }
 
@@ -339,16 +339,16 @@ export function ScoutReportCard({ playerId, playerName, position }: Props) {
               transition={{ delay: 0.3 }}
             >
               <Card 
-                className="p-4 bg-gradient-to-br from-amber-500/20 to-yellow-600/20 border-amber-500/30 backdrop-blur-sm"
+                className="p-4 bg-gradient-to-br from-accent/20 to-accent/10 border-accent/30 backdrop-blur-sm"
                 data-testid="scout-report-scout-ratings"
               >
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">Scout Ratings</p>
-                    <p className="text-2xl font-bold text-amber-400">{ratingCount}</p>
+                    <p className="text-2xl font-bold text-accent">{ratingCount}</p>
                   </div>
                   <div className="p-1.5 rounded-lg bg-white/5">
-                    <Star className="w-4 h-4 text-amber-400" style={{ filter: "drop-shadow(0 0 6px #FCD34D)" }} />
+                    <Star className="w-4 h-4 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(24 95% 53%))" }} />
                   </div>
                 </div>
               </Card>
@@ -406,17 +406,17 @@ export function ScoutReportCard({ playerId, playerName, position }: Props) {
 
               {weaknesses.length > 0 && (
                 <Card 
-                  className="p-4 bg-gradient-to-br from-amber-500/10 to-orange-600/10 border-amber-500/20 backdrop-blur-sm"
+                  className="p-4 bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20 backdrop-blur-sm"
                   data-testid="scout-report-weaknesses"
                 >
                   <div className="flex items-center gap-2 mb-3">
-                    <AlertCircle className="w-4 h-4 text-amber-400" style={{ filter: "drop-shadow(0 0 6px #FCD34D)" }} />
+                    <AlertCircle className="w-4 h-4 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(24 95% 53%))" }} />
                     <h4 className="text-sm font-semibold text-white">Areas to Improve</h4>
                   </div>
                   <ul className="space-y-2">
                     {weaknesses.map((weakness, idx) => (
                       <li key={idx} className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <ChevronRight className="w-3 h-3 text-amber-400 flex-shrink-0" />
+                        <ChevronRight className="w-3 h-3 text-accent flex-shrink-0" />
                         <span>{weakness}</span>
                       </li>
                     ))}

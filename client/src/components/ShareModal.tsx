@@ -162,7 +162,7 @@ export function ShareModal({
             <Button
               onClick={() => setShowPlatformExport(true)}
               variant="outline"
-              className="gap-2 border-primary/30 text-primary"
+              className="gap-2 border-accent/30 text-accent"
               data-testid="button-platform-export"
             >
               <Smartphone className="w-4 h-4" />
@@ -223,7 +223,7 @@ export function ShareModal({
               onClick={handleDownload}
               variant="ghost"
               size="icon"
-              className="hover:bg-gradient-to-br hover:from-purple-500/20 hover:via-pink-500/20 hover:to-orange-500/20"
+              className="hover:bg-gradient-to-br hover:from-purple-500/20 hover:via-pink-500/20 hover:to-accent/20"
               title="Download image to share on Instagram"
               data-testid="button-share-instagram"
             >

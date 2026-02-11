@@ -67,10 +67,10 @@ function ReelCoverCard({ data, selectedClips }: { data: ReelData; selectedClips:
       <div className="relative z-10 h-full flex flex-col p-6">
         <div className="flex items-center justify-between gap-2 mb-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-orange-500 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center">
               <Activity className="w-4 h-4 text-white" />
             </div>
-            <span className="text-sm font-black uppercase tracking-widest text-primary">Caliber</span>
+            <span className="text-sm font-black uppercase tracking-widest text-accent">Caliber</span>
           </div>
           <Badge className="bg-white/10 text-white/70 border-white/10 text-[10px] no-default-hover-elevate no-default-active-elevate">
             <Film className="w-3 h-3 mr-1" />
@@ -102,7 +102,7 @@ function ReelCoverCard({ data, selectedClips }: { data: ReelData; selectedClips:
             {sport === 'basketball' ? (
               <>
                 <div className="rounded-xl bg-white/5 border border-white/10 p-2.5 text-center">
-                  <p className="text-xl font-black text-orange-400">{stat.ppg}</p>
+                  <p className="text-xl font-black text-accent">{stat.ppg}</p>
                   <p className="text-[9px] text-white/50 uppercase">PPG</p>
                 </div>
                 <div className="rounded-xl bg-white/5 border border-white/10 p-2.5 text-center">
@@ -117,7 +117,7 @@ function ReelCoverCard({ data, selectedClips }: { data: ReelData; selectedClips:
             ) : (
               <>
                 <div className="rounded-xl bg-white/5 border border-white/10 p-2.5 text-center">
-                  <p className="text-xl font-black text-orange-400">{stat.tdpg}</p>
+                  <p className="text-xl font-black text-accent">{stat.tdpg}</p>
                   <p className="text-[9px] text-white/50 uppercase">TD/G</p>
                 </div>
                 <div className="rounded-xl bg-white/5 border border-white/10 p-2.5 text-center col-span-2">
@@ -220,7 +220,7 @@ export default function ReelGenerator() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <Loader2 className="w-8 h-8 animate-spin text-accent" />
       </div>
     );
   }
@@ -263,7 +263,7 @@ export default function ReelGenerator() {
                 <Download className="w-3 h-3" />
                 Download Cover
               </Button>
-              <Button variant="outline" size="sm" onClick={() => setShowExport(true)} className="gap-1.5 border-primary/30 text-primary" data-testid="button-export-cover">
+              <Button variant="outline" size="sm" onClick={() => setShowExport(true)} className="gap-1.5 border-accent/30 text-accent" data-testid="button-export-cover">
                 <Share2 className="w-3 h-3" />
                 Export Cover
               </Button>
@@ -302,7 +302,7 @@ export default function ReelGenerator() {
                           {data.player.sport === 'basketball' ? (
                             <>
                               <div className="text-center">
-                                <p className="text-lg font-black text-orange-400">{data.statOverlay.ppg}</p>
+                                <p className="text-lg font-black text-accent">{data.statOverlay.ppg}</p>
                                 <p className="text-[9px] text-white/50">PPG</p>
                               </div>
                               <div className="text-center">
@@ -317,7 +317,7 @@ export default function ReelGenerator() {
                           ) : (
                             <>
                               <div className="text-center">
-                                <p className="text-lg font-black text-orange-400">{data.statOverlay.tdpg}</p>
+                                <p className="text-lg font-black text-accent">{data.statOverlay.tdpg}</p>
                                 <p className="text-[9px] text-white/50">TD/G</p>
                               </div>
                               <div className="text-center">
@@ -369,7 +369,7 @@ export default function ReelGenerator() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowOverlay(!showOverlay)}
-                  className={cn("text-xs gap-1 toggle-elevate", showOverlay ? "text-primary toggle-elevated" : "text-muted-foreground")}
+                  className={cn("text-xs gap-1 toggle-elevate", showOverlay ? "text-accent toggle-elevated" : "text-muted-foreground")}
                   data-testid="button-toggle-overlay"
                 >
                   <Activity className="w-3 h-3" />
@@ -386,7 +386,7 @@ export default function ReelGenerator() {
                 onClick={() => setCurrentClipIndex(index)}
                 className={cn(
                   "flex-shrink-0 w-24 h-16 rounded-md overflow-hidden border-2 transition-all cursor-pointer",
-                  index === currentClipIndex ? "border-primary" : "border-white/10"
+                  index === currentClipIndex ? "border-accent" : "border-white/10"
                 )}
                 data-testid={`button-timeline-clip-${clip.id}`}
               >

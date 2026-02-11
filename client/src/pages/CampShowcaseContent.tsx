@@ -205,7 +205,7 @@ const EVENT_TYPES = [
 const EVENT_TYPE_COLORS: Record<string, string> = {
   camp: "bg-gradient-to-r from-emerald-500 to-green-500 text-white",
   showcase: "bg-accent text-white",
-  combine: "bg-gradient-to-r from-amber-500 to-orange-500 text-white",
+  combine: "bg-gradient-to-r from-accent to-accent/90 text-accent-foreground",
   tournament: "bg-gradient-to-r from-purple-500 to-violet-500 text-white",
   prospect_day: "bg-gradient-to-r from-rose-500 to-pink-500 text-white",
 };
@@ -338,7 +338,7 @@ function EventCard({ eventData, isSaved, onToggleSave, isPending }: EventCardPro
                 <Users className="w-4 h-4 text-accent" />
                 <span className={cn(
                   "text-sm",
-                  event.spotsRemaining <= 10 ? "text-amber-400" : "text-muted-foreground"
+                  event.spotsRemaining <= 10 ? "text-accent" : "text-muted-foreground"
                 )}>
                   {event.spotsRemaining} spots left
                 </span>
@@ -566,8 +566,8 @@ export default function CampShowcaseContent() {
             className={cn(
               "text-xs uppercase font-semibold",
               currentSport === "basketball"
-                ? "border-orange-500/50 text-orange-400 bg-orange-500/10"
-                : "border-amber-700/50 text-amber-500 bg-amber-700/10"
+                ? "border-accent/50 text-accent bg-accent/10"
+                : "border-accent/50 text-accent bg-accent/10"
             )}
           >
             {currentSport === "basketball" ? (

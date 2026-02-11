@@ -14,7 +14,7 @@ export default function CoachAlertsPage() {
       </div>
       
       <div className="flex items-center gap-3 mb-6">
-        <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20">
+        <div className="h-10 w-10 rounded-xl bg-accent flex items-center justify-center text-accent-foreground shadow-lg shadow-accent/20">
           <Bell className="w-6 h-6" />
         </div>
         <div>

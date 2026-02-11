@@ -78,7 +78,7 @@ export function HighlightClipCard({
         )}
 
         {(clip.viewCount || 0) > 100 && (
-          <Badge className="absolute top-3 left-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-black text-[10px] font-bold px-2 py-0.5 border-0">
+          <Badge className="absolute top-3 left-3 bg-gradient-to-r from-yellow-500 to-accent text-black text-[10px] font-bold px-2 py-0.5 border-0">
             <Sparkles className="w-3 h-3 mr-1" />
             Popular
           </Badge>

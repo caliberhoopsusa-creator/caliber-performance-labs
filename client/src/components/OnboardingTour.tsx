@@ -28,7 +28,7 @@ const tourSteps: TourStep[] = [
     title: "Earn Badges & Level Up",
     description: "Complete challenges, maintain streaks, and unlock badges as you progress from Rookie to Hall of Fame. Every game brings you closer to the top!",
     icon: <Trophy className="w-8 h-8" />,
-    gradient: "from-amber-500 to-orange-600",
+    gradient: "from-accent to-accent/80",
   },
   {
     title: "AI Video Analysis",

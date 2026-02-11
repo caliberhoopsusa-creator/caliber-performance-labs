@@ -352,8 +352,8 @@ export function AlertsCenter({ playerId }: AlertsCenterProps) {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <Bell className="w-8 h-8 text-primary/60" />
+            <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
+              <Bell className="w-8 h-8 text-accent/60" />
             </div>
             <p className="text-white font-semibold mb-1">No alerts to display</p>
             <p className="text-sm text-muted-foreground">

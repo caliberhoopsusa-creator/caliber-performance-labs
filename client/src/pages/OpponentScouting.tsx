@@ -193,7 +193,7 @@ function OpponentCard({ opponent, onClick }: { opponent: Opponent; onClick: () =
       <CardContent className="p-6">
         <div className="flex items-start justify-between gap-3 mb-4">
           <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${isTeam ? "bg-blue-500/10 text-blue-500" : "bg-orange-500/10 text-orange-500"}`}>
+            <div className={`p-2 rounded-lg ${isTeam ? "bg-blue-500/10 text-blue-500" : "bg-accent/10 text-accent"}`}>
               {isTeam ? <Users className="w-5 h-5" /> : <User className="w-5 h-5" />}
             </div>
             <div>
@@ -347,7 +347,7 @@ function OpponentDetailView({
         </Button>
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            <div className={`p-3 rounded-xl ${isTeam ? "bg-blue-500/10 text-blue-500" : "bg-orange-500/10 text-orange-500"}`}>
+            <div className={`p-3 rounded-xl ${isTeam ? "bg-blue-500/10 text-blue-500" : "bg-accent/10 text-accent"}`}>
               {isTeam ? <Users className="w-6 h-6" /> : <User className="w-6 h-6" />}
             </div>
             <div>

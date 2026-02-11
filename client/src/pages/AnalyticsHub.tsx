@@ -29,7 +29,7 @@ export default function AnalyticsHub() {
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-white via-accent/20 to-accent bg-clip-text text-transparent">
+            <h1 className="text-2xl md:text-3xl font-display font-bold bg-gradient-to-r from-white via-accent/20 to-accent bg-clip-text text-transparent">
               Analytics Hub
             </h1>
             <HelpTooltip
@@ -52,35 +52,35 @@ export default function AnalyticsHub() {
         >
           <TabsTrigger
             value="leaderboard"
-            className="whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            className="whitespace-nowrap data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
             data-testid="tab-leaderboard"
           >
             Leaderboard
           </TabsTrigger>
           <TabsTrigger
             value="compare"
-            className="whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            className="whitespace-nowrap data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
             data-testid="tab-compare"
           >
             Compare
           </TabsTrigger>
           <TabsTrigger
             value="teams"
-            className="whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            className="whitespace-nowrap data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
             data-testid="tab-teams"
           >
             Teams
           </TabsTrigger>
           <TabsTrigger
             value="challenges"
-            className="whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            className="whitespace-nowrap data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
             data-testid="tab-challenges"
           >
             Challenges
           </TabsTrigger>
           <TabsTrigger
             value="grading"
-            className="whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            className="whitespace-nowrap data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
             data-testid="tab-grading"
           >
             Grading

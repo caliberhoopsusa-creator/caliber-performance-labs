@@ -10,7 +10,7 @@ type EventCardProps = {
 };
 
 const eventTypeConfig: Record<string, { icon: React.ComponentType<{ className?: string }>, color: string }> = {
-  game: { icon: Calendar, color: "text-orange-400" },
+  game: { icon: Calendar, color: "text-accent" },
   practice: { icon: Dumbbell, color: "text-green-400" },
   workout: { icon: Dumbbell, color: "text-blue-400" },
   meeting: { icon: Users, color: "text-purple-400" },

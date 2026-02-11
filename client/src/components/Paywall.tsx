@@ -19,7 +19,7 @@ export function Paywall({ requiredTier = "pro", featureName = "This feature", ch
   if (authLoading || (isAuthenticated && subLoading)) {
     return (
       <div className="flex items-center justify-center p-12">
-        <div className="animate-spin w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full" />
+        <div className="animate-spin w-8 h-8 border-4 border-accent/20 border-t-accent rounded-full" />
       </div>
     );
   }
@@ -72,15 +72,15 @@ function PaywallCard({ icon: Icon, title, description, buttonText, buttonHref, i
   return (
     <div className="flex items-center justify-center min-h-[300px] p-6">
       <Card className="max-w-md w-full overflow-hidden" data-testid="paywall-card">
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-orange-500 to-primary" />
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent via-accent/80 to-accent" />
         <CardContent className="pt-10 pb-8 text-center space-y-6">
           <div className="relative mx-auto">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center mx-auto shadow-lg shadow-primary/20">
-              <Icon className="w-10 h-10 text-primary" />
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20 flex items-center justify-center mx-auto shadow-lg shadow-accent/20">
+              <Icon className="w-10 h-10 text-accent" />
             </div>
             {tier === "coach_pro" && (
               <div className="absolute -top-2 -right-2">
-                <Crown className="w-6 h-6 text-amber-400" />
+                <Crown className="w-6 h-6 text-accent" />
               </div>
             )}
           </div>
@@ -93,14 +93,14 @@ function PaywallCard({ icon: Icon, title, description, buttonText, buttonHref, i
           <div className="pt-2 space-y-3">
             {isExternal ? (
               <a href={buttonHref}>
-                <Button size="lg" className="w-full shadow-lg shadow-primary/25" data-testid="button-paywall-action">
+                <Button size="lg" className="w-full shadow-lg shadow-accent/25" data-testid="button-paywall-action">
                   <Zap className="w-4 h-4 mr-2" />
                   {buttonText}
                 </Button>
               </a>
             ) : (
               <Link href={buttonHref}>
-                <Button size="lg" className="w-full shadow-lg shadow-primary/25" data-testid="button-paywall-action">
+                <Button size="lg" className="w-full shadow-lg shadow-accent/25" data-testid="button-paywall-action">
                   <Zap className="w-4 h-4 mr-2" />
                   {buttonText}
                 </Button>
@@ -152,7 +152,7 @@ export function UpgradeBadge({ requiredTier = "pro", className }: UpgradeBadgePr
   }
 
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-primary to-orange-500 text-white ${className}`}>
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-accent to-accent/80 text-white ${className}`}>
       <Lock className="w-2.5 h-2.5" />
       PRO
     </span>

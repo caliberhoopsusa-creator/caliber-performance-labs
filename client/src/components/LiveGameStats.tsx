@@ -42,15 +42,15 @@ export function LiveGameStats({ stats, animatingStats = new Set() }: LiveGameSta
             key={stat.key}
             className={cn(
               "p-2 rounded-lg transition-all duration-300",
-              stat.primary && "bg-primary/20 border border-primary/30",
+              stat.primary && "bg-accent/20 border border-accent/30",
               stat.negative && stats[stat.key as keyof typeof stats] >= 4 && "bg-red-500/20",
-              animatingStats.has(stat.key) && "scale-110 ring-2 ring-primary"
+              animatingStats.has(stat.key) && "scale-110 ring-2 ring-accent"
             )}
             data-testid={`stat-${stat.key}`}
           >
             <div className={cn(
               "stat-value text-2xl md:text-3xl transition-transform duration-200",
-              stat.primary && "text-primary",
+              stat.primary && "text-accent",
               stat.negative && stats[stat.key as keyof typeof stats] >= 4 && "text-red-400",
               animatingStats.has(stat.key) && "scale-125"
             )}>

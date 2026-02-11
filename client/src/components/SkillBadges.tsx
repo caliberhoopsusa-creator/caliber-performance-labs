@@ -245,16 +245,16 @@ export function SkillBadges({ playerId, position }: SkillBadgesProps) {
 
   return (
     <Card className="p-6 border-white/5 overflow-hidden" data-testid="skill-badges">
-      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+      <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
       
       <div className="relative z-10">
         <div className="flex items-center gap-3 mb-5">
-          <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
-            <Target className="w-5 h-5 text-primary" />
+          <div className="p-2 rounded-lg bg-accent/10 border border-accent/20">
+            <Target className="w-5 h-5 text-accent" />
           </div>
           <h3 className="text-lg font-bold font-display text-foreground uppercase tracking-wider">Skill Badges</h3>
           {unlockedBadges.length > 0 && (
-            <span className="ml-auto text-sm font-medium px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
+            <span className="ml-auto text-sm font-medium px-3 py-1 rounded-full bg-accent/10 text-accent border border-accent/20">
               {unlockedBadges.length}/{filteredBadges.length}
             </span>
           )}

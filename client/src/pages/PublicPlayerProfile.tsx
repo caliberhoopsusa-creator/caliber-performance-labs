@@ -351,7 +351,7 @@ export default function PublicPlayerProfile() {
                       variant="outline" 
                       className={cn(
                         "text-xs uppercase",
-                        isFootball ? "border-orange-500/30 text-orange-400" : "border-orange-500/30 text-orange-400"
+                        isFootball ? "border-accent/30 text-accent" : "border-accent/30 text-accent"
                       )}
                       data-testid={isFootball ? "badge-sport-football" : "badge-sport-basketball"}
                     >
@@ -647,7 +647,7 @@ export default function PublicPlayerProfile() {
                       <Badge 
                         key={accolade.id} 
                         variant="outline" 
-                        className="gap-1 border-amber-500/30 text-amber-400"
+                        className="gap-1 border-accent/30 text-accent"
                         data-testid={`badge-accolade-${accolade.id}`}
                       >
                         <Trophy className="w-3 h-3" />

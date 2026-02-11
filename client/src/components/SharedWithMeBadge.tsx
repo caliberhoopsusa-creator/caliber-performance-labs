@@ -32,7 +32,7 @@ export function SharedWithMeBadge({
     <Badge
       variant="outline"
       className={cn(
-        "px-2 py-1 border-primary/30 bg-primary/5 text-primary gap-1.5",
+        "px-2 py-1 border-accent/30 bg-accent/5 text-accent gap-1.5",
         className
       )}
       data-testid="badge-shared-with-me"
@@ -42,7 +42,7 @@ export function SharedWithMeBadge({
         {sharedByPhotoUrl ? (
           <Avatar className="h-4 w-4">
             <AvatarImage src={sharedByPhotoUrl} width={16} height={16} />
-            <AvatarFallback className="text-[8px] bg-primary/20">
+            <AvatarFallback className="text-[8px] bg-accent/20">
               {sharedByName.slice(0, 1)}
             </AvatarFallback>
           </Avatar>

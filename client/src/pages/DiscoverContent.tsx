@@ -89,7 +89,7 @@ function TrendingPlayerCard({ entry }: { entry: LeaderboardEntry }) {
       <div className="flex flex-col items-center text-center gap-2">
         <Link href={`/players/${entry.playerId}`}>
           <Avatar className="w-14 h-14 border-2 border-white/10 cursor-pointer">
-            <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary text-white font-bold text-lg">
+            <AvatarFallback className="bg-gradient-to-br from-accent/20 to-secondary text-white font-bold text-lg">
               {initials}
             </AvatarFallback>
           </Avatar>
@@ -140,7 +140,7 @@ function SuggestedPlayerCard({ player }: { player: Player }) {
       <div className="flex items-center gap-3">
         <Link href={`/players/${player.id}`}>
           <Avatar className="w-12 h-12 border-2 border-white/10 cursor-pointer">
-            <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary text-white font-bold">
+            <AvatarFallback className="bg-gradient-to-br from-accent/20 to-secondary text-white font-bold">
               {initials}
             </AvatarFallback>
           </Avatar>
@@ -234,7 +234,7 @@ export default function DiscoverContent() {
           <Compass className="w-5 h-5 text-accent" />
         </div>
         <div>
-          <h2 className="text-xl font-bold text-white">Discover</h2>
+          <h2 className="text-xl font-display font-bold text-white tracking-wide">Discover</h2>
           <p className="text-xs text-muted-foreground">
             Find players, follow trends, and explore top performances
           </p>
@@ -275,8 +275,8 @@ export default function DiscoverContent() {
         <>
           <section data-testid="section-trending">
             <div className="flex items-center gap-2 mb-4">
-              <TrendingUp className="w-5 h-5 text-orange-400" />
-              <h3 className="text-lg font-bold text-white">Trending Players</h3>
+              <TrendingUp className="w-5 h-5 text-accent" />
+              <h3 className="text-lg font-display font-bold text-white tracking-wide">Trending Players</h3>
             </div>
             {isLeaderboardLoading ? (
               <div className="flex gap-3 overflow-x-auto pb-2">
@@ -310,7 +310,7 @@ export default function DiscoverContent() {
           <section data-testid="section-suggested">
             <div className="flex items-center gap-2 mb-4">
               <Users className="w-5 h-5 text-purple-400" />
-              <h3 className="text-lg font-bold text-white">Suggested For You</h3>
+              <h3 className="text-lg font-display font-bold text-white tracking-wide">Suggested For You</h3>
             </div>
             {isPlayersLoading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -343,7 +343,7 @@ export default function DiscoverContent() {
           <section data-testid="section-top-performances">
             <div className="flex items-center gap-2 mb-4">
               <Trophy className="w-5 h-5 text-yellow-400" />
-              <h3 className="text-lg font-bold text-white">
+              <h3 className="text-lg font-display font-bold text-white tracking-wide">
                 Top Performances This Week
               </h3>
             </div>
@@ -378,14 +378,14 @@ export default function DiscoverContent() {
                       {activity.playerId ? (
                         <Link href={`/players/${activity.playerId}`}>
                           <Avatar className="w-9 h-9 border border-white/10 cursor-pointer shrink-0">
-                            <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary text-white text-xs font-bold">
+                            <AvatarFallback className="bg-gradient-to-br from-accent/20 to-secondary text-white text-xs font-bold">
                               {initials}
                             </AvatarFallback>
                           </Avatar>
                         </Link>
                       ) : (
                         <Avatar className="w-9 h-9 border border-white/10 shrink-0">
-                          <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary text-white text-xs font-bold">
+                          <AvatarFallback className="bg-gradient-to-br from-accent/20 to-secondary text-white text-xs font-bold">
                             {initials}
                           </AvatarFallback>
                         </Avatar>
@@ -414,7 +414,7 @@ export default function DiscoverContent() {
                       </div>
                       {(activity.reactionCount ?? 0) > 0 && (
                         <Badge variant="secondary" className="shrink-0">
-                          <Flame className="w-3 h-3 mr-1 text-orange-400" />
+                          <Flame className="w-3 h-3 mr-1 text-accent" />
                           {activity.reactionCount}
                         </Badge>
                       )}

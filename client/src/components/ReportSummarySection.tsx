@@ -27,7 +27,7 @@ export function ReportSummarySection({
     >
       <div className="flex items-center gap-2 mb-4 pb-2 border-b border-border/50 print:border-gray-200">
         {Icon && (
-          <Icon className="w-5 h-5 text-primary print:text-orange-600" />
+          <Icon className="w-5 h-5 text-accent print:text-orange-600" />
         )}
         <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground print:text-gray-700">
           {title}
@@ -52,13 +52,13 @@ export function StatBox({ label, value, sublabel, highlight = false }: StatBoxPr
     <div 
       className={cn(
         "text-center p-3 rounded-lg print:bg-gray-50 print:border print:border-gray-200",
-        highlight ? "bg-primary/10" : "bg-secondary/30"
+        highlight ? "bg-accent/10" : "bg-secondary/30"
       )}
       data-testid={`stat-box-${label.toLowerCase().replace(/\s+/g, '-')}`}
     >
       <div className={cn(
         "text-2xl font-bold font-display",
-        highlight ? "text-primary print:text-orange-600" : "text-foreground print:text-black"
+        highlight ? "text-accent print:text-orange-600" : "text-foreground print:text-black"
       )}>
         {value}
       </div>
@@ -94,7 +94,7 @@ export function ProgressRow({ label, value, max, showPercentage = true }: Progre
       </div>
       <div className="progress-bar h-2 bg-secondary/50 rounded-full overflow-hidden print:bg-gray-200">
         <div 
-          className="progress-bar-fill h-full bg-primary rounded-full transition-all print:bg-orange-500"
+          className="progress-bar-fill h-full bg-accent rounded-full transition-all print:bg-orange-500"
           style={{ width: `${percentage}%` }}
         />
       </div>

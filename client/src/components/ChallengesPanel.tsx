@@ -29,13 +29,13 @@ function getTimeRemaining(endDate: string): string {
 function getChallengeIcon(targetType: string) {
   switch (targetType) {
     case 'hustle_avg':
-      return <Flame className="w-5 h-5 text-orange-400" />;
+      return <Flame className="w-5 h-5 text-accent" />;
     case 'points_total':
       return <Target className="w-5 h-5 text-green-400" />;
     case 'grade_count':
       return <Crown className="w-5 h-5 text-yellow-400" />;
     default:
-      return <Trophy className="w-5 h-5 text-primary" />;
+      return <Trophy className="w-5 h-5 text-accent" />;
   }
 }
 
@@ -43,7 +43,7 @@ function getChallengeTypeBadge(type: string) {
   const colors: Record<string, string> = {
     weekly: "bg-blue-500/20 text-blue-400",
     monthly: "bg-purple-500/20 text-purple-400",
-    seasonal: "bg-amber-500/20 text-amber-400",
+    seasonal: "bg-accent/20 text-accent",
   };
   return colors[type] || "bg-muted text-muted-foreground";
 }
@@ -63,7 +63,7 @@ export function ChallengesPanel({ playerId }: { playerId?: number }) {
       <Card className="bg-card border-border">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-primary" />
+            <Trophy className="w-5 h-5 text-accent" />
             Active Challenges
           </CardTitle>
         </CardHeader>
@@ -86,7 +86,7 @@ export function ChallengesPanel({ playerId }: { playerId?: number }) {
       <Card className="bg-card border-border">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-primary" />
+            <Trophy className="w-5 h-5 text-accent" />
             Active Challenges
           </CardTitle>
         </CardHeader>
@@ -97,8 +97,8 @@ export function ChallengesPanel({ playerId }: { playerId?: number }) {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <Trophy className="w-8 h-8 text-primary/60" />
+            <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
+              <Trophy className="w-8 h-8 text-accent/60" />
             </div>
             <p className="text-white font-semibold mb-1">No active challenges</p>
             <p className="text-sm text-muted-foreground">Join or create challenges to compete with other players and push your limits</p>
@@ -117,10 +117,10 @@ export function ChallengesPanel({ playerId }: { playerId?: number }) {
     <Card className="bg-card border-border">
       <CardHeader className="pb-2 flex flex-row items-center justify-between gap-2">
         <CardTitle className="text-lg flex items-center gap-2">
-          <Trophy className="w-5 h-5 text-primary" />
+          <Trophy className="w-5 h-5 text-accent" />
           Active Challenges
         </CardTitle>
-        <Link href="/challenges" className="text-xs text-primary hover:underline" data-testid="link-view-all-challenges">
+        <Link href="/challenges" className="text-xs text-accent hover:underline" data-testid="link-view-all-challenges">
           View All
         </Link>
       </CardHeader>
@@ -139,7 +139,7 @@ export function ChallengesPanel({ playerId }: { playerId?: number }) {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className={`p-3 rounded-lg border ${isCompleted ? 'bg-primary/10 border-primary/30' : 'bg-muted/30 border-border/50'}`}
+                className={`p-3 rounded-lg border ${isCompleted ? 'bg-accent/10 border-accent/30' : 'bg-muted/30 border-border/50'}`}
                 data-testid={`challenge-card-${challenge.id}`}
               >
                 <div className="flex items-start justify-between gap-2 mb-2">
@@ -165,7 +165,7 @@ export function ChallengesPanel({ playerId }: { playerId?: number }) {
                         <motion.span
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
-                          className="text-primary font-bold flex items-center gap-1"
+                          className="text-accent font-bold flex items-center gap-1"
                         >
                           <Trophy className="w-3 h-3" /> Completed!
                         </motion.span>
@@ -220,7 +220,7 @@ export function ChallengeCard({ challengeId }: { challengeId: number }) {
 
   return (
     <Card className="bg-card border-border overflow-hidden">
-      <CardHeader className="pb-2 bg-gradient-to-r from-primary/10 to-transparent">
+      <CardHeader className="pb-2 bg-gradient-to-r from-accent/10 to-transparent">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-3">
             {getChallengeIcon(challenge.targetType)}
@@ -278,7 +278,7 @@ export function ChallengeCard({ challengeId }: { challengeId: number }) {
                   <div className="flex items-center gap-2">
                     <span className="font-semibold">{entry.currentValue}</span>
                     {entry.completed && (
-                      <Trophy className="w-4 h-4 text-primary" />
+                      <Trophy className="w-4 h-4 text-accent" />
                     )}
                   </div>
                 </div>

@@ -82,8 +82,8 @@ function LoginForm({ onLogin }: { onLogin: () => void }) {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-            <Lock className="w-6 h-6 text-primary" />
+          <div className="mx-auto w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center mb-4">
+            <Lock className="w-6 h-6 text-accent" />
           </div>
           <CardTitle>Admin Access</CardTitle>
           <CardDescription>Enter the admin password to continue</CardDescription>
@@ -149,7 +149,7 @@ function SportBadge({ sport }: { sport: "basketball" | "football" }) {
   return (
     <Badge 
       variant="outline" 
-      className={sport === "football" ? "border-orange-500/50 text-orange-400" : "border-primary/50 text-primary"}
+      className="border-accent/50 text-accent"
     >
       {sport === "football" ? "🏈" : "🏀"}
     </Badge>
@@ -1703,7 +1703,7 @@ function StateRankingsTab() {
                 </p>
               )}
               {!selectedPlayer?.state && (
-                <p className="text-xs text-amber-500 mt-1">
+                <p className="text-xs text-accent mt-1">
                   Player has no state set - state rank won't display
                 </p>
               )}
@@ -1939,31 +1939,31 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
       <div className="max-w-7xl mx-auto px-4 py-8">
         <Tabs defaultValue="roster" className="space-y-6">
           <TabsList className="grid w-full grid-cols-7 max-w-4xl bg-card border border-white/10">
-            <TabsTrigger value="roster" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-roster">
+            <TabsTrigger value="roster" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-roster">
               <UserCog className="w-4 h-4" />
               Roster
             </TabsTrigger>
-            <TabsTrigger value="badges" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-badges">
+            <TabsTrigger value="badges" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-badges">
               <Award className="w-4 h-4" />
               Badges
             </TabsTrigger>
-            <TabsTrigger value="rankings" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-rankings">
+            <TabsTrigger value="rankings" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-rankings">
               <Crown className="w-4 h-4" />
               Rankings
             </TabsTrigger>
-            <TabsTrigger value="state" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-state">
+            <TabsTrigger value="state" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-state">
               <Trophy className="w-4 h-4" />
               State Awards
             </TabsTrigger>
-            <TabsTrigger value="products" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-products">
+            <TabsTrigger value="products" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-products">
               <Package className="w-4 h-4" />
               Products
             </TabsTrigger>
-            <TabsTrigger value="coupons" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-coupons">
+            <TabsTrigger value="coupons" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-coupons">
               <Tag className="w-4 h-4" />
               Coupons
             </TabsTrigger>
-            <TabsTrigger value="users" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-users">
+            <TabsTrigger value="users" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-users">
               <Users className="w-4 h-4" />
               Users
             </TabsTrigger>

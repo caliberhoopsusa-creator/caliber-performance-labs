@@ -128,7 +128,7 @@ export function VerificationQueue({ compact = false, maxItems }: Props) {
           {totalUnverified > 0 && (
             <Badge 
               variant="outline" 
-              className="border-amber-500/50 text-amber-400 ml-1"
+              className="border-accent/50 text-accent ml-1"
             >
               {totalUnverified} pending
             </Badge>
@@ -142,7 +142,7 @@ export function VerificationQueue({ compact = false, maxItems }: Props) {
             <TabsTrigger value="all" className="data-[state=active]:bg-accent">
               All ({totalUnverified})
             </TabsTrigger>
-            <TabsTrigger value="basketball" className="data-[state=active]:bg-orange-600">
+            <TabsTrigger value="basketball" className="data-[state=active]:bg-accent">
               Basketball ({basketballCount})
             </TabsTrigger>
             <TabsTrigger value="football" className="data-[state=active]:bg-green-600">

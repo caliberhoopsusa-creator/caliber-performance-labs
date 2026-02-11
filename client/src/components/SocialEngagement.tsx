@@ -342,7 +342,7 @@ export function SocialEngagement({ gameId, compact = false }: SocialEngagementPr
                   className="flex gap-3 group"
                 >
                   <Avatar className="w-8 h-8">
-                    <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                    <AvatarFallback className="text-xs bg-accent/10 text-accent">
                       {getInitials(comment.authorName)}
                     </AvatarFallback>
                   </Avatar>

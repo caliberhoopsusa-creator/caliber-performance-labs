@@ -188,7 +188,7 @@ export default function TeamDashboard() {
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
       </div>
     );
   }
@@ -217,7 +217,7 @@ export default function TeamDashboard() {
         <Card className="bg-gradient-to-br from-card to-card/50 border-white/5" data-testid="card-total-games">
           <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Total Games</CardTitle>
-            <Activity className="w-5 h-5 text-primary" />
+            <Activity className="w-5 h-5 text-accent" />
           </CardHeader>
           <CardContent>
             <div className="text-4xl font-display font-bold text-white">{teamStats.totalGamesPlayed}</div>
@@ -230,7 +230,7 @@ export default function TeamDashboard() {
             <Card className="bg-gradient-to-br from-card to-card/50 border-white/5" data-testid="card-team-ppg">
               <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Team PPG</CardTitle>
-                <Target className="w-5 h-5 text-orange-400" />
+                <Target className="w-5 h-5 text-accent" />
               </CardHeader>
               <CardContent>
                 <div className="text-4xl font-display font-bold text-white">{teamStats.teamPpg}</div>
@@ -265,7 +265,7 @@ export default function TeamDashboard() {
             <Card className="bg-gradient-to-br from-card to-card/50 border-white/5" data-testid="card-team-yds">
               <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Total YDS/G</CardTitle>
-                <Target className="w-5 h-5 text-orange-400" />
+                <Target className="w-5 h-5 text-accent" />
               </CardHeader>
               <CardContent>
                 <div className="text-4xl font-display font-bold text-white">
@@ -316,7 +316,7 @@ export default function TeamDashboard() {
         <Card className="bg-card/50 border-white/5" data-testid="card-best-performers">
           <CardHeader>
             <CardTitle className="text-lg font-display text-white flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-amber-400" />
+              <Trophy className="w-5 h-5 text-accent" />
               Best Performers
             </CardTitle>
           </CardHeader>
@@ -325,15 +325,15 @@ export default function TeamDashboard() {
               <>
                 {bestPerformers.topScorer && (
                   <Link href={`/players/${bestPerformers.topScorer.id}`} className="block">
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-orange-500/10 border border-orange-500/20 hover:bg-orange-500/20 transition-colors" data-testid="link-top-scorer">
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-accent/10 border border-accent/20 hover:bg-accent/20 transition-colors" data-testid="link-top-scorer">
                       <div className="flex items-center gap-3">
-                        <Target className="w-5 h-5 text-orange-400" />
+                        <Target className="w-5 h-5 text-accent" />
                         <div>
-                          <p className="text-xs text-orange-400 uppercase font-bold">Top Scorer</p>
+                          <p className="text-xs text-accent uppercase font-bold">Top Scorer</p>
                           <p className="text-white font-semibold">{bestPerformers.topScorer.name}</p>
                         </div>
                       </div>
-                      <Badge variant="secondary" className="bg-orange-500/20 text-orange-300">
+                      <Badge variant="secondary" className="bg-accent/20 text-accent">
                         {bestPerformers.topScorer.value} PPG
                       </Badge>
                     </div>
@@ -379,15 +379,15 @@ export default function TeamDashboard() {
               <>
                 {footballBestPerformers.topPasser && (
                   <Link href={`/players/${footballBestPerformers.topPasser.id}`} className="block">
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 transition-colors" data-testid="link-top-passer">
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-accent/10 border border-accent/20 hover:bg-accent/20 transition-colors" data-testid="link-top-passer">
                       <div className="flex items-center gap-3">
-                        <Target className="w-5 h-5 text-amber-400" />
+                        <Target className="w-5 h-5 text-accent" />
                         <div>
-                          <p className="text-xs text-amber-400 uppercase font-bold">Top Passer</p>
+                          <p className="text-xs text-accent uppercase font-bold">Top Passer</p>
                           <p className="text-white font-semibold">{footballBestPerformers.topPasser.name}</p>
                         </div>
                       </div>
-                      <Badge variant="secondary" className="bg-amber-500/20 text-amber-300">
+                      <Badge variant="secondary" className="bg-accent/20 text-accent">
                         {footballBestPerformers.topPasser.value} YDS
                       </Badge>
                     </div>
@@ -436,7 +436,7 @@ export default function TeamDashboard() {
         <Card className="bg-card/50 border-white/5" data-testid="card-position-distribution">
           <CardHeader>
             <CardTitle className="text-lg font-display text-white flex items-center gap-2">
-              <Users className="w-5 h-5 text-primary" />
+              <Users className="w-5 h-5 text-accent" />
               Position Distribution
             </CardTitle>
           </CardHeader>
@@ -483,7 +483,7 @@ export default function TeamDashboard() {
             ) : (
               <div className="space-y-3 max-h-[280px] overflow-y-auto pr-1">
                 {[
-                  { key: 'QB', label: 'Quarterbacks', color: 'from-amber-500 to-amber-400' },
+                  { key: 'QB', label: 'Quarterbacks', color: 'from-accent to-accent/90' },
                   { key: 'RB', label: 'Running Backs', color: 'from-green-500 to-green-400' },
                   { key: 'WR', label: 'Wide Receivers', color: 'from-blue-500 to-blue-400' },
                   { key: 'TE', label: 'Tight Ends', color: 'from-accent to-accent' },
@@ -517,7 +517,7 @@ export default function TeamDashboard() {
         <Card className="bg-card/50 border-white/5" data-testid="card-recent-activity">
           <CardHeader>
             <CardTitle className="text-lg font-display text-white flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-primary" />
+              <Calendar className="w-5 h-5 text-accent" />
               Recent Activity
             </CardTitle>
           </CardHeader>
@@ -566,16 +566,16 @@ export default function TeamDashboard() {
       <Card className="bg-card/50 border-white/5">
         <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <CardTitle className="text-xl font-display text-white flex items-center gap-2">
-            <Crosshair className="w-5 h-5 text-primary" />
+            <Crosshair className="w-5 h-5 text-accent" />
             Roster Performance
           </CardTitle>
           <div className="flex items-center gap-3">
             {hasMixedSports && (
               <Tabs value={sportFilter} onValueChange={(v) => { setSportFilter(v as SportFilter); setPositionFilter("All"); }}>
                 <TabsList className="bg-card border border-white/10">
-                  <TabsTrigger value="all" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="sport-filter-all">All</TabsTrigger>
-                  <TabsTrigger value="basketball" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="sport-filter-basketball">Basketball</TabsTrigger>
-                  <TabsTrigger value="football" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="sport-filter-football">Football</TabsTrigger>
+                  <TabsTrigger value="all" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="sport-filter-all">All</TabsTrigger>
+                  <TabsTrigger value="basketball" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="sport-filter-basketball">Basketball</TabsTrigger>
+                  <TabsTrigger value="football" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="sport-filter-football">Football</TabsTrigger>
                 </TabsList>
               </Tabs>
             )}

@@ -44,7 +44,7 @@ const SKILL_CATEGORIES = [
   { value: "offense", label: "Offense", icon: Swords, color: "text-red-400" },
   { value: "defense", label: "Defense", icon: Shield, color: "text-blue-400" },
   { value: "leadership", label: "Leadership", icon: Star, color: "text-yellow-400" },
-  { value: "work_ethic", label: "Work Ethic", icon: Dumbbell, color: "text-orange-400" },
+  { value: "work_ethic", label: "Work Ethic", icon: Dumbbell, color: "text-accent" },
   { value: "basketball_iq", label: "Game IQ", icon: Brain, color: "text-purple-400" },
   { value: "athleticism", label: "Athleticism", icon: Dumbbell, color: "text-emerald-400" },
   { value: "coachability", label: "Coachability", icon: BookOpen, color: "text-accent" },

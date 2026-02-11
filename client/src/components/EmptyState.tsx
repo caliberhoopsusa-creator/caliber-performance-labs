@@ -23,8 +23,8 @@ export function EmptyState({
   
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4 text-center" data-testid={`empty-state-${testIdBase}`}>
-      <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/10 flex items-center justify-center mb-6">
-        <Icon className="w-10 h-10 text-primary/60" />
+      <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/10 flex items-center justify-center mb-6">
+        <Icon className="w-10 h-10 text-accent/60" />
       </div>
       <h3 className="text-xl font-semibold text-white mb-2" data-testid={`text-empty-title-${testIdBase}`}>{title}</h3>
       <p className="text-muted-foreground max-w-md mb-6" data-testid={`text-empty-description-${testIdBase}`}>{description}</p>

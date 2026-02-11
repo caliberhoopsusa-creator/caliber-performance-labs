@@ -57,7 +57,7 @@ const ACHIEVEMENT_CONFIG: Record<string, { title: string; subtitle: string; grad
   hustle_king: {
     title: "HUSTLE KING",
     subtitle: "Maximum Effort",
-    gradient: "from-amber-500 via-orange-500 to-red-500",
+    gradient: "from-accent via-accent/80 to-red-500",
     icon: "⚡",
   },
   hot_streak_3: {
@@ -110,7 +110,7 @@ export function AchievementCard({
   const config = ACHIEVEMENT_CONFIG[achievementType] || {
     title: achievementType.toUpperCase().replace(/_/g, " "),
     subtitle: "Achievement Unlocked",
-    gradient: "from-primary to-orange-600",
+    gradient: "from-accent to-accent/80",
     icon: "🏀",
   };
 
@@ -209,7 +209,7 @@ export function AchievementCard({
               <div className="flex-1 flex flex-col items-center justify-center text-center">
                 <Avatar className="w-24 h-24 border-4 border-white/20 mb-4">
                   {player.photoUrl && <AvatarImage src={player.photoUrl} alt={player.name} width={96} height={96} />}
-                  <AvatarFallback className="bg-gradient-to-br from-primary/50 to-primary/20 text-2xl font-bold text-white">
+                  <AvatarFallback className="bg-gradient-to-br from-accent/50 to-accent/20 text-2xl font-bold text-white">
                     {getInitials(player.name)}
                   </AvatarFallback>
                 </Avatar>
@@ -251,7 +251,7 @@ export function AchievementCard({
 
               <div className="mt-auto pt-4 border-t border-white/10 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-orange-600 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center">
                     <span className="text-white font-bold text-xs">C</span>
                   </div>
                   <span className="text-sm font-display font-bold text-white/80 uppercase tracking-wider">

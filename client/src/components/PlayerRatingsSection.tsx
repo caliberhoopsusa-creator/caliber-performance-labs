@@ -119,7 +119,7 @@ interface SubScoreConfigItem {
 const BASKETBALL_SUB_SCORE_CONFIG: Record<SubScoreKey, SubScoreConfigItem> = {
   production: { label: "Production", icon: Target, color: "text-accent", description: "PPG, APG, RPG" },
   efficiency: { label: "Efficiency", icon: Gauge, color: "text-emerald-400", description: "TS%, eFG%, AST/TO" },
-  impact: { label: "Impact", icon: Zap, color: "text-amber-400", description: "Plus-minus, PER, wins" },
+  impact: { label: "Impact", icon: Zap, color: "text-accent", description: "Plus-minus, PER, wins" },
   defense: { label: "Two-Way", icon: Shield, color: "text-purple-400", description: "Steals, blocks, contests" },
   athletic: { label: "Athletic", icon: Activity, color: "text-red-400", description: "Speed, vertical, endurance" },
   intangibles: { label: "Intangibles", icon: Brain, color: "text-blue-400", description: "Consistency, clutch, IQ" },
@@ -128,7 +128,7 @@ const BASKETBALL_SUB_SCORE_CONFIG: Record<SubScoreKey, SubScoreConfigItem> = {
 const FOOTBALL_SUB_SCORE_CONFIG: Record<SubScoreKey, SubScoreConfigItem> = {
   production: { label: "Production", icon: Target, color: "text-accent", description: "Yards, TDs, receptions" },
   efficiency: { label: "Efficiency", icon: Gauge, color: "text-emerald-400", description: "Comp%, YPC, catch rate" },
-  impact: { label: "Impact", icon: Zap, color: "text-amber-400", description: "Big plays, turnovers forced" },
+  impact: { label: "Impact", icon: Zap, color: "text-accent", description: "Big plays, turnovers forced" },
   defense: { label: "Two-Way", icon: Shield, color: "text-purple-400", description: "Tackles, sacks, INTs" },
   athletic: { label: "Athletic", icon: Activity, color: "text-red-400", description: "40-time, vertical, bench" },
   intangibles: { label: "Intangibles", icon: Brain, color: "text-blue-400", description: "Consistency, clutch, IQ" },
@@ -138,7 +138,7 @@ const FOOTBALL_POSITION_SUB_SCORES: Record<string, Record<SubScoreKey, SubScoreC
   QB: {
     production: { label: "Production", icon: Target, color: "text-accent", description: "Pass yards, TDs, rush yards" },
     efficiency: { label: "Efficiency", icon: Gauge, color: "text-emerald-400", description: "Comp%, passer rating" },
-    impact: { label: "Impact", icon: Zap, color: "text-amber-400", description: "Big plays, game-winning drives" },
+    impact: { label: "Impact", icon: Zap, color: "text-accent", description: "Big plays, game-winning drives" },
     defense: { label: "Ball Security", icon: Shield, color: "text-purple-400", description: "INTs avoided, fumbles" },
     athletic: { label: "Athletic", icon: Activity, color: "text-red-400", description: "40-time, arm strength" },
     intangibles: { label: "Intangibles", icon: Brain, color: "text-blue-400", description: "Pocket presence, reads" },
@@ -146,7 +146,7 @@ const FOOTBALL_POSITION_SUB_SCORES: Record<string, Record<SubScoreKey, SubScoreC
   RB: {
     production: { label: "Production", icon: Target, color: "text-accent", description: "Rush yards, TDs, rec yards" },
     efficiency: { label: "Efficiency", icon: Gauge, color: "text-emerald-400", description: "YPC, yards after contact" },
-    impact: { label: "Impact", icon: Zap, color: "text-amber-400", description: "100+ yard games, TDs" },
+    impact: { label: "Impact", icon: Zap, color: "text-accent", description: "100+ yard games, TDs" },
     defense: { label: "Ball Security", icon: Shield, color: "text-purple-400", description: "Fumbles, pass blocking" },
     athletic: { label: "Athletic", icon: Activity, color: "text-red-400", description: "Speed, agility, power" },
     intangibles: { label: "Intangibles", icon: Brain, color: "text-blue-400", description: "Vision, consistency" },
@@ -154,7 +154,7 @@ const FOOTBALL_POSITION_SUB_SCORES: Record<string, Record<SubScoreKey, SubScoreC
   WR: {
     production: { label: "Production", icon: Target, color: "text-accent", description: "Rec yards, TDs, receptions" },
     efficiency: { label: "Efficiency", icon: Gauge, color: "text-emerald-400", description: "Catch rate, YPR" },
-    impact: { label: "Impact", icon: Zap, color: "text-amber-400", description: "Big plays, contested catches" },
+    impact: { label: "Impact", icon: Zap, color: "text-accent", description: "Big plays, contested catches" },
     defense: { label: "Hands", icon: Shield, color: "text-purple-400", description: "Drops, separation" },
     athletic: { label: "Athletic", icon: Activity, color: "text-red-400", description: "Speed, vertical, agility" },
     intangibles: { label: "Intangibles", icon: Brain, color: "text-blue-400", description: "Route running, IQ" },
@@ -162,7 +162,7 @@ const FOOTBALL_POSITION_SUB_SCORES: Record<string, Record<SubScoreKey, SubScoreC
   TE: {
     production: { label: "Production", icon: Target, color: "text-accent", description: "Rec yards, TDs, receptions" },
     efficiency: { label: "Efficiency", icon: Gauge, color: "text-emerald-400", description: "Catch rate, blocking grade" },
-    impact: { label: "Impact", icon: Zap, color: "text-amber-400", description: "Red zone TDs, big plays" },
+    impact: { label: "Impact", icon: Zap, color: "text-accent", description: "Red zone TDs, big plays" },
     defense: { label: "Blocking", icon: Shield, color: "text-purple-400", description: "Run blocking, pass pro" },
     athletic: { label: "Athletic", icon: Activity, color: "text-red-400", description: "Speed, size, strength" },
     intangibles: { label: "Intangibles", icon: Brain, color: "text-blue-400", description: "Route running, hands" },
@@ -170,7 +170,7 @@ const FOOTBALL_POSITION_SUB_SCORES: Record<string, Record<SubScoreKey, SubScoreC
   DL: {
     production: { label: "Production", icon: Target, color: "text-accent", description: "Tackles, sacks, TFLs" },
     efficiency: { label: "Efficiency", icon: Gauge, color: "text-emerald-400", description: "Pass rush win rate" },
-    impact: { label: "Impact", icon: Zap, color: "text-amber-400", description: "Sacks, forced fumbles" },
+    impact: { label: "Impact", icon: Zap, color: "text-accent", description: "Sacks, forced fumbles" },
     defense: { label: "Run Defense", icon: Shield, color: "text-purple-400", description: "Run stops, gap control" },
     athletic: { label: "Athletic", icon: Activity, color: "text-red-400", description: "Speed, power, bend" },
     intangibles: { label: "Intangibles", icon: Brain, color: "text-blue-400", description: "Motor, technique" },
@@ -178,7 +178,7 @@ const FOOTBALL_POSITION_SUB_SCORES: Record<string, Record<SubScoreKey, SubScoreC
   LB: {
     production: { label: "Production", icon: Target, color: "text-accent", description: "Tackles, sacks, INTs" },
     efficiency: { label: "Efficiency", icon: Gauge, color: "text-emerald-400", description: "Tackle rate, coverage" },
-    impact: { label: "Impact", icon: Zap, color: "text-amber-400", description: "Turnovers, big plays" },
+    impact: { label: "Impact", icon: Zap, color: "text-accent", description: "Turnovers, big plays" },
     defense: { label: "Coverage", icon: Shield, color: "text-purple-400", description: "Pass deflections, INTs" },
     athletic: { label: "Athletic", icon: Activity, color: "text-red-400", description: "Speed, range, closing" },
     intangibles: { label: "Intangibles", icon: Brain, color: "text-blue-400", description: "Instincts, leadership" },
@@ -186,7 +186,7 @@ const FOOTBALL_POSITION_SUB_SCORES: Record<string, Record<SubScoreKey, SubScoreC
   DB: {
     production: { label: "Production", icon: Target, color: "text-accent", description: "INTs, PDs, tackles" },
     efficiency: { label: "Efficiency", icon: Gauge, color: "text-emerald-400", description: "Completion % allowed" },
-    impact: { label: "Impact", icon: Zap, color: "text-amber-400", description: "Turnovers, big plays" },
+    impact: { label: "Impact", icon: Zap, color: "text-accent", description: "Turnovers, big plays" },
     defense: { label: "Coverage", icon: Shield, color: "text-purple-400", description: "Man/zone, lockdown" },
     athletic: { label: "Athletic", icon: Activity, color: "text-red-400", description: "Speed, agility, hips" },
     intangibles: { label: "Intangibles", icon: Brain, color: "text-blue-400", description: "Ball skills, instincts" },
@@ -194,7 +194,7 @@ const FOOTBALL_POSITION_SUB_SCORES: Record<string, Record<SubScoreKey, SubScoreC
   K: {
     production: { label: "Production", icon: Target, color: "text-accent", description: "FG made, XP made" },
     efficiency: { label: "Efficiency", icon: Gauge, color: "text-emerald-400", description: "FG%, XP%" },
-    impact: { label: "Impact", icon: Zap, color: "text-amber-400", description: "Clutch kicks, 50+ yarders" },
+    impact: { label: "Impact", icon: Zap, color: "text-accent", description: "Clutch kicks, 50+ yarders" },
     defense: { label: "Range", icon: Shield, color: "text-purple-400", description: "Max distance, accuracy" },
     athletic: { label: "Athletic", icon: Activity, color: "text-red-400", description: "Leg strength" },
     intangibles: { label: "Intangibles", icon: Brain, color: "text-blue-400", description: "Clutch, consistency" },
@@ -202,7 +202,7 @@ const FOOTBALL_POSITION_SUB_SCORES: Record<string, Record<SubScoreKey, SubScoreC
   P: {
     production: { label: "Production", icon: Target, color: "text-accent", description: "Punts, net yards" },
     efficiency: { label: "Efficiency", icon: Gauge, color: "text-emerald-400", description: "Avg yards, hang time" },
-    impact: { label: "Impact", icon: Zap, color: "text-amber-400", description: "Inside 20, pins" },
+    impact: { label: "Impact", icon: Zap, color: "text-accent", description: "Inside 20, pins" },
     defense: { label: "Placement", icon: Shield, color: "text-purple-400", description: "Directional, coffin corner" },
     athletic: { label: "Athletic", icon: Activity, color: "text-red-400", description: "Leg strength" },
     intangibles: { label: "Intangibles", icon: Brain, color: "text-blue-400", description: "Consistency, pressure" },
@@ -210,7 +210,7 @@ const FOOTBALL_POSITION_SUB_SCORES: Record<string, Record<SubScoreKey, SubScoreC
   OL: {
     production: { label: "Production", icon: Target, color: "text-accent", description: "Pancakes, blocks" },
     efficiency: { label: "Efficiency", icon: Gauge, color: "text-emerald-400", description: "Block win rate, penalties" },
-    impact: { label: "Impact", icon: Zap, color: "text-amber-400", description: "Clean pockets, rushing lanes" },
+    impact: { label: "Impact", icon: Zap, color: "text-accent", description: "Clean pockets, rushing lanes" },
     defense: { label: "Pass Pro", icon: Shield, color: "text-purple-400", description: "Sacks allowed, pressures" },
     athletic: { label: "Athletic", icon: Activity, color: "text-red-400", description: "Strength, footwork, reach" },
     intangibles: { label: "Intangibles", icon: Brain, color: "text-blue-400", description: "Communication, technique" },
@@ -248,17 +248,17 @@ const MILESTONE_LABELS: Record<string, { label: string; icon: typeof Award }> = 
 };
 
 function getRatingColor(rating: number): string {
-  if (rating >= 90) return "text-amber-400";
+  if (rating >= 90) return "text-accent";
   if (rating >= 80) return "text-purple-400";
-  if (rating >= 70) return "text-accent";
+  if (rating >= 70) return "text-accent/80";
   if (rating >= 60) return "text-blue-400";
   return "text-zinc-400";
 }
 
 function getRatingBgColor(rating: number): string {
-  if (rating >= 90) return "from-amber-500/20 to-yellow-600/20 border-amber-500/30";
+  if (rating >= 90) return "from-accent/20 to-accent/10 border-accent/30";
   if (rating >= 80) return "from-purple-500/20 to-purple-600/20 border-purple-500/30";
-  if (rating >= 70) return "from-accent/20 to-accent/20 border-accent/30";
+  if (rating >= 70) return "from-accent/15 to-accent/10 border-accent/20";
   if (rating >= 60) return "from-blue-500/20 to-blue-600/20 border-blue-500/30";
   return "from-zinc-500/20 to-zinc-600/20 border-zinc-500/30";
 }
@@ -377,7 +377,7 @@ export function PlayerRatingsSection({ playerId, isOwnProfile, sport = 'basketba
               )}
             </div>
             <div className="p-2 rounded-lg bg-white/5">
-              <Star className="w-6 h-6 text-amber-400" style={{ filter: "drop-shadow(0 0 8px #FCD34D)" }} />
+              <Star className="w-6 h-6 text-accent" style={{ filter: "drop-shadow(0 0 8px hsl(24 95% 53%))" }} />
             </div>
           </div>
           {aiRating?.ratingBand && (
@@ -573,7 +573,7 @@ export function PlayerRatingsSection({ playerId, isOwnProfile, sport = 'basketba
         >
           <Card className="p-6 bg-gradient-to-br from-black/60 to-black/30 border-white/10">
             <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
-              <Award className="w-5 h-5 text-amber-400" style={{ filter: "drop-shadow(0 0 8px #FCD34D)" }} />
+              <Award className="w-5 h-5 text-accent" style={{ filter: "drop-shadow(0 0 8px hsl(24 95% 53%))" }} />
               Performance Milestones
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -587,12 +587,12 @@ export function PlayerRatingsSection({ playerId, isOwnProfile, sport = 'basketba
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: index * 0.05 }}
-                      className="p-3 rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-600/5 border border-amber-500/20"
+                      className="p-3 rounded-xl bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20"
                       data-testid={`milestone-${milestone.id}`}
                     >
                       <div className="flex items-center gap-2 mb-2">
-                        <IconComponent className="w-4 h-4 text-amber-400" />
-                        <span className="text-xs font-medium text-amber-400">{config.label}</span>
+                        <IconComponent className="w-4 h-4 text-accent" />
+                        <span className="text-xs font-medium text-accent">{config.label}</span>
                       </div>
                       <p className="text-sm text-muted-foreground">
                         {milestone.currentValue.toLocaleString()} {milestone.statCategory}
@@ -621,7 +621,7 @@ export function PlayerRatingsSection({ playerId, isOwnProfile, sport = 'basketba
               <Badge variant="outline" className={cn(
                 "text-xs",
                 aiProjection.projection.confidencePercent >= 70 ? "border-emerald-500/50 text-emerald-400" :
-                aiProjection.projection.confidencePercent >= 50 ? "border-amber-500/50 text-amber-400" :
+                aiProjection.projection.confidencePercent >= 50 ? "border-accent/50 text-accent" :
                 "border-zinc-500/50 text-zinc-400"
               )}>
                 {aiProjection.projection.confidencePercent}% Confidence
@@ -634,7 +634,7 @@ export function PlayerRatingsSection({ playerId, isOwnProfile, sport = 'basketba
                 <p className={cn(
                   "text-xl font-bold",
                   aiProjection.projection.trajectoryScore >= 60 ? "text-emerald-400" :
-                  aiProjection.projection.trajectoryScore >= 45 ? "text-amber-400" : "text-red-400"
+                  aiProjection.projection.trajectoryScore >= 45 ? "text-accent" : "text-red-400"
                 )}>
                   {aiProjection.projection.trajectoryScore}
                 </p>
@@ -644,7 +644,7 @@ export function PlayerRatingsSection({ playerId, isOwnProfile, sport = 'basketba
                 <p className={cn(
                   "text-xl font-bold",
                   aiProjection.projection.translationScore >= 60 ? "text-emerald-400" :
-                  aiProjection.projection.translationScore >= 45 ? "text-amber-400" : "text-red-400"
+                  aiProjection.projection.translationScore >= 45 ? "text-accent" : "text-red-400"
                 )}>
                   {aiProjection.projection.translationScore}
                 </p>
@@ -654,7 +654,7 @@ export function PlayerRatingsSection({ playerId, isOwnProfile, sport = 'basketba
                 <p className={cn(
                   "text-xl font-bold",
                   aiProjection.projection.upsideScore >= 60 ? "text-emerald-400" :
-                  aiProjection.projection.upsideScore >= 45 ? "text-amber-400" : "text-zinc-400"
+                  aiProjection.projection.upsideScore >= 45 ? "text-accent" : "text-zinc-400"
                 )}>
                   {aiProjection.projection.upsideScore}
                 </p>
@@ -664,7 +664,7 @@ export function PlayerRatingsSection({ playerId, isOwnProfile, sport = 'basketba
                 <p className={cn(
                   "text-xl font-bold",
                   aiProjection.projection.riskScore <= 40 ? "text-emerald-400" :
-                  aiProjection.projection.riskScore <= 60 ? "text-amber-400" : "text-red-400"
+                  aiProjection.projection.riskScore <= 60 ? "text-accent" : "text-red-400"
                 )}>
                   {aiProjection.projection.riskScore}
                 </p>
@@ -696,7 +696,7 @@ export function PlayerRatingsSection({ playerId, isOwnProfile, sport = 'basketba
               <Sparkles className="w-5 h-5 text-purple-400" style={{ filter: "drop-shadow(0 0 8px #A855F7)" }} />
               Gemini AI Analysis
               {!isPremium && (
-                <Badge variant="outline" className="ml-2 text-xs border-amber-500/50 text-amber-400">
+                <Badge variant="outline" className="ml-2 text-xs border-accent/50 text-accent">
                   <Lock className="w-3 h-3 mr-1" /> Pro
                 </Badge>
               )}
@@ -739,7 +739,7 @@ export function PlayerRatingsSection({ playerId, isOwnProfile, sport = 'basketba
                 <Badge variant="outline" className={cn(
                   "text-xs",
                   latestProjection.confidenceScore >= 0.8 ? "border-emerald-500/50 text-emerald-400" :
-                  latestProjection.confidenceScore >= 0.6 ? "border-amber-500/50 text-amber-400" :
+                  latestProjection.confidenceScore >= 0.6 ? "border-accent/50 text-accent" :
                   "border-zinc-500/50 text-zinc-400"
                 )}>
                   {Math.round(latestProjection.confidenceScore * 100)}% Confidence

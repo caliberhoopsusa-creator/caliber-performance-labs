@@ -62,9 +62,9 @@ const ACTIVITY_ICONS: Record<string, typeof Target> = {
 const ACTIVITY_COLORS: Record<string, string> = {
   game: "from-green-500/20 to-transparent",
   badge: "from-yellow-500/20 to-transparent",
-  streak: "from-orange-500/20 to-transparent",
+  streak: "from-accent/20 to-transparent",
   story: "from-blue-500/20 to-transparent",
-  default: "from-primary/20 to-transparent",
+  default: "from-accent/20 to-transparent",
 };
 
 function PlayerSkeleton() {
@@ -132,8 +132,8 @@ function FeedActivityCard({ activity }: { activity: FeedActivity }) {
       <div className="relative z-10 flex gap-3">
         {activity.playerId && (
           <Link href={`/players/${activity.playerId}`}>
-            <Avatar className="w-10 h-10 border-2 border-white/10 cursor-pointer hover:border-primary/50 transition-colors shrink-0">
-              <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary text-white font-display font-bold text-sm">
+            <Avatar className="w-10 h-10 border-2 border-white/10 cursor-pointer hover:border-accent/50 transition-colors shrink-0">
+              <AvatarFallback className="bg-gradient-to-br from-accent/20 to-secondary text-white font-display font-bold text-sm">
                 {initials}
               </AvatarFallback>
             </Avatar>
@@ -144,7 +144,7 @@ function FeedActivityCard({ activity }: { activity: FeedActivity }) {
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             {activity.playerName && activity.playerId && (
               <Link href={`/players/${activity.playerId}`}>
-                <span className="text-sm font-semibold text-white hover:text-primary transition-colors cursor-pointer">
+                <span className="text-sm font-semibold text-white hover:text-accent transition-colors cursor-pointer">
                   {activity.playerName}
                 </span>
               </Link>
@@ -198,12 +198,12 @@ function PlayerCard({ player }: { player: PlayerWithStats }) {
       className="p-4 relative overflow-hidden transition-all duration-300 hover-elevate group"
       data-testid={`card-player-${player.id}`}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
       <div className="relative z-10 flex items-center gap-4">
         <Link href={`/players/${player.id}`}>
-          <Avatar className="w-14 h-14 border-2 border-white/10 cursor-pointer hover:border-primary/50 transition-colors">
-            <AvatarFallback className="bg-gradient-to-br from-primary/20 to-secondary text-white font-display font-bold text-lg">
+          <Avatar className="w-14 h-14 border-2 border-white/10 cursor-pointer hover:border-accent/50 transition-colors">
+            <AvatarFallback className="bg-gradient-to-br from-accent/20 to-secondary text-white font-display font-bold text-lg">
               {initials}
             </AvatarFallback>
           </Avatar>
@@ -212,7 +212,7 @@ function PlayerCard({ player }: { player: PlayerWithStats }) {
         <div className="flex-1 min-w-0">
           <Link href={`/players/${player.id}`}>
             <h3
-              className="text-base font-bold text-white leading-tight mb-0.5 truncate hover:text-primary transition-colors cursor-pointer"
+              className="text-base font-bold text-white leading-tight mb-0.5 truncate hover:text-accent transition-colors cursor-pointer"
               data-testid={`text-player-name-${player.id}`}
             >
               {player.name}
@@ -243,7 +243,7 @@ function PlayerCard({ player }: { player: PlayerWithStats }) {
               {followStats?.followersCount ?? 0} followers
             </span>
             {player.recentActivity && ActivityIcon && (
-              <span className="flex items-center gap-1 text-primary/80">
+              <span className="flex items-center gap-1 text-accent/80">
                 <ActivityIcon className="w-3 h-3" />
                 {player.recentActivity.description}
               </span>
@@ -393,11 +393,11 @@ export default function SocialHub() {
 
       <Tabs defaultValue="feed" className="w-full">
         <TabsList className="w-full grid grid-cols-2 mb-4 bg-card border border-white/10" data-testid="tabs-social">
-          <TabsTrigger value="feed" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-feed">
+          <TabsTrigger value="feed" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-feed">
             <TrendingUp className="w-4 h-4" />
             Feed
           </TabsTrigger>
-          <TabsTrigger value="discover" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-discover">
+          <TabsTrigger value="discover" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-discover">
             <Search className="w-4 h-4" />
             Discover
           </TabsTrigger>

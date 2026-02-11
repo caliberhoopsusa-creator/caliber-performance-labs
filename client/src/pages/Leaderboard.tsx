@@ -143,7 +143,7 @@ export default function Leaderboard() {
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 via-yellow-950/10 to-black/60 border border-yellow-500/20">
         <div className="absolute inset-0 opacity-20" />
         <div className="absolute top-0 right-0 w-80 h-80 bg-yellow-500/10 blur-[100px] rounded-full" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-orange-500/10 blur-[60px] rounded-full" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-accent/10 blur-[60px] rounded-full" />
         
         <div className="relative z-10 p-6 md:p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -167,8 +167,8 @@ export default function Leaderboard() {
                 className={cn(
                   "px-4 py-2 text-sm font-bold flex items-center gap-2",
                   isBasketball 
-                    ? "bg-gradient-to-r from-orange-600 to-orange-500 text-white" 
-                    : "bg-gradient-to-r from-amber-700 to-amber-600 text-white"
+                    ? "bg-gradient-to-r from-accent to-accent/90 text-accent-foreground" 
+                    : "bg-gradient-to-r from-accent/80 to-accent/70 text-accent-foreground"
                 )}
                 data-testid="badge-current-sport"
               >

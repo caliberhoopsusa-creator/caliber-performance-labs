@@ -17,7 +17,7 @@ type NoteType = typeof NOTE_TYPES[number];
 
 const NOTE_TYPE_COLORS: Record<NoteType, { bg: string; text: string; border: string }> = {
   observation: { bg: "bg-blue-500/20", text: "text-blue-400", border: "border-blue-500/30" },
-  improvement: { bg: "bg-amber-500/20", text: "text-amber-400", border: "border-amber-500/30" },
+  improvement: { bg: "bg-accent/20", text: "text-accent", border: "border-accent/30" },
   praise: { bg: "bg-green-500/20", text: "text-green-400", border: "border-green-500/30" },
   strategy: { bg: "bg-purple-500/20", text: "text-purple-400", border: "border-purple-500/30" },
 };

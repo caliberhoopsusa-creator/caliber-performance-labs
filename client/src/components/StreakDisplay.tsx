@@ -27,7 +27,7 @@ interface CheckInResponse {
 }
 
 const STREAK_MILESTONES = [
-  { days: 3, label: "3-Day Streak", icon: Flame, color: "text-orange-400", xp: 25 },
+  { days: 3, label: "3-Day Streak", icon: Flame, color: "text-accent", xp: 25 },
   { days: 7, label: "Week Warrior", icon: Zap, color: "text-yellow-400", xp: 75 },
   { days: 14, label: "Two-Week Terror", icon: Award, color: "text-purple-400", xp: 150 },
   { days: 30, label: "Monthly Monster", icon: Target, color: "text-emerald-400", xp: 300 },
@@ -37,7 +37,7 @@ function getStreakLevel(streak: number): { label: string; color: string; glowCol
   if (streak >= 30) return { label: "Legendary", color: "text-emerald-400", glowColor: "shadow-emerald-500/30" };
   if (streak >= 14) return { label: "On Fire", color: "text-purple-400", glowColor: "shadow-purple-500/30" };
   if (streak >= 7) return { label: "Hot Streak", color: "text-yellow-400", glowColor: "shadow-yellow-500/30" };
-  if (streak >= 3) return { label: "Warming Up", color: "text-orange-400", glowColor: "shadow-orange-500/30" };
+  if (streak >= 3) return { label: "Warming Up", color: "text-accent", glowColor: "shadow-accent/30" };
   return { label: "Getting Started", color: "text-muted-foreground", glowColor: "" };
 }
 
@@ -91,7 +91,7 @@ export default function StreakDisplay({ playerId }: { playerId: number }) {
   if (currentStreak === 0 && longestStreak === 0) return null;
 
   return (
-    <Card className="bg-gradient-to-br from-orange-950/30 via-black/20 to-orange-950/20 border-orange-500/20 overflow-hidden" data-testid="card-streak-display">
+    <Card className="bg-gradient-to-br from-accent/10 via-black/20 to-accent/5 border-accent/20 overflow-hidden" data-testid="card-streak-display">
       <div className="p-4">
         <div className="flex items-center justify-between gap-2 mb-3">
           <div className="flex items-center gap-2">
@@ -99,9 +99,9 @@ export default function StreakDisplay({ playerId }: { playerId: number }) {
               animate={currentStreak >= 3 ? { scale: [1, 1.2, 1] } : {}}
               transition={{ repeat: Infinity, duration: 2 }}
             >
-              <Flame className={cn("w-5 h-5", currentStreak >= 3 ? "text-orange-400" : "text-muted-foreground")} />
+              <Flame className={cn("w-5 h-5", currentStreak >= 3 ? "text-accent" : "text-muted-foreground")} />
             </motion.div>
-            <h3 className="text-sm font-bold uppercase tracking-wider text-orange-400">Activity Streak</h3>
+            <h3 className="text-sm font-bold uppercase tracking-wider text-accent">Activity Streak</h3>
           </div>
           <Badge className={cn("text-[10px]", streakInfo.color, "bg-white/5 border-white/10")}>
             {streakInfo.label}
@@ -134,7 +134,7 @@ export default function StreakDisplay({ playerId }: { playerId: number }) {
             </div>
             <div className="h-2 bg-white/5 rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-gradient-to-r from-orange-500 to-yellow-500 rounded-full"
+                className="h-full bg-gradient-to-r from-accent to-accent/80 rounded-full"
                 initial={{ width: 0 }}
                 animate={{ width: `${Math.min(progressToNext, 100)}%` }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
@@ -149,7 +149,7 @@ export default function StreakDisplay({ playerId }: { playerId: number }) {
             <span>Best: {longestStreak} days</span>
           </div>
           {nextMilestone && (
-            <span className="text-xs text-orange-400/70">
+            <span className="text-xs text-accent/70">
               +{nextMilestone.xp} XP at {nextMilestone.days} days
             </span>
           )}

@@ -132,7 +132,7 @@ export default function ReelPage() {
   if (playerLoading || highlightsLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent" />
       </div>
     );
   }
@@ -249,7 +249,7 @@ export default function ReelPage() {
       <div className="absolute bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-black via-black/80 to-transparent">
         <div className="h-1 bg-white/20 relative">
           <div
-            className="absolute h-full bg-primary transition-all"
+            className="absolute h-full bg-accent transition-all"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -259,9 +259,9 @@ export default function ReelPage() {
             <div className="flex-1">
               <Link href={`/players/${playerId}`}>
                 <div className="flex items-center gap-3 mb-3">
-                  <Avatar className="w-10 h-10 border-2 border-primary/50">
+                  <Avatar className="w-10 h-10 border-2 border-accent/50">
                     {player.photoUrl && <AvatarImage src={player.photoUrl} alt={player.name} width={40} height={40} />}
-                    <AvatarFallback className="bg-primary/20 text-white text-sm font-bold">
+                    <AvatarFallback className="bg-accent/20 text-white text-sm font-bold">
                       {getInitials(player.name)}
                     </AvatarFallback>
                   </Avatar>
@@ -294,7 +294,7 @@ export default function ReelPage() {
                     <span>{gameInfo.assists} AST</span>
                   </div>
                   {gameInfo.grade && (
-                    <Badge variant="outline" className="border-primary text-primary">
+                    <Badge variant="outline" className="border-accent text-accent">
                       {gameInfo.grade}
                     </Badge>
                   )}
@@ -304,7 +304,7 @@ export default function ReelPage() {
               {clipBadges.length > 0 && (
                 <div className="flex items-center gap-2 flex-wrap">
                   {clipBadges.slice(0, 3).map((badge) => (
-                    <Badge key={badge.id} className="bg-primary/20 text-primary border-primary/30">
+                    <Badge key={badge.id} className="bg-accent/20 text-accent border-accent/30">
                       <Trophy className="w-3 h-3 mr-1" />
                       {badge.badgeType.replace(/_/g, " ")}
                     </Badge>

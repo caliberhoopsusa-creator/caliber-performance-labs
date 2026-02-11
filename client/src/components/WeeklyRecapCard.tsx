@@ -109,13 +109,13 @@ function WeeklyRecapShareCard({ data }: { data: WeeklyRecapData }) {
           
           {data.sport === 'basketball' ? (
             <div className="grid grid-cols-3 gap-2.5">
-              <StatBox value={data.avgPoints} label="PPG" color="text-amber-400" />
+              <StatBox value={data.avgPoints} label="PPG" color="text-accent" />
               <StatBox value={data.totalRebounds} label="REB" color="text-accent" />
               <StatBox value={data.totalAssists} label="AST" color="text-violet-400" />
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-2.5">
-              <StatBox value={data.totalTouchdowns} label="TDs" color="text-amber-400" />
+              <StatBox value={data.totalTouchdowns} label="TDs" color="text-accent" />
               <StatBox value={data.totalYards} label="YDS" color="text-accent" />
             </div>
           )}
@@ -123,7 +123,7 @@ function WeeklyRecapShareCard({ data }: { data: WeeklyRecapData }) {
           <div className="flex items-center justify-center gap-5 mt-auto pt-2 flex-wrap">
             {data.currentStreak > 0 && (
               <div className="flex items-center gap-1.5">
-                <Flame className="w-5 h-5 text-orange-400" style={{ filter: "drop-shadow(0 0 4px #f97316)" }} />
+                <Flame className="w-5 h-5 text-accent" style={{ filter: "drop-shadow(0 0 4px hsl(24 95% 53%))" }} />
                 <span className="text-sm font-bold text-white">{data.currentStreak}-day streak</span>
               </div>
             )}
@@ -234,7 +234,7 @@ export default function WeeklyRecapCard({ playerId }: { playerId: number }) {
             {data.sport === 'basketball' ? (
               <div className="grid grid-cols-3 gap-2">
                 <div className="rounded-lg bg-white/[0.04] border border-white/[0.08] p-2 text-center">
-                  <p className="text-xl font-black text-amber-400">{data.avgPoints}</p>
+                  <p className="text-xl font-black text-accent">{data.avgPoints}</p>
                   <p className="text-[9px] text-white/40 uppercase tracking-[0.15em] font-semibold">PPG</p>
                 </div>
                 <div className="rounded-lg bg-white/[0.04] border border-white/[0.08] p-2 text-center">
@@ -249,7 +249,7 @@ export default function WeeklyRecapCard({ playerId }: { playerId: number }) {
             ) : (
               <div className="grid grid-cols-2 gap-2">
                 <div className="rounded-lg bg-white/[0.04] border border-white/[0.08] p-2 text-center">
-                  <p className="text-xl font-black text-amber-400">{data.totalTouchdowns}</p>
+                  <p className="text-xl font-black text-accent">{data.totalTouchdowns}</p>
                   <p className="text-[9px] text-white/40 uppercase tracking-[0.15em] font-semibold">TDs</p>
                 </div>
                 <div className="rounded-lg bg-white/[0.04] border border-white/[0.08] p-2 text-center">
@@ -263,7 +263,7 @@ export default function WeeklyRecapCard({ playerId }: { playerId: number }) {
           <div className="flex items-center justify-center gap-4 mb-3 flex-wrap">
             {data.currentStreak > 0 && (
               <div className="flex items-center gap-1.5">
-                <Flame className="w-4 h-4 text-orange-400" style={{ filter: "drop-shadow(0 0 4px #f97316)" }} />
+                <Flame className="w-4 h-4 text-accent" style={{ filter: "drop-shadow(0 0 4px hsl(24 95% 53%))" }} />
                 <span className="text-xs font-bold text-white">{data.currentStreak}-day streak</span>
               </div>
             )}

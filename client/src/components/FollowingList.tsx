@@ -59,7 +59,7 @@ export function FollowingList({ playerId, showUnfollowButton = true }: Following
     return (
       <Card className="p-6">
         <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-accent"></div>
         </div>
       </Card>
     );
@@ -68,7 +68,7 @@ export function FollowingList({ playerId, showUnfollowButton = true }: Following
   return (
     <Card className="p-6">
       <h3 className="text-lg font-bold font-display text-white mb-4 flex items-center gap-2">
-        <Users className="w-5 h-5 text-primary" /> Following
+        <Users className="w-5 h-5 text-accent" /> Following
       </h3>
 
       {following.length === 0 ? (
@@ -78,8 +78,8 @@ export function FollowingList({ playerId, showUnfollowButton = true }: Following
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
         >
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-            <Users className="w-8 h-8 text-primary/60" />
+          <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
+            <Users className="w-8 h-8 text-accent/60" />
           </div>
           <p className="text-white font-semibold mb-1">Not following anyone yet</p>
           <p className="text-sm text-muted-foreground">Follow other players to see their updates and compare your progress</p>
@@ -96,9 +96,9 @@ export function FollowingList({ playerId, showUnfollowButton = true }: Following
                 href={`/players/${player.playerId}`}
                 className="flex items-center gap-3 flex-1 min-w-0 hover-elevate rounded-lg p-1 -m-1"
               >
-                <Avatar className="w-10 h-10 border-2 border-primary/20">
+                <Avatar className="w-10 h-10 border-2 border-accent/20">
                   {player.photoUrl && <AvatarImage src={player.photoUrl} alt={player.name} width={40} height={40} />}
-                  <AvatarFallback className="bg-gradient-to-br from-primary/30 to-primary/10 text-sm font-display font-bold text-white">
+                  <AvatarFallback className="bg-gradient-to-br from-accent/30 to-accent/10 text-sm font-display font-bold text-white">
                     {getInitials(player.name)}
                   </AvatarFallback>
                 </Avatar>

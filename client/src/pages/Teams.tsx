@@ -232,7 +232,7 @@ export default function Teams() {
                       </SelectItem>
                       <SelectItem value="coach">
                         <span className="flex items-center gap-2">
-                          <Crown className="w-4 h-4 text-amber-500" /> Coach
+                          <Crown className="w-4 h-4 text-accent" /> Coach
                         </span>
                       </SelectItem>
                     </SelectContent>
@@ -307,15 +307,15 @@ export default function Teams() {
       {isLoading ? (
         <div className="flex items-center justify-center py-16">
           <div className="animate-pulse flex flex-col items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-primary/20" />
+            <div className="w-16 h-16 rounded-full bg-accent/20" />
             <div className="h-4 w-32 bg-muted rounded" />
           </div>
         </div>
       ) : myTeams.length === 0 ? (
         <Card className="border-dashed border-2 bg-gradient-to-br from-card to-card/50">
           <CardContent className="flex flex-col items-center justify-center py-16">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-6">
-              <Users className="w-10 h-10 text-primary" />
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center mb-6">
+              <Users className="w-10 h-10 text-accent" />
             </div>
             <h3 className="text-xl font-bold mb-2">No Teams Yet</h3>
             <p className="text-muted-foreground text-center max-w-sm mb-6">
@@ -340,15 +340,15 @@ export default function Teams() {
             return (
               <Card 
                 key={team.id} 
-                className="cursor-pointer hover-elevate transition-all group relative overflow-visible border-primary/10 hover:border-primary/30"
+                className="cursor-pointer hover-elevate transition-all group relative overflow-visible border-accent/10 hover:border-accent/30"
                 onClick={() => setSelectedTeam(team)}
                 data-testid={`card-team-${team.id}`}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity" />
                 <CardHeader className="pb-2 relative">
                   <CardTitle className="flex items-center gap-3">
                     <div className="relative">
-                      <Avatar className="w-10 h-10 rounded-lg border border-primary/20">
+                      <Avatar className="w-10 h-10 rounded-lg border border-accent/20">
                         {team.profilePicture ? (
                           <AvatarImage 
                             src={team.profilePicture.startsWith('http') 
@@ -361,13 +361,13 @@ export default function Teams() {
                             height={40}
                           />
                         ) : null}
-                        <AvatarFallback className="rounded-lg bg-gradient-to-br from-primary/20 to-primary/5">
-                          <Users className="w-5 h-5 text-primary" />
+                        <AvatarFallback className="rounded-lg bg-gradient-to-br from-accent/20 to-accent/5">
+                          <Users className="w-5 h-5 text-accent" />
                         </AvatarFallback>
                       </Avatar>
                       {isTeamLeader && (
                         <label 
-                          className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-primary flex items-center justify-center cursor-pointer hover-elevate"
+                          className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-accent flex items-center justify-center cursor-pointer hover-elevate"
                           onClick={(e) => e.stopPropagation()}
                           data-testid={`label-upload-team-picture-${team.id}`}
                         >
@@ -396,9 +396,9 @@ export default function Teams() {
                         </label>
                       )}
                     </div>
-                    <span className="group-hover:text-primary transition-colors">{team.name}</span>
+                    <span className="group-hover:text-accent transition-colors">{team.name}</span>
                     {isTeamLeader && (
-                      <Crown className="w-4 h-4 text-amber-500" />
+                      <Crown className="w-4 h-4 text-accent" />
                     )}
                   </CardTitle>
                 </CardHeader>

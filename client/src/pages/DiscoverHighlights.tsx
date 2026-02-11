@@ -145,7 +145,7 @@ function ClipCard({ clip, isActive, onPlay }: { clip: DiscoverClip; isActive: bo
 
       <div className="absolute top-0 left-0 right-0 h-1 bg-white/10 z-20">
         <div 
-          className="h-full bg-primary transition-all duration-100" 
+          className="h-full bg-accent transition-all duration-100" 
           style={{ width: `${progress}%` }} 
         />
       </div>
@@ -193,7 +193,7 @@ function ClipCard({ clip, isActive, onPlay }: { clip: DiscoverClip; isActive: bo
             <div className="flex items-center gap-3 mb-2">
               <Avatar className="w-10 h-10 border-2 border-white/30">
                 <AvatarImage src={clip.playerPhoto || undefined} />
-                <AvatarFallback className="bg-primary/30 text-white text-sm font-bold">
+                <AvatarFallback className="bg-accent/30 text-white text-sm font-bold">
                   {getInitials(clip.playerName)}
                 </AvatarFallback>
               </Avatar>

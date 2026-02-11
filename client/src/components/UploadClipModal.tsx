@@ -136,7 +136,7 @@ export function UploadClipModal({
       <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-display text-xl uppercase tracking-wide">
-            <Film className="w-5 h-5 text-primary" />
+            <Film className="w-5 h-5 text-accent" />
             Upload Highlight Clip
           </DialogTitle>
         </DialogHeader>
@@ -147,8 +147,8 @@ export function UploadClipModal({
             <div
               className={`relative border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
                 selectedFile
-                  ? "border-primary/50 bg-primary/5"
-                  : "border-border hover:border-primary/30"
+                  ? "border-accent/50 bg-accent/5"
+                  : "border-border hover:border-accent/30"
               }`}
             >
               <input
@@ -163,7 +163,7 @@ export function UploadClipModal({
 
               {selectedFile ? (
                 <div className="flex items-center justify-center gap-3">
-                  <Film className="w-8 h-8 text-primary" />
+                  <Film className="w-8 h-8 text-accent" />
                   <div className="text-left">
                     <p className="font-medium text-white">{selectedFile.name}</p>
                     <p className="text-sm text-muted-foreground">

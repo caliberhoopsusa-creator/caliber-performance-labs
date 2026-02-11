@@ -157,11 +157,11 @@ export const ShareablePlayerCard = forwardRef<HTMLDivElement, ShareablePlayerCar
         <div className="relative h-full p-6 flex flex-col">
           <div className="flex items-start gap-4 mb-4">
             <div className="relative">
-              <div className="w-20 h-20 rounded-xl overflow-hidden border-2 border-orange-500/30 shadow-lg shadow-orange-500/20">
+              <div className="w-20 h-20 rounded-xl overflow-hidden border-2 border-accent/30 shadow-lg shadow-accent/20">
                 {player.photoUrl ? (
                   <img src={player.photoUrl} alt={player.name} className="w-full h-full object-cover" loading="lazy" width={80} height={80} />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-orange-500/30 to-orange-600/10 flex items-center justify-center">
+                  <div className="w-full h-full bg-gradient-to-br from-accent/30 to-accent/10 flex items-center justify-center">
                     <span className="text-2xl font-bold text-white font-display">{getInitials(player.name)}</span>
                   </div>
                 )}
@@ -174,9 +174,9 @@ export const ShareablePlayerCard = forwardRef<HTMLDivElement, ShareablePlayerCar
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 {player.jerseyNumber && (
-                  <span className="text-xl font-bold text-orange-500 font-display">#{player.jerseyNumber}</span>
+                  <span className="text-xl font-bold text-accent font-display">#{player.jerseyNumber}</span>
                 )}
-                <span className="text-xs font-bold uppercase tracking-wider bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded border border-orange-500/30">
+                <span className="text-xs font-bold uppercase tracking-wider bg-accent/20 text-accent px-2 py-0.5 rounded border border-accent/30">
                   {player.position?.split(',').map(p => p.trim()).map(pos => 
                     FOOTBALL_POSITIONS.includes(pos as FootballPosition)
                       ? FOOTBALL_POSITION_LABELS[pos as FootballPosition]
@@ -246,7 +246,7 @@ export const ShareablePlayerCard = forwardRef<HTMLDivElement, ShareablePlayerCar
                         key={badge.skillType}
                         className="flex items-center gap-1.5 bg-white/5 rounded-md px-2 py-1 border border-white/10"
                       >
-                        <Icon className="w-3.5 h-3.5 text-orange-400" />
+                        <Icon className="w-3.5 h-3.5 text-accent" />
                         <span className="text-[10px] font-medium text-white/80 uppercase">{badge.currentLevel}</span>
                       </div>
                     );
@@ -265,8 +265,8 @@ export const ShareablePlayerCard = forwardRef<HTMLDivElement, ShareablePlayerCar
               </div>
               
               <div className="flex items-center gap-2 text-white/30">
-                <div className="w-6 h-6 rounded bg-orange-500/20 flex items-center justify-center">
-                  <span className="text-orange-500 font-bold text-xs">C</span>
+                <div className="w-6 h-6 rounded bg-accent/20 flex items-center justify-center">
+                  <span className="text-accent font-bold text-xs">C</span>
                 </div>
                 <span className="text-[10px] font-medium uppercase tracking-wider">Caliber</span>
               </div>

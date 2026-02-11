@@ -151,7 +151,7 @@ export default function WorkoutTracker() {
         </Card>
         <Card className="" data-testid="stat-this-week">
           <CardContent className="p-4">
-            <div className="text-3xl font-display font-bold text-primary">{stats.thisWeek}</div>
+            <div className="text-3xl font-display font-bold text-accent">{stats.thisWeek}</div>
             <div className="text-xs text-muted-foreground uppercase tracking-wider">This Week</div>
           </CardContent>
         </Card>

@@ -135,7 +135,7 @@ export default function ScheduleCalendar() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-display font-bold tracking-wide uppercase text-white flex items-center gap-3">
-            <CalendarDays className="w-8 h-8 text-primary" />
+            <CalendarDays className="w-8 h-8 text-accent" />
             Schedule
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -154,7 +154,7 @@ export default function ScheduleCalendar() {
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-xl font-display uppercase tracking-wide flex items-center gap-2">
-                  <CalendarIcon className="w-5 h-5 text-primary" />
+                  <CalendarIcon className="w-5 h-5 text-accent" />
                   {format(currentMonth, 'MMMM yyyy')}
                 </CardTitle>
                 <div className="flex items-center gap-2">
@@ -225,14 +225,14 @@ export default function ScheduleCalendar() {
                               ? 'bg-white/5 hover:bg-white/10' 
                               : 'bg-transparent text-muted-foreground/50 hover:bg-white/5'
                             }
-                            ${isSelected ? 'ring-2 ring-primary bg-primary/10' : ''}
-                            ${isCurrentDay ? 'border border-primary/50' : ''}
+                            ${isSelected ? 'ring-2 ring-accent bg-accent/10' : ''}
+                            ${isCurrentDay ? 'border border-accent/50' : ''}
                           `}
                           data-testid={`calendar-day-${dateKey}`}
                         >
                           <span className={`
                             text-sm font-medium
-                            ${isCurrentDay ? 'text-primary font-bold' : ''}
+                            ${isCurrentDay ? 'text-accent font-bold' : ''}
                             ${!isCurrentMonth ? 'text-muted-foreground/50' : ''}
                           `}>
                             {format(day, 'd')}
@@ -245,11 +245,11 @@ export default function ScheduleCalendar() {
                                   key={i}
                                   className={`
                                     w-1.5 h-1.5 rounded-full
-                                    ${event.eventType === 'game' ? 'bg-orange-400' : ''}
+                                    ${event.eventType === 'game' ? 'bg-accent' : ''}
                                     ${event.eventType === 'practice' ? 'bg-green-400' : ''}
                                     ${event.eventType === 'workout' ? 'bg-blue-400' : ''}
                                     ${event.eventType === 'meeting' ? 'bg-purple-400' : ''}
-                                    ${!['game', 'practice', 'workout', 'meeting'].includes(event.eventType) ? 'bg-primary' : ''}
+                                    ${!['game', 'practice', 'workout', 'meeting'].includes(event.eventType) ? 'bg-accent' : ''}
                                   `}
                                 />
                               ))}
@@ -303,7 +303,7 @@ export default function ScheduleCalendar() {
                   <Button 
                     variant="ghost" 
                     onClick={handleAddEvent}
-                    className="text-primary mt-2"
+                    className="text-accent mt-2"
                   >
                     Schedule something
                   </Button>
@@ -320,7 +320,7 @@ export default function ScheduleCalendar() {
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center gap-2 text-sm">
-                <span className="w-3 h-3 rounded-full bg-orange-400" />
+                <span className="w-3 h-3 rounded-full bg-accent" />
                 <span className="text-muted-foreground">Games</span>
               </div>
               <div className="flex items-center gap-2 text-sm">

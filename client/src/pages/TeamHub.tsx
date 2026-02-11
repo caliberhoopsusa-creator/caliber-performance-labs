@@ -66,7 +66,7 @@ function EventTypeIcon({ type }: { type: string }) {
 
 function EventTypeBadge({ type }: { type: string }) {
   const colors: Record<string, string> = {
-    game: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+    game: 'bg-accent/20 text-accent border-accent/30',
     practice: 'bg-green-500/20 text-green-400 border-green-500/30',
     workout: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
     meeting: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
@@ -190,8 +190,8 @@ export default function TeamHub() {
     return (
       <Paywall requiredTier="coach_pro" featureName="Team Hub">
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4" data-testid="team-hub-no-team">
-          <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
-            <Users className="w-10 h-10 text-primary" />
+          <div className="w-20 h-20 rounded-2xl bg-accent/10 flex items-center justify-center mb-6">
+            <Users className="w-10 h-10 text-accent" />
           </div>
           <h2 className="text-2xl font-display uppercase tracking-wide text-white mb-2">
             No Team Yet
@@ -236,7 +236,7 @@ export default function TeamHub() {
         <Card className="border-white/10">
           <CardHeader className="pb-4">
             <CardTitle className="text-lg font-display uppercase tracking-wide flex items-center gap-2">
-              <CalendarPlus className="w-5 h-5 text-primary" />
+              <CalendarPlus className="w-5 h-5 text-accent" />
               Quick Schedule
             </CardTitle>
           </CardHeader>
@@ -256,12 +256,12 @@ export default function TeamHub() {
               <div 
                 role="button"
                 tabIndex={0}
-                className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border cursor-pointer bg-orange-500/10 border-orange-500/30 hover-elevate active-elevate-2 transition-colors"
+                className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border cursor-pointer bg-accent/10 border-accent/30 hover-elevate active-elevate-2 transition-colors"
                 onClick={() => openAddEvent('game')}
                 onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openAddEvent('game')}
                 data-testid="button-schedule-game"
               >
-                <Trophy className="w-6 h-6 text-orange-400" />
+                <Trophy className="w-6 h-6 text-accent" />
                 <span className="text-sm font-medium">Game</span>
               </div>
               <div 
@@ -381,9 +381,9 @@ export default function TeamHub() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-orange-500/10">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-accent/10">
                 <div className="flex items-center gap-3">
-                  <Trophy className="w-5 h-5 text-orange-400" />
+                  <Trophy className="w-5 h-5 text-accent" />
                   <span className="text-sm">Games</span>
                 </div>
                 <span className="text-xl font-bold">{eventsByType.games}</span>
@@ -416,7 +416,7 @@ export default function TeamHub() {
           <Card className="border-white/10 lg:col-span-2">
             <CardHeader className="pb-3 flex flex-row items-center justify-between gap-2">
               <CardTitle className="text-lg font-display uppercase tracking-wide flex items-center gap-2">
-                <Clock className="w-5 h-5 text-primary" />
+                <Clock className="w-5 h-5 text-accent" />
                 Upcoming Events
               </CardTitle>
               <Button 
@@ -462,7 +462,7 @@ export default function TeamHub() {
                       >
                         <div className={`
                           w-10 h-10 rounded-lg flex items-center justify-center
-                          ${event.eventType === 'game' ? 'bg-orange-500/20' : ''}
+                          ${event.eventType === 'game' ? 'bg-accent/20' : ''}
                           ${event.eventType === 'practice' ? 'bg-green-500/20' : ''}
                           ${event.eventType === 'workout' ? 'bg-blue-500/20' : ''}
                           ${event.eventType === 'meeting' ? 'bg-purple-500/20' : ''}
@@ -498,7 +498,7 @@ export default function TeamHub() {
         <Card className="border-white/10">
           <CardHeader className="pb-3 flex flex-row items-center justify-between gap-2">
             <CardTitle className="text-lg font-display uppercase tracking-wide flex items-center gap-2">
-              <Users className="w-5 h-5 text-primary" />
+              <Users className="w-5 h-5 text-accent" />
               My Teams
             </CardTitle>
             <Link href="/teams">
@@ -534,8 +534,8 @@ export default function TeamHub() {
                       data-testid={`team-card-${team.id}`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center">
-                          <Users className="w-6 h-6 text-primary" />
+                        <div className="w-12 h-12 rounded-lg bg-accent/20 flex items-center justify-center">
+                          <Users className="w-6 h-6 text-accent" />
                         </div>
                         <div>
                           <h3 className="font-semibold">{team.name}</h3>
@@ -554,7 +554,7 @@ export default function TeamHub() {
 
         {/* Today's Schedule */}
         {todayEvents.length > 0 && (
-          <Card className="border-white/10 border-l-4 border-l-primary">
+          <Card className="border-white/10 border-l-4 border-l-accent">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg font-display uppercase tracking-wide">
                 Today's Schedule
@@ -567,7 +567,7 @@ export default function TeamHub() {
                   return (
                     <div 
                       key={event.id} 
-                      className="flex items-center gap-3 p-3 rounded-lg bg-primary/10"
+                      className="flex items-center gap-3 p-3 rounded-lg bg-accent/10"
                     >
                       <EventTypeIcon type={event.eventType} />
                       <div className="flex-1">

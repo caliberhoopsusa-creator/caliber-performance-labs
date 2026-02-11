@@ -465,7 +465,7 @@ export function CoachGoals({ playerId }: CoachGoalsProps) {
         )}
         
         {goal.coachFeedback && (
-          <div className="mt-3 p-2 rounded bg-muted/50 border-l-2 border-primary" data-testid={`feedback-${goal.id}`}>
+          <div className="mt-3 p-2 rounded bg-muted/50 border-l-2 border-accent" data-testid={`feedback-${goal.id}`}>
             <p className="text-xs text-muted-foreground mb-1">Coach Feedback:</p>
             <p className="text-sm">{goal.coachFeedback}</p>
           </div>
@@ -478,7 +478,7 @@ export function CoachGoals({ playerId }: CoachGoalsProps) {
     <Card className="p-5" data-testid="coach-goals-panel">
       <div className="flex items-center justify-between gap-2 mb-4">
         <h3 className="text-lg font-bold font-display flex items-center gap-2">
-          <Target className="w-5 h-5 text-primary" /> Coach Goals
+          <Target className="w-5 h-5 text-accent" /> Coach Goals
         </h3>
         <Dialog open={isAddOpen} onOpenChange={(open) => { setIsAddOpen(open); if (!open) resetForm(); }}>
           <DialogTrigger asChild>

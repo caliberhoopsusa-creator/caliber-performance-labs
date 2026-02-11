@@ -53,12 +53,12 @@ export default function CommunityHub() {
     <div className="space-y-6 pb-8" data-testid="page-community-hub">
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-500/5 border border-purple-500/20 flex items-center justify-center">
-            <Users className="w-6 h-6 text-purple-400" />
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20 flex items-center justify-center">
+            <Users className="w-6 h-6 text-accent" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-white via-purple-100 to-purple-400 bg-clip-text text-transparent">
+              <h1 className="text-2xl md:text-3xl font-display font-bold bg-gradient-to-r from-white via-white/90 to-accent bg-clip-text text-transparent tracking-wide">
                 Community
               </h1>
               <HelpTooltip
@@ -82,7 +82,7 @@ export default function CommunityHub() {
         >
           <TabsTrigger 
             value="feed" 
-            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
             data-testid="tab-feed"
           >
             <Rss className="w-4 h-4" />
@@ -91,7 +91,7 @@ export default function CommunityHub() {
           </TabsTrigger>
           <TabsTrigger 
             value="stories" 
-            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
             data-testid="tab-stories"
           >
             <Camera className="w-4 h-4" />
@@ -99,7 +99,7 @@ export default function CommunityHub() {
           </TabsTrigger>
           <TabsTrigger 
             value="polls" 
-            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
             data-testid="tab-polls"
           >
             <BarChart3 className="w-4 h-4" />
@@ -108,7 +108,7 @@ export default function CommunityHub() {
           </TabsTrigger>
           <TabsTrigger 
             value="messages" 
-            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
             data-testid="tab-messages"
           >
             <MessageCircle className="w-4 h-4" />
@@ -116,7 +116,7 @@ export default function CommunityHub() {
           </TabsTrigger>
           <TabsTrigger 
             value="discover" 
-            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
             data-testid="tab-discover"
           >
             <Compass className="w-4 h-4" />
@@ -124,7 +124,7 @@ export default function CommunityHub() {
           </TabsTrigger>
           <TabsTrigger 
             value="connect" 
-            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
             data-testid="tab-connect"
           >
             <UserPlus className="w-4 h-4" />

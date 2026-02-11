@@ -83,7 +83,7 @@ export default function ComparePlayers() {
 
       {isLoading && (
         <div className="flex justify-center p-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
         </div>
       )}
 
@@ -158,7 +158,7 @@ function ComparisonCard({ player, side }: any) {
   return (
     <div className={cn(
       "p-8 flex flex-col items-center gap-6",
-      side === "left" ? "bg-primary/5" : "bg-secondary/5"
+      side === "left" ? "bg-accent/5" : "bg-secondary/5"
     )}>
       <div className="w-24 h-24 rounded-full bg-background border-4 border-white/10 flex items-center justify-center text-4xl font-display font-bold text-white shadow-xl">
         {player.jerseyNumber || "#"}
@@ -178,17 +178,17 @@ function StatRow({ label, v1, v2, suffix = "" }: any) {
   return (
     <div className="space-y-3">
       <div className="flex justify-between items-center text-xs font-bold uppercase tracking-widest text-muted-foreground">
-        <span className={cn(n1 > n2 && "text-primary")}>{v1}{suffix}</span>
+        <span className={cn(n1 > n2 && "text-accent")}>{v1}{suffix}</span>
         <span>{label}</span>
-        <span className={cn(n2 > n1 && "text-primary")}>{v2}{suffix}</span>
+        <span className={cn(n2 > n1 && "text-accent")}>{v2}{suffix}</span>
       </div>
       <div className="flex h-2 w-full bg-white/5 rounded-full overflow-hidden">
         <div 
-          className={cn("h-full transition-all duration-500", n1 > n2 ? "bg-primary" : "bg-white/20")} 
+          className={cn("h-full transition-all duration-500", n1 > n2 ? "bg-accent" : "bg-white/20")} 
           style={{ width: `${(n1 / (n1 + n2)) * 100}%` }} 
         />
         <div 
-          className={cn("h-full transition-all duration-500", n2 > n1 ? "bg-primary" : "bg-white/20")} 
+          className={cn("h-full transition-all duration-500", n2 > n1 ? "bg-accent" : "bg-white/20")} 
           style={{ width: `${(n2 / (n1 + n2)) * 100}%` }} 
         />
       </div>

@@ -27,7 +27,7 @@ export function SharedGoalsList() {
     return (
       <Card className="p-5">
         <h3 className="text-lg font-bold font-display text-white flex items-center gap-2 mb-4">
-          <Users className="w-5 h-5 text-primary" /> Goals Shared With Me
+          <Users className="w-5 h-5 text-accent" /> Goals Shared With Me
         </h3>
         <div className="text-center py-6 text-muted-foreground">
           <Users className="w-10 h-10 mx-auto mb-2 opacity-30" />
@@ -51,7 +51,7 @@ export function SharedGoalsList() {
   return (
     <Card className="p-5">
       <h3 className="text-lg font-bold font-display text-white flex items-center gap-2 mb-4">
-        <Users className="w-5 h-5 text-primary" /> Goals Shared With Me
+        <Users className="w-5 h-5 text-accent" /> Goals Shared With Me
       </h3>
 
       <div className="space-y-3">
@@ -72,15 +72,15 @@ export function SharedGoalsList() {
                   "p-3 rounded-md border hover-elevate cursor-pointer",
                   goal.completed 
                     ? "border-green-500/30 bg-green-500/5" 
-                    : "border-primary/20 bg-card/50"
+                    : "border-accent/20 bg-card/50"
                 )}
                 data-testid={`shared-goal-${sharedGoal.id}`}
               >
                 <div className="flex items-start gap-3">
                   {sharedByPlayer && (
-                    <Avatar className="h-9 w-9 border border-primary/20">
+                    <Avatar className="h-9 w-9 border border-accent/20">
                       <AvatarImage src={sharedByPlayer.photoUrl || undefined} width={36} height={36} />
-                      <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                      <AvatarFallback className="bg-accent/10 text-accent text-xs">
                         {sharedByPlayer.name?.slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
@@ -88,7 +88,7 @@ export function SharedGoalsList() {
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <Target className="w-4 h-4 text-primary shrink-0" />
+                      <Target className="w-4 h-4 text-accent shrink-0" />
                       <span className="font-medium text-sm truncate">{goal.title}</span>
                       {goal.completed && (
                         <Badge variant="secondary" className="text-xs bg-green-500/20 text-green-400 shrink-0">

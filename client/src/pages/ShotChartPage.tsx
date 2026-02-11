@@ -92,7 +92,7 @@ export default function ShotChartPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-            <Crosshair className="h-8 w-8 text-primary" />
+            <Crosshair className="h-8 w-8 text-accent" />
             Shot Chart
           </h1>
           <p className="text-muted-foreground mt-1">Analyze shooting performance by zone</p>
@@ -203,7 +203,7 @@ export default function ShotChartPage() {
             </Card>
             <Card className="p-4 text-center">
               <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">FG%</div>
-              <div className="text-3xl font-bold text-primary">{totalStats.percentage}%</div>
+              <div className="text-3xl font-bold text-accent">{totalStats.percentage}%</div>
             </Card>
             <Card className="p-4 text-center">
               <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Points</div>
@@ -216,7 +216,7 @@ export default function ShotChartPage() {
               <Card data-testid="main-shot-chart">
                 <CardHeader className="pb-2">
                   <CardTitle className="flex items-center gap-2">
-                    <Crosshair className="h-5 w-5 text-primary" />
+                    <Crosshair className="h-5 w-5 text-accent" />
                     {playerData?.name}'s Shot Chart
                     {filteredShots.length > 0 && (
                       <Badge variant="secondary" className="ml-2">
@@ -241,7 +241,7 @@ export default function ShotChartPage() {
                 <Card data-testid="recent-games-breakdown">
                   <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2 text-base">
-                      <TrendingUp className="h-4 w-4 text-primary" />
+                      <TrendingUp className="h-4 w-4 text-accent" />
                       Recent Games
                     </CardTitle>
                   </CardHeader>

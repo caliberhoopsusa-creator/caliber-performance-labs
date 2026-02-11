@@ -60,7 +60,7 @@ export default function CoachHub() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-white via-accent/20 to-accent bg-clip-text text-transparent">
+              <h1 className="text-2xl md:text-3xl font-bold font-display bg-gradient-to-r from-white via-accent/20 to-accent bg-clip-text text-transparent">
                 Coach Hub
               </h1>
               <HelpTooltip
@@ -84,7 +84,7 @@ export default function CoachHub() {
         >
           <TabsTrigger 
             value="dashboard" 
-            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
             data-testid="tab-dashboard"
           >
             <LayoutDashboard className="w-4 h-4" />
@@ -93,7 +93,7 @@ export default function CoachHub() {
           </TabsTrigger>
           <TabsTrigger 
             value="verify" 
-            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
             data-testid="tab-verify"
           >
             <ClipboardCheck className="w-4 h-4" />
@@ -101,7 +101,7 @@ export default function CoachHub() {
           </TabsTrigger>
           <TabsTrigger 
             value="endorse" 
-            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
             data-testid="tab-endorse"
           >
             <Medal className="w-4 h-4" />
@@ -109,7 +109,7 @@ export default function CoachHub() {
           </TabsTrigger>
           <TabsTrigger 
             value="practices" 
-            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
             data-testid="tab-practices"
           >
             <CalendarCheck className="w-4 h-4" />
@@ -118,7 +118,7 @@ export default function CoachHub() {
           </TabsTrigger>
           <TabsTrigger 
             value="lineups" 
-            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
             data-testid="tab-lineups"
           >
             <Users className="w-4 h-4" />
@@ -126,7 +126,7 @@ export default function CoachHub() {
           </TabsTrigger>
           <TabsTrigger 
             value="scouting" 
-            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
             data-testid="tab-scouting"
           >
             <Eye className="w-4 h-4" />
@@ -135,7 +135,7 @@ export default function CoachHub() {
           </TabsTrigger>
           <TabsTrigger 
             value="alerts" 
-            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
             data-testid="tab-alerts"
           >
             <Bell className="w-4 h-4" />

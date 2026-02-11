@@ -93,7 +93,7 @@ const TIER_CONFIG: Record<string, { gradient: string; text: string; icon: string
   Starter: { gradient: "from-emerald-600 to-emerald-700", text: "text-emerald-300", icon: "text-emerald-400" },
   "All-Star": { gradient: "from-blue-600 to-blue-700", text: "text-blue-300", icon: "text-blue-400" },
   MVP: { gradient: "from-purple-600 to-purple-700", text: "text-purple-300", icon: "text-purple-400" },
-  "Hall of Fame": { gradient: "from-amber-600 to-amber-700", text: "text-amber-300", icon: "text-amber-400" },
+  "Hall of Fame": { gradient: "from-accent to-accent/80", text: "text-accent", icon: "text-accent" },
 };
 
 const XP_THRESHOLDS: Record<string, number> = {
@@ -426,7 +426,7 @@ export default function PublicRecruitProfile() {
           {(player.stateRank || player.countryRank) && (
             <div className="flex items-center gap-2 flex-wrap">
               {player.stateRank && (
-                <Badge variant="secondary" className="bg-amber-500/15 text-amber-400 gap-1" data-testid="badge-state-rank">
+                <Badge variant="secondary" className="bg-accent/15 text-accent gap-1" data-testid="badge-state-rank">
                   <Trophy className="w-3 h-3" /> #{player.stateRank} in {player.state || 'State'}
                 </Badge>
               )}
@@ -456,8 +456,8 @@ export default function PublicRecruitProfile() {
 
           {streak && streak.current > 0 && (
             <Card className="p-3 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-orange-500/15 flex items-center justify-center">
-                <Flame className="w-5 h-5 text-orange-400" />
+              <div className="w-10 h-10 rounded-full bg-accent/15 flex items-center justify-center">
+                <Flame className="w-5 h-5 text-accent" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-white" data-testid="text-streak-current">{streak.current}-day streak</p>
@@ -492,7 +492,7 @@ export default function PublicRecruitProfile() {
           {bestGame && (
             <Card className="p-4">
               <h2 className="text-sm font-bold font-display uppercase tracking-wider mb-3 flex items-center gap-2 text-white/70">
-                <Star className="w-4 h-4 text-amber-400" /> Best Performance
+                <Star className="w-4 h-4 text-accent" /> Best Performance
               </h2>
               <div className="flex items-center justify-between gap-3 mb-3">
                 <div>

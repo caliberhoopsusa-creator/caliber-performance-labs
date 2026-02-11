@@ -88,7 +88,7 @@ function StarRating({ value, size = "sm" }: { value: number; size?: "sm" | "md" 
           className={cn(
             sizeClass,
             star <= stars
-              ? "fill-amber-400 text-amber-400"
+              ? "fill-accent text-accent"
               : "text-slate-600"
           )}
         />
@@ -406,7 +406,7 @@ export function CoachRecommendations({
                           </div>
                           <div className="flex items-center gap-2">
                             <StarRating value={formData.ratings[key]} />
-                            <span className="text-sm font-medium text-amber-400 w-6 text-right">
+                            <span className="text-sm font-medium text-accent w-6 text-right">
                               {formData.ratings[key]}
                             </span>
                           </div>

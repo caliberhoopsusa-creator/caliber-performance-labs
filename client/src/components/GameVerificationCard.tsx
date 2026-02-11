@@ -110,7 +110,7 @@ export function GameVerificationCard({ game, onVerified }: Props) {
                 variant="outline" 
                 className={cn(
                   "text-xs",
-                  isBasketball ? "border-orange-500/30 text-orange-400" : "border-green-500/30 text-green-400"
+                  isBasketball ? "border-accent/30 text-accent" : "border-green-500/30 text-green-400"
                 )}
               >
                 {isBasketball ? "Basketball" : "Football"}
@@ -236,7 +236,7 @@ export function GameVerificationCard({ game, onVerified }: Props) {
         </div>
 
         {game.verificationStatus === 'pending' && (
-          <div className="flex items-center gap-1 mt-2 text-xs text-amber-400">
+          <div className="flex items-center gap-1 mt-2 text-xs text-accent">
             <Clock className="w-3 h-3" />
             Pending review
           </div>

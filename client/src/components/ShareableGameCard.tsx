@@ -121,7 +121,7 @@ export const ShareableGameCard = forwardRef<HTMLDivElement, ShareableGameCardPro
             {isFootball ? (
               <>
                 <div className="bg-white/5 rounded-lg p-4 text-center border border-white/10">
-                  <div className="text-3xl font-bold text-orange-400 font-display">{totalYards}</div>
+                  <div className="text-3xl font-bold text-accent font-display">{totalYards}</div>
                   <div className="text-[10px] text-white/50 uppercase tracking-wider">Total Yds</div>
                 </div>
                 <div className="bg-white/5 rounded-lg p-4 text-center border border-white/10">
@@ -140,7 +140,7 @@ export const ShareableGameCard = forwardRef<HTMLDivElement, ShareableGameCardPro
             ) : (
               <>
                 <div className="bg-white/5 rounded-lg p-4 text-center border border-white/10">
-                  <div className="text-3xl font-bold text-orange-400 font-display">{game.points}</div>
+                  <div className="text-3xl font-bold text-accent font-display">{game.points}</div>
                   <div className="text-[10px] text-white/50 uppercase tracking-wider">Points</div>
                 </div>
                 <div className="bg-white/5 rounded-lg p-4 text-center border border-white/10">
@@ -244,10 +244,10 @@ export const ShareableGameCard = forwardRef<HTMLDivElement, ShareableGameCardPro
                   return (
                     <div 
                       key={i}
-                      className="flex items-center gap-1.5 bg-orange-500/10 rounded-md px-2 py-1 border border-orange-500/30"
+                      className="flex items-center gap-1.5 bg-accent/10 rounded-md px-2 py-1 border border-accent/30"
                     >
-                      <Icon className="w-3.5 h-3.5 text-orange-400" />
-                      <span className="text-[10px] font-bold text-orange-300 uppercase">{badgeDef?.name || badge.badgeType}</span>
+                      <Icon className="w-3.5 h-3.5 text-accent" />
+                      <span className="text-[10px] font-bold text-accent uppercase">{badgeDef?.name || badge.badgeType}</span>
                     </div>
                   );
                 })}
@@ -255,8 +255,8 @@ export const ShareableGameCard = forwardRef<HTMLDivElement, ShareableGameCardPro
             )}
             
             <div className="flex items-center gap-2 text-white/30">
-              <div className="w-6 h-6 rounded bg-orange-500/20 flex items-center justify-center">
-                <span className="text-orange-500 font-bold text-xs">C</span>
+              <div className="w-6 h-6 rounded bg-accent/20 flex items-center justify-center">
+                <span className="text-accent font-bold text-xs">C</span>
               </div>
               <span className="text-[10px] font-medium uppercase tracking-wider">Caliber</span>
             </div>

@@ -65,7 +65,7 @@ interface CollegeCompareProps {
 }
 
 const DIVISION_COLORS: Record<string, string> = {
-  'D1': 'bg-gradient-to-r from-amber-500 to-orange-500 text-white',
+  'D1': 'bg-gradient-to-r from-accent to-accent/90 text-accent-foreground',
   'D2': 'bg-accent text-white',
   'D3': 'bg-gradient-to-r from-emerald-500 to-green-500 text-white',
   'NAIA': 'bg-gradient-to-r from-purple-500 to-violet-500 text-white',
@@ -74,7 +74,7 @@ const DIVISION_COLORS: Record<string, string> = {
 
 const LOGO_COLORS = [
   'bg-gradient-to-br from-accent to-blue-600',
-  'bg-gradient-to-br from-amber-500 to-orange-600',
+  'bg-gradient-to-br from-accent to-accent/80',
   'bg-gradient-to-br from-emerald-500 to-teal-600',
   'bg-gradient-to-br from-purple-500 to-indigo-600',
   'bg-gradient-to-br from-rose-500 to-pink-600',

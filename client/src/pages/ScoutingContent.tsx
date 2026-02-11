@@ -142,7 +142,7 @@ export default function ScoutingContent() {
         <Card>
           <CardContent className="p-12 text-center">
             <Target className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Opponents Found</h3>
+            <h3 className="text-lg font-semibold font-display mb-2">No Opponents Found</h3>
             <p className="text-muted-foreground mb-4">
               {searchQuery || filterType !== "all"
                 ? "No opponents match your search criteria"
@@ -192,7 +192,7 @@ function OpponentCard({ opponent, onClick }: { opponent: Opponent; onClick: () =
       <CardContent className="p-6">
         <div className="flex items-start justify-between gap-3 mb-4">
           <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${isTeam ? "bg-blue-500/10 text-blue-500" : "bg-orange-500/10 text-orange-500"}`}>
+            <div className={`p-2 rounded-lg ${isTeam ? "bg-blue-500/10 text-blue-500" : "bg-accent/10 text-accent"}`}>
               {isTeam ? <Users className="w-5 h-5" /> : <User className="w-5 h-5" />}
             </div>
             <div>
@@ -346,7 +346,7 @@ function OpponentDetailView({
         </Button>
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            <div className={`p-3 rounded-xl ${isTeam ? "bg-blue-500/10 text-blue-500" : "bg-orange-500/10 text-orange-500"}`}>
+            <div className={`p-3 rounded-xl ${isTeam ? "bg-blue-500/10 text-blue-500" : "bg-accent/10 text-accent"}`}>
               {isTeam ? <Users className="w-6 h-6" /> : <User className="w-6 h-6" />}
             </div>
             <div>
@@ -395,7 +395,7 @@ function OpponentDetailView({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 font-display">
               <Target className="w-5 h-5" />
               Scouting Report
             </CardTitle>
@@ -434,7 +434,7 @@ function OpponentDetailView({
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 font-display">
               <Gamepad2 className="w-5 h-5" />
               Games Against
             </CardTitle>

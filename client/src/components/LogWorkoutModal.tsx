@@ -259,7 +259,7 @@ export function LogWorkoutModal({ playerId }: LogWorkoutModalProps) {
                 <FormItem>
                   <div className="flex items-center justify-between">
                     <FormLabel>Intensity</FormLabel>
-                    <span className="text-sm font-medium text-primary">{field.value}/10</span>
+                    <span className="text-sm font-medium text-accent">{field.value}/10</span>
                   </div>
                   <FormControl>
                     <Slider

@@ -318,7 +318,7 @@ export function LivePractice({ practice, onEnd, onBack }: LivePracticeProps) {
           <div className="flex items-center gap-4">
             <div className="px-6 py-3 rounded-xl" data-testid="timer-display">
               <div className="flex items-center gap-3">
-                <Timer className="w-6 h-6 text-primary" />
+                <Timer className="w-6 h-6 text-accent" />
                 <span className="text-3xl font-mono font-bold text-white tabular-nums">
                   {formatTime(elapsedSeconds)}
                 </span>
@@ -339,10 +339,10 @@ export function LivePractice({ practice, onEnd, onBack }: LivePracticeProps) {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-2 bg-card border border-white/10" data-testid="tabs-practice-mode">
-          <TabsTrigger value="attendance" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-attendance">
+          <TabsTrigger value="attendance" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-attendance">
             <Users className="w-4 h-4" /> Attendance
           </TabsTrigger>
-          <TabsTrigger value="drills" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-drills">
+          <TabsTrigger value="drills" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-drills">
             <Target className="w-4 h-4" /> Drills
           </TabsTrigger>
         </TabsList>
@@ -375,7 +375,7 @@ export function LivePractice({ practice, onEnd, onBack }: LivePracticeProps) {
               {playersLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-pulse flex flex-col items-center gap-2">
-                    <div className="w-12 h-12 rounded-full bg-primary/20" />
+                    <div className="w-12 h-12 rounded-full bg-accent/20" />
                     <div className="h-3 w-20 bg-muted rounded" />
                   </div>
                 </div>
@@ -511,7 +511,7 @@ export function LivePractice({ practice, onEnd, onBack }: LivePracticeProps) {
                 <div className="space-y-4 pt-4 border-t">
                   <div className="flex items-center justify-between">
                     <h3 className="font-medium flex items-center gap-2">
-                      <Zap className="w-4 h-4 text-primary" />
+                      <Zap className="w-4 h-4 text-accent" />
                       Score Players ({presentPlayers.length} present)
                     </h3>
                     <Badge variant="outline">
@@ -622,7 +622,7 @@ export function LivePractice({ practice, onEnd, onBack }: LivePracticeProps) {
                 <div className="text-muted-foreground">Players Present</div>
               </div>
               <div className="p-3 rounded-lg text-center">
-                <div className="text-2xl font-bold text-primary">{formatTime(elapsedSeconds)}</div>
+                <div className="text-2xl font-bold text-accent">{formatTime(elapsedSeconds)}</div>
                 <div className="text-muted-foreground">Duration</div>
               </div>
             </div>

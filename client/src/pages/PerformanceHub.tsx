@@ -45,12 +45,12 @@ export default function PerformanceHub() {
     <div className="space-y-6 pb-8" data-testid="page-performance-hub">
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-500/5 border border-orange-500/20 flex items-center justify-center">
-            <Zap className="w-6 h-6 text-orange-400" />
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20 flex items-center justify-center">
+            <Zap className="w-6 h-6 text-accent" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-white via-orange-100 to-orange-400 bg-clip-text text-transparent">
+              <h1 className="text-2xl md:text-3xl font-display font-bold bg-gradient-to-r from-white via-accent/20 to-accent bg-clip-text text-transparent">
                 Performance Hub
               </h1>
               <HelpTooltip
@@ -74,7 +74,7 @@ export default function PerformanceHub() {
         >
           <TabsTrigger 
             value="workouts" 
-            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
             data-testid="tab-workouts"
           >
             <Dumbbell className="w-4 h-4" />
@@ -82,7 +82,7 @@ export default function PerformanceHub() {
           </TabsTrigger>
           <TabsTrigger 
             value="fitness" 
-            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
             data-testid="tab-fitness"
           >
             <Heart className="w-4 h-4" />

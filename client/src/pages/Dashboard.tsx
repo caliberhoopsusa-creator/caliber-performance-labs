@@ -112,11 +112,11 @@ export default function Dashboard() {
             
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-wrap">
               {currentStreak > 0 && (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-orange-500/15 to-orange-600/5 border border-orange-500/30">
-                  <Flame className="w-5 h-5 text-orange-500" />
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-accent/15 to-accent/5 border border-accent/30">
+                  <Flame className="w-5 h-5 text-accent" />
                   <div>
-                    <p className="text-xs text-orange-500/80">Active Streak</p>
-                    <p className="font-bold text-orange-400">{currentStreak} days</p>
+                    <p className="text-xs text-accent/80">Active Streak</p>
+                    <p className="font-bold text-accent">{currentStreak} days</p>
                   </div>
                 </div>
               )}

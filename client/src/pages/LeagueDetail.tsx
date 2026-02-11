@@ -1316,12 +1316,12 @@ export default function LeagueDetail() {
               className={cn(
                 "w-16 h-16 rounded-2xl flex items-center justify-center border-2",
                 isBasketball
-                  ? "bg-orange-500/20 border-orange-500/30"
+                  ? "bg-accent/20 border-accent/30"
                   : "bg-green-500/20 border-green-500/30"
               )}
             >
               {isBasketball ? (
-                <Dribbble className="w-8 h-8 text-orange-400" />
+                <Dribbble className="w-8 h-8 text-accent" />
               ) : (
                 <GiAmericanFootballBall className="w-8 h-8 text-green-400" />
               )}
@@ -1336,7 +1336,7 @@ export default function LeagueDetail() {
                   className={cn(
                     "text-xs gap-1",
                     isBasketball
-                      ? "border-orange-500/30 text-orange-400 bg-orange-500/10"
+                      ? "border-accent/30 text-accent bg-accent/10"
                       : "border-green-500/30 text-green-400 bg-green-500/10"
                   )}
                 >

@@ -97,7 +97,7 @@ export function VideoPlayerModal({ clip, isOpen, onClose }: VideoPlayerModalProp
             <Button
               onClick={handleShare}
               variant="outline"
-              className="gap-2 border-primary/30 text-primary hover:bg-primary/10"
+              className="gap-2 border-accent/30 text-accent hover:bg-accent/10"
               data-testid="button-share-clip"
             >
               <Share2 className="w-4 h-4" />

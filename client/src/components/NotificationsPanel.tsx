@@ -106,8 +106,8 @@ export function NotificationsPanel({ onClose }: NotificationsPanelProps) {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <Bell className="w-8 h-8 text-primary/60" />
+            <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
+              <Bell className="w-8 h-8 text-accent/60" />
             </div>
             <p className="text-white font-semibold mb-1">No notifications yet</p>
             <p className="text-sm text-muted-foreground">
@@ -128,20 +128,20 @@ export function NotificationsPanel({ onClose }: NotificationsPanelProps) {
                   onClick={() => handleNotificationClick(notification)}
                   className={cn(
                     "w-full text-left p-4 flex gap-3 transition-colors hover-elevate",
-                    !notification.isRead && "bg-primary/5"
+                    !notification.isRead && "bg-accent/5"
                   )}
                   data-testid={`notification-item-${notification.id}`}
                 >
                   <div
                     className={cn(
                       "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
-                      notification.isRead ? "bg-secondary/50" : "bg-primary/20"
+                      notification.isRead ? "bg-secondary/50" : "bg-accent/20"
                     )}
                   >
                     <IconComponent
                       className={cn(
                         "w-4 h-4",
-                        notification.isRead ? "text-muted-foreground" : "text-primary"
+                        notification.isRead ? "text-muted-foreground" : "text-accent"
                       )}
                     />
                   </div>
@@ -156,7 +156,7 @@ export function NotificationsPanel({ onClose }: NotificationsPanelProps) {
                         {notification.title}
                       </p>
                       {!notification.isRead && (
-                        <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-1.5" />
+                        <span className="w-2 h-2 rounded-full bg-accent flex-shrink-0 mt-1.5" />
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">

@@ -174,7 +174,7 @@ export default function LineupAnalysis() {
                       key={player.id}
                       className={`flex items-center justify-between p-2 rounded cursor-pointer transition-colors ${
                         selectedPlayers.includes(player.id) 
-                          ? "bg-primary/20 border border-primary/50" 
+                          ? "bg-accent/20 border border-accent/50" 
                           : "hover-elevate"
                       }`}
                       onClick={() => togglePlayerSelection(player.id)}

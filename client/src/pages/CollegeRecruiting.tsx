@@ -109,8 +109,8 @@ export default function CollegeRecruiting() {
               className={cn(
                 "text-xs uppercase font-semibold",
                 currentSport === 'basketball' 
-                  ? "border-orange-500/50 text-orange-400 bg-orange-500/10" 
-                  : "border-amber-700/50 text-amber-500 bg-amber-700/10"
+                  ? "border-accent/50 text-accent bg-accent/10" 
+                  : "border-accent/50 text-accent bg-accent/10"
               )}
             >
               {currentSport === 'basketball' ? (

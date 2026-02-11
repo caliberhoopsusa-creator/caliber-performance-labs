@@ -79,7 +79,7 @@ export function OfflineIndicator() {
 
   return (
     <div 
-      className="flex items-center gap-1.5 text-orange-500"
+      className="flex items-center gap-1.5 text-accent"
       title="Offline mode - using cached data"
       data-testid="indicator-offline"
     >

@@ -201,7 +201,7 @@ export function PreGameReport({ playerId, defaultOpponent = "" }: PreGameReportP
         <Card className="print:break-inside-avoid print:bg-white print:border-gray-300" data-testid="card-recent-performance">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base print:text-black">
-              <BarChart3 className="w-5 h-5 text-primary print:text-gray-700" />
+              <BarChart3 className="w-5 h-5 text-accent print:text-gray-700" />
               Recent Performance (Last 5 Games)
             </CardTitle>
           </CardHeader>
@@ -243,7 +243,7 @@ export function PreGameReport({ playerId, defaultOpponent = "" }: PreGameReportP
         <Card className="print:break-inside-avoid print:bg-white print:border-gray-300" data-testid="card-opponent-history">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base print:text-black">
-              <Swords className="w-5 h-5 text-primary print:text-gray-700" />
+              <Swords className="w-5 h-5 text-accent print:text-gray-700" />
               Matchup History {activeOpponent && `vs ${activeOpponent}`}
             </CardTitle>
           </CardHeader>
@@ -293,7 +293,7 @@ export function PreGameReport({ playerId, defaultOpponent = "" }: PreGameReportP
         <Card className="print:break-inside-avoid print:bg-white print:border-gray-300" data-testid="card-scouting-report">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base print:text-black">
-              <User className="w-5 h-5 text-primary print:text-gray-700" />
+              <User className="w-5 h-5 text-accent print:text-gray-700" />
               Opponent Scouting Report
             </CardTitle>
           </CardHeader>
@@ -336,7 +336,7 @@ export function PreGameReport({ playerId, defaultOpponent = "" }: PreGameReportP
         <Card className="print:break-inside-avoid print:bg-white print:border-gray-300" data-testid="card-coach-goals">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base print:text-black">
-              <Target className="w-5 h-5 text-primary print:text-gray-700" />
+              <Target className="w-5 h-5 text-accent print:text-gray-700" />
               Active Coach Goals
             </CardTitle>
           </CardHeader>
@@ -353,7 +353,7 @@ export function PreGameReport({ playerId, defaultOpponent = "" }: PreGameReportP
                     className="flex items-start gap-3 p-3 rounded-md bg-muted/50 print:bg-gray-100"
                     data-testid={`goal-item-${idx}`}
                   >
-                    <ClipboardList className="w-4 h-4 mt-0.5 text-primary print:text-gray-700 shrink-0" />
+                    <ClipboardList className="w-4 h-4 mt-0.5 text-accent print:text-gray-700 shrink-0" />
                     <div className="flex-1">
                       <p className="font-medium text-sm print:text-black">{goal.title}</p>
                       <div className="flex flex-wrap items-center gap-2 mt-1">

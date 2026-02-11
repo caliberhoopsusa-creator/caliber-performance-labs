@@ -33,13 +33,13 @@ const BADGE_ICONS: Record<string, typeof Target> = {
 };
 
 const BADGE_COLORS: Record<string, { bg: string; border: string; glow: string; text: string }> = {
-  twenty_piece: { bg: 'from-orange-500/30 to-orange-600/10', border: 'border-orange-500/50', glow: 'shadow-orange-500/40', text: 'text-orange-400' },
+  twenty_piece: { bg: 'from-accent/30 to-accent/10', border: 'border-accent/50', glow: 'shadow-accent/40', text: 'text-accent' },
   thirty_bomb: { bg: 'from-red-500/30 to-red-600/10', border: 'border-red-500/50', glow: 'shadow-red-500/40', text: 'text-red-400' },
   double_double: { bg: 'from-purple-500/30 to-purple-600/10', border: 'border-purple-500/50', glow: 'shadow-purple-500/40', text: 'text-purple-400' },
-  triple_double: { bg: 'from-amber-500/30 to-amber-600/10', border: 'border-amber-500/50', glow: 'shadow-amber-500/40', text: 'text-amber-400' },
+  triple_double: { bg: 'from-accent/30 to-accent/10', border: 'border-accent/50', glow: 'shadow-accent/40', text: 'text-accent' },
   efficiency_master: { bg: 'from-green-500/30 to-green-600/10', border: 'border-green-500/50', glow: 'shadow-green-500/40', text: 'text-green-400' },
   lockdown: { bg: 'from-blue-500/30 to-blue-600/10', border: 'border-blue-500/50', glow: 'shadow-blue-500/40', text: 'text-blue-400' },
-  default: { bg: 'from-orange-500/30 to-orange-600/10', border: 'border-orange-500/50', glow: 'shadow-orange-500/40', text: 'text-orange-400' },
+  default: { bg: 'from-accent/30 to-accent/10', border: 'border-accent/50', glow: 'shadow-accent/40', text: 'text-accent' },
 };
 
 interface ShareableBadgeCardProps {
@@ -88,7 +88,7 @@ export const ShareableBadgeCard = forwardRef<HTMLDivElement, ShareableBadgeCardP
             }}
           >
             <Sparkles 
-              className="text-orange-400/40" 
+              className="text-accent/40" 
               style={{ 
                 width: 8 + Math.random() * 12, 
                 height: 8 + Math.random() * 12 
@@ -143,8 +143,8 @@ export const ShareableBadgeCard = forwardRef<HTMLDivElement, ShareableBadgeCardP
           </div>
           
           <div className="absolute bottom-4 right-4 flex items-center gap-2 text-white/30">
-            <div className="w-6 h-6 rounded bg-orange-500/20 flex items-center justify-center">
-              <span className="text-orange-500 font-bold text-xs">C</span>
+            <div className="w-6 h-6 rounded bg-accent/20 flex items-center justify-center">
+              <span className="text-accent font-bold text-xs">C</span>
             </div>
             <span className="text-[10px] font-medium uppercase tracking-wider">Caliber</span>
           </div>

@@ -54,7 +54,7 @@ function BasketballSpinner({ size, className }: { size: number; className?: stri
         <path d="M34 8 Q26 20 34 32" stroke="#C2410C" strokeWidth="1" fill="none" opacity="0.4" />
       </svg>
       <div 
-        className="rounded-full bg-orange-500/20 mt-1"
+        className="rounded-full bg-accent/20 mt-1"
         style={{ 
           width: size * 0.6, 
           height: size * 0.1,

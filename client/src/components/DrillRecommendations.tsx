@@ -19,7 +19,7 @@ interface DrillRecommendationsProps {
 
 const CATEGORY_COLORS: Record<string, string> = {
   // Basketball categories
-  shooting: "bg-orange-500/20 text-orange-400 border-orange-500/30",
+  shooting: "bg-accent/20 text-accent border-accent/30",
   dribbling: "bg-blue-500/20 text-blue-400 border-blue-500/30",
   passing: "bg-green-500/20 text-green-400 border-green-500/30",
   defense: "bg-red-500/20 text-red-400 border-red-500/30",
@@ -28,7 +28,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   rebounding: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
   finishing: "bg-pink-500/20 text-pink-400 border-pink-500/30",
   // Football categories
-  route_running: "bg-amber-500/20 text-amber-400 border-amber-500/30",
+  route_running: "bg-accent/20 text-accent border-accent/30",
   rushing: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
   blocking: "bg-slate-500/20 text-slate-400 border-slate-500/30",
   tackling: "bg-rose-500/20 text-rose-400 border-rose-500/30",
@@ -108,7 +108,7 @@ function RecommendationCard({
 
       <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/50">
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <AlertTriangle className="w-3 h-3 text-amber-500" />
+          <AlertTriangle className="w-3 h-3 text-accent" />
           <span data-testid={`weak-stat-${recommendation.id}`}>
             Addresses: <span className="text-foreground font-medium">{recommendation.weakStat}</span>
           </span>
@@ -157,8 +157,8 @@ function EmptyState({ onGenerate, isGenerating }: { onGenerate: () => void; isGe
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3 }}
     >
-      <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-        <Dumbbell className="w-8 h-8 text-primary/60" />
+      <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
+        <Dumbbell className="w-8 h-8 text-accent/60" />
       </div>
       <p className="text-white font-semibold mb-1">No Drill Recommendations</p>
       <p className="text-sm text-muted-foreground mb-6">
@@ -208,7 +208,7 @@ export function DrillRecommendations({ playerId }: DrillRecommendationsProps) {
     <Card className="p-4" data-testid="drill-recommendations">
       <div className="flex items-center justify-between gap-2 mb-4">
         <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-          <Target className="w-4 h-4 text-primary" />
+          <Target className="w-4 h-4 text-accent" />
           {sport === 'basketball' ? 'Basketball' : 'Football'} Drill Recommendations
         </h4>
         {sortedRecommendations.length > 0 && (

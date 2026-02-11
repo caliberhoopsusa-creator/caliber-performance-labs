@@ -245,7 +245,7 @@ function InventorySection() {
     return (
       <Card className="p-6">
         <div className="flex items-center gap-2 mb-4">
-          <Package className="w-5 h-5 text-primary" />
+          <Package className="w-5 h-5 text-accent" />
           <h3 className="font-display text-xl uppercase tracking-wide">My Inventory</h3>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -284,7 +284,7 @@ function InventorySection() {
   return (
     <Card className="p-6">
       <div className="flex items-center gap-2 mb-6">
-        <Package className="w-5 h-5 text-primary" />
+        <Package className="w-5 h-5 text-accent" />
         <h3 className="font-display text-xl uppercase tracking-wide">My Inventory</h3>
         <span className="text-sm text-muted-foreground ml-2">({items.length} items)</span>
       </div>
@@ -327,12 +327,12 @@ function InventorySection() {
                         className={cn(
                           "relative rounded-lg border-2 p-4 transition-all",
                           rarityColor,
-                          isEquipped && "ring-2 ring-primary ring-offset-2 ring-offset-background"
+                          isEquipped && "ring-2 ring-accent ring-offset-2 ring-offset-background"
                         )}
                         data-testid={`inventory-item-${inventoryItem.id}`}
                       >
                         {isEquipped && (
-                          <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <div className="absolute -top-2 -right-2 bg-accent text-primary-foreground text-xs px-2 py-0.5 rounded-full flex items-center gap-1">
                             <CheckCircle className="w-3 h-3" />
                             Equipped
                           </div>
@@ -480,14 +480,14 @@ function CoachToolsSection({ playerId, games }: CoachToolsSectionProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="p-6">
           <h3 className="text-lg font-bold font-display text-white mb-4 flex items-center gap-2">
-            <Target className="w-5 h-5 text-primary" /> Coach Goals
+            <Target className="w-5 h-5 text-accent" /> Coach Goals
           </h3>
           <CoachGoals playerId={playerId} />
         </Card>
 
         <Card className="p-6">
           <h3 className="text-lg font-bold font-display text-white mb-4 flex items-center gap-2">
-            <Dumbbell className="w-5 h-5 text-primary" /> Drill Recommendations
+            <Dumbbell className="w-5 h-5 text-accent" /> Drill Recommendations
           </h3>
           <DrillRecommendations playerId={playerId} />
         </Card>
@@ -497,7 +497,7 @@ function CoachToolsSection({ playerId, games }: CoachToolsSectionProps) {
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold font-display text-white flex items-center gap-2">
-              <ClipboardList className="w-5 h-5 text-primary" /> Game Notes
+              <ClipboardList className="w-5 h-5 text-accent" /> Game Notes
             </h3>
             <Select
               value={selectedGameId?.toString() || ""}
@@ -526,7 +526,7 @@ function CoachToolsSection({ playerId, games }: CoachToolsSectionProps) {
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold font-display text-white flex items-center gap-2">
-            <FileText className="w-5 h-5 text-primary" /> Player Report Card
+            <FileText className="w-5 h-5 text-accent" /> Player Report Card
           </h3>
           <Button 
             onClick={() => setShowReportCard(!showReportCard)}
@@ -545,10 +545,10 @@ function CoachToolsSection({ playerId, games }: CoachToolsSectionProps) {
 }
 
 const ACCOLADE_TYPES = {
-  championship: { name: "Championship", icon: Trophy, color: "text-amber-500", bgColor: "bg-amber-500/10", borderColor: "border-amber-500/20" },
-  career_high: { name: "Career High", icon: TrendingUp, color: "text-primary", bgColor: "bg-primary/10", borderColor: "border-primary/20" },
+  championship: { name: "Championship", icon: Trophy, color: "text-accent", bgColor: "bg-accent/10", borderColor: "border-accent/20" },
+  career_high: { name: "Career High", icon: TrendingUp, color: "text-accent", bgColor: "bg-accent/10", borderColor: "border-accent/20" },
   award: { name: "Award", icon: Medal, color: "text-purple-500", bgColor: "bg-purple-500/10", borderColor: "border-purple-500/20" },
-  record: { name: "Record", icon: Star, color: "text-orange-500", bgColor: "bg-orange-500/10", borderColor: "border-orange-500/20" },
+  record: { name: "Record", icon: Star, color: "text-accent", bgColor: "bg-accent/10", borderColor: "border-accent/20" },
   state_award: { name: "State Award", icon: Award, color: "text-emerald-500", bgColor: "bg-emerald-500/10", borderColor: "border-emerald-500/20" },
 } as const;
 
@@ -685,7 +685,7 @@ function AccoladesSection({ playerId, isOwnProfile }: AccoladesSectionProps) {
     return (
       <Card className="p-6" data-testid="accolades-section">
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
         </div>
       </Card>
     );
@@ -695,7 +695,7 @@ function AccoladesSection({ playerId, isOwnProfile }: AccoladesSectionProps) {
     <Card className="p-6" data-testid="accolades-section">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-bold font-display text-white flex items-center gap-2">
-          <Trophy className="w-5 h-5 text-primary" /> Achievements & Accolades
+          <Trophy className="w-5 h-5 text-accent" /> Achievements & Accolades
         </h3>
         {isOwnProfile && (
           <Button onClick={openAddDialog} className="gap-2" data-testid="button-add-accolade">
@@ -989,8 +989,8 @@ function CoachContactSection({ player, isOwnProfile }: CoachContactSectionProps)
     <Card className="p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-primary/10">
-            <Phone className="w-5 h-5 text-primary" />
+          <div className="p-2 rounded-lg bg-accent/10">
+            <Phone className="w-5 h-5 text-accent" />
           </div>
           <div>
             <h3 className="text-lg font-semibold">Coach Contact</h3>
@@ -1059,13 +1059,13 @@ function CoachContactSection({ player, isOwnProfile }: CoachContactSectionProps)
           {player.coachName || player.coachPhone ? (
             <>
               <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/30">
-                <User className="w-10 h-10 p-2 rounded-full bg-primary/10 text-primary" />
+                <User className="w-10 h-10 p-2 rounded-full bg-accent/10 text-accent" />
                 <div>
                   <p className="font-medium">{player.coachName || "No name provided"}</p>
                   {player.coachPhone && (
                     <a 
                       href={`tel:${player.coachPhone}`}
-                      className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
+                      className="text-sm text-muted-foreground hover:text-accent transition-colors flex items-center gap-1"
                     >
                       <Phone className="w-3 h-3" />
                       {player.coachPhone}
@@ -1131,10 +1131,10 @@ function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: n
   const ACTIVITY_TYPE_COLORS: Record<string, string> = {
     game: 'text-accent',
     badge: 'text-purple-400',
-    streak: 'text-orange-400',
+    streak: 'text-accent',
     workout: 'text-emerald-400',
     goal: 'text-blue-400',
-    challenge: 'text-amber-400',
+    challenge: 'text-accent',
     repost: 'text-accent',
     poll: 'text-pink-400',
     prediction: 'text-indigo-400',
@@ -1605,8 +1605,8 @@ export default function PlayerDetail() {
         </Link>
         <Card className="p-8 text-center">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-              <User className="w-8 h-8 text-primary/60" />
+            <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center">
+              <User className="w-8 h-8 text-accent/60" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-white mb-2">Player not found</h2>
@@ -2077,28 +2077,28 @@ export default function PlayerDetail() {
                         </div>
                         {hasPosition(player.position, ['QB']) && (
                           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border">
-                            <Crosshair className="w-4 h-4 text-amber-500" />
+                            <Crosshair className="w-4 h-4 text-accent" />
                             <span className="text-xs text-muted-foreground uppercase font-medium">COMP%</span>
                             <span className="text-sm font-bold text-foreground">{compPercent}%</span>
                           </div>
                         )}
                         {hasPosition(player.position, ['RB']) && (
                           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border">
-                            <Zap className="w-4 h-4 text-amber-500" />
+                            <Zap className="w-4 h-4 text-accent" />
                             <span className="text-xs text-muted-foreground uppercase font-medium">YPC</span>
                             <span className="text-sm font-bold text-foreground">{yardsPerCarry}</span>
                           </div>
                         )}
                         {hasPosition(player.position, ['WR', 'TE']) && (
                           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border">
-                            <Target className="w-4 h-4 text-amber-500" />
+                            <Target className="w-4 h-4 text-accent" />
                             <span className="text-xs text-muted-foreground uppercase font-medium">REC</span>
                             <span className="text-sm font-bold text-foreground">{totalReceptions}</span>
                           </div>
                         )}
                         {hasPosition(player.position, ['DL', 'LB', 'DB']) && (
                           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border">
-                            <Shield className="w-4 h-4 text-amber-500" />
+                            <Shield className="w-4 h-4 text-accent" />
                             <span className="text-xs text-muted-foreground uppercase font-medium">TCK/G</span>
                             <span className="text-sm font-bold text-foreground">{avgTackles}</span>
                           </div>
@@ -2117,7 +2117,7 @@ export default function PlayerDetail() {
                           <span className="text-sm font-bold text-foreground">{avgReb}</span>
                         </div>
                         <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border">
-                          <Zap className="w-4 h-4 text-amber-500" />
+                          <Zap className="w-4 h-4 text-accent" />
                           <span className="text-xs text-muted-foreground uppercase font-medium">APG</span>
                           <span className="text-sm font-bold text-foreground">{avgAst}</span>
                         </div>
@@ -2211,7 +2211,7 @@ export default function PlayerDetail() {
 
                 {progression && progression.currentStreak > 0 && (
                   <div className="flex items-center gap-2 text-sm" data-testid="streak-indicator">
-                    <Flame className="w-4 h-4 text-orange-400" />
+                    <Flame className="w-4 h-4 text-accent" />
                     <span className="text-foreground font-semibold">{progression.currentStreak}-day streak</span>
                     {progression.longestStreak > 0 && (
                       <span className="text-muted-foreground">Best: {progression.longestStreak} days</span>
@@ -2323,7 +2323,7 @@ export default function PlayerDetail() {
               const GreetingIcon = greeting.icon;
               return (
                 <>
-                  <GreetingIcon className="w-5 h-5 text-amber-400" style={{ filter: "drop-shadow(0 0 6px rgba(251, 191, 36, 0.5))" }} />
+                  <GreetingIcon className="w-5 h-5 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(24 95% 53% / 0.5))" }} />
                   <span className="text-lg font-display text-white/90">
                     {greeting.text}, <span className="bg-gradient-to-r from-white to-accent bg-clip-text text-transparent font-bold">{player.name.split(' ')[0]}</span>
                   </span>
@@ -2420,10 +2420,10 @@ export default function PlayerDetail() {
           >
             <Card className="p-6 bg-gradient-to-br from-black/60 to-black/30 border-white/10">
               <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
-                <div className="p-1.5 rounded-lg bg-amber-500/20 border border-amber-500/30">
-                  <Star className="w-4 h-4 text-amber-400" style={{ filter: "drop-shadow(0 0 6px rgba(251, 191, 36, 0.6))" }} />
+                <div className="p-1.5 rounded-lg bg-accent/20 border border-accent/30">
+                  <Star className="w-4 h-4 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(24 95% 53% / 0.6))" }} />
                 </div>
-                <span className="bg-gradient-to-r from-white to-amber-300 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-white to-accent bg-clip-text text-transparent">
                   Ratings & Trust Score
                 </span>
               </h3>
@@ -2493,13 +2493,13 @@ export default function PlayerDetail() {
                   <span className="text-muted-foreground">A+ Grade</span>
                   <span className="font-bold text-accent">+50 XP</span>
                 </div>
-                <div className="flex items-center justify-between p-2.5 rounded-lg bg-gradient-to-r from-orange-500/10 to-amber-500/5 border border-orange-500/20 hover:border-orange-500/40 transition-colors">
-                  <span className="text-orange-400">3-Day Streak</span>
-                  <span className="font-bold text-orange-400">+25 XP</span>
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-gradient-to-r from-accent/10 to-accent/5 border border-accent/20 hover:border-accent/40 transition-colors">
+                  <span className="text-accent">3-Day Streak</span>
+                  <span className="font-bold text-accent">+25 XP</span>
                 </div>
-                <div className="flex items-center justify-between p-2.5 rounded-lg bg-gradient-to-r from-orange-500/10 to-amber-500/5 border border-orange-500/20 hover:border-orange-500/40 transition-colors">
-                  <span className="text-orange-400">7-Day Streak</span>
-                  <span className="font-bold text-orange-400">+75 XP</span>
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-gradient-to-r from-accent/10 to-accent/5 border border-accent/20 hover:border-accent/40 transition-colors">
+                  <span className="text-accent">7-Day Streak</span>
+                  <span className="font-bold text-accent">+75 XP</span>
                 </div>
               </div>
             </div>
@@ -2666,7 +2666,7 @@ export default function PlayerDetail() {
                   <StatCard label="Penalties" value={totalPenalties} sparklineData={sparklines.penalties} />
                 </>
               )}
-              <div className="rounded-xl p-5 flex flex-col justify-between relative overflow-hidden group hover:border-primary/30 transition-colors duration-300">
+              <div className="rounded-xl p-5 flex flex-col justify-between relative overflow-hidden group hover:border-accent/30 transition-colors duration-300">
                 <span className="stat-label text-muted-foreground/80">Avg Grade</span>
                 <div className="flex items-center justify-center mt-2">
                   <GradeBadge grade={averageGrade} size="md" />
@@ -2685,7 +2685,7 @@ export default function PlayerDetail() {
               <StatCard label="FG%" value={fgPercent !== "—" ? `${fgPercent}%` : "—"} sparklineData={sparklines.fgPct} />
               <StatCard label="3P%" value={threePercent !== "—" ? `${threePercent}%` : "—"} sparklineData={sparklines.threePct} />
               <StatCard label="FT%" value={ftPercent !== "—" ? `${ftPercent}%` : "—"} sparklineData={sparklines.ftPct} />
-              <div className="rounded-xl p-5 flex flex-col justify-between relative overflow-hidden group hover:border-primary/30 transition-colors duration-300">
+              <div className="rounded-xl p-5 flex flex-col justify-between relative overflow-hidden group hover:border-accent/30 transition-colors duration-300">
                 <span className="stat-label text-muted-foreground/80">Avg Grade</span>
                 <div className="flex items-center justify-center mt-2">
                   <GradeBadge grade={averageGrade} size="md" />
@@ -2763,8 +2763,8 @@ export default function PlayerDetail() {
                 <div>
                   <span className="text-xs text-muted-foreground block mb-1">Areas to Improve</span>
                   {weaknesses.map((w, i) => (
-                    <div key={i} className="text-xs font-medium text-amber-400 flex items-center gap-1">
-                      <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                    <div key={i} className="text-xs font-medium text-accent flex items-center gap-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-accent" />
                       {w.category} ({w.value})
                     </div>
                   ))}
@@ -2781,10 +2781,10 @@ export default function PlayerDetail() {
             transition={{ delay: 0.35, duration: 0.4 }}
           >
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                <Medal className="w-5 h-5 text-amber-400" style={{ filter: "drop-shadow(0 0 6px rgba(245, 158, 11, 0.6))" }} />
+              <div className="p-2 rounded-lg bg-accent/10 border border-accent/20">
+                <Medal className="w-5 h-5 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(24 95% 53% / 0.6))" }} />
               </div>
-              <h3 className="text-lg font-bold font-display bg-gradient-to-r from-white to-amber-300 bg-clip-text text-transparent">
+              <h3 className="text-lg font-bold font-display bg-gradient-to-r from-white to-accent bg-clip-text text-transparent">
                 Top 5 Games
               </h3>
             </div>
@@ -2813,7 +2813,7 @@ export default function PlayerDetail() {
                   data-testid={`card-top-game-${game.id}`}
                 >
                   {index === 0 && (
-                    <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+                    <div className="absolute top-0 left-0 w-1 h-full bg-accent" />
                   )}
                   <CollapsibleTrigger asChild>
                     <div className="p-4 cursor-pointer hover-elevate flex items-center gap-4">
@@ -2825,7 +2825,7 @@ export default function PlayerDetail() {
                         <div className="flex flex-wrap items-center gap-2 mb-1">
                           <span className="text-sm font-bold text-white">vs {game.opponent}</span>
                           {index === 0 && (
-                            <span className="text-xs font-bold text-primary bg-primary/20 px-2 py-0.5 rounded">Best Game</span>
+                            <span className="text-xs font-bold text-accent bg-accent/20 px-2 py-0.5 rounded">Best Game</span>
                           )}
                         </div>
                         <div className="text-xs text-muted-foreground">
@@ -2838,14 +2838,14 @@ export default function PlayerDetail() {
                           <div className="hidden sm:flex gap-4 text-sm font-medium text-white/80">
                             <span><span className="text-muted-foreground text-xs">YDS</span> {(game.passingYards || 0) + (game.rushingYards || 0) + (game.receivingYards || 0)}</span>
                             <span><span className="text-muted-foreground text-xs">TDs</span> {(game.passingTouchdowns || 0) + (game.rushingTouchdowns || 0) + (game.receivingTouchdowns || 0)}</span>
-                            <span className="text-primary"><span className="text-primary/60 text-xs">RTG</span> {game.grade || "—"}</span>
+                            <span className="text-accent"><span className="text-accent/60 text-xs">RTG</span> {game.grade || "—"}</span>
                           </div>
                         ) : (
                           <div className="hidden sm:flex gap-4 text-sm font-medium text-white/80">
                             <span><span className="text-muted-foreground text-xs">PTS</span> {game.points}</span>
                             <span><span className="text-muted-foreground text-xs">REB</span> {game.rebounds}</span>
                             <span><span className="text-muted-foreground text-xs">AST</span> {game.assists}</span>
-                            <span className="text-primary"><span className="text-primary/60 text-xs">PER</span> {game.points + game.rebounds + game.assists}</span>
+                            <span className="text-accent"><span className="text-accent/60 text-xs">PER</span> {game.points + game.rebounds + game.assists}</span>
                           </div>
                         )}
                         <GradeBadge grade={game.grade || "-"} size="sm" />
@@ -2875,8 +2875,8 @@ export default function PlayerDetail() {
                               <div className="text-lg font-bold text-white">{game.receivingYards || 0}</div>
                             </div>
                             <div className="text-center">
-                              <div className="text-xs text-primary/60 mb-1">Total TDs</div>
-                              <div className="text-lg font-bold text-primary">{(game.passingTouchdowns || 0) + (game.rushingTouchdowns || 0) + (game.receivingTouchdowns || 0)}</div>
+                              <div className="text-xs text-accent/60 mb-1">Total TDs</div>
+                              <div className="text-lg font-bold text-accent">{(game.passingTouchdowns || 0) + (game.rushingTouchdowns || 0) + (game.receivingTouchdowns || 0)}</div>
                             </div>
                             <div className="text-center">
                               <div className="text-xs text-muted-foreground mb-1">Tackles</div>
@@ -2928,8 +2928,8 @@ export default function PlayerDetail() {
                               <div className="text-lg font-bold text-white">{game.assists}</div>
                             </div>
                             <div className="text-center">
-                              <div className="text-xs text-primary/60 mb-1">PER</div>
-                              <div className="text-lg font-bold text-primary">{game.points + game.rebounds + game.assists}</div>
+                              <div className="text-xs text-accent/60 mb-1">PER</div>
+                              <div className="text-lg font-bold text-accent">{game.points + game.rebounds + game.assists}</div>
                             </div>
                             <div className="text-center">
                               <div className="text-xs text-muted-foreground mb-1">Steals</div>
@@ -2986,7 +2986,7 @@ export default function PlayerDetail() {
                                 { label: "EFF", value: game.efficiencyGrade, icon: Target, color: "from-blue-500/10 to-sky-600/5 border-blue-500/20", testId: "grade-efficiency" },
                                 { label: "PLAY", value: game.playmakingGrade, icon: Zap, color: "from-purple-500/10 to-violet-600/5 border-purple-500/20", testId: "grade-playmaking" },
                                 { label: "SEC", value: game.ballSecurityGrade, icon: ShieldCheck, color: "from-green-500/10 to-emerald-600/5 border-green-500/20", testId: "grade-security" },
-                                { label: "IMP", value: game.impactGrade, icon: Flame, color: "from-orange-500/10 to-red-600/5 border-orange-500/20", testId: "grade-impact" },
+                                { label: "IMP", value: game.impactGrade, icon: Flame, color: "from-accent/10 to-red-600/5 border-accent/20", testId: "grade-impact" },
                               ].map((cat) => (
                                 <div 
                                   key={cat.label} 
@@ -3103,7 +3103,7 @@ export default function PlayerDetail() {
           <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold font-display text-white flex items-center gap-2">
-                <ClipboardList className="w-5 h-5 text-primary" /> Game History
+                <ClipboardList className="w-5 h-5 text-accent" /> Game History
               </h3>
               {games.length > 5 && (
                 <Button 
@@ -3197,14 +3197,14 @@ export default function PlayerDetail() {
                           <div className="flex gap-3 text-xs font-medium text-white/80">
                             <span><span className="text-muted-foreground">YDS</span> {(game.passingYards || 0) + (game.rushingYards || 0) + (game.receivingYards || 0)}</span>
                             <span><span className="text-muted-foreground">TDs</span> {(game.passingTouchdowns || 0) + (game.rushingTouchdowns || 0) + (game.receivingTouchdowns || 0)}</span>
-                            <span className="text-primary"><span className="text-primary/60">RTG</span> {game.grade || "—"}</span>
+                            <span className="text-accent"><span className="text-accent/60">RTG</span> {game.grade || "—"}</span>
                           </div>
                         ) : (
                           <div className="flex gap-3 text-xs font-medium text-white/80">
                             <span><span className="text-muted-foreground">PTS</span> {game.points}</span>
                             <span><span className="text-muted-foreground">REB</span> {game.rebounds}</span>
                             <span><span className="text-muted-foreground">AST</span> {game.assists}</span>
-                            <span className="text-primary"><span className="text-primary/60">PER</span> {game.points + game.rebounds + game.assists}</span>
+                            <span className="text-accent"><span className="text-accent/60">PER</span> {game.points + game.rebounds + game.assists}</span>
                           </div>
                         )}
                         <SocialEngagement gameId={game.id} compact />
@@ -3213,7 +3213,7 @@ export default function PlayerDetail() {
                       <div className="flex items-center gap-1">
                         <button 
                           onClick={() => handleShareGame(game)}
-                          className="text-muted-foreground hover:text-primary transition-colors opacity-0 group-hover:opacity-100 p-1"
+                          className="text-muted-foreground hover:text-accent transition-colors opacity-0 group-hover:opacity-100 p-1"
                           data-testid={`button-share-game-${game.id}`}
                         >
                           <Share2 className="w-3.5 h-3.5" />
@@ -3250,7 +3250,7 @@ export default function PlayerDetail() {
           <Card className="p-6">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-bold font-display text-white flex items-center gap-2">
-                <Film className="w-5 h-5 text-primary" /> Highlights
+                <Film className="w-5 h-5 text-accent" /> Highlights
               </h3>
             </div>
             <HighlightsGallery playerId={player.id} isOwner={isOwnProfile} />
@@ -3315,9 +3315,9 @@ export default function PlayerDetail() {
           <div className="space-y-6 pt-4">
             <div className="flex flex-col items-center gap-4">
               <div className="relative">
-                <Avatar className="w-24 h-24 border-4 border-primary/20">
+                <Avatar className="w-24 h-24 border-4 border-accent/20">
                   {editForm.photoUrl && <AvatarImage src={editForm.photoUrl} alt="Profile" width={96} height={96} />}
-                  <AvatarFallback className="bg-gradient-to-br from-primary/30 to-primary/10 text-2xl font-display font-bold text-white">
+                  <AvatarFallback className="bg-gradient-to-br from-accent/30 to-accent/10 text-2xl font-display font-bold text-white">
                     {editForm.name ? getInitials(editForm.name) : "?"}
                   </AvatarFallback>
                 </Avatar>
@@ -3388,7 +3388,7 @@ export default function PlayerDetail() {
                       className={`
                         cursor-pointer rounded-lg border p-2 text-center text-sm font-medium transition-all
                         ${editPositions.includes(pos)
-                          ? 'border-primary bg-primary/10 text-white'
+                          ? 'border-accent bg-accent/10 text-white'
                           : 'border-white/10 bg-secondary/30 text-muted-foreground hover:border-white/30 hover:bg-secondary/50'
                         }
                       `}
@@ -3401,7 +3401,7 @@ export default function PlayerDetail() {
                   ))}
                 </div>
                 {editPositions.length > 0 && (
-                  <p className="text-xs text-primary">
+                  <p className="text-xs text-accent">
                     Selected: {editPositions.map(p => 
                       isFootball && FOOTBALL_POSITIONS.includes(p as FootballPosition) 
                         ? FOOTBALL_POSITION_LABELS[p as FootballPosition] 
@@ -3461,7 +3461,7 @@ export default function PlayerDetail() {
               <div className="pt-4 border-t border-white/10">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <Eye className="w-4 h-4 text-primary" />
+                    <Eye className="w-4 h-4 text-accent" />
                     <span className="text-sm font-bold text-white">Recruiting Visibility</span>
                   </div>
                   <div className="flex items-center gap-2">

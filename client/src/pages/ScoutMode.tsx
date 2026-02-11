@@ -111,7 +111,7 @@ function PlayerScoutCard({ player }: { player: ScoutPlayer }) {
                 {player.archetype && (
                   <Badge 
                     variant="secondary" 
-                    className="text-[10px] px-2 py-0.5 bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border-amber-500/30"
+                    className="text-[10px] px-2 py-0.5 bg-gradient-to-r from-accent/20 to-accent/15 text-accent border-accent/30"
                     data-testid={`scout-archetype-${player.id}`}
                   >
                     <Star className="w-3 h-3 mr-1" />
@@ -121,7 +121,7 @@ function PlayerScoutCard({ player }: { player: ScoutPlayer }) {
                 {badgeInfo && (
                   <Badge 
                     variant="secondary" 
-                    className="text-[10px] px-2 py-0.5 bg-primary/20 text-primary border-primary/30"
+                    className="text-[10px] px-2 py-0.5 bg-accent/20 text-accent border-accent/30"
                     data-testid={`scout-badge-${player.id}`}
                   >
                     <Trophy className="w-3 h-3 mr-1" />
@@ -190,7 +190,7 @@ export default function ScoutMode() {
       <div className="space-y-6">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center shadow-lg shadow-accent/20">
               <Binoculars className="w-6 h-6 text-white" />
             </div>
             <div>

@@ -32,14 +32,14 @@ export function FloatingActionButton({ userRole, playerId }: FloatingActionButto
   const playerActions: QuickAction[] = [
     { href: "/analyze", icon: Plus, label: "Log Game", color: "from-accent to-blue-500" },
     { href: "/highlights", icon: Camera, label: "Highlights", color: "from-purple-500 to-pink-500" },
-    { href: "/recruiting", icon: GraduationCap, label: "Recruiting", color: "from-amber-500 to-orange-500" },
+    { href: "/recruiting", icon: GraduationCap, label: "Recruiting", color: "from-accent to-accent/80" },
     { href: "/leaderboard", icon: Trophy, label: "Leaderboard", color: "from-green-500 to-emerald-500" },
   ];
 
   const coachActions: QuickAction[] = [
     { href: "/analyze", icon: Plus, label: "Log Game", color: "from-accent to-blue-500" },
     { href: "/video", icon: Video, label: "Video Analysis", color: "from-purple-500 to-pink-500" },
-    { href: "/scout", icon: Trophy, label: "Scout Hub", color: "from-amber-500 to-orange-500" },
+    { href: "/scout", icon: Trophy, label: "Scout Hub", color: "from-accent to-accent/80" },
     { href: "/coach/endorsements", icon: GraduationCap, label: "Endorsements", color: "from-green-500 to-emerald-500" },
   ];
 

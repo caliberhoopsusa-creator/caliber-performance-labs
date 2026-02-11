@@ -84,8 +84,8 @@ export function HighlightsGallery({ playerId, isOwner = false }: HighlightsGalle
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
         >
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-            <Film className="w-8 h-8 text-primary/60" />
+          <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
+            <Film className="w-8 h-8 text-accent/60" />
           </div>
           <p className="text-white font-semibold mb-1">Failed to load highlights</p>
           <p className="text-sm text-muted-foreground">There was an error loading the highlights. Please try again later.</p>
@@ -103,8 +103,8 @@ export function HighlightsGallery({ playerId, isOwner = false }: HighlightsGalle
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
         >
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-            <Film className="w-8 h-8 text-primary/60" />
+          <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
+            <Film className="w-8 h-8 text-accent/60" />
           </div>
           <p className="text-white font-semibold mb-1">No highlights yet</p>
           <p className="text-sm text-muted-foreground mb-6">Upload your best plays and moments to showcase your skills.</p>
@@ -177,7 +177,7 @@ export function HighlightsGallery({ playerId, isOwner = false }: HighlightsGalle
                   </div>
                 )}
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="w-14 h-14 rounded-full bg-primary/90 flex items-center justify-center">
+                  <div className="w-14 h-14 rounded-full bg-accent/90 flex items-center justify-center">
                     <Play className="w-7 h-7 text-white ml-1" />
                   </div>
                 </div>
@@ -200,7 +200,7 @@ export function HighlightsGallery({ playerId, isOwner = false }: HighlightsGalle
                 )}
 
                 {gameInfo && (
-                  <div className="text-xs text-primary/80 mb-2 flex items-center gap-1">
+                  <div className="text-xs text-accent/80 mb-2 flex items-center gap-1">
                     <span>vs {gameInfo.opponent}</span>
                     <span className="text-muted-foreground">·</span>
                     <span className="text-muted-foreground">

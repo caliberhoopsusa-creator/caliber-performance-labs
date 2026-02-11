@@ -345,7 +345,7 @@ export function ShotChart({
     <Card data-testid="shot-chart">
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
         <CardTitle className="flex items-center gap-2">
-          <Target className="h-5 w-5 text-primary" />
+          <Target className="h-5 w-5 text-accent" />
           Shot Chart
         </CardTitle>
         <div className="flex items-center gap-2">

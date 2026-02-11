@@ -97,7 +97,7 @@ export function GameCard({ game, playerName, badges = [], showShareButton = true
         gradeColors.border,
         "shadow-2xl",
         gradeColors.glow,
-        "transition-all duration-500 hover:border-primary/20",
+        "transition-all duration-500 hover:border-accent/20",
         className
       )}
     >
@@ -106,14 +106,14 @@ export function GameCard({ game, playerName, badges = [], showShareButton = true
         gradeColors.bg
       )} />
 
-      <div className="absolute top-0 left-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-      <div className="absolute bottom-0 right-0 w-40 h-40 bg-primary/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
+      <div className="absolute top-0 left-0 w-32 h-32 bg-accent/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+      <div className="absolute bottom-0 right-0 w-40 h-40 bg-accent/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
 
       <div className="relative z-10 h-full flex flex-col p-5">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Activity className="w-5 h-5 text-primary" />
-            <span className="text-xs font-bold uppercase tracking-widest text-primary">Caliber</span>
+            <Activity className="w-5 h-5 text-accent" />
+            <span className="text-xs font-bold uppercase tracking-widest text-accent">Caliber</span>
           </div>
           <div className="flex items-center gap-3">
             <LikeCount gameId={game.id} />
@@ -165,7 +165,7 @@ export function GameCard({ game, playerName, badges = [], showShareButton = true
                 { label: "SACK", value: game.sacks || 0 },
                 { label: "INT", value: game.defensiveInterceptions || 0 },
               ].map((stat) => (
-                <div key={stat.label} className="text-center p-2 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/10 transition-all duration-300 hover:border-primary/30 hover:from-primary/15 hover:to-primary/8">
+                <div key={stat.label} className="text-center p-2 rounded-lg bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/10 transition-all duration-300 hover:border-accent/30 hover:from-accent/15 hover:to-accent/8">
                   <div className="stat-value text-white">{stat.value}</div>
                   <div className="stat-label">{stat.label}</div>
                 </div>
@@ -193,7 +193,7 @@ export function GameCard({ game, playerName, badges = [], showShareButton = true
                   { label: "EFF", value: game.efficiencyGrade, icon: Target, color: "from-blue-500/10 to-sky-600/5 border-blue-500/20", testId: "grade-efficiency" },
                   { label: "PLAY", value: game.playmakingGrade, icon: Zap, color: "from-purple-500/10 to-violet-600/5 border-purple-500/20", testId: "grade-playmaking" },
                   { label: "SEC", value: game.ballSecurityGrade, icon: ShieldCheck, color: "from-green-500/10 to-emerald-600/5 border-green-500/20", testId: "grade-security" },
-                  { label: "IMP", value: game.impactGrade, icon: Flame, color: "from-orange-500/10 to-red-600/5 border-orange-500/20", testId: "grade-impact" },
+                  { label: "IMP", value: game.impactGrade, icon: Flame, color: "from-accent/10 to-red-600/5 border-accent/20", testId: "grade-impact" },
                 ].map((cat) => (
                   <div 
                     key={cat.label} 
@@ -223,7 +223,7 @@ export function GameCard({ game, playerName, badges = [], showShareButton = true
                 { label: "STL", value: game.steals },
                 { label: "BLK", value: game.blocks },
               ].map((stat) => (
-                <div key={stat.label} className="text-center p-2 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/10 transition-all duration-300 hover:border-primary/30 hover:from-primary/15 hover:to-primary/8">
+                <div key={stat.label} className="text-center p-2 rounded-lg bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/10 transition-all duration-300 hover:border-accent/30 hover:from-accent/15 hover:to-accent/8">
                   <div className="stat-value text-white">{stat.value}</div>
                   <div className="stat-label">{stat.label}</div>
                 </div>
@@ -285,16 +285,16 @@ export function GameCard({ game, playerName, badges = [], showShareButton = true
                   className={cn(
                     "badge-elite flex items-center gap-1.5 rounded-full px-2.5 py-1 transition-all duration-300 border",
                     isPremiumBadge 
-                      ? "bg-gradient-to-r from-primary/30 to-primary/20 border-primary/50 hover:border-primary/70 hover:shadow-lg hover:shadow-primary/30"
-                      : "bg-gradient-to-r from-primary/20 to-orange-500/20 border-primary/40 hover:border-primary/60 hover:shadow-lg hover:shadow-primary/20"
+                      ? "bg-gradient-to-r from-accent/30 to-accent/20 border-accent/50 hover:border-accent/70 hover:shadow-lg hover:shadow-accent/30"
+                      : "bg-gradient-to-r from-accent/20 to-accent/15 border-accent/40 hover:border-accent/60 hover:shadow-lg hover:shadow-accent/20"
                   )}
                   data-testid={`badge-${badge.badgeType}-${badge.id}`}
                 >
                   <BadgeIcon className={cn(
                     "w-3.5 h-3.5",
-                    isPremiumBadge ? "text-primary" : "text-primary"
+                    isPremiumBadge ? "text-accent" : "text-accent"
                   )} />
-                  <span className="text-[10px] font-bold text-primary uppercase tracking-wider">
+                  <span className="text-[10px] font-bold text-accent uppercase tracking-wider">
                     {badgeDef?.name || badge.badgeType}
                   </span>
                 </div>
@@ -308,7 +308,7 @@ export function GameCard({ game, playerName, badges = [], showShareButton = true
             onClick={() => setShareOpen(true)}
             variant="outline"
             size="sm"
-            className="w-full bg-gradient-to-r from-primary/10 to-orange-500/10 border border-primary/30 hover:border-primary/50 text-primary font-bold gap-2 transition-all duration-300 hover:shadow-lg hover:shadow-primary/20"
+            className="w-full bg-gradient-to-r from-accent/10 to-accent/5 border border-accent/30 hover:border-accent/50 text-accent font-bold gap-2 transition-all duration-300 hover:shadow-lg hover:shadow-accent/20"
             data-testid="button-share-game"
           >
             <Share2 className="w-4 h-4" />

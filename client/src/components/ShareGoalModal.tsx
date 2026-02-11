@@ -78,7 +78,7 @@ export function ShareGoalModal({ goalId, isOpen, onClose }: ShareGoalModalProps)
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-white">
-            <Share2 className="w-5 h-5 text-primary" />
+            <Share2 className="w-5 h-5 text-accent" />
             Share Goal
           </DialogTitle>
           <DialogDescription>

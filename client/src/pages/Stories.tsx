@@ -29,7 +29,7 @@ function generateSessionId(): string {
 type StoryWithPlayer = PlayerStory & { playerName: string };
 
 const REACTIONS = [
-  { key: 'fire', icon: Flame, label: 'Fire', color: 'text-orange-400' },
+  { key: 'fire', icon: Flame, label: 'Fire', color: 'text-accent' },
   { key: 'heart', icon: Heart, label: 'Love', color: 'text-red-400' },
   { key: 'clap', icon: ThumbsUp, label: 'Nice', color: 'text-blue-400' },
   { key: 'trophy', icon: Trophy, label: 'Winner', color: 'text-yellow-400' },
@@ -80,7 +80,7 @@ function StoryRing({
       >
         <div className="bg-background p-[2px] rounded-full">
           <motion.div 
-            className="w-14 h-14 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center overflow-hidden"
+            className="w-14 h-14 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center overflow-hidden"
             initial={{ scale: 0.95 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.1 }}
@@ -88,7 +88,7 @@ function StoryRing({
             {story.imageUrl ? (
               <img src={story.imageUrl} alt="" className="w-full h-full object-cover" loading="lazy" width={56} height={56} />
             ) : (
-              <User className="w-6 h-6 text-primary" />
+              <User className="w-6 h-6 text-accent" />
             )}
           </motion.div>
         </div>
@@ -280,12 +280,12 @@ function StoryViewer({
           transition={{ duration: 0.2 }}
         >
           <motion.div 
-            className="w-10 h-10 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center overflow-hidden"
+            className="w-10 h-10 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center overflow-hidden"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.1, type: "spring", stiffness: 400 }}
           >
-            <User className="w-5 h-5 text-primary" />
+            <User className="w-5 h-5 text-accent" />
           </motion.div>
           <motion.div
             initial={{ opacity: 0 }}
@@ -379,7 +379,7 @@ function StoryViewer({
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                 >
-                  <Star className="w-24 h-24 text-primary/40" />
+                  <Star className="w-24 h-24 text-accent/40" />
                 </motion.div>
               )}
             </>
@@ -410,7 +410,7 @@ function StoryViewer({
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.35, type: "spring", stiffness: 300 }}
                   >
-                    <p className="text-3xl font-bold text-primary">{parsedStats.points}</p>
+                    <p className="text-3xl font-bold text-accent">{parsedStats.points}</p>
                     <p className="text-xs text-white/60 uppercase">Points</p>
                   </motion.div>
                 )}
@@ -421,7 +421,7 @@ function StoryViewer({
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.4, type: "spring", stiffness: 300 }}
                   >
-                    <p className="text-3xl font-bold text-primary">{parsedStats.rebounds}</p>
+                    <p className="text-3xl font-bold text-accent">{parsedStats.rebounds}</p>
                     <p className="text-xs text-white/60 uppercase">Rebounds</p>
                   </motion.div>
                 )}
@@ -432,7 +432,7 @@ function StoryViewer({
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.45, type: "spring", stiffness: 300 }}
                   >
-                    <p className="text-3xl font-bold text-primary">{parsedStats.assists}</p>
+                    <p className="text-3xl font-bold text-accent">{parsedStats.assists}</p>
                     <p className="text-xs text-white/60 uppercase">Assists</p>
                   </motion.div>
                 )}
@@ -661,7 +661,7 @@ function CreateStoryDialog({
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-white uppercase tracking-wide">
-            <Plus className="w-5 h-5 text-primary" />
+            <Plus className="w-5 h-5 text-accent" />
             Create Story
           </DialogTitle>
         </DialogHeader>
@@ -946,7 +946,7 @@ export default function Stories() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl md:text-4xl font-display font-bold bg-gradient-to-b from-white to-accent/20 bg-clip-text text-transparent tracking-wide flex items-center gap-3">
-            <Camera className="w-8 h-8 text-primary" />
+            <Camera className="w-8 h-8 text-accent" />
             Stories
           </h1>
           <p className="text-accent/50 font-medium mt-1">
@@ -978,8 +978,8 @@ export default function Stories() {
             transition={{ duration: 0.3 }}
             data-testid="empty-stories"
           >
-            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <Camera className="w-8 h-8 text-primary/60" />
+            <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
+              <Camera className="w-8 h-8 text-accent/60" />
             </div>
             <p className="text-white font-semibold mb-1">No stories yet</p>
             <p className="text-sm text-muted-foreground mb-4">
@@ -992,7 +992,7 @@ export default function Stories() {
           </motion.div>
         ) : (
           <motion.div 
-            className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-primary/20 scroll-snap-x-mandatory touch-pan-x" 
+            className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-accent/20 scroll-snap-x-mandatory touch-pan-x" 
             data-testid="stories-scroll"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1046,8 +1046,8 @@ export default function Stories() {
                       <Video className="w-12 h-12 text-blue-400" />
                     </div>
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                      <Star className="w-12 h-12 text-primary/40" />
+                    <div className="w-full h-full bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center">
+                      <Star className="w-12 h-12 text-accent/40" />
                     </div>
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />

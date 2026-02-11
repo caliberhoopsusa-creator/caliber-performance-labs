@@ -81,12 +81,12 @@ export function InstallPrompt() {
           <div className="elite-card p-5 backdrop-blur-2xl">
             <div className="flex items-start gap-3">
               <motion.div 
-                className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/40 to-primary/20 flex items-center justify-center shrink-0"
+                className="w-10 h-10 rounded-lg bg-gradient-to-br from-accent/40 to-accent/20 flex items-center justify-center shrink-0"
                 initial={prefersReducedMotion ? { scale: 1 } : { scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={prefersReducedMotion ? { duration: 0 } : { delay: 0.1, duration: 0.3, type: "spring", stiffness: 200 }}
               >
-                <Smartphone className="w-5 h-5 text-primary" />
+                <Smartphone className="w-5 h-5 text-accent" />
               </motion.div>
               <motion.div 
                 className="flex-1 min-w-0"

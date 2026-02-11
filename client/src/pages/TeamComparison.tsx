@@ -114,7 +114,7 @@ export default function TeamComparison() {
 
       {isLoading && (
         <div className="flex justify-center p-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
         </div>
       )}
 
@@ -160,7 +160,7 @@ export default function TeamComparison() {
 
           <div className="bg-card border border-white/5 rounded-2xl p-6 shadow-xl">
             <h3 className="text-xl font-bold font-display text-white mb-6 text-center uppercase tracking-widest flex items-center justify-center gap-2">
-              <Trophy className="w-5 h-5 text-primary" />
+              <Trophy className="w-5 h-5 text-accent" />
               Best Performers
             </h3>
             
@@ -176,13 +176,13 @@ export default function TeamComparison() {
                     return (
                       <div key={stat} className="flex items-center justify-between bg-white/5 rounded-lg px-4 py-3" data-testid={`best-performer-team1-${stat}`}>
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold">
+                          <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center text-xs font-bold">
                             {best.jerseyNumber || "#"}
                           </div>
                           <span className="font-medium text-white">{best.name}</span>
                         </div>
                         <div className="text-right">
-                          <span className="text-lg font-display font-bold text-primary">
+                          <span className="text-lg font-display font-bold text-accent">
                             {best[stat as "ppg" | "rpg" | "apg"]}
                           </span>
                           <span className="text-xs text-muted-foreground ml-1 uppercase">{stat}</span>

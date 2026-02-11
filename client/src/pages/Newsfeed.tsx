@@ -44,9 +44,9 @@ const ACTIVITY_ICONS: Record<string, typeof Target> = {
 };
 
 const ACTIVITY_GRADIENTS: Record<string, string> = {
-  game: "from-orange-500/30 to-orange-600/10",
-  badge: "from-yellow-500/30 to-amber-600/10",
-  streak: "from-red-500/30 to-orange-600/10",
+  game: "from-accent/30 to-accent/10",
+  badge: "from-yellow-500/30 to-accent/10",
+  streak: "from-red-500/30 to-accent/10",
   goal: "from-emerald-500/30 to-green-600/10",
   challenge: "from-purple-500/30 to-violet-600/10",
   repost: "from-blue-500/30 to-accent/10",
@@ -56,7 +56,7 @@ const ACTIVITY_GRADIENTS: Record<string, string> = {
 };
 
 const ACTIVITY_COLORS: Record<string, string> = {
-  game: "text-orange-400",
+  game: "text-accent",
   badge: "text-yellow-400",
   streak: "text-red-400",
   goal: "text-emerald-400",

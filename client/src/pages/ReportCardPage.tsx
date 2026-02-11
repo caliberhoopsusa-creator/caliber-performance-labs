@@ -63,7 +63,7 @@ export default function ReportCardPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-3">
-          <FileText className="w-8 h-8 text-primary" />
+          <FileText className="w-8 h-8 text-accent" />
           <div>
             <h1 className="text-3xl font-bold font-display">Report Cards</h1>
             <p className="text-muted-foreground">Loading players...</p>
@@ -81,7 +81,7 @@ export default function ReportCardPage() {
       
       <div className="flex items-center justify-between gap-4 print:hidden">
         <div className="flex items-center gap-3">
-          <FileText className="w-8 h-8 text-primary" />
+          <FileText className="w-8 h-8 text-accent" />
           <div>
             <h1 className="text-3xl font-bold font-display" data-testid="text-page-title">Report Cards</h1>
             <p className="text-muted-foreground">Generate printable player reports for recruiters and parents</p>
@@ -92,7 +92,7 @@ export default function ReportCardPage() {
       <Card className="print:hidden">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <Users className="w-5 h-5 text-primary" />
+            <Users className="w-5 h-5 text-accent" />
             Select Player & Options
           </CardTitle>
         </CardHeader>

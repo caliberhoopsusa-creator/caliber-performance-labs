@@ -328,7 +328,7 @@ export default function PracticeTracker() {
   if (practicesLoading || playersLoading) {
     return (
       <div className="flex h-full items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
       </div>
     );
   }
@@ -535,7 +535,7 @@ export default function PracticeTracker() {
           <Card className="bg-card/50 border-white/5">
             <CardHeader>
               <CardTitle className="text-lg font-display text-white flex items-center gap-2">
-                <ClipboardList className="w-5 h-5 text-primary" />
+                <ClipboardList className="w-5 h-5 text-accent" />
                 Practice Sessions
               </CardTitle>
             </CardHeader>
@@ -582,7 +582,7 @@ export default function PracticeTracker() {
           <Card className="bg-card/50 border-white/5" data-testid="card-attendance-summary">
             <CardHeader>
               <CardTitle className="text-lg font-display text-white flex items-center gap-2">
-                <Users className="w-5 h-5 text-primary" />
+                <Users className="w-5 h-5 text-accent" />
                 Attendance Summary
               </CardTitle>
             </CardHeader>
@@ -628,7 +628,7 @@ export default function PracticeTracker() {
             <Card className="bg-card/50 border-white/5" data-testid="card-drill-categories">
               <CardHeader>
                 <CardTitle className="text-lg font-display text-white flex items-center gap-2">
-                  <Target className="w-5 h-5 text-primary" />
+                  <Target className="w-5 h-5 text-accent" />
                   Available Drills
                 </CardTitle>
               </CardHeader>
@@ -807,7 +807,7 @@ function PracticeCard({
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
                             <label className="text-xs text-muted-foreground">Effort Rating</label>
-                            <span className="text-sm font-bold text-primary">{record.effortRating}/10</span>
+                            <span className="text-sm font-bold text-accent">{record.effortRating}/10</span>
                           </div>
                           <Slider
                             value={[record.effortRating]}

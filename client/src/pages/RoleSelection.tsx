@@ -295,10 +295,10 @@ export default function RoleSelection() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-xl">
         <div className="text-center mb-8">
-          <div className="mx-auto h-16 w-16 rounded-2xl bg-primary flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20 mb-4">
+          <div className="mx-auto h-16 w-16 rounded-2xl bg-accent flex items-center justify-center text-primary-foreground shadow-lg shadow-accent/20 mb-4">
             <Activity className="w-8 h-8" />
           </div>
-          <h1 className="text-3xl font-bold font-display text-white tracking-wider uppercase">Welcome to Caliber</h1>
+          <h1 className="text-3xl font-bold font-display text-white tracking-wider uppercase">Choose Your Path</h1>
           <p className="text-muted-foreground mt-2">{getSubtitle()}</p>
         </div>
 
@@ -323,14 +323,14 @@ export default function RoleSelection() {
                   <div
                     className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
                       playerForm.sport === 'basketball'
-                        ? 'border-orange-500 bg-orange-500/10'
+                        ? 'border-accent bg-accent/10'
                         : 'border-border hover:border-muted-foreground/50'
                     }`}
                     onClick={() => handleSportChange('basketball')}
                     data-testid="card-sport-basketball"
                   >
                     <div className="flex flex-col items-center gap-2">
-                      <BasketballIcon className={`w-8 h-8 ${playerForm.sport === 'basketball' ? 'text-orange-500' : 'text-muted-foreground'}`} />
+                      <BasketballIcon className={`w-8 h-8 ${playerForm.sport === 'basketball' ? 'text-accent' : 'text-muted-foreground'}`} />
                       <span className={`text-sm font-medium ${playerForm.sport === 'basketball' ? 'text-white' : 'text-muted-foreground'}`}>
                         Basketball
                       </span>
@@ -339,14 +339,14 @@ export default function RoleSelection() {
                   <div
                     className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
                       playerForm.sport === 'football'
-                        ? 'border-amber-700 bg-amber-700/10'
+                        ? 'border-accent bg-accent/10'
                         : 'border-border hover:border-muted-foreground/50'
                     }`}
                     onClick={() => handleSportChange('football')}
                     data-testid="card-sport-football"
                   >
                     <div className="flex flex-col items-center gap-2">
-                      <FootballIcon className={`w-8 h-8 ${playerForm.sport === 'football' ? 'text-amber-600' : 'text-muted-foreground'}`} />
+                      <FootballIcon className={`w-8 h-8 ${playerForm.sport === 'football' ? 'text-accent' : 'text-muted-foreground'}`} />
                       <span className={`text-sm font-medium ${playerForm.sport === 'football' ? 'text-white' : 'text-muted-foreground'}`}>
                         Football
                       </span>
@@ -365,7 +365,7 @@ export default function RoleSelection() {
                       className={`
                         cursor-pointer rounded-lg border p-2 text-center text-sm font-medium transition-all
                         ${playerForm.positions.includes(pos)
-                          ? 'border-primary bg-primary/10 text-white'
+                          ? 'border-accent bg-accent/10 text-white'
                           : 'border-white/10 bg-secondary/30 text-muted-foreground hover:border-white/30 hover:bg-secondary/50'
                         }
                       `}
@@ -376,7 +376,7 @@ export default function RoleSelection() {
                   ))}
                 </div>
                 {playerForm.positions.length > 0 && (
-                  <p className="text-xs text-primary mt-2">
+                  <p className="text-xs text-accent mt-2">
                     Selected: {playerForm.positions.map(p => getPositionLabel(p)).join(', ')}
                   </p>
                 )}
@@ -422,7 +422,7 @@ export default function RoleSelection() {
 
               <div className="border-t border-border pt-4 mt-4">
                 <Label htmlFor="teamCode" className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-amber-500" />
+                  <Users className="w-4 h-4 text-accent" />
                   Have a Team Invite Code?
                 </Label>
                 <Input
@@ -462,16 +462,16 @@ export default function RoleSelection() {
                 data-testid="card-create-team"
               >
                 <div className="text-center space-y-4">
-                  <div className="mx-auto w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                    <Plus className="w-8 h-8 text-primary" />
+                  <div className="mx-auto w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
+                    <Plus className="w-8 h-8 text-accent" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-white">Create a Team</h3>
+                    <h3 className="text-xl font-bold font-display text-white tracking-wide uppercase">Create a Team</h3>
                     <p className="text-sm text-muted-foreground mt-1">
                       Start fresh and invite your players
                     </p>
                   </div>
-                  <Button variant="outline" className="w-full" disabled={isLoading}>
+                  <Button variant="outline" className="w-full" disabled={isLoading} data-testid="button-create-team-card">
                     Create Team
                   </Button>
                 </div>
@@ -483,16 +483,16 @@ export default function RoleSelection() {
                 data-testid="card-join-team"
               >
                 <div className="text-center space-y-4">
-                  <div className="mx-auto w-16 h-16 rounded-2xl bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
-                    <Users className="w-8 h-8 text-amber-500" />
+                  <div className="mx-auto w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
+                    <Users className="w-8 h-8 text-accent" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-white">Join Existing Team</h3>
+                    <h3 className="text-xl font-bold font-display text-white tracking-wide uppercase">Join Existing Team</h3>
                     <p className="text-sm text-muted-foreground mt-1">
                       Have a team code? Join your team
                     </p>
                   </div>
-                  <Button variant="outline" className="w-full" disabled={isLoading}>
+                  <Button variant="outline" className="w-full" disabled={isLoading} data-testid="button-join-team-card">
                     Join Team
                   </Button>
                 </div>
@@ -609,16 +609,16 @@ export default function RoleSelection() {
               data-testid="card-select-player"
             >
               <div className="text-center space-y-4">
-                <div className="mx-auto w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                  <UserCircle className="w-8 h-8 text-primary" />
+                <div className="mx-auto w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
+                  <UserCircle className="w-8 h-8 text-accent" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white">I'm a Player</h3>
+                  <h3 className="text-xl font-bold font-display text-white tracking-wide uppercase">I'm a Player</h3>
                   <p className="text-sm text-muted-foreground mt-1">
                     Track my own stats, earn badges, and level up my game
                   </p>
                 </div>
-                <Button variant="outline" className="w-full" disabled={isLoading}>
+                <Button variant="outline" className="w-full" disabled={isLoading} data-testid="button-select-player">
                   {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Select Player"}
                 </Button>
               </div>
@@ -630,16 +630,16 @@ export default function RoleSelection() {
               data-testid="card-select-coach"
             >
               <div className="text-center space-y-4">
-                <div className="mx-auto w-16 h-16 rounded-2xl bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
-                  <ClipboardList className="w-8 h-8 text-amber-500" />
+                <div className="mx-auto w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
+                  <ClipboardList className="w-8 h-8 text-accent" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white">I'm a Coach</h3>
+                  <h3 className="text-xl font-bold font-display text-white tracking-wide uppercase">I'm a Coach</h3>
                   <p className="text-sm text-muted-foreground mt-1">
                     Manage my roster, analyze players, and scout talent
                   </p>
                 </div>
-                <Button variant="outline" className="w-full" disabled={isLoading}>
+                <Button variant="outline" className="w-full" disabled={isLoading} data-testid="button-select-coach">
                   {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Select Coach"}
                 </Button>
               </div>

@@ -159,8 +159,8 @@ export default function CoachEndorsements() {
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30">
-              <Award className="w-8 h-8 text-amber-400" />
+            <div className="p-3 rounded-xl bg-gradient-to-br from-accent/20 to-accent/15 border border-accent/30">
+              <Award className="w-8 h-8 text-accent" />
             </div>
             <div>
               <h1 className="text-3xl font-bold font-display text-white tracking-wide">
@@ -172,10 +172,10 @@ export default function CoachEndorsements() {
             </div>
           </div>
 
-          <Card className="bg-gradient-to-br from-amber-500/5 to-orange-500/5 border-amber-500/20">
+          <Card className="bg-gradient-to-br from-accent/5 to-accent/5 border-accent/20">
             <CardContent className="py-4">
               <div className="flex items-start gap-3">
-                <PenLine className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
+                <PenLine className="w-5 h-5 text-accent mt-0.5 flex-shrink-0" />
                 <div className="text-sm">
                   <p className="text-white font-medium mb-1">Help players stand out to recruiters</p>
                   <p className="text-muted-foreground">
@@ -233,7 +233,7 @@ export default function CoachEndorsements() {
             {playersWithMyRecs.length > 0 && (
               <div className="space-y-3">
                 <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                  <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
+                  <Star className="w-5 h-5 text-accent fill-accent" />
                   Players You've Endorsed ({playersWithMyRecs.length})
                 </h2>
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -300,7 +300,7 @@ function PlayerCard({ player, summary, onSelect, hasEndorsement }: PlayerCardPro
       className={cn(
         "transition-all duration-300 cursor-pointer hover-elevate group",
         "bg-gradient-to-br from-[hsl(220,25%,10%)] via-[hsl(220,20%,8%)] to-[hsl(220,25%,6%)]",
-        hasEndorsement ? "border-amber-500/30" : "border-border"
+        hasEndorsement ? "border-accent/30" : "border-border"
       )}
       onClick={onSelect}
       data-testid={`player-card-${player.id}`}
@@ -311,7 +311,7 @@ function PlayerCard({ player, summary, onSelect, hasEndorsement }: PlayerCardPro
             className={cn(
               "w-12 h-12 rounded-full flex items-center justify-center border",
               hasEndorsement
-                ? "bg-gradient-to-br from-amber-500/20 to-orange-500/20 border-amber-500/30"
+                ? "bg-gradient-to-br from-accent/20 to-accent/10 border-accent/30"
                 : "bg-gradient-to-br from-accent/20 to-purple-500/20 border-accent/30"
             )}
           >
@@ -322,7 +322,7 @@ function PlayerCard({ player, summary, onSelect, hasEndorsement }: PlayerCardPro
                 className="w-full h-full rounded-full object-cover"
               />
             ) : (
-              <User className={cn("w-6 h-6", hasEndorsement ? "text-amber-400" : "text-accent")} />
+              <User className={cn("w-6 h-6", hasEndorsement ? "text-accent" : "text-accent")} />
             )}
           </div>
           <div className="flex-1 min-w-0">
@@ -347,15 +347,15 @@ function PlayerCard({ player, summary, onSelect, hasEndorsement }: PlayerCardPro
         </div>
 
         {hasEndorsement && (
-          <div className="mt-3 pt-3 border-t border-amber-500/20 flex items-center gap-2">
-            <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">
+          <div className="mt-3 pt-3 border-t border-accent/20 flex items-center gap-2">
+            <Badge className="bg-accent/20 text-accent border-accent/30">
               <Star className="w-3 h-3 mr-1 fill-current" />
               Endorsed
             </Badge>
             <Button
               size="sm"
               variant="ghost"
-              className="ml-auto text-xs text-muted-foreground hover:text-amber-400"
+              className="ml-auto text-xs text-muted-foreground hover:text-accent"
               onClick={(e) => {
                 e.stopPropagation();
                 onSelect();

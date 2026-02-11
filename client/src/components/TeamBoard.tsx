@@ -101,7 +101,7 @@ function PostComments({ postId, teamId, sessionId, currentMember }: {
       {isOpen && (
         <div className="mt-2 space-y-2">
           {comments.map((c) => (
-            <div key={c.id} className="flex gap-2 pl-2 border-l-2 border-primary/20">
+            <div key={c.id} className="flex gap-2 pl-2 border-l-2 border-accent/20">
               <Avatar className="h-6 w-6 flex-shrink-0">
                 <AvatarFallback className="text-[10px]">{getInitials(c.authorName)}</AvatarFallback>
               </Avatar>
@@ -242,22 +242,22 @@ export function TeamBoard({ team, sessionId, onBack }: TeamBoardProps) {
 
   return (
     <div className="space-y-6">
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-6 border border-primary/20">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl" />
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-accent/10 via-accent/5 to-transparent p-6 border border-accent/20">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-full blur-3xl" />
         <div className="flex items-center gap-4 relative">
           <Button variant="ghost" size="icon" onClick={onBack} data-testid="button-back" className="shrink-0">
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shrink-0 shadow-lg shadow-primary/20">
+          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-accent to-accent/60 flex items-center justify-center shrink-0 shadow-lg shadow-accent/20">
             <Users className="w-7 h-7 text-white" />
           </div>
           <div className="flex-1 min-w-0">
             <h1 className="text-2xl sm:text-3xl font-bold font-display text-white tracking-wide truncate">{team.name}</h1>
             <div className="flex items-center gap-3 mt-1 flex-wrap">
-              <code className="text-sm bg-black/30 backdrop-blur px-2 py-0.5 rounded font-mono tracking-widest text-primary">{team.code}</code>
+              <code className="text-sm bg-black/30 backdrop-blur px-2 py-0.5 rounded font-mono tracking-widest text-accent">{team.code}</code>
               <span className="text-sm text-muted-foreground">{members.length} members</span>
               {isCoach && (
-                <Badge variant="secondary" className="text-xs bg-amber-500/20 text-amber-400 border-amber-500/30">
+                <Badge variant="secondary" className="text-xs bg-accent/20 text-accent border-accent/30">
                   <Crown className="w-3 h-3 mr-1" /> Coach
                 </Badge>
               )}
@@ -268,11 +268,11 @@ export function TeamBoard({ team, sessionId, onBack }: TeamBoardProps) {
 
       <div className="grid gap-6 lg:grid-cols-[1fr,300px]">
         <div className="space-y-4">
-          <Card className="border-primary/10">
+          <Card className="border-accent/10">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <MessageCircle className="w-4 h-4 text-primary" />
+                <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                  <MessageCircle className="w-4 h-4 text-accent" />
                 </div>
                 Team Feed
               </CardTitle>
@@ -359,7 +359,7 @@ export function TeamBoard({ team, sessionId, onBack }: TeamBoardProps) {
                 {postsLoading ? (
                   <div className="flex items-center justify-center py-12">
                     <div className="animate-pulse flex flex-col items-center gap-3">
-                      <div className="w-12 h-12 rounded-full bg-primary/20" />
+                      <div className="w-12 h-12 rounded-full bg-accent/20" />
                       <div className="h-3 w-24 bg-muted rounded" />
                     </div>
                   </div>
@@ -381,7 +381,7 @@ export function TeamBoard({ team, sessionId, onBack }: TeamBoardProps) {
                       return (
                         <Card
                           key={post.id}
-                          className={`p-4 transition-all shadow-sm ${post.isPinned ? "border-primary/40 bg-primary/5 shadow-md" : "hover:border-primary/30 hover:shadow-md"}`}
+                          className={`p-4 transition-all shadow-sm ${post.isPinned ? "border-accent/40 bg-accent/5 shadow-md" : "hover:border-accent/30 hover:shadow-md"}`}
                           data-testid={`post-${post.id}`}
                         >
                           <div className="flex gap-3">
@@ -398,7 +398,7 @@ export function TeamBoard({ team, sessionId, onBack }: TeamBoardProps) {
                                   {config.label}
                                 </Badge>
                                 {post.isPinned && (
-                                  <Badge variant="outline" className="text-[10px] text-primary bg-primary/5 border-primary/30">
+                                  <Badge variant="outline" className="text-[10px] text-accent bg-accent/5 border-accent/30">
                                     <Pin className="w-3 h-3 mr-1 fill-current" /> Pinned
                                   </Badge>
                                 )}
@@ -458,14 +458,14 @@ export function TeamBoard({ team, sessionId, onBack }: TeamBoardProps) {
         </div>
 
         <div className="lg:block space-y-4">
-          <Card className="border-primary/10">
+          <Card className="border-accent/10">
             <Collapsible open={membersOpen} onOpenChange={setMembersOpen}>
               <CollapsibleTrigger asChild>
                 <CardHeader className="cursor-pointer hover-elevate rounded-t-lg pb-3">
                   <CardTitle className="text-base flex items-center justify-between">
                     <span className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Users className="w-4 h-4 text-primary" />
+                      <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                        <Users className="w-4 h-4 text-accent" />
                       </div>
                       Team ({members.length})
                     </span>
@@ -483,7 +483,7 @@ export function TeamBoard({ team, sessionId, onBack }: TeamBoardProps) {
                         data-testid={`member-${member.id}`}
                       >
                         <Avatar className="h-9 w-9 border-2 border-background">
-                          <AvatarFallback className="text-xs bg-gradient-to-br from-primary/20 to-primary/5">
+                          <AvatarFallback className="text-xs bg-gradient-to-br from-accent/20 to-accent/5">
                             {getInitials(member.displayName)}
                           </AvatarFallback>
                         </Avatar>
@@ -494,8 +494,8 @@ export function TeamBoard({ team, sessionId, onBack }: TeamBoardProps) {
                           </span>
                         </div>
                         {(member.role === "admin" || member.role === "coach") && (
-                          <div className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center">
-                            <Crown className="w-3 h-3 text-amber-500" />
+                          <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center">
+                            <Crown className="w-3 h-3 text-accent" />
                           </div>
                         )}
                       </div>

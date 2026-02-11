@@ -22,10 +22,10 @@ function getGradeColor(grade: string) {
   const normalizedGrade = grade?.trim().toUpperCase() || "";
   if (["A+", "A", "A-"].includes(normalizedGrade)) {
     return {
-      bg: "from-amber-500 to-yellow-600",
-      bgLight: "from-amber-500/20 to-yellow-600/20",
-      border: "border-amber-500",
-      text: "text-amber-400",
+      bg: "from-accent to-accent/80",
+      bgLight: "from-accent/20 to-accent/10",
+      border: "border-accent",
+      text: "text-accent",
     };
   }
   if (["B+", "B", "B-"].includes(normalizedGrade)) {
@@ -38,15 +38,15 @@ function getGradeColor(grade: string) {
   }
   if (["C+", "C", "C-"].includes(normalizedGrade)) {
     return {
-      bg: "from-yellow-500 to-orange-500",
-      bgLight: "from-yellow-500/20 to-orange-500/20",
+      bg: "from-yellow-500 to-accent",
+      bgLight: "from-yellow-500/20 to-accent/20",
       border: "border-yellow-500",
       text: "text-yellow-400",
     };
   }
   return {
-    bg: "from-red-500 to-orange-600",
-    bgLight: "from-red-500/20 to-orange-600/20",
+    bg: "from-red-500 to-accent/80",
+    bgLight: "from-red-500/20 to-accent/20",
     border: "border-red-500",
     text: "text-red-400",
   };
@@ -67,18 +67,18 @@ export function ShareableGameCard({ game, playerName, playerPhoto, badges = [] }
       data-testid="shareable-game-card"
     >
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-20 -left-20 w-64 h-64 rounded-full bg-primary/20 blur-3xl" />
-        <div className="absolute -bottom-20 -right-20 w-72 h-72 rounded-full bg-orange-500/15 blur-3xl" />
+        <div className="absolute -top-20 -left-20 w-64 h-64 rounded-full bg-accent/20 blur-3xl" />
+        <div className="absolute -bottom-20 -right-20 w-72 h-72 rounded-full bg-accent/15 blur-3xl" />
         <div className={cn("absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full opacity-20 blur-3xl bg-gradient-to-br", gradeColors.bgLight)} />
       </div>
 
       <div className="relative z-10 h-full flex flex-col p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-orange-500 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center">
               <Activity className="w-4 h-4 text-white" />
             </div>
-            <span className="text-sm font-black uppercase tracking-widest text-primary">Caliber</span>
+            <span className="text-sm font-black uppercase tracking-widest text-accent">Caliber</span>
           </div>
           <span className="text-xs text-white/60 font-medium bg-white/10 px-3 py-1 rounded-full">
             {format(new Date(game.date), "MMM dd, yyyy")}
@@ -89,7 +89,7 @@ export function ShareableGameCard({ game, playerName, playerPhoto, badges = [] }
           {playerPhoto ? (
             <img src={playerPhoto} alt={playerName} className="w-14 h-14 rounded-xl object-cover border-2 border-white/20" loading="lazy" width={56} height={56} />
           ) : (
-            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/30 to-orange-500/30 flex items-center justify-center border-2 border-white/20">
+            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-accent/30 to-accent/20 flex items-center justify-center border-2 border-white/20">
               <span className="text-xl font-bold text-white">{playerName.charAt(0)}</span>
             </div>
           )}
@@ -146,9 +146,9 @@ export function ShareableGameCard({ game, playerName, playerPhoto, badges = [] }
             {gameBadges.slice(0, 3).map((badge) => {
               const badgeDef = BADGE_DEFINITIONS[badge.badgeType as keyof typeof BADGE_DEFINITIONS];
               return (
-                <div key={badge.id} className="flex items-center gap-1 bg-primary/20 border border-primary/40 rounded-full px-2 py-1">
-                  <Award className="w-3 h-3 text-primary" />
-                  <span className="text-[9px] font-bold text-primary uppercase">{badgeDef?.name || badge.badgeType}</span>
+                <div key={badge.id} className="flex items-center gap-1 bg-accent/20 border border-accent/40 rounded-full px-2 py-1">
+                  <Award className="w-3 h-3 text-accent" />
+                  <span className="text-[9px] font-bold text-accent uppercase">{badgeDef?.name || badge.badgeType}</span>
                 </div>
               );
             })}
@@ -180,17 +180,17 @@ export function ShareableBadgeCard({ badgeType, playerName, playerPhoto, earnedD
     >
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-20 -left-20 w-64 h-64 rounded-full bg-purple-500/30 blur-3xl" />
-        <div className="absolute -bottom-20 -right-20 w-72 h-72 rounded-full bg-primary/20 blur-3xl" />
+        <div className="absolute -bottom-20 -right-20 w-72 h-72 rounded-full bg-accent/20 blur-3xl" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full bg-yellow-500/10 blur-3xl" />
       </div>
 
       <div className="relative z-10 h-full flex flex-col p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-orange-500 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center">
               <Activity className="w-4 h-4 text-white" />
             </div>
-            <span className="text-sm font-black uppercase tracking-widest text-primary">Caliber</span>
+            <span className="text-sm font-black uppercase tracking-widest text-accent">Caliber</span>
           </div>
           <span className="text-xs text-white/60 font-medium bg-white/10 px-3 py-1 rounded-full">
             {format(earnedDate, "MMM dd, yyyy")}
@@ -204,11 +204,11 @@ export function ShareableBadgeCard({ badgeType, playerName, playerPhoto, earnedD
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center">
-          <div className="w-36 h-36 rounded-3xl bg-gradient-to-br from-yellow-500/30 to-orange-500/20 border-2 border-yellow-500/50 flex items-center justify-center mb-4 relative">
+          <div className="w-36 h-36 rounded-3xl bg-gradient-to-br from-yellow-500/30 to-accent/20 border-2 border-yellow-500/50 flex items-center justify-center mb-4 relative">
             <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/20 to-transparent" />
             <Award className="w-20 h-20 text-yellow-400 relative z-10" style={{ filter: "drop-shadow(0 0 20px rgba(234, 179, 8, 0.5))" }} />
             {rank > 1 && (
-              <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center border-2 border-white/20">
+              <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-gradient-to-br from-yellow-500 to-accent flex items-center justify-center border-2 border-white/20">
                 <span className="text-xs font-black text-white">{rank}</span>
               </div>
             )}
@@ -225,7 +225,7 @@ export function ShareableBadgeCard({ badgeType, playerName, playerPhoto, earnedD
           {playerPhoto ? (
             <img src={playerPhoto} alt={playerName} className="w-12 h-12 rounded-xl object-cover border-2 border-white/20" loading="lazy" width={48} height={48} />
           ) : (
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/30 to-orange-500/30 flex items-center justify-center border-2 border-white/20">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/30 to-accent/30 flex items-center justify-center border-2 border-white/20">
               <span className="text-lg font-bold text-white">{playerName.charAt(0)}</span>
             </div>
           )}
@@ -260,17 +260,17 @@ export function ShareableLevelUpCard({ playerName, playerPhoto, newTier, totalXp
     >
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-20 -left-20 w-64 h-64 rounded-full bg-indigo-500/30 blur-3xl" />
-        <div className="absolute -bottom-20 -right-20 w-72 h-72 rounded-full bg-primary/25 blur-3xl" />
+        <div className="absolute -bottom-20 -right-20 w-72 h-72 rounded-full bg-accent/25 blur-3xl" />
         <div className="absolute top-1/3 right-1/4 w-40 h-40 rounded-full bg-accent/20 blur-3xl" />
       </div>
 
       <div className="relative z-10 h-full flex flex-col p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-orange-500 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center">
               <Activity className="w-4 h-4 text-white" />
             </div>
-            <span className="text-sm font-black uppercase tracking-widest text-primary">Caliber</span>
+            <span className="text-sm font-black uppercase tracking-widest text-accent">Caliber</span>
           </div>
         </div>
 
@@ -301,7 +301,7 @@ export function ShareableLevelUpCard({ playerName, playerPhoto, newTier, totalXp
           {playerPhoto ? (
             <img src={playerPhoto} alt={playerName} className="w-12 h-12 rounded-xl object-cover border-2 border-white/20" loading="lazy" width={48} height={48} />
           ) : (
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/30 to-orange-500/30 flex items-center justify-center border-2 border-white/20">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/30 to-accent/30 flex items-center justify-center border-2 border-white/20">
               <span className="text-lg font-bold text-white">{playerName.charAt(0)}</span>
             </div>
           )}
@@ -349,17 +349,17 @@ export function ShareableRankingCard({ playerName, playerPhoto, rank, totalPlaye
     >
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-20 -left-20 w-64 h-64 rounded-full bg-yellow-500/20 blur-3xl" />
-        <div className="absolute -bottom-20 -right-20 w-72 h-72 rounded-full bg-primary/20 blur-3xl" />
+        <div className="absolute -bottom-20 -right-20 w-72 h-72 rounded-full bg-accent/20 blur-3xl" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full bg-green-500/10 blur-3xl" />
       </div>
 
       <div className="relative z-10 h-full flex flex-col p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-orange-500 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center">
               <Activity className="w-4 h-4 text-white" />
             </div>
-            <span className="text-sm font-black uppercase tracking-widest text-primary">Caliber</span>
+            <span className="text-sm font-black uppercase tracking-widest text-accent">Caliber</span>
           </div>
           <span className="text-xs text-white/60 font-medium bg-white/10 px-3 py-1 rounded-full">
             {sport === 'football' ? 'Football' : 'Basketball'}
@@ -377,7 +377,7 @@ export function ShareableRankingCard({ playerName, playerPhoto, rank, totalPlaye
           {playerPhoto ? (
             <img src={playerPhoto} alt={playerName} className="w-20 h-20 rounded-2xl object-cover border-2 border-yellow-500/40 mb-3" loading="lazy" width={80} height={80} />
           ) : (
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-yellow-500/30 to-orange-500/30 flex items-center justify-center border-2 border-yellow-500/40 mb-3">
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-yellow-500/30 to-accent/30 flex items-center justify-center border-2 border-yellow-500/40 mb-3">
               <span className="text-3xl font-bold text-white">{playerName.charAt(0)}</span>
             </div>
           )}
@@ -425,7 +425,7 @@ export function ShareableStreakCard({ playerName, playerPhoto, streakCount, stre
       data-testid="shareable-streak-card"
     >
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-20 -left-20 w-64 h-64 rounded-full bg-orange-500/30 blur-3xl" />
+        <div className="absolute -top-20 -left-20 w-64 h-64 rounded-full bg-accent/30 blur-3xl" />
         <div className="absolute -bottom-20 -right-20 w-72 h-72 rounded-full bg-red-500/20 blur-3xl" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full bg-yellow-500/15 blur-3xl" />
       </div>
@@ -433,29 +433,29 @@ export function ShareableStreakCard({ playerName, playerPhoto, streakCount, stre
       <div className="relative z-10 h-full flex flex-col p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-orange-500 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center">
               <Activity className="w-4 h-4 text-white" />
             </div>
-            <span className="text-sm font-black uppercase tracking-widest text-primary">Caliber</span>
+            <span className="text-sm font-black uppercase tracking-widest text-accent">Caliber</span>
           </div>
         </div>
 
         <div className="text-center mb-4">
-          <span className="text-xs font-bold uppercase tracking-widest text-orange-400/80 bg-orange-500/10 px-4 py-1 rounded-full inline-flex items-center gap-1">
+          <span className="text-xs font-bold uppercase tracking-widest text-accent/80 bg-accent/10 px-4 py-1 rounded-full inline-flex items-center gap-1">
             <Flame className="w-3 h-3" />
             On Fire!
           </span>
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center">
-          <div className="w-36 h-36 rounded-3xl bg-gradient-to-br from-orange-500/30 to-red-500/20 border-2 border-orange-500/50 flex items-center justify-center mb-4 relative">
+          <div className="w-36 h-36 rounded-3xl bg-gradient-to-br from-accent/30 to-red-500/20 border-2 border-accent/50 flex items-center justify-center mb-4 relative">
             <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/20 to-transparent" />
-            <Flame className="w-20 h-20 text-orange-400 relative z-10" style={{ filter: "drop-shadow(0 0 20px rgba(249, 115, 22, 0.6))" }} />
+            <Flame className="w-20 h-20 text-accent relative z-10" style={{ filter: "drop-shadow(0 0 20px hsl(24 95% 53% / 0.6))" }} />
           </div>
           <div className="text-7xl font-black text-white mb-2" style={{ textShadow: "0 0 40px rgba(249, 115, 22, 0.5)" }}>
             {streakCount}
           </div>
-          <h2 className="text-xl font-bold text-orange-400 uppercase tracking-wider">
+          <h2 className="text-xl font-bold text-accent uppercase tracking-wider">
             {streakLabel}
           </h2>
         </div>
@@ -464,7 +464,7 @@ export function ShareableStreakCard({ playerName, playerPhoto, streakCount, stre
           {playerPhoto ? (
             <img src={playerPhoto} alt={playerName} className="w-12 h-12 rounded-xl object-cover border-2 border-white/20" loading="lazy" width={48} height={48} />
           ) : (
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/30 to-orange-500/30 flex items-center justify-center border-2 border-white/20">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/30 to-accent/30 flex items-center justify-center border-2 border-white/20">
               <span className="text-lg font-bold text-white">{playerName.charAt(0)}</span>
             </div>
           )}

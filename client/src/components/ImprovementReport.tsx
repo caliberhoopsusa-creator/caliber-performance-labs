@@ -45,7 +45,7 @@ import type { Game } from "@shared/schema";
 const PremiumTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-card/80 backdrop-blur-md border border-primary/20 rounded-lg p-3 shadow-xl shadow-primary/10">
+      <div className="bg-card/80 backdrop-blur-md border border-accent/20 rounded-lg p-3 shadow-xl shadow-accent/10">
         <p className="text-xs text-muted-foreground">{label}</p>
         {payload.map((entry: any, index: number) => (
           <p key={index} style={{ color: entry.color }} className="text-sm font-medium">
@@ -53,6 +53,7 @@ const PremiumTooltip = ({ active, payload, label }: any) => {
           </p>
         ))}
       </div>
+
     );
   }
   return null;
@@ -760,7 +761,7 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
                       content={({ active, payload }: any) => {
                         if (active && payload && payload[0]) {
                           return (
-                            <div className="bg-card/80 backdrop-blur-md border border-primary/20 rounded-lg p-3 shadow-xl shadow-primary/10">
+                            <div className="bg-card/80 backdrop-blur-md border border-accent/20 rounded-lg p-3 shadow-xl shadow-accent/10">
                               <p className="text-xs text-muted-foreground">{payload[0].payload.date}</p>
                               <p style={{ color: 'hsl(24, 95%, 53%)' }} className="text-sm font-medium">
                                 Grade: {valueToGrade(payload[0].value)}
@@ -825,7 +826,7 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
 
             <Card data-testid="areas-to-improve-card">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-amber-500">
+                <CardTitle className="flex items-center gap-2 text-accent">
                   <Target className="w-5 h-5" />
                   Areas Needing Work
                 </CardTitle>
@@ -843,11 +844,11 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
                       .map((item) => (
                         <li
                           key={item.label}
-                          className="flex items-center justify-between bg-amber-500/10 rounded-lg px-3 py-2"
+                          className="flex items-center justify-between bg-accent/10 rounded-lg px-3 py-2"
                           data-testid={`decline-${item.label.toLowerCase()}`}
                         >
                           <span className="font-medium">{item.label}</span>
-                          <Badge variant="secondary" className="bg-amber-500/20 text-amber-500">
+                          <Badge variant="secondary" className="bg-accent/20 text-accent">
                             {item.change.toFixed(1)}
                           </Badge>
                         </li>
@@ -943,14 +944,14 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
                       )}
                       {worstDecline && (
                         <p>
-                          <span className="text-amber-500 font-semibold">Needs work:</span>{" "}
+                          <span className="text-accent font-semibold">Needs work:</span>{" "}
                           <span className="text-foreground">{worstDecline.label}</span>
                           <span className="text-muted-foreground"> - declined by {Math.abs(worstDecline.change).toFixed(1)} compared to previous period</span>
                         </p>
                       )}
                       {currentStats.turnovers > 3 && (
                         <p>
-                          <span className="text-amber-500 font-semibold">Focus area:</span>{" "}
+                          <span className="text-accent font-semibold">Focus area:</span>{" "}
                           <span className="text-foreground">Ball security</span>
                           <span className="text-muted-foreground"> - averaging {currentStats.turnovers.toFixed(1)} turnovers per game</span>
                         </p>
@@ -970,7 +971,7 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
                     <span className={cn(
                       "font-semibold",
                       currentStats.avgGrade > previousStats.avgGrade ? "text-green-500" : 
-                      currentStats.avgGrade < previousStats.avgGrade ? "text-amber-500" : "text-foreground"
+                      currentStats.avgGrade < previousStats.avgGrade ? "text-accent" : "text-foreground"
                     )}>
                       {currentStats.avgGrade > previousStats.avgGrade
                         ? "grade improved"

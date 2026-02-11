@@ -38,13 +38,13 @@ function getTimeRemaining(endDate: string): string {
 function getChallengeIcon(targetType: string) {
   switch (targetType) {
     case 'hustle_avg':
-      return <Flame className="w-6 h-6 text-orange-400" />;
+      return <Flame className="w-6 h-6 text-accent" />;
     case 'points_total':
       return <Target className="w-6 h-6 text-green-400" />;
     case 'grade_count':
       return <Crown className="w-6 h-6 text-yellow-400" />;
     default:
-      return <Trophy className="w-6 h-6 text-primary" />;
+      return <Trophy className="w-6 h-6 text-accent" />;
   }
 }
 
@@ -52,7 +52,7 @@ function getChallengeTypeBadge(type: string) {
   const colors: Record<string, string> = {
     weekly: "bg-blue-500/20 text-blue-400",
     monthly: "bg-purple-500/20 text-purple-400",
-    seasonal: "bg-amber-500/20 text-amber-400",
+    seasonal: "bg-accent/20 text-accent",
   };
   return colors[type] || "bg-muted text-muted-foreground";
 }
@@ -194,7 +194,7 @@ export default function ChallengesContent() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h2 className="text-2xl md:text-3xl font-bold font-display flex items-center gap-3">
-              <Trophy className="w-7 h-7 text-primary" />
+              <Trophy className="w-7 h-7 text-accent" />
               Challenges
             </h2>
             <p className="text-muted-foreground mt-1">
@@ -214,7 +214,7 @@ export default function ChallengesContent() {
                 <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                      <Trophy className="w-5 h-5 text-primary" />
+                      <Trophy className="w-5 h-5 text-accent" />
                       Create New Challenge
                     </DialogTitle>
                   </DialogHeader>
@@ -370,11 +370,11 @@ export default function ChallengesContent() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList className="bg-card border border-white/10">
-            <TabsTrigger value="active" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-active-challenges">
+            <TabsTrigger value="active" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-active-challenges">
               <Flame className="w-4 h-4" />
               Active ({activeChallenges?.length || 0})
             </TabsTrigger>
-            <TabsTrigger value="past" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-past-challenges">
+            <TabsTrigger value="past" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-past-challenges">
               <Calendar className="w-4 h-4" />
               Past ({pastChallenges.length})
             </TabsTrigger>
@@ -415,11 +415,11 @@ export default function ChallengesContent() {
                       >
                         <Card
                           className={`bg-card border-border overflow-hidden transition-all ${
-                            isCompleted ? 'ring-2 ring-primary' : ''
+                            isCompleted ? 'ring-2 ring-accent' : ''
                           }`}
                           data-testid={`challenge-detail-${challenge.id}`}
                         >
-                          <CardHeader className="pb-2 bg-gradient-to-r from-primary/10 to-transparent">
+                          <CardHeader className="pb-2 bg-gradient-to-r from-accent/10 to-transparent">
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex items-center gap-3">
                                 {getChallengeIcon(challenge.targetType)}
@@ -453,7 +453,7 @@ export default function ChallengesContent() {
                                     <motion.span
                                       initial={{ scale: 0 }}
                                       animate={{ scale: 1 }}
-                                      className="text-primary font-bold flex items-center gap-1"
+                                      className="text-accent font-bold flex items-center gap-1"
                                     >
                                       <CheckCircle2 className="w-4 h-4" /> Completed!
                                     </motion.span>
@@ -468,9 +468,9 @@ export default function ChallengesContent() {
                                   <motion.div
                                     initial={{ opacity: 0, scale: 0.8 }}
                                     animate={{ opacity: 1, scale: 1 }}
-                                    className="bg-primary/10 border border-primary/30 rounded-lg p-3 flex items-center gap-2"
+                                    className="bg-accent/10 border border-accent/30 rounded-lg p-3 flex items-center gap-2"
                                   >
-                                    <Trophy className="w-5 h-5 text-primary" />
+                                    <Trophy className="w-5 h-5 text-accent" />
                                     <span className="text-sm">
                                       Badge earned: <strong>{challenge.badgeReward.replace(/_/g, ' ')}</strong>
                                     </span>
@@ -582,7 +582,7 @@ function ChallengeLeaderboard({ challengeId, showAll = false }: { challengeId: n
             <div className="flex items-center gap-2">
               <span className="font-semibold">{entry.currentValue}</span>
               {entry.completed && (
-                <Trophy className="w-4 h-4 text-primary" />
+                <Trophy className="w-4 h-4 text-accent" />
               )}
             </div>
           </div>

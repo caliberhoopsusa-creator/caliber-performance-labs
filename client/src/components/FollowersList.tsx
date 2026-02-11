@@ -45,7 +45,7 @@ export function FollowersList({ playerId }: FollowersListProps) {
   return (
     <Card className="p-6">
       <h3 className="text-lg font-bold font-display text-white mb-4 flex items-center gap-2">
-        <Users className="w-5 h-5 text-primary" /> Followers
+        <Users className="w-5 h-5 text-accent" /> Followers
       </h3>
 
       {followers.length === 0 ? (
@@ -55,8 +55,8 @@ export function FollowersList({ playerId }: FollowersListProps) {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
         >
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-            <Users className="w-8 h-8 text-primary/60" />
+          <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
+            <Users className="w-8 h-8 text-accent/60" />
           </div>
           <p className="text-white font-semibold mb-1">No followers yet</p>
           <p className="text-sm text-muted-foreground">Share your profile to build your following and connect with other players</p>
@@ -70,9 +70,9 @@ export function FollowersList({ playerId }: FollowersListProps) {
               className="flex items-center gap-3 p-2 rounded-lg hover-elevate transition-all"
               data-testid={`link-follower-${follower.playerId}`}
             >
-              <Avatar className="w-10 h-10 border-2 border-primary/20">
+              <Avatar className="w-10 h-10 border-2 border-accent/20">
                 {follower.photoUrl && <AvatarImage src={follower.photoUrl} alt={follower.name} width={40} height={40} />}
-                <AvatarFallback className="bg-gradient-to-br from-primary/30 to-primary/10 text-sm font-display font-bold text-white">
+                <AvatarFallback className="bg-gradient-to-br from-accent/30 to-accent/10 text-sm font-display font-bold text-white">
                   {getInitials(follower.name)}
                 </AvatarFallback>
               </Avatar>

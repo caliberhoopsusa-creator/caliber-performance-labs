@@ -76,11 +76,11 @@ const TIER_STYLES = {
     fire: "text-yellow-400",
   },
   elite: {
-    bg: "bg-gradient-to-r from-orange-500/40 to-red-500/30",
-    border: "border-orange-500/60",
-    text: "text-orange-400",
-    glow: "shadow-orange-500/50",
-    fire: "text-orange-500",
+    bg: "bg-gradient-to-r from-accent/40 to-red-500/30",
+    border: "border-accent/60",
+    text: "text-accent",
+    glow: "shadow-accent/50",
+    fire: "text-accent",
   },
 };
 

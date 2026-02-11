@@ -135,7 +135,7 @@ export function TeamRosterList({ players, teamName, compact = false }: TeamRoste
                     <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center font-bold text-xs shrink-0">
                       {player.jerseyNumber || "#"}
                     </div>
-                    <span className="font-medium text-white group-hover:text-primary transition-colors truncate">
+                    <span className="font-medium text-white group-hover:text-accent transition-colors truncate">
                       {player.name}
                     </span>
                   </Link>

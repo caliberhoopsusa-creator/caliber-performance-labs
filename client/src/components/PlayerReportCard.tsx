@@ -149,7 +149,7 @@ function CoachGoalItem({ goal }: { goal: ReportCardCoachGoal }) {
           <div className="flex items-center gap-2">
             <Target className={cn(
               "w-4 h-4",
-              isCompleted ? "text-emerald-500" : "text-primary"
+              isCompleted ? "text-emerald-500" : "text-accent"
             )} />
             <span className="font-medium text-sm print:text-black">{goal.title}</span>
           </div>
@@ -241,7 +241,7 @@ function EndorsementStars({ value }: { value: number }) {
           key={star}
           className={cn(
             "w-3 h-3",
-            star <= stars ? "fill-amber-400 text-amber-400" : "text-slate-600"
+            star <= stars ? "fill-accent text-accent" : "text-slate-600"
           )}
         />
       ))}
@@ -254,12 +254,12 @@ function EndorsementItem({ endorsement }: { endorsement: CoachEndorsement }) {
   
   return (
     <div 
-      className="p-4 rounded-lg bg-gradient-to-br from-amber-500/5 to-orange-500/5 border border-amber-500/20 print:bg-amber-50 print:border-amber-200"
+      className="p-4 rounded-lg bg-gradient-to-br from-accent/5 to-accent/5 border border-accent/20 print:bg-amber-50 print:border-amber-200"
       data-testid={`endorsement-item-${endorsement.id}`}
     >
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center border border-amber-500/30 flex-shrink-0 print:bg-amber-100">
-          <Medal className="w-5 h-5 text-amber-400 print:text-amber-600" />
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent/20 to-accent/20 flex items-center justify-center border border-accent/30 flex-shrink-0 print:bg-amber-100">
+          <Medal className="w-5 h-5 text-accent print:text-amber-600" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
@@ -280,7 +280,7 @@ function EndorsementItem({ endorsement }: { endorsement: CoachEndorsement }) {
               return (
                 <div key={key} className="flex items-center gap-1 text-xs">
                   <span className="text-muted-foreground print:text-gray-600">{label}:</span>
-                  <span className="text-amber-400 print:text-amber-600 font-medium">{stars}/5</span>
+                  <span className="text-accent print:text-amber-600 font-medium">{stars}/5</span>
                 </div>
               );
             })}
@@ -552,9 +552,9 @@ export function PlayerReportCard({ playerId, dateRange, showActions = true }: Pl
         <Card className="print:shadow-none print:border-gray-300 print:bg-white report-card-header">
           <CardContent className="p-6 print:p-4">
             <div className="flex items-start gap-4 pb-6 border-b border-border print:border-gray-300 print:pb-4">
-              <Avatar className="w-20 h-20 border-2 border-primary/20 print:border-gray-300">
+              <Avatar className="w-20 h-20 border-2 border-accent/20 print:border-gray-300">
                 <AvatarImage src={player.photoUrl || undefined} alt={player.name} width={80} height={80} />
-                <AvatarFallback className="text-2xl font-bold bg-primary/10 print:bg-gray-200 print:text-black">
+                <AvatarFallback className="text-2xl font-bold bg-accent/10 print:bg-gray-200 print:text-black">
                   {player.name.split(' ').map(n => n[0]).join('')}
                 </AvatarFallback>
               </Avatar>
@@ -634,7 +634,7 @@ export function PlayerReportCard({ playerId, dateRange, showActions = true }: Pl
                 
                 {playerSummary.needsWork && (
                   <p>
-                    <span className="text-amber-500 font-semibold">Needs work:</span>{" "}
+                    <span className="text-accent font-semibold">Needs work:</span>{" "}
                     <span className="text-foreground">{playerSummary.needsWork.label}</span>
                     <span className="text-muted-foreground">
                       {playerSummary.needsWork.trend < -0.5 

@@ -167,7 +167,7 @@ export function GoalsPanel({ playerId, games }: GoalsPanelProps) {
       <Card className="p-5">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold font-display text-white flex items-center gap-2">
-            <Target className="w-5 h-5 text-primary" /> Goals
+            <Target className="w-5 h-5 text-accent" /> Goals
           </h3>
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
@@ -334,7 +334,7 @@ export function GoalsPanel({ playerId, games }: GoalsPanelProps) {
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-7 w-7 text-primary"
+                        className="h-7 w-7 text-accent"
                         onClick={() => setShareGoalId(goal.id)}
                         data-testid={`button-share-goal-${goal.id}`}
                       >
@@ -395,7 +395,7 @@ export function GoalsPanel({ playerId, games }: GoalsPanelProps) {
 
       <Card className="p-5">
         <h3 className="text-lg font-bold font-display text-white flex items-center gap-2 mb-4">
-          <Flame className="w-5 h-5 text-orange-500" /> Current Streaks
+          <Flame className="w-5 h-5 text-accent" /> Current Streaks
         </h3>
 
         {(streaks as Streak[]).length === 0 ? (
@@ -416,7 +416,7 @@ export function GoalsPanel({ playerId, games }: GoalsPanelProps) {
                   className={cn(
                     "p-3 rounded-md border text-center",
                     isActive 
-                      ? "border-orange-500/30 bg-gradient-to-b from-orange-500/10 to-transparent" 
+                      ? "border-accent/30 bg-gradient-to-b from-accent/10 to-transparent" 
                       : "border-border bg-card/30"
                   )}
                   data-testid={`streak-${streak.streakType}`}
@@ -424,11 +424,11 @@ export function GoalsPanel({ playerId, games }: GoalsPanelProps) {
                   <div className="flex items-center justify-center gap-1.5 mb-1">
                     <Flame className={cn(
                       "w-5 h-5",
-                      isActive ? "text-orange-500" : "text-muted-foreground/30"
+                      isActive ? "text-accent" : "text-muted-foreground/30"
                     )} />
                     <span className={cn(
                       "text-2xl font-bold font-display",
-                      isActive ? "text-orange-400" : "text-muted-foreground/50"
+                      isActive ? "text-accent" : "text-muted-foreground/50"
                     )}>
                       {streak.currentCount}
                     </span>

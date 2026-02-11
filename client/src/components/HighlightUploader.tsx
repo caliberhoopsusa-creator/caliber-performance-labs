@@ -89,7 +89,7 @@ export function HighlightUploader({ gameId, playerId }: HighlightUploaderProps) 
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-bold font-display text-white flex items-center gap-2">
-        <Film className="w-5 h-5 text-primary" /> Game Highlights
+        <Film className="w-5 h-5 text-accent" /> Game Highlights
       </h3>
 
       <div className="bg-secondary/20 backdrop-blur-sm p-5 rounded-xl border border-white/10 space-y-4">
@@ -201,7 +201,7 @@ export function HighlightUploader({ gameId, playerId }: HighlightUploaderProps) 
                   setUploadedVideoUrl(objectPath);
                 }
               }}
-              buttonClassName="w-full bg-secondary/50 border border-dashed border-white/20 hover:bg-secondary/70 hover:border-primary/50 text-white h-16"
+              buttonClassName="w-full bg-secondary/50 border border-dashed border-white/20 hover:bg-secondary/70 hover:border-accent/50 text-white h-16"
             >
               <span className="flex items-center gap-2">
                 <Video className="w-5 h-5" />
@@ -233,7 +233,7 @@ export function HighlightUploader({ gameId, playerId }: HighlightUploaderProps) 
                 data-testid={`highlight-clip-${clip.id}`}
               >
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <Video className="w-4 h-4 text-primary shrink-0" />
+                  <Video className="w-4 h-4 text-accent shrink-0" />
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-white truncate">{clip.title}</p>
                     {clip.description && (

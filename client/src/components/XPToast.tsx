@@ -47,18 +47,18 @@ function XPToast({ notification, onComplete }: XPToastProps) {
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
       className={cn(
         "flex items-center gap-3 px-4 py-3 rounded-xl",
-        "bg-gradient-to-r from-primary/20 to-accent/10",
-        "border border-primary/30 backdrop-blur-md",
-        "shadow-lg shadow-primary/20"
+        "bg-gradient-to-r from-accent/20 to-accent/10",
+        "border border-accent/30 backdrop-blur-md",
+        "shadow-lg shadow-accent/20"
       )}
       data-testid="xp-toast"
     >
       <motion.div
         animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.2, 1] }}
         transition={{ duration: 0.5, repeat: 2 }}
-        className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center"
+        className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center"
       >
-        <Zap className="w-5 h-5 text-primary" />
+        <Zap className="w-5 h-5 text-accent" />
       </motion.div>
       
       <div className="flex flex-col">
@@ -67,7 +67,7 @@ function XPToast({ notification, onComplete }: XPToastProps) {
             initial={{ scale: 0.5 }}
             animate={{ scale: [0.5, 1.3, 1] }}
             transition={{ duration: 0.4 }}
-            className="text-xl font-display font-bold text-primary"
+            className="text-xl font-display font-bold text-accent"
           >
             +{notification.amount} XP
           </motion.span>

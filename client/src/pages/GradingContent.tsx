@@ -79,7 +79,7 @@ export default function GradingContent() {
       <Card className="bg-card border-white/5">
         <CardHeader>
           <CardTitle className="font-display uppercase tracking-wider flex items-center gap-3">
-            <TrendingUp className="w-5 h-5 text-primary" />
+            <TrendingUp className="w-5 h-5 text-accent" />
             Grade Scale
           </CardTitle>
         </CardHeader>
@@ -103,13 +103,13 @@ export default function GradingContent() {
       <Card className="bg-card border-white/5">
         <CardHeader>
           <CardTitle className="font-display uppercase tracking-wider flex items-center gap-3">
-            <Target className="w-5 h-5 text-primary" />
+            <Target className="w-5 h-5 text-accent" />
             Base Formula
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
-            <code className="text-sm text-primary font-mono">
+          <div className="p-4 rounded-lg bg-accent/10 border border-accent/20">
+            <code className="text-sm text-accent font-mono">
               Score = 50 + (PTS × 1.0) + (REB × 1.5) + (AST × 1.5) + (STL × 2.5) + (BLK × 2.5) - (TO × 2.5) - (FOULS × 1.0)
             </code>
           </div>
@@ -134,7 +134,7 @@ export default function GradingContent() {
       <Card className="bg-card border-white/5">
         <CardHeader>
           <CardTitle className="font-display uppercase tracking-wider flex items-center gap-3">
-            <Activity className="w-5 h-5 text-primary" />
+            <Activity className="w-5 h-5 text-accent" />
             Position-Based Weighting
           </CardTitle>
         </CardHeader>
@@ -171,7 +171,7 @@ export default function GradingContent() {
       <Card className="bg-card border-white/5">
         <CardHeader>
           <CardTitle className="font-display uppercase tracking-wider flex items-center gap-3">
-            <Zap className="w-5 h-5 text-primary" />
+            <Zap className="w-5 h-5 text-accent" />
             Efficiency & Hustle Bonuses
           </CardTitle>
         </CardHeader>
@@ -204,7 +204,7 @@ export default function GradingContent() {
           <CardTitle className="font-display uppercase tracking-wider">Example: Guard with 18 PTS, 4 REB, 8 AST, 2 STL, 0 BLK, 3 TO, 2 FOULS</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="p-4 rounded-lg bg-primary/10 border border-primary/20 font-mono text-sm space-y-1">
+          <div className="p-4 rounded-lg bg-accent/10 border border-accent/20 font-mono text-sm space-y-1">
             <div className="text-muted-foreground">Base: 50</div>
             <div className="text-green-500">+ Points: 18 × 1.0 = +18</div>
             <div className="text-green-500">+ Rebounds: 4 × 1.5 = +6</div>

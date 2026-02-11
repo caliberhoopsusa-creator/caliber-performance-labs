@@ -167,7 +167,7 @@ function HeaderCoinDisplay() {
           <Button 
             variant="ghost" 
             size="icon" 
-            className="text-muted-foreground hover:text-primary"
+            className="text-muted-foreground hover:text-accent"
             data-testid="header-inventory-btn"
             title="My Inventory"
           >
@@ -211,7 +211,7 @@ function MainRouter() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
-          <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto" />
+          <Loader2 className="w-10 h-10 text-accent animate-spin mx-auto" />
           <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
@@ -236,7 +236,7 @@ function MainRouter() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
-          <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto" />
+          <Loader2 className="w-10 h-10 text-accent animate-spin mx-auto" />
           <p className="text-muted-foreground">Loading your profile...</p>
         </div>
       </div>

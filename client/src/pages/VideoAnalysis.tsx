@@ -160,10 +160,10 @@ export default function VideoAnalysis() {
           {/* Analysis Input Tabs */}
           <Tabs defaultValue="video" className="w-full">
             <TabsList className="grid w-full grid-cols-2 bg-card border border-white/10">
-              <TabsTrigger value="video" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-video">
+              <TabsTrigger value="video" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-video">
                 <Video className="w-4 h-4" /> Video Upload
               </TabsTrigger>
-              <TabsTrigger value="text" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-text">
+              <TabsTrigger value="text" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-text">
                 <FileText className="w-4 h-4" /> Play-by-Play
               </TabsTrigger>
             </TabsList>
@@ -174,7 +174,7 @@ export default function VideoAnalysis() {
                   <div 
                     className={cn(
                       "border-2 border-dashed rounded-xl p-8 text-center transition-colors",
-                      videoFile ? "border-primary/50 bg-primary/5" : "border-white/10 hover:border-white/20"
+                      videoFile ? "border-accent/50 bg-accent/5" : "border-white/10 hover:border-white/20"
                     )}
                   >
                     <input
@@ -188,7 +188,7 @@ export default function VideoAnalysis() {
                     <label htmlFor="video-upload" className="cursor-pointer block">
                       {videoFile ? (
                         <div className="space-y-2">
-                          <CheckCircle className="w-12 h-12 mx-auto text-primary" />
+                          <CheckCircle className="w-12 h-12 mx-auto text-accent" />
                           <p className="font-medium text-white">{videoFile.name}</p>
                           <p className="text-sm text-muted-foreground">{(videoFile.size / 1024 / 1024).toFixed(1)} MB</p>
                         </div>
@@ -286,13 +286,13 @@ Example:
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="text-center p-4 bg-primary/10 rounded-xl border border-primary/20">
+                <div className="text-center p-4 bg-accent/10 rounded-xl border border-accent/20">
                   <h3 className="text-xl font-display font-bold text-white">{result.playerName}</h3>
                 </div>
 
                 {/* Main Stats */}
                 <div className="grid grid-cols-3 gap-4">
-                  <StatBox label="PTS" value={result.stats.points} icon={Target} color="text-primary" />
+                  <StatBox label="PTS" value={result.stats.points} icon={Target} color="text-accent" />
                   <StatBox label="REB" value={result.stats.rebounds} icon={Shield} color="text-blue-500" />
                   <StatBox label="AST" value={result.stats.assists} icon={Zap} color="text-yellow-500" />
                 </div>

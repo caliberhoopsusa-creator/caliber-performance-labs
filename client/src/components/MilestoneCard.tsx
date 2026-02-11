@@ -30,7 +30,7 @@ const MILESTONE_CONFIG: Record<string, {
     color: "text-yellow-400",
     glowColor: "rgba(250, 204, 21, 0.4)",
     gradientFrom: "from-yellow-400",
-    gradientTo: "to-orange-500",
+    gradientTo: "to-accent",
   },
   tier_promotion: {
     icon: Crown,
@@ -55,9 +55,9 @@ const MILESTONE_CONFIG: Record<string, {
   },
   games_milestone: {
     icon: Target,
-    color: "text-orange-400",
+    color: "text-accent",
     glowColor: "rgba(251, 146, 60, 0.4)",
-    gradientFrom: "from-orange-400",
+    gradientFrom: "from-accent",
     gradientTo: "to-red-500",
   },
   streak_milestone: {
@@ -65,7 +65,7 @@ const MILESTONE_CONFIG: Record<string, {
     color: "text-red-400",
     glowColor: "rgba(248, 113, 113, 0.4)",
     gradientFrom: "from-red-400",
-    gradientTo: "to-orange-500",
+    gradientTo: "to-accent",
   },
 };
 

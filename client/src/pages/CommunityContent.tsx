@@ -54,7 +54,7 @@ export default function CommunityContent() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold font-display text-white tracking-wide flex items-center gap-3">
-          <Users className="w-8 h-8 text-primary" />
+          <Users className="w-8 h-8 text-accent" />
           Community
         </h1>
         <p className="text-muted-foreground mt-1">
@@ -64,11 +64,11 @@ export default function CommunityContent() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="bg-card border border-white/10">
-          <TabsTrigger value="polls" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-polls">
+          <TabsTrigger value="polls" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-polls">
             <BarChart3 className="w-4 h-4" />
             Polls
           </TabsTrigger>
-          <TabsTrigger value="predictions" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground" data-testid="tab-predictions">
+          <TabsTrigger value="predictions" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-predictions">
             <Swords className="w-4 h-4" />
             Matchup Predictions
           </TabsTrigger>
@@ -297,7 +297,7 @@ function PollCard({
     <Card data-testid={`poll-card-${poll.id}`}>
       <CardHeader className="pb-2">
         <CardTitle className="text-lg flex items-center gap-2">
-          <BarChart3 className="w-5 h-5 text-primary" />
+          <BarChart3 className="w-5 h-5 text-accent" />
           {poll.question}
         </CardTitle>
         <p className="text-xs text-muted-foreground">
@@ -315,7 +315,7 @@ function PollCard({
               {poll.hasVoted ? (
                 <div className="relative">
                   <div className="flex items-center justify-between mb-1">
-                    <span className={`text-sm ${isUserVote ? "font-semibold text-primary" : ""}`}>
+                    <span className={`text-sm ${isUserVote ? "font-semibold text-accent" : ""}`}>
                       {option} {isUserVote && <Vote className="w-3 h-3 inline ml-1" />}
                     </span>
                     <span className="text-xs text-muted-foreground">
@@ -599,7 +599,7 @@ function PredictionCard({
           <div className="mt-4">
             <div className="flex h-2 rounded-full overflow-hidden bg-muted">
               <div
-                className="bg-primary transition-all"
+                className="bg-accent transition-all"
                 style={{ width: `${p1Percentage}%` }}
               />
               <div

@@ -71,7 +71,7 @@ export function FollowButton({ playerId, initialIsFollowing, onFollowChange, cla
       variant={isFollowing ? "secondary" : "default"}
       className={cn(
         "gap-2 transition-all duration-200",
-        isFollowing && "border-primary/30",
+        isFollowing && "border-accent/30",
         className
       )}
       data-testid={isFollowing ? "button-unfollow" : "button-follow"}

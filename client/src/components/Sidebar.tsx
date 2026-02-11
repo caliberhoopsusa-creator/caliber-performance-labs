@@ -215,7 +215,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
                       ? "text-muted-foreground/50"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   )} data-testid={`nav-${item.href.replace(/\//g, '-').replace(/^-/, '') || 'home'}`}>
-                    <item.icon className={cn("w-4 h-4", isActive && "text-primary", isFeatured && "text-accent")} />
+                    <item.icon className={cn("w-4 h-4", isActive && "text-accent", isFeatured && "text-accent")} />
                     {item.label}
                     {item.badgeCount !== undefined && item.badgeCount > 0 && (
                       <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] bg-accent text-white rounded-full font-bold">
@@ -223,7 +223,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
                       </span>
                     )}
                     {isFeatured && !item.badgeCount && (
-                      <span className="ml-auto text-[9px] bg-primary text-white px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">
+                      <span className="ml-auto text-[9px] bg-accent text-white px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">
                         LIVE
                       </span>
                     )}

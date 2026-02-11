@@ -20,7 +20,7 @@ interface LiveGameEventLogProps {
 const EVENT_LABELS: Record<string, { label: string; icon: string; color: string }> = {
   made_2pt: { label: "+2 Made", icon: "🏀", color: "text-green-400" },
   missed_2pt: { label: "2PT Miss", icon: "❌", color: "text-muted-foreground" },
-  made_3pt: { label: "+3 Made", icon: "🎯", color: "text-primary" },
+  made_3pt: { label: "+3 Made", icon: "🎯", color: "text-accent" },
   missed_3pt: { label: "3PT Miss", icon: "❌", color: "text-muted-foreground" },
   made_ft: { label: "+1 FT", icon: "✓", color: "text-green-400" },
   missed_ft: { label: "FT Miss", icon: "❌", color: "text-muted-foreground" },
@@ -59,7 +59,7 @@ export function LiveGameEventLog({ events, onUndo, isUndoing }: LiveGameEventLog
               key={event.id}
               className={cn(
                 "flex items-center justify-between p-2 rounded-md bg-card/50 border border-border/50 transition-all",
-                isLast && "ring-1 ring-primary/30"
+                isLast && "ring-1 ring-accent/30"
               )}
               data-testid={`event-${event.id}`}
             >

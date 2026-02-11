@@ -145,7 +145,7 @@ export function SportToggle({ className, showLabels = true, size = 'default' }: 
         className={cn(
           buttonPadding,
           "relative transition-all duration-200",
-          currentSport === 'basketball' && "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/25"
+          currentSport === 'basketball' && "bg-gradient-to-r from-accent to-accent/90 text-accent-foreground shadow-lg shadow-accent/25"
         )}
         data-testid="sport-toggle-basketball"
       >
@@ -166,7 +166,7 @@ export function SportToggle({ className, showLabels = true, size = 'default' }: 
         className={cn(
           buttonPadding,
           "relative transition-all duration-200",
-          currentSport === 'football' && "bg-gradient-to-r from-amber-700 to-amber-800 text-white shadow-lg shadow-amber-700/25"
+          currentSport === 'football' && "bg-gradient-to-r from-accent/80 to-accent/70 text-accent-foreground shadow-lg shadow-accent/25"
         )}
         data-testid="sport-toggle-football"
       >

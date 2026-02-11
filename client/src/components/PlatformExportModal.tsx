@@ -134,13 +134,13 @@ export function PlatformExportModal({
                   className={cn(
                     "flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all text-center cursor-pointer toggle-elevate",
                     selectedFormat === key
-                      ? "border-primary/50 bg-primary/10 toggle-elevated"
+                      ? "border-accent/50 bg-accent/10 toggle-elevated"
                       : "border-white/10 bg-black/20"
                   )}
                   data-testid={`button-format-${key}`}
                 >
-                  <Icon className={cn("w-5 h-5", selectedFormat === key ? "text-primary" : "text-muted-foreground")} />
-                  <span className={cn("text-xs font-bold", selectedFormat === key ? "text-primary" : "text-white")}>{fmt.label}</span>
+                  <Icon className={cn("w-5 h-5", selectedFormat === key ? "text-accent" : "text-muted-foreground")} />
+                  <span className={cn("text-xs font-bold", selectedFormat === key ? "text-accent" : "text-white")}>{fmt.label}</span>
                   <span className="text-[10px] text-muted-foreground">{fmt.description}</span>
                 </div>
               );
@@ -191,14 +191,14 @@ export function PlatformExportModal({
               </div>
               
               <div className="absolute bottom-4 left-0 right-0 flex items-center justify-center gap-2 opacity-60">
-                <div className="w-6 h-6 rounded-md bg-gradient-to-br from-primary to-orange-500 flex items-center justify-center">
+                <div className="w-6 h-6 rounded-md bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center">
                   <Activity className="w-3 h-3 text-white" />
                 </div>
                 <span className="text-sm font-black uppercase tracking-widest text-white/70">Caliber</span>
               </div>
               
-              <div className="absolute -top-20 -left-20 w-64 h-64 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
-              <div className="absolute -bottom-20 -right-20 w-72 h-72 rounded-full bg-orange-500/10 blur-3xl pointer-events-none" />
+              <div className="absolute -top-20 -left-20 w-64 h-64 rounded-full bg-accent/10 blur-3xl pointer-events-none" />
+              <div className="absolute -bottom-20 -right-20 w-72 h-72 rounded-full bg-accent/10 blur-3xl pointer-events-none" />
             </div>
           </div>
         </div>

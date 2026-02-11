@@ -122,7 +122,7 @@ interface CollegeMatchesProps {
 }
 
 const DIVISION_COLORS: Record<string, string> = {
-  'D1': 'bg-gradient-to-r from-amber-500 to-orange-500 text-white',
+  'D1': 'bg-gradient-to-r from-accent to-accent/90 text-accent-foreground',
   'D2': 'bg-accent text-white',
   'D3': 'bg-gradient-to-r from-emerald-500 to-green-500 text-white',
   'NAIA': 'bg-gradient-to-r from-purple-500 to-violet-500 text-white',
@@ -131,7 +131,7 @@ const DIVISION_COLORS: Record<string, string> = {
 
 const LOGO_COLORS = [
   'bg-gradient-to-br from-accent to-blue-600',
-  'bg-gradient-to-br from-amber-500 to-orange-600',
+  'bg-gradient-to-br from-accent to-accent/80',
   'bg-gradient-to-br from-emerald-500 to-teal-600',
   'bg-gradient-to-br from-purple-500 to-indigo-600',
   'bg-gradient-to-br from-rose-500 to-pink-600',
@@ -327,7 +327,7 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
                 </Badge>
               )}
               {match.isRecommended && (
-                <Badge className="text-[10px] bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+                <Badge className="text-[10px] bg-gradient-to-r from-accent to-accent/90 text-accent-foreground">
                   Top Match
                 </Badge>
               )}
@@ -367,7 +367,7 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
               )}
               {hasTitles && (
                 <div className="text-center">
-                  <div className="text-lg font-bold text-amber-400">{college.nationalChampionships}</div>
+                  <div className="text-lg font-bold text-accent">{college.nationalChampionships}</div>
                   <div className="text-[10px] text-muted-foreground uppercase">Titles</div>
                 </div>
               )}
@@ -453,9 +453,9 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
                     )}
                     {college.finalFourAppearances !== null && college.finalFourAppearances > 0 && (
                       <div className="flex items-center gap-2">
-                        <Star className="w-3.5 h-3.5 text-amber-400" />
+                        <Star className="w-3.5 h-3.5 text-accent" />
                         <span className="text-muted-foreground">{college.sport === 'basketball' ? 'Final Fours' : 'Playoffs'}:</span>
-                        <span className="text-amber-400 font-medium">{college.finalFourAppearances}</span>
+                        <span className="text-accent font-medium">{college.finalFourAppearances}</span>
                       </div>
                     )}
                     {college.conferenceChampionships !== null && college.conferenceChampionships > 0 && (
@@ -533,7 +533,7 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
                           college.niLOpportunities === 'High' 
                             ? "border-emerald-500/50 text-emerald-400" 
                             : college.niLOpportunities === 'Medium'
-                            ? "border-amber-500/50 text-amber-400"
+                            ? "border-accent/50 text-accent"
                             : "border-gray-500/50 text-gray-400"
                         )}>
                           {college.niLOpportunities}
@@ -576,8 +576,8 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
               )}
               
               {match.developmentAreas && (
-                <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                  <h4 className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                <div className="p-3 rounded-lg bg-accent/10 border border-accent/20">
+                  <h4 className="text-xs font-semibold text-accent uppercase tracking-wider mb-2 flex items-center gap-2">
                     <Target className="w-3.5 h-3.5" />
                     Development Areas
                   </h4>
@@ -675,7 +675,7 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
               onClick={() => onToggleSave(match.id)}
               className={cn(
                 "transition-colors",
-                match.isSaved ? "text-amber-400 hover:text-amber-300" : "text-muted-foreground hover:text-white"
+                match.isSaved ? "text-accent hover:text-accent/80" : "text-muted-foreground hover:text-white"
               )}
               data-testid={`button-save-${match.id}`}
             >

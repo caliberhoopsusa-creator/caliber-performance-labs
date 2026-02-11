@@ -33,7 +33,7 @@ export function DayEventsPanel({
       <SheetContent className="sm:max-w-md border-white/10 overflow-y-auto" data-testid="day-events-panel">
         <SheetHeader className="space-y-1">
           <SheetTitle className="text-xl font-display uppercase tracking-wide flex items-center gap-2">
-            <CalendarDays className="w-5 h-5 text-primary" />
+            <CalendarDays className="w-5 h-5 text-accent" />
             {selectedDate ? format(selectedDate, "EEEE, MMMM d") : "Events"}
           </SheetTitle>
           <SheetDescription className="text-muted-foreground">

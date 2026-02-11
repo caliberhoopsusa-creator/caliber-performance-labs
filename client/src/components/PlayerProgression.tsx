@@ -115,7 +115,7 @@ export function PlayerProgression({ playerId, compact = false }: PlayerProgressi
           <span className="font-medium">{progression.totalXp.toLocaleString()} XP</span>
         </div>
         {progression.currentStreak > 0 && (
-          <div className="flex items-center gap-1 text-sm text-orange-400">
+          <div className="flex items-center gap-1 text-sm text-accent">
             <Flame className="w-3.5 h-3.5" />
             <span className="font-bold">{progression.currentStreak}</span>
           </div>
@@ -180,8 +180,8 @@ export function PlayerProgression({ playerId, compact = false }: PlayerProgressi
           {progression.currentStreak > 0 && (
             <motion.div 
               className={cn(
-                "flex flex-col items-center bg-gradient-to-br from-orange-500/15 to-orange-600/5 rounded-lg px-4 py-3 border border-orange-500/30 shadow-lg shadow-orange-500/10 transition-all hover:shadow-orange-500/20 hover:border-orange-500/40",
-                progression.streakInGracePeriod && "border-orange-500/50 shadow-lg shadow-orange-500/30"
+                "flex flex-col items-center bg-gradient-to-br from-accent/15 to-accent/5 rounded-lg px-4 py-3 border border-accent/30 shadow-lg shadow-accent/10 transition-all hover:shadow-accent/20 hover:border-accent/40",
+                progression.streakInGracePeriod && "border-accent/50 shadow-lg shadow-accent/30"
               )}
               animate={{
                 scale: progression.streakInGracePeriod ? [1, 1.02, 1] : 1,
@@ -193,10 +193,10 @@ export function PlayerProgression({ playerId, compact = false }: PlayerProgressi
               data-testid="streak-display"
             >
               <div className="flex items-center gap-1.5">
-                <Flame className={cn("w-5 h-5 text-orange-400", progression.streakInGracePeriod ? "animate-pulse" : "")} />
-                <span className="text-2xl font-bold text-orange-400">{progression.currentStreak}</span>
+                <Flame className={cn("w-5 h-5 text-accent", progression.streakInGracePeriod ? "animate-pulse" : "")} />
+                <span className="text-2xl font-bold text-accent">{progression.currentStreak}</span>
               </div>
-              <span className="text-[10px] uppercase tracking-widest text-orange-400/70 font-semibold">Streak</span>
+              <span className="text-[10px] uppercase tracking-widest text-accent/70 font-semibold">Streak</span>
             </motion.div>
           )}
           

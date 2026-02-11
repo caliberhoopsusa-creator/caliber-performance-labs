@@ -72,10 +72,10 @@ const FOOTBALL_ARCHETYPE_ICONS: Record<FootballArchetypeId, React.ElementType> =
 
 const ARCHETYPE_COLORS: Record<ArchetypeId, { bg: string; border: string; text: string; glow: string }> = {
   scoring_guard: {
-    bg: "from-orange-500/20 to-red-500/20",
-    border: "border-orange-500/40",
-    text: "text-orange-400",
-    glow: "shadow-orange-500/20",
+    bg: "from-accent/20 to-red-500/20",
+    border: "border-accent/40",
+    text: "text-accent",
+    glow: "shadow-accent/20",
   },
   floor_general: {
     bg: "from-blue-500/20 to-accent/20",
@@ -96,10 +96,10 @@ const ARCHETYPE_COLORS: Record<ArchetypeId, { bg: string; border: string; text: 
     glow: "shadow-purple-500/20",
   },
   stretch_big: {
-    bg: "from-amber-500/20 to-yellow-500/20",
-    border: "border-amber-500/40",
-    text: "text-amber-400",
-    glow: "shadow-amber-500/20",
+    bg: "from-accent/20 to-yellow-500/20",
+    border: "border-accent/40",
+    text: "text-accent",
+    glow: "shadow-accent/20",
   },
   paint_beast: {
     bg: "from-red-500/20 to-rose-500/20",
@@ -114,7 +114,7 @@ const ARCHETYPE_COLORS: Record<ArchetypeId, { bg: string; border: string; text: 
     glow: "shadow-slate-500/20",
   },
   sharpshooter: {
-    bg: "from-yellow-500/20 to-orange-500/20",
+    bg: "from-yellow-500/20 to-accent/20",
     border: "border-yellow-500/40",
     text: "text-yellow-400",
     glow: "shadow-yellow-500/20",
@@ -126,10 +126,10 @@ const ARCHETYPE_COLORS: Record<ArchetypeId, { bg: string; border: string; text: 
     glow: "shadow-indigo-500/20",
   },
   all_around_star: {
-    bg: "from-amber-500/20 to-yellow-400/20",
-    border: "border-amber-400/50",
-    text: "text-amber-300",
-    glow: "shadow-amber-400/30",
+    bg: "from-accent/20 to-yellow-400/20",
+    border: "border-accent/50",
+    text: "text-accent",
+    glow: "shadow-accent/30",
   },
 };
 
@@ -153,13 +153,13 @@ const FOOTBALL_ARCHETYPE_COLORS: Record<FootballArchetypeId, { bg: string; borde
     glow: "shadow-slate-500/20",
   },
   power_back: {
-    bg: "from-red-500/20 to-orange-500/20",
+    bg: "from-red-500/20 to-accent/20",
     border: "border-red-500/40",
     text: "text-red-400",
     glow: "shadow-red-500/20",
   },
   speed_back: {
-    bg: "from-yellow-500/20 to-amber-500/20",
+    bg: "from-yellow-500/20 to-accent/20",
     border: "border-yellow-500/40",
     text: "text-yellow-400",
     glow: "shadow-yellow-500/20",
@@ -171,10 +171,10 @@ const FOOTBALL_ARCHETYPE_COLORS: Record<FootballArchetypeId, { bg: string; borde
     glow: "shadow-accent/20",
   },
   deep_threat: {
-    bg: "from-orange-500/20 to-red-500/20",
-    border: "border-orange-500/40",
-    text: "text-orange-400",
-    glow: "shadow-orange-500/20",
+    bg: "from-accent/20 to-red-500/20",
+    border: "border-accent/40",
+    text: "text-accent",
+    glow: "shadow-accent/20",
   },
   possession_receiver: {
     bg: "from-green-500/20 to-teal-500/20",
@@ -183,10 +183,10 @@ const FOOTBALL_ARCHETYPE_COLORS: Record<FootballArchetypeId, { bg: string; borde
     glow: "shadow-green-500/20",
   },
   playmaker_wr: {
-    bg: "from-amber-500/20 to-yellow-400/20",
-    border: "border-amber-400/50",
-    text: "text-amber-300",
-    glow: "shadow-amber-400/30",
+    bg: "from-accent/20 to-yellow-400/20",
+    border: "border-accent/50",
+    text: "text-accent",
+    glow: "shadow-accent/30",
   },
   blocking_te: {
     bg: "from-stone-500/20 to-gray-500/20",
@@ -213,10 +213,10 @@ const FOOTBALL_ARCHETYPE_COLORS: Record<FootballArchetypeId, { bg: string; borde
     glow: "shadow-violet-500/20",
   },
   run_stopper_lb: {
-    bg: "from-orange-600/20 to-amber-500/20",
-    border: "border-orange-500/40",
-    text: "text-orange-400",
-    glow: "shadow-orange-500/20",
+    bg: "from-accent/20 to-accent/10",
+    border: "border-accent/40",
+    text: "text-accent",
+    glow: "shadow-accent/20",
   },
   coverage_lb: {
     bg: "from-sky-500/20 to-blue-500/20",
@@ -255,10 +255,10 @@ const FOOTBALL_ARCHETYPE_COLORS: Record<FootballArchetypeId, { bg: string; borde
     glow: "shadow-teal-500/20",
   },
   power_leg: {
-    bg: "from-amber-500/20 to-orange-500/20",
-    border: "border-amber-500/40",
-    text: "text-amber-400",
-    glow: "shadow-amber-500/20",
+    bg: "from-accent/20 to-accent/10",
+    border: "border-accent/40",
+    text: "text-accent",
+    glow: "shadow-accent/20",
   },
   precision_punter: {
     bg: "from-accent/20 to-sky-500/20",

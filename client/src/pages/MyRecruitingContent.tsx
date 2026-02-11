@@ -144,7 +144,7 @@ function getNextMilestone(graduationYear: number, sport: 'basketball' | 'footbal
 }
 
 const DIVISION_COLORS: Record<string, string> = {
-  'D1': 'bg-gradient-to-r from-amber-500 to-orange-500 text-white',
+  'D1': 'bg-gradient-to-r from-accent to-accent/90 text-accent-foreground',
   'D2': 'bg-accent text-white',
   'D3': 'bg-gradient-to-r from-emerald-500 to-green-500 text-white',
   'NAIA': 'bg-gradient-to-r from-purple-500 to-violet-500 text-white',
@@ -287,7 +287,7 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
           ) : (
             <Badge 
               variant="outline" 
-              className="text-sm border-amber-500/50 text-amber-400"
+              className="text-sm border-accent/50 text-accent"
               data-testid="no-graduation-year"
             >
               Set your graduation year
@@ -298,8 +298,8 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
             className={cn(
               "text-xs uppercase font-semibold",
               sport === 'basketball' 
-                ? "border-orange-500/50 text-orange-400 bg-orange-500/10" 
-                : "border-amber-700/50 text-amber-500 bg-amber-700/10"
+                ? "border-accent/50 text-accent bg-accent/10" 
+                : "border-accent/50 text-accent bg-accent/10"
             )}
             data-testid="sport-badge"
           >
@@ -389,7 +389,7 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <User className="w-4 h-4 text-amber-400" />
+                    <User className="w-4 h-4 text-accent" />
                     <p className="text-xs text-muted-foreground">Profile Complete</p>
                   </div>
                   <p className="text-sm font-bold text-white" data-testid="stat-profile-completeness">{profileCompleteness}%</p>
@@ -636,7 +636,7 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
                 <Link href={`/players/${playerId}`}>
                   <Button
                     variant="outline"
-                    className="border-amber-500/30 text-amber-300 hover:bg-amber-500/10"
+                    className="border-accent/30 text-accent hover:bg-accent/10"
                     data-testid="button-complete-profile"
                   >
                     <User className="w-4 h-4 mr-2" />

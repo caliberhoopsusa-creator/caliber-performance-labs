@@ -224,7 +224,7 @@ export default function Pricing() {
 
         {isSubscribed && (
           <div className="flex items-center justify-center gap-4 flex-wrap">
-            <Badge className="text-sm px-4 py-2 bg-gradient-to-r from-accent/20 to-orange-500/20 border-accent/30" data-testid="badge-subscription-status">
+            <Badge className="text-sm px-4 py-2 bg-gradient-to-r from-accent/20 to-accent/15 border-accent/30" data-testid="badge-subscription-status">
               <Crown className="w-4 h-4 mr-2" />
               Active Subscription
             </Badge>
@@ -296,8 +296,8 @@ export default function Pricing() {
                 >
                   {isPopular && (
                     <>
-                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent via-orange-500 to-accent" />
-                      <Badge className="absolute -top-0 left-1/2 -translate-x-1/2 translate-y-3 bg-gradient-to-r from-accent to-orange-500 text-white border-0 shadow-lg">
+                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent via-accent/80 to-accent" />
+                      <Badge className="absolute -top-0 left-1/2 -translate-x-1/2 translate-y-3 bg-gradient-to-r from-accent to-accent/80 text-accent-foreground border-0 shadow-lg">
                         <Star className="w-3 h-3 mr-1 fill-current" />
                         Most Popular
                       </Badge>

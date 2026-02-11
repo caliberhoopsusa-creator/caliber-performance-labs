@@ -63,12 +63,12 @@ const STAT_CONFIG: Record<StatType, { label: string; shortLabel: string; color: 
   points_1: { label: '1 PT', shortLabel: '1', color: 'text-green-400', bgColor: 'bg-green-600' },
   points_2: { label: '2 PT', shortLabel: '2', color: 'text-accent', bgColor: 'bg-accent' },
   points_3: { label: '3 PT', shortLabel: '3', color: 'text-blue-400', bgColor: 'bg-blue-600' },
-  rebound: { label: 'REB', shortLabel: 'R', color: 'text-orange-400', bgColor: 'bg-orange-600/20 border-orange-500/50' },
+  rebound: { label: 'REB', shortLabel: 'R', color: 'text-accent', bgColor: 'bg-accent/20 border-accent/50' },
   assist: { label: 'AST', shortLabel: 'A', color: 'text-purple-400', bgColor: 'bg-purple-600/20 border-purple-500/50' },
   steal: { label: 'STL', shortLabel: 'S', color: 'text-yellow-400', bgColor: 'bg-yellow-600/20 border-yellow-500/50' },
   block: { label: 'BLK', shortLabel: 'B', color: 'text-red-400', bgColor: 'bg-red-600/20 border-red-500/50' },
   turnover: { label: 'TO', shortLabel: 'TO', color: 'text-rose-400', bgColor: 'bg-rose-600/20 border-rose-500/50' },
-  foul: { label: 'FOUL', shortLabel: 'F', color: 'text-amber-400', bgColor: 'bg-amber-600/20 border-amber-500/50' },
+  foul: { label: 'FOUL', shortLabel: 'F', color: 'text-accent', bgColor: 'bg-accent/20 border-accent/50' },
 };
 
 export default function LiveGameMode() {
@@ -442,7 +442,7 @@ export default function LiveGameMode() {
               </Badge>
             )}
             {isOffline && (
-              <Badge variant="outline" className="gap-1 text-amber-400 border-amber-500/30">
+              <Badge variant="outline" className="gap-1 text-accent border-accent/30">
                 <WifiOff className="w-3 h-3" />
                 <span className="text-xs">Offline</span>
               </Badge>
@@ -633,7 +633,7 @@ export default function LiveGameMode() {
                         <div className="text-muted-foreground">TO</div>
                       </div>
                       <div>
-                        <div className="font-bold text-amber-400">{stats.fouls}</div>
+                        <div className="font-bold text-accent">{stats.fouls}</div>
                         <div className="text-muted-foreground">FLS</div>
                       </div>
                     </div>
@@ -651,7 +651,7 @@ export default function LiveGameMode() {
             <CardTitle className="text-sm flex items-center gap-2">
               Recent ({sessionEvents.length} events)
               {getUnsyncedEvents().length > 0 && (
-                <Badge variant="outline" className="text-xs text-amber-400 border-amber-500/30">
+                <Badge variant="outline" className="text-xs text-accent border-accent/30">
                   +{getUnsyncedEvents().length} pending
                 </Badge>
               )}

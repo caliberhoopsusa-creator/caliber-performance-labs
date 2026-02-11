@@ -13,7 +13,7 @@ import { useSport } from "@/components/SportToggle";
 const PremiumTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-card/80 backdrop-blur-md border border-primary/20 rounded-lg p-3 shadow-xl shadow-primary/10">
+      <div className="bg-card/80 backdrop-blur-md border border-accent/20 rounded-lg p-3 shadow-xl shadow-accent/10">
         <p className="text-xs text-muted-foreground">{label}</p>
         {payload.map((entry: any, index: number) => (
           <p key={index} style={{ color: entry.color }} className="text-sm font-medium">
@@ -111,7 +111,7 @@ export function ProfileWidgets({ games, selectedWidgets, onWidgetsChange, isOwnP
           {availableWidgets.map((widget) => (
             <div key={widget.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30" data-testid={`widget-toggle-${widget.id}`}>
               <div className="flex items-center gap-3">
-                <widget.icon className="w-5 h-5 text-primary" />
+                <widget.icon className="w-5 h-5 text-accent" />
                 <div>
                   <p className="font-medium text-white">{widget.label}</p>
                   <p className="text-xs text-muted-foreground">{widget.description}</p>
@@ -264,7 +264,7 @@ function TrendsWidget({ games, isFootball, position }: { games: Game[]; isFootba
     return (
       <Card className="p-4 animate-fade-up" data-testid="widget-trends">
         <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-          <TrendingUp className="w-4 h-4 text-primary" /> Performance Trends
+          <TrendingUp className="w-4 h-4 text-accent" /> Performance Trends
         </h3>
         <div className="h-48">
           <ResponsiveContainer width="100%" height="100%">
@@ -299,7 +299,7 @@ function TrendsWidget({ games, isFootball, position }: { games: Game[]; isFootba
   return (
     <Card className="p-4 animate-fade-up" data-testid="widget-trends">
       <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-        <TrendingUp className="w-4 h-4 text-primary" /> Performance Trends
+        <TrendingUp className="w-4 h-4 text-accent" /> Performance Trends
       </h3>
       <div className="h-48">
         <ResponsiveContainer width="100%" height="100%">
@@ -323,7 +323,7 @@ function TrendsWidget({ games, isFootball, position }: { games: Game[]; isFootba
       <div className="flex justify-center gap-4 mt-2 text-xs">
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-accent" /> PTS</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /> REB</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500" /> AST</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-accent" /> AST</span>
       </div>
     </Card>
   );
@@ -358,7 +358,7 @@ function GradesWidget({ games }: { games: Game[] }) {
   return (
     <Card className="p-4 animate-fade-up" data-testid="widget-grades">
       <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-        <Award className="w-4 h-4 text-primary" /> Grade History
+        <Award className="w-4 h-4 text-accent" /> Grade History
       </h3>
       <div className="h-48">
         <ResponsiveContainer width="100%" height="100%">
@@ -369,7 +369,7 @@ function GradesWidget({ games }: { games: Game[] }) {
             <Tooltip content={({ active, payload }: any) => {
               if (active && payload && payload[0]) {
                 return (
-                  <div className="bg-card/80 backdrop-blur-md border border-primary/20 rounded-lg p-3 shadow-xl shadow-primary/10">
+                  <div className="bg-card/80 backdrop-blur-md border border-accent/20 rounded-lg p-3 shadow-xl shadow-accent/10">
                     <p className="text-xs text-muted-foreground">{payload[0].payload.date}</p>
                     <p style={{ color: getGradeColor(payload[0].payload.value) }} className="text-sm font-medium">
                       Grade: {payload[0].payload.grade}
@@ -523,7 +523,7 @@ function RadarWidget({ games, isFootball, position }: { games: Game[]; isFootbal
   return (
     <Card className="p-4 animate-fade-up" data-testid="widget-radar">
       <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-        <Target className="w-4 h-4 text-primary" /> Skill Breakdown
+        <Target className="w-4 h-4 text-accent" /> Skill Breakdown
       </h3>
       <div className="h-48">
         <ResponsiveContainer width="100%" height="100%">
@@ -632,7 +632,7 @@ function AveragesWidget({ games, isFootball, position }: { games: Game[]; isFoot
     return (
       <Card className="p-4 animate-fade-up" data-testid="widget-averages">
         <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-          <BarChart3 className="w-4 h-4 text-primary" /> Season Averages
+          <BarChart3 className="w-4 h-4 text-accent" /> Season Averages
         </h3>
         <div className={`grid gap-2 text-center`} style={{ gridTemplateColumns: `repeat(${positionStats.length}, 1fr)` }}>
           {positionStats.map((stat, i) => (
@@ -649,7 +649,7 @@ function AveragesWidget({ games, isFootball, position }: { games: Game[]; isFoot
   return (
     <Card className="p-4 animate-fade-up" data-testid="widget-averages">
       <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-        <BarChart3 className="w-4 h-4 text-primary" /> Season Averages
+        <BarChart3 className="w-4 h-4 text-accent" /> Season Averages
       </h3>
       <div className="grid grid-cols-5 gap-2 text-center">
         <div className="p-3 rounded-lg bg-gradient-to-br from-accent/10 to-blue-500/5 border border-accent/20 hover-elevate transition-all">
@@ -698,7 +698,7 @@ function ShootingWidget({ games }: { games: Game[] }) {
   return (
     <Card className="p-4 animate-fade-up" data-testid="widget-shooting">
       <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-        <Activity className="w-4 h-4 text-primary" /> Shooting Splits
+        <Activity className="w-4 h-4 text-accent" /> Shooting Splits
       </h3>
       <div className="grid grid-cols-3 gap-3 text-center">
         <div className="p-4 rounded-lg bg-gradient-to-br from-blue-500/15 to-accent/5 border border-blue-500/20 hover-elevate transition-all">
@@ -709,8 +709,8 @@ function ShootingWidget({ games }: { games: Game[] }) {
           <p className="text-2xl font-bold text-green-400">{shooting.three}%</p>
           <p className="text-xs text-muted-foreground">3PT%</p>
         </div>
-        <div className="p-4 rounded-lg bg-gradient-to-br from-amber-500/15 to-accent/5 border border-amber-500/20 hover-elevate transition-all">
-          <p className="text-2xl font-bold text-amber-400">{shooting.ft}%</p>
+        <div className="p-4 rounded-lg bg-gradient-to-br from-accent/15 to-accent/5 border border-accent/20 hover-elevate transition-all">
+          <p className="text-2xl font-bold text-accent">{shooting.ft}%</p>
           <p className="text-xs text-muted-foreground">FT%</p>
         </div>
       </div>
@@ -739,7 +739,7 @@ function EfficiencyWidget({ games }: { games: Game[] }) {
   return (
     <Card className="p-4 animate-fade-up" data-testid="widget-efficiency">
       <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-        <Activity className="w-4 h-4 text-primary" /> Efficiency Stats
+        <Activity className="w-4 h-4 text-accent" /> Efficiency Stats
       </h3>
       <div className="grid grid-cols-3 gap-3 text-center">
         <div className="p-4 rounded-lg bg-gradient-to-br from-blue-500/15 to-accent/5 border border-blue-500/20 hover-elevate transition-all">
@@ -750,8 +750,8 @@ function EfficiencyWidget({ games }: { games: Game[] }) {
           <p className="text-2xl font-bold text-green-400">{efficiency.ypc}</p>
           <p className="text-xs text-muted-foreground">YPC</p>
         </div>
-        <div className="p-4 rounded-lg bg-gradient-to-br from-amber-500/15 to-accent/5 border border-amber-500/20 hover-elevate transition-all">
-          <p className="text-2xl font-bold text-amber-400">{efficiency.ypr}</p>
+        <div className="p-4 rounded-lg bg-gradient-to-br from-accent/15 to-accent/5 border border-accent/20 hover-elevate transition-all">
+          <p className="text-2xl font-bold text-accent">{efficiency.ypr}</p>
           <p className="text-xs text-muted-foreground">YPR</p>
         </div>
       </div>

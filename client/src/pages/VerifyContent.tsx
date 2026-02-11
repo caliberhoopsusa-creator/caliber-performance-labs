@@ -25,9 +25,9 @@ export default function VerifyContent() {
           </p>
         </div>
         
-        <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/20">
+        <div className="p-4 rounded-xl bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20">
           <div className="flex items-center gap-2 mb-2">
-            <Shield className="w-5 h-5 text-amber-400" />
+            <Shield className="w-5 h-5 text-accent" />
             <span className="font-medium text-white/90">Team Only</span>
           </div>
           <p className="text-sm text-white/60">

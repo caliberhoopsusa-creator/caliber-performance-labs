@@ -130,12 +130,12 @@ function LeagueCard({ league, index }: LeagueCardProps) {
                   className={cn(
                     "w-14 h-14 rounded-xl flex items-center justify-center relative z-10 border-2",
                     isBasketball
-                      ? "bg-orange-500/20 border-orange-500/30"
+                      ? "bg-accent/20 border-accent/30"
                       : "bg-green-500/20 border-green-500/30"
                   )}
                 >
                   {isBasketball ? (
-                    <Dribbble className="w-7 h-7 text-orange-400" />
+                    <Dribbble className="w-7 h-7 text-accent" />
                   ) : (
                     <GiAmericanFootballBall className="w-7 h-7 text-green-400" />
                   )}
@@ -166,7 +166,7 @@ function LeagueCard({ league, index }: LeagueCardProps) {
                 className={cn(
                   "text-xs gap-1 py-0.5",
                   isBasketball
-                    ? "border-orange-500/30 text-orange-400 bg-orange-500/10"
+                    ? "border-accent/30 text-accent bg-accent/10"
                     : "border-green-500/30 text-green-400 bg-green-500/10"
                 )}
               >
@@ -539,7 +539,7 @@ export default function LeagueHub() {
           size="sm"
           className={cn(
             "relative gap-1.5",
-            sportFilter === "basketball" && "text-orange-400"
+            sportFilter === "basketball" && "text-accent"
           )}
           onClick={() => setSportFilter("basketball")}
           data-testid="filter-basketball"
@@ -547,7 +547,7 @@ export default function LeagueHub() {
           <Dribbble className="w-4 h-4" />
           Basketball
           {sportFilter === "basketball" && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-400 rounded-full" />
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent rounded-full" />
           )}
         </Button>
         <Button

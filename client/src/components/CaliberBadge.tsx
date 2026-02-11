@@ -186,7 +186,7 @@ export function CaliberBadge({ playerId, isOwner = false, showControls = false, 
                 <Button
                   size="sm"
                   variant="outline"
-                  className="gap-1.5 border-amber-500/30 text-amber-500 hover:bg-amber-500/10"
+                  className="gap-1.5 border-accent/30 text-accent hover:bg-accent/10"
                   data-testid="button-award-caliber-badge"
                 >
                   <Award className="h-3.5 w-3.5" />
@@ -235,7 +235,7 @@ export function CaliberBadge({ playerId, isOwner = false, showControls = false, 
                   <Button
                     onClick={() => awardMutation.mutate({ category, reason })}
                     disabled={awardMutation.isPending}
-                    className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-semibold"
+                    className="w-full bg-gradient-to-r from-accent to-accent/90 text-accent-foreground font-semibold"
                     data-testid="button-confirm-award-badge"
                   >
                     {awardMutation.isPending ? "Awarding..." : "Award Badge"}
@@ -276,7 +276,7 @@ export function CaliberBadgeInline({ playerId }: { playerId: number }) {
   return (
     <Badge
       variant="outline"
-      className="gap-1 border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-yellow-500/10 text-amber-400"
+      className="gap-1 border-accent/30 bg-gradient-to-r from-accent/10 to-accent/5 text-accent"
       data-testid="badge-caliber-inline"
     >
       <Award className="h-3 w-3" />

@@ -83,8 +83,8 @@ const TIER_GLOW_COLORS: Record<string, { glow: string; border: string; text: str
   "Rookie": { glow: "rgba(113,113,122,0.3)", border: "border-zinc-500/40", text: "text-zinc-400" },
   "Starter": { glow: "rgba(59,130,246,0.4)", border: "border-blue-500/50", text: "text-blue-400" },
   "All-Star": { glow: "rgba(168,85,247,0.5)", border: "border-purple-500/50", text: "text-purple-400" },
-  "MVP": { glow: "rgba(245,158,11,0.5)", border: "border-amber-500/50", text: "text-amber-400" },
-  "Hall of Fame": { glow: "rgba(251,146,60,0.6)", border: "border-orange-500/50", text: "text-orange-400" },
+  "MVP": { glow: "rgba(245,158,11,0.5)", border: "border-accent/50", text: "text-accent" },
+  "Hall of Fame": { glow: "rgba(251,146,60,0.6)", border: "border-accent/50", text: "text-accent" },
 };
 
 function getGradeValue(grade: string | null): number {

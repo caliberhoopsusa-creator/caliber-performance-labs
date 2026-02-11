@@ -28,13 +28,13 @@ export function TeamStatsCard({
   return (
     <div className={cn(
       "rounded-2xl p-6",
-      side === "left" ? "bg-primary/5" : "bg-secondary/5"
+      side === "left" ? "bg-accent/5" : "bg-secondary/5"
     )} data-testid={`card-team-stats-${side}`}>
       <div className="flex flex-col items-center gap-4">
         <div className={cn(
           "w-20 h-20 rounded-full flex items-center justify-center text-3xl font-display font-bold shadow-xl",
           side === "left" 
-            ? "bg-primary/20 text-primary border-2 border-primary/30" 
+            ? "bg-accent/20 text-accent border-2 border-accent/30" 
             : "bg-secondary text-white border-2 border-white/10"
         )}>
           <Users className="w-10 h-10" />

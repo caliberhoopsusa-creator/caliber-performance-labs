@@ -85,7 +85,7 @@ export function WorkoutCard({ workout, onDelete, isDeleting }: WorkoutCardProps)
   const [showVideoModal, setShowVideoModal] = useState(false);
   
   const Icon = workoutIcons[workout.workoutType] || Dumbbell;
-  const iconColor = workoutColors[workout.workoutType] || "text-primary";
+  const iconColor = workoutColors[workout.workoutType] || "text-accent";
   
   return (
     <div 
@@ -137,7 +137,7 @@ export function WorkoutCard({ workout, onDelete, isDeleting }: WorkoutCardProps)
               <Button
                 size="sm"
                 variant="outline"
-                className="mt-3 gap-2 border-primary/30 text-primary"
+                className="mt-3 gap-2 border-accent/30 text-accent"
                 onClick={() => setShowVideoModal(true)}
                 data-testid={`workout-video-${workout.id}`}
               >

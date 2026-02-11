@@ -82,11 +82,11 @@ function getGradeColor(grade: string) {
     };
   }
   return {
-    bg: "from-red-500/20 to-orange-600/20",
+    bg: "from-red-500/20 to-accent/20",
     border: "border-red-500/50",
     text: "text-red-400",
     glow: "shadow-red-500/30",
-    accent: "bg-gradient-to-r from-red-500 to-orange-500",
+    accent: "bg-gradient-to-r from-red-500 to-accent",
   };
 }
 
@@ -105,7 +105,7 @@ export default function PlayerCard() {
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
       </div>
     );
   }
@@ -114,7 +114,7 @@ export default function PlayerCard() {
     return (
       <div className="flex flex-col items-center justify-center h-[80vh] text-center">
         <h2 className="text-2xl font-display font-bold text-white mb-2">Player Not Found</h2>
-        <Link href="/players" className="text-primary hover:underline">Return to Roster</Link>
+        <Link href="/players" className="text-accent hover:underline">Return to Roster</Link>
       </div>
     );
   }
@@ -200,8 +200,8 @@ export default function PlayerCard() {
           gradeColors.bg
         )} />
 
-        <div className="absolute top-0 right-0 w-48 h-48 bg-primary/10 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-0 left-0 w-56 h-56 bg-primary/5 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2" />
+        <div className="absolute top-0 right-0 w-48 h-48 bg-accent/10 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute bottom-0 left-0 w-56 h-56 bg-accent/5 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2" />
 
         <div className={cn(
           "absolute top-0 left-0 right-0 h-1",
@@ -211,8 +211,8 @@ export default function PlayerCard() {
         <div className="relative z-10 h-full flex flex-col p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
-              <Activity className="w-5 h-5 text-primary" />
-              <span className="text-xs font-bold uppercase tracking-widest text-primary">Caliber</span>
+              <Activity className="w-5 h-5 text-accent" />
+              <span className="text-xs font-bold uppercase tracking-widest text-accent">Caliber</span>
             </div>
             <div className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
               {games.length} Games
@@ -289,7 +289,7 @@ export default function PlayerCard() {
           {recentBadges.length > 0 && (
             <div className="mb-6">
               <div className="flex items-center gap-2 mb-3">
-                <Trophy className="w-4 h-4 text-primary" />
+                <Trophy className="w-4 h-4 text-accent" />
                 <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Recent Badges</span>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -299,10 +299,10 @@ export default function PlayerCard() {
                   return (
                     <div
                       key={badge.id}
-                      className="flex items-center gap-1.5 bg-primary/20 border border-primary/30 rounded-full px-2.5 py-1"
+                      className="flex items-center gap-1.5 bg-accent/20 border border-accent/30 rounded-full px-2.5 py-1"
                     >
-                      <BadgeIcon className="w-3.5 h-3.5 text-primary" />
-                      <span className="text-[10px] font-bold text-primary uppercase tracking-wider">
+                      <BadgeIcon className="w-3.5 h-3.5 text-accent" />
+                      <span className="text-[10px] font-bold text-accent uppercase tracking-wider">
                         {badgeDef?.name || badge.badgeType}
                       </span>
                     </div>
