@@ -6,7 +6,7 @@ import {
   Shield, Zap, Quote, ChevronRight, Star
 } from "lucide-react";
 import { Link } from "wouter";
-import caliberLogo from "@assets/caliber-logo-orange.png";
+import { CaliberLogo } from "@/components/CaliberLogo";
 
 const features = [
   { icon: BarChart3, title: "Performance Grades", description: "Instant A-F grades based on position-weighted stats after every game." },
@@ -87,7 +87,7 @@ export default function Landing() {
       <nav className="sticky top-0 z-[100] bg-background/80 backdrop-blur-lg border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 flex-wrap">
-            <img src={caliberLogo} alt="Caliber Logo" className="h-10 w-10 rounded-md object-contain" width={40} height={40} />
+            <CaliberLogo size={40} color="#F97316" />
             <span className="text-xl font-bold font-display text-white tracking-wider uppercase">CALIBER</span>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
@@ -476,7 +476,7 @@ export default function Landing() {
           <div className="grid md:grid-cols-4 gap-12 mb-12">
             <div className="md:col-span-2 space-y-4">
               <div className="flex items-center gap-3 flex-wrap">
-                <img src={caliberLogo} alt="Caliber Logo" className="h-10 w-10 rounded-md object-contain" width={40} height={40} />
+                <CaliberLogo size={40} color="#F97316" />
                 <span className="text-xl font-bold font-display text-white tracking-wider uppercase">CALIBER</span>
               </div>
               <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">

@@ -10,8 +10,9 @@ import {
   UsersRound, CalendarCheck, Eye, UserCircle, LogOut, CreditCard, Lock, Dumbbell, 
   CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, Bell, ShoppingBag, GraduationCap, Radio
 } from "lucide-react";
-import caliberLogo from "@assets/caliber-logo-orange.png";
 import { cn } from "@/lib/utils";
+import { CaliberLogo } from "@/components/CaliberLogo";
+import { useEquippedItems } from "@/contexts/EquippedItemsContext";
 import { useSubscription, type SubscriptionTier } from "@/hooks/use-subscription";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -43,6 +44,8 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
   const { toast } = useToast();
   const prefersReducedMotion = useReducedMotion();
   
+  const { equippedTheme } = useEquippedItems();
+  const drawerThemeColor = equippedTheme?.item?.value || '#F97316';
   const isPlayer = userRole === 'player';
 
   const handleRoleSwitch = () => {
@@ -189,7 +192,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
             <div className="flex items-center gap-4">
               <div className="relative">
                 <div className="absolute inset-[-3px] rounded-xl bg-gradient-to-br from-accent/40 to-accent/20 blur-sm" />
-                <img src={caliberLogo} alt="Caliber" className="relative w-11 h-11 rounded-xl shadow-lg shadow-accent/20 object-contain" width={44} height={44} />
+                <CaliberLogo size={44} color={drawerThemeColor} className="relative" />
               </div>
               <div>
                 <h2 className="font-display font-bold text-white text-xl uppercase tracking-wider">Caliber</h2>

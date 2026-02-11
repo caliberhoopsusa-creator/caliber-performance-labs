@@ -2,8 +2,9 @@ import { Link, useLocation } from "wouter";
 import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, ShoppingBag, ClipboardCheck, Medal, GraduationCap, Heart, Radio, Wand2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import caliberLogo from "@assets/caliber-logo-monogram.png";
 import { cn } from "@/lib/utils";
+import { CaliberLogo } from "@/components/CaliberLogo";
+import { useEquippedItems } from "@/contexts/EquippedItemsContext";
 import { AlertsBadge } from "@/components/AlertsCenter";
 import { Button } from "@/components/ui/button";
 import { useSubscription, type SubscriptionTier } from "@/hooks/use-subscription";
@@ -36,6 +37,8 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
 
   // For players: show their profile and limited options
   // For coaches: show full navigation with all coach tools
+  const { equippedTheme } = useEquippedItems();
+  const sidebarThemeColor = equippedTheme?.item?.value || '#F97316';
   const isPlayer = userRole === 'player';
   const isCoach = userRole === 'coach';
 
@@ -166,7 +169,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
   return (
     <div className="hidden md:flex flex-col w-64 bg-sidebar border-r border-border h-screen sticky top-0 overflow-y-auto">
       <div className="p-5 flex items-center gap-3 border-b border-border">
-        <img src={caliberLogo} alt="Caliber Logo" className="h-9 w-9 rounded-lg shadow-lg shadow-black/20 object-contain" width={36} height={36} />
+        <CaliberLogo size={36} color={sidebarThemeColor} />
         <div className="flex-1">
           <h1 className="text-xl font-bold font-display text-white tracking-wider uppercase">CALIBER</h1>
           <button 

@@ -21,6 +21,8 @@ import { XPNotificationProvider } from "@/components/XPToast";
 import { useAuth } from "@/hooks/use-auth";
 import { useOffline } from "@/hooks/use-offline";
 import { useToast } from "@/hooks/use-toast";
+import { useEquippedItems } from "@/contexts/EquippedItemsContext";
+import { CaliberLogo } from "@/components/CaliberLogo";
 import { Loader2, ChevronLeft, Coins, Package } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
@@ -190,7 +192,12 @@ function PublicPricing() {
               Back
             </Button>
           </Link>
-          <h1 className="font-display text-xl font-bold tracking-tight text-accent">CALIBER</h1>
+          <Link href="/">
+            <div className="flex items-center gap-2">
+              <CaliberLogo size={28} color="#F97316" />
+              <span className="font-display text-xl font-bold tracking-tight text-accent">CALIBER</span>
+            </div>
+          </Link>
           <div className="w-20" />
         </div>
       </header>
@@ -198,6 +205,20 @@ function PublicPricing() {
         <Pricing />
       </main>
     </div>
+  );
+}
+
+function AuthenticatedLogo() {
+  const { equippedTheme } = useEquippedItems();
+  const themeColor = equippedTheme?.item?.value || '#F97316';
+
+  return (
+    <Link href="/">
+      <div className="flex items-center gap-2">
+        <CaliberLogo size={28} color={themeColor} className="h-7 w-7 md:h-8 md:w-8" />
+        <span className="hidden md:block text-lg font-bold font-display tracking-wider uppercase" style={{ color: themeColor }}>CALIBER</span>
+      </div>
+    </Link>
   );
 }
 
@@ -277,6 +298,7 @@ function MainRouter() {
           <header className="mobile-header-blur md:static md:backdrop-blur-none md:bg-transparent relative z-10 flex items-center justify-between gap-2 px-3 py-2 md:p-4 md:px-8 border-b border-border overflow-visible">
             <div className="flex items-center gap-2 overflow-visible">
               <MobileDrawer userRole={extendedUser.role!} playerId={extendedUser.playerId} />
+              <AuthenticatedLogo />
               <HeaderCoinDisplay />
             </div>
             <div className="flex items-center gap-2 overflow-visible">

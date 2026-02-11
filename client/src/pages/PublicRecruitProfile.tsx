@@ -7,7 +7,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Loader2, MapPin, GraduationCap, Trophy, Award, Share2, ExternalLink, Star, Target, Activity, TrendingUp, TrendingDown, Minus, Flame, Mail, Copy, Shield, Zap, Clock, CheckCircle, Eye, BookOpen } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import caliberLogo from "@assets/caliber-logo-orange.png";
+import { CaliberLogo } from "@/components/CaliberLogo";
 
 interface PublicBadge {
   type: string;
@@ -273,7 +273,7 @@ export default function PublicRecruitProfile() {
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-[hsl(220,15%,8%)]/90 border-b border-white/[0.06]">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <img src={caliberLogo} alt="Caliber" className="h-7" data-testid="img-caliber-logo" />
+            <CaliberLogo size={28} color="#F97316" />
           </div>
           <Button
             variant="outline"
@@ -641,7 +641,7 @@ export default function PublicRecruitProfile() {
           </div>
 
           <div className="text-center pb-8">
-            <img src={caliberLogo} alt="Caliber" className="h-5 mx-auto opacity-30" />
+            <CaliberLogo size={20} color="#F97316" className="mx-auto opacity-30" />
             <p className="text-[10px] text-white/15 mt-1.5">Powered by Caliber Performance Labs</p>
           </div>
         </div>
