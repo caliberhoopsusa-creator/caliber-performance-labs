@@ -60,14 +60,14 @@ interface PlayerStats {
 type StatType = 'points_1' | 'points_2' | 'points_3' | 'rebound' | 'assist' | 'steal' | 'block' | 'turnover' | 'foul';
 
 const STAT_CONFIG: Record<StatType, { label: string; shortLabel: string; color: string; bgColor: string }> = {
-  points_1: { label: '1 PT', shortLabel: '1', color: 'text-green-400', bgColor: 'bg-green-600' },
+  points_1: { label: '1 PT', shortLabel: '1', color: 'text-green-600 dark:text-green-400', bgColor: 'bg-green-600' },
   points_2: { label: '2 PT', shortLabel: '2', color: 'text-accent', bgColor: 'bg-accent' },
-  points_3: { label: '3 PT', shortLabel: '3', color: 'text-blue-400', bgColor: 'bg-blue-600' },
+  points_3: { label: '3 PT', shortLabel: '3', color: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-600' },
   rebound: { label: 'REB', shortLabel: 'R', color: 'text-accent', bgColor: 'bg-accent/20 border-accent/50' },
-  assist: { label: 'AST', shortLabel: 'A', color: 'text-purple-400', bgColor: 'bg-purple-600/20 border-purple-500/50' },
-  steal: { label: 'STL', shortLabel: 'S', color: 'text-yellow-400', bgColor: 'bg-yellow-600/20 border-yellow-500/50' },
-  block: { label: 'BLK', shortLabel: 'B', color: 'text-red-400', bgColor: 'bg-red-600/20 border-red-500/50' },
-  turnover: { label: 'TO', shortLabel: 'TO', color: 'text-rose-400', bgColor: 'bg-rose-600/20 border-rose-500/50' },
+  assist: { label: 'AST', shortLabel: 'A', color: 'text-purple-600 dark:text-purple-400', bgColor: 'bg-purple-600/20 border-purple-500/50' },
+  steal: { label: 'STL', shortLabel: 'S', color: 'text-yellow-600 dark:text-yellow-400', bgColor: 'bg-yellow-600/20 border-yellow-500/50' },
+  block: { label: 'BLK', shortLabel: 'B', color: 'text-red-600 dark:text-red-400', bgColor: 'bg-red-600/20 border-red-500/50' },
+  turnover: { label: 'TO', shortLabel: 'TO', color: 'text-rose-600 dark:text-rose-400', bgColor: 'bg-rose-600/20 border-rose-500/50' },
   foul: { label: 'FOUL', shortLabel: 'F', color: 'text-accent', bgColor: 'bg-accent/20 border-accent/50' },
 };
 
@@ -629,7 +629,7 @@ export default function LiveGameMode() {
                         <div className="text-muted-foreground">BLK</div>
                       </div>
                       <div>
-                        <div className="font-bold text-rose-400">{stats.turnovers}</div>
+                        <div className="font-bold text-rose-600 dark:text-rose-400">{stats.turnovers}</div>
                         <div className="text-muted-foreground">TO</div>
                       </div>
                       <div>

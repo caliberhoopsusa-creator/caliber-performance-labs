@@ -36,7 +36,7 @@ export default function CoachVerify() {
         
         <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20">
           <div className="flex items-center gap-2 mb-2">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             <span className="font-medium text-white/90">Quick Verify</span>
           </div>
           <p className="text-sm text-white/60">

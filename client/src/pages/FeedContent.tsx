@@ -152,15 +152,15 @@ const ACTIVITY_ICONS: Record<string, typeof Target> = {
 
 const ACTIVITY_COLORS: Record<string, string> = {
   game: "text-accent",
-  badge: "text-yellow-400",
-  streak: "text-red-400",
-  goal: "text-emerald-400",
-  challenge: "text-purple-400",
-  repost: "text-blue-400",
-  poll: "text-indigo-400",
-  prediction: "text-pink-400",
+  badge: "text-yellow-600 dark:text-yellow-400",
+  streak: "text-red-600 dark:text-red-400",
+  goal: "text-emerald-600 dark:text-emerald-400",
+  challenge: "text-purple-600 dark:text-purple-400",
+  repost: "text-blue-600 dark:text-blue-400",
+  poll: "text-indigo-600 dark:text-indigo-400",
+  prediction: "text-pink-600 dark:text-pink-400",
   story: "text-accent",
-  workout: "text-emerald-400",
+  workout: "text-emerald-600 dark:text-emerald-400",
 };
 
 interface FeedComment {
@@ -781,11 +781,11 @@ function parsePollSubtext(subtext: string | null) {
 }
 
 const GRADE_COLORS: Record<string, string> = {
-  "A+": "text-emerald-400", "A": "text-emerald-400", "A-": "text-emerald-400",
-  "B+": "text-blue-400", "B": "text-blue-400", "B-": "text-blue-400",
-  "C+": "text-yellow-400", "C": "text-yellow-400", "C-": "text-yellow-400",
-  "D+": "text-orange-400", "D": "text-orange-400", "D-": "text-orange-400",
-  "F": "text-red-400",
+  "A+": "text-emerald-600 dark:text-emerald-400", "A": "text-emerald-600 dark:text-emerald-400", "A-": "text-emerald-600 dark:text-emerald-400",
+  "B+": "text-blue-600 dark:text-blue-400", "B": "text-blue-600 dark:text-blue-400", "B-": "text-blue-600 dark:text-blue-400",
+  "C+": "text-yellow-600 dark:text-yellow-400", "C": "text-yellow-600 dark:text-yellow-400", "C-": "text-yellow-600 dark:text-yellow-400",
+  "D+": "text-orange-600 dark:text-orange-400", "D": "text-orange-600 dark:text-orange-400", "D-": "text-orange-600 dark:text-orange-400",
+  "F": "text-red-600 dark:text-red-400",
 };
 
 const GRADE_BG: Record<string, string> = {
@@ -874,11 +874,11 @@ function WorkoutContent({ activity }: { activity: FeedActivity }) {
       <div className="rounded-md bg-emerald-500/5 p-3 space-y-3">
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <div className="flex items-center gap-2">
-            <Dumbbell className="w-4 h-4 text-emerald-400" />
+            <Dumbbell className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span className="text-sm font-semibold text-foreground">{parsed?.workoutName || "Workout"}</span>
           </div>
           {parsed?.duration && (
-            <div className="flex items-center gap-1.5 text-emerald-400">
+            <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
               <Clock className="w-3.5 h-3.5" />
               <span className="text-sm font-bold">{parsed.duration} min</span>
             </div>
@@ -891,7 +891,7 @@ function WorkoutContent({ activity }: { activity: FeedActivity }) {
           <div className="space-y-1.5">
             <div className="flex items-center justify-between gap-2">
               <span className="text-xs text-muted-foreground">Intensity</span>
-              <span className="text-xs font-semibold text-emerald-400">{intensity.intensity}/{intensity.max}</span>
+              <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">{intensity.intensity}/{intensity.max}</span>
             </div>
             <Progress value={(intensity.intensity / intensity.max) * 100} className="h-2 [&>div]:bg-gradient-to-r [&>div]:from-emerald-500 [&>div]:to-emerald-400" />
           </div>
@@ -935,7 +935,7 @@ function PollContent({ activity }: { activity: FeedActivity }) {
       {activity.subtext && <p className="sr-only" data-testid={`text-subtext-${activity.id}`}>{activity.subtext}</p>}
       <div className="rounded-md bg-indigo-500/5 p-3">
         <div className="flex items-center gap-2">
-          <BarChart3 className="w-5 h-5 text-indigo-400" />
+          <BarChart3 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
           <span className="text-sm font-medium text-foreground">Poll</span>
           {optionCount && (
             <Badge variant="secondary" className="text-xs">{optionCount} options</Badge>
@@ -953,7 +953,7 @@ function RepostContent({ activity }: { activity: FeedActivity }) {
       {activity.subtext && <p className="sr-only" data-testid={`text-subtext-${activity.id}`}>{activity.subtext}</p>}
       <div className="rounded-md bg-muted/50 p-3">
         <div className="flex items-start gap-2">
-          <Quote className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+          <Quote className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
           <div className="min-w-0">
             <p className="text-sm text-foreground">{activity.headline}</p>
             {activity.subtext && (

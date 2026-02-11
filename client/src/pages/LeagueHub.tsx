@@ -137,7 +137,7 @@ function LeagueCard({ league, index }: LeagueCardProps) {
                   {isBasketball ? (
                     <Dribbble className="w-7 h-7 text-accent" />
                   ) : (
-                    <GiAmericanFootballBall className="w-7 h-7 text-green-400" />
+                    <GiAmericanFootballBall className="w-7 h-7 text-green-600 dark:text-green-400" />
                   )}
                 </div>
               </div>
@@ -167,7 +167,7 @@ function LeagueCard({ league, index }: LeagueCardProps) {
                   "text-xs gap-1 py-0.5",
                   isBasketball
                     ? "border-accent/30 text-accent bg-accent/10"
-                    : "border-green-500/30 text-green-400 bg-green-500/10"
+                    : "border-green-500/30 text-green-600 dark:text-green-400 bg-green-500/10"
                 )}
               >
                 {isBasketball ? (
@@ -555,7 +555,7 @@ export default function LeagueHub() {
           size="sm"
           className={cn(
             "relative gap-1.5",
-            sportFilter === "football" && "text-green-400"
+            sportFilter === "football" && "text-green-600 dark:text-green-400"
           )}
           onClick={() => setSportFilter("football")}
           data-testid="filter-football"

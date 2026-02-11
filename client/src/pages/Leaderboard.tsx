@@ -58,7 +58,7 @@ const RANK_STYLES = {
     border: "border-yellow-500/40",
     glow: "shadow-[0_0_30px_rgba(234,179,8,0.3)]",
     icon: Trophy,
-    iconColor: "text-yellow-400",
+    iconColor: "text-yellow-600 dark:text-yellow-400",
     ringColor: "ring-yellow-500/30",
   },
   2: {
@@ -66,7 +66,7 @@ const RANK_STYLES = {
     border: "border-slate-400/40",
     glow: "shadow-[0_0_20px_rgba(148,163,184,0.2)]",
     icon: Medal,
-    iconColor: "text-slate-300",
+    iconColor: "text-slate-600 dark:text-slate-300",
     ringColor: "ring-slate-400/30",
   },
   3: {
@@ -74,7 +74,7 @@ const RANK_STYLES = {
     border: "border-orange-600/40",
     glow: "shadow-[0_0_20px_rgba(234,88,12,0.2)]",
     icon: Medal,
-    iconColor: "text-orange-400",
+    iconColor: "text-orange-600 dark:text-orange-400",
     ringColor: "ring-orange-500/30",
   },
 };
@@ -149,8 +149,8 @@ export default function Leaderboard() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-yellow-400" style={{ filter: "drop-shadow(0 0 8px #fbbf24)" }} />
-                <span className="text-xs uppercase tracking-wider text-yellow-400 font-semibold">Rankings</span>
+                <Trophy className="w-5 h-5 text-yellow-600 dark:text-yellow-400" style={{ filter: "drop-shadow(0 0 8px #fbbf24)" }} />
+                <span className="text-xs uppercase tracking-wider text-yellow-600 dark:text-yellow-400 font-semibold">Rankings</span>
               </div>
               <h1 className="text-3xl md:text-4xl font-bold" data-testid="text-leaderboard-title">
                 <span className="bg-gradient-to-r from-white via-yellow-200 to-yellow-400 bg-clip-text text-transparent">

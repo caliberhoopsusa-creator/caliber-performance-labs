@@ -321,9 +321,9 @@ export default function PracticesContent() {
   }, [drills, sportDrillCategories]);
 
   const getAttendanceColor = (rate: number) => {
-    if (rate >= 80) return "text-green-400";
-    if (rate >= 60) return "text-yellow-400";
-    return "text-red-400";
+    if (rate >= 80) return "text-green-600 dark:text-green-400";
+    if (rate >= 60) return "text-yellow-600 dark:text-yellow-400";
+    return "text-red-600 dark:text-red-400";
   };
 
   if (practicesLoading || playersLoading) {
@@ -420,8 +420,8 @@ export default function PracticesContent() {
       {activePractices.length > 0 && (
         <Card className="border-green-500/30 bg-green-500/5">
           <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-green-400 font-display">
-              <Zap className="w-5 h-5" />
+            <CardTitle className="flex items-center gap-2 text-green-600 dark:text-green-400 font-display">
+              <Zap className="w-5 h-5 text-green-600 dark:text-green-400" />
               Active Practice Session
             </CardTitle>
           </CardHeader>
@@ -460,7 +460,7 @@ export default function PracticesContent() {
             <DialogContent className="sm:max-w-[450px]" data-testid="dialog-start-live-practice">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-green-400" />
+                  <Zap className="w-5 h-5 text-green-600 dark:text-green-400" />
                   Start Live Practice
                 </DialogTitle>
                 <DialogDescription>
@@ -809,7 +809,7 @@ function PracticeCard({
               <Button 
                 size="icon" 
                 variant="ghost" 
-                className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                className="h-8 w-8 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-500/10"
                 onClick={(e) => { e.stopPropagation(); onDelete(); }}
                 data-testid={`button-delete-practice-${practice.id}`}
               >
@@ -861,9 +861,9 @@ function PracticeCard({
                         <span className="font-medium text-foreground">{player.name}</span>
                       </div>
                       {record.attended ? (
-                        <CheckCircle2 className="w-5 h-5 text-green-400" />
+                        <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
                       ) : (
-                        <XCircle className="w-5 h-5 text-red-400" />
+                        <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
                       )}
                     </div>
                     

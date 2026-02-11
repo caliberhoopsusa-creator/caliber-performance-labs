@@ -67,9 +67,9 @@ function EventTypeIcon({ type }: { type: string }) {
 function EventTypeBadge({ type }: { type: string }) {
   const colors: Record<string, string> = {
     game: 'bg-accent/20 text-accent border-accent/30',
-    practice: 'bg-green-500/20 text-green-400 border-green-500/30',
-    workout: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-    meeting: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+    practice: 'bg-green-500/20 text-green-600 dark:text-green-400 border-green-500/30',
+    workout: 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30',
+    meeting: 'bg-purple-500/20 text-purple-600 dark:text-purple-400 border-purple-500/30',
   };
 
   return (
@@ -250,7 +250,7 @@ export default function TeamHub() {
                 onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openAddEvent('practice')}
                 data-testid="button-schedule-practice"
               >
-                <Target className="w-6 h-6 text-green-400" />
+                <Target className="w-6 h-6 text-green-600 dark:text-green-400" />
                 <span className="text-sm font-medium">Practice</span>
               </div>
               <div 
@@ -272,7 +272,7 @@ export default function TeamHub() {
                 onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openAddEvent('workout')}
                 data-testid="button-schedule-workout"
               >
-                <Dumbbell className="w-6 h-6 text-blue-400" />
+                <Dumbbell className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 <span className="text-sm font-medium">Workout</span>
               </div>
               <div 
@@ -283,7 +283,7 @@ export default function TeamHub() {
                 onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openAddEvent('meeting')}
                 data-testid="button-schedule-meeting"
               >
-                <Users className="w-6 h-6 text-purple-400" />
+                <Users className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                 <span className="text-sm font-medium">Meeting</span>
               </div>
             </div>
@@ -361,7 +361,7 @@ export default function TeamHub() {
             <CardContent>
               <div className="flex items-center gap-4 p-4 rounded-lg bg-white/5">
                 <div className="w-12 h-12 rounded-lg bg-green-500/20 flex items-center justify-center">
-                  <Timer className="w-6 h-6 text-green-400" />
+                  <Timer className="w-6 h-6 text-green-600 dark:text-green-400" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">No active practice</p>
@@ -390,21 +390,21 @@ export default function TeamHub() {
               </div>
               <div className="flex items-center justify-between p-3 rounded-lg bg-green-500/10">
                 <div className="flex items-center gap-3">
-                  <Target className="w-5 h-5 text-green-400" />
+                  <Target className="w-5 h-5 text-green-600 dark:text-green-400" />
                   <span className="text-sm">Practices</span>
                 </div>
                 <span className="text-xl font-bold">{eventsByType.practices}</span>
               </div>
               <div className="flex items-center justify-between p-3 rounded-lg bg-blue-500/10">
                 <div className="flex items-center gap-3">
-                  <Dumbbell className="w-5 h-5 text-blue-400" />
+                  <Dumbbell className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   <span className="text-sm">Workouts</span>
                 </div>
                 <span className="text-xl font-bold">{eventsByType.workouts}</span>
               </div>
               <div className="flex items-center justify-between p-3 rounded-lg bg-purple-500/10">
                 <div className="flex items-center gap-3">
-                  <Users className="w-5 h-5 text-purple-400" />
+                  <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   <span className="text-sm">Meetings</span>
                 </div>
                 <span className="text-xl font-bold">{eventsByType.meetings}</span>

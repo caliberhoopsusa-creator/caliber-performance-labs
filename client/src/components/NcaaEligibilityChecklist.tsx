@@ -339,7 +339,7 @@ export function NcaaEligibilityChecklist({ playerId }: NcaaEligibilityChecklistP
           className={cn(
             "text-sm px-3 py-1",
             completionPercentage === 100
-              ? "border-emerald-500/50 text-emerald-400 bg-emerald-500/10"
+              ? "border-emerald-500/50 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10"
               : "border-accent/50 text-accent bg-accent/10"
           )}
           data-testid="completion-badge"
@@ -461,7 +461,7 @@ export function NcaaEligibilityChecklist({ playerId }: NcaaEligibilityChecklistP
                           <span
                             className={cn(
                               "text-sm transition-colors",
-                              isChecked ? "text-emerald-400" : "text-foreground/80"
+                              isChecked ? "text-emerald-600 dark:text-emerald-400" : "text-foreground/80"
                             )}
                           >
                             {item.label}

@@ -37,32 +37,32 @@ function getGradeColor(grade: string) {
   const normalizedGrade = grade?.trim().toUpperCase() || "";
   if (["A+", "A", "A-"].includes(normalizedGrade)) {
     return {
-      bg: "from-amber-500/20 to-yellow-600/20",
+      bg: "from-amber-500/10 dark:from-amber-500/20 to-yellow-600/10 dark:to-yellow-600/20",
       border: "border-amber-500/50",
-      text: "text-amber-400",
+      text: "text-amber-600 dark:text-amber-400",
       glow: "shadow-amber-500/30",
     };
   }
   if (["B+", "B", "B-"].includes(normalizedGrade)) {
     return {
-      bg: "from-slate-400/20 to-gray-500/20",
+      bg: "from-slate-400/10 dark:from-slate-400/20 to-gray-500/10 dark:to-gray-500/20",
       border: "border-slate-400/50",
-      text: "text-slate-300",
+      text: "text-slate-600 dark:text-slate-300",
       glow: "shadow-slate-400/30",
     };
   }
   if (["C+", "C", "C-"].includes(normalizedGrade)) {
     return {
-      bg: "from-yellow-500/20 to-orange-500/20",
+      bg: "from-yellow-500/10 dark:from-yellow-500/20 to-orange-500/10 dark:to-orange-500/20",
       border: "border-yellow-500/50",
-      text: "text-yellow-400",
+      text: "text-yellow-600 dark:text-yellow-400",
       glow: "shadow-yellow-500/30",
     };
   }
   return {
-    bg: "from-red-500/20 to-orange-600/20",
+    bg: "from-red-500/10 dark:from-red-500/20 to-orange-600/10 dark:to-orange-600/20",
     border: "border-red-500/50",
-    text: "text-red-400",
+    text: "text-red-600 dark:text-red-400",
     glow: "shadow-red-500/30",
   };
 }

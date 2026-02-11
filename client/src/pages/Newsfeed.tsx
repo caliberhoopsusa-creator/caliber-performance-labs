@@ -45,26 +45,28 @@ const ACTIVITY_ICONS: Record<string, typeof Target> = {
 
 const ACTIVITY_GRADIENTS: Record<string, string> = {
   game: "from-accent/30 to-accent/10",
-  badge: "from-yellow-500/30 to-accent/10",
-  streak: "from-red-500/30 to-accent/10",
-  goal: "from-emerald-500/30 to-green-600/10",
-  challenge: "from-purple-500/30 to-violet-600/10",
-  repost: "from-blue-500/30 to-accent/10",
-  poll: "from-indigo-500/30 to-blue-600/10",
-  prediction: "from-pink-500/30 to-rose-600/10",
+  badge: "from-yellow-500/15 dark:from-yellow-500/30 to-accent/10",
+  streak: "from-red-500/15 dark:from-red-500/30 to-accent/10",
+  goal: "from-emerald-500/15 dark:from-emerald-500/30 to-green-600/10",
+  challenge: "from-purple-500/15 dark:from-purple-500/30 to-violet-600/10",
+  repost: "from-blue-500/15 dark:from-blue-500/30 to-accent/10",
+  poll: "from-indigo-500/15 dark:from-indigo-500/30 to-blue-600/10",
+  prediction: "from-pink-500/15 dark:from-pink-500/30 to-rose-600/10",
   story: "from-accent/30 to-teal-600/10",
+  fallback: "from-gray-500/10 dark:from-gray-500/30 to-gray-600/5 dark:to-gray-600/10",
 };
 
 const ACTIVITY_COLORS: Record<string, string> = {
   game: "text-accent",
-  badge: "text-yellow-400",
-  streak: "text-red-400",
-  goal: "text-emerald-400",
-  challenge: "text-purple-400",
-  repost: "text-blue-400",
-  poll: "text-indigo-400",
-  prediction: "text-pink-400",
+  badge: "text-yellow-600 dark:text-yellow-400",
+  streak: "text-red-600 dark:text-red-400",
+  goal: "text-emerald-600 dark:text-emerald-400",
+  challenge: "text-purple-600 dark:text-purple-400",
+  repost: "text-blue-600 dark:text-blue-400",
+  poll: "text-indigo-600 dark:text-indigo-400",
+  prediction: "text-pink-600 dark:text-pink-400",
   story: "text-accent",
+  fallback: "text-gray-600 dark:text-gray-400",
 };
 
 const ACTIVITY_GLOW: Record<string, string> = {
@@ -110,8 +112,8 @@ function ActivitySkeleton({ index }: { index: number }) {
 function ActivityCard({ activity, index }: { activity: FeedActivity; index: number }) {
   const [, setLocation] = useLocation();
   const Icon = ACTIVITY_ICONS[activity.activityType] || Rss;
-  const gradient = ACTIVITY_GRADIENTS[activity.activityType] || "from-gray-500/30 to-gray-600/10";
-  const iconColor = ACTIVITY_COLORS[activity.activityType] || "text-gray-400";
+  const gradient = ACTIVITY_GRADIENTS[activity.activityType] || ACTIVITY_GRADIENTS.fallback;
+  const iconColor = ACTIVITY_COLORS[activity.activityType] || ACTIVITY_COLORS.fallback;
   const glowColor = ACTIVITY_GLOW[activity.activityType] || "#6B7280";
 
   const handleClick = () => {

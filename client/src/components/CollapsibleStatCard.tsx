@@ -125,8 +125,8 @@ export function QuickStat({ label, value, icon: Icon, trend, trendValue, classNa
         {trend && trendValue && (
           <span className={cn(
             "text-[10px] font-medium",
-            trend === "up" && "text-green-400",
-            trend === "down" && "text-red-400",
+            trend === "up" && "text-green-600 dark:text-green-400",
+            trend === "down" && "text-red-600 dark:text-red-400",
             trend === "neutral" && "text-muted-foreground"
           )}>
             {trend === "up" && "↑"}{trend === "down" && "↓"}{trendValue}

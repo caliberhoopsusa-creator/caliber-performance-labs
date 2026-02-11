@@ -309,7 +309,7 @@ export default function DiscoverContent() {
 
           <section data-testid="section-suggested">
             <div className="flex items-center gap-2 mb-4">
-              <Users className="w-5 h-5 text-purple-400" />
+              <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
               <h3 className="text-lg font-display font-bold text-white tracking-wide">Suggested For You</h3>
             </div>
             {isPlayersLoading ? (
@@ -342,7 +342,7 @@ export default function DiscoverContent() {
 
           <section data-testid="section-top-performances">
             <div className="flex items-center gap-2 mb-4">
-              <Trophy className="w-5 h-5 text-yellow-400" />
+              <Trophy className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
               <h3 className="text-lg font-display font-bold text-white tracking-wide">
                 Top Performances This Week
               </h3>

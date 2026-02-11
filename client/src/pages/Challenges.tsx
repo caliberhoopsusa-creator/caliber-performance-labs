@@ -39,9 +39,9 @@ function getChallengeIcon(targetType: string) {
     case 'hustle_avg':
       return <Flame className="w-6 h-6 text-accent" />;
     case 'points_total':
-      return <Target className="w-6 h-6 text-green-400" />;
+      return <Target className="w-6 h-6 text-green-600 dark:text-green-400" />;
     case 'grade_count':
-      return <Crown className="w-6 h-6 text-yellow-400" />;
+      return <Crown className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />;
     default:
       return <Trophy className="w-6 h-6 text-accent" />;
   }
@@ -49,8 +49,8 @@ function getChallengeIcon(targetType: string) {
 
 function getChallengeTypeBadge(type: string) {
   const colors: Record<string, string> = {
-    weekly: "bg-blue-500/20 text-blue-400",
-    monthly: "bg-purple-500/20 text-purple-400",
+    weekly: "bg-blue-500/20 text-blue-600 dark:text-blue-400",
+    monthly: "bg-purple-500/20 text-purple-600 dark:text-purple-400",
     seasonal: "bg-accent/20 text-accent",
   };
   return colors[type] || "bg-muted text-muted-foreground";

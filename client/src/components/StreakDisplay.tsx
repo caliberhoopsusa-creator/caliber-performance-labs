@@ -28,15 +28,15 @@ interface CheckInResponse {
 
 const STREAK_MILESTONES = [
   { days: 3, label: "3-Day Streak", icon: Flame, color: "text-accent", xp: 25 },
-  { days: 7, label: "Week Warrior", icon: Zap, color: "text-yellow-400", xp: 75 },
-  { days: 14, label: "Two-Week Terror", icon: Award, color: "text-purple-400", xp: 150 },
-  { days: 30, label: "Monthly Monster", icon: Target, color: "text-emerald-400", xp: 300 },
+  { days: 7, label: "Week Warrior", icon: Zap, color: "text-yellow-600 dark:text-yellow-400", xp: 75 },
+  { days: 14, label: "Two-Week Terror", icon: Award, color: "text-purple-600 dark:text-purple-400", xp: 150 },
+  { days: 30, label: "Monthly Monster", icon: Target, color: "text-emerald-600 dark:text-emerald-400", xp: 300 },
 ];
 
 function getStreakLevel(streak: number): { label: string; color: string; glowColor: string } {
-  if (streak >= 30) return { label: "Legendary", color: "text-emerald-400", glowColor: "shadow-emerald-500/30" };
-  if (streak >= 14) return { label: "On Fire", color: "text-purple-400", glowColor: "shadow-purple-500/30" };
-  if (streak >= 7) return { label: "Hot Streak", color: "text-yellow-400", glowColor: "shadow-yellow-500/30" };
+  if (streak >= 30) return { label: "Legendary", color: "text-emerald-600 dark:text-emerald-400", glowColor: "shadow-emerald-500/30" };
+  if (streak >= 14) return { label: "On Fire", color: "text-purple-600 dark:text-purple-400", glowColor: "shadow-purple-500/30" };
+  if (streak >= 7) return { label: "Hot Streak", color: "text-yellow-600 dark:text-yellow-400", glowColor: "shadow-yellow-500/30" };
   if (streak >= 3) return { label: "Warming Up", color: "text-accent", glowColor: "shadow-accent/30" };
   return { label: "Getting Started", color: "text-muted-foreground", glowColor: "" };
 }

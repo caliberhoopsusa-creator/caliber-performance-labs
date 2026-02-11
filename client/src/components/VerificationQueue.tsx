@@ -93,7 +93,7 @@ export function VerificationQueue({ compact = false, maxItems }: Props) {
     return (
       <Card className="p-6 bg-card/80 border-border">
         <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-2 text-red-400">
+          <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
             <AlertCircle className="w-5 h-5" />
             <span>Failed to load verification queue</span>
           </div>
@@ -159,7 +159,7 @@ export function VerificationQueue({ compact = false, maxItems }: Props) {
           className="text-center py-8"
         >
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-500/10 flex items-center justify-center">
-            <CheckCircle className="w-8 h-8 text-emerald-400" />
+            <CheckCircle className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
           </div>
           <p className="text-muted-foreground mb-1">All caught up!</p>
           <p className="text-sm text-muted-foreground/70">No games awaiting verification</p>

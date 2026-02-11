@@ -40,12 +40,12 @@ export function StateRankingBadge({ playerId }: StateRankingBadgeProps) {
         "transition-all duration-500",
         "overflow-hidden",
         isTop10 
-          ? "bg-gradient-to-r from-yellow-500/40 via-amber-400/30 to-yellow-500/40 border-yellow-400/60 text-yellow-300 shadow-lg shadow-yellow-500/30"
+          ? "bg-gradient-to-r from-yellow-500/40 via-amber-400/30 to-yellow-500/40 border-yellow-400/60 text-yellow-600 dark:text-yellow-300 shadow-lg shadow-yellow-500/30"
           : isTop25
-          ? "bg-gradient-to-r from-purple-500/30 to-pink-500/20 border-purple-400/50 text-purple-300 shadow-lg shadow-purple-500/20"
+          ? "bg-gradient-to-r from-purple-500/30 to-pink-500/20 border-purple-400/50 text-purple-600 dark:text-purple-300 shadow-lg shadow-purple-500/20"
           : isTop50
-          ? "bg-gradient-to-r from-blue-500/30 to-accent/20 border-blue-400/50 text-blue-300 shadow-md shadow-blue-500/20"
-          : "bg-gradient-to-r from-green-500/20 to-emerald-500/15 border-green-400/40 text-green-300"
+          ? "bg-gradient-to-r from-blue-500/30 to-accent/20 border-blue-400/50 text-blue-600 dark:text-blue-300 shadow-md shadow-blue-500/20"
+          : "bg-gradient-to-r from-green-500/20 to-emerald-500/15 border-green-400/40 text-green-600 dark:text-green-300"
       )}
       data-testid="state-ranking-badge"
     >
@@ -72,9 +72,9 @@ export function StateRankingBadge({ playerId }: StateRankingBadgeProps) {
       
       <div className="relative z-10 flex items-center gap-2">
         {isTop10 ? (
-          <Crown className={cn("w-4 h-4 animate-bounce", isTop10 && "text-yellow-400")} />
+          <Crown className={cn("w-4 h-4 animate-bounce", isTop10 && "text-yellow-600 dark:text-yellow-400")} />
         ) : isTop25 ? (
-          <Star className="w-4 h-4 text-purple-400" />
+          <Star className="w-4 h-4 text-purple-600 dark:text-purple-400" />
         ) : (
           <MapPin className="w-4 h-4" />
         )}

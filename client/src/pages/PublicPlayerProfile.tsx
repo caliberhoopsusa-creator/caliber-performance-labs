@@ -113,10 +113,10 @@ const TIER_ICONS: Record<string, typeof Star> = {
 
 const TIER_COLORS: Record<string, string> = {
   Rookie: "text-gray-400 bg-gray-500/10 border-gray-500/20",
-  Starter: "text-green-400 bg-green-500/10 border-green-500/20",
-  "All-Star": "text-blue-400 bg-blue-500/10 border-blue-500/20",
-  MVP: "text-purple-400 bg-purple-500/10 border-purple-500/20",
-  "Hall of Fame": "text-yellow-400 bg-yellow-500/10 border-yellow-500/20",
+  Starter: "text-green-600 dark:text-green-400 bg-green-500/10 border-green-500/20",
+  "All-Star": "text-blue-600 dark:text-blue-400 bg-blue-500/10 border-blue-500/20",
+  MVP: "text-purple-600 dark:text-purple-400 bg-purple-500/10 border-purple-500/20",
+  "Hall of Fame": "text-yellow-600 dark:text-yellow-400 bg-yellow-500/10 border-yellow-500/20",
 };
 
 const GRADE_COLORS: Record<string, string> = {
@@ -281,8 +281,8 @@ export default function PublicPlayerProfile() {
 
   const TrendIcon = stats.performanceTrend === 'improving' ? TrendingUp : 
                     stats.performanceTrend === 'declining' ? TrendingDown : Minus;
-  const trendColor = stats.performanceTrend === 'improving' ? 'text-green-400' :
-                     stats.performanceTrend === 'declining' ? 'text-red-400' : 'text-gray-400';
+  const trendColor = stats.performanceTrend === 'improving' ? 'text-green-600 dark:text-green-400' :
+                     stats.performanceTrend === 'declining' ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400';
 
   return (
     <div className="min-h-screen bg-background text-foreground">

@@ -160,9 +160,9 @@ export function StatCard({ label, value, subValue, trend, className, highlight, 
         {trend && (
           <span className={cn(
             "flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-md backdrop-blur-sm",
-            trend === "up" ? "bg-emerald-500/20 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]" : 
-            trend === "down" ? "bg-red-500/20 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.2)]" : 
-            "bg-yellow-500/20 text-yellow-400"
+            trend === "up" ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]" : 
+            trend === "down" ? "bg-red-500/20 text-red-600 dark:text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.2)]" : 
+            "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400"
           )}>
             {trend === "up" ? <TrendingUp className="w-3 h-3" /> : trend === "down" ? <TrendingDown className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
           </span>

@@ -165,8 +165,8 @@ function LeagueDetailSkeleton() {
 function StatusBadge({ status, quarter, gameTime }: { status: string; quarter?: number | null; gameTime?: string | null }) {
   if (status === "live") {
     return (
-      <Badge className="bg-green-500/20 text-green-400 border-green-500/30 animate-pulse gap-1" data-testid="badge-status-live">
-        <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+      <Badge className="bg-green-500/20 text-green-600 dark:text-green-400 border-green-500/30 animate-pulse gap-1" data-testid="badge-status-live">
+        <span className="w-2 h-2 rounded-full bg-green-400 dark:bg-green-400 animate-pulse" />
         {quarter && gameTime ? `Q${quarter} - ${gameTime}` : "LIVE"}
       </Badge>
     );
@@ -240,14 +240,14 @@ function StandingsTable({ teams }: { teams: LeagueTeam[] }) {
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="text-center font-medium text-green-400">{team.wins}</TableCell>
-                <TableCell className="text-center font-medium text-red-400">{team.losses}</TableCell>
+                <TableCell className="text-center font-medium text-green-600 dark:text-green-400">{team.wins}</TableCell>
+                <TableCell className="text-center font-medium text-red-600 dark:text-red-400">{team.losses}</TableCell>
                 <TableCell className="text-center text-muted-foreground">{team.ties}</TableCell>
                 <TableCell className="text-center hidden sm:table-cell">{team.pointsFor}</TableCell>
                 <TableCell className="text-center hidden sm:table-cell">{team.pointsAgainst}</TableCell>
                 <TableCell className={cn(
                   "text-center hidden md:table-cell font-medium",
-                  diff > 0 ? "text-green-400" : diff < 0 ? "text-red-400" : "text-muted-foreground"
+                  diff > 0 ? "text-green-600 dark:text-green-400" : diff < 0 ? "text-red-600 dark:text-red-400" : "text-muted-foreground"
                 )}>
                   {diff > 0 ? `+${diff}` : diff}
                 </TableCell>
@@ -458,7 +458,7 @@ function TeamCard({ team, isCreator }: { team: LeagueTeam; isCreator: boolean })
                           </span>
                         </Link>
                         {member.role === "captain" && (
-                          <Badge variant="outline" className="ml-2 text-[10px] py-0 px-1 border-yellow-500/30 text-yellow-400">
+                          <Badge variant="outline" className="ml-2 text-[10px] py-0 px-1 border-yellow-500/30 text-yellow-600 dark:text-yellow-400">
                             Captain
                           </Badge>
                         )}
@@ -1056,7 +1056,7 @@ function PlayoffBracket({
 
           <div className="space-y-2">
             <h4 className="text-xs font-medium text-accent/80 uppercase tracking-wider mb-3 flex items-center gap-2">
-              <Trophy className="w-4 h-4 text-yellow-400" />
+              <Trophy className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
               Championship
             </h4>
             <div className="flex flex-col gap-6" style={{ marginTop: hasQuarterfinals ? '5rem' : '2.5rem' }}>
@@ -1077,7 +1077,7 @@ function PlayoffBracket({
           animate={{ opacity: 1, scale: 1 }}
           className="mt-6 p-6 rounded-xl bg-gradient-to-br from-accent/10 to-yellow-500/10 border border-accent/20 text-center"
         >
-          <Trophy className="w-12 h-12 text-yellow-400 mx-auto mb-3" />
+          <Trophy className="w-12 h-12 text-yellow-600 dark:text-yellow-400 mx-auto mb-3" />
           <h3 className="font-display text-xl uppercase tracking-wide text-white mb-2">Champion</h3>
           {(() => {
             const game = championship[0];
@@ -1323,7 +1323,7 @@ export default function LeagueDetail() {
               {isBasketball ? (
                 <Dribbble className="w-8 h-8 text-accent" />
               ) : (
-                <GiAmericanFootballBall className="w-8 h-8 text-green-400" />
+                <GiAmericanFootballBall className="w-8 h-8 text-green-600 dark:text-green-400" />
               )}
             </div>
             <div>
@@ -1337,7 +1337,7 @@ export default function LeagueDetail() {
                     "text-xs gap-1",
                     isBasketball
                       ? "border-accent/30 text-accent bg-accent/10"
-                      : "border-green-500/30 text-green-400 bg-green-500/10"
+                      : "border-green-500/30 text-green-600 dark:text-green-400 bg-green-500/10"
                   )}
                 >
                   {isBasketball ? <Dribbble className="w-3 h-3" /> : <GiAmericanFootballBall className="w-3 h-3" />}

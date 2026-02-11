@@ -378,7 +378,7 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
               )}
               {hasGradRate && (
                 <div className="text-center">
-                  <div className="text-lg font-bold text-emerald-400">{college.athleteGraduationRate}%</div>
+                  <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{college.athleteGraduationRate}%</div>
                   <div className="text-[10px] text-muted-foreground uppercase">Grad Rate</div>
                 </div>
               )}
@@ -472,7 +472,7 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
                 (college.sport === 'football' && college.nflPlayersProduced) ||
                 college.averageMinutesForFreshmen) && (
                 <div className="p-3 rounded-lg bg-gradient-to-br from-emerald-500/10 to-teal-500/5 border border-emerald-500/20">
-                  <h4 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <h4 className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                     <TrendingUp className="w-3.5 h-3.5" />
                     Player Development
                   </h4>
@@ -518,7 +518,7 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
 
               {(college.niLOpportunities || college.athleticBudget || college.averageAttendance) && (
                 <div className="p-3 rounded-lg bg-gradient-to-br from-purple-500/10 to-violet-500/5 border border-purple-500/20">
-                  <h4 className="text-xs font-semibold text-purple-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <h4 className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                     <DollarSign className="w-3.5 h-3.5" />
                     Resources & Support
                   </h4>
@@ -530,7 +530,7 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
                         <Badge variant="outline" className={cn(
                           "text-[10px] ml-1",
                           college.niLOpportunities === 'High' 
-                            ? "border-emerald-500/50 text-emerald-400" 
+                            ? "border-emerald-500/50 text-emerald-600 dark:text-emerald-400" 
                             : college.niLOpportunities === 'Medium'
                             ? "border-accent/50 text-accent"
                             : "border-gray-500/50 text-muted-foreground"
@@ -566,7 +566,7 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
 
               {match.strengthsForProgram && (
                 <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                  <h4 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                  <h4 className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-2 flex items-center gap-2">
                     <Trophy className="w-3.5 h-3.5" />
                     Strengths for Program
                   </h4>
@@ -627,7 +627,7 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
                         data-testid={`button-copy-email-${match.id}`}
                       >
                         {copiedEmail ? (
-                          <Check className="w-4 h-4 mr-2 text-green-400" />
+                          <Check className="w-4 h-4 mr-2 text-green-600 dark:text-green-400" />
                         ) : (
                           <Copy className="w-4 h-4 mr-2" />
                         )}

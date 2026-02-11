@@ -637,7 +637,7 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
                 <div className="absolute inset-x-[20%] top-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
                 
                 {isOnRoster && showInvite && (
-                  <Badge className="absolute top-3 left-3 z-10 bg-emerald-500/20 text-emerald-400 border-emerald-400/30 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                  <Badge className="absolute top-3 left-3 z-10 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-400/30 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
                     On Roster
                   </Badge>
                 )}
@@ -693,7 +693,7 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
                           <DropdownMenuSeparator className="bg-white/10" />
                           <DropdownMenuItem
                             onClick={() => setPlayerToDelete({ id: player.id, name: player.name })}
-                            className="gap-2 cursor-pointer text-red-400 focus:text-red-300 focus:bg-red-500/10"
+                            className="gap-2 cursor-pointer text-red-600 dark:text-red-400 focus:text-red-700 dark:focus:text-red-300 focus:bg-red-500/10"
                             data-testid={`menu-delete-player-${player.id}`}
                           >
                             <Trash2 className="w-4 h-4" /> Delete Player
@@ -711,8 +711,8 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
                         className={cn(
                           "w-16 h-16 rounded-full flex items-center justify-center text-2xl font-display font-bold",
                           "bg-gradient-to-br from-accent/20 to-accent/10 border-2",
-                          tier === "elite" ? "border-yellow-400/40 text-yellow-300" :
-                          tier === "pro" ? "border-purple-400/40 text-purple-300" :
+                          tier === "elite" ? "border-yellow-400/40 text-yellow-700 dark:text-yellow-300" :
+                          tier === "pro" ? "border-purple-400/40 text-purple-700 dark:text-purple-300" :
                           tier === "rising" ? "border-accent/40 text-accent" :
                           "border-white/20 text-white/70"
                         )}
@@ -784,7 +784,7 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
                           variant="outline"
                           size="icon"
                           onClick={() => setPlayerToDelete({ id: player.id, name: player.name })}
-                          className="text-red-400 border-red-500/20 hover:bg-red-500/10 hover:border-red-500/40"
+                          className="text-red-600 dark:text-red-400 border-red-500/20 hover:bg-red-500/10 hover:border-red-500/40"
                           data-testid={`button-delete-player-${player.id}`}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -836,7 +836,7 @@ function CreatePlayerForm({ onSuccess }: { onSuccess: () => void }) {
           data-testid="input-player-name"
         />
         {form.formState.errors.name && (
-          <p className="text-xs text-red-400">{form.formState.errors.name.message}</p>
+          <p className="text-xs text-red-600 dark:text-red-400">{form.formState.errors.name.message}</p>
         )}
       </div>
       

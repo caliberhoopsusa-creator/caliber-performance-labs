@@ -150,7 +150,7 @@ function getGradeColor(grade: string) {
     return {
       bg: "from-amber-500/20 to-yellow-600/20",
       border: "border-amber-500/50",
-      text: "text-amber-400",
+      text: "text-amber-600 dark:text-amber-400",
       glow: "shadow-amber-500/30",
     };
   }
@@ -158,7 +158,7 @@ function getGradeColor(grade: string) {
     return {
       bg: "from-slate-400/20 to-gray-500/20",
       border: "border-slate-400/50",
-      text: "text-slate-300",
+      text: "text-slate-600 dark:text-slate-300",
       glow: "shadow-slate-400/30",
     };
   }
@@ -173,7 +173,7 @@ function getGradeColor(grade: string) {
   return {
     bg: "from-red-500/20 to-rose-600/20",
     border: "border-red-500/50",
-    text: "text-red-400",
+    text: "text-red-600 dark:text-red-400",
     glow: "shadow-red-500/30",
   };
 }
@@ -204,9 +204,9 @@ const RARITY_COLORS: Record<string, string> = {
 
 const RARITY_TEXT_COLORS: Record<string, string> = {
   common: "text-gray-400",
-  rare: "text-blue-400",
-  epic: "text-purple-400",
-  legendary: "text-yellow-400",
+  rare: "text-blue-600 dark:text-blue-400",
+  epic: "text-purple-600 dark:text-purple-400",
+  legendary: "text-yellow-600 dark:text-yellow-400",
 };
 
 const CATEGORY_ICONS: Record<string, any> = {
@@ -853,7 +853,7 @@ function AccoladesSection({ playerId, isOwnProfile }: AccoladesSectionProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs uppercase font-bold text-muted-foreground tracking-wider">
-                      Title <span className="text-red-400">*</span>
+                      Title <span className="text-red-600 dark:text-red-400">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -1130,10 +1130,10 @@ function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: n
 
   const ACTIVITY_TYPE_COLORS: Record<string, string> = {
     game: 'text-accent',
-    badge: 'text-purple-400',
+    badge: 'text-purple-600 dark:text-purple-400',
     streak: 'text-accent',
-    workout: 'text-emerald-400',
-    goal: 'text-blue-400',
+    workout: 'text-emerald-600 dark:text-emerald-400',
+    goal: 'text-blue-600 dark:text-blue-400',
     challenge: 'text-accent',
     repost: 'text-accent',
     poll: 'text-pink-400',
@@ -1160,7 +1160,7 @@ function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: n
       <Card className="p-5 bg-card/80 border-border" data-testid="section-social-overview">
         <div className="flex items-center gap-3 mb-4">
           <div className="p-1.5 rounded-lg bg-purple-500/20 border border-purple-500/30">
-            <Users className="w-4 h-4 text-purple-400" />
+            <Users className="w-4 h-4 text-purple-600 dark:text-purple-400" />
           </div>
           <h3 className="text-sm font-bold uppercase tracking-wider bg-gradient-to-r from-foreground to-purple-300 bg-clip-text text-transparent">
             Social Overview
@@ -1250,7 +1250,7 @@ function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: n
         <div data-testid="section-recent-workouts">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/30">
-              <Dumbbell className="w-4 h-4 text-emerald-400" />
+              <Dumbbell className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             </div>
             <h3 className="text-sm font-bold uppercase tracking-wider bg-gradient-to-r from-foreground to-emerald-300 bg-clip-text text-transparent">
               Recent Workouts
@@ -1283,7 +1283,7 @@ function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: n
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="p-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex-shrink-0">
-                        <Dumbbell className="w-4 h-4 text-emerald-400" />
+                        <Dumbbell className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">{workout.title}</p>
@@ -1322,7 +1322,7 @@ function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: n
                       }}
                       data-testid={`button-share-workout-${workout.id}`}
                     >
-                      <Share2 className="w-4 h-4 text-emerald-400" />
+                      <Share2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     </Button>
                   </div>
                 </Card>
@@ -1952,7 +1952,7 @@ export default function PlayerDetail() {
                     <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-muted/50 border border-border" data-testid="equipped-cosmetics-indicator">
                       {equippedProfileSkin && (
                         <div className="flex items-center gap-1" title={`Skin: ${equippedProfileSkin.item.name}`}>
-                          <User className="w-3 h-3 text-purple-400" />
+                          <User className="w-3 h-3 text-purple-600 dark:text-purple-400" />
                         </div>
                       )}
                       {equippedEffect && (
@@ -2708,7 +2708,7 @@ export default function PlayerDetail() {
             <div>
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 rounded-lg bg-purple-500/10 border border-purple-500/20">
-                  <TrendingUp className="w-5 h-5 text-purple-400" style={{ filter: "drop-shadow(0 0 6px rgba(168, 85, 247, 0.6))" }} />
+                  <TrendingUp className="w-5 h-5 text-purple-600 dark:text-purple-400" style={{ filter: "drop-shadow(0 0 6px rgba(168, 85, 247, 0.6))" }} />
                 </div>
                 <h3 className="text-lg font-bold font-display bg-gradient-to-r from-foreground to-purple-300 bg-clip-text text-transparent">
                   Player Profile
@@ -2764,7 +2764,7 @@ export default function PlayerDetail() {
                 <div>
                   <span className="text-xs text-muted-foreground block mb-1">Strengths</span>
                   {strengths.map((s, i) => (
-                    <div key={i} className="text-xs font-medium text-green-400 flex items-center gap-1">
+                    <div key={i} className="text-xs font-medium text-green-600 dark:text-green-400 flex items-center gap-1">
                       <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
                       {s.category} ({s.value})
                     </div>
@@ -2918,7 +2918,7 @@ export default function PlayerDetail() {
                             </div>
                             <div className="text-center">
                               <div className="text-xs text-muted-foreground mb-1">Turnovers</div>
-                              <div className="text-sm font-medium text-red-400">{(game.interceptions || 0) + (game.fumbles || 0)}</div>
+                              <div className="text-sm font-medium text-red-600 dark:text-red-400">{(game.interceptions || 0) + (game.fumbles || 0)}</div>
                             </div>
                           </div>
                         </>
@@ -3230,7 +3230,7 @@ export default function PlayerDetail() {
                         </button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <button className="text-muted-foreground hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 p-1" data-testid={`button-delete-game-${game.id}`}>
+                            <button className="text-muted-foreground hover:text-red-600 dark:hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 p-1" data-testid={`button-delete-game-${game.id}`}>
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </AlertDialogTrigger>

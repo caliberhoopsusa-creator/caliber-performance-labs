@@ -110,7 +110,7 @@ export function GameVerificationCard({ game, onVerified }: Props) {
                 variant="outline" 
                 className={cn(
                   "text-xs",
-                  isBasketball ? "border-accent/30 text-accent" : "border-green-500/30 text-green-400"
+                  isBasketball ? "border-accent/30 text-accent" : "border-green-500/30 text-green-600 dark:text-green-400"
                 )}
               >
                 {isBasketball ? "Basketball" : "Football"}
@@ -131,7 +131,7 @@ export function GameVerificationCard({ game, onVerified }: Props) {
                   variant="outline" 
                   className={cn(
                     "text-xs",
-                    game.result.startsWith('W') ? "border-emerald-500/30 text-emerald-400" : "border-red-500/30 text-red-400"
+                    game.result.startsWith('W') ? "border-emerald-500/30 text-emerald-600 dark:text-emerald-400" : "border-red-500/30 text-red-600 dark:text-red-400"
                   )}
                 >
                   {game.result}

@@ -82,8 +82,8 @@ const LOGO_COLORS = [
 ];
 
 const NIL_LEVELS: Record<string, { label: string; color: string }> = {
-  'elite': { label: 'Elite', color: 'text-amber-400' },
-  'high': { label: 'High', color: 'text-emerald-400' },
+  'elite': { label: 'Elite', color: 'text-amber-600 dark:text-amber-400' },
+  'high': { label: 'High', color: 'text-emerald-600 dark:text-emerald-400' },
   'moderate': { label: 'Moderate', color: 'text-accent' },
   'low': { label: 'Low', color: 'text-muted-foreground' },
   'developing': { label: 'Developing', color: 'text-muted-foreground' },

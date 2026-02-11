@@ -13,10 +13,10 @@ import { Paywall } from "@/components/Paywall";
 import { useToast } from "@/hooks/use-toast";
 
 const ROLE_COLORS: Record<string, string> = {
-  "starter": "bg-green-500/20 text-green-400 border-green-500/30",
-  "rotation": "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  "bench": "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  "development": "bg-gray-500/20 text-gray-400 border-gray-500/30",
+  "starter": "bg-green-500/20 text-green-600 dark:text-green-400 border-green-500/30",
+  "rotation": "bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30",
+  "bench": "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 border-yellow-500/30",
+  "development": "bg-gray-500/20 text-gray-600 dark:text-gray-400 border-gray-500/30",
 };
 
 const ROLE_LABELS: Record<string, string> = {
@@ -434,7 +434,7 @@ function LineupCard({
           <div className="flex items-center gap-1 text-sm">
             <TrendingUp className="h-3 w-3 text-muted-foreground" />
             <span className="text-muted-foreground">Avg +/-:</span>
-            <span className={stats.avgPlusMinus >= 0 ? "text-green-400" : "text-red-400"}>
+            <span className={stats.avgPlusMinus >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
               {stats.avgPlusMinus >= 0 ? "+" : ""}{stats.avgPlusMinus.toFixed(1)}
             </span>
           </div>

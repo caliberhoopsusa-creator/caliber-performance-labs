@@ -129,7 +129,7 @@ export default function EndorseContent() {
                     {selectedPlayer?.sport}
                   </Badge>
                   {selectedPlayer?.position && (
-                    <Badge variant="outline" className="border-purple-500/30 text-purple-400">
+                    <Badge variant="outline" className="border-purple-500/30 text-purple-600 dark:text-purple-400">
                       {selectedPlayer.position}
                     </Badge>
                   )}

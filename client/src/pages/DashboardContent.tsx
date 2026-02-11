@@ -314,7 +314,7 @@ export default function DashboardContent() {
             <Card className="bg-gradient-to-br from-card to-card/50 border-border/50" data-testid="card-team-rpg">
               <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Team RPG</CardTitle>
-                <TrendingUp className="w-5 h-5 text-green-400" />
+                <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
               </CardHeader>
               <CardContent>
                 <div className="text-4xl font-display font-bold text-foreground">{teamStats.teamRpg}</div>
@@ -325,7 +325,7 @@ export default function DashboardContent() {
             <Card className="bg-gradient-to-br from-card to-card/50 border-border/50" data-testid="card-team-apg">
               <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Team APG</CardTitle>
-                <Zap className="w-5 h-5 text-blue-400" />
+                <Zap className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               </CardHeader>
               <CardContent>
                 <div className="text-4xl font-display font-bold text-foreground">{teamStats.teamApg}</div>
@@ -353,7 +353,7 @@ export default function DashboardContent() {
             <Card className="bg-gradient-to-br from-card to-card/50 border-border/50" data-testid="card-team-tds">
               <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">TD/G</CardTitle>
-                <TrendingUp className="w-5 h-5 text-green-400" />
+                <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
               </CardHeader>
               <CardContent>
                 <div className="text-4xl font-display font-bold text-foreground">
@@ -368,7 +368,7 @@ export default function DashboardContent() {
             <Card className="bg-gradient-to-br from-card to-card/50 border-border/50" data-testid="card-team-tackles">
               <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">TCK/G</CardTitle>
-                <Zap className="w-5 h-5 text-blue-400" />
+                <Zap className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               </CardHeader>
               <CardContent>
                 <div className="text-4xl font-display font-bold text-foreground">
@@ -416,13 +416,13 @@ export default function DashboardContent() {
                   <Link href={`/players/${bestPerformers.topRebounder.id}`} className="block">
                     <div className="flex items-center justify-between p-3 rounded-lg bg-green-500/10 border border-green-500/20 hover:bg-green-500/20 transition-colors" data-testid="link-top-rebounder">
                       <div className="flex items-center gap-3">
-                        <TrendingUp className="w-5 h-5 text-green-400" />
+                        <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
                         <div>
-                          <p className="text-xs text-green-400 uppercase font-bold">Top Rebounder</p>
+                          <p className="text-xs text-green-600 dark:text-green-400 uppercase font-bold">Top Rebounder</p>
                           <p className="text-foreground font-semibold">{bestPerformers.topRebounder.name}</p>
                         </div>
                       </div>
-                      <Badge variant="secondary" className="bg-green-500/20 text-green-300">
+                      <Badge variant="secondary" className="bg-green-500/20 text-green-600 dark:text-green-300">
                         {bestPerformers.topRebounder.value} RPG
                       </Badge>
                     </div>
@@ -432,13 +432,13 @@ export default function DashboardContent() {
                   <Link href={`/players/${bestPerformers.topAssister.id}`} className="block">
                     <div className="flex items-center justify-between p-3 rounded-lg bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 transition-colors" data-testid="link-top-assister">
                       <div className="flex items-center gap-3">
-                        <Medal className="w-5 h-5 text-blue-400" />
+                        <Medal className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                         <div>
-                          <p className="text-xs text-blue-400 uppercase font-bold">Top Assister</p>
+                          <p className="text-xs text-blue-600 dark:text-blue-400 uppercase font-bold">Top Assister</p>
                           <p className="text-foreground font-semibold">{bestPerformers.topAssister.name}</p>
                         </div>
                       </div>
-                      <Badge variant="secondary" className="bg-blue-500/20 text-blue-300">
+                      <Badge variant="secondary" className="bg-blue-500/20 text-blue-600 dark:text-blue-300">
                         {bestPerformers.topAssister.value} APG
                       </Badge>
                     </div>
@@ -470,13 +470,13 @@ export default function DashboardContent() {
                   <Link href={`/players/${footballBestPerformers.topRusher.id}`} className="block">
                     <div className="flex items-center justify-between p-3 rounded-lg bg-green-500/10 border border-green-500/20 hover:bg-green-500/20 transition-colors" data-testid="link-top-rusher">
                       <div className="flex items-center gap-3">
-                        <TrendingUp className="w-5 h-5 text-green-400" />
+                        <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
                         <div>
-                          <p className="text-xs text-green-400 uppercase font-bold">Top Rusher</p>
+                          <p className="text-xs text-green-600 dark:text-green-400 uppercase font-bold">Top Rusher</p>
                           <p className="text-foreground font-semibold">{footballBestPerformers.topRusher.name}</p>
                         </div>
                       </div>
-                      <Badge variant="secondary" className="bg-green-500/20 text-green-300">
+                      <Badge variant="secondary" className="bg-green-500/20 text-green-600 dark:text-green-300">
                         {footballBestPerformers.topRusher.value} YDS
                       </Badge>
                     </div>
@@ -486,13 +486,13 @@ export default function DashboardContent() {
                   <Link href={`/players/${footballBestPerformers.topTackler.id}`} className="block">
                     <div className="flex items-center justify-between p-3 rounded-lg bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition-colors" data-testid="link-top-tackler">
                       <div className="flex items-center gap-3">
-                        <Shield className="w-5 h-5 text-red-400" />
+                        <Shield className="w-5 h-5 text-red-600 dark:text-red-400" />
                         <div>
-                          <p className="text-xs text-red-400 uppercase font-bold">Top Tackler</p>
+                          <p className="text-xs text-red-600 dark:text-red-400 uppercase font-bold">Top Tackler</p>
                           <p className="text-foreground font-semibold">{footballBestPerformers.topTackler.name}</p>
                         </div>
                       </div>
-                      <Badge variant="secondary" className="bg-red-500/20 text-red-300">
+                      <Badge variant="secondary" className="bg-red-500/20 text-red-600 dark:text-red-300">
                         {footballBestPerformers.topTackler.value} TCK
                       </Badge>
                     </div>
