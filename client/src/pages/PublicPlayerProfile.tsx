@@ -293,7 +293,7 @@ export default function PublicPlayerProfile() {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-blue-600 flex items-center justify-center">
               <span className="text-white font-bold text-sm">C</span>
             </div>
-            <span className="font-display text-lg font-bold tracking-tight text-gradient-primary">CALIBER</span>
+            <span className="font-display text-lg font-bold tracking-tight text-accent">CALIBER</span>
           </div>
           <Button 
             variant="outline" 
@@ -424,11 +424,11 @@ export default function PublicPlayerProfile() {
           </div>
         </Card>
 
-        <Card className="bg-gradient-to-r from-primary/10 via-accent/5 to-primary/10 border-primary/20 overflow-hidden" data-testid="card-scout-me">
+        <Card className="bg-gradient-to-r from-accent/10 via-accent/5 to-accent/10 border-accent/20 overflow-hidden" data-testid="card-scout-me">
           <div className="p-4 md:p-6 flex flex-col md:flex-row items-center gap-4">
             <div className="flex-1 text-center md:text-left">
               <h3 className="text-lg font-bold text-white flex items-center gap-2 justify-center md:justify-start">
-                <Target className="w-5 h-5 text-primary" />
+                <Target className="w-5 h-5 text-accent" />
                 Interested in Recruiting {player.name.split(' ')[0]}?
               </h3>
               <p className="text-sm text-muted-foreground mt-1">

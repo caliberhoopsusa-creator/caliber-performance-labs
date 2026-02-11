@@ -190,7 +190,7 @@ function PublicPricing() {
               Back
             </Button>
           </Link>
-          <h1 className="font-display text-xl font-bold tracking-tight text-gradient-primary">CALIBER</h1>
+          <h1 className="font-display text-xl font-bold tracking-tight text-accent">CALIBER</h1>
           <div className="w-20" />
         </div>
       </header>

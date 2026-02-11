@@ -111,7 +111,7 @@ export function PlayerProgression({ playerId, compact = false }: PlayerProgressi
           <span className="text-xs font-bold">{progression.currentTier}</span>
         </Badge>
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-          <Zap className="w-3.5 h-3.5 text-primary" />
+          <Zap className="w-3.5 h-3.5 text-accent" />
           <span className="font-medium">{progression.totalXp.toLocaleString()} XP</span>
         </div>
         {progression.currentStreak > 0 && (
@@ -134,8 +134,8 @@ export function PlayerProgression({ playerId, compact = false }: PlayerProgressi
           <motion.div 
             className={cn(
               "relative w-16 h-16 rounded-xl flex items-center justify-center",
-              "bg-gradient-to-br from-primary/30 to-primary/10 border-2",
-              badgeStyle ? "" : "border-primary/20 shadow-lg shadow-primary/20"
+              "bg-gradient-to-br from-accent/30 to-accent/10 border-2",
+              badgeStyle ? "" : "border-accent/20 shadow-lg shadow-accent/20"
             )}
             animate={{
               scale: [1, 1.05, 1],
@@ -222,13 +222,13 @@ export function PlayerProgression({ playerId, compact = false }: PlayerProgressi
         </div>
       </div>
       
-      <div className="divider-glow my-5" />
+      <div className="h-px bg-border my-5" />
       
       <div className="space-y-3">
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground uppercase tracking-wider font-medium text-xs">XP Progress</span>
           <motion.span 
-            className="font-bold text-primary text-base"
+            className="font-bold text-accent text-base"
             animate={xpIncreased ? { scale: [1, 1.1, 1], color: ["hsl(24, 95%, 53%)", "#ffeb3b", "hsl(24, 95%, 53%)"] } : {}}
             transition={{ duration: 0.6 }}
             data-testid="xp-display"
@@ -241,7 +241,7 @@ export function PlayerProgression({ playerId, compact = false }: PlayerProgressi
           {/* Animated overlay */}
           {xpIncreased && (
             <motion.div 
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/20 to-transparent pointer-events-none z-20"
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-accent/20 to-transparent pointer-events-none z-20"
               initial={{ x: "-100%" }}
               animate={{ x: "100%" }}
               transition={{ duration: 0.8, ease: "easeInOut" }}
@@ -249,7 +249,7 @@ export function PlayerProgression({ playerId, compact = false }: PlayerProgressi
           )}
           
           {/* Static background */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent pointer-events-none z-10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-accent/10 to-transparent pointer-events-none z-10" />
           
           <Progress 
             value={progression.progressPercent} 
@@ -261,7 +261,7 @@ export function PlayerProgression({ playerId, compact = false }: PlayerProgressi
         {progression.nextTier && (
           <div className="flex items-center justify-between text-xs text-muted-foreground font-medium animate-in fade-in duration-300">
             <span className="uppercase tracking-wider">Next: {progression.nextTier}</span>
-            <span className="text-primary font-semibold">{progression.xpToNextTier.toLocaleString()} XP to go</span>
+            <span className="text-accent font-semibold">{progression.xpToNextTier.toLocaleString()} XP to go</span>
           </div>
         )}
         
@@ -272,7 +272,7 @@ export function PlayerProgression({ playerId, compact = false }: PlayerProgressi
         )}
       </div>
       
-      <div className="mt-6 pt-5 border-t border-primary/10">
+      <div className="mt-6 pt-5 border-t border-accent/10">
         <div className="grid grid-cols-5 gap-2 text-center">
           {Object.entries(progression.tierThresholds).map(([tier, xp]) => {
             const isCurrentTier = tier === progression.currentTier;
@@ -285,7 +285,7 @@ export function PlayerProgression({ playerId, compact = false }: PlayerProgressi
                 key={tier} 
                 className={cn(
                   "py-2 px-1 rounded-lg transition-all duration-300",
-                  isCurrentTier && "bg-primary/15 border border-primary/30 shadow-lg shadow-primary/10",
+                  isCurrentTier && "bg-accent/15 border border-accent/30 shadow-lg shadow-accent/10",
                   !isCurrentTier && isPastTier && "bg-white/5 border border-white/10",
                   !isPastTier && "opacity-40"
                 )}

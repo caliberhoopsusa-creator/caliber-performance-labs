@@ -206,16 +206,16 @@ export default function Pricing() {
   return (
     <div className="space-y-10">
       <div className="text-center space-y-6 relative">
-        <div className="absolute inset-0 gradient-radial-glow pointer-events-none opacity-50" />
+        <div className="absolute inset-0 pointer-events-none opacity-50" style={{ background: "radial-gradient(ellipse at center, hsl(24 95% 53% / 0.08) 0%, transparent 70%)" }} />
         
         <div className="relative">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/20 text-accent text-sm font-medium mb-6">
             <Sparkles className="w-4 h-4" />
             Premium Plans
           </div>
           
           <h1 className="text-4xl md:text-5xl font-bold font-display tracking-tight text-white" data-testid="text-pricing-title">
-            Upgrade Your <span className="text-gradient-primary">Game</span>
+            Upgrade Your <span className="text-accent">Game</span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mt-4">
             Choose the plan that fits your goals. Level up with premium analytics and insights.
@@ -224,7 +224,7 @@ export default function Pricing() {
 
         {isSubscribed && (
           <div className="flex items-center justify-center gap-4 flex-wrap">
-            <Badge className="text-sm px-4 py-2 bg-gradient-to-r from-primary/20 to-orange-500/20 border-primary/30" data-testid="badge-subscription-status">
+            <Badge className="text-sm px-4 py-2 bg-gradient-to-r from-accent/20 to-orange-500/20 border-accent/30" data-testid="badge-subscription-status">
               <Crown className="w-4 h-4 mr-2" />
               Active Subscription
             </Badge>
@@ -291,13 +291,13 @@ export default function Pricing() {
               return (
                 <Card 
                   key={product.id} 
-                  className={`relative overflow-hidden transition-all duration-300 ${isPopular ? "border-primary/30 shadow-xl shadow-primary/10" : "border-white/5"}`}
+                  className={`relative overflow-hidden transition-all duration-300 ${isPopular ? "border-accent/30 shadow-xl shadow-accent/10" : "border-white/5"}`}
                   data-testid={`card-plan-${product.id}`}
                 >
                   {isPopular && (
                     <>
-                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-orange-500 to-primary" />
-                      <Badge className="absolute -top-0 left-1/2 -translate-x-1/2 translate-y-3 bg-gradient-to-r from-primary to-orange-500 text-white border-0 shadow-lg">
+                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent via-orange-500 to-accent" />
+                      <Badge className="absolute -top-0 left-1/2 -translate-x-1/2 translate-y-3 bg-gradient-to-r from-accent to-orange-500 text-white border-0 shadow-lg">
                         <Star className="w-3 h-3 mr-1 fill-current" />
                         Most Popular
                       </Badge>
@@ -305,8 +305,8 @@ export default function Pricing() {
                   )}
                   <CardHeader className={isPopular ? "pt-10" : ""}>
                     <CardTitle className="flex items-center gap-3 text-2xl">
-                      <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/10">
-                        <Zap className="w-6 h-6 text-primary" />
+                      <div className="p-2 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/10">
+                        <Zap className="w-6 h-6 text-accent" />
                       </div>
                       {product.name}
                     </CardTitle>
@@ -335,13 +335,13 @@ export default function Pricing() {
                       <p className="text-muted-foreground">Contact for pricing</p>
                     )}
 
-                    <div className="divider-glow" />
+                    <div className="h-px bg-border" />
 
                     <ul className="space-y-4">
                       {features.map((feature, i) => (
                         <li key={i} className="flex items-start gap-3">
-                          <div className="mt-0.5 p-1 rounded-full bg-primary/10">
-                            <Check className="w-4 h-4 text-primary" />
+                          <div className="mt-0.5 p-1 rounded-full bg-accent/10">
+                            <Check className="w-4 h-4 text-accent" />
                           </div>
                           <span className="text-sm text-foreground/90">{feature}</span>
                         </li>
@@ -350,7 +350,7 @@ export default function Pricing() {
                   </CardContent>
                   <CardFooter className="pt-2">
                     <Button
-                      className={`w-full ${isPopular ? "shadow-lg shadow-primary/25" : ""}`}
+                      className={`w-full ${isPopular ? "shadow-lg shadow-accent/25" : ""}`}
                       size="lg"
                       variant={isPopular ? "default" : "outline"}
                       disabled={!price || !user || checkoutMutation.isPending || !!isSubscribed}
@@ -395,8 +395,8 @@ export default function Pricing() {
                 <Card key={product.id} className="border-white/5 overflow-hidden" data-testid={`card-purchase-${product.id}`}>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-3">
-                      <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/10">
-                        <IconComponent className="w-5 h-5 text-primary" />
+                      <div className="p-2 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/10">
+                        <IconComponent className="w-5 h-5 text-accent" />
                       </div>
                       {product.name}
                     </CardTitle>
@@ -414,8 +414,8 @@ export default function Pricing() {
                     <ul className="space-y-3">
                       {features.map((feature, i) => (
                         <li key={i} className="flex items-start gap-3">
-                          <div className="mt-0.5 p-1 rounded-full bg-primary/10">
-                            <Check className="w-3 h-3 text-primary" />
+                          <div className="mt-0.5 p-1 rounded-full bg-accent/10">
+                            <Check className="w-3 h-3 text-accent" />
                           </div>
                           <span className="text-sm text-foreground/90">{feature}</span>
                         </li>
