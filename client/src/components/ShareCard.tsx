@@ -4,7 +4,7 @@ import { Star, Zap, Trophy, Crown, Sparkles } from "lucide-react";
 import { type PlayerWithGames, type Badge as BadgeType, TIER_THRESHOLDS } from "@shared/schema";
 import { type SkillBadge } from "@/hooks/use-basketball";
 import { FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS, type FootballPosition } from "@shared/sports-config";
-import caliberLogoCyan from "@assets/caliber-logo-cyan.png";
+import caliberLogo from "@assets/caliber-logo-orange.png";
 
 const TIER_ICONS: Record<string, typeof Star> = {
   Rookie: Star,
@@ -155,7 +155,7 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
           {/* Caliber Logo Header */}
           <div className="flex items-center justify-center mb-6">
             <img 
-              src={caliberLogoCyan} 
+              src={caliberLogo} 
               alt="Caliber" 
               className="h-8 object-contain"
               style={{ filter: 'drop-shadow(0 0 8px rgba(234, 88, 12, 0.3))' }}

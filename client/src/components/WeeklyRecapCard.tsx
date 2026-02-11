@@ -11,7 +11,7 @@ import html2canvas from "html2canvas";
 import { cn } from "@/lib/utils";
 import { PlatformExportModal } from "./PlatformExportModal";
 import { format } from "date-fns";
-import caliberLogo from "@assets/caliber-logo-cyan.png";
+import caliberLogo from "@assets/caliber-logo-orange.png";
 
 interface WeeklyRecapData {
   hasRecap: boolean;

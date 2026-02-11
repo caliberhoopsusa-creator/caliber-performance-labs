@@ -72,14 +72,14 @@ const PROFILE_SKIN_STYLES: Record<string, ProfileSkinStyle> = {
   "aurora-glow": {
     background: `
       linear-gradient(135deg, 
-        rgba(0, 255, 136, 0.1) 0%, 
-        rgba(0, 180, 255, 0.08) 50%,
-        rgba(138, 43, 226, 0.1) 100%
+        rgba(234, 88, 12, 0.08) 0%, 
+        rgba(168, 85, 247, 0.06) 50%,
+        rgba(234, 179, 8, 0.08) 100%
       ),
-      linear-gradient(180deg, rgba(0, 15, 25, 0.95) 0%, rgba(10, 20, 35, 0.9) 100%)
+      linear-gradient(180deg, rgba(10, 12, 16, 0.95) 0%, rgba(15, 17, 22, 0.9) 100%)
     `,
-    borderColor: "rgba(0, 255, 136, 0.4)",
-    boxShadow: "0 0 35px rgba(234, 88, 12, 0.12), 0 0 60px rgba(234, 88, 12, 0.06)",
+    borderColor: "rgba(234, 88, 12, 0.3)",
+    boxShadow: "0 2px 12px rgba(0, 0, 0, 0.3)",
     animation: "auroraShiftSubtle 10s ease-in-out infinite",
   },
   "galaxy-swirl": {

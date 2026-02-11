@@ -4,7 +4,7 @@ import {
   ArrowRight, Zap, Trophy, Video, BarChart3, Users, Target, Award, Shield
 } from "lucide-react";
 import { Link } from "wouter";
-import caliberLogo from "@assets/caliber-logo-cyan.png";
+import caliberLogo from "@assets/caliber-logo-orange.png";
 
 export default function Landing() {
   return (

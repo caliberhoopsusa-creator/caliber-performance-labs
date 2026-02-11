@@ -79,7 +79,7 @@ export function PageTransition({ children }: PageTransitionProps) {
               ease: "easeOut",
             }}
           >
-            <div className="absolute inset-0 bg-gradient-radial opacity-0 animate-glow-pulse" />
+            <div className="absolute inset-0 bg-accent/5 opacity-0" />
           </motion.div>
         )}
 
