@@ -55,7 +55,7 @@ const PROFILE_SKIN_STYLES: Record<string, ProfileSkinStyle> = {
       linear-gradient(180deg, rgba(0, 10, 20, 0.95) 0%, rgba(0, 20, 35, 0.9) 100%)
     `,
     borderColor: "rgba(234, 88, 12, 0.5)",
-    boxShadow: "0 0 30px rgba(234, 88, 12, 0.2), inset 0 0 40px rgba(234, 88, 12, 0.05)",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
     animation: "subtleGlow 4s ease-in-out infinite",
   },
   "flame-burst": {

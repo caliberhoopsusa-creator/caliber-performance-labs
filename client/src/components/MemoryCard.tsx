@@ -38,7 +38,6 @@ export function MemoryCard({ data }: MemoryCardProps) {
         className="relative overflow-visible border-amber-500/20"
         style={{
           background: "linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(249, 115, 22, 0.04) 50%, rgba(0,0,0,0.3) 100%)",
-          boxShadow: "0 0 40px rgba(245, 158, 11, 0.06)",
         }}
       >
         <div className="p-5">

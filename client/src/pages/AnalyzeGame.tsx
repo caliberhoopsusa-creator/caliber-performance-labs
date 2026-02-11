@@ -414,7 +414,6 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
       <motion.section 
         variants={sectionVariants}
         className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 to-black/30 border border-accent/20"
-        style={{ boxShadow: "0 0 40px rgba(234, 88, 12, 0.05)" }}
       >
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
         <div className="p-6">
@@ -485,7 +484,6 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
           <motion.section 
             variants={sectionVariants}
             className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 to-black/30 border border-accent/20"
-            style={{ boxShadow: "0 0 40px rgba(234, 88, 12, 0.05)" }}
           >
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
             <div className="p-6">
@@ -512,7 +510,6 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
           <motion.section 
             variants={sectionVariants}
             className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 to-black/30 border border-accent/20"
-            style={{ boxShadow: "0 0 40px rgba(234, 88, 12, 0.05)" }}
           >
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
             <div className="p-6">
@@ -612,7 +609,6 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
           <motion.section 
             variants={sectionVariants}
             className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 to-black/30 border border-accent/20"
-            style={{ boxShadow: "0 0 40px rgba(234, 88, 12, 0.05)" }}
           >
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
             <div className="p-6">
@@ -693,7 +689,6 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
             <motion.section 
               variants={sectionVariants}
               className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 to-black/30 border border-accent/20"
-              style={{ boxShadow: "0 0 40px rgba(234, 88, 12, 0.05)" }}
             >
               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
               <div className="p-6">
@@ -903,7 +898,6 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
       <motion.section 
         variants={sectionVariants}
         className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 to-black/30 border border-accent/20"
-        style={{ boxShadow: "0 0 40px rgba(234, 88, 12, 0.05)" }}
       >
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
         <div className="p-6">
@@ -1023,7 +1017,6 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
           disabled={isPending} 
           size="lg" 
           className="w-full h-14 text-lg font-bold bg-accent  text-black transition-all"
-          style={{ boxShadow: "0 0 30px rgba(234, 88, 12, 0.3)" }}
           data-testid="button-submit-game"
         >
           {isPending ? (
@@ -1123,7 +1116,6 @@ function ReportCardView({ game, onReset }: { game: any, onReset: () => void }) {
       transition={{ duration: 0.5 }}
     >
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-black/60 to-black/30 border border-accent/20 shadow-2xl"
-        style={{ boxShadow: "0 0 60px rgba(234, 88, 12, 0.15)" }}
       >
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
         <div className="bg-gradient-to-b from-accent/10 to-transparent p-8 text-center relative">
@@ -1215,7 +1207,6 @@ function ReportCardView({ game, onReset }: { game: any, onReset: () => void }) {
           <Button 
             onClick={() => setShareOpen(true)} 
             className="w-full gap-2 bg-accent  text-black font-bold"
-            style={{ boxShadow: "0 0 20px rgba(234, 88, 12, 0.3)" }}
             data-testid="button-share-achievement"
           >
             <Share2 className="w-4 h-4" />

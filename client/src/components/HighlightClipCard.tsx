@@ -40,14 +40,7 @@ export function HighlightClipCard({
         "shadow-lg hover:shadow-accent/20",
         className
       )}
-      style={{ boxShadow: "0 0 0 1px rgba(234,88,12,0)" }}
       onClick={onPlay}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = "0 0 30px rgba(234,88,12,0.15)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = "0 0 0 1px rgba(234,88,12,0)";
-      }}
     >
       <div className={cn(
         "relative overflow-hidden",

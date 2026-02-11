@@ -170,7 +170,6 @@ export default function Leaderboard() {
                     ? "bg-gradient-to-r from-orange-600 to-orange-500 text-white" 
                     : "bg-gradient-to-r from-amber-700 to-amber-600 text-white"
                 )}
-                style={{ boxShadow: isBasketball ? "0 0 20px rgba(234,88,12,0.3)" : "0 0 20px rgba(180,83,9,0.3)" }}
                 data-testid="badge-current-sport"
               >
                 {isBasketball ? (

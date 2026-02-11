@@ -138,7 +138,7 @@ function ScoutPlayerCard({ player, sport, index }: ScoutPlayerCardProps) {
             isRecruitReady && "ring-1 ring-green-500/30"
           )}
           style={{ 
-            boxShadow: `0 0 30px ${tierStyles.glow}, inset 0 1px 0 rgba(255,255,255,0.05)` 
+            boxShadow: "0 2px 8px rgba(0,0,0,0.2)" 
           }}
           data-testid={`card-scout-player-${player.id}`}
         >

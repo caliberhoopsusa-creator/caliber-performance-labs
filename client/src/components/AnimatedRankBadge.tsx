@@ -37,7 +37,7 @@ export function AnimatedRankBadge({ type, rank, state, className }: AnimatedRank
       <div 
         className="absolute inset-0 rounded-full opacity-60"
         style={{
-          boxShadow: `0 0 20px rgba(${colorRgb},0.4), inset 0 0 20px rgba(${colorRgb},0.1)`,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
           animation: 'rankBadgeGlow 2s ease-in-out infinite',
         }}
       />

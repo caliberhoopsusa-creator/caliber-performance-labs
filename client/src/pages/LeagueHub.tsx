@@ -115,9 +115,6 @@ function LeagueCard({ league, index }: LeagueCardProps) {
             "hover:scale-[1.02] hover:-translate-y-1 border-white/10",
             "hover:border-accent/30"
           )}
-          style={{
-            boxShadow: "0 0 30px rgba(234,88,12,0.1), inset 0 1px 0 rgba(255,255,255,0.05)",
-          }}
           data-testid={`card-league-${league.id}`}
         >
           <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />

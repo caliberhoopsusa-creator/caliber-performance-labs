@@ -2467,7 +2467,6 @@ export default function PlayerDetail() {
               className="relative overflow-hidden rounded-xl border border-accent/20 p-5"
               style={{ 
                 background: `linear-gradient(135deg, hsl(var(--accent) / 0.05) 0%, rgba(0, 0, 0, 0.4) 100%)`,
-                boxShadow: "0 0 30px hsl(var(--accent) / 0.08)"
               }}
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 blur-[60px] rounded-full pointer-events-none" />
@@ -2709,7 +2708,6 @@ export default function PlayerDetail() {
                 className="relative overflow-hidden rounded-xl border border-purple-500/20 p-4"
                 style={{ 
                   background: "linear-gradient(135deg, rgba(168, 85, 247, 0.05) 0%, rgba(0, 0, 0, 0.4) 100%)",
-                  boxShadow: "0 0 30px rgba(168, 85, 247, 0.08)"
                 }}
               >
                 <div className="absolute top-0 left-0 w-32 h-32 bg-purple-500/5 blur-[60px] rounded-full pointer-events-none" />

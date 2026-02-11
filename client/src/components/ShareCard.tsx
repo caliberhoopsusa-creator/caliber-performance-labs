@@ -215,7 +215,7 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
             <div 
               className={`relative w-20 h-20 rounded-2xl flex items-center justify-center ${gradeColors.bg} shadow-lg ${gradeColors.glow}`}
               style={{ 
-                boxShadow: `0 0 30px ${averageGrade.charAt(0) === 'A' ? 'rgba(16, 185, 129, 0.4)' : averageGrade.charAt(0) === 'B' ? 'rgba(6, 182, 212, 0.4)' : 'rgba(234, 179, 8, 0.3)'}`,
+                boxShadow: `0 0 30px ${averageGrade.charAt(0) === 'A' ? 'rgba(16, 185, 129, 0.4)' : averageGrade.charAt(0) === 'B' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(234, 179, 8, 0.3)'}`,
               }}
             >
               <span className="text-4xl font-black text-white font-display drop-shadow-lg">{averageGrade}</span>
