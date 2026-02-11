@@ -69,12 +69,12 @@ function StoryRing({
           "relative p-[3px] rounded-full transition-all duration-300",
           isViewed 
             ? "bg-gradient-to-tr from-gray-500 to-gray-600" 
-            : "bg-gradient-to-tr from-cyan-400 via-blue-400 to-cyan-500"
+            : "bg-gradient-to-tr from-accent via-accent to-accent"
         )}
         animate={!isViewed ? { boxShadow: [
-          "0 0 0 0 rgba(34, 211, 238, 0.4)",
-          "0 0 0 8px rgba(34, 211, 238, 0.2)",
-          "0 0 0 12px rgba(34, 211, 238, 0)"
+          "0 0 0 0 rgba(234, 88, 12, 0.4)",
+          "0 0 0 8px rgba(234, 88, 12, 0.2)",
+          "0 0 0 12px rgba(234, 88, 12, 0)"
         ]} : {}}
         transition={!isViewed ? { duration: 2, repeat: Infinity } : {}}
       >
@@ -260,7 +260,7 @@ function StoryViewer({
         {stories.map((_, idx) => (
           <div key={idx} className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
             <motion.div 
-              className="h-full bg-gradient-to-r from-cyan-300 via-cyan-400 to-blue-400 rounded-full shadow-[0_0_10px_rgba(34,211,238,0.6)]"
+              className="h-full bg-accent rounded-full shadow-[0_0_10px_rgba(234,88,12,0.6)]"
               style={{ 
                 width: idx < currentIndex ? '100%' : idx === currentIndex ? `${progress}%` : '0%' 
               }}
@@ -945,11 +945,11 @@ export default function StoriesContent() {
     <div className="space-y-6 animate-in fade-in duration-500" data-testid="page-stories">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl md:text-4xl font-display font-bold bg-gradient-to-b from-white to-cyan-100/80 bg-clip-text text-transparent tracking-wide flex items-center gap-3">
+          <h1 className="text-3xl md:text-4xl font-display font-bold bg-gradient-to-b from-white to-accent/20 bg-clip-text text-transparent tracking-wide flex items-center gap-3">
             <Camera className="w-8 h-8 text-primary" />
             Stories
           </h1>
-          <p className="text-cyan-200/50 font-medium mt-1">
+          <p className="text-accent/50 font-medium mt-1">
             Share your highlights with photos and videos
           </p>
         </div>

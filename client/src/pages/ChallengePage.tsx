@@ -151,7 +151,7 @@ export default function ChallengePage() {
   return (
     <div className="pb-24 md:pb-8 max-w-2xl mx-auto space-y-6" data-testid="page-challenge">
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-950/40 via-black/40 to-blue-950/40 border border-white/10">
-        <div className="absolute inset-0 cyber-grid opacity-10" />
+        <div className="absolute inset-0 opacity-10" />
         <div className="relative z-10 p-6 text-center">
           <Swords className="w-10 h-10 mx-auto text-yellow-400 mb-2" style={{ filter: "drop-shadow(0 0 12px rgba(234,179,8,0.5))" }} />
           <h1 className="text-2xl md:text-3xl font-black uppercase tracking-wider">
@@ -247,7 +247,7 @@ export default function ChallengePage() {
 
       {p1 && (
         <Card className="bg-black/20 border-white/10 overflow-visible" data-testid="card-stats-comparison">
-          <div className="p-4 border-b border-white/10 bg-gradient-to-r from-red-950/20 via-black/20 to-blue-950/20">
+          <div className="p-4 border-b border-white/10 bg-gradient-to-r from-red-950/20 via-black/20 to-card">
             <h3 className="text-center text-sm font-bold uppercase tracking-wider text-white">
               Stats Comparison (Last 10 Games)
             </h3>

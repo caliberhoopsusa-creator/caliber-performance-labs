@@ -5,9 +5,9 @@ export default function VerifyContent() {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="p-4 rounded-xl bg-gradient-to-br from-cyan-500/10 to-cyan-500/5 border border-cyan-500/20">
+        <div className="p-4 rounded-xl bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20">
           <div className="flex items-center gap-2 mb-2">
-            <Shield className="w-5 h-5 text-cyan-400" />
+            <Shield className="w-5 h-5 text-accent" />
             <span className="font-medium text-white/90">Trust System</span>
           </div>
           <p className="text-sm text-white/60">

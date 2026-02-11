@@ -316,7 +316,7 @@ export function LivePractice({ practice, onEnd, onBack }: LivePracticeProps) {
           </div>
           
           <div className="flex items-center gap-4">
-            <div className="glass-card px-6 py-3 rounded-xl" data-testid="timer-display">
+            <div className="px-6 py-3 rounded-xl" data-testid="timer-display">
               <div className="flex items-center gap-3">
                 <Timer className="w-6 h-6 text-primary" />
                 <span className="text-3xl font-mono font-bold text-white tabular-nums">
@@ -348,7 +348,7 @@ export function LivePractice({ practice, onEnd, onBack }: LivePracticeProps) {
         </TabsList>
 
         <TabsContent value="attendance" className="space-y-4">
-          <Card className="glass-card">
+          <Card className="">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between gap-2">
                 <CardTitle className="flex items-center gap-2">
@@ -452,7 +452,7 @@ export function LivePractice({ practice, onEnd, onBack }: LivePracticeProps) {
         </TabsContent>
 
         <TabsContent value="drills" className="space-y-4">
-          <Card className="glass-card">
+          <Card className="">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between gap-2">
                 <CardTitle className="flex items-center gap-2">
@@ -617,11 +617,11 @@ export function LivePractice({ practice, onEnd, onBack }: LivePracticeProps) {
           
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="glass-card p-3 rounded-lg text-center">
+              <div className="p-3 rounded-lg text-center">
                 <div className="text-2xl font-bold text-green-400">{presentCount}</div>
                 <div className="text-muted-foreground">Players Present</div>
               </div>
-              <div className="glass-card p-3 rounded-lg text-center">
+              <div className="p-3 rounded-lg text-center">
                 <div className="text-2xl font-bold text-primary">{formatTime(elapsedSeconds)}</div>
                 <div className="text-muted-foreground">Duration</div>
               </div>

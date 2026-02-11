@@ -16,7 +16,7 @@ const tourSteps: TourStep[] = [
     title: "Welcome to Caliber!",
     description: "Your personal basketball performance lab. Let's show you around and get you started on your journey to greatness.",
     icon: <Sparkles className="w-8 h-8" />,
-    gradient: "from-cyan-500 to-blue-600",
+    gradient: "from-accent to-blue-600",
   },
   {
     title: "Log Your Games",
@@ -145,7 +145,7 @@ export function OnboardingTour({ forceShow = false, onComplete }: OnboardingTour
               transition={{ repeat: Infinity, duration: 3 }}
             />
             
-            <div className="relative bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,20%,6%)] border border-cyan-500/20 rounded-2xl p-8 space-y-6">
+            <div className="relative bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,20%,6%)] border border-accent/20 rounded-2xl p-8 space-y-6">
               <motion.div
                 className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${step.gradient}`}
                 layoutId="progress-bar"
@@ -200,7 +200,7 @@ export function OnboardingTour({ forceShow = false, onComplete }: OnboardingTour
                       index === currentStep
                         ? `bg-gradient-to-r ${s.gradient}`
                         : index < currentStep
-                        ? "bg-cyan-500/50"
+                        ? "bg-accent/50"
                         : "bg-white/20"
                     }`}
                     animate={{ width: index === currentStep ? 32 : 8 }}

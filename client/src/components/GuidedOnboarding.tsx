@@ -197,18 +197,18 @@ export function GuidedOnboarding() {
         className="fixed bottom-20 md:bottom-6 right-4 left-4 md:left-auto md:w-80 z-50"
         data-testid="guided-onboarding-widget"
       >
-        <div className="relative rounded-xl border border-cyan-500/20 bg-gradient-to-br from-[hsl(220,25%,10%)] via-[hsl(220,20%,8%)] to-[hsl(220,25%,6%)] shadow-xl shadow-black/40 overflow-hidden">
-          <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
+        <div className="relative rounded-xl border border-accent/20 bg-gradient-to-br from-[hsl(220,25%,10%)] via-[hsl(220,20%,8%)] to-[hsl(220,25%,6%)] shadow-xl shadow-black/40 overflow-hidden">
+          <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
           
           <div className="p-4">
             <div className="flex items-center justify-between gap-2 mb-3">
               <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-500/10 border border-cyan-400/20">
-                  <Activity className="w-4 h-4 text-cyan-400" />
+                <div className="p-1.5 rounded-lg bg-gradient-to-br from-accent/20 to-blue-500/10 border border-accent/20">
+                  <Activity className="w-4 h-4 text-accent" />
                 </div>
                 <div>
                   <span className="text-sm font-semibold text-white">Quick Start</span>
-                  <span className="text-xs text-cyan-400/70 ml-2" data-testid="text-onboarding-progress">
+                  <span className="text-xs text-accent/70 ml-2" data-testid="text-onboarding-progress">
                     {completedCount}/{steps.length} completed
                   </span>
                 </div>
@@ -245,9 +245,9 @@ export function GuidedOnboarding() {
                   className={cn(
                     "flex-1 h-1.5 rounded-full transition-all",
                     step.completed
-                      ? "bg-cyan-500"
+                      ? "bg-accent"
                       : i === currentStepIndex
-                      ? "bg-cyan-500/40"
+                      ? "bg-accent/40"
                       : "bg-white/10"
                   )}
                 />
@@ -272,7 +272,7 @@ export function GuidedOnboarding() {
                         className={cn(
                           "flex items-start gap-3 p-3 rounded-lg transition-all",
                           step.completed
-                            ? "bg-cyan-500/10 border border-cyan-500/20"
+                            ? "bg-accent/10 border border-accent/20"
                             : i === currentStepIndex
                             ? "bg-white/5 border border-white/10"
                             : "opacity-50"
@@ -283,7 +283,7 @@ export function GuidedOnboarding() {
                           className={cn(
                             "p-2 rounded-lg shrink-0",
                             step.completed
-                              ? "bg-cyan-500/20 text-cyan-400"
+                              ? "bg-accent/20 text-accent"
                               : "bg-white/10 text-muted-foreground"
                           )}
                         >
@@ -297,7 +297,7 @@ export function GuidedOnboarding() {
                           <h4
                             className={cn(
                               "text-sm font-medium",
-                              step.completed ? "text-cyan-400" : "text-white"
+                              step.completed ? "text-accent" : "text-white"
                             )}
                           >
                             {step.title}

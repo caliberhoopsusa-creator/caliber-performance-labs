@@ -68,7 +68,7 @@ function getGradeGlowColor(grade: string): { bg: string; glow: string; text: str
     case 'A':
       return { bg: 'bg-emerald-500', glow: 'shadow-emerald-500/50', text: 'text-emerald-400' };
     case 'B':
-      return { bg: 'bg-cyan-500', glow: 'shadow-cyan-500/50', text: 'text-cyan-400' };
+      return { bg: 'bg-accent', glow: 'shadow-accent/50', text: 'text-accent' };
     case 'C':
       return { bg: 'bg-yellow-500', glow: 'shadow-yellow-500/50', text: 'text-yellow-400' };
     case 'D':
@@ -128,17 +128,17 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
         }}
         data-testid="share-card"
       >
-        {/* Cyan gradient overlay for branded look */}
+        {/* Accent gradient overlay for branded look */}
         <div 
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: 'radial-gradient(ellipse at 50% 0%, hsl(185 100% 40% / 0.15) 0%, transparent 60%)',
+            background: 'radial-gradient(ellipse at 50% 0%, hsl(var(--accent) / 0.15) 0%, transparent 60%)',
           }}
         />
         <div 
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: 'radial-gradient(ellipse at 80% 100%, hsl(185 100% 50% / 0.08) 0%, transparent 50%)',
+            background: 'radial-gradient(ellipse at 80% 100%, hsl(var(--accent) / 0.08) 0%, transparent 50%)',
           }}
         />
         
@@ -146,7 +146,7 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
         <div 
           className="absolute inset-0 opacity-[0.03] pointer-events-none"
           style={{
-            backgroundImage: `linear-gradient(rgba(0,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,255,0.1) 1px, transparent 1px)`,
+            backgroundImage: `linear-gradient(rgba(234,88,12,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(234,88,12,0.1) 1px, transparent 1px)`,
             backgroundSize: '40px 40px',
           }}
         />
@@ -158,7 +158,7 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
               src={caliberLogoCyan} 
               alt="Caliber" 
               className="h-8 object-contain"
-              style={{ filter: 'drop-shadow(0 0 8px rgba(0, 255, 255, 0.3))' }}
+              style={{ filter: 'drop-shadow(0 0 8px rgba(234, 88, 12, 0.3))' }}
             />
           </div>
           
@@ -166,23 +166,23 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
           <div className="flex items-center gap-5 mb-6">
             <div className="relative">
               <div 
-                className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-cyan-500/40"
+                className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-accent/40"
                 style={{ 
-                  boxShadow: '0 0 20px rgba(0, 255, 255, 0.2), inset 0 0 20px rgba(0, 255, 255, 0.05)',
+                  boxShadow: '0 0 20px rgba(234, 88, 12, 0.2), inset 0 0 20px rgba(234, 88, 12, 0.05)',
                 }}
               >
                 {player.photoUrl ? (
                   <img src={player.photoUrl} alt={player.name} className="w-full h-full object-cover" loading="lazy" width={96} height={96} />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 flex items-center justify-center">
+                  <div className="w-full h-full bg-gradient-to-br from-accent/20 to-accent/10 flex items-center justify-center">
                     <span className="text-3xl font-bold text-white font-display">{getInitials(player.name)}</span>
                   </div>
                 )}
               </div>
               {/* Tier badge */}
               <div 
-                className={`absolute -bottom-2 -right-2 w-8 h-8 rounded-lg bg-black/80 border border-cyan-500/30 flex items-center justify-center ${tierColor}`}
-                style={{ boxShadow: '0 0 10px rgba(0, 255, 255, 0.15)' }}
+                className={`absolute -bottom-2 -right-2 w-8 h-8 rounded-lg bg-black/80 border border-accent/30 flex items-center justify-center ${tierColor}`}
+                style={{ boxShadow: '0 0 10px rgba(234, 88, 12, 0.15)' }}
               >
                 <TierIcon className="w-5 h-5" />
               </div>
@@ -190,13 +190,13 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
             
             <div className="flex-1 min-w-0">
               {player.jerseyNumber && (
-                <span className="text-2xl font-bold text-cyan-400 font-display">#{player.jerseyNumber}</span>
+                <span className="text-2xl font-bold text-accent font-display">#{player.jerseyNumber}</span>
               )}
               <h2 className="text-2xl font-bold text-white font-display uppercase tracking-tight truncate leading-tight">
                 {player.name}
               </h2>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-xs font-bold uppercase tracking-wider bg-cyan-500/20 text-cyan-300 px-2 py-1 rounded border border-cyan-500/30">
+                <span className="text-xs font-bold uppercase tracking-wider bg-accent/20 text-accent px-2 py-1 rounded border border-accent/30">
                   {player.position?.split(',').map(p => p.trim()).map(pos => 
                     FOOTBALL_POSITIONS.includes(pos as FootballPosition)
                       ? FOOTBALL_POSITION_LABELS[pos as FootballPosition]
@@ -226,39 +226,39 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
           <div className="grid grid-cols-3 gap-3 mb-6">
             {isFootball ? (
               <>
-                <div className="bg-white/5 rounded-xl p-4 text-center border border-cyan-500/10 backdrop-blur-sm">
+                <div className="bg-white/5 rounded-xl p-4 text-center border border-border backdrop-blur-sm">
                   <div className="text-3xl font-bold text-white font-display">{totalTDs}</div>
-                  <div className="text-[10px] text-cyan-300/70 uppercase tracking-wider mt-1">TDs</div>
+                  <div className="text-[10px] text-accent/70 uppercase tracking-wider mt-1">TDs</div>
                 </div>
-                <div className="bg-white/5 rounded-xl p-4 text-center border border-cyan-500/10 backdrop-blur-sm">
+                <div className="bg-white/5 rounded-xl p-4 text-center border border-border backdrop-blur-sm">
                   <div className="text-3xl font-bold text-white font-display">{avgRushYds}</div>
-                  <div className="text-[10px] text-cyan-300/70 uppercase tracking-wider mt-1">Rush YPG</div>
+                  <div className="text-[10px] text-accent/70 uppercase tracking-wider mt-1">Rush YPG</div>
                 </div>
-                <div className="bg-white/5 rounded-xl p-4 text-center border border-cyan-500/10 backdrop-blur-sm">
+                <div className="bg-white/5 rounded-xl p-4 text-center border border-border backdrop-blur-sm">
                   <div className="text-3xl font-bold text-white font-display">{avgTackles}</div>
-                  <div className="text-[10px] text-cyan-300/70 uppercase tracking-wider mt-1">TCK/G</div>
+                  <div className="text-[10px] text-accent/70 uppercase tracking-wider mt-1">TCK/G</div>
                 </div>
               </>
             ) : (
               <>
-                <div className="bg-white/5 rounded-xl p-4 text-center border border-cyan-500/10 backdrop-blur-sm">
+                <div className="bg-white/5 rounded-xl p-4 text-center border border-border backdrop-blur-sm">
                   <div className="text-3xl font-bold text-white font-display">{avgPoints}</div>
-                  <div className="text-[10px] text-cyan-300/70 uppercase tracking-wider mt-1">PPG</div>
+                  <div className="text-[10px] text-accent/70 uppercase tracking-wider mt-1">PPG</div>
                 </div>
-                <div className="bg-white/5 rounded-xl p-4 text-center border border-cyan-500/10 backdrop-blur-sm">
+                <div className="bg-white/5 rounded-xl p-4 text-center border border-border backdrop-blur-sm">
                   <div className="text-3xl font-bold text-white font-display">{avgReb}</div>
-                  <div className="text-[10px] text-cyan-300/70 uppercase tracking-wider mt-1">RPG</div>
+                  <div className="text-[10px] text-accent/70 uppercase tracking-wider mt-1">RPG</div>
                 </div>
-                <div className="bg-white/5 rounded-xl p-4 text-center border border-cyan-500/10 backdrop-blur-sm">
+                <div className="bg-white/5 rounded-xl p-4 text-center border border-border backdrop-blur-sm">
                   <div className="text-3xl font-bold text-white font-display">{avgAst}</div>
-                  <div className="text-[10px] text-cyan-300/70 uppercase tracking-wider mt-1">APG</div>
+                  <div className="text-[10px] text-accent/70 uppercase tracking-wider mt-1">APG</div>
                 </div>
               </>
             )}
           </div>
           
           {/* Tier & XP */}
-          <div className="flex items-center justify-center gap-3 mb-6 py-3 px-4 bg-white/5 rounded-xl border border-cyan-500/10">
+          <div className="flex items-center justify-center gap-3 mb-6 py-3 px-4 bg-white/5 rounded-xl border border-border">
             <TierIcon className={`w-6 h-6 ${tierColor}`} />
             <div className="text-center">
               <div className={`text-lg font-bold font-display ${tierColor}`}>{currentTier}</div>
@@ -272,15 +272,15 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
           </div>
           
           {/* Footer Branding */}
-          <div className="mt-auto pt-4 border-t border-cyan-500/10">
+          <div className="mt-auto pt-4 border-t border-border">
             <div className="flex items-center justify-center gap-2">
               <div 
-                className="w-6 h-6 rounded bg-cyan-500/20 flex items-center justify-center border border-cyan-500/30"
-                style={{ boxShadow: '0 0 10px rgba(0, 255, 255, 0.2)' }}
+                className="w-6 h-6 rounded bg-accent/20 flex items-center justify-center border border-accent/30"
+                style={{ boxShadow: '0 0 10px rgba(234, 88, 12, 0.2)' }}
               >
-                <span className="text-cyan-400 font-bold text-xs">C</span>
+                <span className="text-accent font-bold text-xs">C</span>
               </div>
-              <span className="text-sm font-medium text-cyan-300/60 uppercase tracking-widest">View on Caliber</span>
+              <span className="text-sm font-medium text-accent/60 uppercase tracking-widest">View on Caliber</span>
             </div>
           </div>
         </div>

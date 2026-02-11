@@ -288,13 +288,13 @@ export function CoachRecommendations({
     <div className="space-y-6" data-testid="coach-recommendations">
       {isCoachViewing && (
         <Card
-          className="bg-gradient-to-br from-slate-900/80 to-slate-800/60 border-cyan-500/20"
+          className="bg-gradient-to-br from-slate-900/80 to-slate-800/60 border-accent/20"
           data-testid="coach-actions-card"
         >
           <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-cyan-500/20">
-                <Quote className="w-5 h-5 text-cyan-400" />
+              <div className="p-2 rounded-lg bg-accent/20">
+                <Quote className="w-5 h-5 text-accent" />
               </div>
               <CardTitle className="font-display text-lg text-white tracking-wide">
                 Write a Recommendation
@@ -303,7 +303,7 @@ export function CoachRecommendations({
             {!isFormOpen && (
               <Button
                 onClick={() => setIsFormOpen(true)}
-                className="bg-cyan-600 hover:bg-cyan-500"
+                className="bg-accent hover:bg-accent"
                 data-testid="button-write-recommendation"
               >
                 <Quote className="w-4 h-4 mr-2" />
@@ -401,7 +401,7 @@ export function CoachRecommendations({
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <Icon className="w-4 h-4 text-cyan-400" />
+                            <Icon className="w-4 h-4 text-accent" />
                             <span className="text-sm text-white">{label}</span>
                           </div>
                           <div className="flex items-center gap-2">
@@ -427,7 +427,7 @@ export function CoachRecommendations({
 
                 <div className="space-y-4 p-4 rounded-xl bg-slate-800/30 border border-slate-700/50">
                   <Label className="text-muted-foreground flex items-center gap-2">
-                    <User className="w-4 h-4 text-cyan-400" />
+                    <User className="w-4 h-4 text-accent" />
                     Coach Information
                   </Label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -560,7 +560,7 @@ export function CoachRecommendations({
                   </Button>
                   <Button
                     type="submit"
-                    className="bg-cyan-600 hover:bg-cyan-500"
+                    className="bg-accent hover:bg-accent"
                     disabled={createMutation.isPending}
                     data-testid="button-submit-recommendation"
                   >
@@ -581,13 +581,13 @@ export function CoachRecommendations({
       )}
 
       <Card
-        className="bg-gradient-to-br from-slate-900/80 to-slate-800/60 border-cyan-500/20"
+        className="bg-gradient-to-br from-slate-900/80 to-slate-800/60 border-accent/20"
         data-testid="recommendations-list-card"
       >
         <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-cyan-500/20">
-              <Quote className="w-5 h-5 text-cyan-400" />
+            <div className="p-2 rounded-lg bg-accent/20">
+              <Quote className="w-5 h-5 text-accent" />
             </div>
             <CardTitle className="font-display text-lg text-white tracking-wide">
               Coach Recommendations
@@ -596,7 +596,7 @@ export function CoachRecommendations({
           {publicRecommendations.length > 0 && (
             <Badge
               variant="outline"
-              className="border-cyan-500/50 text-cyan-400 bg-cyan-500/10"
+              className="border-accent/50 text-accent bg-accent/10"
               data-testid="badge-count"
             >
               {publicRecommendations.length} Recommendation
@@ -633,8 +633,8 @@ export function CoachRecommendations({
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 flex items-center justify-center border border-cyan-500/30">
-                          <User className="w-6 h-6 text-cyan-400" />
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent/20 to-accent/10 flex items-center justify-center border border-accent/30">
+                          <User className="w-6 h-6 text-accent" />
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
@@ -688,7 +688,7 @@ export function CoachRecommendations({
                       )}
                     </div>
 
-                    <blockquote className="mt-4 pl-4 border-l-2 border-cyan-500/30 text-slate-300 italic">
+                    <blockquote className="mt-4 pl-4 border-l-2 border-accent/30 text-slate-300 italic">
                       "{rec.recommendation}"
                     </blockquote>
 
@@ -744,13 +744,13 @@ export function CoachRecommendations({
                     <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                       {rec.relationship && (
                         <div className="flex items-center gap-1.5">
-                          <Users className="w-4 h-4 text-cyan-400" />
+                          <Users className="w-4 h-4 text-accent" />
                           {rec.relationship}
                         </div>
                       )}
                       {rec.yearsKnown && (
                         <div className="flex items-center gap-1.5">
-                          <Clock className="w-4 h-4 text-cyan-400" />
+                          <Clock className="w-4 h-4 text-accent" />
                           {rec.yearsKnown} year{rec.yearsKnown !== 1 ? "s" : ""} known
                         </div>
                       )}

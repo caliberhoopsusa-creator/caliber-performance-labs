@@ -101,7 +101,7 @@ export default function CollegeRecruiting() {
         <div>
           <div className="flex items-center gap-3 mb-1">
             <h1 className="font-display text-3xl md:text-4xl font-bold text-white tracking-tight flex items-center gap-3">
-              <GraduationCap className="w-8 h-8 text-cyan-400" />
+              <GraduationCap className="w-8 h-8 text-accent" />
               College Recruiting
             </h1>
             <Badge 
@@ -128,7 +128,7 @@ export default function CollegeRecruiting() {
         <Button
           onClick={handleGenerate}
           disabled={isGenerating}
-          className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white shadow-lg shadow-cyan-500/25"
+          className="bg-accent hover:from-accent hover:to-blue-400 text-white"
           data-testid="button-generate-matches"
         >
           {isGenerating ? (
@@ -151,7 +151,7 @@ export default function CollegeRecruiting() {
       </div>
 
       {playerLoading ? (
-        <Card className="p-4 md:p-6 bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-cyan-500/10">
+        <Card className="p-4 md:p-6 bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-border">
           <div className="flex flex-wrap gap-4">
             <Skeleton className="h-6 w-32" />
             <Skeleton className="h-6 w-24" />
@@ -163,15 +163,15 @@ export default function CollegeRecruiting() {
         <Card className={cn(
           "p-4 md:p-6 relative overflow-hidden",
           "bg-gradient-to-br from-[hsl(220,25%,10%)] via-[hsl(220,20%,8%)] to-[hsl(220,25%,6%)]",
-          "border-cyan-500/10"
+          "border-border"
         )}>
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
           
           <div className="flex flex-wrap items-center gap-3 md:gap-4">
             <div className="flex items-center gap-2">
-              <User className="w-4 h-4 text-cyan-400" />
+              <User className="w-4 h-4 text-accent" />
               <span className="font-semibold text-white">{player.name}</span>
-              <Badge variant="outline" className="border-cyan-500/30 text-cyan-300">
+              <Badge variant="outline" className="border-accent/30 text-accent">
                 {player.position}
               </Badge>
             </div>
@@ -214,7 +214,7 @@ export default function CollegeRecruiting() {
               placeholder="Search schools by name, city, state, or conference..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-10 bg-white/5 border-cyan-500/20 focus:border-cyan-400/50 placeholder:text-muted-foreground/60"
+              className="pl-10 pr-10 bg-white/5 border-accent/20 focus:border-accent/50 placeholder:text-muted-foreground/60"
               data-testid="input-school-search"
             />
             {searchQuery && (
@@ -237,8 +237,8 @@ export default function CollegeRecruiting() {
                 onClick={() => setDivisionFilter(div.value)}
                 className={cn(
                   divisionFilter === div.value 
-                    ? "bg-cyan-500 hover:bg-cyan-400 text-white" 
-                    : "border-cyan-500/20 hover:border-cyan-400/40 hover:bg-cyan-500/10"
+                    ? "bg-accent hover:bg-accent text-white" 
+                    : "border-accent/20 hover:border-accent/40 hover:bg-accent/10"
                 )}
                 data-testid={`filter-division-${div.value}`}
               >
@@ -252,7 +252,7 @@ export default function CollegeRecruiting() {
       {matchesLoading ? (
         <div className="grid gap-4 md:gap-6 md:grid-cols-2">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i} className="p-4 md:p-5 bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-cyan-500/10">
+            <Card key={i} className="p-4 md:p-5 bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-border">
               <div className="flex gap-4">
                 <Skeleton className="w-16 h-16 rounded-xl" />
                 <div className="flex-1 space-y-2">
@@ -269,8 +269,8 @@ export default function CollegeRecruiting() {
         <CollegeMatches playerId={playerId} divisionFilter={divisionFilter} sportFilter={currentSport} searchQuery={searchQuery} />
       ) : (
         <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-          <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/20 flex items-center justify-center mb-6">
-            <GraduationCap className="w-12 h-12 text-cyan-400" />
+          <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20 flex items-center justify-center mb-6">
+            <GraduationCap className="w-12 h-12 text-accent" />
           </div>
           <h3 className="text-xl font-semibold text-white mb-2" data-testid="text-empty-title">
             No College Matches Yet
@@ -281,7 +281,7 @@ export default function CollegeRecruiting() {
           <Button
             onClick={handleGenerate}
             disabled={isGenerating}
-            className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white shadow-lg shadow-cyan-500/25"
+            className="bg-accent hover:from-accent hover:to-blue-400 text-white"
             data-testid="button-generate-empty"
           >
             {isGenerating ? (

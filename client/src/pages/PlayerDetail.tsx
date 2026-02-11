@@ -384,34 +384,34 @@ function PlayerDetailSkeleton() {
       <Card className="p-4 md:p-8 relative overflow-hidden">
         <div className="flex flex-col gap-6">
           <div className="flex items-start gap-4 md:gap-6">
-            <Skeleton className="w-16 h-16 md:w-24 md:h-24 rounded-full skeleton-cyan" />
+            <Skeleton className="w-16 h-16 md:w-24 md:h-24 rounded-full skeleton-premium" />
             <div className="flex-1 space-y-3">
               <div className="flex items-center gap-2">
-                <Skeleton className="h-8 w-12 skeleton-cyan rounded" />
+                <Skeleton className="h-8 w-12 skeleton-premium rounded" />
                 <Skeleton className="h-6 w-16 rounded" />
               </div>
-              <Skeleton className="h-8 w-48 skeleton-cyan rounded" />
+              <Skeleton className="h-8 w-48 skeleton-premium rounded" />
               <div className="flex gap-2">
                 <Skeleton className="h-4 w-12 rounded" />
                 <Skeleton className="h-4 w-24 rounded" />
                 <Skeleton className="h-4 w-16 rounded" />
               </div>
               <div className="flex gap-3 mt-3">
-                <Skeleton className="h-8 w-20 rounded-lg skeleton-cyan" />
+                <Skeleton className="h-8 w-20 rounded-lg skeleton-premium" />
                 <Skeleton className="h-8 w-20 rounded-lg" />
                 <Skeleton className="h-8 w-20 rounded-lg" />
               </div>
             </div>
             <div className="hidden md:flex flex-col items-center gap-2">
               <Skeleton className="h-3 w-12 rounded" />
-              <Skeleton className="h-16 w-16 rounded-full skeleton-cyan" />
+              <Skeleton className="h-16 w-16 rounded-full skeleton-premium" />
             </div>
           </div>
           
           <div className="flex justify-center md:hidden">
             <div className="flex flex-col items-center gap-2 p-4 rounded-xl border border-accent/[0.08]">
               <Skeleton className="h-3 w-20 rounded" />
-              <Skeleton className="h-12 w-12 rounded-full skeleton-cyan" />
+              <Skeleton className="h-12 w-12 rounded-full skeleton-premium" />
             </div>
           </div>
           
@@ -430,33 +430,33 @@ function PlayerDetailSkeleton() {
           {[1, 2, 3, 4].map((i) => (
             <Card key={i} className="p-4">
               <Skeleton className="h-3 w-16 mb-2 rounded" />
-              <Skeleton className="h-8 w-12 skeleton-cyan rounded" />
+              <Skeleton className="h-8 w-12 skeleton-premium rounded" />
             </Card>
           ))}
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card className="p-6">
-            <Skeleton className="h-5 w-32 mb-4 skeleton-cyan rounded" />
+            <Skeleton className="h-5 w-32 mb-4 skeleton-premium rounded" />
             <Skeleton className="h-48 w-full rounded-lg" />
           </Card>
           <Card className="p-6">
-            <Skeleton className="h-5 w-32 mb-4 skeleton-cyan rounded" />
+            <Skeleton className="h-5 w-32 mb-4 skeleton-premium rounded" />
             <Skeleton className="h-48 w-full rounded-lg" />
           </Card>
         </div>
         
         <Card className="p-6">
-          <Skeleton className="h-5 w-40 mb-4 skeleton-cyan rounded" />
+          <Skeleton className="h-5 w-40 mb-4 skeleton-premium rounded" />
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
               <div key={i} className="flex items-center gap-4 p-3 rounded-lg border border-white/5">
-                <Skeleton className="h-10 w-10 rounded-lg skeleton-cyan" />
+                <Skeleton className="h-10 w-10 rounded-lg skeleton-premium" />
                 <div className="flex-1 space-y-2">
                   <Skeleton className="h-4 w-32 rounded" />
                   <Skeleton className="h-3 w-24 rounded" />
                 </div>
-                <Skeleton className="h-8 w-12 rounded skeleton-cyan" />
+                <Skeleton className="h-8 w-12 rounded skeleton-premium" />
               </div>
             ))}
           </div>
@@ -986,7 +986,7 @@ function CoachContactSection({ player, isOwnProfile }: CoachContactSectionProps)
   };
 
   return (
-    <Card className="glass-card p-6">
+    <Card className="p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-primary/10">
@@ -1135,7 +1135,7 @@ function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: n
     workout: 'text-emerald-400',
     goal: 'text-blue-400',
     challenge: 'text-amber-400',
-    repost: 'text-cyan-400',
+    repost: 'text-accent',
     poll: 'text-pink-400',
     prediction: 'text-indigo-400',
   };
@@ -2667,7 +2667,7 @@ export default function PlayerDetail() {
                   <StatCard label="Penalties" value={totalPenalties} sparklineData={sparklines.penalties} />
                 </>
               )}
-              <div className="glass-card rounded-xl p-5 flex flex-col justify-between relative overflow-hidden group hover:border-primary/30 transition-colors duration-300">
+              <div className="rounded-xl p-5 flex flex-col justify-between relative overflow-hidden group hover:border-primary/30 transition-colors duration-300">
                 <span className="stat-label text-muted-foreground/80">Avg Grade</span>
                 <div className="flex items-center justify-center mt-2">
                   <GradeBadge grade={averageGrade} size="md" />
@@ -2686,7 +2686,7 @@ export default function PlayerDetail() {
               <StatCard label="FG%" value={fgPercent !== "—" ? `${fgPercent}%` : "—"} sparklineData={sparklines.fgPct} />
               <StatCard label="3P%" value={threePercent !== "—" ? `${threePercent}%` : "—"} sparklineData={sparklines.threePct} />
               <StatCard label="FT%" value={ftPercent !== "—" ? `${ftPercent}%` : "—"} sparklineData={sparklines.ftPct} />
-              <div className="glass-card rounded-xl p-5 flex flex-col justify-between relative overflow-hidden group hover:border-primary/30 transition-colors duration-300">
+              <div className="rounded-xl p-5 flex flex-col justify-between relative overflow-hidden group hover:border-primary/30 transition-colors duration-300">
                 <span className="stat-label text-muted-foreground/80">Avg Grade</span>
                 <div className="flex items-center justify-center mt-2">
                   <GradeBadge grade={averageGrade} size="md" />

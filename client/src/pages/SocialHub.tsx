@@ -383,10 +383,10 @@ export default function SocialHub() {
       data-testid="page-social-hub"
     >
       <div>
-        <h2 className="text-3xl md:text-4xl font-display font-bold uppercase tracking-wide bg-gradient-to-b from-white to-cyan-100/80 bg-clip-text text-transparent">
+        <h2 className="text-3xl md:text-4xl font-display font-bold uppercase tracking-wide bg-gradient-to-b from-white to-accent/20 bg-clip-text text-transparent">
           Social Hub
         </h2>
-        <p className="text-cyan-200/50 font-medium mt-1">
+        <p className="text-accent/50 font-medium mt-1">
           Stay updated with players you follow
         </p>
       </div>

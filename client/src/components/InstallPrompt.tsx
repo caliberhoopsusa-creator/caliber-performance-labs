@@ -156,7 +156,7 @@ export function InstallPrompt() {
                 >
                   <Button
                     size="sm"
-                    className={`w-full ${prefersReducedMotion ? '' : 'pulse-glow'}`}
+                    className={`w-full ${prefersReducedMotion ? '' : ''}`}
                     onClick={handleInstall}
                     data-testid="button-install-app"
                   >

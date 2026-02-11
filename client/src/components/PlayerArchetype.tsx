@@ -78,7 +78,7 @@ const ARCHETYPE_COLORS: Record<ArchetypeId, { bg: string; border: string; text: 
     glow: "shadow-orange-500/20",
   },
   floor_general: {
-    bg: "from-blue-500/20 to-cyan-500/20",
+    bg: "from-blue-500/20 to-accent/20",
     border: "border-blue-500/40",
     text: "text-blue-400",
     glow: "shadow-blue-500/20",
@@ -135,7 +135,7 @@ const ARCHETYPE_COLORS: Record<ArchetypeId, { bg: string; border: string; text: 
 
 const FOOTBALL_ARCHETYPE_COLORS: Record<FootballArchetypeId, { bg: string; border: string; text: string; glow: string }> = {
   pocket_passer: {
-    bg: "from-blue-500/20 to-cyan-500/20",
+    bg: "from-blue-500/20 to-accent/20",
     border: "border-blue-500/40",
     text: "text-blue-400",
     glow: "shadow-blue-500/20",
@@ -165,10 +165,10 @@ const FOOTBALL_ARCHETYPE_COLORS: Record<FootballArchetypeId, { bg: string; borde
     glow: "shadow-yellow-500/20",
   },
   receiving_back: {
-    bg: "from-cyan-500/20 to-teal-500/20",
-    border: "border-cyan-500/40",
-    text: "text-cyan-400",
-    glow: "shadow-cyan-500/20",
+    bg: "from-accent/20 to-teal-500/20",
+    border: "border-accent/40",
+    text: "text-accent",
+    glow: "shadow-accent/20",
   },
   deep_threat: {
     bg: "from-orange-500/20 to-red-500/20",
@@ -249,7 +249,7 @@ const FOOTBALL_ARCHETYPE_COLORS: Record<FootballArchetypeId, { bg: string; borde
     glow: "shadow-red-500/20",
   },
   accurate_kicker: {
-    bg: "from-teal-500/20 to-cyan-500/20",
+    bg: "from-teal-500/20 to-accent/20",
     border: "border-teal-500/40",
     text: "text-teal-400",
     glow: "shadow-teal-500/20",
@@ -261,10 +261,10 @@ const FOOTBALL_ARCHETYPE_COLORS: Record<FootballArchetypeId, { bg: string; borde
     glow: "shadow-amber-500/20",
   },
   precision_punter: {
-    bg: "from-cyan-500/20 to-sky-500/20",
-    border: "border-cyan-500/40",
-    text: "text-cyan-400",
-    glow: "shadow-cyan-500/20",
+    bg: "from-accent/20 to-sky-500/20",
+    border: "border-accent/40",
+    text: "text-accent",
+    glow: "shadow-accent/20",
   },
 };
 

@@ -710,7 +710,7 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
                         width={40}
                         axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
                       />
-                      <Tooltip content={<PremiumTooltip />} cursor={{ fill: 'rgba(0,212,255,0.1)' }} />
+                      <Tooltip content={<PremiumTooltip />} cursor={{ fill: 'rgba(234,88,12,0.1)' }} />
                       <Bar dataKey="value" radius={[0, 6, 6, 0]} isAnimationActive>
                         {gradeDistribution.map((entry, index) => (
                           <Cell 
@@ -737,7 +737,7 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
                   <LineChart data={trendData}>
                     <defs>
                       <linearGradient id="gradeGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#00D4FF" stopOpacity={0.8} />
+                        <stop offset="5%" stopColor="hsl(24, 95%, 53%)" stopOpacity={0.8} />
                         <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.2} />
                       </linearGradient>
                     </defs>
@@ -762,7 +762,7 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
                           return (
                             <div className="bg-card/80 backdrop-blur-md border border-primary/20 rounded-lg p-3 shadow-xl shadow-primary/10">
                               <p className="text-xs text-muted-foreground">{payload[0].payload.date}</p>
-                              <p style={{ color: '#00D4FF' }} className="text-sm font-medium">
+                              <p style={{ color: 'hsl(24, 95%, 53%)' }} className="text-sm font-medium">
                                 Grade: {valueToGrade(payload[0].value)}
                               </p>
                             </div>
@@ -770,15 +770,15 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
                         }
                         return null;
                       }}
-                      cursor={{ stroke: 'rgba(0,212,255,0.3)' }}
+                      cursor={{ stroke: 'rgba(234,88,12,0.3)' }}
                     />
                     <Line
                       type="monotone"
                       dataKey="grade"
-                      stroke="#00D4FF"
+                      stroke="hsl(24, 95%, 53%)"
                       strokeWidth={3}
-                      dot={{ r: 4, fill: '#00D4FF', filter: 'drop-shadow(0 0 8px rgba(0,212,255,0.6))' }}
-                      activeDot={{ r: 6, filter: 'drop-shadow(0 0 12px rgba(0,212,255,0.8))' }}
+                      dot={{ r: 4, fill: 'hsl(24, 95%, 53%)', filter: 'drop-shadow(0 0 8px rgba(234,88,12,0.6))' }}
+                      activeDot={{ r: 6, filter: 'drop-shadow(0 0 12px rgba(234,88,12,0.8))' }}
                       isAnimationActive
                       name="Grade"
                     />

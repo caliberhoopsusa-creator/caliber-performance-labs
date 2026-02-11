@@ -75,7 +75,7 @@ const ACHIEVEMENT_CONFIG: Record<string, { title: string; subtitle: string; grad
   clean_sheet: {
     title: "CLEAN SHEET",
     subtitle: "Zero Turnovers",
-    gradient: "from-cyan-500 via-blue-500 to-indigo-500",
+    gradient: "from-accent via-blue-500 to-indigo-500",
     icon: "✨",
   },
   sharpshooter: {

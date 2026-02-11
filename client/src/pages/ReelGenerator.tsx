@@ -61,7 +61,7 @@ function ReelCoverCard({ data, selectedClips }: { data: ReelData; selectedClips:
     >
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-purple-500/20 blur-3xl" />
-        <div className="absolute -bottom-20 -left-20 w-72 h-72 rounded-full bg-cyan-500/15 blur-3xl" />
+        <div className="absolute -bottom-20 -left-20 w-72 h-72 rounded-full bg-accent/15 blur-3xl" />
       </div>
 
       <div className="relative z-10 h-full flex flex-col p-6">
@@ -82,7 +82,7 @@ function ReelCoverCard({ data, selectedClips }: { data: ReelData; selectedClips:
           {data.player.photoUrl ? (
             <img src={data.player.photoUrl} alt={data.player.name} className="w-24 h-24 rounded-2xl object-cover border-2 border-purple-500/40 mb-4" loading="lazy" width={96} height={96} />
           ) : (
-            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-purple-500/30 to-cyan-500/30 flex items-center justify-center border-2 border-purple-500/40 mb-4">
+            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-purple-500/30 to-accent/30 flex items-center justify-center border-2 border-purple-500/40 mb-4">
               <span className="text-4xl font-bold text-white">{data.player.name.charAt(0)}</span>
             </div>
           )}
@@ -90,7 +90,7 @@ function ReelCoverCard({ data, selectedClips }: { data: ReelData; selectedClips:
           <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-1">{data.player.name}</h2>
           <p className="text-sm text-white/60 mb-1">{data.player.position} {data.player.team ? `- ${data.player.team}` : ''}</p>
           {data.player.school && (
-            <p className="text-xs text-cyan-400/60 mb-4">{data.player.school} {data.player.graduationYear ? `'${String(data.player.graduationYear).slice(2)}` : ''}</p>
+            <p className="text-xs text-accent/60 mb-4">{data.player.school} {data.player.graduationYear ? `'${String(data.player.graduationYear).slice(2)}` : ''}</p>
           )}
           
           <div className="flex items-center gap-2 mb-4">
@@ -240,8 +240,8 @@ export default function ReelGenerator() {
 
   return (
     <div className="pb-24 md:pb-8 space-y-6" data-testid="page-reel-generator">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-950/40 via-black/40 to-cyan-950/40 border border-purple-500/20">
-        <div className="absolute inset-0 cyber-grid opacity-10" />
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-950/40 via-black/40 to-card border border-purple-500/20">
+        <div className="absolute inset-0 opacity-10" />
         <div className="relative z-10 p-6 md:p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-2">
@@ -250,7 +250,7 @@ export default function ReelGenerator() {
                 <span className="text-xs uppercase tracking-wider text-purple-400 font-semibold">AI Reel Builder</span>
               </div>
               <h2 className="text-2xl md:text-3xl font-bold">
-                <span className="bg-gradient-to-r from-white via-purple-200 to-cyan-400 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-white via-purple-200 to-accent bg-clip-text text-transparent">
                   Highlight Reel Generator
                 </span>
               </h2>

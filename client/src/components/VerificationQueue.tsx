@@ -102,7 +102,7 @@ export function VerificationQueue({ compact = false, maxItems }: Props) {
           </p>
           <a 
             href="/api/logout" 
-            className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/30 rounded-lg text-cyan-400 text-sm font-medium transition-colors w-fit"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-accent/20 hover:bg-accent/30 border border-accent/30 rounded-lg text-accent text-sm font-medium transition-colors w-fit"
             data-testid="button-logout-refresh"
           >
             Logout & Refresh
@@ -121,8 +121,8 @@ export function VerificationQueue({ compact = false, maxItems }: Props) {
     )}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-cyan-500/20 border border-cyan-500/30">
-            <Shield className="w-4 h-4 text-cyan-400" style={{ filter: "drop-shadow(0 0 6px rgba(0, 212, 255, 0.6))" }} />
+          <div className="p-1.5 rounded-lg bg-accent/20 border border-accent/30">
+            <Shield className="w-4 h-4 text-accent" style={{ filter: "drop-shadow(0 0 6px rgba(234, 88, 12, 0.6))" }} />
           </div>
           <h3 className="text-lg font-bold text-white">Verification Queue</h3>
           {totalUnverified > 0 && (
@@ -139,7 +139,7 @@ export function VerificationQueue({ compact = false, maxItems }: Props) {
       {totalUnverified > 0 && !compact && (
         <Tabs value={sportFilter} onValueChange={(v) => setSportFilter(v as typeof sportFilter)} className="mb-4">
           <TabsList className="bg-black/40">
-            <TabsTrigger value="all" className="data-[state=active]:bg-cyan-600">
+            <TabsTrigger value="all" className="data-[state=active]:bg-accent">
               All ({totalUnverified})
             </TabsTrigger>
             <TabsTrigger value="basketball" className="data-[state=active]:bg-orange-600">

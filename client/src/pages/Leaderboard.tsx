@@ -126,7 +126,7 @@ export default function Leaderboard() {
     return (
       <div className="space-y-6 pb-24 md:pb-8">
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 via-yellow-950/10 to-black/60 border border-yellow-500/20 p-6">
-          <div className="h-8 w-48 skeleton-cyan rounded mb-2" />
+          <div className="h-8 w-48 skeleton-premium rounded mb-2" />
           <div className="h-4 w-64 skeleton-premium rounded" />
         </div>
         <div className="space-y-3">
@@ -141,7 +141,7 @@ export default function Leaderboard() {
   return (
     <div className="space-y-6 pb-24 md:pb-8">
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 via-yellow-950/10 to-black/60 border border-yellow-500/20">
-        <div className="absolute inset-0 cyber-grid opacity-20" />
+        <div className="absolute inset-0 opacity-20" />
         <div className="absolute top-0 right-0 w-80 h-80 bg-yellow-500/10 blur-[100px] rounded-full" />
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-orange-500/10 blur-[60px] rounded-full" />
         
@@ -191,12 +191,12 @@ export default function Leaderboard() {
       </div>
 
       <Card className="relative overflow-hidden bg-gradient-to-br from-black/60 to-black/30 border-white/10">
-        <div className="absolute inset-x-[20%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
+        <div className="absolute inset-x-[20%] top-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
         
         <CardContent className="p-4 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-cyan-400" />
+              <Filter className="w-4 h-4 text-accent" />
               <span className="text-sm font-medium text-white">Filters</span>
             </div>
             {hasFilters && (
@@ -204,7 +204,7 @@ export default function Leaderboard() {
                 variant="ghost" 
                 size="sm" 
                 onClick={clearFilters}
-                className="text-xs text-cyan-400"
+                className="text-xs text-accent"
                 data-testid="button-clear-filters"
               >
                 <X className="w-3 h-3 mr-1" />
@@ -220,7 +220,7 @@ export default function Leaderboard() {
                 placeholder="Search players..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 bg-black/20 border-white/10 focus:border-cyan-500/50"
+                className="pl-9 bg-black/20 border-white/10 focus:border-accent/50"
                 data-testid="input-search"
               />
             </div>
@@ -335,31 +335,31 @@ export default function Leaderboard() {
       )}
 
       <Card className="relative overflow-hidden bg-gradient-to-br from-black/60 to-black/30 border-white/10">
-        <div className="absolute inset-x-[15%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
+        <div className="absolute inset-x-[15%] top-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
         
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[700px]">
             <thead>
-              <tr className="bg-gradient-to-r from-cyan-500/5 to-transparent border-b border-white/5">
-                <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-cyan-300/60">Rank</th>
-                <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-cyan-300/60">Player</th>
-                <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-cyan-300/60">Grade</th>
+              <tr className="bg-gradient-to-r from-accent/5 to-transparent border-b border-white/5">
+                <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">Rank</th>
+                <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">Player</th>
+                <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">Grade</th>
                 {isBasketball ? (
                   <>
-                    <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-cyan-300/60">PPG</th>
-                    <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-cyan-300/60">RPG</th>
-                    <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-cyan-300/60">APG</th>
-                    <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-cyan-300/60">FG%</th>
+                    <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">PPG</th>
+                    <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">RPG</th>
+                    <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">APG</th>
+                    <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">FG%</th>
                   </>
                 ) : (
                   <>
-                    <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-cyan-300/60">Pass YDS</th>
-                    <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-cyan-300/60">Rush YDS</th>
-                    <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-cyan-300/60">Rec YDS</th>
-                    <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-cyan-300/60">TDs</th>
+                    <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">Pass YDS</th>
+                    <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">Rush YDS</th>
+                    <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">Rec YDS</th>
+                    <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">TDs</th>
                   </>
                 )}
-                <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-cyan-300/60">Games</th>
+                <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">Games</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -391,22 +391,22 @@ export default function Leaderboard() {
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.03 }}
-                        className="transition-all duration-300 hover:bg-gradient-to-r hover:from-cyan-500/5 hover:to-transparent group"
+                        className="transition-all duration-300 hover:bg-gradient-to-r hover:from-accent/5 hover:to-transparent group"
                         data-testid={`row-leaderboard-${rank}`}
                       >
                         <td className="px-4 md:px-6 py-4">
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-lg text-cyan-200/50">#{rank}</span>
+                            <span className="font-bold text-lg text-accent/50">#{rank}</span>
                           </div>
                         </td>
                         <td className="px-4 md:px-6 py-4">
                           <Link href={`/players/${entry.playerId}`} data-testid={`link-player-profile-${entry.playerId}`}>
                             <div className="flex items-center gap-3 cursor-pointer">
-                              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500/20 to-transparent border border-cyan-400/20 flex items-center justify-center font-bold text-sm text-cyan-300 shrink-0">
+                              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-accent/20 to-transparent border border-accent/20 flex items-center justify-center font-bold text-sm text-accent shrink-0">
                                 {entry.jerseyNumber || "#"}
                               </div>
                               <div className="min-w-0">
-                                <p className="font-bold text-white group-hover:text-cyan-300 transition-colors truncate">
+                                <p className="font-bold text-white group-hover:text-accent transition-colors truncate">
                                   {entry.name}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
@@ -422,19 +422,19 @@ export default function Leaderboard() {
                         {isBasketball ? (
                           <>
                             <td className="px-4 md:px-6 py-4 font-mono font-bold text-white">{entry.avgPoints ?? 0}</td>
-                            <td className="px-4 md:px-6 py-4 font-mono text-cyan-200/70">{entry.avgRebounds ?? 0}</td>
-                            <td className="px-4 md:px-6 py-4 font-mono text-cyan-200/70">{entry.avgAssists ?? 0}</td>
-                            <td className="px-4 md:px-6 py-4 font-mono text-cyan-200/70">{entry.fgPct ?? 0}%</td>
+                            <td className="px-4 md:px-6 py-4 font-mono text-accent/70">{entry.avgRebounds ?? 0}</td>
+                            <td className="px-4 md:px-6 py-4 font-mono text-accent/70">{entry.avgAssists ?? 0}</td>
+                            <td className="px-4 md:px-6 py-4 font-mono text-accent/70">{entry.fgPct ?? 0}%</td>
                           </>
                         ) : (
                           <>
                             <td className="px-4 md:px-6 py-4 font-mono font-bold text-white">{entry.avgPassYds ?? 0}</td>
-                            <td className="px-4 md:px-6 py-4 font-mono text-cyan-200/70">{entry.avgRushYds ?? 0}</td>
-                            <td className="px-4 md:px-6 py-4 font-mono text-cyan-200/70">{entry.avgRecYds ?? 0}</td>
-                            <td className="px-4 md:px-6 py-4 font-mono text-cyan-200/70">{entry.totalTDs ?? 0}</td>
+                            <td className="px-4 md:px-6 py-4 font-mono text-accent/70">{entry.avgRushYds ?? 0}</td>
+                            <td className="px-4 md:px-6 py-4 font-mono text-accent/70">{entry.avgRecYds ?? 0}</td>
+                            <td className="px-4 md:px-6 py-4 font-mono text-accent/70">{entry.totalTDs ?? 0}</td>
                           </>
                         )}
-                        <td className="px-4 md:px-6 py-4 text-cyan-200/50">{entry.gamesPlayed}</td>
+                        <td className="px-4 md:px-6 py-4 text-accent/50">{entry.gamesPlayed}</td>
                       </motion.tr>
                     );
                   })}

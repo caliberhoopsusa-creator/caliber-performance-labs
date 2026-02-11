@@ -34,7 +34,7 @@ export function FollowersList({ playerId }: FollowersListProps) {
 
   if (isLoading) {
     return (
-      <Card className="glass-card p-6">
+      <Card className="p-6">
         <div className="flex items-center justify-center py-8">
           <SportSpinner size="sm" />
         </div>
@@ -43,7 +43,7 @@ export function FollowersList({ playerId }: FollowersListProps) {
   }
 
   return (
-    <Card className="glass-card p-6">
+    <Card className="p-6">
       <h3 className="text-lg font-bold font-display text-white mb-4 flex items-center gap-2">
         <Users className="w-5 h-5 text-primary" /> Followers
       </h3>

@@ -54,7 +54,7 @@ export function NotificationsPanel({ onClose }: NotificationsPanelProps) {
 
   if (isLoading) {
     return (
-      <div className="w-80 glass-card rounded-lg p-4 space-y-3">
+      <div className="w-80 rounded-lg p-4 space-y-3">
         <div className="flex justify-center py-2">
           <SportSpinner size="sm" />
         </div>
@@ -76,7 +76,7 @@ export function NotificationsPanel({ onClose }: NotificationsPanelProps) {
   }
 
   return (
-    <div className="w-80 glass-card rounded-lg overflow-hidden" data-testid="notifications-panel">
+    <div className="w-80 rounded-lg overflow-hidden" data-testid="notifications-panel">
       <div className="flex items-center justify-between p-4 border-b border-white/10">
         <h3 className="font-display text-lg font-semibold tracking-wide">Notifications</h3>
         {unreadNotifications.length > 0 && (

@@ -226,7 +226,7 @@ export default function MessagesPage() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <Avatar className="w-9 h-9">
-            <AvatarFallback className="bg-gradient-to-br from-cyan-600/30 to-blue-600/30 text-white text-sm">
+            <AvatarFallback className="bg-gradient-to-br from-accent/30 to-blue-600/30 text-white text-sm">
               {getInitials(otherPlayerName)}
             </AvatarFallback>
           </Avatar>
@@ -264,7 +264,7 @@ export default function MessagesPage() {
                     <div
                       className={`max-w-[75%] px-4 py-2.5 rounded-2xl ${
                         isMine
-                          ? "bg-gradient-to-br from-cyan-600 to-blue-700 text-white rounded-br-md"
+                          ? "bg-gradient-to-br from-accent to-blue-700 text-white rounded-br-md"
                           : "bg-card border border-white/10 text-white rounded-bl-md"
                       }`}
                     >
@@ -314,10 +314,10 @@ export default function MessagesPage() {
     <div className="flex flex-col h-full" data-testid="messages-inbox-view">
       <div className="flex items-center justify-between gap-4 p-4 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/10 border border-cyan-500/20 flex items-center justify-center">
-            <MessageCircle className="w-5 h-5 text-cyan-400" />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/20 to-blue-500/10 border border-accent/20 flex items-center justify-center">
+            <MessageCircle className="w-5 h-5 text-accent" />
           </div>
-          <h1 className="text-xl font-bold bg-gradient-to-r from-white via-cyan-100 to-cyan-400 bg-clip-text text-transparent">
+          <h1 className="text-xl font-bold bg-gradient-to-r from-white via-accent/20 to-accent bg-clip-text text-transparent">
             Messages
           </h1>
         </div>
@@ -370,7 +370,7 @@ export default function MessagesPage() {
                   data-testid={`thread-item-${ts.thread.id}`}
                 >
                   <Avatar className="w-11 h-11">
-                    <AvatarFallback className="bg-gradient-to-br from-cyan-600/30 to-blue-600/30 text-white text-sm">
+                    <AvatarFallback className="bg-gradient-to-br from-accent/30 to-blue-600/30 text-white text-sm">
                       {getInitials(otherName)}
                     </AvatarFallback>
                   </Avatar>
@@ -432,7 +432,7 @@ export default function MessagesPage() {
                       data-testid={`player-select-${p.id}`}
                     >
                       <Avatar className="w-9 h-9">
-                        <AvatarFallback className="bg-gradient-to-br from-cyan-600/30 to-blue-600/30 text-white text-sm">
+                        <AvatarFallback className="bg-gradient-to-br from-accent/30 to-blue-600/30 text-white text-sm">
                           {getInitials(p.name)}
                         </AvatarFallback>
                       </Avatar>

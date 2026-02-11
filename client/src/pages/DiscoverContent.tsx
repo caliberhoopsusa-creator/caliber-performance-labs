@@ -230,8 +230,8 @@ export default function DiscoverContent() {
   return (
     <div className="space-y-8" data-testid="page-discover">
       <div className="flex items-center gap-3 mb-2">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/20 flex items-center justify-center">
-          <Compass className="w-5 h-5 text-cyan-400" />
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20 flex items-center justify-center">
+          <Compass className="w-5 h-5 text-accent" />
         </div>
         <div>
           <h2 className="text-xl font-bold text-white">Discover</h2>

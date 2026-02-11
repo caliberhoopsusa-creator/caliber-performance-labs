@@ -57,7 +57,7 @@ export function FollowingList({ playerId, showUnfollowButton = true }: Following
 
   if (isLoading) {
     return (
-      <Card className="glass-card p-6">
+      <Card className="p-6">
         <div className="flex items-center justify-center py-8">
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
         </div>
@@ -66,7 +66,7 @@ export function FollowingList({ playerId, showUnfollowButton = true }: Following
   }
 
   return (
-    <Card className="glass-card p-6">
+    <Card className="p-6">
       <h3 className="text-lg font-bold font-display text-white mb-4 flex items-center gap-2">
         <Users className="w-5 h-5 text-primary" /> Following
       </h3>

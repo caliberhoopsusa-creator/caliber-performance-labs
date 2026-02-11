@@ -262,7 +262,7 @@ function PlayerCard({ player }: { player: PlayerWithStats }) {
             </span>
             {lastSeenText && (
               <span
-                className="flex items-center gap-1 text-cyan-400/70"
+                className="flex items-center gap-1 text-accent/70"
                 data-testid={`text-last-seen-${player.id}`}
               >
                 <Clock className="w-3 h-3" />

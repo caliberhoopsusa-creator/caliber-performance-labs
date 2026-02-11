@@ -193,7 +193,7 @@ export function CaliberBadge({ playerId, isOwner = false, showControls = false, 
                   Award Caliber Badge
                 </Button>
               </DialogTrigger>
-              <DialogContent className="glass-card">
+              <DialogContent className="">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <Award className="h-5 w-5 text-amber-400" />

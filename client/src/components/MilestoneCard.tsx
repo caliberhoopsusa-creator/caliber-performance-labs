@@ -41,9 +41,9 @@ const MILESTONE_CONFIG: Record<string, {
   },
   badge_unlock: {
     icon: Award,
-    color: "text-cyan-400",
-    glowColor: "rgba(34, 211, 238, 0.4)",
-    gradientFrom: "from-cyan-400",
+    color: "text-accent",
+    glowColor: "rgba(234, 88, 12, 0.4)",
+    gradientFrom: "from-accent",
     gradientTo: "to-blue-500",
   },
   grade_a: {

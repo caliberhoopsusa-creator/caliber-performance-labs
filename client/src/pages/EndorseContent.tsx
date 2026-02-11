@@ -106,10 +106,10 @@ export default function EndorseContent() {
           Back to Players
         </Button>
 
-        <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] via-[hsl(220,20%,8%)] to-[hsl(220,25%,6%)] border-cyan-500/10">
-          <CardHeader className="border-b border-cyan-500/10">
+        <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] via-[hsl(220,20%,8%)] to-[hsl(220,25%,6%)] border-border">
+          <CardHeader className="border-b border-border">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-500/20 to-purple-500/20 flex items-center justify-center border border-cyan-500/30">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-accent/20 to-purple-500/20 flex items-center justify-center border border-accent/30">
                 {selectedPlayer?.avatarUrl ? (
                   <img
                     src={selectedPlayer.avatarUrl}
@@ -117,7 +117,7 @@ export default function EndorseContent() {
                     className="w-full h-full rounded-full object-cover"
                   />
                 ) : (
-                  <User className="w-8 h-8 text-cyan-400" />
+                  <User className="w-8 h-8 text-accent" />
                 )}
               </div>
               <div>
@@ -125,7 +125,7 @@ export default function EndorseContent() {
                   {selectedPlayer?.name}
                 </CardTitle>
                 <div className="flex items-center gap-2 mt-1">
-                  <Badge variant="outline" className="border-cyan-500/30 text-cyan-400">
+                  <Badge variant="outline" className="border-accent/30 text-accent">
                     {selectedPlayer?.sport}
                   </Badge>
                   {selectedPlayer?.position && (
@@ -173,12 +173,12 @@ export default function EndorseContent() {
             placeholder="Search players by name..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-[hsl(220,20%,8%)] border-cyan-500/20 focus:border-cyan-500/50"
+            className="pl-10 bg-[hsl(220,20%,8%)] border-accent/20 focus:border-accent/50"
             data-testid="input-search-players"
           />
         </div>
         <Select value={sportFilter} onValueChange={setSportFilter}>
-          <SelectTrigger className="w-full sm:w-40 bg-[hsl(220,20%,8%)] border-cyan-500/20" data-testid="select-sport-filter">
+          <SelectTrigger className="w-full sm:w-40 bg-[hsl(220,20%,8%)] border-accent/20" data-testid="select-sport-filter">
             <Filter className="w-4 h-4 mr-2" />
             <SelectValue placeholder="Sport" />
           </SelectTrigger>
@@ -193,7 +193,7 @@ export default function EndorseContent() {
       {playersLoading || recsLoading ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Card key={i} className="bg-[hsl(220,20%,8%)] border-cyan-500/10">
+            <Card key={i} className="bg-[hsl(220,20%,8%)] border-border">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   <Skeleton className="w-12 h-12 rounded-full" />
@@ -230,11 +230,11 @@ export default function EndorseContent() {
 
           <div className="space-y-3">
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-              <User className="w-5 h-5 text-cyan-400" />
+              <User className="w-5 h-5 text-accent" />
               Available Players ({playersWithoutMyRecs.length})
             </h2>
             {playersWithoutMyRecs.length === 0 ? (
-              <Card className="bg-[hsl(220,20%,8%)] border-cyan-500/10">
+              <Card className="bg-[hsl(220,20%,8%)] border-border">
                 <CardContent className="py-12 text-center">
                   <GraduationCap className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
                   <p className="text-muted-foreground">
@@ -277,7 +277,7 @@ function PlayerCard({ player, summary, onSelect, hasEndorsement }: PlayerCardPro
       className={cn(
         "transition-all duration-300 cursor-pointer hover-elevate group",
         "bg-gradient-to-br from-[hsl(220,25%,10%)] via-[hsl(220,20%,8%)] to-[hsl(220,25%,6%)]",
-        hasEndorsement ? "border-amber-500/30" : "border-cyan-500/10"
+        hasEndorsement ? "border-amber-500/30" : "border-border"
       )}
       onClick={onSelect}
       data-testid={`player-card-${player.id}`}
@@ -289,7 +289,7 @@ function PlayerCard({ player, summary, onSelect, hasEndorsement }: PlayerCardPro
               "w-12 h-12 rounded-full flex items-center justify-center border",
               hasEndorsement
                 ? "bg-gradient-to-br from-amber-500/20 to-orange-500/20 border-amber-500/30"
-                : "bg-gradient-to-br from-cyan-500/20 to-purple-500/20 border-cyan-500/30"
+                : "bg-gradient-to-br from-accent/20 to-purple-500/20 border-accent/30"
             )}
           >
             {player.avatarUrl ? (
@@ -299,7 +299,7 @@ function PlayerCard({ player, summary, onSelect, hasEndorsement }: PlayerCardPro
                 className="w-full h-full rounded-full object-cover"
               />
             ) : (
-              <User className={cn("w-6 h-6", hasEndorsement ? "text-amber-400" : "text-cyan-400")} />
+              <User className={cn("w-6 h-6", hasEndorsement ? "text-amber-400" : "text-accent")} />
             )}
           </div>
           <div className="flex-1 min-w-0">
@@ -308,7 +308,7 @@ function PlayerCard({ player, summary, onSelect, hasEndorsement }: PlayerCardPro
               <span className="capitalize">{player.sport}</span>
               {player.position && (
                 <>
-                  <span className="text-cyan-500/50">•</span>
+                  <span className="text-accent/50">•</span>
                   <span className="truncate">{player.position}</span>
                 </>
               )}
@@ -320,7 +320,7 @@ function PlayerCard({ player, summary, onSelect, hasEndorsement }: PlayerCardPro
               </div>
             )}
           </div>
-          <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-cyan-400 transition-colors" />
+          <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-accent transition-colors" />
         </div>
 
         {hasEndorsement && (
@@ -345,11 +345,11 @@ function PlayerCard({ player, summary, onSelect, hasEndorsement }: PlayerCardPro
         )}
 
         {!hasEndorsement && (
-          <div className="mt-3 pt-3 border-t border-cyan-500/10">
+          <div className="mt-3 pt-3 border-t border-border">
             <Button
               size="sm"
               variant="outline"
-              className="w-full border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
+              className="w-full border-accent/30 text-accent hover:bg-accent/10"
               onClick={(e) => {
                 e.stopPropagation();
                 onSelect();

@@ -559,7 +559,7 @@ export default function DashboardContent() {
                   { key: 'QB', label: 'Quarterbacks', color: 'from-amber-500 to-amber-400' },
                   { key: 'RB', label: 'Running Backs', color: 'from-green-500 to-green-400' },
                   { key: 'WR', label: 'Wide Receivers', color: 'from-blue-500 to-blue-400' },
-                  { key: 'TE', label: 'Tight Ends', color: 'from-cyan-500 to-cyan-400' },
+                  { key: 'TE', label: 'Tight Ends', color: 'from-accent to-accent' },
                   { key: 'OL', label: 'Offensive Line', color: 'from-slate-500 to-slate-400' },
                   { key: 'DL', label: 'Defensive Line', color: 'from-red-500 to-red-400' },
                   { key: 'LB', label: 'Linebackers', color: 'from-orange-500 to-orange-400' },

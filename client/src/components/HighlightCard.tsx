@@ -88,7 +88,7 @@ export function HighlightCard({
   const statsToFeature = clip.statsToFeature ? JSON.parse(clip.statsToFeature) : [];
 
   return (
-    <Card className="group overflow-hidden bg-card/50 border-cyan-500/10 hover-elevate transition-all duration-300">
+    <Card className="group overflow-hidden bg-card/50 border-border hover-elevate transition-all duration-300">
       <div className="relative aspect-[9/16] bg-gradient-to-br from-slate-900 to-slate-800 overflow-hidden">
         {clip.thumbnailUrl ? (
           <img
@@ -98,7 +98,7 @@ export function HighlightCard({
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
-            <Film className="w-16 h-16 text-cyan-500/30" />
+            <Film className="w-16 h-16 text-accent/30" />
           </div>
         )}
         
@@ -109,7 +109,7 @@ export function HighlightCard({
           className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
           data-testid={`button-play-highlight-${clip.id}`}
         >
-          <div className="w-16 h-16 rounded-full bg-cyan-500/90 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+          <div className="w-16 h-16 rounded-full bg-accent/90 flex items-center justify-center">
             <Play className="w-8 h-8 text-white fill-white ml-1" />
           </div>
         </button>
@@ -130,7 +130,7 @@ export function HighlightCard({
                 <Badge
                   key={stat}
                   variant="secondary"
-                  className="text-[10px] bg-cyan-500/20 text-cyan-300 border-cyan-500/30"
+                  className="text-[10px] bg-accent/20 text-accent border-accent/30"
                 >
                   {stat}
                 </Badge>
@@ -150,7 +150,7 @@ export function HighlightCard({
               </span>
             </div>
             {clip.overlayStyle && (
-              <Badge variant="outline" className="text-[10px] border-cyan-500/30 text-cyan-400">
+              <Badge variant="outline" className="text-[10px] border-accent/30 text-accent">
                 {overlayStyleLabel}
               </Badge>
             )}
@@ -195,7 +195,7 @@ export function HighlightCard({
             <Button
               variant="outline"
               size="sm"
-              className="h-7 text-xs gap-1 border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
+              className="h-7 text-xs gap-1 border-accent/30 text-accent hover:bg-accent/10"
               onClick={() => onGenerateOverlay?.(clip)}
               data-testid={`button-generate-overlay-${clip.id}`}
             >

@@ -10,11 +10,11 @@ export default function CoachVerify() {
       className="space-y-6"
     >
       <div className="flex items-center gap-4">
-        <div className="p-3 rounded-xl bg-gradient-to-br from-cyan-500/20 to-emerald-500/20 border border-cyan-500/30">
-          <ClipboardCheck className="w-8 h-8 text-cyan-400" />
+        <div className="p-3 rounded-xl bg-gradient-to-br from-accent/20 to-emerald-500/20 border border-accent/30">
+          <ClipboardCheck className="w-8 h-8 text-accent" />
         </div>
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">
+          <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-accent to-emerald-400 bg-clip-text text-transparent">
             Game Verification
           </h1>
           <p className="text-white/60 text-sm md:text-base">
@@ -24,9 +24,9 @@ export default function CoachVerify() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="p-4 rounded-xl bg-gradient-to-br from-cyan-500/10 to-cyan-500/5 border border-cyan-500/20">
+        <div className="p-4 rounded-xl bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20">
           <div className="flex items-center gap-2 mb-2">
-            <Shield className="w-5 h-5 text-cyan-400" />
+            <Shield className="w-5 h-5 text-accent" />
             <span className="font-medium text-white/90">Trust System</span>
           </div>
           <p className="text-sm text-white/60">

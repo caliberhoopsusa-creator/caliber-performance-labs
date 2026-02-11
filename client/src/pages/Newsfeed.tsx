@@ -49,10 +49,10 @@ const ACTIVITY_GRADIENTS: Record<string, string> = {
   streak: "from-red-500/30 to-orange-600/10",
   goal: "from-emerald-500/30 to-green-600/10",
   challenge: "from-purple-500/30 to-violet-600/10",
-  repost: "from-blue-500/30 to-cyan-600/10",
+  repost: "from-blue-500/30 to-accent/10",
   poll: "from-indigo-500/30 to-blue-600/10",
   prediction: "from-pink-500/30 to-rose-600/10",
-  story: "from-cyan-500/30 to-teal-600/10",
+  story: "from-accent/30 to-teal-600/10",
 };
 
 const ACTIVITY_COLORS: Record<string, string> = {
@@ -64,7 +64,7 @@ const ACTIVITY_COLORS: Record<string, string> = {
   repost: "text-blue-400",
   poll: "text-indigo-400",
   prediction: "text-pink-400",
-  story: "text-cyan-400",
+  story: "text-accent",
 };
 
 const ACTIVITY_GLOW: Record<string, string> = {
@@ -132,7 +132,7 @@ function ActivityCard({ activity, index }: { activity: FeedActivity; index: numb
         className={cn(
           "p-4 relative overflow-hidden transition-all duration-300",
           "bg-gradient-to-br from-black/60 to-black/30 border-white/10",
-          "hover:border-cyan-500/30",
+          "hover:border-accent/30",
           activity.playerId && "cursor-pointer hover:scale-[1.01]"
         )}
         onClick={activity.playerId ? handleClick : undefined}
@@ -286,21 +286,21 @@ function FeedList({ activities, isLoading, error, emptyMessage, emptyDescription
         >
           <div className="flex flex-col items-center gap-5">
             <div className="relative">
-              <div className="absolute inset-0 bg-cyan-500/20 blur-3xl rounded-full" />
+              <div className="absolute inset-0 bg-accent/20 blur-3xl rounded-full" />
               <motion.div 
-                className="w-20 h-20 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 border border-cyan-500/30 flex items-center justify-center relative z-10"
+                className="w-20 h-20 rounded-2xl bg-gradient-to-br from-accent/20 to-accent/10 border border-accent/30 flex items-center justify-center relative z-10"
                 animate={{ 
                   boxShadow: [
-                    "0 0 20px rgba(0, 212, 255, 0.2)",
-                    "0 0 40px rgba(0, 212, 255, 0.4)",
-                    "0 0 20px rgba(0, 212, 255, 0.2)"
+                    "0 0 20px rgba(234, 88, 12, 0.2)",
+                    "0 0 40px rgba(234, 88, 12, 0.4)",
+                    "0 0 20px rgba(234, 88, 12, 0.2)"
                   ]
                 }}
                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
               >
                 <EmptyIcon 
-                  className="w-10 h-10 text-cyan-400" 
-                  style={{ filter: "drop-shadow(0 0 10px #00D4FF)" }} 
+                  className="w-10 h-10 text-accent" 
+                  style={{ filter: "drop-shadow(0 0 10px hsl(24, 95%, 53%))" }} 
                 />
               </motion.div>
             </div>
@@ -360,20 +360,20 @@ export default function Newsfeed() {
 
   return (
     <div className="pb-24 md:pb-6 space-y-8" data-testid="page-newsfeed">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 via-cyan-950/20 to-black/60 border border-cyan-500/20">
-        <div className="absolute inset-0 cyber-grid opacity-30" />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 blur-[100px] rounded-full" />
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 via-card to-black/60 border border-accent/20">
+        <div className="absolute inset-0 opacity-30" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-accent/10 blur-[100px] rounded-full" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 blur-[80px] rounded-full" />
         
         <div className="relative z-10 p-6 md:p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Activity className="w-5 h-5 text-cyan-400" style={{ filter: "drop-shadow(0 0 8px #00D4FF)" }} />
-                <span className="text-xs uppercase tracking-wider text-cyan-400 font-semibold">Live Updates</span>
+                <Activity className="w-5 h-5 text-accent" style={{ filter: "drop-shadow(0 0 8px hsl(24, 95%, 53%))" }} />
+                <span className="text-xs uppercase tracking-wider text-accent font-semibold">Live Updates</span>
               </div>
               <h1 className="text-3xl md:text-4xl font-bold">
-                <span className="bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-white via-accent to-accent bg-clip-text text-transparent">
                   Activity Feed
                 </span>
               </h1>
@@ -382,20 +382,20 @@ export default function Newsfeed() {
               </p>
             </div>
             
-            <div className="flex items-center gap-3 px-5 py-3 rounded-xl bg-gradient-to-r from-cyan-500/15 to-cyan-600/5 border border-cyan-500/30 backdrop-blur-sm">
+            <div className="flex items-center gap-3 px-5 py-3 rounded-xl bg-gradient-to-r from-accent/15 to-accent/5 border border-accent/30 backdrop-blur-sm">
               <div className="relative">
-                <Rss className="w-7 h-7 text-cyan-400" style={{ filter: "drop-shadow(0 0 8px #00D4FF)" }} />
+                <Rss className="w-7 h-7 text-accent" style={{ filter: "drop-shadow(0 0 8px hsl(24, 95%, 53%))" }} />
                 <motion.div 
                   className="absolute inset-0"
                   animate={{ opacity: [1, 0.3, 1] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 >
-                  <Rss className="w-7 h-7 text-cyan-400/30" />
+                  <Rss className="w-7 h-7 text-accent/30" />
                 </motion.div>
               </div>
               <div>
-                <p className="text-xs text-cyan-400/80 uppercase tracking-wide">Live Feed</p>
-                <p className="text-lg font-bold text-cyan-400" style={{ textShadow: "0 0 20px rgba(0,212,255,0.5)" }}>
+                <p className="text-xs text-accent/80 uppercase tracking-wide">Live Feed</p>
+                <p className="text-lg font-bold text-accent" style={{ textShadow: "0 0 20px rgba(234,88,12,0.5)" }}>
                   {allActivities?.length || 0} Updates
                 </p>
               </div>
@@ -417,8 +417,8 @@ export default function Newsfeed() {
                 value={tab}
                 className={cn(
                   "flex items-center justify-center gap-2 py-3 px-4 rounded-lg transition-all",
-                  "data-[state=active]:bg-gradient-to-br data-[state=active]:from-cyan-600 data-[state=active]:to-cyan-700",
-                  "data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-cyan-500/20"
+                  "data-[state=active]:bg-gradient-to-br data-[state=active]:from-accent data-[state=active]:to-accent",
+                  "data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/20"
                 )}
                 data-testid={`tab-${tab}`}
               >

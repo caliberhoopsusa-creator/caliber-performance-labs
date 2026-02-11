@@ -121,7 +121,7 @@ const TIER_COLORS: Record<string, string> = {
 
 const GRADE_COLORS: Record<string, string> = {
   'A': "from-green-500 to-emerald-500",
-  'B': "from-blue-500 to-cyan-500",
+  'B': "from-blue-500 to-accent",
   'C': "from-yellow-500 to-orange-500",
   'D': "from-orange-500 to-red-500",
   'F': "from-red-500 to-rose-500",
@@ -285,12 +285,12 @@ export default function PublicPlayerProfile() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[hsl(220,25%,6%)] via-[hsl(220,20%,5%)] to-[hsl(220,25%,4%)] text-white">
-      <div className="absolute inset-0 cyber-grid pointer-events-none opacity-30" />
+      <div className="absolute inset-0 pointer-events-none opacity-30" />
       
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-[hsl(220,25%,6%)]/80 border-b border-cyan-500/10">
+      <header className="sticky top-0 z-50 backdrop-blur-xl bg-[hsl(220,25%,6%)]/80 border-b border-border">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-blue-600 flex items-center justify-center">
               <span className="text-white font-bold text-sm">C</span>
             </div>
             <span className="font-display text-lg font-bold tracking-tight text-gradient-primary">CALIBER</span>
@@ -309,7 +309,7 @@ export default function PublicPlayerProfile() {
       </header>
 
       <main className="relative z-10 max-w-4xl mx-auto px-4 py-6 space-y-6 pb-12">
-        <Card className="overflow-hidden border-cyan-500/10 bg-card/50 backdrop-blur-sm">
+        <Card className="overflow-hidden border-border bg-card/50 backdrop-blur-sm">
           {player.bannerUrl && (
             <div className="h-32 md:h-48 overflow-hidden">
               <img 
@@ -325,9 +325,9 @@ export default function PublicPlayerProfile() {
             <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-6">
               <div className="flex items-start gap-4 flex-1">
                 <div className="relative flex-shrink-0">
-                  <Avatar className="w-20 h-20 md:w-24 md:h-24 border-2 border-cyan-500/30">
+                  <Avatar className="w-20 h-20 md:w-24 md:h-24 border-2 border-accent/30">
                     <AvatarImage src={player.photoUrl || undefined} alt={player.name} data-testid="img-player-photo" />
-                    <AvatarFallback className="bg-gradient-to-br from-cyan-500/30 to-blue-600/30 text-xl font-bold">
+                    <AvatarFallback className="bg-gradient-to-br from-accent/30 to-blue-600/30 text-xl font-bold">
                       {getInitials(player.name)}
                     </AvatarFallback>
                   </Avatar>
@@ -342,9 +342,9 @@ export default function PublicPlayerProfile() {
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2 mb-1">
                     {player.jerseyNumber && (
-                      <span className="text-xl font-bold text-cyan-400 font-display">#{player.jerseyNumber}</span>
+                      <span className="text-xl font-bold text-accent font-display">#{player.jerseyNumber}</span>
                     )}
-                    <Badge variant="outline" className="border-cyan-500/30 text-cyan-400 text-xs uppercase">
+                    <Badge variant="outline" className="border-accent/30 text-accent text-xs uppercase">
                       {formatPosition(player.position)}
                     </Badge>
                     <Badge 
@@ -371,7 +371,7 @@ export default function PublicPlayerProfile() {
                       </span>
                     )}
                     {player.graduationYear && (
-                      <span className="font-medium text-cyan-400" data-testid="text-graduation-year">
+                      <span className="font-medium text-accent" data-testid="text-graduation-year">
                         Class of {player.graduationYear}
                       </span>
                     )}
@@ -424,7 +424,7 @@ export default function PublicPlayerProfile() {
           </div>
         </Card>
 
-        <Card className="bg-gradient-to-r from-primary/10 via-cyan-500/5 to-primary/10 border-primary/20 overflow-hidden" data-testid="card-scout-me">
+        <Card className="bg-gradient-to-r from-primary/10 via-accent/5 to-primary/10 border-primary/20 overflow-hidden" data-testid="card-scout-me">
           <div className="p-4 md:p-6 flex flex-col md:flex-row items-center gap-4">
             <div className="flex-1 text-center md:text-left">
               <h3 className="text-lg font-bold text-white flex items-center gap-2 justify-center md:justify-start">
@@ -469,25 +469,25 @@ export default function PublicPlayerProfile() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           {isFootball ? (
             <>
-              <Card className="p-4 text-center border-cyan-500/10 bg-card/50">
+              <Card className="p-4 text-center border-border bg-card/50">
                 <div className="text-2xl md:text-3xl font-bold text-white font-display" data-testid="stat-total-tds">
                   {stats.football.totalTDs}
                 </div>
                 <div className="text-xs text-muted-foreground uppercase">Total TDs</div>
               </Card>
-              <Card className="p-4 text-center border-cyan-500/10 bg-card/50">
+              <Card className="p-4 text-center border-border bg-card/50">
                 <div className="text-2xl md:text-3xl font-bold text-white font-display" data-testid="stat-rushing-ypg">
                   {stats.football.rushingYpg}
                 </div>
                 <div className="text-xs text-muted-foreground uppercase">Rush YPG</div>
               </Card>
-              <Card className="p-4 text-center border-cyan-500/10 bg-card/50">
+              <Card className="p-4 text-center border-border bg-card/50">
                 <div className="text-2xl md:text-3xl font-bold text-white font-display" data-testid="stat-passing-ypg">
                   {stats.football.passingYpg}
                 </div>
                 <div className="text-xs text-muted-foreground uppercase">Pass YPG</div>
               </Card>
-              <Card className="p-4 text-center border-cyan-500/10 bg-card/50">
+              <Card className="p-4 text-center border-border bg-card/50">
                 <div className="text-2xl md:text-3xl font-bold text-white font-display" data-testid="stat-games-played">
                   {stats.gamesPlayed}
                 </div>
@@ -496,25 +496,25 @@ export default function PublicPlayerProfile() {
             </>
           ) : (
             <>
-              <Card className="p-4 text-center border-cyan-500/10 bg-card/50">
+              <Card className="p-4 text-center border-border bg-card/50">
                 <div className="text-2xl md:text-3xl font-bold text-white font-display" data-testid="stat-ppg">
                   {stats.basketball.ppg}
                 </div>
                 <div className="text-xs text-muted-foreground uppercase">PPG</div>
               </Card>
-              <Card className="p-4 text-center border-cyan-500/10 bg-card/50">
+              <Card className="p-4 text-center border-border bg-card/50">
                 <div className="text-2xl md:text-3xl font-bold text-white font-display" data-testid="stat-rpg">
                   {stats.basketball.rpg}
                 </div>
                 <div className="text-xs text-muted-foreground uppercase">RPG</div>
               </Card>
-              <Card className="p-4 text-center border-cyan-500/10 bg-card/50">
+              <Card className="p-4 text-center border-border bg-card/50">
                 <div className="text-2xl md:text-3xl font-bold text-white font-display" data-testid="stat-apg">
                   {stats.basketball.apg}
                 </div>
                 <div className="text-xs text-muted-foreground uppercase">APG</div>
               </Card>
-              <Card className="p-4 text-center border-cyan-500/10 bg-card/50">
+              <Card className="p-4 text-center border-border bg-card/50">
                 <div className="text-2xl md:text-3xl font-bold text-white font-display" data-testid="stat-games-played">
                   {stats.gamesPlayed}
                 </div>
@@ -525,16 +525,16 @@ export default function PublicPlayerProfile() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className="p-4 md:p-6 border-cyan-500/10 bg-card/50">
+          <Card className="p-4 md:p-6 border-border bg-card/50">
             <h2 className="text-lg font-bold font-display uppercase tracking-wide mb-4 flex items-center gap-2">
-              <GraduationCap className="w-5 h-5 text-cyan-400" />
+              <GraduationCap className="w-5 h-5 text-accent" />
               Recruiting Info
             </h2>
             <div className="space-y-3">
               {player.graduationYear && (
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Class Year</span>
-                  <span className="font-medium text-lg text-cyan-400" data-testid="text-class-year">{player.graduationYear}</span>
+                  <span className="font-medium text-lg text-accent" data-testid="text-class-year">{player.graduationYear}</span>
                 </div>
               )}
               {player.gpa && (
@@ -567,9 +567,9 @@ export default function PublicPlayerProfile() {
             </Button>
           </Card>
 
-          <Card className="p-4 md:p-6 border-cyan-500/10 bg-card/50">
+          <Card className="p-4 md:p-6 border-border bg-card/50">
             <h2 className="text-lg font-bold font-display uppercase tracking-wide mb-4 flex items-center gap-2">
-              <Activity className="w-5 h-5 text-cyan-400" />
+              <Activity className="w-5 h-5 text-accent" />
               Recent Highlights
             </h2>
             {recentGames.length > 0 ? (
@@ -615,9 +615,9 @@ export default function PublicPlayerProfile() {
         </div>
 
         {(skillBadges.length > 0 || accolades.length > 0) && (
-          <Card className="p-4 md:p-6 border-cyan-500/10 bg-card/50">
+          <Card className="p-4 md:p-6 border-border bg-card/50">
             <h2 className="text-lg font-bold font-display uppercase tracking-wide mb-4 flex items-center gap-2">
-              <Award className="w-5 h-5 text-cyan-400" />
+              <Award className="w-5 h-5 text-accent" />
               Achievements
             </h2>
             <div className="space-y-4">
@@ -629,7 +629,7 @@ export default function PublicPlayerProfile() {
                       <Badge 
                         key={badge.skillType} 
                         variant="outline" 
-                        className="capitalize gap-1 border-cyan-500/30"
+                        className="capitalize gap-1 border-accent/30"
                         data-testid={`badge-skill-${badge.skillType}`}
                       >
                         <Target className="w-3 h-3" />
@@ -665,9 +665,9 @@ export default function PublicPlayerProfile() {
         {endorsements.length > 0 && (
           <div className="space-y-4" data-testid="section-public-endorsements">
             <h2 className="text-xl font-bold flex items-center gap-2">
-              <MessageSquareQuote className="w-5 h-5 text-cyan-400" />
+              <MessageSquareQuote className="w-5 h-5 text-accent" />
               Coach Endorsements
-              <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 no-default-hover-elevate no-default-active-elevate">
+              <Badge className="bg-accent/10 text-accent border-accent/20 no-default-hover-elevate no-default-active-elevate">
                 {endorsements.length}
               </Badge>
             </h2>
@@ -676,7 +676,7 @@ export default function PublicPlayerProfile() {
                 <Card key={e.id} className="p-4 bg-white/5 border-white/10" data-testid={`public-endorsement-${e.id}`}>
                   <div className="flex items-start gap-3">
                     <Avatar className="w-8 h-8 border border-white/10">
-                      <AvatarFallback className="bg-cyan-500/20 text-cyan-400 text-xs font-bold">
+                      <AvatarFallback className="bg-accent/20 text-accent text-xs font-bold">
                         {e.coachName?.split(" ").map((n: string) => n[0]).join("").slice(0, 2)}
                       </AvatarFallback>
                     </Avatar>
@@ -699,9 +699,9 @@ export default function PublicPlayerProfile() {
         {highlights.length > 0 && (
           <div className="space-y-4" data-testid="section-public-highlights">
             <h2 className="text-xl font-bold flex items-center gap-2">
-              <Film className="w-5 h-5 text-cyan-400" />
+              <Film className="w-5 h-5 text-accent" />
               Highlight Clips
-              <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 no-default-hover-elevate no-default-active-elevate">
+              <Badge className="bg-accent/10 text-accent border-accent/20 no-default-hover-elevate no-default-active-elevate">
                 {highlights.length}
               </Badge>
             </h2>
@@ -718,7 +718,7 @@ export default function PublicPlayerProfile() {
                       </div>
                     </div>
                   ) : (
-                    <div className="aspect-video bg-gradient-to-br from-cyan-500/10 to-blue-600/10 flex items-center justify-center">
+                    <div className="aspect-video bg-gradient-to-br from-accent/10 to-blue-600/10 flex items-center justify-center">
                       <Film className="w-10 h-10 text-white/20" />
                     </div>
                   )}
@@ -758,7 +758,7 @@ export default function PublicPlayerProfile() {
         </div>
 
         {/* Coach Recommendations Section */}
-        <section className="py-12 border-t border-cyan-500/10">
+        <section className="py-12 border-t border-border">
           <CoachRecommendations 
             playerId={player.id}
             isCoachViewing={false}
@@ -767,9 +767,9 @@ export default function PublicPlayerProfile() {
         </section>
       </main>
 
-      <footer className="relative z-10 border-t border-cyan-500/10 py-6 text-center text-sm text-muted-foreground">
+      <footer className="relative z-10 border-t border-border py-6 text-center text-sm text-muted-foreground">
         <div className="flex items-center justify-center gap-2 mb-2">
-          <div className="w-6 h-6 rounded bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+          <div className="w-6 h-6 rounded bg-gradient-to-br from-accent to-blue-600 flex items-center justify-center">
             <span className="text-white font-bold text-xs">C</span>
           </div>
           <span className="font-display font-bold">CALIBER</span>

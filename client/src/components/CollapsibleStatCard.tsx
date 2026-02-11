@@ -40,7 +40,7 @@ export function CollapsibleStatCard({
     <Card className={cn("overflow-hidden", className)} data-testid={testId}>
       <button
         type="button"
-        className="w-full py-3 px-4 md:py-4 md:px-6 text-left cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-t-lg"
+        className="w-full py-3 px-4 md:py-4 md:px-6 text-left cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-t-lg"
         onClick={handleToggle}
         onKeyDown={handleKeyDown}
         aria-expanded={isOpen}
@@ -49,7 +49,7 @@ export function CollapsibleStatCard({
       >
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            {Icon && <Icon className="w-4 h-4 text-cyan-400" />}
+            {Icon && <Icon className="w-4 h-4 text-accent" />}
             <span className="text-sm md:text-base font-semibold text-card-foreground">{title}</span>
           </div>
           <div className="flex items-center gap-2">
@@ -118,7 +118,7 @@ export function QuickStat({ label, value, icon: Icon, trend, trendValue, classNa
         <span className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wide truncate">
           {label}
         </span>
-        {Icon && <Icon className="w-3 h-3 md:w-4 md:h-4 text-cyan-400/60" />}
+        {Icon && <Icon className="w-3 h-3 md:w-4 md:h-4 text-accent/60" />}
       </div>
       <div className="flex items-baseline gap-1">
         <span className="text-lg md:text-2xl font-bold text-white">{value}</span>

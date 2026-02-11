@@ -418,7 +418,7 @@ export default function PracticesContent() {
       <div className="space-y-8 animate-in fade-in duration-500">
       
       {activePractices.length > 0 && (
-        <Card className="glass-card border-green-500/30 bg-green-500/5">
+        <Card className="border-green-500/30 bg-green-500/5">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-green-400">
               <Zap className="w-5 h-5" />
@@ -444,7 +444,7 @@ export default function PracticesContent() {
       
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <p className="text-cyan-200/50 font-medium">
+          <p className="text-accent/50 font-medium">
             Log {sport === 'basketball' ? 'basketball drills, shooting sessions' : 'football drills, plays, and conditioning'} and track player attendance
           </p>
         </div>

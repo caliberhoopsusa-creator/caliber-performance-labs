@@ -89,7 +89,7 @@ export function WorkoutCard({ workout, onDelete, isDeleting }: WorkoutCardProps)
   
   return (
     <div 
-      className="glass-card rounded-xl p-4 transition-all duration-200"
+      className="rounded-xl p-4 transition-all duration-200"
       data-testid={`workout-card-${workout.id}`}
     >
       <div className="flex items-start justify-between gap-3">

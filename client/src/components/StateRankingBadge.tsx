@@ -44,7 +44,7 @@ export function StateRankingBadge({ playerId }: StateRankingBadgeProps) {
           : isTop25
           ? "bg-gradient-to-r from-purple-500/30 to-pink-500/20 border-purple-400/50 text-purple-300 shadow-lg shadow-purple-500/20"
           : isTop50
-          ? "bg-gradient-to-r from-blue-500/30 to-cyan-500/20 border-blue-400/50 text-blue-300 shadow-md shadow-blue-500/20"
+          ? "bg-gradient-to-r from-blue-500/30 to-accent/20 border-blue-400/50 text-blue-300 shadow-md shadow-blue-500/20"
           : "bg-gradient-to-r from-green-500/20 to-emerald-500/15 border-green-400/40 text-green-300"
       )}
       data-testid="state-ranking-badge"
@@ -53,7 +53,7 @@ export function StateRankingBadge({ playerId }: StateRankingBadgeProps) {
         <div 
           className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full"
           style={{
-            animation: "shimmer 3s infinite",
+            animation: "3s infinite",
           }}
         />
       </div>

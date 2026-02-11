@@ -71,7 +71,7 @@ interface PaywallCardProps {
 function PaywallCard({ icon: Icon, title, description, buttonText, buttonHref, isExternal, tier }: PaywallCardProps) {
   return (
     <div className="flex items-center justify-center min-h-[300px] p-6">
-      <Card className="glass-card-glow max-w-md w-full overflow-hidden" data-testid="paywall-card">
+      <Card className="max-w-md w-full overflow-hidden" data-testid="paywall-card">
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-orange-500 to-primary" />
         <CardContent className="pt-10 pb-8 text-center space-y-6">
           <div className="relative mx-auto">

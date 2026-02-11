@@ -150,7 +150,7 @@ export default function ScheduleCalendar() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <Card className="glass-card border-white/10">
+          <Card className="border-white/10">
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-xl font-display uppercase tracking-wide flex items-center gap-2">
@@ -271,7 +271,7 @@ export default function ScheduleCalendar() {
         </div>
 
         <div>
-          <Card className="glass-card border-white/10">
+          <Card className="border-white/10">
             <CardHeader>
               <CardTitle className="text-lg font-display uppercase tracking-wide">
                 Upcoming Events
@@ -312,7 +312,7 @@ export default function ScheduleCalendar() {
             </CardContent>
           </Card>
 
-          <Card className="glass-card border-white/10 mt-6">
+          <Card className="border-white/10 mt-6">
             <CardHeader>
               <CardTitle className="text-lg font-display uppercase tracking-wide">
                 Event Types

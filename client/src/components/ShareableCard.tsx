@@ -261,7 +261,7 @@ export function ShareableLevelUpCard({ playerName, playerPhoto, newTier, totalXp
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-20 -left-20 w-64 h-64 rounded-full bg-indigo-500/30 blur-3xl" />
         <div className="absolute -bottom-20 -right-20 w-72 h-72 rounded-full bg-primary/25 blur-3xl" />
-        <div className="absolute top-1/3 right-1/4 w-40 h-40 rounded-full bg-cyan-500/20 blur-3xl" />
+        <div className="absolute top-1/3 right-1/4 w-40 h-40 rounded-full bg-accent/20 blur-3xl" />
       </div>
 
       <div className="relative z-10 h-full flex flex-col p-6">
@@ -275,7 +275,7 @@ export function ShareableLevelUpCard({ playerName, playerPhoto, newTier, totalXp
         </div>
 
         <div className="text-center mb-4">
-          <span className="text-xs font-bold uppercase tracking-widest text-cyan-400/80 bg-cyan-500/10 px-4 py-1 rounded-full inline-flex items-center gap-1">
+          <span className="text-xs font-bold uppercase tracking-widest text-accent/80 bg-accent/10 px-4 py-1 rounded-full inline-flex items-center gap-1">
             <TrendingUp className="w-3 h-3" />
             Level Up!
           </span>
@@ -384,7 +384,7 @@ export function ShareableRankingCard({ playerName, playerPhoto, rank, totalPlaye
           
           <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-1">{playerName}</h2>
           <p className="text-sm text-white/60 mb-1">{position}</p>
-          {location && <p className="text-xs text-cyan-400/70 mb-4">{location}</p>}
+          {location && <p className="text-xs text-accent/70 mb-4">{location}</p>}
           
           <div className="text-8xl font-black text-yellow-400 mb-1" style={{ textShadow: "0 0 40px rgba(234, 179, 8, 0.5)" }}>
             #{rank}

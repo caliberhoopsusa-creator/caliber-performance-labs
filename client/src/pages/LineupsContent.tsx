@@ -141,7 +141,7 @@ export default function LineupsContent() {
       <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-cyan-200/50">Manage lineups and analyze position depth</p>
+          <p className="text-accent/50">Manage lineups and analyze position depth</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -235,7 +235,7 @@ export default function LineupsContent() {
           Position Depth Chart
           <Settings2 className="h-4 w-4 text-muted-foreground ml-1" />
         </h2>
-        <p className="text-sm text-cyan-200/50 mb-4">Assign roles to players by selecting from the dropdown</p>
+        <p className="text-sm text-accent/50 mb-4">Assign roles to players by selecting from the dropdown</p>
         <div className="grid gap-4 md:grid-cols-3">
           {(["Guard", "Wing", "Big"] as const).map(position => (
             <Card key={position} data-testid={`card-depth-${position.toLowerCase()}`}>

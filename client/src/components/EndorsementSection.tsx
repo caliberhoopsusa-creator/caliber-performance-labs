@@ -47,7 +47,7 @@ const SKILL_CATEGORIES = [
   { value: "work_ethic", label: "Work Ethic", icon: Dumbbell, color: "text-orange-400" },
   { value: "basketball_iq", label: "Game IQ", icon: Brain, color: "text-purple-400" },
   { value: "athleticism", label: "Athleticism", icon: Dumbbell, color: "text-emerald-400" },
-  { value: "coachability", label: "Coachability", icon: BookOpen, color: "text-cyan-400" },
+  { value: "coachability", label: "Coachability", icon: BookOpen, color: "text-accent" },
   { value: "teamwork", label: "Teamwork", icon: Users, color: "text-pink-400" },
 ];
 
@@ -114,10 +114,10 @@ export default function EndorsementSection({ playerId, playerName }: Endorsement
     <div className="space-y-4" data-testid="section-endorsements">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
-          <MessageSquareQuote className="w-5 h-5 text-cyan-400" />
+          <MessageSquareQuote className="w-5 h-5 text-accent" />
           <h3 className="text-lg font-bold text-white">Coach Endorsements</h3>
           {endorsements.length > 0 && (
-            <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 no-default-hover-elevate no-default-active-elevate">
+            <Badge className="bg-accent/10 text-accent border-accent/20 no-default-hover-elevate no-default-active-elevate">
               {endorsements.length}
             </Badge>
           )}
@@ -125,7 +125,7 @@ export default function EndorsementSection({ playerId, playerName }: Endorsement
         {isCoach && (
           <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
             <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-1.5 border-cyan-500/30 text-cyan-400" data-testid="button-add-endorsement">
+              <Button variant="outline" size="sm" className="gap-1.5 border-accent/30 text-accent" data-testid="button-add-endorsement">
                 <Plus className="w-3 h-3" />
                 Endorse
               </Button>
@@ -198,7 +198,7 @@ export default function EndorsementSection({ playerId, playerName }: Endorsement
               <Card key={endorsement.id} className="p-4 bg-black/20 border-white/5" data-testid={`endorsement-${endorsement.id}`}>
                 <div className="flex items-start gap-3">
                   <Avatar className="w-9 h-9 border border-white/10">
-                    <AvatarFallback className="bg-cyan-500/20 text-cyan-400 text-xs font-bold">
+                    <AvatarFallback className="bg-accent/20 text-accent text-xs font-bold">
                       {endorsement.coachName.split(" ").map(n => n[0]).join("").slice(0, 2)}
                     </AvatarFallback>
                   </Avatar>

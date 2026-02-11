@@ -27,7 +27,7 @@ const EVENT_LABELS: Record<string, { label: string; icon: string; color: string 
   rebound: { label: "Rebound", icon: "📥", color: "text-blue-400" },
   assist: { label: "Assist", icon: "🤝", color: "text-purple-400" },
   steal: { label: "Steal", icon: "⚡", color: "text-yellow-400" },
-  block: { label: "Block", icon: "🛡️", color: "text-cyan-400" },
+  block: { label: "Block", icon: "🛡️", color: "text-accent" },
   turnover: { label: "Turnover", icon: "💔", color: "text-red-400" },
   foul: { label: "Foul", icon: "🚨", color: "text-orange-400" },
 };

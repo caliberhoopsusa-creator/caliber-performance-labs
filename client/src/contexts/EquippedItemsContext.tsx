@@ -49,13 +49,13 @@ interface EffectLayer {
 const PROFILE_SKIN_STYLES: Record<string, ProfileSkinStyle> = {
   "neon-grid": {
     background: `
-      linear-gradient(135deg, rgba(0, 212, 255, 0.08) 0%, rgba(0, 100, 150, 0.05) 100%),
-      repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(0, 212, 255, 0.15) 40px, rgba(0, 212, 255, 0.15) 41px),
-      repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(0, 212, 255, 0.15) 40px, rgba(0, 212, 255, 0.15) 41px),
+      linear-gradient(135deg, rgba(234, 88, 12, 0.08) 0%, rgba(0, 100, 150, 0.05) 100%),
+      repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(234, 88, 12, 0.15) 40px, rgba(234, 88, 12, 0.15) 41px),
+      repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(234, 88, 12, 0.15) 40px, rgba(234, 88, 12, 0.15) 41px),
       linear-gradient(180deg, rgba(0, 10, 20, 0.95) 0%, rgba(0, 20, 35, 0.9) 100%)
     `,
-    borderColor: "rgba(0, 212, 255, 0.5)",
-    boxShadow: "0 0 30px rgba(0, 212, 255, 0.2), inset 0 0 40px rgba(0, 212, 255, 0.05)",
+    borderColor: "rgba(234, 88, 12, 0.5)",
+    boxShadow: "0 0 30px rgba(234, 88, 12, 0.2), inset 0 0 40px rgba(234, 88, 12, 0.05)",
     animation: "subtleGlow 4s ease-in-out infinite",
   },
   "flame-burst": {
@@ -121,7 +121,7 @@ const EFFECTS: Record<string, EffectConfig> = {
     layers: [
       // Soft ambient glow
       {
-        gradient: "radial-gradient(circle at 50% 50%, rgba(0, 212, 255, 0.25) 0%, rgba(0, 150, 200, 0.1) 40%, transparent 70%)",
+        gradient: "radial-gradient(circle at 50% 50%, rgba(234, 88, 12, 0.25) 0%, rgba(200, 100, 20, 0.1) 40%, transparent 70%)",
         animation: "ambientPulse 4s ease-in-out infinite",
         size: "350px",
         opacity: 0.6,
@@ -136,7 +136,7 @@ const EFFECTS: Record<string, EffectConfig> = {
       },
       // Subtle rotating accent
       {
-        gradient: "conic-gradient(from 0deg at 50% 50%, transparent 0%, rgba(0, 212, 255, 0.1) 25%, transparent 50%, rgba(0, 200, 230, 0.08) 75%, transparent 100%)",
+        gradient: "conic-gradient(from 0deg at 50% 50%, transparent 0%, rgba(234, 88, 12, 0.1) 25%, transparent 50%, rgba(0, 200, 230, 0.08) 75%, transparent 100%)",
         animation: "gentleSpin 20s linear infinite",
         size: "400px",
         opacity: 0.4,

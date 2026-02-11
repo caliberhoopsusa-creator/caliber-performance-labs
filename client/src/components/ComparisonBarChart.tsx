@@ -15,15 +15,15 @@ interface ComparisonBarChartProps {
 
 export function ComparisonBarChart({ stats, team1Name, team2Name }: ComparisonBarChartProps) {
   return (
-    <div className="bg-gradient-to-br from-card to-card/50 border border-cyan-500/20 rounded-2xl p-6 shadow-2xl shadow-cyan-500/10 animate-fade-up" data-testid="comparison-bar-chart">
+    <div className="bg-gradient-to-br from-card to-card/50 border border-accent/20 rounded-2xl p-6 shadow-2xl animate-fade-up" data-testid="comparison-bar-chart">
       <h3 className="text-xl font-bold font-display text-white mb-6 text-center uppercase tracking-widest">
         Statistical Comparison
       </h3>
       
       <div className="flex justify-between items-center mb-4 px-4">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-cyan-400 shadow-lg shadow-cyan-400/50" />
-          <span className="text-sm font-medium text-cyan-300">{team1Name}</span>
+          <div className="w-4 h-4 rounded bg-accent shadow-lg" />
+          <span className="text-sm font-medium text-accent">{team1Name}</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-blue-300">{team2Name}</span>
@@ -43,7 +43,7 @@ export function ComparisonBarChart({ stats, team1Name, team2Name }: ComparisonBa
           return (
             <div key={index} className="space-y-2" data-testid={`stat-row-${stat.label.toLowerCase().replace(/\s+/g, '-')}`}>
               <div className="flex justify-between items-center text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                <span className={cn("tabular-nums", team1Wins && "text-cyan-400")}>
+                <span className={cn("tabular-nums", team1Wins && "text-accent")}>
                   {stat.team1Value}{suffix}
                 </span>
                 <span>{stat.label}</span>
@@ -55,7 +55,7 @@ export function ComparisonBarChart({ stats, team1Name, team2Name }: ComparisonBa
                 <div 
                   className={cn(
                     "h-full transition-all duration-700 ease-out",
-                    team1Wins ? "bg-gradient-to-r from-cyan-500 to-cyan-400 shadow-lg shadow-cyan-500/50" : "bg-gradient-to-r from-cyan-500/40 to-cyan-400/20"
+                    team1Wins ? "bg-accent shadow-lg" : "bg-gradient-to-r from-accent/40 to-accent/20"
                   )} 
                   style={{ width: `${team1Pct}%` }} 
                 />

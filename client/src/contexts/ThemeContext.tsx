@@ -22,7 +22,7 @@ interface ThemeContextValue {
   refreshTheme: () => void;
 }
 
-const DEFAULT_ACCENT_COLOR = "#00D4FF";
+const DEFAULT_ACCENT_COLOR = "#F97316";
 
 const ThemeContext = createContext<ThemeContextValue>({
   themeData: null,
@@ -35,7 +35,7 @@ const ThemeContext = createContext<ThemeContextValue>({
 function hexToHSL(hex: string): { h: number; s: number; l: number } {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   if (!result) {
-    return { h: 186, s: 100, l: 50 };
+    return { h: 24, s: 95, l: 53 };
   }
 
   let r = parseInt(result[1], 16) / 255;

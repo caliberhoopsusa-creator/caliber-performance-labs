@@ -140,7 +140,7 @@ interface CurrentUser {
 }
 
 const COLOR_PRESETS = [
-  "#00D4FF", "#FF6B35", "#10B981", "#8B5CF6", "#EF4444", 
+  "hsl(24, 95%, 53%)", "#FF6B35", "#10B981", "#8B5CF6", "#EF4444", 
   "#F59E0B", "#EC4899", "#06B6D4", "#84CC16", "#6366F1"
 ];
 
@@ -148,7 +148,7 @@ function LeagueDetailSkeleton() {
   return (
     <div className="space-y-6" data-testid="league-detail-skeleton">
       <div className="space-y-4">
-        <Skeleton className="h-10 w-2/3 skeleton-cyan" />
+        <Skeleton className="h-10 w-2/3 skeleton-premium" />
         <Skeleton className="h-5 w-1/3 skeleton-premium" />
         <Skeleton className="h-4 w-full skeleton-premium" />
       </div>
@@ -173,7 +173,7 @@ function StatusBadge({ status, quarter, gameTime }: { status: string; quarter?: 
   }
   if (status === "final") {
     return (
-      <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30" data-testid="badge-status-final">
+      <Badge className="bg-accent/20 text-accent border-accent/30" data-testid="badge-status-final">
         Final
       </Badge>
     );
@@ -193,18 +193,18 @@ function StandingsTable({ teams }: { teams: LeagueTeam[] }) {
   });
 
   return (
-    <div className="rounded-xl border border-cyan-500/[0.08] bg-gradient-to-br from-black/60 to-black/30 overflow-hidden">
+    <div className="rounded-xl border border-accent/[0.08] bg-gradient-to-br from-black/60 to-black/30 overflow-hidden">
       <Table>
         <TableHeader>
-          <TableRow className="border-cyan-500/10 hover:bg-transparent">
-            <TableHead className="text-cyan-400/80 w-12">#</TableHead>
-            <TableHead className="text-cyan-400/80">Team</TableHead>
-            <TableHead className="text-cyan-400/80 text-center">W</TableHead>
-            <TableHead className="text-cyan-400/80 text-center">L</TableHead>
-            <TableHead className="text-cyan-400/80 text-center">T</TableHead>
-            <TableHead className="text-cyan-400/80 text-center hidden sm:table-cell">PF</TableHead>
-            <TableHead className="text-cyan-400/80 text-center hidden sm:table-cell">PA</TableHead>
-            <TableHead className="text-cyan-400/80 text-center hidden md:table-cell">+/-</TableHead>
+          <TableRow className="border-border hover:bg-transparent">
+            <TableHead className="text-accent/80 w-12">#</TableHead>
+            <TableHead className="text-accent/80">Team</TableHead>
+            <TableHead className="text-accent/80 text-center">W</TableHead>
+            <TableHead className="text-accent/80 text-center">L</TableHead>
+            <TableHead className="text-accent/80 text-center">T</TableHead>
+            <TableHead className="text-accent/80 text-center hidden sm:table-cell">PF</TableHead>
+            <TableHead className="text-accent/80 text-center hidden sm:table-cell">PA</TableHead>
+            <TableHead className="text-accent/80 text-center hidden md:table-cell">+/-</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -215,9 +215,9 @@ function StandingsTable({ teams }: { teams: LeagueTeam[] }) {
               <TableRow
                 key={team.id}
                 className={cn(
-                  "border-cyan-500/[0.05] transition-all",
-                  isPlayoffTeam && "bg-cyan-500/[0.03]",
-                  isPlayoffTeam && "shadow-[0_0_15px_rgba(0,212,255,0.08)]"
+                  "border-accent/[0.05] transition-all",
+                  isPlayoffTeam && "bg-accent/[0.03]",
+                  isPlayoffTeam && "shadow-[0_0_15px_rgba(234,88,12,0.08)]"
                 )}
                 data-testid={`row-team-${team.id}`}
               >
@@ -233,7 +233,7 @@ function StandingsTable({ teams }: { teams: LeagueTeam[] }) {
                     <div>
                       <span className="font-medium text-white">{team.name}</span>
                       {isPlayoffTeam && (
-                        <Badge variant="outline" className="ml-2 text-[10px] py-0 px-1 border-cyan-500/30 text-cyan-400">
+                        <Badge variant="outline" className="ml-2 text-[10px] py-0 px-1 border-accent/30 text-accent">
                           #{team.playoffSeed}
                         </Badge>
                       )}
@@ -279,9 +279,9 @@ function GameCard({ game, teams, onClick }: { game: LeagueGame; teams: LeagueTea
     >
       <Card
         className={cn(
-          "border-cyan-500/[0.08] bg-gradient-to-br from-black/60 to-black/30 overflow-hidden transition-all",
+          "border-accent/[0.08] bg-gradient-to-br from-black/60 to-black/30 overflow-hidden transition-all",
           game.status === "live" && "border-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.15)]",
-          onClick && "cursor-pointer hover:border-cyan-500/20 hover:shadow-[0_0_15px_rgba(0,212,255,0.1)]"
+          onClick && "cursor-pointer hover:border-accent/20 hover:shadow-[0_0_15px_rgba(234,88,12,0.1)]"
         )}
         onClick={onClick}
         data-testid={`card-game-${game.id}`}
@@ -289,7 +289,7 @@ function GameCard({ game, teams, onClick }: { game: LeagueGame; teams: LeagueTea
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Calendar className="w-3.5 h-3.5 text-cyan-400/70" />
+              <Calendar className="w-3.5 h-3.5 text-accent/70" />
               {game.scheduledDate ? format(new Date(game.scheduledDate), "MMM d, yyyy • h:mm a") : "TBD"}
             </div>
             <StatusBadge status={game.status} quarter={game.quarter} gameTime={game.gameTime} />
@@ -317,14 +317,14 @@ function GameCard({ game, teams, onClick }: { game: LeagueGame; teams: LeagueTea
                 <>
                   <span className={cn(
                     "text-xl font-bold",
-                    (game.homeScore ?? 0) > (game.awayScore ?? 0) ? "text-cyan-400" : "text-muted-foreground"
+                    (game.homeScore ?? 0) > (game.awayScore ?? 0) ? "text-accent" : "text-muted-foreground"
                   )}>
                     {game.homeScore ?? 0}
                   </span>
                   <span className="text-muted-foreground">-</span>
                   <span className={cn(
                     "text-xl font-bold",
-                    (game.awayScore ?? 0) > (game.homeScore ?? 0) ? "text-cyan-400" : "text-muted-foreground"
+                    (game.awayScore ?? 0) > (game.homeScore ?? 0) ? "text-accent" : "text-muted-foreground"
                   )}>
                     {game.awayScore ?? 0}
                   </span>
@@ -352,8 +352,8 @@ function GameCard({ game, teams, onClick }: { game: LeagueGame; teams: LeagueTea
           </div>
 
           {game.location && (
-            <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-cyan-500/[0.06] text-xs text-muted-foreground">
-              <MapPin className="w-3.5 h-3.5 text-cyan-400/70" />
+            <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-accent/[0.06] text-xs text-muted-foreground">
+              <MapPin className="w-3.5 h-3.5 text-accent/70" />
               {game.location}
             </div>
           )}
@@ -380,8 +380,8 @@ function TeamCard({ team, isCreator }: { team: LeagueTeam; isCreator: boolean })
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <Card
         className={cn(
-          "border-cyan-500/[0.08] bg-gradient-to-br from-black/60 to-black/30 overflow-hidden transition-all",
-          isOpen && "border-cyan-500/20"
+          "border-accent/[0.08] bg-gradient-to-br from-black/60 to-black/30 overflow-hidden transition-all",
+          isOpen && "border-accent/20"
         )}
         data-testid={`card-team-${team.id}`}
       >
@@ -401,7 +401,7 @@ function TeamCard({ team, isCreator }: { team: LeagueTeam; isCreator: boolean })
                     <span>{team.wins}-{team.losses}{team.ties > 0 ? `-${team.ties}` : ""}</span>
                     {team.captain && (
                       <>
-                        <span className="text-cyan-500/30">•</span>
+                        <span className="text-accent/30">•</span>
                         <span className="flex items-center gap-1">
                           <User className="w-3 h-3" />
                           {team.captain.firstName || "Captain"}
@@ -413,7 +413,7 @@ function TeamCard({ team, isCreator }: { team: LeagueTeam; isCreator: boolean })
               </div>
               <div className="flex items-center gap-2">
                 {team.playoffSeed && !team.isEliminated && (
-                  <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30">
+                  <Badge className="bg-accent/20 text-accent border-accent/30">
                     #{team.playoffSeed} Seed
                   </Badge>
                 )}
@@ -427,8 +427,8 @@ function TeamCard({ team, isCreator }: { team: LeagueTeam; isCreator: boolean })
           </CardContent>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <div className="px-4 pb-4 border-t border-cyan-500/[0.06] pt-4">
-            <h4 className="text-sm font-medium text-cyan-400/80 mb-3">Roster</h4>
+          <div className="px-4 pb-4 border-t border-accent/[0.06] pt-4">
+            <h4 className="text-sm font-medium text-accent/80 mb-3">Roster</h4>
             {rosterLoading ? (
               <div className="space-y-2">
                 {[1, 2, 3].map(i => (
@@ -442,18 +442,18 @@ function TeamCard({ team, isCreator }: { team: LeagueTeam; isCreator: boolean })
                 {roster.map((member) => (
                   <div
                     key={member.id}
-                    className="flex items-center justify-between p-2 rounded-lg bg-white/[0.02] border border-cyan-500/[0.05]"
+                    className="flex items-center justify-between p-2 rounded-lg bg-white/[0.02] border border-accent/[0.05]"
                     data-testid={`roster-member-${member.id}`}
                   >
                     <div className="flex items-center gap-3">
                       {member.jerseyNumber && (
-                        <span className="w-8 h-8 rounded bg-cyan-500/10 flex items-center justify-center text-sm font-bold text-cyan-400">
+                        <span className="w-8 h-8 rounded bg-accent/10 flex items-center justify-center text-sm font-bold text-accent">
                           #{member.jerseyNumber}
                         </span>
                       )}
                       <div>
                         <Link href={`/players/${member.playerId}`}>
-                          <span className="font-medium text-white hover:text-cyan-400 transition-colors cursor-pointer">
+                          <span className="font-medium text-white hover:text-accent transition-colors cursor-pointer">
                             {member.player?.name || `Player #${member.playerId}`}
                           </span>
                         </Link>
@@ -489,7 +489,7 @@ function CreateTeamDialog({
 }) {
   const { toast } = useToast();
   const [name, setName] = useState("");
-  const [primaryColor, setPrimaryColor] = useState("#00D4FF");
+  const [primaryColor, setPrimaryColor] = useState("hsl(24, 95%, 53%)");
 
   const createTeamMutation = useMutation({
     mutationFn: async (data: { name: string; primaryColor: string }) => {
@@ -501,7 +501,7 @@ function CreateTeamDialog({
       toast({ title: "Team created!", description: "Your team has been added to the league." });
       onOpenChange(false);
       setName("");
-      setPrimaryColor("#00D4FF");
+      setPrimaryColor("hsl(24, 95%, 53%)");
     },
     onError: (err: any) => {
       toast({
@@ -700,7 +700,7 @@ function UpdateGameModal({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 pt-4">
-          <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-white/[0.02] border border-cyan-500/10">
+          <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-white/[0.02] border border-border">
             <div className="flex items-center gap-2">
               <div
                 className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm"
@@ -802,8 +802,8 @@ function UpdateGameModal({
           )}
 
           {status === "final" && (
-            <div className="p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
-              <p className="text-sm text-cyan-400">
+            <div className="p-3 rounded-lg bg-accent/10 border border-accent/20">
+              <p className="text-sm text-accent">
                 Setting to "Final" will update team standings (wins, losses, points for/against).
               </p>
             </div>
@@ -934,17 +934,17 @@ function PlayoffBracket({
         data-testid={`bracket-game-${game.id}`}
       >
         <Card className={cn(
-          "border-cyan-500/[0.08] bg-gradient-to-br from-black/60 to-black/30 overflow-hidden w-48",
-          isFinal && "border-cyan-500/20"
+          "border-accent/[0.08] bg-gradient-to-br from-black/60 to-black/30 overflow-hidden w-48",
+          isFinal && "border-accent/20"
         )}>
           <CardContent className="p-0">
             <div className={cn(
-              "flex items-center justify-between p-2 border-b border-cyan-500/[0.06] transition-all",
-              homeWon && "bg-cyan-500/10 shadow-[0_0_15px_rgba(0,212,255,0.15)]"
+              "flex items-center justify-between p-2 border-b border-accent/[0.06] transition-all",
+              homeWon && "bg-accent/10 shadow-[0_0_15px_rgba(234,88,12,0.15)]"
             )}>
               <div className="flex items-center gap-2 min-w-0 flex-1">
                 {!isPlaceholder && homeTeam?.playoffSeed && (
-                  <span className="text-xs font-bold text-cyan-400/70 w-4 flex-shrink-0">
+                  <span className="text-xs font-bold text-accent/70 w-4 flex-shrink-0">
                     {homeTeam.playoffSeed}
                   </span>
                 )}
@@ -960,7 +960,7 @@ function PlayoffBracket({
                 <span className={cn(
                   "text-sm truncate",
                   isPlaceholder ? "text-muted-foreground/50" : "text-white",
-                  homeWon && "font-semibold text-cyan-400"
+                  homeWon && "font-semibold text-accent"
                 )}>
                   {isPlaceholder ? "TBD" : homeTeam?.name || "TBD"}
                 </span>
@@ -968,7 +968,7 @@ function PlayoffBracket({
               {isFinal && (
                 <span className={cn(
                   "text-sm font-bold ml-2",
-                  homeWon ? "text-cyan-400" : "text-muted-foreground"
+                  homeWon ? "text-accent" : "text-muted-foreground"
                 )}>
                   {game.homeScore}
                 </span>
@@ -976,11 +976,11 @@ function PlayoffBracket({
             </div>
             <div className={cn(
               "flex items-center justify-between p-2 transition-all",
-              awayWon && "bg-cyan-500/10 shadow-[0_0_15px_rgba(0,212,255,0.15)]"
+              awayWon && "bg-accent/10 shadow-[0_0_15px_rgba(234,88,12,0.15)]"
             )}>
               <div className="flex items-center gap-2 min-w-0 flex-1">
                 {!isPlaceholder && awayTeam?.playoffSeed && (
-                  <span className="text-xs font-bold text-cyan-400/70 w-4 flex-shrink-0">
+                  <span className="text-xs font-bold text-accent/70 w-4 flex-shrink-0">
                     {awayTeam.playoffSeed}
                   </span>
                 )}
@@ -996,7 +996,7 @@ function PlayoffBracket({
                 <span className={cn(
                   "text-sm truncate",
                   isPlaceholder ? "text-muted-foreground/50" : "text-white",
-                  awayWon && "font-semibold text-cyan-400"
+                  awayWon && "font-semibold text-accent"
                 )}>
                   {isPlaceholder ? "TBD" : awayTeam?.name || "TBD"}
                 </span>
@@ -1004,7 +1004,7 @@ function PlayoffBracket({
               {isFinal && (
                 <span className={cn(
                   "text-sm font-bold ml-2",
-                  awayWon ? "text-cyan-400" : "text-muted-foreground"
+                  awayWon ? "text-accent" : "text-muted-foreground"
                 )}>
                   {game.awayScore}
                 </span>
@@ -1019,7 +1019,7 @@ function PlayoffBracket({
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2 mb-4">
-        <Trophy className="w-5 h-5 text-cyan-400" />
+        <Trophy className="w-5 h-5 text-accent" />
         <h3 className="font-display text-lg uppercase tracking-wide text-white">Playoff Bracket</h3>
       </div>
 
@@ -1027,12 +1027,12 @@ function PlayoffBracket({
         <div className="flex items-start gap-8 min-w-max">
           {hasQuarterfinals && (
             <div className="space-y-2">
-              <h4 className="text-xs font-medium text-cyan-400/80 uppercase tracking-wider mb-3">Quarterfinals</h4>
+              <h4 className="text-xs font-medium text-accent/80 uppercase tracking-wider mb-3">Quarterfinals</h4>
               <div className="flex flex-col gap-6">
                 {quarterfinals.map((game, idx) => (
                   <div key={game.id} className="relative">
                     <BracketMatchup game={game} roundIndex={0} />
-                    <div className="absolute top-1/2 -right-8 w-8 h-px bg-cyan-500/20" />
+                    <div className="absolute top-1/2 -right-8 w-8 h-px bg-accent/20" />
                   </div>
                 ))}
               </div>
@@ -1040,29 +1040,29 @@ function PlayoffBracket({
           )}
 
           <div className="space-y-2">
-            <h4 className="text-xs font-medium text-cyan-400/80 uppercase tracking-wider mb-3">Semifinals</h4>
+            <h4 className="text-xs font-medium text-accent/80 uppercase tracking-wider mb-3">Semifinals</h4>
             <div className="flex flex-col gap-6" style={{ marginTop: hasQuarterfinals ? '2.5rem' : 0 }}>
               {semifinals.map((game, idx) => (
                 <div key={game.id} className="relative" style={{ marginTop: idx > 0 && hasQuarterfinals ? '5rem' : 0 }}>
                   {hasQuarterfinals && (
-                    <div className="absolute top-1/2 -left-8 w-8 h-px bg-cyan-500/20" />
+                    <div className="absolute top-1/2 -left-8 w-8 h-px bg-accent/20" />
                   )}
                   <BracketMatchup game={game} roundIndex={1} />
-                  <div className="absolute top-1/2 -right-8 w-8 h-px bg-cyan-500/20" />
+                  <div className="absolute top-1/2 -right-8 w-8 h-px bg-accent/20" />
                 </div>
               ))}
             </div>
           </div>
 
           <div className="space-y-2">
-            <h4 className="text-xs font-medium text-cyan-400/80 uppercase tracking-wider mb-3 flex items-center gap-2">
+            <h4 className="text-xs font-medium text-accent/80 uppercase tracking-wider mb-3 flex items-center gap-2">
               <Trophy className="w-4 h-4 text-yellow-400" />
               Championship
             </h4>
             <div className="flex flex-col gap-6" style={{ marginTop: hasQuarterfinals ? '5rem' : '2.5rem' }}>
               {championship.map((game) => (
                 <div key={game.id} className="relative">
-                  <div className="absolute top-1/2 -left-8 w-8 h-px bg-cyan-500/20" />
+                  <div className="absolute top-1/2 -left-8 w-8 h-px bg-accent/20" />
                   <BracketMatchup game={game} roundIndex={2} />
                 </div>
               ))}
@@ -1075,7 +1075,7 @@ function PlayoffBracket({
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="mt-6 p-6 rounded-xl bg-gradient-to-br from-cyan-500/10 to-yellow-500/10 border border-cyan-500/20 text-center"
+          className="mt-6 p-6 rounded-xl bg-gradient-to-br from-accent/10 to-yellow-500/10 border border-accent/20 text-center"
         >
           <Trophy className="w-12 h-12 text-yellow-400 mx-auto mb-3" />
           <h3 className="font-display text-xl uppercase tracking-wide text-white mb-2">Champion</h3>
@@ -1091,7 +1091,7 @@ function PlayoffBracket({
                 >
                   {winner?.name.charAt(0)}
                 </div>
-                <span className="text-2xl font-bold text-cyan-400">{winner?.name}</span>
+                <span className="text-2xl font-bold text-accent">{winner?.name}</span>
               </div>
             );
           })()}
@@ -1327,7 +1327,7 @@ export default function LeagueDetail() {
               )}
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-display uppercase tracking-wide bg-gradient-to-b from-white to-cyan-100/80 bg-clip-text text-transparent">
+              <h1 className="text-2xl md:text-3xl font-display uppercase tracking-wide bg-gradient-to-b from-white to-accent/20 bg-clip-text text-transparent">
                 {league.name}
               </h1>
               <div className="flex items-center gap-2 mt-1">
@@ -1344,13 +1344,13 @@ export default function LeagueDetail() {
                   {isBasketball ? "Basketball" : "Football"}
                 </Badge>
                 {league.seasonName && (
-                  <Badge variant="outline" className="text-xs gap-1 border-cyan-500/20 text-cyan-400/80 bg-cyan-500/10">
+                  <Badge variant="outline" className="text-xs gap-1 border-accent/20 text-accent/80 bg-accent/10">
                     <Calendar className="w-3 h-3" />
                     {league.seasonName}
                   </Badge>
                 )}
                 <Badge variant="outline" className="text-xs gap-1 border-white/10 bg-white/5">
-                  <Users className="w-3 h-3 text-cyan-400" />
+                  <Users className="w-3 h-3 text-accent" />
                   {league.teams.length} / {league.maxTeams ?? 12}
                 </Badge>
               </div>

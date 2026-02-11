@@ -70,7 +70,7 @@ function formatWingspan(inches: number | string | null | undefined): string {
 function MetricDisplay({ label, value, unit = "" }: { label: string; value: string | number | null | undefined; unit?: string }) {
   const displayValue = value !== null && value !== undefined && value !== "" ? `${value}${unit}` : "—";
   return (
-    <div className="flex justify-between items-center py-2 border-b border-cyan-500/10 last:border-0">
+    <div className="flex justify-between items-center py-2 border-b border-border last:border-0">
       <span className="text-sm text-muted-foreground">{label}</span>
       <span className="text-sm font-medium text-foreground">{displayValue}</span>
     </div>
@@ -85,9 +85,9 @@ function TraitProgress({ label, value }: { label: string; value: number | null |
     <div className="space-y-1">
       <div className="flex justify-between text-sm">
         <span className="text-muted-foreground">{label}</span>
-        <span className="font-medium text-cyan-400">{value ?? "—"}/10</span>
+        <span className="font-medium text-accent">{value ?? "—"}/10</span>
       </div>
-      <Progress value={percentage} className="h-2 bg-cyan-900/30" />
+      <Progress value={percentage} className="h-2 bg-accent/10" />
     </div>
   );
 }
@@ -295,7 +295,7 @@ export function FootballMetrics({ playerId, canEdit }: FootballMetricsProps) {
         <Card data-testid="card-combine-scores">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
-              <Dumbbell className="h-5 w-5 text-cyan-400" />
+              <Dumbbell className="h-5 w-5 text-accent" />
               Combine Scores
             </CardTitle>
           </CardHeader>
@@ -314,7 +314,7 @@ export function FootballMetrics({ playerId, canEdit }: FootballMetricsProps) {
         <Card data-testid="card-advanced-analytics">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
-              <Activity className="h-5 w-5 text-cyan-400" />
+              <Activity className="h-5 w-5 text-accent" />
               Advanced Analytics
             </CardTitle>
           </CardHeader>
@@ -334,7 +334,7 @@ export function FootballMetrics({ playerId, canEdit }: FootballMetricsProps) {
         <Card data-testid="card-qualitative-traits">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
-              <Brain className="h-5 w-5 text-cyan-400" />
+              <Brain className="h-5 w-5 text-accent" />
               Qualitative Traits
             </CardTitle>
           </CardHeader>
@@ -360,7 +360,7 @@ export function FootballMetrics({ playerId, canEdit }: FootballMetricsProps) {
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart data={radarData} margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
-                  <PolarGrid stroke="rgba(0, 212, 255, 0.2)" />
+                  <PolarGrid stroke="rgba(234, 88, 12, 0.2)" />
                   <PolarAngleAxis
                     dataKey="trait"
                     tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
@@ -373,8 +373,8 @@ export function FootballMetrics({ playerId, canEdit }: FootballMetricsProps) {
                   <Radar
                     name="Traits"
                     dataKey="value"
-                    stroke="rgb(0, 212, 255)"
-                    fill="rgba(0, 212, 255, 0.3)"
+                    stroke="hsl(24, 95%, 53%)"
+                    fill="rgba(234, 88, 12, 0.3)"
                     fillOpacity={0.6}
                   />
                 </RadarChart>
@@ -413,7 +413,7 @@ function MetricsFormFields({ form }: { form: ReturnType<typeof useForm<FootballM
   return (
     <>
       <div>
-        <h3 className="text-sm font-semibold text-cyan-400 mb-3 flex items-center gap-2">
+        <h3 className="text-sm font-semibold text-accent mb-3 flex items-center gap-2">
           <Dumbbell className="h-4 w-4" />
           Combine Scores
         </h3>
@@ -526,7 +526,7 @@ function MetricsFormFields({ form }: { form: ReturnType<typeof useForm<FootballM
       </div>
 
       <div>
-        <h3 className="text-sm font-semibold text-cyan-400 mb-3 flex items-center gap-2">
+        <h3 className="text-sm font-semibold text-accent mb-3 flex items-center gap-2">
           <Activity className="h-4 w-4" />
           Advanced Analytics
         </h3>
@@ -652,7 +652,7 @@ function MetricsFormFields({ form }: { form: ReturnType<typeof useForm<FootballM
       </div>
 
       <div>
-        <h3 className="text-sm font-semibold text-cyan-400 mb-3 flex items-center gap-2">
+        <h3 className="text-sm font-semibold text-accent mb-3 flex items-center gap-2">
           <Brain className="h-4 w-4" />
           Qualitative Traits (1-10 scale)
         </h3>

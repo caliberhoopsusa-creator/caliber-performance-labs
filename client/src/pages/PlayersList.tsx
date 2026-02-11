@@ -95,14 +95,14 @@ const TIER_STYLES = {
     label: "Pro",
   },
   rising: {
-    border: "border-cyan-500/40 hover:border-cyan-400/60",
-    glow: "0 0 20px rgba(0, 212, 255, 0.2)",
-    badge: "bg-gradient-to-r from-cyan-600 to-cyan-500 text-white",
+    border: "border-accent/40 hover:border-accent/60",
+    glow: "0 0 20px rgba(234, 88, 12, 0.2)",
+    badge: "bg-accent text-white",
     icon: Zap,
     label: "Rising",
   },
   rookie: {
-    border: "border-white/10 hover:border-cyan-500/30",
+    border: "border-white/10 hover:border-accent/30",
     glow: "none",
     badge: "bg-white/10 text-white/70",
     icon: UserPlus,
@@ -202,22 +202,22 @@ export default function PlayersList() {
 
   return (
     <div className="pb-24 md:pb-6 space-y-8">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 via-cyan-950/20 to-black/60 border border-cyan-500/20">
-        <div className="absolute inset-0 cyber-grid opacity-30" />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 blur-[100px] rounded-full" />
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 via-card to-black/60 border border-accent/20">
+        <div className="absolute inset-0 opacity-30" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-accent/10 blur-[100px] rounded-full" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 blur-[80px] rounded-full" />
         
         <div className="relative z-10 p-6 md:p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Users className="w-6 h-6 text-cyan-400" style={{ filter: "drop-shadow(0 0 8px #00D4FF)" }} />
-                <span className="text-xs uppercase tracking-wider text-cyan-400 font-semibold">
+                <Users className="w-6 h-6 text-accent" style={{ filter: "drop-shadow(0 0 8px hsl(24, 95%, 53%))" }} />
+                <span className="text-xs uppercase tracking-wider text-accent font-semibold">
                   {hasTeam ? primaryTeam?.name : "Team Management"}
                 </span>
               </div>
               <h1 className="text-3xl md:text-4xl font-bold">
-                <span className="bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-white via-accent to-accent bg-clip-text text-transparent">
                   Player Roster
                 </span>
               </h1>
@@ -231,8 +231,8 @@ export default function PlayersList() {
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                   <DialogTrigger asChild>
                     <Button 
-                      className="gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg"
-                      style={{ boxShadow: "0 4px 20px rgba(0, 212, 255, 0.3)" }}
+                      className="gap-2 bg-gradient-to-r from-accent to-blue-600 text-white shadow-lg"
+                      style={{ boxShadow: "0 4px 20px rgba(234, 88, 12, 0.3)" }}
                       data-testid="button-add-player"
                     >
                       <Plus className="w-4 h-4" />
@@ -254,7 +254,7 @@ export default function PlayersList() {
                   <Button 
                     variant="outline" 
                     onClick={copyTeamCode} 
-                    className="gap-2 border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10 hover:border-cyan-400/50" 
+                    className="gap-2 border-accent/30 text-accent hover:bg-accent/10 hover:border-accent/50" 
                     data-testid="button-copy-code"
                   >
                     {copiedCode ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -264,9 +264,9 @@ export default function PlayersList() {
               </div>
               
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
-                  <Users className="w-4 h-4 text-cyan-400" />
-                  <span className="text-cyan-300 font-medium">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent/10 border border-accent/20">
+                  <Users className="w-4 h-4 text-accent" />
+                  <span className="text-accent font-medium">
                     {hasTeam ? rosterPlayers.length : players?.length || 0}
                   </span>
                   <span>players</span>
@@ -280,8 +280,8 @@ export default function PlayersList() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
-              <Filter className="w-5 h-5 text-cyan-400" />
+            <div className="p-2 rounded-lg bg-accent/10 border border-accent/20">
+              <Filter className="w-5 h-5 text-accent" />
             </div>
             <div>
               <h2 className="text-xl font-bold">Search & Filter</h2>
@@ -308,7 +308,7 @@ export default function PlayersList() {
               placeholder="Search players by name or team..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 bg-black/20 border-white/10 focus:border-cyan-500/50"
+              className="pl-9 bg-black/20 border-white/10 focus:border-accent/50"
               data-testid="input-search-players"
             />
           </div>
@@ -322,8 +322,8 @@ export default function PlayersList() {
                 className={cn(
                   "capitalize transition-all",
                   positionFilter === position 
-                    ? "bg-gradient-to-r from-cyan-500 to-cyan-600 text-white border-transparent"
-                    : "border-white/10 hover:border-cyan-500/30"
+                    ? "bg-accent text-white border-transparent"
+                    : "border-white/10 hover:border-accent/30"
                 )}
                 data-testid={`filter-position-${position.toLowerCase()}`}
               >
@@ -341,7 +341,7 @@ export default function PlayersList() {
           >
             <span className="text-xs text-muted-foreground">Active filters:</span>
             {search && (
-              <Badge variant="outline" className="gap-1.5 border-cyan-500/30 text-cyan-300">
+              <Badge variant="outline" className="gap-1.5 border-accent/30 text-accent">
                 Search: "{search}"
                 <button onClick={() => setSearch("")} className="ml-1 hover:text-white">
                   <X className="w-3 h-3" />
@@ -349,7 +349,7 @@ export default function PlayersList() {
               </Badge>
             )}
             {positionFilter !== "All" && (
-              <Badge variant="outline" className="gap-1.5 border-cyan-500/30 text-cyan-300">
+              <Badge variant="outline" className="gap-1.5 border-accent/30 text-accent">
                 Position: {positionFilter}
                 <button onClick={() => setPositionFilter("All")} className="ml-1 hover:text-white">
                   <X className="w-3 h-3" />
@@ -365,7 +365,7 @@ export default function PlayersList() {
           <TabsList className="w-full grid grid-cols-2 mb-6 bg-black/40 border border-white/10 p-1 rounded-xl" data-testid="tabs-roster">
             <TabsTrigger 
               value="roster" 
-              className="gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/20 data-[state=active]:to-cyan-600/10 data-[state=active]:border-cyan-500/30 data-[state=active]:text-cyan-300 rounded-lg transition-all" 
+              className="gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent/20 data-[state=active]:to-accent/10 data-[state=active]:border-accent/30 data-[state=active]:text-accent rounded-lg transition-all" 
               data-testid="tab-roster"
             >
               <Users className="w-4 h-4" />
@@ -373,7 +373,7 @@ export default function PlayersList() {
             </TabsTrigger>
             <TabsTrigger 
               value="find" 
-              className="gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/20 data-[state=active]:to-cyan-600/10 data-[state=active]:border-cyan-500/30 data-[state=active]:text-cyan-300 rounded-lg transition-all" 
+              className="gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent/20 data-[state=active]:to-accent/10 data-[state=active]:border-accent/30 data-[state=active]:text-accent rounded-lg transition-all" 
               data-testid="tab-find"
             >
               <Search className="w-4 h-4" />
@@ -405,7 +405,7 @@ export default function PlayersList() {
                         Clear Filters
                       </Button>
                     ) : (
-                      <Button onClick={copyTeamCode} variant="default" className="gap-2 bg-gradient-to-r from-cyan-500 to-cyan-600">
+                      <Button onClick={copyTeamCode} variant="default" className="gap-2 bg-accent">
                         <Copy className="w-4 h-4" />
                         Copy Invite Code
                       </Button>
@@ -425,20 +425,20 @@ export default function PlayersList() {
 
           <TabsContent value="find">
             <div className="space-y-6">
-              <Card className="p-4 bg-gradient-to-r from-cyan-500/10 to-cyan-600/5 border-cyan-500/20 backdrop-blur-sm">
+              <Card className="p-4 bg-gradient-to-r from-accent/10 to-accent/5 border-accent/20 backdrop-blur-sm">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-cyan-500/20 border border-cyan-400/30">
-                    <Send className="w-5 h-5 text-cyan-400" style={{ filter: "drop-shadow(0 0 6px #00D4FF)" }} />
+                  <div className="p-2 rounded-lg bg-accent/20 border border-accent/30">
+                    <Send className="w-5 h-5 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(24, 95%, 53%))" }} />
                   </div>
                   <div className="flex-1">
                     <p className="text-sm text-white font-medium">Invite players to your team</p>
-                    <p className="text-xs text-muted-foreground">Share your team code: <span className="text-cyan-400 font-bold">{primaryTeam?.code}</span></p>
+                    <p className="text-xs text-muted-foreground">Share your team code: <span className="text-accent font-bold">{primaryTeam?.code}</span></p>
                   </div>
                   <Button 
                     size="sm" 
                     variant="outline" 
                     onClick={copyTeamCode} 
-                    className="gap-1.5 border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10"
+                    className="gap-1.5 border-accent/30 text-accent hover:bg-accent/10"
                   >
                     {copiedCode ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                     Copy
@@ -556,18 +556,18 @@ function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps)
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative overflow-hidden text-center py-20 border border-cyan-500/10 rounded-2xl bg-gradient-to-br from-black/40 to-black/20"
+      className="relative overflow-hidden text-center py-20 border border-border rounded-2xl bg-gradient-to-br from-black/40 to-black/20"
     >
-      <div className="absolute inset-0 cyber-grid opacity-10" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-cyan-500/5 blur-[80px] rounded-full" />
+      <div className="absolute inset-0 opacity-10" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-accent/5 blur-[80px] rounded-full" />
       
       <div className="relative z-10">
         <div className="relative inline-block mb-6">
-          <div className="absolute inset-0 bg-cyan-500/20 blur-2xl rounded-full animate-pulse" />
-          <div className="relative p-4 rounded-full bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 border border-cyan-500/30">
+          <div className="absolute inset-0 bg-accent/20 blur-2xl rounded-full animate-pulse" />
+          <div className="relative p-4 rounded-full bg-gradient-to-br from-accent/20 to-accent/10 border border-accent/30">
             <Icon 
-              className="w-10 h-10 text-cyan-400" 
-              style={{ filter: "drop-shadow(0 0 10px #00D4FF)" }}
+              className="w-10 h-10 text-accent" 
+              style={{ filter: "drop-shadow(0 0 10px hsl(24, 95%, 53%))" }}
             />
           </div>
         </div>
@@ -634,7 +634,7 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
                   boxShadow: tier !== "rookie" ? tierStyle.glow : "0 4px 30px rgba(0,0,0,0.3)"
                 }}
               >
-                <div className="absolute inset-x-[20%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
+                <div className="absolute inset-x-[20%] top-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
                 
                 {isOnRoster && showInvite && (
                   <Badge className="absolute top-3 left-3 z-10 bg-emerald-500/20 text-emerald-400 border-emerald-400/30 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
@@ -710,16 +710,16 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
                       <motion.div 
                         className={cn(
                           "w-16 h-16 rounded-full flex items-center justify-center text-2xl font-display font-bold",
-                          "bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 border-2",
+                          "bg-gradient-to-br from-accent/20 to-accent/10 border-2",
                           tier === "elite" ? "border-yellow-400/40 text-yellow-300" :
                           tier === "pro" ? "border-purple-400/40 text-purple-300" :
-                          tier === "rising" ? "border-cyan-400/40 text-cyan-300" :
+                          tier === "rising" ? "border-accent/40 text-accent" :
                           "border-white/20 text-white/70"
                         )}
                         style={tier !== "rookie" ? { 
                           boxShadow: tier === "elite" ? "0 0 25px rgba(234, 179, 8, 0.3)" :
                                     tier === "pro" ? "0 0 20px rgba(168, 85, 247, 0.25)" :
-                                    "0 0 15px rgba(0, 212, 255, 0.2)"
+                                    "0 0 15px rgba(234, 88, 12, 0.2)"
                         } : {}}
                         whileHover={{ scale: 1.05 }}
                         transition={{ type: "spring", stiffness: 300 }}
@@ -728,7 +728,7 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
                       </motion.div>
                     </div>
                     
-                    <h3 className="text-xl font-bold font-display text-white mb-1 group-hover:text-cyan-300 transition-colors truncate">
+                    <h3 className="text-xl font-bold font-display text-white mb-1 group-hover:text-accent transition-colors truncate">
                       {player.name}
                     </h3>
                     <p className="text-sm text-muted-foreground mb-4 font-medium">
@@ -736,8 +736,8 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
                     </p>
                     
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="px-3 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
-                        <span className="text-xs font-bold uppercase tracking-wider text-cyan-300">
+                      <div className="px-3 py-1.5 rounded-lg bg-accent/10 border border-accent/20">
+                        <span className="text-xs font-bold uppercase tracking-wider text-accent">
                           {player.position}
                         </span>
                       </div>
@@ -754,7 +754,7 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
                       variant="outline"
                       size="sm"
                       onClick={() => navigate(`/players/${player.id}`)}
-                      className="flex-1 gap-1.5 border-white/10 hover:border-cyan-500/30 hover:bg-cyan-500/10"
+                      className="flex-1 gap-1.5 border-white/10 hover:border-accent/30 hover:bg-accent/10"
                       data-testid={`button-view-player-${player.id}`}
                     >
                       <Eye className="w-3.5 h-3.5" /> View
@@ -764,7 +764,7 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
                         variant="outline"
                         size="sm"
                         onClick={() => copyInviteMessage(player.name)}
-                        className="flex-1 gap-1.5 border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10"
+                        className="flex-1 gap-1.5 border-accent/30 text-accent hover:bg-accent/10"
                         data-testid={`button-invite-player-${player.id}`}
                       >
                         <Send className="w-3.5 h-3.5" /> Invite
@@ -775,7 +775,7 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
                           variant="outline"
                           size="sm"
                           onClick={() => navigate(`/players/${player.id}?edit=true`)}
-                          className="flex-1 gap-1.5 border-white/10 hover:border-cyan-500/30 hover:bg-cyan-500/10"
+                          className="flex-1 gap-1.5 border-white/10 hover:border-accent/30 hover:bg-accent/10"
                           data-testid={`button-edit-player-${player.id}`}
                         >
                           <Pencil className="w-3.5 h-3.5" /> Edit
@@ -832,7 +832,7 @@ function CreatePlayerForm({ onSuccess }: { onSuccess: () => void }) {
         <Input
           {...form.register("name")}
           placeholder="Enter player name"
-          className="bg-black/20 border-white/10 focus:border-cyan-500/50"
+          className="bg-black/20 border-white/10 focus:border-accent/50"
           data-testid="input-player-name"
         />
         {form.formState.errors.name && (
@@ -847,7 +847,7 @@ function CreatePlayerForm({ onSuccess }: { onSuccess: () => void }) {
             value={form.watch("position")}
             onValueChange={(val) => form.setValue("position", val)}
           >
-            <SelectTrigger className="bg-black/20 border-white/10 focus:border-cyan-500/50" data-testid="select-position">
+            <SelectTrigger className="bg-black/20 border-white/10 focus:border-accent/50" data-testid="select-position">
               <SelectValue placeholder="Select position" />
             </SelectTrigger>
             <SelectContent className="bg-card border-white/10">
@@ -864,7 +864,7 @@ function CreatePlayerForm({ onSuccess }: { onSuccess: () => void }) {
             {...form.register("jerseyNumber", { valueAsNumber: true })}
             type="number"
             placeholder="#"
-            className="bg-black/20 border-white/10 focus:border-cyan-500/50"
+            className="bg-black/20 border-white/10 focus:border-accent/50"
             data-testid="input-jersey-number"
           />
         </div>
@@ -876,7 +876,7 @@ function CreatePlayerForm({ onSuccess }: { onSuccess: () => void }) {
           <Input
             {...form.register("height")}
             placeholder="e.g. 6'2"
-            className="bg-black/20 border-white/10 focus:border-cyan-500/50"
+            className="bg-black/20 border-white/10 focus:border-accent/50"
             data-testid="input-height"
           />
         </div>
@@ -886,7 +886,7 @@ function CreatePlayerForm({ onSuccess }: { onSuccess: () => void }) {
           <Input
             {...form.register("team")}
             placeholder="Team name"
-            className="bg-black/20 border-white/10 focus:border-cyan-500/50"
+            className="bg-black/20 border-white/10 focus:border-accent/50"
             data-testid="input-team"
           />
         </div>
@@ -896,8 +896,8 @@ function CreatePlayerForm({ onSuccess }: { onSuccess: () => void }) {
         <Button 
           type="submit" 
           disabled={isPending}
-          className="w-full gap-2 bg-gradient-to-r from-cyan-500 to-cyan-600"
-          style={{ boxShadow: "0 4px 20px rgba(0, 212, 255, 0.3)" }}
+          className="w-full gap-2 bg-accent"
+          style={{ boxShadow: "0 4px 20px rgba(234, 88, 12, 0.3)" }}
           data-testid="button-submit-player"
         >
           {isPending ? (

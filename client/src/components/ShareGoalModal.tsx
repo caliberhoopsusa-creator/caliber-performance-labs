@@ -75,7 +75,7 @@ export function ShareGoalModal({ goalId, isOpen, onClose }: ShareGoalModalProps)
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-md glass-card">
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-white">
             <Share2 className="w-5 h-5 text-primary" />

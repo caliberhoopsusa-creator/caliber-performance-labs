@@ -141,22 +141,22 @@ export function StatCard({ label, value, subValue, trend, className, highlight, 
     <div className={cn(
       "relative rounded-xl p-4 md:p-5 flex flex-col justify-between group overflow-hidden touch-press",
       "bg-gradient-to-br from-[hsl(220,25%,8%)] via-[hsl(220,20%,6%)] to-[hsl(220,25%,5%)]",
-      "border border-cyan-500/[0.08] backdrop-blur-xl",
-      "shadow-[0_4px_24px_rgba(0,0,0,0.4),0_0_50px_rgba(0,212,255,0.02)]",
+      "border border-accent/[0.08] backdrop-blur-xl",
+      "shadow-[0_4px_24px_rgba(0,0,0,0.4),0_0_50px_rgba(234,88,12,0.02)]",
       "transition-all duration-300",
-      "hover:border-cyan-400/[0.15] hover:shadow-[0_8px_32px_rgba(0,0,0,0.5),0_0_60px_rgba(0,212,255,0.04)]",
+      "hover:border-accent/[0.15] hover:shadow-[0_8px_32px_rgba(0,0,0,0.5),0_0_60px_rgba(234,88,12,0.04)]",
       "active:shadow-[0_2px_12px_rgba(0,0,0,0.5)]",
-      highlight && "border-cyan-400/20 shadow-[0_0_40px_rgba(0,212,255,0.08)]",
+      highlight && "border-accent/20 shadow-[0_0_40px_rgba(234,88,12,0.08)]",
       className
     )}>
-      <div className="absolute inset-x-[20%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
+      <div className="absolute inset-x-[20%] top-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
       
       {highlight && (
-        <div className="absolute -right-8 -top-8 w-32 h-32 bg-gradient-radial from-cyan-400/10 to-transparent rounded-full blur-2xl group-hover:from-cyan-400/15 transition-all duration-500" />
+        <div className="absolute -right-8 -top-8 w-32 h-32 bg-gradient-radial from-accent/10 to-transparent rounded-full blur-2xl group-hover:from-accent/15 transition-all duration-500" />
       )}
       
       <div className="flex justify-between items-start mb-3 relative z-10">
-        <span className="stat-label text-cyan-200/60 tracking-widest uppercase text-[10px] font-medium">{label}</span>
+        <span className="stat-label text-accent/60 tracking-widest uppercase text-[10px] font-medium">{label}</span>
         {trend && (
           <span className={cn(
             "flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-md backdrop-blur-sm",
@@ -172,13 +172,13 @@ export function StatCard({ label, value, subValue, trend, className, highlight, 
       <div className="flex items-end gap-2 relative z-10">
         <span className={cn(
           "font-display text-4xl font-bold tracking-tight",
-          "bg-gradient-to-b from-white to-cyan-100/80 bg-clip-text text-transparent",
+          "bg-gradient-to-b from-white to-accent/20 bg-clip-text text-transparent",
           "drop-shadow-[0_2px_10px_rgba(100,200,255,0.15)]"
         )}>
           <AnimatedValue value={value} />
         </span>
         {subValue && (
-          <span className="text-xs text-cyan-200/50 mb-2 font-medium">{subValue}</span>
+          <span className="text-xs text-accent/50 mb-2 font-medium">{subValue}</span>
         )}
         {sparklineData && sparklineData.length >= 2 && (
           <div className="mb-1 ml-auto" data-testid={`sparkline-${statTestId}`}>

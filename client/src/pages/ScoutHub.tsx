@@ -142,7 +142,7 @@ function ScoutPlayerCard({ player, sport, index }: ScoutPlayerCardProps) {
           }}
           data-testid={`card-scout-player-${player.id}`}
         >
-          <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
+          <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
           
           {isRecruitReady && (
             <div className="absolute top-0 left-0 right-0 flex justify-center">
@@ -172,7 +172,7 @@ function ScoutPlayerCard({ player, sport, index }: ScoutPlayerCardProps) {
                   tierStyles.border
                 )}>
                   <AvatarImage src={player.photoUrl || undefined} alt={player.name} width={64} height={64} />
-                  <AvatarFallback className="rounded-xl bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 text-cyan-400 font-bold">
+                  <AvatarFallback className="rounded-xl bg-gradient-to-br from-accent/20 to-accent/10 text-accent font-bold">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
@@ -181,11 +181,11 @@ function ScoutPlayerCard({ player, sport, index }: ScoutPlayerCardProps) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2 mb-1">
                   <div className="min-w-0">
-                    <h3 className="font-bold text-white truncate group-hover:text-cyan-400 transition-colors">
+                    <h3 className="font-bold text-white truncate group-hover:text-accent transition-colors">
                       {player.name}
                     </h3>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span className="text-cyan-400/80">{positionLabel}</span>
+                      <span className="text-accent/80">{positionLabel}</span>
                       {player.height && <span className="text-white/50">• {player.height}</span>}
                     </div>
                   </div>
@@ -197,13 +197,13 @@ function ScoutPlayerCard({ player, sport, index }: ScoutPlayerCardProps) {
                 <div className="flex flex-wrap items-center gap-1.5 mt-2">
                   {player.school && (
                     <Badge variant="outline" className="text-xs gap-1 py-0.5 border-white/10 bg-white/5">
-                      <GraduationCap className="w-3 h-3 text-cyan-400" />
+                      <GraduationCap className="w-3 h-3 text-accent" />
                       {player.school}
                     </Badge>
                   )}
                   {(player.city || player.state) && (
                     <Badge variant="outline" className="text-xs gap-1 py-0.5 border-white/10 bg-white/5">
-                      <MapPin className="w-3 h-3 text-cyan-400" />
+                      <MapPin className="w-3 h-3 text-accent" />
                       {player.city && player.state ? `${player.city}, ${player.state}` : player.state || player.city}
                     </Badge>
                   )}
@@ -216,7 +216,7 @@ function ScoutPlayerCard({ player, sport, index }: ScoutPlayerCardProps) {
               </div>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-cyan-500/10">
+            <div className="mt-4 pt-4 border-t border-border">
               {isFootball ? (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
                   {hasPos(['QB']) ? (
@@ -288,35 +288,35 @@ function ScoutPlayerCard({ player, sport, index }: ScoutPlayerCardProps) {
               )}
 
               {isFootball && (player.fortyYardDash || player.totalPointsSIS || player.physicality || player.footballIQ || player.leadership) && (
-                <div className="mt-3 pt-3 border-t border-cyan-500/10">
+                <div className="mt-3 pt-3 border-t border-border">
                   <div className="grid grid-cols-3 gap-2 text-center">
                     {player.fortyYardDash && (
                       <div>
-                        <div className="text-sm font-bold text-cyan-400" style={{ textShadow: '0 0 10px rgba(0,212,255,0.5)' }}>{player.fortyYardDash}s</div>
+                        <div className="text-sm font-bold text-accent" style={{ textShadow: '0 0 10px rgba(234,88,12,0.5)' }}>{player.fortyYardDash}s</div>
                         <div className="text-xs text-muted-foreground">40 Time</div>
                       </div>
                     )}
                     {player.totalPointsSIS && (
                       <div>
-                        <div className="text-sm font-bold text-cyan-400" style={{ textShadow: '0 0 10px rgba(0,212,255,0.5)' }}>{player.totalPointsSIS}</div>
+                        <div className="text-sm font-bold text-accent" style={{ textShadow: '0 0 10px rgba(234,88,12,0.5)' }}>{player.totalPointsSIS}</div>
                         <div className="text-xs text-muted-foreground">SIS Pts</div>
                       </div>
                     )}
                     {player.physicality !== null && player.physicality > 0 && (
                       <div>
-                        <div className="text-sm font-bold text-cyan-400" style={{ textShadow: '0 0 10px rgba(0,212,255,0.5)' }}>{player.physicality}/10</div>
+                        <div className="text-sm font-bold text-accent" style={{ textShadow: '0 0 10px rgba(234,88,12,0.5)' }}>{player.physicality}/10</div>
                         <div className="text-xs text-muted-foreground">Physical</div>
                       </div>
                     )}
                     {player.footballIQ !== null && player.footballIQ > 0 && (
                       <div>
-                        <div className="text-sm font-bold text-cyan-400" style={{ textShadow: '0 0 10px rgba(0,212,255,0.5)' }}>{player.footballIQ}/10</div>
+                        <div className="text-sm font-bold text-accent" style={{ textShadow: '0 0 10px rgba(234,88,12,0.5)' }}>{player.footballIQ}/10</div>
                         <div className="text-xs text-muted-foreground">IQ</div>
                       </div>
                     )}
                     {player.leadership !== null && player.leadership > 0 && (
                       <div>
-                        <div className="text-sm font-bold text-cyan-400" style={{ textShadow: '0 0 10px rgba(0,212,255,0.5)' }}>{player.leadership}/10</div>
+                        <div className="text-sm font-bold text-accent" style={{ textShadow: '0 0 10px rgba(234,88,12,0.5)' }}>{player.leadership}/10</div>
                         <div className="text-xs text-muted-foreground">Leader</div>
                       </div>
                     )}
@@ -401,9 +401,9 @@ function StatDisplay({ value, label, isText }: { value: string | number; label: 
       <div 
         className={cn(
           "text-lg font-bold",
-          isText ? "text-cyan-400/80 text-sm" : "text-cyan-400"
+          isText ? "text-accent/80 text-sm" : "text-accent"
         )}
-        style={!isText ? { textShadow: '0 0 15px rgba(0,212,255,0.4)' } : undefined}
+        style={!isText ? { textShadow: '0 0 15px rgba(234,88,12,0.4)' } : undefined}
       >
         {value}
       </div>
@@ -414,26 +414,26 @@ function StatDisplay({ value, label, isText }: { value: string | number; label: 
 
 function PlayerCardSkeleton() {
   return (
-    <Card className="border-cyan-500/[0.08] bg-gradient-to-br from-black/60 to-black/30 relative overflow-hidden">
-      <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent" />
+    <Card className="border-accent/[0.08] bg-gradient-to-br from-black/60 to-black/30 relative overflow-hidden">
+      <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
       <CardContent className="p-5">
         <div className="flex gap-4">
-          <Skeleton className="w-16 h-16 rounded-xl skeleton-cyan" />
+          <Skeleton className="w-16 h-16 rounded-xl skeleton-premium" />
           <div className="flex-1 space-y-3">
-            <Skeleton className="h-5 w-3/4 skeleton-cyan" />
+            <Skeleton className="h-5 w-3/4 skeleton-premium" />
             <Skeleton className="h-4 w-1/2 skeleton-premium" />
             <div className="flex flex-wrap gap-2">
               <Skeleton className="h-5 w-20 rounded-full skeleton-premium" />
               <Skeleton className="h-5 w-16 rounded-full skeleton-premium" />
             </div>
           </div>
-          <Skeleton className="h-10 w-10 rounded-full skeleton-cyan" />
+          <Skeleton className="h-10 w-10 rounded-full skeleton-premium" />
         </div>
-        <div className="mt-4 pt-4 border-t border-cyan-500/[0.06]">
+        <div className="mt-4 pt-4 border-t border-accent/[0.06]">
           <div className="grid grid-cols-4 gap-3 text-center">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="space-y-1">
-                <Skeleton className="h-6 w-10 mx-auto skeleton-cyan" />
+                <Skeleton className="h-6 w-10 mx-auto skeleton-premium" />
                 <Skeleton className="h-3 w-8 mx-auto skeleton-premium" />
               </div>
             ))}
@@ -528,20 +528,20 @@ export default function ScoutHub() {
 
   return (
     <div className="pb-24 md:pb-6 space-y-6" data-testid="page-scout-hub">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 via-cyan-950/20 to-black/60 border border-cyan-500/20">
-        <div className="absolute inset-0 cyber-grid opacity-30" />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 blur-[100px] rounded-full" />
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 via-card to-black/60 border border-accent/20">
+        <div className="absolute inset-0 opacity-30" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-accent/10 blur-[100px] rounded-full" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 blur-[80px] rounded-full" />
         
         <div className="relative z-10 p-6 md:p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Eye className="w-6 h-6 text-cyan-400" style={{ filter: 'drop-shadow(0 0 8px #00D4FF)' }} />
-                <span className="text-xs uppercase tracking-wider text-cyan-400 font-semibold">Talent Discovery</span>
+                <Eye className="w-6 h-6 text-accent" style={{ filter: 'drop-shadow(0 0 8px hsl(24, 95%, 53%))' }} />
+                <span className="text-xs uppercase tracking-wider text-accent font-semibold">Talent Discovery</span>
               </div>
               <h1 className="text-3xl md:text-4xl font-bold">
-                <span className="bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-white via-accent to-accent bg-clip-text text-transparent">
                   Scout Hub
                 </span>
               </h1>
@@ -550,14 +550,14 @@ export default function ScoutHub() {
               </p>
             </div>
 
-            <div className="flex items-center gap-2 px-2 py-1.5 rounded-xl bg-black/40 border border-cyan-500/20 backdrop-blur-sm">
+            <div className="flex items-center gap-2 px-2 py-1.5 rounded-xl bg-black/40 border border-accent/20 backdrop-blur-sm">
               <Button
                 variant={sport === 'basketball' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => handleSportChange('basketball')}
                 className={cn(
                   "gap-2 transition-all",
-                  sport === 'basketball' && "bg-gradient-to-r from-cyan-600 to-cyan-700 shadow-lg shadow-cyan-500/20"
+                  sport === 'basketball' && "bg-gradient-to-r from-accent to-accent shadow-lg"
                 )}
                 data-testid="button-sport-basketball"
               >
@@ -570,7 +570,7 @@ export default function ScoutHub() {
                 onClick={() => handleSportChange('football')}
                 className={cn(
                   "gap-2 transition-all",
-                  sport === 'football' && "bg-gradient-to-r from-cyan-600 to-cyan-700 shadow-lg shadow-cyan-500/20"
+                  sport === 'football' && "bg-gradient-to-r from-accent to-accent shadow-lg"
                 )}
                 data-testid="button-sport-football"
               >
@@ -582,12 +582,12 @@ export default function ScoutHub() {
         </div>
       </div>
 
-      <Card className="relative overflow-hidden bg-gradient-to-br from-black/60 to-black/30 border-cyan-500/20 backdrop-blur-sm">
-        <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
+      <Card className="relative overflow-hidden bg-gradient-to-br from-black/60 to-black/30 border-accent/20 backdrop-blur-sm">
+        <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
         <CardContent className="p-5">
           <div className="flex items-center gap-3 mb-5">
-            <div className="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
-              <Filter className="w-4 h-4 text-cyan-400" />
+            <div className="p-2 rounded-lg bg-accent/10 border border-accent/20">
+              <Filter className="w-4 h-4 text-accent" />
             </div>
             <div>
               <h2 className="text-base font-bold">Filter Athletes</h2>
@@ -597,23 +597,23 @@ export default function ScoutHub() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
             <div className="lg:col-span-2">
-              <label className="text-xs text-cyan-400/80 mb-1.5 block font-medium">Search</label>
+              <label className="text-xs text-accent/80 mb-1.5 block font-medium">Search</label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cyan-400/60" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-accent/60" />
                 <Input
                   placeholder="Search by name, school, or team..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 bg-black/40 border-cyan-500/20 focus:border-cyan-500/50 placeholder:text-muted-foreground/50"
+                  className="pl-9 bg-black/40 border-accent/20 focus:border-accent/50 placeholder:text-muted-foreground/50"
                   data-testid="input-scout-search"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-xs text-cyan-400/80 mb-1.5 block font-medium">Position</label>
+              <label className="text-xs text-accent/80 mb-1.5 block font-medium">Position</label>
               <Select value={position} onValueChange={setPosition}>
-                <SelectTrigger className="bg-black/40 border-cyan-500/20 focus:border-cyan-500/50" data-testid="select-scout-position">
+                <SelectTrigger className="bg-black/40 border-accent/20 focus:border-accent/50" data-testid="select-scout-position">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -634,9 +634,9 @@ export default function ScoutHub() {
             </div>
 
             <div>
-              <label className="text-xs text-cyan-400/80 mb-1.5 block font-medium">State</label>
+              <label className="text-xs text-accent/80 mb-1.5 block font-medium">State</label>
               <Select value={state} onValueChange={setState}>
-                <SelectTrigger className="bg-black/40 border-cyan-500/20 focus:border-cyan-500/50" data-testid="select-scout-state">
+                <SelectTrigger className="bg-black/40 border-accent/20 focus:border-accent/50" data-testid="select-scout-state">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -649,9 +649,9 @@ export default function ScoutHub() {
             </div>
 
             <div>
-              <label className="text-xs text-cyan-400/80 mb-1.5 block font-medium">Class Year</label>
+              <label className="text-xs text-accent/80 mb-1.5 block font-medium">Class Year</label>
               <Select value={graduationYear} onValueChange={setGraduationYear}>
-                <SelectTrigger className="bg-black/40 border-cyan-500/20 focus:border-cyan-500/50" data-testid="select-scout-year">
+                <SelectTrigger className="bg-black/40 border-accent/20 focus:border-accent/50" data-testid="select-scout-year">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -664,9 +664,9 @@ export default function ScoutHub() {
             </div>
 
             <div>
-              <label className="text-xs text-cyan-400/80 mb-1.5 block font-medium">Min Grade</label>
+              <label className="text-xs text-accent/80 mb-1.5 block font-medium">Min Grade</label>
               <Select value={minGrade} onValueChange={setMinGrade}>
-                <SelectTrigger className="bg-black/40 border-cyan-500/20 focus:border-cyan-500/50" data-testid="select-scout-grade">
+                <SelectTrigger className="bg-black/40 border-accent/20 focus:border-accent/50" data-testid="select-scout-grade">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -679,7 +679,7 @@ export default function ScoutHub() {
             </div>
           </div>
 
-          <div className="border-t border-cyan-500/10 mt-5 pt-5">
+          <div className="border-t border-border mt-5 pt-5">
             <div className="flex items-center gap-3 mb-4">
               <div className="p-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20">
                 <TrendingUp className="w-3.5 h-3.5 text-purple-400" />
@@ -691,11 +691,11 @@ export default function ScoutHub() {
               {!isFootball && (
                 <div>
                   <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
-                    <Target className="w-3 h-3 text-cyan-400" />
+                    <Target className="w-3 h-3 text-accent" />
                     Min PPG
                   </label>
                   <Select value={minPpg} onValueChange={setMinPpg}>
-                    <SelectTrigger className="bg-black/40 border-cyan-500/20 focus:border-cyan-500/50" data-testid="select-scout-ppg">
+                    <SelectTrigger className="bg-black/40 border-accent/20 focus:border-accent/50" data-testid="select-scout-ppg">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -712,11 +712,11 @@ export default function ScoutHub() {
                 <>
                   <div>
                     <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
-                      <Zap className="w-3 h-3 text-cyan-400" />
+                      <Zap className="w-3 h-3 text-accent" />
                       Min Pass YDS
                     </label>
                     <Select value={minPassingYds} onValueChange={setMinPassingYds}>
-                      <SelectTrigger className="bg-black/40 border-cyan-500/20 focus:border-cyan-500/50" data-testid="select-scout-pass-yds">
+                      <SelectTrigger className="bg-black/40 border-accent/20 focus:border-accent/50" data-testid="select-scout-pass-yds">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -730,11 +730,11 @@ export default function ScoutHub() {
 
                   <div>
                     <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
-                      <Crosshair className="w-3 h-3 text-cyan-400" />
+                      <Crosshair className="w-3 h-3 text-accent" />
                       Min Rush YDS
                     </label>
                     <Select value={minRushingYds} onValueChange={setMinRushingYds}>
-                      <SelectTrigger className="bg-black/40 border-cyan-500/20 focus:border-cyan-500/50" data-testid="select-scout-rush-yds">
+                      <SelectTrigger className="bg-black/40 border-accent/20 focus:border-accent/50" data-testid="select-scout-rush-yds">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -748,11 +748,11 @@ export default function ScoutHub() {
 
                   <div>
                     <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
-                      <Users className="w-3 h-3 text-cyan-400" />
+                      <Users className="w-3 h-3 text-accent" />
                       Min Rec YDS
                     </label>
                     <Select value={minReceivingYds} onValueChange={setMinReceivingYds}>
-                      <SelectTrigger className="bg-black/40 border-cyan-500/20 focus:border-cyan-500/50" data-testid="select-scout-rec-yds">
+                      <SelectTrigger className="bg-black/40 border-accent/20 focus:border-accent/50" data-testid="select-scout-rec-yds">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -768,11 +768,11 @@ export default function ScoutHub() {
 
               <div>
                 <label className="text-xs text-muted-foreground mb-1.5 block flex items-center gap-1.5">
-                  <ArrowUpDown className="w-3 h-3 text-cyan-400" />
+                  <ArrowUpDown className="w-3 h-3 text-accent" />
                   Sort By
                 </label>
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="bg-black/40 border-cyan-500/20 focus:border-cyan-500/50" data-testid="select-scout-sort">
+                  <SelectTrigger className="bg-black/40 border-accent/20 focus:border-accent/50" data-testid="select-scout-sort">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -805,8 +805,8 @@ export default function ScoutHub() {
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
-            <UserSearch className="w-4 h-4 text-cyan-400" />
+          <div className="p-2 rounded-lg bg-accent/10 border border-accent/20">
+            <UserSearch className="w-4 h-4 text-accent" />
           </div>
           <div>
             <h2 className="text-base font-bold">
@@ -814,7 +814,7 @@ export default function ScoutHub() {
                 "Loading athletes..."
               ) : players ? (
                 <span>
-                  <span className="text-cyan-400">{players.length}</span> athletes found
+                  <span className="text-accent">{players.length}</span> athletes found
                 </span>
               ) : (
                 "No athletes found"
@@ -840,8 +840,8 @@ export default function ScoutHub() {
           ))}
         </div>
       ) : (
-        <Card className="border-cyan-500/[0.08] bg-gradient-to-br from-black/60 to-black/30 relative overflow-hidden">
-          <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent" />
+        <Card className="border-accent/[0.08] bg-gradient-to-br from-black/60 to-black/30 relative overflow-hidden">
+          <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
           <CardContent className="py-8">
             <EmptyState
               icon={UserSearch}

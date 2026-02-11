@@ -82,7 +82,7 @@ export default function ScoutingContent() {
       <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <p className="text-cyan-200/50 mt-1">
+          <p className="text-accent/50 mt-1">
             Track and analyze opposing teams and players
           </p>
         </div>

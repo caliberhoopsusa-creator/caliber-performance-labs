@@ -267,7 +267,7 @@ export default function DiscoverHighlights() {
   return (
     <div className="pb-24 md:pb-8 space-y-4">
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 via-purple-950/20 to-black/60 border border-purple-500/20">
-        <div className="absolute inset-0 cyber-grid opacity-20" />
+        <div className="absolute inset-0 opacity-20" />
         <div className="absolute top-0 right-0 w-80 h-80 bg-purple-500/10 blur-[100px] rounded-full" />
         
         <div className="relative z-10 p-6 md:p-8">

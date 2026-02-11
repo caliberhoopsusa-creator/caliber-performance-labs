@@ -181,9 +181,8 @@ function HeaderCoinDisplay() {
 
 function PublicPricing() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[hsl(220,25%,6%)] via-[hsl(220,20%,5%)] to-[hsl(220,25%,4%)] text-white">
-      <div className="absolute inset-0 cyber-grid pointer-events-none opacity-30" />
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-[hsl(220,25%,6%)]/80 border-b border-cyan-500/10">
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-50 backdrop-blur-lg bg-background/80 border-b border-border">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
           <Link href="/">
             <Button variant="ghost" size="sm" className="text-white/70" data-testid="button-back-home">
@@ -274,14 +273,8 @@ function MainRouter() {
       <OfflineBanner />
       <div className="flex min-h-screen w-full max-w-full overflow-x-hidden bg-background text-foreground font-body selection:bg-primary/30">
         <Sidebar userRole={extendedUser.role!} playerId={extendedUser.playerId} />
-        <div className="flex-1 flex flex-col min-w-0 relative bg-gradient-to-b from-[hsl(220,25%,6%)] via-[hsl(220,20%,5%)] to-[hsl(220,25%,4%)]">
-          <div className="absolute inset-0 cyber-grid pointer-events-none opacity-50" />
-          <div className="absolute inset-0 scan-lines pointer-events-none opacity-20" />
-          <div className="absolute top-0 left-1/4 w-[800px] h-[800px] bg-gradient-radial from-cyan-500/[0.04] to-transparent rounded-full blur-[180px] pointer-events-none" />
-          <div className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-gradient-radial from-blue-500/[0.03] to-transparent rounded-full blur-[150px] pointer-events-none" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-gradient-radial from-cyan-500/[0.02] to-transparent rounded-full pointer-events-none" />
-          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent pointer-events-none" />
-          <header className="mobile-header-blur md:static md:backdrop-blur-none md:bg-transparent relative z-10 flex items-center justify-between gap-2 px-3 py-2 md:p-4 md:px-8 border-b border-cyan-500/[0.08] md:backdrop-blur-2xl md:bg-gradient-to-r from-[hsl(220,25%,8%)]/80 via-[hsl(220,20%,6%)]/60 to-[hsl(220,25%,8%)]/80 overflow-visible">
+        <div className="flex-1 flex flex-col min-w-0 relative bg-background">
+          <header className="mobile-header-blur md:static md:backdrop-blur-none md:bg-transparent relative z-10 flex items-center justify-between gap-2 px-3 py-2 md:p-4 md:px-8 border-b border-border overflow-visible">
             <div className="flex items-center gap-2 overflow-visible">
               <MobileDrawer userRole={extendedUser.role!} playerId={extendedUser.playerId} />
               <HeaderCoinDisplay />

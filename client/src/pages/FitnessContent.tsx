@@ -129,7 +129,7 @@ type ManualEntryForm = z.infer<typeof manualEntrySchema>;
 const PremiumTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-card/90 backdrop-blur-md border border-cyan-500/20 rounded-lg p-3 shadow-xl shadow-cyan-500/10">
+      <div className="bg-card/90 backdrop-blur-md border border-accent/20 rounded-lg p-3 shadow-xl">
         <p className="text-xs text-muted-foreground">{label}</p>
         {payload.map((entry: any, index: number) => (
           <p
@@ -402,7 +402,7 @@ export default function FitnessContent() {
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <Card key={i} className="glass-card">
+            <Card key={i} className="">
               <CardContent className="p-6">
                 <Skeleton className="h-32 w-full" />
               </CardContent>
@@ -412,10 +412,10 @@ export default function FitnessContent() {
       ) : (
         <>
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <Card className="glass-card lg:row-span-2" data-testid="card-recovery-score">
+            <Card className="lg:row-span-2" data-testid="card-recovery-score">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
-                  <Heart className="w-4 h-4 text-cyan-400" />
+                  <Heart className="w-4 h-4 text-accent" />
                   Recovery Score
                 </CardTitle>
               </CardHeader>
@@ -431,7 +431,7 @@ export default function FitnessContent() {
               </CardContent>
             </Card>
 
-            <Card className="glass-card" data-testid="card-sleep">
+            <Card className="" data-testid="card-sleep">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 text-muted-foreground mb-2">
                   <Moon className="w-4 h-4 text-indigo-400" />
@@ -446,7 +446,7 @@ export default function FitnessContent() {
               </CardContent>
             </Card>
 
-            <Card className="glass-card" data-testid="card-hrv">
+            <Card className="" data-testid="card-hrv">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 text-muted-foreground mb-2">
                   <Activity className="w-4 h-4 text-pink-400" />
@@ -461,7 +461,7 @@ export default function FitnessContent() {
               </CardContent>
             </Card>
 
-            <Card className="glass-card" data-testid="card-readiness">
+            <Card className="" data-testid="card-readiness">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 text-muted-foreground mb-2">
                   <Zap className="w-4 h-4 text-yellow-400" />
@@ -474,7 +474,7 @@ export default function FitnessContent() {
               </CardContent>
             </Card>
 
-            <Card className="glass-card" data-testid="card-strain">
+            <Card className="" data-testid="card-strain">
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 text-muted-foreground mb-2">
                   <TrendingUp className="w-4 h-4 text-orange-400" />
@@ -489,10 +489,10 @@ export default function FitnessContent() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="glass-card" data-testid="chart-recovery-trend">
+            <Card className="" data-testid="chart-recovery-trend">
               <CardHeader>
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <Heart className="w-4 h-4 text-cyan-400" />
+                  <Heart className="w-4 h-4 text-accent" />
                   Recovery Trend
                 </CardTitle>
               </CardHeader>
@@ -537,7 +537,7 @@ export default function FitnessContent() {
               </CardContent>
             </Card>
 
-            <Card className="glass-card" data-testid="chart-sleep">
+            <Card className="" data-testid="chart-sleep">
               <CardHeader>
                 <CardTitle className="text-sm flex items-center gap-2">
                   <Moon className="w-4 h-4 text-indigo-400" />
@@ -582,7 +582,7 @@ export default function FitnessContent() {
               </CardContent>
             </Card>
 
-            <Card className="glass-card lg:col-span-2" data-testid="chart-hrv-trend">
+            <Card className="lg:col-span-2" data-testid="chart-hrv-trend">
               <CardHeader>
                 <CardTitle className="text-sm flex items-center gap-2">
                   <Activity className="w-4 h-4 text-pink-400" />
@@ -631,10 +631,10 @@ export default function FitnessContent() {
           </div>
 
           {!hasWearableConnected && (
-            <Card className="glass-card border-cyan-500/20" data-testid="card-manual-entry">
+            <Card className="border-accent/20" data-testid="card-manual-entry">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Plus className="w-5 h-5 text-cyan-400" />
+                  <Plus className="w-5 h-5 text-accent" />
                   Manual Entry
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
@@ -748,7 +748,7 @@ export default function FitnessContent() {
             </Card>
           )}
 
-          <Card className="glass-card" data-testid="card-insights">
+          <Card className="" data-testid="card-insights">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-yellow-400" />
@@ -769,8 +769,8 @@ export default function FitnessContent() {
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
-                  <div className="w-2 h-2 rounded-full bg-cyan-400 mt-2" />
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-accent/10 border border-accent/20">
+                  <div className="w-2 h-2 rounded-full bg-accent mt-2" />
                   <div>
                     <p className="text-sm text-white font-medium">
                       Recovery above 70 correlates with fewer turnovers
@@ -806,7 +806,7 @@ export default function FitnessContent() {
                 return (
                   <Card
                     key={wearable.id}
-                    className="glass-card hover-elevate cursor-pointer"
+                    className="hover-elevate cursor-pointer"
                     data-testid={`card-wearable-${wearable.id}`}
                   >
                     <CardContent className="p-6 flex flex-col items-center text-center">

@@ -61,7 +61,7 @@ type StatType = 'points_1' | 'points_2' | 'points_3' | 'rebound' | 'assist' | 's
 
 const STAT_CONFIG: Record<StatType, { label: string; shortLabel: string; color: string; bgColor: string }> = {
   points_1: { label: '1 PT', shortLabel: '1', color: 'text-green-400', bgColor: 'bg-green-600' },
-  points_2: { label: '2 PT', shortLabel: '2', color: 'text-cyan-400', bgColor: 'bg-cyan-600' },
+  points_2: { label: '2 PT', shortLabel: '2', color: 'text-accent', bgColor: 'bg-accent' },
   points_3: { label: '3 PT', shortLabel: '3', color: 'text-blue-400', bgColor: 'bg-blue-600' },
   rebound: { label: 'REB', shortLabel: 'R', color: 'text-orange-400', bgColor: 'bg-orange-600/20 border-orange-500/50' },
   assist: { label: 'AST', shortLabel: 'A', color: 'text-purple-400', bgColor: 'bg-purple-600/20 border-purple-500/50' },
@@ -317,7 +317,7 @@ export default function LiveGameMode() {
   if (sessionLoading || rosterLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-cyan-400" />
+        <Loader2 className="w-8 h-8 animate-spin text-accent" />
       </div>
     );
   }
@@ -338,15 +338,15 @@ export default function LiveGameMode() {
             <ChevronLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-cyan-400 font-display">LIVE GAME MODE</h1>
+            <h1 className="text-2xl font-bold text-accent font-display">LIVE GAME MODE</h1>
             <p className="text-muted-foreground">Track stats in real-time during a game</p>
           </div>
         </div>
 
-        <Card className="border-cyan-500/20">
+        <Card className="border-accent/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-cyan-400" />
+              <Users className="w-5 h-5 text-accent" />
               Select Players
               <HelpTooltip
                 content="Tap players to select them for tracking. Only selected players will have their stats recorded."
@@ -382,7 +382,7 @@ export default function LiveGameMode() {
                     className={cn(
                       "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
                       selectedPlayers.includes(player.id)
-                        ? "border-cyan-500/50 bg-cyan-500/10"
+                        ? "border-accent/50 bg-accent/10"
                         : "border-border hover-elevate"
                     )}
                     onClick={() => togglePlayerSelection(player.id)}
@@ -424,10 +424,10 @@ export default function LiveGameMode() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2 sticky top-0 z-20 bg-background/80 backdrop-blur-sm py-2 -mx-4 px-4 border-b border-cyan-500/10">
+      <div className="flex items-center justify-between gap-2 sticky top-0 z-20 bg-background/80 backdrop-blur-sm py-2 -mx-4 px-4 border-b border-border">
         <div className="flex items-center gap-3">
           <div>
-            <h1 className="text-lg font-bold text-cyan-400 font-display">
+            <h1 className="text-lg font-bold text-accent font-display">
               {activeSession.opponent ? `VS ${activeSession.opponent.toUpperCase()}` : 'LIVE GAME'}
             </h1>
             <p className="text-xs text-muted-foreground">{sessionPlayers.length} players tracked</p>
@@ -436,7 +436,7 @@ export default function LiveGameMode() {
           {/* Status indicators */}
           <div className="flex items-center gap-2">
             {isSyncing && (
-              <Badge variant="outline" className="gap-1 text-cyan-400 border-cyan-500/30">
+              <Badge variant="outline" className="gap-1 text-accent border-accent/30">
                 <RefreshCw className="w-3 h-3 animate-spin" />
                 <span className="text-xs">Syncing...</span>
               </Badge>
@@ -459,7 +459,7 @@ export default function LiveGameMode() {
             data-testid="button-sound-toggle"
           >
             {soundEnabled ? (
-              <Volume2 className="w-4 h-4 text-cyan-400" />
+              <Volume2 className="w-4 h-4 text-accent" />
             ) : (
               <VolumeX className="w-4 h-4 text-muted-foreground" />
             )}
@@ -533,8 +533,8 @@ export default function LiveGameMode() {
             <Card 
               key={player.id}
               className={cn(
-                "transition-all border-cyan-500/20",
-                isActive && "ring-2 ring-cyan-500/50"
+                "transition-all border-accent/20",
+                isActive && "ring-2 ring-accent/50"
               )}
               data-testid={`player-card-${player.id}`}
             >
@@ -545,7 +545,7 @@ export default function LiveGameMode() {
                   data-testid={`button-toggle-player-${player.id}`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-cyan-600 flex items-center justify-center text-base font-bold shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-base font-bold shrink-0">
                       {player.jerseyNumber || player.name[0]}
                     </div>
                     <div className="text-left">
@@ -554,7 +554,7 @@ export default function LiveGameMode() {
                     </div>
                   </div>
                   <div className="flex items-center gap-4 text-base">
-                    <span className="font-bold text-cyan-400">{stats.points} PTS</span>
+                    <span className="font-bold text-accent">{stats.points} PTS</span>
                     <span className="text-muted-foreground">
                       {stats.rebounds}R {stats.assists}A
                     </span>
@@ -609,7 +609,7 @@ export default function LiveGameMode() {
                     </div>
                     <div className="pt-2 border-t border-border/50 grid grid-cols-7 gap-1 text-center text-xs">
                       <div>
-                        <div className="font-bold text-cyan-400">{stats.points}</div>
+                        <div className="font-bold text-accent">{stats.points}</div>
                         <div className="text-muted-foreground">PTS</div>
                       </div>
                       <div>
@@ -646,7 +646,7 @@ export default function LiveGameMode() {
       </div>
 
       {(sessionEvents.length > 0 || getUnsyncedEvents().length > 0) && (
-        <Card className="border-cyan-500/20">
+        <Card className="border-accent/20">
           <CardHeader className="py-3">
             <CardTitle className="text-sm flex items-center gap-2">
               Recent ({sessionEvents.length} events)

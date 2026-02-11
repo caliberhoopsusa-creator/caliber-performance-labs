@@ -197,7 +197,7 @@ export function RecruitingTimeline({ graduationYear, sport, className }: Recruit
   return (
     <div className={cn("relative", className)} data-testid="recruiting-timeline">
       <div 
-        className="absolute left-6 top-0 bottom-0 w-px bg-gradient-to-b from-cyan-500/50 via-cyan-500/20 to-transparent"
+        className="absolute left-6 top-0 bottom-0 w-px bg-gradient-to-b from-accent/50 via-accent/20 to-transparent"
         data-testid="timeline-line"
       />
       
@@ -210,7 +210,7 @@ export function RecruitingTimeline({ graduationYear, sport, className }: Recruit
               key={milestone.id}
               className={cn(
                 "relative pl-14 pr-4 py-3 rounded-xl transition-all duration-300",
-                status === 'current' && "bg-gradient-to-r from-cyan-500/10 to-transparent border-l-2 border-cyan-500 shadow-[0_0_20px_rgba(6,182,212,0.15)]",
+                status === 'current' && "bg-gradient-to-r from-accent/10 to-transparent border-l-2 border-accent shadow-[0_0_20px_rgba(6,182,212,0.15)]",
                 status === 'past' && "opacity-60",
                 status === 'future' && "opacity-80"
               )}
@@ -221,7 +221,7 @@ export function RecruitingTimeline({ graduationYear, sport, className }: Recruit
                 className={cn(
                   "absolute left-3 top-4 w-6 h-6 rounded-full flex items-center justify-center z-10",
                   status === 'past' && "bg-emerald-500/20",
-                  status === 'current' && "bg-cyan-500 shadow-[0_0_12px_rgba(6,182,212,0.6)]",
+                  status === 'current' && "bg-accent shadow-[0_0_12px_rgba(6,182,212,0.6)]",
                   status === 'future' && "bg-white/10 border border-white/20"
                 )}
                 data-testid={`milestone-icon-${milestone.id}`}
@@ -240,7 +240,7 @@ export function RecruitingTimeline({ graduationYear, sport, className }: Recruit
                   <span 
                     className={cn(
                       "text-xs font-medium uppercase tracking-wider",
-                      status === 'current' ? "text-cyan-400" : "text-muted-foreground"
+                      status === 'current' ? "text-accent" : "text-muted-foreground"
                     )}
                     data-testid={`milestone-period-${milestone.id}`}
                   >
@@ -248,7 +248,7 @@ export function RecruitingTimeline({ graduationYear, sport, className }: Recruit
                   </span>
                   {status === 'current' && (
                     <span 
-                      className="text-[10px] font-bold uppercase tracking-wider text-cyan-400 bg-cyan-500/20 px-2 py-0.5 rounded-full animate-pulse"
+                      className="text-[10px] font-bold uppercase tracking-wider text-accent bg-accent/20 px-2 py-0.5 rounded-full animate-pulse"
                       data-testid={`milestone-now-badge-${milestone.id}`}
                     >
                       Now

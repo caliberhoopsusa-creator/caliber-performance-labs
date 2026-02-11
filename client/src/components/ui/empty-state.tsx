@@ -36,19 +36,19 @@ export function EmptyState({
     >
       {/* Background glow effect */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="w-48 h-48 bg-cyan-500/5 rounded-full blur-3xl" />
+        <div className="w-48 h-48 bg-accent/5 rounded-full blur-3xl" />
       </div>
       
       {/* Icon container with animated border */}
       <div className="relative mb-6">
-        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-2xl blur-xl animate-pulse-slow" />
+        <div className="absolute inset-0 bg-gradient-to-br from-accent/20 to-blue-500/20 rounded-2xl blur-xl animate-pulse-slow" />
         <div 
           className={cn(
-            "relative flex items-center justify-center rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-cyan-500/10",
+            "relative flex items-center justify-center rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-border",
             isCompact ? "w-16 h-16" : "w-20 h-20"
           )}
         >
-          <Icon className={cn("text-cyan-400/60", isCompact ? "w-7 h-7" : "w-9 h-9")} />
+          <Icon className={cn("text-accent/60", isCompact ? "w-7 h-7" : "w-9 h-9")} />
         </div>
       </div>
       
@@ -72,7 +72,7 @@ export function EmptyState({
           <Button 
             asChild
             data-testid="button-empty-state-action"
-            className="mt-6 bg-gradient-to-r from-cyan-500 to-blue-600 border-0 shadow-lg shadow-cyan-500/20"
+            className="mt-6 bg-gradient-to-r from-accent to-blue-600 border-0 shadow-lg"
           >
             <Link href={action.href}>{action.label}</Link>
           </Button>
@@ -80,7 +80,7 @@ export function EmptyState({
           <Button 
             onClick={action.onClick}
             data-testid="button-empty-state-action"
-            className="mt-6 bg-gradient-to-r from-cyan-500 to-blue-600 border-0 shadow-lg shadow-cyan-500/20"
+            className="mt-6 bg-gradient-to-r from-accent to-blue-600 border-0 shadow-lg"
           >
             {action.label}
           </Button>
@@ -98,15 +98,15 @@ export function EmptyStateCard({ cardClassName, ...props }: EmptyStateCardProps)
   return (
     <div 
       className={cn(
-        "relative rounded-xl border border-cyan-500/[0.08] bg-gradient-to-br from-[hsl(220,25%,8%)] via-[hsl(220,20%,6%)] to-[hsl(220,25%,5%)] overflow-hidden",
+        "relative rounded-xl border border-accent/[0.08] bg-gradient-to-br from-[hsl(220,25%,8%)] via-[hsl(220,20%,6%)] to-[hsl(220,25%,5%)] overflow-hidden",
         cardClassName
       )}
     >
       {/* Top accent line */}
-      <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent" />
+      <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
       
       {/* Cyber grid pattern */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(0,212,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(0,212,255,0.02)_1px,transparent_1px)] bg-[size:30px_30px] opacity-30 pointer-events-none" />
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(234,88,12,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(234,88,12,0.02)_1px,transparent_1px)] bg-[size:30px_30px] opacity-30 pointer-events-none" />
       
       <EmptyState {...props} />
     </div>

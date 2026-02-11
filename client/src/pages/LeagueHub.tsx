@@ -74,13 +74,13 @@ function generateJoinCode(): string {
 
 function LeagueCardSkeleton() {
   return (
-    <Card className="border-cyan-500/[0.08] bg-gradient-to-br from-black/60 to-black/30 relative overflow-hidden">
-      <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent" />
+    <Card className="border-accent/[0.08] bg-gradient-to-br from-black/60 to-black/30 relative overflow-hidden">
+      <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
       <CardContent className="p-5">
         <div className="flex items-start gap-4">
-          <Skeleton className="w-14 h-14 rounded-xl skeleton-cyan" />
+          <Skeleton className="w-14 h-14 rounded-xl skeleton-premium" />
           <div className="flex-1 space-y-3">
-            <Skeleton className="h-5 w-3/4 skeleton-cyan" />
+            <Skeleton className="h-5 w-3/4 skeleton-premium" />
             <Skeleton className="h-4 w-1/2 skeleton-premium" />
             <div className="flex flex-wrap gap-2">
               <Skeleton className="h-5 w-16 rounded-full skeleton-premium" />
@@ -113,14 +113,14 @@ function LeagueCard({ league, index }: LeagueCardProps) {
             "group cursor-pointer transition-all duration-300 h-full overflow-hidden relative",
             "bg-gradient-to-br from-black/60 to-black/30 backdrop-blur-sm",
             "hover:scale-[1.02] hover:-translate-y-1 border-white/10",
-            "hover:border-cyan-500/30"
+            "hover:border-accent/30"
           )}
           style={{
-            boxShadow: "0 0 30px rgba(0,212,255,0.1), inset 0 1px 0 rgba(255,255,255,0.05)",
+            boxShadow: "0 0 30px rgba(234,88,12,0.1), inset 0 1px 0 rgba(255,255,255,0.05)",
           }}
           data-testid={`card-league-${league.id}`}
         >
-          <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
+          <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
 
           <CardContent className="p-5">
             <div className="flex items-start gap-4">
@@ -146,12 +146,12 @@ function LeagueCard({ league, index }: LeagueCardProps) {
               </div>
 
               <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-white truncate group-hover:text-cyan-400 transition-colors">
+                <h3 className="font-bold text-white truncate group-hover:text-accent transition-colors">
                   {league.name}
                 </h3>
                 {league.seasonName && (
                   <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1">
-                    <Calendar className="w-3.5 h-3.5 text-cyan-400/80" />
+                    <Calendar className="w-3.5 h-3.5 text-accent/80" />
                     <span>{league.seasonName}</span>
                   </div>
                 )}
@@ -163,7 +163,7 @@ function LeagueCard({ league, index }: LeagueCardProps) {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-cyan-500/10">
+            <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-border">
               <Badge
                 variant="outline"
                 className={cn(
@@ -182,13 +182,13 @@ function LeagueCard({ league, index }: LeagueCardProps) {
               </Badge>
 
               <Badge variant="outline" className="text-xs gap-1 py-0.5 border-white/10 bg-white/5">
-                <Users className="w-3 h-3 text-cyan-400" />
+                <Users className="w-3 h-3 text-accent" />
                 {league.teamCount ?? 0} / {league.maxTeams ?? 12} Teams
               </Badge>
 
               {league.gameFormat && (
                 <Badge variant="outline" className="text-xs gap-1 py-0.5 border-white/10 bg-white/5">
-                  <Trophy className="w-3 h-3 text-cyan-400" />
+                  <Trophy className="w-3 h-3 text-accent" />
                   {GAME_FORMAT_LABELS[league.gameFormat] || league.gameFormat}
                 </Badge>
               )}
@@ -344,10 +344,10 @@ export default function LeagueHub() {
     <div className="space-y-6" data-testid="league-hub-page">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-display uppercase tracking-wide bg-gradient-to-b from-white to-cyan-100/80 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-display uppercase tracking-wide bg-gradient-to-b from-white to-accent/20 bg-clip-text text-transparent">
             League Hub
           </h1>
-          <p className="text-cyan-200/50 mt-1">Create, join, and manage competitive leagues</p>
+          <p className="text-accent/50 mt-1">Create, join, and manage competitive leagues</p>
         </div>
         <div className="flex items-center gap-3">
           <Dialog open={joinDialogOpen} onOpenChange={setJoinDialogOpen}>
@@ -527,14 +527,14 @@ export default function LeagueHub() {
           size="sm"
           className={cn(
             "relative",
-            sportFilter === "all" && "text-cyan-400"
+            sportFilter === "all" && "text-accent"
           )}
           onClick={() => setSportFilter("all")}
           data-testid="filter-all"
         >
           All
           {sportFilter === "all" && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400 rounded-full" />
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent rounded-full" />
           )}
         </Button>
         <Button
@@ -580,8 +580,8 @@ export default function LeagueHub() {
       ) : filteredLeagues.length === 0 ? (
         <Card className="border-white/10 bg-gradient-to-br from-black/60 to-black/30">
           <CardContent className="flex flex-col items-center justify-center py-16">
-            <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 flex items-center justify-center mb-4">
-              <Trophy className="w-8 h-8 text-cyan-400" />
+            <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mb-4">
+              <Trophy className="w-8 h-8 text-accent" />
             </div>
             <h3 className="text-lg font-display uppercase tracking-wide text-white mb-2">
               No Leagues Yet

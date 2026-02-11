@@ -70,7 +70,7 @@ export function LazyImage({
             placeholderClassName
           )}
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer" />
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent " />
         </div>
       )}
 
@@ -124,9 +124,9 @@ export function LazyAvatar({ src, name, size = "md", className }: LazyAvatarProp
     .slice(0, 2);
 
   return (
-    <Avatar className={cn(sizeClasses[size], "border border-cyan-500/30", className)}>
+    <Avatar className={cn(sizeClasses[size], "border border-accent/30", className)}>
       {src && <AvatarImage src={src} alt={name} width={sizeDimensions[size]} height={sizeDimensions[size]} />}
-      <AvatarFallback className="bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 text-cyan-400 font-semibold">
+      <AvatarFallback className="bg-gradient-to-br from-accent/20 to-accent/10 text-accent font-semibold">
         {initials}
       </AvatarFallback>
     </Avatar>

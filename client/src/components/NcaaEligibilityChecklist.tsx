@@ -299,7 +299,7 @@ export function NcaaEligibilityChecklist({ playerId }: NcaaEligibilityChecklistP
   if (isLoading) {
     return (
       <Card
-        className="bg-gradient-to-br from-slate-900/80 to-slate-800/60 border-cyan-500/20"
+        className="bg-gradient-to-br from-slate-900/80 to-slate-800/60 border-accent/20"
         data-testid="ncaa-eligibility-loading"
       >
         <CardHeader>
@@ -322,13 +322,13 @@ export function NcaaEligibilityChecklist({ playerId }: NcaaEligibilityChecklistP
 
   return (
     <Card
-      className="bg-gradient-to-br from-slate-900/80 to-slate-800/60 border-cyan-500/20"
+      className="bg-gradient-to-br from-slate-900/80 to-slate-800/60 border-accent/20"
       data-testid="ncaa-eligibility-checklist"
     >
       <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-cyan-500/20">
-            <GraduationCap className="w-6 h-6 text-cyan-400" />
+          <div className="p-2 rounded-lg bg-accent/20">
+            <GraduationCap className="w-6 h-6 text-accent" />
           </div>
           <CardTitle className="font-display text-xl text-white tracking-wide">
             NCAA Eligibility Checklist
@@ -340,7 +340,7 @@ export function NcaaEligibilityChecklist({ playerId }: NcaaEligibilityChecklistP
             "text-sm px-3 py-1",
             completionPercentage === 100
               ? "border-emerald-500/50 text-emerald-400 bg-emerald-500/10"
-              : "border-cyan-500/50 text-cyan-400 bg-cyan-500/10"
+              : "border-accent/50 text-accent bg-accent/10"
           )}
           data-testid="completion-badge"
         >
@@ -352,7 +352,7 @@ export function NcaaEligibilityChecklist({ playerId }: NcaaEligibilityChecklistP
         <div className="space-y-3">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Overall Progress</span>
-            <span className="text-cyan-400 font-medium">{completionPercentage}%</span>
+            <span className="text-accent font-medium">{completionPercentage}%</span>
           </div>
           <Progress
             value={completionPercentage}
@@ -385,10 +385,10 @@ export function NcaaEligibilityChecklist({ playerId }: NcaaEligibilityChecklistP
 
         {divisionReq && (
           <div
-            className="p-4 rounded-xl bg-cyan-500/5 border border-cyan-500/20"
+            className="p-4 rounded-xl bg-accent/5 border border-accent/20"
             data-testid="division-requirements"
           >
-            <h4 className="text-sm font-semibold text-cyan-400 mb-2 flex items-center gap-2">
+            <h4 className="text-sm font-semibold text-accent mb-2 flex items-center gap-2">
               <Hash className="w-4 h-4" />
               {targetDivision} Requirements
             </h4>
@@ -423,7 +423,7 @@ export function NcaaEligibilityChecklist({ playerId }: NcaaEligibilityChecklistP
                 data-testid={`category-${category.id}`}
               >
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-700/50">
-                  <IconComponent className="w-5 h-5 text-cyan-400" />
+                  <IconComponent className="w-5 h-5 text-accent" />
                   <h3 className="font-semibold text-white">{category.title}</h3>
                 </div>
 
@@ -500,7 +500,7 @@ export function NcaaEligibilityChecklist({ playerId }: NcaaEligibilityChecklistP
 
         {saveMutation.isPending && (
           <div
-            className="flex items-center justify-center py-2 text-sm text-cyan-400"
+            className="flex items-center justify-center py-2 text-sm text-accent"
             data-testid="saving-indicator"
           >
             Saving...

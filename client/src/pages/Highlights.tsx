@@ -222,8 +222,8 @@ export default function Highlights() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] p-6">
         <div className="relative">
-          <div className="absolute inset-0 bg-cyan-500/20 blur-3xl rounded-full" />
-          <Film className="w-20 h-20 text-cyan-400 relative z-10 mb-6" />
+          <div className="absolute inset-0 bg-accent/20 blur-3xl rounded-full" />
+          <Film className="w-20 h-20 text-accent relative z-10 mb-6" />
         </div>
         <h2 className="text-2xl font-bold text-white mb-2">No Player Profile</h2>
         <p className="text-muted-foreground text-center max-w-md">
@@ -239,8 +239,8 @@ export default function Highlights() {
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-3">
             <div className="relative">
-              <div className="absolute inset-0 bg-cyan-500/30 blur-xl rounded-full" />
-              <Film className="w-8 h-8 text-cyan-400 relative z-10" />
+              <div className="absolute inset-0 bg-accent/30 blur-xl rounded-full" />
+              <Film className="w-8 h-8 text-accent relative z-10" />
             </div>
             My Highlights
           </h1>
@@ -273,7 +273,7 @@ export default function Highlights() {
 
           <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
             <DialogTrigger asChild>
-              <Button className="gap-2 bg-cyan-600 hover:bg-cyan-700" data-testid="button-upload-highlight">
+              <Button className="gap-2 bg-accent " data-testid="button-upload-highlight">
                 <Plus className="w-4 h-4" />
                 Upload Highlight
               </Button>
@@ -281,7 +281,7 @@ export default function Highlights() {
             <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
-                  <Film className="w-5 h-5 text-cyan-400" />
+                  <Film className="w-5 h-5 text-accent" />
                   Upload Highlight
                 </DialogTitle>
                 <DialogDescription>
@@ -444,7 +444,7 @@ export default function Highlights() {
                     </Button>
                     <Button
                       type="submit"
-                      className="bg-cyan-600 hover:bg-cyan-700"
+                      className="bg-accent "
                       disabled={createMutation.isPending}
                       data-testid="button-submit-highlight"
                     >
@@ -459,25 +459,25 @@ export default function Highlights() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="bg-card/50 border-cyan-500/10">
+        <Card className="bg-card/50 border-border">
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-cyan-400">{clips.length}</p>
+            <p className="text-2xl font-bold text-accent">{clips.length}</p>
             <p className="text-sm text-muted-foreground">Total Clips</p>
           </CardContent>
         </Card>
-        <Card className="bg-card/50 border-cyan-500/10">
+        <Card className="bg-card/50 border-border">
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-cyan-400">{totalViews.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-accent">{totalViews.toLocaleString()}</p>
             <p className="text-sm text-muted-foreground">Total Views</p>
           </CardContent>
         </Card>
-        <Card className="bg-card/50 border-cyan-500/10">
+        <Card className="bg-card/50 border-border">
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-bold text-pink-400">{totalLikes.toLocaleString()}</p>
             <p className="text-sm text-muted-foreground">Total Likes</p>
           </CardContent>
         </Card>
-        <Card className="bg-card/50 border-cyan-500/10">
+        <Card className="bg-card/50 border-border">
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-bold text-green-400">
               {clips.filter((c) => c.overlayStyle).length}
@@ -494,18 +494,18 @@ export default function Highlights() {
           ))}
         </div>
       ) : clips.length === 0 ? (
-        <Card className="bg-card/50 border-cyan-500/10">
+        <Card className="bg-card/50 border-border">
           <CardContent className="p-12 text-center">
             <div className="relative inline-block mb-6">
-              <div className="absolute inset-0 bg-cyan-500/20 blur-2xl rounded-full" />
-              <Film className="w-16 h-16 text-cyan-400 relative z-10" />
+              <div className="absolute inset-0 bg-accent/20 blur-2xl rounded-full" />
+              <Film className="w-16 h-16 text-accent relative z-10" />
             </div>
             <h3 className="text-xl font-semibold text-white mb-2">No Highlights Yet</h3>
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
               Upload your best plays and add TikTok-style stat overlays to share with scouts and fans.
             </p>
             <Button
-              className="gap-2 bg-cyan-600 hover:bg-cyan-700"
+              className="gap-2 bg-accent "
               onClick={() => setIsUploadOpen(true)}
               data-testid="button-first-upload"
             >
@@ -548,7 +548,7 @@ export default function Highlights() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-cyan-400" />
+              <Sparkles className="w-5 h-5 text-accent" />
               Generate Overlay
             </DialogTitle>
             <DialogDescription>
@@ -571,8 +571,8 @@ export default function Highlights() {
                     className={cn(
                       "p-3 rounded-lg border text-center transition-all",
                       overlayForm.watch("overlayStyle") === style.value
-                        ? "border-cyan-500 bg-cyan-500/10 text-cyan-400"
-                        : "border-border hover:border-cyan-500/50"
+                        ? "border-accent bg-accent/10 text-accent"
+                        : "border-border hover:border-accent/50"
                     )}
                     data-testid={`button-overlay-style-${style.value}`}
                   >
@@ -625,7 +625,7 @@ export default function Highlights() {
               </Button>
               <Button
                 type="submit"
-                className="gap-2 bg-cyan-600 hover:bg-cyan-700"
+                className="gap-2 bg-accent "
                 disabled={overlayMutation.isPending}
                 data-testid="button-submit-overlay"
               >

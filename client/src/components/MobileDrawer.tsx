@@ -175,7 +175,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
           </Button>
         </motion.div>
       </SheetTrigger>
-      <SheetContent side="left" className="w-[300px] p-0 mobile-drawer-glass border-r border-accent/10 overflow-hidden">
+      <SheetContent side="left" className="w-[300px] p-0 border-r border-accent/10 overflow-hidden">
         <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
         <SheetDescription className="sr-only">Access all app features from this menu</SheetDescription>
         
@@ -270,7 +270,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
                                 "transition-all duration-200",
                                 isActive && "mobile-menu-item-active",
                                 isActive 
-                                  ? "text-accent bg-accent/15 shadow-[0_0_16px_hsl(var(--accent)/0.4)]" 
+                                  ? "text-accent bg-accent/15" 
                                   : isFeatured
                                   ? "text-accent bg-accent/5 hover:bg-accent/10"
                                   : needsUpgrade
@@ -283,7 +283,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
                                 className={cn(
                                   "p-1.5 rounded-lg transition-all duration-300 flex-shrink-0",
                                   isActive 
-                                    ? "bg-accent/30 shadow-[0_0_16px_hsl(var(--accent)/0.4)]" 
+                                    ? "bg-accent/30" 
                                     : "bg-white/[0.04]"
                                 )}
                                 animate={isActive && !prefersReducedMotion ? { scale: [1, 1.1, 1] } : {}}
@@ -291,13 +291,13 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
                               >
                                 <item.icon className={cn(
                                   "w-4 h-4 transition-all duration-300",
-                                  isActive && "text-accent drop-shadow-[0_0_8px_hsl(var(--accent)/0.7)]"
+                                  isActive && "text-accent"
                                 )} />
                               </motion.div>
                               <span className="flex-1 truncate">{item.label}</span>
                               {isFeatured && (
                                 <motion.span 
-                                  className="text-[9px] bg-accent text-accent-foreground px-2 py-0.5 rounded-full font-bold uppercase tracking-wide shadow-lg shadow-accent/30 whitespace-nowrap"
+                                  className="text-[9px] bg-accent text-accent-foreground px-2 py-0.5 rounded-full font-bold uppercase tracking-wide whitespace-nowrap"
                                   initial={prefersReducedMotion ? { scale: 1, opacity: 1 } : { scale: 0.8, opacity: 0 }}
                                   animate={{ scale: 1, opacity: 1 }}
                                   transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3, delay: 0.2 }}

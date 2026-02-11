@@ -34,8 +34,8 @@ const staggerContainer = {
 function DashboardSkeleton() {
   return (
     <div className="pb-24 md:pb-6 space-y-6 animate-fade-in">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 via-cyan-950/20 to-black/60 border border-cyan-500/20 p-6">
-        <div className="h-8 w-48 skeleton-cyan rounded mb-2" />
+      <div className="bg-card border border-border rounded-md p-6">
+        <div className="h-8 w-48 skeleton-premium rounded mb-2" />
         <div className="h-4 w-64 skeleton-premium rounded" />
       </div>
       
@@ -94,32 +94,26 @@ export default function Dashboard() {
 
   return (
     <div className="pb-24 md:pb-6 space-y-6">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 via-cyan-950/20 to-black/60 border border-cyan-500/20">
-        <div className="absolute inset-0 cyber-grid opacity-30" />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 blur-[100px] rounded-full" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 blur-[80px] rounded-full" />
-        
-        <div className="relative z-10 p-6 md:p-8">
+      <Card>
+        <CardContent className="p-6 md:p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Activity className="w-5 h-5 text-cyan-400" />
-                <span className="text-xs uppercase tracking-wider text-cyan-400 font-semibold">Command Center</span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Activity className="w-5 h-5 text-accent" />
+                <span className="text-xs uppercase tracking-wider text-accent font-semibold">Command Center</span>
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold" data-testid="text-dashboard-title">
-                <span className="bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent">
-                  Welcome Back{user?.firstName ? `, ${user.firstName}` : ''}
-                </span>
+              <h1 className="text-3xl md:text-4xl font-bold text-foreground" data-testid="text-dashboard-title">
+                Welcome Back{user?.firstName ? `, ${user.firstName}` : ''}
               </h1>
               <p className="text-muted-foreground max-w-md">
                 Track performance, analyze games, and unlock your potential
               </p>
             </div>
             
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-wrap">
               {currentStreak > 0 && (
                 <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-orange-500/15 to-orange-600/5 border border-orange-500/30">
-                  <Flame className="w-5 h-5 text-orange-500" style={{ filter: "drop-shadow(0 0 8px #f97316)" }} />
+                  <Flame className="w-5 h-5 text-orange-500" />
                   <div>
                     <p className="text-xs text-orange-500/80">Active Streak</p>
                     <p className="font-bold text-orange-400">{currentStreak} days</p>
@@ -128,7 +122,7 @@ export default function Dashboard() {
               )}
               <Link href="/analyze">
                 <Button 
-                  className="bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-white shadow-lg shadow-cyan-500/25"
+                  className="bg-accent text-white"
                   data-testid="button-new-analysis"
                 >
                   <Plus className="w-4 h-4 mr-2" />
@@ -137,8 +131,8 @@ export default function Dashboard() {
               </Link>
             </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       <motion.div 
         className="grid grid-cols-2 lg:grid-cols-4 gap-4"
@@ -151,7 +145,6 @@ export default function Dashboard() {
             icon={Users}
             label="Players"
             value={totalPlayers}
-            color="cyan"
             href="/players"
             testId="card-roster-size"
           />
@@ -162,7 +155,6 @@ export default function Dashboard() {
             icon={TrendingUp}
             label="Team Grade"
             value={avgTeamGrade}
-            color="emerald"
             testId="card-team-grade"
           />
         </motion.div>
@@ -172,7 +164,6 @@ export default function Dashboard() {
             icon={Target}
             label="Games Logged"
             value={totalGames}
-            color="purple"
             href="/analyze"
             testId="card-games-logged"
           />
@@ -183,7 +174,6 @@ export default function Dashboard() {
             icon={Trophy}
             label="Leaderboard"
             value="View"
-            color="yellow"
             href="/leaderboard"
             testId="card-leaderboard"
           />
@@ -197,29 +187,27 @@ export default function Dashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Card className="relative overflow-hidden bg-gradient-to-br from-black/60 to-black/30 border-white/10">
-            <div className="absolute inset-x-[15%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
-            
-            <div className="p-4 border-b border-white/5 flex items-center justify-between gap-2 bg-gradient-to-r from-cyan-500/5 to-transparent">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
-                  <Users className="w-4 h-4 text-cyan-400" />
+          <Card>
+            <div className="p-4 border-b border-border flex items-center justify-between gap-2">
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="p-2 rounded-md bg-accent/10">
+                  <Users className="w-4 h-4 text-accent" />
                 </div>
                 <div>
-                  <h2 className="font-bold text-white">Your Roster</h2>
+                  <h2 className="font-bold text-foreground">Your Roster</h2>
                   <p className="text-xs text-muted-foreground">{totalPlayers} players tracked</p>
                 </div>
               </div>
               <Link 
                 href="/players" 
-                className="text-sm text-cyan-400 flex items-center gap-1 transition-all duration-300 hover:text-cyan-300 hover:gap-2" 
+                className="text-sm text-accent flex items-center gap-1" 
                 data-testid="link-view-all-players"
               >
                 View All <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
             
-            <div className="divide-y divide-white/5">
+            <div className="divide-y divide-border">
               {recentPlayers.length === 0 ? (
                 <EmptyState
                   icon={UserPlus}
@@ -238,22 +226,22 @@ export default function Dashboard() {
                   >
                     <Link 
                       href={`/players/${player.id}`} 
-                      className="block hover:bg-gradient-to-r hover:from-cyan-500/5 hover:to-transparent transition-all duration-300 group" 
+                      className="block hover:bg-muted/50 transition-colors group" 
                       data-testid={`link-player-${player.id}`}
                     >
-                      <div className="p-4 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500/20 to-transparent border border-cyan-400/20 flex items-center justify-center text-sm font-bold text-cyan-300 shadow-[0_0_15px_rgba(100,200,255,0.1)] group-hover:shadow-[0_0_20px_rgba(100,200,255,0.2)] transition-shadow">
+                      <div className="p-4 flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <div className="w-10 h-10 rounded-md bg-accent/10 text-accent border border-accent/20 flex items-center justify-center text-sm font-bold">
                             {player.jerseyNumber || "#"}
                           </div>
                           <div>
-                            <p className="font-medium text-white group-hover:text-cyan-300 transition-colors">{player.name}</p>
+                            <p className="font-medium text-foreground group-hover:text-accent transition-colors">{player.name}</p>
                             <p className="text-xs text-muted-foreground">
                               {player.position} • {player.team || "No Team"}
                             </p>
                           </div>
                         </div>
-                        <ChevronRight className="w-4 h-4 text-cyan-400/50 group-hover:text-cyan-400 transition-colors" />
+                        <ChevronRight className="w-4 h-4 text-muted-foreground" />
                       </div>
                     </Link>
                   </motion.div>
@@ -269,15 +257,13 @@ export default function Dashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <Card className="relative overflow-hidden bg-gradient-to-br from-black/60 to-black/30 border-white/10">
-            <div className="absolute inset-x-[15%] top-0 h-px bg-gradient-to-r from-transparent via-purple-400/30 to-transparent" />
-            
-            <div className="p-4 border-b border-white/5 bg-gradient-to-r from-purple-500/5 to-transparent">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-purple-500/10 border border-purple-500/20">
-                  <Zap className="w-4 h-4 text-purple-400" />
+          <Card>
+            <div className="p-4 border-b border-border">
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="p-2 rounded-md bg-accent/10">
+                  <Zap className="w-4 h-4 text-accent" />
                 </div>
-                <h3 className="font-bold text-white">Quick Actions</h3>
+                <h3 className="font-bold text-foreground">Quick Actions</h3>
               </div>
             </div>
             
@@ -286,52 +272,43 @@ export default function Dashboard() {
                 icon={Target}
                 label="Analyze Game"
                 href="/analyze"
-                color="cyan"
               />
               <QuickActionButton
                 icon={BarChart3}
                 label="View Leaderboard"
                 href="/leaderboard"
-                color="yellow"
               />
               <QuickActionButton
                 icon={Calendar}
                 label="Schedule Practice"
                 href="/schedule"
-                color="green"
               />
               <QuickActionButton
                 icon={Star}
                 label="Scout Players"
                 href="/scout"
-                color="purple"
               />
             </div>
           </Card>
 
-          <Card className="relative overflow-hidden bg-gradient-to-br from-black/60 to-black/30 border-white/10">
-            <div className="absolute inset-x-[15%] top-0 h-px bg-gradient-to-r from-transparent via-yellow-400/30 to-transparent" />
-            
-            <div className="p-4 border-b border-white/5 bg-gradient-to-r from-yellow-500/5 to-transparent">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
-                  <Award className="w-4 h-4 text-yellow-400" />
+          <Card>
+            <div className="p-4 border-b border-border">
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="p-2 rounded-md bg-accent/10">
+                  <Award className="w-4 h-4 text-accent" />
                 </div>
-                <h3 className="font-bold text-white">Recent Achievements</h3>
+                <h3 className="font-bold text-foreground">Recent Achievements</h3>
               </div>
             </div>
             
             <div className="p-4">
               <div className="text-center py-6">
-                <div className="relative inline-block mb-3">
-                  <div className="absolute inset-0 bg-yellow-500/20 blur-xl rounded-full" />
-                  <Trophy className="w-10 h-10 text-yellow-500/50 relative z-10" />
-                </div>
+                <Trophy className="w-10 h-10 text-accent/50 mx-auto mb-3" />
                 <p className="text-sm text-muted-foreground">
                   Log games to earn badges and achievements
                 </p>
                 <Link href="/analyze">
-                  <Button variant="outline" size="sm" className="mt-3 border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10">
+                  <Button variant="outline" size="sm" className="mt-3">
                     Start Earning
                   </Button>
                 </Link>
@@ -348,82 +325,29 @@ interface StatCardProps {
   icon: typeof Users;
   label: string;
   value: string | number;
-  color: "cyan" | "emerald" | "purple" | "yellow" | "orange";
   href?: string;
   testId?: string;
 }
 
-const colorStyles = {
-  cyan: {
-    bg: "from-cyan-500/20 to-cyan-600/10",
-    border: "border-cyan-400/20",
-    shadow: "shadow-[0_0_20px_rgba(100,200,255,0.1)]",
-    text: "text-cyan-400",
-    gradient: "from-white to-cyan-100/80",
-    line: "via-cyan-400/30",
-  },
-  emerald: {
-    bg: "from-emerald-500/20 to-emerald-600/10",
-    border: "border-emerald-400/20",
-    shadow: "shadow-[0_0_20px_rgba(16,185,129,0.1)]",
-    text: "text-emerald-400",
-    gradient: "from-white to-emerald-100/80",
-    line: "via-emerald-400/30",
-  },
-  purple: {
-    bg: "from-purple-500/20 to-purple-600/10",
-    border: "border-purple-400/20",
-    shadow: "shadow-[0_0_20px_rgba(168,85,247,0.1)]",
-    text: "text-purple-400",
-    gradient: "from-white to-purple-100/80",
-    line: "via-purple-400/30",
-  },
-  yellow: {
-    bg: "from-yellow-500/20 to-yellow-600/10",
-    border: "border-yellow-400/20",
-    shadow: "shadow-[0_0_20px_rgba(234,179,8,0.1)]",
-    text: "text-yellow-400",
-    gradient: "from-white to-yellow-100/80",
-    line: "via-yellow-400/30",
-  },
-  orange: {
-    bg: "from-orange-500/20 to-orange-600/10",
-    border: "border-orange-400/20",
-    shadow: "shadow-[0_0_20px_rgba(249,115,22,0.1)]",
-    text: "text-orange-400",
-    gradient: "from-white to-orange-100/80",
-    line: "via-orange-400/30",
-  },
-};
-
-function StatCard({ icon: Icon, label, value, color, href, testId }: StatCardProps) {
-  const styles = colorStyles[color];
-  
+function StatCard({ icon: Icon, label, value, href, testId }: StatCardProps) {
   const content = (
     <Card 
       className={cn(
-        "relative overflow-hidden transition-all duration-300 group",
-        "bg-gradient-to-br from-black/60 to-black/30 border-white/10",
+        "transition-all duration-300",
         href && "hover:scale-[1.02] cursor-pointer"
       )}
       data-testid={testId}
     >
-      <div className={cn("absolute inset-x-[20%] top-0 h-px bg-gradient-to-r from-transparent to-transparent", styles.line)} />
       <CardContent className="pt-5 pb-5">
-        <div className="flex items-center gap-3">
-          <div className={cn(
-            "p-2.5 rounded-lg bg-gradient-to-br border",
-            styles.bg,
-            styles.border,
-            styles.shadow
-          )}>
-            <Icon className={cn("w-5 h-5", styles.text)} />
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="p-2 rounded-md bg-accent/10">
+            <Icon className="w-5 h-5 text-accent" />
           </div>
           <div>
-            <p className={cn("text-2xl font-bold bg-gradient-to-b bg-clip-text text-transparent", styles.gradient)}>
+            <p className="text-foreground text-2xl font-bold font-display">
               {value}
             </p>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">{label}</p>
+            <p className="text-muted-foreground text-xs uppercase tracking-wider">{label}</p>
           </div>
         </div>
       </CardContent>
@@ -440,28 +364,17 @@ interface QuickActionButtonProps {
   icon: typeof Target;
   label: string;
   href: string;
-  color: "cyan" | "yellow" | "green" | "purple";
 }
 
-const quickActionColors = {
-  cyan: "hover:bg-cyan-500/10 hover:border-cyan-500/30 text-cyan-400",
-  yellow: "hover:bg-yellow-500/10 hover:border-yellow-500/30 text-yellow-400",
-  green: "hover:bg-emerald-500/10 hover:border-emerald-500/30 text-emerald-400",
-  purple: "hover:bg-purple-500/10 hover:border-purple-500/30 text-purple-400",
-};
-
-function QuickActionButton({ icon: Icon, label, href, color }: QuickActionButtonProps) {
+function QuickActionButton({ icon: Icon, label, href }: QuickActionButtonProps) {
   return (
     <Link href={href}>
       <Button
         variant="ghost"
-        className={cn(
-          "w-full justify-start gap-3 h-11 border border-white/5 transition-all",
-          quickActionColors[color]
-        )}
+        className="w-full justify-start gap-3 border border-border"
       >
-        <Icon className="w-4 h-4" />
-        <span className="text-white">{label}</span>
+        <Icon className="w-4 h-4 text-accent" />
+        <span>{label}</span>
         <ChevronRight className="w-4 h-4 ml-auto opacity-50" />
       </Button>
     </Link>

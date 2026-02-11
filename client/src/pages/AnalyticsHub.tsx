@@ -24,12 +24,12 @@ export default function AnalyticsHub() {
   return (
     <div className="space-y-6 pb-20" data-testid="page-analytics-hub">
       <div className="flex items-center gap-3">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/20 flex items-center justify-center">
-          <BarChart3 className="w-6 h-6 text-cyan-400" />
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20 flex items-center justify-center">
+          <BarChart3 className="w-6 h-6 text-accent" />
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-white via-cyan-100 to-cyan-400 bg-clip-text text-transparent">
+            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-white via-accent/20 to-accent bg-clip-text text-transparent">
               Analytics Hub
             </h1>
             <HelpTooltip

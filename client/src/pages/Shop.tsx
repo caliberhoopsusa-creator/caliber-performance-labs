@@ -214,10 +214,10 @@ export default function Shop() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] p-6">
         <div className="relative">
-          <div className="absolute inset-0 bg-cyan-500/20 blur-3xl rounded-full" />
-          <Lock className="w-20 h-20 text-cyan-400 relative z-10 mb-6" />
+          <div className="absolute inset-0 bg-accent/20 blur-3xl rounded-full" />
+          <Lock className="w-20 h-20 text-accent relative z-10 mb-6" />
         </div>
-        <h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-white to-cyan-400 bg-clip-text text-transparent">
+        <h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-white to-accent bg-clip-text text-transparent">
           Sign in to access the Shop
         </h2>
         <p className="text-muted-foreground text-center max-w-md">
@@ -229,20 +229,20 @@ export default function Shop() {
 
   return (
     <div className="pb-24 md:pb-6 space-y-8">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 via-cyan-950/20 to-black/60 border border-cyan-500/20">
-        <div className="absolute inset-0 cyber-grid opacity-30" />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 blur-[100px] rounded-full" />
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 via-card to-black/60 border border-accent/20">
+        <div className="absolute inset-0 opacity-30" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-accent/10 blur-[100px] rounded-full" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-yellow-500/10 blur-[80px] rounded-full" />
         
         <div className="relative z-10 p-6 md:p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <ShoppingBag className="w-6 h-6 text-cyan-400" />
-                <span className="text-xs uppercase tracking-wider text-cyan-400 font-semibold">Premium Store</span>
+                <ShoppingBag className="w-6 h-6 text-accent" />
+                <span className="text-xs uppercase tracking-wider text-accent font-semibold">Premium Store</span>
               </div>
               <h1 className="text-3xl md:text-4xl font-bold">
-                <span className="bg-gradient-to-r from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-white via-accent to-accent bg-clip-text text-transparent">
                   Caliber Shop
                 </span>
               </h1>
@@ -463,8 +463,8 @@ export default function Shop() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
-              <Package className="w-5 h-5 text-cyan-400" />
+            <div className="p-2 rounded-lg bg-accent/10 border border-accent/20">
+              <Package className="w-5 h-5 text-accent" />
             </div>
             <div>
               <h2 className="text-xl font-bold">All Items</h2>
@@ -480,7 +480,7 @@ export default function Shop() {
               placeholder="Search items..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-black/20 border-white/10 focus:border-cyan-500/50"
+              className="pl-9 bg-black/20 border-white/10 focus:border-accent/50"
               data-testid="input-shop-search"
             />
           </div>
@@ -514,8 +514,8 @@ export default function Shop() {
                   value={key}
                   className={cn(
                     "flex flex-col items-center gap-1.5 py-3 px-2 rounded-lg transition-all",
-                    "data-[state=active]:bg-gradient-to-br data-[state=active]:from-cyan-600 data-[state=active]:to-cyan-700",
-                    "data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-cyan-500/20"
+                    "data-[state=active]:bg-gradient-to-br data-[state=active]:from-accent data-[state=active]:to-accent",
+                    "data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/20"
                   )}
                   data-testid={`tab-shop-${key}`}
                 >
@@ -602,12 +602,12 @@ export default function Shop() {
         </Tabs>
       </div>
 
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-cyan-950/30 via-purple-950/20 to-cyan-950/30 border border-cyan-500/20 p-6">
-        <div className="absolute inset-0 cyber-grid opacity-20" />
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-card via-purple-950/20 to-card border border-accent/20 p-6">
+        <div className="absolute inset-0 opacity-20" />
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-cyan-500/20 to-purple-500/20 border border-white/10">
-              <Gift className="w-8 h-8 text-cyan-400" />
+            <div className="p-3 rounded-xl bg-gradient-to-br from-accent/20 to-purple-500/20 border border-white/10">
+              <Gift className="w-8 h-8 text-accent" />
             </div>
             <div>
               <h3 className="font-bold text-lg">Earn Free Coins</h3>
@@ -622,7 +622,7 @@ export default function Shop() {
                 <span className="font-bold text-yellow-400">+10</span>
               </div>
             </div>
-            <Button variant="outline" className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10" data-testid="btn-start-earning">
+            <Button variant="outline" className="border-accent/30 text-accent" data-testid="btn-start-earning">
               <TrendingUp className="w-4 h-4 mr-2" />
               Start Earning
             </Button>
@@ -689,7 +689,7 @@ function FeaturedItemCard({
             <Button
               size="lg"
               variant={item.equipped ? "default" : "outline"}
-              className={cn(item.equipped && "bg-cyan-600 hover:bg-cyan-700")}
+              className={cn(item.equipped && "bg-accent ")}
               onClick={() => onEquip(!item.equipped)}
               disabled={isEquipping}
               data-testid={`btn-featured-equip-${item.id}`}
@@ -757,7 +757,7 @@ function ShopItemCard({
         className={cn(
           "relative overflow-hidden transition-all duration-300 hover:scale-[1.02] group",
           "bg-gradient-to-br from-black/60 to-black/30 border-white/10 hover:border-white/20",
-          item.equipped && "ring-2 ring-cyan-500 ring-offset-2 ring-offset-background"
+          item.equipped && "ring-2 ring-accent ring-offset-2 ring-offset-background"
         )}
         style={{ boxShadow: rarity.glow }}
         data-testid={`shop-item-${item.id}`}
@@ -809,7 +809,7 @@ function ShopItemCard({
                 variant={item.equipped ? "default" : "outline"}
                 className={cn(
                   "w-full",
-                  item.equipped && "bg-cyan-600 hover:bg-cyan-700"
+                  item.equipped && "bg-accent "
                 )}
                 onClick={() => onEquip(!item.equipped)}
                 disabled={isEquipping}
@@ -855,15 +855,15 @@ function ShopItemCard({
 
 const PROFILE_SKIN_STYLES: Record<string, { background: string; borderColor: string }> = {
   "neon-grid": {
-    background: "linear-gradient(135deg, #00D4FF15 0%, #00D4FF08 50%, transparent 50%), repeating-linear-gradient(0deg, transparent, transparent 8px, #00D4FF20 8px, #00D4FF20 9px), repeating-linear-gradient(90deg, transparent, transparent 8px, #00D4FF20 8px, #00D4FF20 9px)",
-    borderColor: "#00D4FF60",
+    background: "linear-gradient(135deg, hsl(24, 95%, 53%)15 0%, hsl(24, 95%, 53%)08 50%, transparent 50%), repeating-linear-gradient(0deg, transparent, transparent 8px, hsl(24, 95%, 53%)20 8px, hsl(24, 95%, 53%)20 9px), repeating-linear-gradient(90deg, transparent, transparent 8px, hsl(24, 95%, 53%)20 8px, hsl(24, 95%, 53%)20 9px)",
+    borderColor: "hsl(24, 95%, 53%)60",
   },
   "flame-burst": {
     background: "linear-gradient(135deg, #ff6b3530 0%, #ff220030 25%, #ff6b3520 50%, #ff9a0015 100%)",
     borderColor: "#ff6b3570",
   },
   "aurora-glow": {
-    background: "linear-gradient(135deg, #00ff8840 0%, #00D4FF35 33%, #9b59b630 66%, #00ff8820 100%)",
+    background: "linear-gradient(135deg, #00ff8840 0%, hsl(24, 95%, 53%)35 33%, #9b59b630 66%, #00ff8820 100%)",
     borderColor: "#00ff8860",
   },
   "galaxy-swirl": {
@@ -878,8 +878,8 @@ const BADGE_STYLE_PREVIEW: Record<string, { ringColor: string; glowColor: string
 };
 
 const EFFECT_PREVIEW: Record<string, { gradient: string }> = {
-  "glow-trail": { gradient: "radial-gradient(circle at 50% 50%, #00D4FF50 0%, transparent 70%)" },
-  "particle-burst": { gradient: "radial-gradient(circle at 30% 30%, #FFD70050 0%, transparent 30%), radial-gradient(circle at 70% 60%, #FF6B3550 0%, transparent 25%), radial-gradient(circle at 50% 80%, #00D4FF50 0%, transparent 35%)" },
+  "glow-trail": { gradient: "radial-gradient(circle at 50% 50%, hsl(24, 95%, 53%)50 0%, transparent 70%)" },
+  "particle-burst": { gradient: "radial-gradient(circle at 30% 30%, #FFD70050 0%, transparent 30%), radial-gradient(circle at 70% 60%, #FF6B3550 0%, transparent 25%), radial-gradient(circle at 50% 80%, hsl(24, 95%, 53%)50 0%, transparent 35%)" },
 };
 
 function getPreviewStyle(item: ShopItem) {
@@ -955,7 +955,7 @@ function PreviewContent({ item, size = "normal" }: { item: ShopItem; size?: "nor
           className="absolute inset-0 rounded-full animate-pulse"
           style={{ background: EFFECT_PREVIEW[item.value].gradient }}
         />
-        <Sparkles className={cn(iconSize, "text-cyan-400 relative z-10")} style={{ filter: "drop-shadow(0 0 8px #00D4FF)" }} />
+        <Sparkles className={cn(iconSize, "text-accent relative z-10")} style={{ filter: "drop-shadow(0 0 8px hsl(24, 95%, 53%))" }} />
       </div>
     );
   }

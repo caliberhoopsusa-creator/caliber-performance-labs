@@ -34,8 +34,8 @@ const CELEBRATION_CONFIGS: Record<CelebrationType, CelebrationConfig> = {
   badge_unlock: {
     title: "BADGE UNLOCKED!",
     icon: Award,
-    color: "text-cyan-400",
-    bgColor: "from-cyan-500/30 to-blue-500/20",
+    color: "text-accent",
+    bgColor: "from-accent/30 to-blue-500/20",
     particleCount: 40,
     duration: 3500,
   },
@@ -51,7 +51,7 @@ const CELEBRATION_CONFIGS: Record<CelebrationType, CelebrationConfig> = {
     title: "XP EARNED!",
     icon: Zap,
     color: "text-primary",
-    bgColor: "from-primary/30 to-cyan-500/20",
+    bgColor: "from-primary/30 to-accent/20",
     particleCount: 20,
     duration: 2000,
   },
@@ -94,7 +94,7 @@ interface Particle {
 }
 
 const PARTICLE_COLORS = [
-  "#00D4FF", // cyan
+  "hsl(24, 95%, 53%)", // accent (orange)
   "#FFD700", // gold
   "#FF6B6B", // coral
   "#4ECDC4", // teal

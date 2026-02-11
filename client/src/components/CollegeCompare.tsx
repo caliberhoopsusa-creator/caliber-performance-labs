@@ -66,25 +66,25 @@ interface CollegeCompareProps {
 
 const DIVISION_COLORS: Record<string, string> = {
   'D1': 'bg-gradient-to-r from-amber-500 to-orange-500 text-white',
-  'D2': 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white',
+  'D2': 'bg-accent text-white',
   'D3': 'bg-gradient-to-r from-emerald-500 to-green-500 text-white',
   'NAIA': 'bg-gradient-to-r from-purple-500 to-violet-500 text-white',
   'JUCO': 'bg-gradient-to-r from-rose-500 to-pink-500 text-white',
 };
 
 const LOGO_COLORS = [
-  'bg-gradient-to-br from-cyan-500 to-blue-600',
+  'bg-gradient-to-br from-accent to-blue-600',
   'bg-gradient-to-br from-amber-500 to-orange-600',
   'bg-gradient-to-br from-emerald-500 to-teal-600',
   'bg-gradient-to-br from-purple-500 to-indigo-600',
   'bg-gradient-to-br from-rose-500 to-pink-600',
-  'bg-gradient-to-br from-sky-500 to-cyan-600',
+  'bg-gradient-to-br from-sky-500 to-accent',
 ];
 
 const NIL_LEVELS: Record<string, { label: string; color: string }> = {
   'elite': { label: 'Elite', color: 'text-amber-400' },
   'high': { label: 'High', color: 'text-emerald-400' },
-  'moderate': { label: 'Moderate', color: 'text-cyan-400' },
+  'moderate': { label: 'Moderate', color: 'text-accent' },
   'low': { label: 'Low', color: 'text-muted-foreground' },
   'developing': { label: 'Developing', color: 'text-muted-foreground' },
 };
@@ -117,7 +117,7 @@ function ComparisonStat({
   return (
     <div className="grid gap-4" style={{ gridTemplateColumns: `1fr repeat(${values.length}, 1fr)` }}>
       <div className="flex items-center gap-2 text-muted-foreground">
-        <Icon className="w-4 h-4 text-cyan-400" />
+        <Icon className="w-4 h-4 text-accent" />
         <span className="text-sm">{label}</span>
       </div>
       {values.map((value, i) => (
@@ -145,7 +145,7 @@ function CollegeCard({
       <Card className={cn(
         "relative overflow-hidden flex flex-col items-center justify-center min-h-[200px]",
         "bg-gradient-to-br from-[hsl(220,25%,10%)] via-[hsl(220,20%,8%)] to-[hsl(220,25%,6%)]",
-        "border-dashed border-cyan-500/20"
+        "border-dashed border-accent/20"
       )}>
         <Plus className="w-8 h-8 text-muted-foreground mb-2" />
         <p className="text-sm text-muted-foreground">Select a school</p>
@@ -159,10 +159,10 @@ function CollegeCard({
     <Card className={cn(
       "relative overflow-hidden",
       "bg-gradient-to-br from-[hsl(220,25%,10%)] via-[hsl(220,20%,8%)] to-[hsl(220,25%,6%)]",
-      "border-cyan-500/10",
+      "border-border",
       "shadow-[0_4px_24px_rgba(0,0,0,0.4)]"
     )}>
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
       
       <Button
         variant="ghost"
@@ -195,7 +195,7 @@ function CollegeCard({
             {college.division}
           </Badge>
           {college.conference && (
-            <Badge variant="outline" className="text-[10px] border-cyan-500/30 text-cyan-300">
+            <Badge variant="outline" className="text-[10px] border-accent/30 text-accent">
               {college.conference}
             </Badge>
           )}
@@ -203,7 +203,7 @@ function CollegeCard({
 
         {matchScore !== undefined && (
           <div className="mt-3 flex items-center gap-2">
-            <Target className="w-4 h-4 text-cyan-400" />
+            <Target className="w-4 h-4 text-accent" />
             <span className="text-sm font-semibold text-white">{matchScore}% Match</span>
           </div>
         )}
@@ -285,13 +285,13 @@ export function CollegeCompare({ open, onOpenChange }: CollegeCompareProps) {
       <DialogContent className={cn(
         "max-w-4xl max-h-[90vh] overflow-y-auto",
         "bg-gradient-to-br from-[hsl(220,25%,10%)] via-[hsl(220,20%,8%)] to-[hsl(220,25%,6%)]",
-        "border-cyan-500/20"
+        "border-accent/20"
       )}>
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
         
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl font-display text-white">
-            <Trophy className="w-5 h-5 text-cyan-400" />
+            <Trophy className="w-5 h-5 text-accent" />
             Compare Schools
           </DialogTitle>
           <DialogDescription className="text-muted-foreground">
@@ -311,17 +311,17 @@ export function CollegeCompare({ open, onOpenChange }: CollegeCompareProps) {
                   onValueChange={(value) => handleSelectCollege(slot, value)}
                 >
                   <SelectTrigger 
-                    className="bg-white/5 border-cyan-500/20"
+                    className="bg-white/5 border-accent/20"
                     data-testid={`select-college-${slot}`}
                   >
                     <SelectValue placeholder="Select a school..." />
                   </SelectTrigger>
-                  <SelectContent className="bg-[hsl(220,25%,10%)] border-cyan-500/20 max-h-[300px]">
+                  <SelectContent className="bg-[hsl(220,25%,10%)] border-accent/20 max-h-[300px]">
                     {availableColleges(slot).map(college => (
                       <SelectItem 
                         key={college.id} 
                         value={college.id.toString()}
-                        className="focus:bg-cyan-500/20"
+                        className="focus:bg-accent/20"
                       >
                         <div className="flex items-center gap-2">
                           <span>{college.shortName || college.name}</span>
@@ -346,7 +346,7 @@ export function CollegeCompare({ open, onOpenChange }: CollegeCompareProps) {
             {selectedCollegeIds.length < 3 && (
               <Button
                 variant="outline"
-                className="h-full min-h-[200px] border-dashed border-cyan-500/20 hover:border-cyan-500/40 hover:bg-cyan-500/5"
+                className="h-full min-h-[200px] border-dashed border-accent/20 hover:border-accent/40 hover:bg-accent/5"
                 onClick={handleAddSlot}
                 data-testid="button-add-college-slot"
               >
@@ -360,12 +360,12 @@ export function CollegeCompare({ open, onOpenChange }: CollegeCompareProps) {
             <Card className={cn(
               "p-5 relative overflow-hidden",
               "bg-gradient-to-br from-[hsl(220,25%,10%)] via-[hsl(220,20%,8%)] to-[hsl(220,25%,6%)]",
-              "border-cyan-500/10"
+              "border-border"
             )}>
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
               
               <h4 className="font-display text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-cyan-400" />
+                <TrendingUp className="w-4 h-4 text-accent" />
                 Comparison
               </h4>
 
@@ -376,7 +376,7 @@ export function CollegeCompare({ open, onOpenChange }: CollegeCompareProps) {
                   icon={Medal}
                 />
                 
-                <div className="h-px bg-cyan-500/10" />
+                <div className="h-px bg-accent/10" />
                 
                 <ComparisonStat
                   label="Win/Loss Record"
@@ -388,7 +388,7 @@ export function CollegeCompare({ open, onOpenChange }: CollegeCompareProps) {
                   icon={Trophy}
                 />
                 
-                <div className="h-px bg-cyan-500/10" />
+                <div className="h-px bg-accent/10" />
                 
                 <ComparisonStat
                   label="National Championships"
@@ -396,7 +396,7 @@ export function CollegeCompare({ open, onOpenChange }: CollegeCompareProps) {
                   icon={Trophy}
                 />
                 
-                <div className="h-px bg-cyan-500/10" />
+                <div className="h-px bg-accent/10" />
                 
                 <ComparisonStat
                   label="Pro Draft Picks"
@@ -404,7 +404,7 @@ export function CollegeCompare({ open, onOpenChange }: CollegeCompareProps) {
                   icon={Users}
                 />
                 
-                <div className="h-px bg-cyan-500/10" />
+                <div className="h-px bg-accent/10" />
                 
                 <ComparisonStat
                   label="NIL Opportunities"
@@ -413,7 +413,7 @@ export function CollegeCompare({ open, onOpenChange }: CollegeCompareProps) {
                   format="nil"
                 />
                 
-                <div className="h-px bg-cyan-500/10" />
+                <div className="h-px bg-accent/10" />
                 
                 <ComparisonStat
                   label="Graduation Rate"
@@ -422,7 +422,7 @@ export function CollegeCompare({ open, onOpenChange }: CollegeCompareProps) {
                   format="percentage"
                 />
                 
-                <div className="h-px bg-cyan-500/10" />
+                <div className="h-px bg-accent/10" />
                 
                 <ComparisonStat
                   label="Match Score"

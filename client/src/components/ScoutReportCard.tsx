@@ -52,7 +52,7 @@ interface Props {
 function getRatingColor(rating: number): string {
   if (rating >= 90) return "text-amber-400";
   if (rating >= 80) return "text-purple-400";
-  if (rating >= 70) return "text-cyan-400";
+  if (rating >= 70) return "text-accent";
   if (rating >= 60) return "text-blue-400";
   return "text-zinc-400";
 }
@@ -60,7 +60,7 @@ function getRatingColor(rating: number): string {
 function getRatingBgColor(rating: number): string {
   if (rating >= 90) return "from-amber-500/20 to-yellow-600/20 border-amber-500/30";
   if (rating >= 80) return "from-purple-500/20 to-purple-600/20 border-purple-500/30";
-  if (rating >= 70) return "from-cyan-500/20 to-cyan-600/20 border-cyan-500/30";
+  if (rating >= 70) return "from-accent/20 to-accent/20 border-accent/30";
   if (rating >= 60) return "from-blue-500/20 to-blue-600/20 border-blue-500/30";
   return "from-zinc-500/20 to-zinc-600/20 border-zinc-500/30";
 }
@@ -68,7 +68,7 @@ function getRatingBgColor(rating: number): string {
 function getRatingBadgeStyle(rating: number): string {
   if (rating >= 90) return "bg-gradient-to-r from-amber-500 to-yellow-500 text-black";
   if (rating >= 80) return "bg-gradient-to-r from-purple-500 to-purple-600 text-white";
-  if (rating >= 70) return "bg-gradient-to-r from-cyan-500 to-cyan-600 text-white";
+  if (rating >= 70) return "bg-accent text-white";
   if (rating >= 60) return "bg-gradient-to-r from-blue-500 to-blue-600 text-white";
   return "bg-gradient-to-r from-zinc-500 to-zinc-600 text-white";
 }
@@ -87,7 +87,7 @@ function calculateTrustScore(verificationCount: number, ratingCount: number): nu
 
 function getTrustLevel(score: number): { label: string; color: string } {
   if (score >= 80) return { label: "Highly Trusted", color: "text-emerald-400" };
-  if (score >= 60) return { label: "Trusted", color: "text-cyan-400" };
+  if (score >= 60) return { label: "Trusted", color: "text-accent" };
   if (score >= 40) return { label: "Building Trust", color: "text-amber-400" };
   return { label: "New Profile", color: "text-zinc-400" };
 }
@@ -187,7 +187,7 @@ export function ScoutReportCard({ playerId, playerName, position }: Props) {
       data-testid="scout-report-card"
     >
       <Card className="overflow-hidden bg-gradient-to-br from-black/60 to-black/30 border-white/10 backdrop-blur-sm">
-        <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
+        <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
         
         <div className="p-6 space-y-6">
           <div className="flex items-start justify-between gap-4">
@@ -226,7 +226,7 @@ export function ScoutReportCard({ playerId, playerName, position }: Props) {
                 <h3 className="text-xl font-bold text-white" data-testid="scout-report-player-name">
                   {playerName}
                 </h3>
-                <p className="text-sm text-cyan-400/80" data-testid="scout-report-position">
+                <p className="text-sm text-accent/80" data-testid="scout-report-position">
                   {position}
                 </p>
                 <div className="flex items-center gap-2 mt-1">
@@ -294,16 +294,16 @@ export function ScoutReportCard({ playerId, playerName, position }: Props) {
               transition={{ delay: 0.2 }}
             >
               <Card 
-                className="p-4 bg-gradient-to-br from-cyan-500/20 to-cyan-600/20 border-cyan-500/30 backdrop-blur-sm"
+                className="p-4 bg-gradient-to-br from-accent/20 to-accent/20 border-accent/30 backdrop-blur-sm"
                 data-testid="scout-report-trust-score"
               >
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">Trust Score</p>
-                    <p className="text-2xl font-bold text-cyan-400">{trustScore}%</p>
+                    <p className="text-2xl font-bold text-accent">{trustScore}%</p>
                   </div>
                   <div className="p-1.5 rounded-lg bg-white/5">
-                    <Shield className="w-4 h-4 text-cyan-400" style={{ filter: "drop-shadow(0 0 6px #22D3EE)" }} />
+                    <Shield className="w-4 h-4 text-accent" style={{ filter: "drop-shadow(0 0 6px #22D3EE)" }} />
                   </div>
                 </div>
                 <p className={cn("text-xs mt-1", trustLevel.color)}>{trustLevel.label}</p>
@@ -362,7 +362,7 @@ export function ScoutReportCard({ playerId, playerName, position }: Props) {
               transition={{ delay: 0.35 }}
               data-testid="scout-report-ai-summary"
             >
-              <Card className="p-4 bg-gradient-to-br from-purple-500/10 to-cyan-500/10 border-purple-500/20 backdrop-blur-sm">
+              <Card className="p-4 bg-gradient-to-br from-purple-500/10 to-accent/10 border-purple-500/20 backdrop-blur-sm">
                 <div className="flex items-center gap-2 mb-3">
                   <Sparkles className="w-4 h-4 text-purple-400" style={{ filter: "drop-shadow(0 0 6px #A855F7)" }} />
                   <h4 className="text-sm font-semibold text-white">AI Projection Summary</h4>

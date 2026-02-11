@@ -31,8 +31,8 @@ export function PullToRefreshIndicator({
     >
       <div className={cn(
         "flex items-center justify-center w-10 h-10 rounded-full mt-2",
-        "bg-slate-800/90 backdrop-blur-sm border border-cyan-500/30",
-        shouldTrigger && "border-cyan-400/60"
+        "bg-slate-800/90 backdrop-blur-sm border border-accent/30",
+        shouldTrigger && "border-accent/60"
       )}>
         <motion.div
           animate={{ 
@@ -47,7 +47,7 @@ export function PullToRefreshIndicator({
         >
           <RefreshCw className={cn(
             "w-5 h-5 transition-colors",
-            shouldTrigger || isRefreshing ? "text-cyan-400" : "text-muted-foreground"
+            shouldTrigger || isRefreshing ? "text-accent" : "text-muted-foreground"
           )} />
         </motion.div>
       </div>

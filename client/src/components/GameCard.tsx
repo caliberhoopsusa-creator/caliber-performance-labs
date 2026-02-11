@@ -93,7 +93,6 @@ export function GameCard({ game, playerName, badges = [], showShareButton = true
       data-testid={`game-card-${game.id}`}
       className={cn(
         "relative w-full max-w-[400px] aspect-[4/5] rounded-2xl overflow-hidden",
-        "glass-card card-shine",
         "border-2",
         gradeColors.border,
         "shadow-2xl",
@@ -150,7 +149,7 @@ export function GameCard({ game, playerName, badges = [], showShareButton = true
             )}
           >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300" />
-            <span className={cn("text-6xl font-display font-bold relative z-10 text-glow", gradeColors.text)}>
+            <span className={cn("text-6xl font-display font-bold relative z-10", gradeColors.text)}>
               {game.grade || "—"}
             </span>
           </div>
@@ -182,7 +181,7 @@ export function GameCard({ game, playerName, badges = [], showShareButton = true
                 <div className="stat-value text-white text-2xl">{game.rushingYards || 0}</div>
                 <div className="stat-label">RUSH YDS</div>
               </div>
-              <div className="text-center px-3 py-1 rounded-md bg-gradient-to-br from-cyan-500/10 to-cyan-600/5 border border-cyan-500/10 transition-all duration-300 hover:border-cyan-500/20 hover:from-cyan-500/15 flex-1">
+              <div className="text-center px-3 py-1 rounded-md bg-gradient-to-br from-accent/10 to-accent/5 border border-border transition-all duration-300 hover:border-accent/20 hover:from-accent/15 flex-1">
                 <div className="stat-value text-white text-2xl">{game.receivingYards || 0}</div>
                 <div className="stat-label">REC YDS</div>
               </div>
@@ -240,7 +239,7 @@ export function GameCard({ game, playerName, badges = [], showShareButton = true
                 <div className="stat-value text-white text-2xl">{threePct}%</div>
                 <div className="stat-label">3PT</div>
               </div>
-              <div className="text-center px-3 py-1 rounded-md bg-gradient-to-br from-cyan-500/10 to-cyan-600/5 border border-cyan-500/10 transition-all duration-300 hover:border-cyan-500/20 hover:from-cyan-500/15 flex-1">
+              <div className="text-center px-3 py-1 rounded-md bg-gradient-to-br from-accent/10 to-accent/5 border border-border transition-all duration-300 hover:border-accent/20 hover:from-accent/15 flex-1">
                 <div className="stat-value text-white text-2xl">{ftPct}%</div>
                 <div className="stat-label">FT</div>
               </div>

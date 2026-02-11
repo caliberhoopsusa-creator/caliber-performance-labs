@@ -45,8 +45,8 @@ export function PullToRefresh({
           className={cn(
             "w-10 h-10 rounded-full flex items-center justify-center",
             "bg-gradient-to-br from-[hsl(220,25%,12%)] to-[hsl(220,25%,8%)]",
-            "border border-cyan-500/30 shadow-lg shadow-cyan-500/20",
-            shouldTrigger && "border-cyan-400/50"
+            "border border-accent/30 shadow-lg",
+            shouldTrigger && "border-accent/50"
           )}
         >
           <motion.div
@@ -62,7 +62,7 @@ export function PullToRefresh({
             <RefreshCw
               className={cn(
                 "w-5 h-5 transition-colors",
-                shouldTrigger ? "text-cyan-400" : "text-muted-foreground"
+                shouldTrigger ? "text-accent" : "text-muted-foreground"
               )}
             />
           </motion.div>

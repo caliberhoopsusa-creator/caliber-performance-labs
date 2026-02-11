@@ -89,7 +89,7 @@ export function PageTransition({ children }: PageTransitionProps) {
               ease: "easeInOut",
             }}
           >
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/10 to-transparent animate-scan-line-sweep" />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-accent/10 to-transparent animate-scan-line-sweep" />
           </motion.div>
         )}
 
@@ -104,7 +104,7 @@ export function PageTransition({ children }: PageTransitionProps) {
               ease: "easeOut",
             }}
           >
-            <div className="absolute inset-0 bg-gradient-radial-cyan opacity-0 animate-glow-pulse-cyan" />
+            <div className="absolute inset-0 bg-gradient-radial opacity-0 animate-glow-pulse" />
           </motion.div>
         )}
 

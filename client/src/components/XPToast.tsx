@@ -47,7 +47,7 @@ function XPToast({ notification, onComplete }: XPToastProps) {
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
       className={cn(
         "flex items-center gap-3 px-4 py-3 rounded-xl",
-        "bg-gradient-to-r from-primary/20 to-cyan-500/10",
+        "bg-gradient-to-r from-primary/20 to-accent/10",
         "border border-primary/30 backdrop-blur-md",
         "shadow-lg shadow-primary/20"
       )}

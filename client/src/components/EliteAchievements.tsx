@@ -137,10 +137,10 @@ function AchievementBadge({ label, tier }: { label: string; tier: "bronze" | "si
           <div 
             className={cn(
               "absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent",
-              "animate-shimmer"
+              ""
             )}
             style={{
-              animation: "shimmer 2s infinite",
+              animation: "2s infinite",
             }}
           />
         </div>

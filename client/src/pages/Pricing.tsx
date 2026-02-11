@@ -188,7 +188,7 @@ export default function Pricing() {
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
-            <Card key={i} className="glass-card p-6">
+            <Card key={i} className="p-6">
               <Skeleton className="h-8 w-32 mb-4" />
               <Skeleton className="h-12 w-24 mb-4" />
               <div className="space-y-3">
@@ -215,7 +215,7 @@ export default function Pricing() {
           </div>
           
           <h1 className="text-4xl md:text-5xl font-bold font-display tracking-tight text-white" data-testid="text-pricing-title">
-            Upgrade Your <span className="text-gradient-primary text-glow">Game</span>
+            Upgrade Your <span className="text-gradient-primary">Game</span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mt-4">
             Choose the plan that fits your goals. Level up with premium analytics and insights.
@@ -256,7 +256,7 @@ export default function Pricing() {
               <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent min-w-[40px]" />
             </div>
             {subscriptionPlans.some((p) => hasYearlyOption(p.prices)) && (
-              <div className="flex items-center gap-1 glass-card rounded-xl p-1.5">
+              <div className="flex items-center gap-1 rounded-xl p-1.5">
                 <Button
                   size="sm"
                   variant={billingPeriod === "monthly" ? "default" : "ghost"}
@@ -291,7 +291,7 @@ export default function Pricing() {
               return (
                 <Card 
                   key={product.id} 
-                  className={`relative glass-card card-shine overflow-hidden transition-all duration-300 ${isPopular ? "border-primary/30 shadow-xl shadow-primary/10" : "border-white/5"}`}
+                  className={`relative overflow-hidden transition-all duration-300 ${isPopular ? "border-primary/30 shadow-xl shadow-primary/10" : "border-white/5"}`}
                   data-testid={`card-plan-${product.id}`}
                 >
                   {isPopular && (
@@ -392,7 +392,7 @@ export default function Pricing() {
               const IconComponent = icon;
 
               return (
-                <Card key={product.id} className="glass-card card-shine border-white/5 overflow-hidden" data-testid={`card-purchase-${product.id}`}>
+                <Card key={product.id} className="border-white/5 overflow-hidden" data-testid={`card-purchase-${product.id}`}>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-3">
                       <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/10">
@@ -447,7 +447,7 @@ export default function Pricing() {
       )}
 
       {products.length === 0 && !productsLoading && (
-        <Card className="glass-card text-center py-16 border-white/5">
+        <Card className="text-center py-16 border-white/5">
           <CardContent>
             <div className="w-16 h-16 rounded-full bg-card border border-white/10 flex items-center justify-center mx-auto mb-4">
               <Sparkles className="w-8 h-8 text-muted-foreground" />

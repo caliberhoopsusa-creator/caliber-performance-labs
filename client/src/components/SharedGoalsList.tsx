@@ -13,7 +13,7 @@ export function SharedGoalsList() {
 
   if (isLoading) {
     return (
-      <Card className="p-5 glass-card">
+      <Card className="p-5">
         <div className="animate-pulse space-y-3">
           <div className="h-5 bg-muted rounded w-40"></div>
           <div className="h-16 bg-muted rounded"></div>
@@ -25,7 +25,7 @@ export function SharedGoalsList() {
 
   if (sharedGoals.length === 0) {
     return (
-      <Card className="p-5 glass-card">
+      <Card className="p-5">
         <h3 className="text-lg font-bold font-display text-white flex items-center gap-2 mb-4">
           <Users className="w-5 h-5 text-primary" /> Goals Shared With Me
         </h3>
@@ -49,7 +49,7 @@ export function SharedGoalsList() {
   };
 
   return (
-    <Card className="p-5 glass-card">
+    <Card className="p-5">
       <h3 className="text-lg font-bold font-display text-white flex items-center gap-2 mb-4">
         <Users className="w-5 h-5 text-primary" /> Goals Shared With Me
       </h3>

@@ -123,19 +123,19 @@ interface CollegeMatchesProps {
 
 const DIVISION_COLORS: Record<string, string> = {
   'D1': 'bg-gradient-to-r from-amber-500 to-orange-500 text-white',
-  'D2': 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white',
+  'D2': 'bg-accent text-white',
   'D3': 'bg-gradient-to-r from-emerald-500 to-green-500 text-white',
   'NAIA': 'bg-gradient-to-r from-purple-500 to-violet-500 text-white',
   'JUCO': 'bg-gradient-to-r from-rose-500 to-pink-500 text-white',
 };
 
 const LOGO_COLORS = [
-  'bg-gradient-to-br from-cyan-500 to-blue-600',
+  'bg-gradient-to-br from-accent to-blue-600',
   'bg-gradient-to-br from-amber-500 to-orange-600',
   'bg-gradient-to-br from-emerald-500 to-teal-600',
   'bg-gradient-to-br from-purple-500 to-indigo-600',
   'bg-gradient-to-br from-rose-500 to-pink-600',
-  'bg-gradient-to-br from-sky-500 to-cyan-600',
+  'bg-gradient-to-br from-sky-500 to-accent',
 ];
 
 function CircularProgress({ value, size = 64, strokeWidth = 6 }: { value: number; size?: number; strokeWidth?: number }) {
@@ -145,7 +145,7 @@ function CircularProgress({ value, size = 64, strokeWidth = 6 }: { value: number
   
   const getColor = (score: number) => {
     if (score >= 80) return 'stroke-emerald-400';
-    if (score >= 60) return 'stroke-cyan-400';
+    if (score >= 60) return 'stroke-accent';
     if (score >= 40) return 'stroke-amber-400';
     return 'stroke-rose-400';
   };
@@ -187,7 +187,7 @@ function ScoreBar({ label, value, icon: Icon }: { label: string; value: number |
   
   return (
     <div className="flex items-center gap-3">
-      <Icon className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+      <Icon className="w-4 h-4 text-accent flex-shrink-0" />
       <div className="flex-1">
         <div className="flex justify-between items-center mb-1">
           <span className="text-xs text-muted-foreground">{label}</span>
@@ -197,7 +197,7 @@ function ScoreBar({ label, value, icon: Icon }: { label: string; value: number |
           <div 
             className={cn(
               "h-full rounded-full transition-all duration-500",
-              score >= 80 ? "bg-emerald-400" : score >= 60 ? "bg-cyan-400" : score >= 40 ? "bg-amber-400" : "bg-rose-400"
+              score >= 80 ? "bg-emerald-400" : score >= 60 ? "bg-accent" : score >= 40 ? "bg-amber-400" : "bg-rose-400"
             )}
             style={{ width: `${score}%` }}
           />
@@ -289,10 +289,10 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
     <Card className={cn(
       "relative overflow-hidden transition-all duration-300",
       "bg-gradient-to-br from-[hsl(220,25%,10%)] via-[hsl(220,20%,8%)] to-[hsl(220,25%,6%)]",
-      "border-cyan-500/10",
+      "border-border",
       "shadow-[0_4px_24px_rgba(0,0,0,0.4)]"
     )}>
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent" />
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
       
       <div className="p-4 md:p-5">
         <div className="flex gap-4">
@@ -322,7 +322,7 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
                 {college.division}
               </Badge>
               {college.conference && (
-                <Badge variant="outline" className="text-[10px] border-cyan-500/30 text-cyan-300">
+                <Badge variant="outline" className="text-[10px] border-accent/30 text-accent">
                   {college.conference}
                 </Badge>
               )}
@@ -373,7 +373,7 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
               )}
               {hasDraftPicks && (
                 <div className="text-center">
-                  <div className="text-lg font-bold text-cyan-400">{college.draftPicksLast5Years}</div>
+                  <div className="text-lg font-bold text-accent">{college.draftPicksLast5Years}</div>
                   <div className="text-[10px] text-muted-foreground uppercase">Draft Picks (5yr)</div>
                 </div>
               )}
@@ -399,7 +399,7 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="w-full border-cyan-500/20"
+                className="w-full border-accent/20"
                 data-testid={`button-view-details-${match.id}`}
               >
                 {isOpen ? (
@@ -417,8 +417,8 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
             </CollapsibleTrigger>
             <CollapsibleContent className="mt-4 space-y-4">
               {(college.headCoachName || college.tournamentAppearances || college.conferenceRecord) && (
-                <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20">
-                  <h4 className="text-xs font-semibold text-cyan-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <div className="p-3 rounded-lg bg-gradient-to-br from-accent/10 to-blue-500/5 border border-accent/20">
+                  <h4 className="text-xs font-semibold text-accent uppercase tracking-wider mb-3 flex items-center gap-2">
                     <BarChart3 className="w-3.5 h-3.5" />
                     Program Statistics
                   </h4>
@@ -508,9 +508,9 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
                     )}
                     {college.incomingRecruitingClass !== null && (
                       <div className="flex items-center gap-2">
-                        <Users className="w-3.5 h-3.5 text-cyan-400" />
+                        <Users className="w-3.5 h-3.5 text-accent" />
                         <span className="text-muted-foreground">Incoming Class:</span>
-                        <span className="text-cyan-400 font-medium">{college.incomingRecruitingClass} recruits</span>
+                        <span className="text-accent font-medium">{college.incomingRecruitingClass} recruits</span>
                       </div>
                     )}
                   </div>
@@ -586,7 +586,7 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
               )}
               
               <div className="p-3 rounded-lg bg-white/5 border border-white/10">
-                <h4 className="text-xs font-semibold text-cyan-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                <h4 className="text-xs font-semibold text-accent uppercase tracking-wider mb-2 flex items-center gap-2">
                   <MapPin className="w-3.5 h-3.5" />
                   Location & Info
                 </h4>
@@ -614,7 +614,7 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
                       <Button 
                         size="sm" 
                         onClick={handleEmailCoach}
-                        className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white"
+                        className="bg-accent hover:from-accent hover:to-blue-400 text-white"
                         data-testid={`button-contact-coach-${match.id}`}
                       >
                         <Mail className="w-4 h-4 mr-2" />
@@ -623,7 +623,7 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
                       <Button 
                         size="sm" 
                         variant="outline" 
-                        className="border-cyan-500/30"
+                        className="border-accent/30"
                         onClick={handleCopyEmail}
                         data-testid={`button-copy-email-${match.id}`}
                       >
@@ -640,7 +640,7 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
                     <Button 
                       size="sm" 
                       variant="outline" 
-                      className="border-cyan-500/30"
+                      className="border-accent/30"
                       asChild
                     >
                       <a href={college.recruitingUrl} target="_blank" rel="noopener noreferrer" data-testid={`link-recruiting-${match.id}`}>
@@ -694,7 +694,7 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
 
 function CollegeMatchSkeleton() {
   return (
-    <Card className="p-4 md:p-5 bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-cyan-500/10">
+    <Card className="p-4 md:p-5 bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-border">
       <div className="flex gap-4">
         <Skeleton className="w-14 h-14 md:w-16 md:h-16 rounded-xl" />
         <div className="flex-1 space-y-2">

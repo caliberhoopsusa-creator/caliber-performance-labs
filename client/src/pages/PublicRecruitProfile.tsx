@@ -183,7 +183,7 @@ function StatBar({ label, value, max, suffix = "" }: { label: string; value: num
       </div>
       <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-700"
+          className="h-full rounded-full bg-accent transition-all duration-700"
           style={{ width: `${pct}%` }}
         />
       </div>
@@ -240,7 +240,7 @@ export default function PublicRecruitProfile() {
     return (
       <div className="min-h-screen bg-[hsl(220,15%,8%)] flex items-center justify-center">
         <div className="text-center space-y-4">
-          <Loader2 className="w-8 h-8 text-cyan-400 animate-spin mx-auto" />
+          <Loader2 className="w-8 h-8 text-accent animate-spin mx-auto" />
           <p className="text-white/40 text-sm">Loading profile...</p>
         </div>
       </div>
@@ -300,7 +300,7 @@ export default function PublicRecruitProfile() {
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[hsl(220,15%,8%)]" />
             </div>
           ) : (
-            <div className="h-36 sm:h-44 w-full bg-gradient-to-br from-cyan-900/40 via-blue-900/30 to-[hsl(220,15%,8%)]">
+            <div className="h-36 sm:h-44 w-full bg-card">
               <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[hsl(220,15%,8%)]" />
             </div>
           )}
@@ -311,7 +311,7 @@ export default function PublicRecruitProfile() {
                 {player.photoUrl ? (
                   <AvatarImage src={player.photoUrl} alt={player.name} />
                 ) : null}
-                <AvatarFallback className="text-2xl bg-cyan-900/40 text-cyan-300 font-display">
+                <AvatarFallback className="text-2xl bg-accent/10 text-accent font-display">
                   {getInitials(player.name)}
                 </AvatarFallback>
               </Avatar>
@@ -319,7 +319,7 @@ export default function PublicRecruitProfile() {
               <div className="flex-1 pb-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   {player.jerseyNumber != null && (
-                    <span className="text-cyan-400 font-bold text-base font-display" data-testid="text-jersey-number">#{player.jerseyNumber}</span>
+                    <span className="text-accent font-bold text-base font-display" data-testid="text-jersey-number">#{player.jerseyNumber}</span>
                   )}
                   <Badge variant="secondary" className="text-xs" data-testid="badge-position">{player.position}</Badge>
                   <Badge variant="outline" className="text-xs" data-testid="badge-sport">
@@ -402,7 +402,7 @@ export default function PublicRecruitProfile() {
             <Card className="p-3 text-center">
               <p className="text-[10px] text-white/40 uppercase tracking-widest mb-0.5">Badges</p>
               <div className="flex items-center justify-center gap-1">
-                <Award className="w-3.5 h-3.5 text-cyan-400" />
+                <Award className="w-3.5 h-3.5 text-accent" />
                 <p className="text-xl font-bold text-white font-display" data-testid="text-badge-count">{badgeCount}</p>
               </div>
             </Card>
@@ -468,7 +468,7 @@ export default function PublicRecruitProfile() {
 
           <Card className="p-4">
             <h2 className="text-sm font-bold font-display uppercase tracking-wider mb-3 flex items-center gap-2 text-white/70">
-              <Activity className="w-4 h-4 text-cyan-400" /> Season Averages
+              <Activity className="w-4 h-4 text-accent" /> Season Averages
             </h2>
             {isBasketball ? (
               <div className="space-y-3">
@@ -536,7 +536,7 @@ export default function PublicRecruitProfile() {
           {badges && badges.length > 0 && (
             <Card className="p-4">
               <h2 className="text-sm font-bold font-display uppercase tracking-wider mb-3 flex items-center gap-2 text-white/70">
-                <Award className="w-4 h-4 text-cyan-400" /> Badges Earned
+                <Award className="w-4 h-4 text-accent" /> Badges Earned
               </h2>
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                 {badges.slice(0, 8).map((badge, i) => {
@@ -547,8 +547,8 @@ export default function PublicRecruitProfile() {
                       className="flex flex-col items-center gap-1.5 p-3 rounded-lg bg-white/[0.03] border border-white/[0.06]"
                       data-testid={`card-badge-${badge.type}`}
                     >
-                      <div className="w-8 h-8 rounded-full bg-cyan-500/10 flex items-center justify-center">
-                        <IconComp className="w-4 h-4 text-cyan-400" />
+                      <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center">
+                        <IconComp className="w-4 h-4 text-accent" />
                       </div>
                       <p className="text-[10px] text-white/60 text-center leading-tight font-medium">{badge.name}</p>
                     </div>
@@ -564,7 +564,7 @@ export default function PublicRecruitProfile() {
           {recentGames.length > 0 && (
             <Card className="p-4">
               <h2 className="text-sm font-bold font-display uppercase tracking-wider mb-3 flex items-center gap-2 text-white/70">
-                <Activity className="w-4 h-4 text-cyan-400" /> Recent Games
+                <Activity className="w-4 h-4 text-accent" /> Recent Games
               </h2>
               <div className="space-y-2">
                 {recentGames.map(game => (
@@ -604,7 +604,7 @@ export default function PublicRecruitProfile() {
             </Card>
           )}
 
-          <Card className="p-5 border-cyan-500/20 bg-gradient-to-br from-cyan-950/30 to-blue-950/20">
+          <Card className="p-5 border-accent/20 bg-gradient-to-br from-card to-card">
             <div className="text-center space-y-3">
               <h3 className="text-lg font-bold font-display" data-testid="text-recruiting-cta">
                 Interested in recruiting {player.name.split(' ')[0]}?

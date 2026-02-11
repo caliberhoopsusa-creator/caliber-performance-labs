@@ -38,7 +38,7 @@ interface WeeklyRecapData {
 
 function getGradeColor(grade: string) {
   if (grade.startsWith('A')) return { text: "text-emerald-400", bg: "from-emerald-500/20 to-emerald-500/5", border: "border-emerald-500/30", raw: "#34d399" };
-  if (grade.startsWith('B')) return { text: "text-blue-400", bg: "from-blue-500/20 to-blue-500/5", border: "border-blue-500/30", raw: "#60a5fa" };
+  if (grade.startsWith('B')) return { text: "text-accent", bg: "from-accent/20 to-accent/5", border: "border-accent/30", raw: "#ea580c" };
   if (grade.startsWith('C')) return { text: "text-yellow-400", bg: "from-yellow-500/20 to-yellow-500/5", border: "border-yellow-500/30", raw: "#facc15" };
   return { text: "text-red-400", bg: "from-red-500/20 to-red-500/5", border: "border-red-500/30", raw: "#f87171" };
 }
@@ -72,7 +72,7 @@ function WeeklyRecapShareCard({ data }: { data: WeeklyRecapData }) {
       data-testid="shareable-weekly-recap"
     >
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-32 -left-32 w-80 h-80 rounded-full bg-cyan-500/8 blur-[80px]" />
+        <div className="absolute -top-32 -left-32 w-80 h-80 rounded-full bg-accent/8 blur-[80px]" />
         <div className="absolute -bottom-24 -right-24 w-96 h-96 rounded-full bg-purple-600/12 blur-[80px]" />
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-64 h-64 rounded-full bg-indigo-500/10 blur-[60px]" />
       </div>
@@ -83,19 +83,19 @@ function WeeklyRecapShareCard({ data }: { data: WeeklyRecapData }) {
             <img src={caliberLogo} alt="Caliber" className="w-8 h-8 rounded-lg object-cover" />
             <span className="text-sm font-black uppercase tracking-[0.2em] text-white">Caliber</span>
           </div>
-          <Badge className="bg-emerald-500/90 text-white text-[10px] font-bold uppercase tracking-wider no-default-hover-elevate no-default-active-elevate">
+          <Badge className="bg-emerald-500/90 text-white text-[10px] font-bold uppercase tracking-wider">
             Weekly Recap
           </Badge>
         </div>
         
         <div className="text-center mb-5">
           <h2 className="text-2xl font-black text-white uppercase tracking-wide">{data.playerName}</h2>
-          <p className="text-xs text-cyan-300/60 mt-1 font-medium tracking-wide">{weekRange}</p>
+          <p className="text-xs text-accent/60 mt-1 font-medium tracking-wide">{weekRange}</p>
         </div>
 
         <div className="flex-1 flex flex-col gap-2.5">
           <div className="grid grid-cols-2 gap-2.5">
-            <StatBox value={data.gamesPlayed} label="Games" color="text-cyan-300" />
+            <StatBox value={data.gamesPlayed} label="Games" color="text-accent" />
             <div className={cn("rounded-xl bg-gradient-to-br border p-3 text-center relative overflow-hidden", gradeColor.bg, gradeColor.border)}>
               <div className="relative">
                 <div className="flex items-center justify-center gap-1">
@@ -110,13 +110,13 @@ function WeeklyRecapShareCard({ data }: { data: WeeklyRecapData }) {
           {data.sport === 'basketball' ? (
             <div className="grid grid-cols-3 gap-2.5">
               <StatBox value={data.avgPoints} label="PPG" color="text-amber-400" />
-              <StatBox value={data.totalRebounds} label="REB" color="text-cyan-400" />
+              <StatBox value={data.totalRebounds} label="REB" color="text-accent" />
               <StatBox value={data.totalAssists} label="AST" color="text-violet-400" />
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-2.5">
               <StatBox value={data.totalTouchdowns} label="TDs" color="text-amber-400" />
-              <StatBox value={data.totalYards} label="YDS" color="text-cyan-400" />
+              <StatBox value={data.totalYards} label="YDS" color="text-accent" />
             </div>
           )}
           
@@ -196,7 +196,7 @@ export default function WeeklyRecapCard({ playerId }: { playerId: number }) {
         data-testid="card-weekly-recap"
       >
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-20 -left-20 w-60 h-60 rounded-full bg-cyan-500/8 blur-[60px]" />
+          <div className="absolute -top-20 -left-20 w-60 h-60 rounded-full bg-accent/8 blur-[60px]" />
           <div className="absolute -bottom-16 -right-16 w-72 h-72 rounded-full bg-purple-600/10 blur-[60px]" />
         </div>
 
@@ -206,20 +206,20 @@ export default function WeeklyRecapCard({ playerId }: { playerId: number }) {
               <img src={caliberLogo} alt="Caliber" className="w-7 h-7 rounded-md object-cover" />
               <span className="text-xs font-black uppercase tracking-[0.2em] text-white/90">Caliber</span>
             </div>
-            <Badge className="bg-emerald-500/90 text-white text-[9px] font-bold uppercase tracking-wider no-default-hover-elevate no-default-active-elevate">
+            <Badge className="bg-emerald-500/90 text-white text-[9px] font-bold uppercase tracking-wider">
               Weekly Recap
             </Badge>
           </div>
 
           <div className="text-center mb-4">
             <h3 className="text-lg font-black text-white uppercase tracking-wide" data-testid="text-recap-player-name">{data.playerName}</h3>
-            <p className="text-[11px] text-cyan-300/50 mt-0.5 font-medium tracking-wide">{weekRange}</p>
+            <p className="text-[11px] text-accent/50 mt-0.5 font-medium tracking-wide">{weekRange}</p>
           </div>
           
           <div className="space-y-2 mb-4">
             <div className="grid grid-cols-2 gap-2">
               <div className="rounded-lg bg-white/[0.04] border border-white/[0.08] p-2.5 text-center">
-                <p className="text-2xl font-black text-cyan-300">{data.gamesPlayed}</p>
+                <p className="text-2xl font-black text-accent">{data.gamesPlayed}</p>
                 <p className="text-[9px] text-white/40 uppercase tracking-[0.15em] font-semibold">Games</p>
               </div>
               <div className={cn("rounded-lg bg-gradient-to-br border p-2.5 text-center", gradeColor.bg, gradeColor.border)}>
@@ -238,7 +238,7 @@ export default function WeeklyRecapCard({ playerId }: { playerId: number }) {
                   <p className="text-[9px] text-white/40 uppercase tracking-[0.15em] font-semibold">PPG</p>
                 </div>
                 <div className="rounded-lg bg-white/[0.04] border border-white/[0.08] p-2 text-center">
-                  <p className="text-xl font-black text-cyan-400">{data.totalRebounds}</p>
+                  <p className="text-xl font-black text-accent">{data.totalRebounds}</p>
                   <p className="text-[9px] text-white/40 uppercase tracking-[0.15em] font-semibold">REB</p>
                 </div>
                 <div className="rounded-lg bg-white/[0.04] border border-white/[0.08] p-2 text-center">
@@ -253,7 +253,7 @@ export default function WeeklyRecapCard({ playerId }: { playerId: number }) {
                   <p className="text-[9px] text-white/40 uppercase tracking-[0.15em] font-semibold">TDs</p>
                 </div>
                 <div className="rounded-lg bg-white/[0.04] border border-white/[0.08] p-2 text-center">
-                  <p className="text-xl font-black text-cyan-400">{data.totalYards}</p>
+                  <p className="text-xl font-black text-accent">{data.totalYards}</p>
                   <p className="text-[9px] text-white/40 uppercase tracking-[0.15em] font-semibold">YDS</p>
                 </div>
               </div>
@@ -280,7 +280,7 @@ export default function WeeklyRecapCard({ playerId }: { playerId: number }) {
               <Download className="w-3.5 h-3.5" />
               Download
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setShowExport(true)} className="gap-1.5 border-cyan-500/30 text-cyan-300 bg-cyan-500/10" data-testid="button-export-recap">
+            <Button variant="outline" size="sm" onClick={() => setShowExport(true)} className="gap-1.5 border-accent/30 text-accent bg-accent/10" data-testid="button-export-recap">
               <Share2 className="w-3.5 h-3.5" />
               Share
             </Button>

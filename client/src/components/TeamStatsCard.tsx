@@ -27,7 +27,7 @@ export function TeamStatsCard({
 }: TeamStatsCardProps) {
   return (
     <div className={cn(
-      "glass-card rounded-2xl p-6",
+      "rounded-2xl p-6",
       side === "left" ? "bg-primary/5" : "bg-secondary/5"
     )} data-testid={`card-team-stats-${side}`}>
       <div className="flex flex-col items-center gap-4">

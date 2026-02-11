@@ -218,44 +218,44 @@ function TrendsWidget({ games, isFootball, position }: { games: Game[]; isFootba
     
     if (primaryPosition === 'QB') {
       lines = [
-        { key: 'passYds', name: 'Pass YDS', color: '#00D4FF' },
+        { key: 'passYds', name: 'Pass YDS', color: 'hsl(24, 95%, 53%)' },
         { key: 'tds', name: 'TD×10', color: '#10b981' },
         { key: 'rushYds', name: 'Rush YDS', color: '#f59e0b' },
       ];
     } else if (primaryPosition === 'RB') {
       lines = [
-        { key: 'rushYds', name: 'Rush YDS', color: '#00D4FF' },
+        { key: 'rushYds', name: 'Rush YDS', color: 'hsl(24, 95%, 53%)' },
         { key: 'tds', name: 'TD×10', color: '#10b981' },
         { key: 'recYds', name: 'Rec YDS', color: '#f59e0b' },
       ];
     } else if (['WR', 'TE'].includes(primaryPosition)) {
       lines = [
-        { key: 'recYds', name: 'Rec YDS', color: '#00D4FF' },
+        { key: 'recYds', name: 'Rec YDS', color: 'hsl(24, 95%, 53%)' },
         { key: 'tds', name: 'TD×10', color: '#10b981' },
         { key: 'targets', name: 'Targets', color: '#f59e0b' },
       ];
     } else if (isDefensive) {
       lines = [
-        { key: 'tackles', name: 'Tackles', color: '#00D4FF' },
+        { key: 'tackles', name: 'Tackles', color: 'hsl(24, 95%, 53%)' },
         { key: 'sacks', name: 'Sack×10', color: '#10b981' },
         { key: 'ints', name: 'INT×20', color: '#f59e0b' },
       ];
     } else if (primaryPosition === 'K') {
       lines = [
-        { key: 'fgMade', name: 'FG×10', color: '#00D4FF' },
+        { key: 'fgMade', name: 'FG×10', color: 'hsl(24, 95%, 53%)' },
         { key: 'xpMade', name: 'XP×5', color: '#10b981' },
         { key: 'pts', name: 'Points', color: '#f59e0b' },
       ];
     } else if (primaryPosition === 'P') {
       lines = [
-        { key: 'puntYds', name: 'Punt YDS', color: '#00D4FF' },
+        { key: 'puntYds', name: 'Punt YDS', color: 'hsl(24, 95%, 53%)' },
         { key: 'punts', name: 'Punts×10', color: '#10b981' },
         { key: 'avg', name: 'Avg', color: '#f59e0b' },
       ];
     } else {
       // Default fallback
       lines = [
-        { key: 'yards', name: 'YDS', color: '#00D4FF' },
+        { key: 'yards', name: 'YDS', color: 'hsl(24, 95%, 53%)' },
         { key: 'tds', name: 'TD×10', color: '#10b981' },
         { key: 'touches', name: 'Touches', color: '#f59e0b' },
       ];
@@ -271,14 +271,14 @@ function TrendsWidget({ games, isFootball, position }: { games: Game[]; isFootba
             <LineChart data={chartData}>
               <defs>
                 <linearGradient id="yardsGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#00D4FF" stopOpacity={0.8} />
+                  <stop offset="5%" stopColor="hsl(24, 95%, 53%)" stopOpacity={0.8} />
                   <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.2} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" vertical={false} />
               <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.5)' }} axisLine={{ stroke: 'rgba(255,255,255,0.1)' }} />
               <YAxis tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.5)' }} width={40} axisLine={{ stroke: 'rgba(255,255,255,0.1)' }} />
-              <Tooltip content={<PremiumTooltip />} cursor={{ stroke: 'rgba(0,212,255,0.3)' }} />
+              <Tooltip content={<PremiumTooltip />} cursor={{ stroke: 'rgba(234,88,12,0.3)' }} />
               {lines.map((line, i) => (
                 <Line key={line.key} type="monotone" dataKey={line.key} stroke={line.color} strokeWidth={2.5} dot={{ r: 4, fill: line.color, filter: `drop-shadow(0 0 8px ${line.color}80)` }} activeDot={{ r: 6, filter: `drop-shadow(0 0 12px ${line.color}cc)` }} isAnimationActive name={line.name} />
               ))}
@@ -306,22 +306,22 @@ function TrendsWidget({ games, isFootball, position }: { games: Game[]; isFootba
           <LineChart data={chartData}>
             <defs>
               <linearGradient id="pointsGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#00D4FF" stopOpacity={0.8} />
+                <stop offset="5%" stopColor="hsl(24, 95%, 53%)" stopOpacity={0.8} />
                 <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.2} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" vertical={false} />
             <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.5)' }} axisLine={{ stroke: 'rgba(255,255,255,0.1)' }} />
             <YAxis tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.5)' }} width={30} axisLine={{ stroke: 'rgba(255,255,255,0.1)' }} />
-            <Tooltip content={<PremiumTooltip />} cursor={{ stroke: 'rgba(0,212,255,0.3)' }} />
-            <Line type="monotone" dataKey="points" stroke="#00D4FF" strokeWidth={2.5} dot={{ r: 4, fill: '#00D4FF', filter: 'drop-shadow(0 0 8px rgba(0,212,255,0.6))' }} activeDot={{ r: 6, filter: 'drop-shadow(0 0 12px rgba(0,212,255,0.8))' }} isAnimationActive name="PTS" />
+            <Tooltip content={<PremiumTooltip />} cursor={{ stroke: 'rgba(234,88,12,0.3)' }} />
+            <Line type="monotone" dataKey="points" stroke="hsl(24, 95%, 53%)" strokeWidth={2.5} dot={{ r: 4, fill: 'hsl(24, 95%, 53%)', filter: 'drop-shadow(0 0 8px rgba(234,88,12,0.6))' }} activeDot={{ r: 6, filter: 'drop-shadow(0 0 12px rgba(234,88,12,0.8))' }} isAnimationActive name="PTS" />
             <Line type="monotone" dataKey="rebounds" stroke="#10b981" strokeWidth={2.5} dot={{ r: 4, fill: '#10b981', filter: 'drop-shadow(0 0 8px rgba(16,185,129,0.6))' }} activeDot={{ r: 6, filter: 'drop-shadow(0 0 12px rgba(16,185,129,0.8))' }} isAnimationActive name="REB" />
             <Line type="monotone" dataKey="assists" stroke="#f59e0b" strokeWidth={2.5} dot={{ r: 4, fill: '#f59e0b', filter: 'drop-shadow(0 0 8px rgba(245,158,11,0.6))' }} activeDot={{ r: 6, filter: 'drop-shadow(0 0 12px rgba(245,158,11,0.8))' }} isAnimationActive name="AST" />
           </LineChart>
         </ResponsiveContainer>
       </div>
       <div className="flex justify-center gap-4 mt-2 text-xs">
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-cyan-400" /> PTS</span>
+        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-accent" /> PTS</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /> REB</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500" /> AST</span>
       </div>
@@ -378,7 +378,7 @@ function GradesWidget({ games }: { games: Game[] }) {
                 );
               }
               return null;
-            }} cursor={{ fill: 'rgba(0,212,255,0.1)' }} />
+            }} cursor={{ fill: 'rgba(234,88,12,0.1)' }} />
             <Bar dataKey="value" radius={[6, 6, 0, 0]} isAnimationActive>
               {chartData.map((entry, index) => (
                 <Cell 
@@ -530,7 +530,7 @@ function RadarWidget({ games, isFootball, position }: { games: Game[]; isFootbal
           <RadarChart data={radarData}>
             <defs>
               <linearGradient id="radarGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#00D4FF" stopOpacity={0.3} />
+                <stop offset="0%" stopColor="hsl(24, 95%, 53%)" stopOpacity={0.3} />
                 <stop offset="100%" stopColor="#3B82F6" stopOpacity={0.1} />
               </linearGradient>
             </defs>
@@ -539,11 +539,11 @@ function RadarWidget({ games, isFootball, position }: { games: Game[]; isFootbal
             <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
             <Radar
               dataKey="value"
-              stroke="#00D4FF"
+              stroke="hsl(24, 95%, 53%)"
               fill="url(#radarGradient)"
               strokeWidth={2.5}
               isAnimationActive
-              filter="drop-shadow(0 0 8px rgba(0,212,255,0.3))"
+              filter="drop-shadow(0 0 8px rgba(234,88,12,0.3))"
             />
           </RadarChart>
         </ResponsiveContainer>
@@ -636,8 +636,8 @@ function AveragesWidget({ games, isFootball, position }: { games: Game[]; isFoot
         </h3>
         <div className={`grid gap-2 text-center`} style={{ gridTemplateColumns: `repeat(${positionStats.length}, 1fr)` }}>
           {positionStats.map((stat, i) => (
-            <div key={stat.label} className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 hover-elevate transition-all">
-              <p className="text-xl font-bold text-cyan-400">{stat.value}</p>
+            <div key={stat.label} className="p-3 rounded-lg bg-gradient-to-br from-accent/10 to-blue-500/5 border border-accent/20 hover-elevate transition-all">
+              <p className="text-xl font-bold text-accent">{stat.value}</p>
               <p className="text-xs text-muted-foreground">{stat.label}</p>
             </div>
           ))}
@@ -652,24 +652,24 @@ function AveragesWidget({ games, isFootball, position }: { games: Game[]; isFoot
         <BarChart3 className="w-4 h-4 text-primary" /> Season Averages
       </h3>
       <div className="grid grid-cols-5 gap-2 text-center">
-        <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 hover-elevate transition-all">
-          <p className="text-xl font-bold text-cyan-400">{basketballStats.pts}</p>
+        <div className="p-3 rounded-lg bg-gradient-to-br from-accent/10 to-blue-500/5 border border-accent/20 hover-elevate transition-all">
+          <p className="text-xl font-bold text-accent">{basketballStats.pts}</p>
           <p className="text-xs text-muted-foreground">PTS</p>
         </div>
-        <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 hover-elevate transition-all">
-          <p className="text-xl font-bold text-cyan-400">{basketballStats.reb}</p>
+        <div className="p-3 rounded-lg bg-gradient-to-br from-accent/10 to-blue-500/5 border border-accent/20 hover-elevate transition-all">
+          <p className="text-xl font-bold text-accent">{basketballStats.reb}</p>
           <p className="text-xs text-muted-foreground">REB</p>
         </div>
-        <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 hover-elevate transition-all">
-          <p className="text-xl font-bold text-cyan-400">{basketballStats.ast}</p>
+        <div className="p-3 rounded-lg bg-gradient-to-br from-accent/10 to-blue-500/5 border border-accent/20 hover-elevate transition-all">
+          <p className="text-xl font-bold text-accent">{basketballStats.ast}</p>
           <p className="text-xs text-muted-foreground">AST</p>
         </div>
-        <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 hover-elevate transition-all">
-          <p className="text-xl font-bold text-cyan-400">{basketballStats.stl}</p>
+        <div className="p-3 rounded-lg bg-gradient-to-br from-accent/10 to-blue-500/5 border border-accent/20 hover-elevate transition-all">
+          <p className="text-xl font-bold text-accent">{basketballStats.stl}</p>
           <p className="text-xs text-muted-foreground">STL</p>
         </div>
-        <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 hover-elevate transition-all">
-          <p className="text-xl font-bold text-cyan-400">{basketballStats.blk}</p>
+        <div className="p-3 rounded-lg bg-gradient-to-br from-accent/10 to-blue-500/5 border border-accent/20 hover-elevate transition-all">
+          <p className="text-xl font-bold text-accent">{basketballStats.blk}</p>
           <p className="text-xs text-muted-foreground">BLK</p>
         </div>
       </div>
@@ -701,15 +701,15 @@ function ShootingWidget({ games }: { games: Game[] }) {
         <Activity className="w-4 h-4 text-primary" /> Shooting Splits
       </h3>
       <div className="grid grid-cols-3 gap-3 text-center">
-        <div className="p-4 rounded-lg bg-gradient-to-br from-blue-500/15 to-cyan-500/5 border border-blue-500/20 hover-elevate transition-all">
-          <p className="text-2xl font-bold text-cyan-400">{shooting.fg}%</p>
+        <div className="p-4 rounded-lg bg-gradient-to-br from-blue-500/15 to-accent/5 border border-blue-500/20 hover-elevate transition-all">
+          <p className="text-2xl font-bold text-accent">{shooting.fg}%</p>
           <p className="text-xs text-muted-foreground">FG%</p>
         </div>
-        <div className="p-4 rounded-lg bg-gradient-to-br from-green-500/15 to-cyan-500/5 border border-green-500/20 hover-elevate transition-all">
+        <div className="p-4 rounded-lg bg-gradient-to-br from-green-500/15 to-accent/5 border border-green-500/20 hover-elevate transition-all">
           <p className="text-2xl font-bold text-green-400">{shooting.three}%</p>
           <p className="text-xs text-muted-foreground">3PT%</p>
         </div>
-        <div className="p-4 rounded-lg bg-gradient-to-br from-amber-500/15 to-cyan-500/5 border border-amber-500/20 hover-elevate transition-all">
+        <div className="p-4 rounded-lg bg-gradient-to-br from-amber-500/15 to-accent/5 border border-amber-500/20 hover-elevate transition-all">
           <p className="text-2xl font-bold text-amber-400">{shooting.ft}%</p>
           <p className="text-xs text-muted-foreground">FT%</p>
         </div>
@@ -742,15 +742,15 @@ function EfficiencyWidget({ games }: { games: Game[] }) {
         <Activity className="w-4 h-4 text-primary" /> Efficiency Stats
       </h3>
       <div className="grid grid-cols-3 gap-3 text-center">
-        <div className="p-4 rounded-lg bg-gradient-to-br from-blue-500/15 to-cyan-500/5 border border-blue-500/20 hover-elevate transition-all">
-          <p className="text-2xl font-bold text-cyan-400">{efficiency.compPct}%</p>
+        <div className="p-4 rounded-lg bg-gradient-to-br from-blue-500/15 to-accent/5 border border-blue-500/20 hover-elevate transition-all">
+          <p className="text-2xl font-bold text-accent">{efficiency.compPct}%</p>
           <p className="text-xs text-muted-foreground">CMP%</p>
         </div>
-        <div className="p-4 rounded-lg bg-gradient-to-br from-green-500/15 to-cyan-500/5 border border-green-500/20 hover-elevate transition-all">
+        <div className="p-4 rounded-lg bg-gradient-to-br from-green-500/15 to-accent/5 border border-green-500/20 hover-elevate transition-all">
           <p className="text-2xl font-bold text-green-400">{efficiency.ypc}</p>
           <p className="text-xs text-muted-foreground">YPC</p>
         </div>
-        <div className="p-4 rounded-lg bg-gradient-to-br from-amber-500/15 to-cyan-500/5 border border-amber-500/20 hover-elevate transition-all">
+        <div className="p-4 rounded-lg bg-gradient-to-br from-amber-500/15 to-accent/5 border border-amber-500/20 hover-elevate transition-all">
           <p className="text-2xl font-bold text-amber-400">{efficiency.ypr}</p>
           <p className="text-xs text-muted-foreground">YPR</p>
         </div>

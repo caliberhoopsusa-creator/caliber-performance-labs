@@ -79,8 +79,8 @@ export function BottomSheet({
             className={cn(
               "fixed bottom-0 left-0 right-0 z-50 max-h-[90vh] rounded-t-[20px] overflow-hidden",
               "bg-gradient-to-b from-[hsl(220,25%,10%)] to-[hsl(220,25%,8%)]",
-              "border-t border-x border-cyan-500/20",
-              "shadow-[0_-4px_40px_rgba(0,212,255,0.15)]",
+              "border-t border-x border-accent/20",
+              "shadow-[0_-4px_40px_rgba(234,88,12,0.15)]",
               className
             )}
             initial={{ y: "100%" }}
@@ -101,15 +101,15 @@ export function BottomSheet({
             aria-describedby={description ? "bottom-sheet-description" : undefined}
             data-testid="bottom-sheet"
           >
-            <div className="absolute inset-0 cyber-grid opacity-30 pointer-events-none" />
+            <div className="absolute inset-0 opacity-30 pointer-events-none" />
             
             <div className="relative">
               <div className="flex justify-center pt-3 pb-2">
-                <div className="w-10 h-1 rounded-full bg-cyan-400/40" />
+                <div className="w-10 h-1 rounded-full bg-accent/40" />
               </div>
               
               {(title || description) && (
-                <div className="px-6 pb-4 border-b border-cyan-500/10">
+                <div className="px-6 pb-4 border-b border-border">
                   <div className="flex items-center justify-between">
                     {title && (
                       <h2 id="bottom-sheet-title" className="text-lg font-display font-bold text-foreground">

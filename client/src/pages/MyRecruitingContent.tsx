@@ -145,7 +145,7 @@ function getNextMilestone(graduationYear: number, sport: 'basketball' | 'footbal
 
 const DIVISION_COLORS: Record<string, string> = {
   'D1': 'bg-gradient-to-r from-amber-500 to-orange-500 text-white',
-  'D2': 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white',
+  'D2': 'bg-accent text-white',
   'D3': 'bg-gradient-to-r from-emerald-500 to-green-500 text-white',
   'NAIA': 'bg-gradient-to-r from-purple-500 to-violet-500 text-white',
   'JUCO': 'bg-gradient-to-r from-rose-500 to-pink-500 text-white',
@@ -279,7 +279,7 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
           ) : player?.graduationYear ? (
             <Badge 
               variant="outline" 
-              className="text-lg px-4 py-1 border-cyan-500/50 text-cyan-300 bg-cyan-500/10"
+              className="text-lg px-4 py-1 border-accent/50 text-accent bg-accent/10"
               data-testid="graduation-year-badge"
             >
               Class of {player.graduationYear}
@@ -315,7 +315,7 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
           <Link href={`/profile/${playerId}/public`}>
             <Button
               variant="outline"
-              className="border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10"
+              className="border-accent/30 text-accent hover:bg-accent/10"
               data-testid="button-share-profile"
             >
               <Share2 className="w-4 h-4 mr-2" />
@@ -342,11 +342,11 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
         <SkeletonQuickStatsGrid data-testid="quick-stats-skeleton" />
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4" data-testid="quick-stats-panel">
-          <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-cyan-500/10">
+          <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-border">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center">
-                  <School className="w-5 h-5 text-cyan-400" />
+                <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
+                  <School className="w-5 h-5 text-accent" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-white" data-testid="stat-schools-count">{schoolsCount}</p>
@@ -356,7 +356,7 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-cyan-500/10">
+          <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-border">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
@@ -370,7 +370,7 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-cyan-500/10">
+          <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-border">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
@@ -384,7 +384,7 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-cyan-500/10">
+          <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-border">
             <CardContent className="pt-6">
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
@@ -407,10 +407,10 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
 
       <div className="grid lg:grid-cols-5 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-cyan-500/10">
+          <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-border">
             <CardHeader>
               <CardTitle className="text-lg font-display text-white flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-cyan-400" />
+                <Calendar className="w-5 h-5 text-accent" />
                 Recruiting Timeline
               </CardTitle>
             </CardHeader>
@@ -432,7 +432,7 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
                     <Button 
                       variant="outline" 
                       size="sm"
-                      className="border-cyan-500/30 text-cyan-300"
+                      className="border-accent/30 text-accent"
                       data-testid="button-set-graduation-year"
                     >
                       Update Profile
@@ -445,11 +445,11 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
 
           {nextMilestone && player?.graduationYear && (
             <Card 
-              className="bg-gradient-to-br from-cyan-500/10 via-[hsl(220,25%,8%)] to-[hsl(220,25%,6%)] border-cyan-500/20 shadow-[0_0_30px_rgba(6,182,212,0.1)]"
+              className="bg-gradient-to-br from-accent/10 via-[hsl(220,25%,8%)] to-[hsl(220,25%,6%)] border-accent/20 shadow-[0_0_30px_rgba(6,182,212,0.1)]"
               data-testid="whats-next-card"
             >
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-cyan-400 flex items-center gap-2">
+                <CardTitle className="text-sm font-medium text-accent flex items-center gap-2">
                   <Sparkles className="w-4 h-4" />
                   What's Next
                 </CardTitle>
@@ -458,7 +458,7 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
                 <h3 className="text-xl font-display font-bold text-white mb-1" data-testid="next-milestone-title">
                   {nextMilestone.title}
                 </h3>
-                <p className="text-sm text-cyan-300 mb-2" data-testid="next-milestone-period">
+                <p className="text-sm text-accent mb-2" data-testid="next-milestone-period">
                   {nextMilestone.period}
                 </p>
                 <p className="text-sm text-muted-foreground" data-testid="next-milestone-description">
@@ -472,17 +472,17 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
         </div>
 
         <div className="lg:col-span-3">
-          <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-cyan-500/10">
+          <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-border">
             <CardHeader className="flex flex-row items-center justify-between gap-4 flex-wrap">
               <CardTitle className="text-lg font-display text-white flex items-center gap-2">
-                <Target className="w-5 h-5 text-cyan-400" />
+                <Target className="w-5 h-5 text-accent" />
                 My Interested Schools
               </CardTitle>
               <Button 
                 onClick={() => onTabChange?.("schools")}
                 variant="outline" 
                 size="sm"
-                className="border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10"
+                className="border-accent/30 text-accent hover:bg-accent/10"
                 data-testid="button-browse-schools"
               >
                 Browse Schools
@@ -505,7 +505,7 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
                     return (
                       <div
                         key={interest.id}
-                        className="group relative p-4 rounded-xl bg-white/5 border border-white/10 hover:border-cyan-500/30 transition-all duration-300"
+                        className="group relative p-4 rounded-xl bg-white/5 border border-white/10 hover:border-accent/30 transition-all duration-300"
                         data-testid={`interest-card-${interest.collegeId}`}
                       >
                         <div className="flex items-start justify-between gap-4">
@@ -513,7 +513,7 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
                             <div 
                               className={cn(
                                 "w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 text-white font-bold text-sm",
-                                "bg-gradient-to-br from-cyan-500 to-blue-600"
+                                "bg-gradient-to-br from-accent to-blue-600"
                               )}
                             >
                               {interest.college.shortName || interest.college.name.slice(0, 2).toUpperCase()}
@@ -549,7 +549,7 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
                                   {interest.college.city}, {interest.college.state}
                                 </span>
                                 {matchScore && (
-                                  <span className="flex items-center gap-1 text-cyan-400">
+                                  <span className="flex items-center gap-1 text-accent">
                                     <Target className="w-3 h-3" />
                                     {matchScore}% match
                                   </span>
@@ -569,7 +569,7 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleEmailCoach(interest.college!, player)}
-                                className="border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10"
+                                className="border-accent/30 text-accent hover:bg-accent/10"
                                 data-testid={`button-email-coach-${interest.collegeId}`}
                               >
                                 <Mail className="w-4 h-4 mr-1" />
@@ -601,7 +601,7 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
                   </p>
                   <Button 
                     onClick={() => onTabChange?.("schools")}
-                    className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white"
+                    className="bg-accent hover:from-accent hover:to-blue-400 text-white"
                     data-testid="button-browse-colleges-cta"
                   >
                     <Sparkles className="w-4 h-4 mr-2" />
@@ -614,7 +614,7 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
         </div>
       </div>
 
-      <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-cyan-500/10" data-testid="cta-section">
+      <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-border" data-testid="cta-section">
         <CardContent className="py-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="text-center md:text-left">
@@ -646,7 +646,7 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
               )}
               <Button
                 onClick={() => onTabChange?.("schools")}
-                className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white"
+                className="bg-accent hover:from-accent hover:to-blue-400 text-white"
                 data-testid="button-browse-more-schools"
               >
                 <School className="w-4 h-4 mr-2" />

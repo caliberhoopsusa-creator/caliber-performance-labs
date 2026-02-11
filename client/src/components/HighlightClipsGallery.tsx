@@ -54,9 +54,9 @@ export function HighlightClipsGallery({
       <Card className="bg-gradient-to-br from-black/60 to-black/30 border-white/10">
         <CardContent className="flex flex-col items-center justify-center py-16">
           <div className="relative mb-4">
-            <div className="absolute inset-0 bg-cyan-500/10 blur-2xl rounded-full" />
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-purple-500/10 border border-cyan-500/20 flex items-center justify-center relative z-10">
-              <Film className="w-10 h-10 text-cyan-400" />
+            <div className="absolute inset-0 bg-accent/10 blur-2xl rounded-full" />
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-accent/20 to-purple-500/10 border border-accent/20 flex items-center justify-center relative z-10">
+              <Film className="w-10 h-10 text-accent" />
             </div>
           </div>
           <h3 className="font-bold text-lg mb-1">No Highlight Clips Yet</h3>

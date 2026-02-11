@@ -50,12 +50,12 @@ export default function RecruitingHub() {
     <div className="space-y-6 pb-8">
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/20 flex items-center justify-center">
-            <GraduationCap className="w-6 h-6 text-cyan-400" />
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20 flex items-center justify-center">
+            <GraduationCap className="w-6 h-6 text-accent" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-white via-cyan-100 to-cyan-400 bg-clip-text text-transparent">
+              <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-white via-accent/20 to-accent bg-clip-text text-transparent">
                 Recruiting Hub
               </h1>
               <HelpTooltip
@@ -73,13 +73,13 @@ export default function RecruitingHub() {
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="w-full justify-start bg-white/5 border border-cyan-500/10 p-1 rounded-xl overflow-x-auto flex-nowrap">
+        <TabsList className="w-full justify-start bg-white/5 border border-border p-1 rounded-xl overflow-x-auto flex-nowrap">
           <TabsTrigger 
             value="journey" 
             className={cn(
               "flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all whitespace-nowrap",
-              "data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/20 data-[state=active]:to-cyan-500/10",
-              "data-[state=active]:text-cyan-400 data-[state=active]:border-cyan-500/30"
+              "data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent/20 data-[state=active]:to-accent/10",
+              "data-[state=active]:text-accent data-[state=active]:border-accent/30"
             )}
             data-testid="tab-journey"
           >
@@ -91,8 +91,8 @@ export default function RecruitingHub() {
             value="schools" 
             className={cn(
               "flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all whitespace-nowrap",
-              "data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/20 data-[state=active]:to-cyan-500/10",
-              "data-[state=active]:text-cyan-400 data-[state=active]:border-cyan-500/30"
+              "data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent/20 data-[state=active]:to-accent/10",
+              "data-[state=active]:text-accent data-[state=active]:border-accent/30"
             )}
             data-testid="tab-schools"
           >
@@ -104,8 +104,8 @@ export default function RecruitingHub() {
             value="events" 
             className={cn(
               "flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all whitespace-nowrap",
-              "data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/20 data-[state=active]:to-cyan-500/10",
-              "data-[state=active]:text-cyan-400 data-[state=active]:border-cyan-500/30"
+              "data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent/20 data-[state=active]:to-accent/10",
+              "data-[state=active]:text-accent data-[state=active]:border-accent/30"
             )}
             data-testid="tab-events"
           >

@@ -69,12 +69,12 @@ const LEVEL_COLORS: Record<string, {
     shadowColor: "shadow-amber-500/15"
   },
   platinum: { 
-    bg: "bg-gradient-to-br from-cyan-500/30 to-cyan-600/15", 
-    border: "border-cyan-400/50", 
-    text: "text-cyan-300",
-    iconGradient: "from-cyan-400/70 to-blue-500/50",
-    glow: "shadow-lg shadow-cyan-500/25",
-    shadowColor: "shadow-cyan-500/15"
+    bg: "bg-gradient-to-br from-accent/30 to-accent/15", 
+    border: "border-accent/50", 
+    text: "text-accent",
+    iconGradient: "from-accent/70 to-blue-500/50",
+    glow: "",
+    shadowColor: "shadow-accent/15"
   },
   hall_of_fame: { 
     bg: "bg-gradient-to-br from-purple-500/30 to-purple-600/15", 
@@ -223,7 +223,7 @@ export function SkillBadges({ playerId, position }: SkillBadgesProps) {
 
   if (isLoading) {
     return (
-      <Card className="glass-card p-6 border-white/5" data-testid="skill-badges-loading">
+      <Card className="p-6 border-white/5" data-testid="skill-badges-loading">
         <div className="animate-pulse space-y-3">
           <div className="h-4 bg-muted/30 rounded w-1/3"></div>
           <div className="grid grid-cols-2 gap-3">
@@ -244,7 +244,7 @@ export function SkillBadges({ playerId, position }: SkillBadgesProps) {
   const lockedBadges = filteredBadges.filter(b => b.currentLevel === 'none');
 
   return (
-    <Card className="glass-card p-6 border-white/5 overflow-hidden" data-testid="skill-badges">
+    <Card className="p-6 border-white/5 overflow-hidden" data-testid="skill-badges">
       <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
       
       <div className="relative z-10">

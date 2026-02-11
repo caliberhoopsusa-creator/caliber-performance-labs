@@ -70,7 +70,7 @@ export function PlayerProgression({ playerId, compact = false }: PlayerProgressi
     previousTierRef.current = progression.currentTier;
   }, [progression?.currentTier, triggerCelebration]);
   
-  // Detect XP increases for shimmer animation
+  // Detect XP increases for animation
   useEffect(() => {
     if (!progression) return;
     
@@ -126,7 +126,7 @@ export function PlayerProgression({ playerId, compact = false }: PlayerProgressi
   
   return (
     <div 
-      className="glass-card-glow rounded-xl p-5 animate-in fade-in duration-500"
+      className="rounded-xl p-5 animate-in fade-in duration-500"
       data-testid="player-progression"
     >
       <div className="flex items-start justify-between mb-6">
@@ -171,7 +171,7 @@ export function PlayerProgression({ playerId, compact = false }: PlayerProgressi
             </h3>
             <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Current Tier</p>
             {badgeStyle && equippedBadgeStyle && (
-              <p className="text-[10px] text-cyan-400/70 mt-0.5">{equippedBadgeStyle.item.name}</p>
+              <p className="text-[10px] text-accent/70 mt-0.5">{equippedBadgeStyle.item.name}</p>
             )}
           </div>
         </div>
@@ -229,7 +229,7 @@ export function PlayerProgression({ playerId, compact = false }: PlayerProgressi
           <span className="text-muted-foreground uppercase tracking-wider font-medium text-xs">XP Progress</span>
           <motion.span 
             className="font-bold text-primary text-base"
-            animate={xpIncreased ? { scale: [1, 1.1, 1], color: ["#00d4ff", "#ffeb3b", "#00d4ff"] } : {}}
+            animate={xpIncreased ? { scale: [1, 1.1, 1], color: ["hsl(24, 95%, 53%)", "#ffeb3b", "hsl(24, 95%, 53%)"] } : {}}
             transition={{ duration: 0.6 }}
             data-testid="xp-display"
           >
@@ -238,7 +238,7 @@ export function PlayerProgression({ playerId, compact = false }: PlayerProgressi
         </div>
         
         <div className="relative rounded-lg overflow-hidden">
-          {/* Animated shimmer overlay */}
+          {/* Animated overlay */}
           {xpIncreased && (
             <motion.div 
               className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/20 to-transparent pointer-events-none z-20"
@@ -248,7 +248,7 @@ export function PlayerProgression({ playerId, compact = false }: PlayerProgressi
             />
           )}
           
-          {/* Static shimmer background */}
+          {/* Static background */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent pointer-events-none z-10" />
           
           <Progress 

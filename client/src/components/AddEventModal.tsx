@@ -108,7 +108,7 @@ export function AddEventModal({ open, onOpenChange, defaultDate, defaultEventTyp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md glass-card border-white/10 max-h-[85vh] overflow-y-auto" data-testid="add-event-modal">
+      <DialogContent className="sm:max-w-md border-white/10 max-h-[85vh] overflow-y-auto" data-testid="add-event-modal">
         <DialogHeader>
           <DialogTitle className="text-xl font-display uppercase tracking-wide">Add Event</DialogTitle>
           <DialogDescription className="text-muted-foreground">

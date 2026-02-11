@@ -217,10 +217,10 @@ export default function TeamHub() {
       <div className="space-y-6" data-testid="team-hub-page">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-display uppercase tracking-wide bg-gradient-to-b from-white to-cyan-100/80 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-display uppercase tracking-wide bg-gradient-to-b from-white to-accent/20 bg-clip-text text-transparent">
               Team Hub
             </h1>
-            <p className="text-cyan-200/50 mt-1">
+            <p className="text-accent/50 mt-1">
               Manage your team schedule and events
             </p>
           </div>
@@ -233,7 +233,7 @@ export default function TeamHub() {
         </div>
 
         {/* Quick Actions */}
-        <Card className="glass-card border-white/10">
+        <Card className="border-white/10">
           <CardHeader className="pb-4">
             <CardTitle className="text-lg font-display uppercase tracking-wide flex items-center gap-2">
               <CalendarPlus className="w-5 h-5 text-primary" />
@@ -298,7 +298,7 @@ export default function TeamHub() {
             onEnd={() => setActivePractice(null)}
           />
         ) : (
-          <Card className="glass-card border-white/10 border-l-4 border-l-green-500" data-testid="card-live-practice">
+          <Card className="border-white/10 border-l-4 border-l-green-500" data-testid="card-live-practice">
             <CardHeader className="pb-4 flex flex-row items-center justify-between gap-2">
               <CardTitle className="text-lg font-display uppercase tracking-wide flex items-center gap-2">
                 <Radio className="w-5 h-5 text-green-400" />
@@ -374,7 +374,7 @@ export default function TeamHub() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Weekly Overview */}
-          <Card className="glass-card border-white/10">
+          <Card className="border-white/10">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg font-display uppercase tracking-wide">
                 This Week
@@ -413,7 +413,7 @@ export default function TeamHub() {
           </Card>
 
           {/* Upcoming Events */}
-          <Card className="glass-card border-white/10 lg:col-span-2">
+          <Card className="border-white/10 lg:col-span-2">
             <CardHeader className="pb-3 flex flex-row items-center justify-between gap-2">
               <CardTitle className="text-lg font-display uppercase tracking-wide flex items-center gap-2">
                 <Clock className="w-5 h-5 text-primary" />
@@ -495,7 +495,7 @@ export default function TeamHub() {
         </div>
 
         {/* My Teams */}
-        <Card className="glass-card border-white/10">
+        <Card className="border-white/10">
           <CardHeader className="pb-3 flex flex-row items-center justify-between gap-2">
             <CardTitle className="text-lg font-display uppercase tracking-wide flex items-center gap-2">
               <Users className="w-5 h-5 text-primary" />
@@ -554,7 +554,7 @@ export default function TeamHub() {
 
         {/* Today's Schedule */}
         {todayEvents.length > 0 && (
-          <Card className="glass-card border-white/10 border-l-4 border-l-primary">
+          <Card className="border-white/10 border-l-4 border-l-primary">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg font-display uppercase tracking-wide">
                 Today's Schedule

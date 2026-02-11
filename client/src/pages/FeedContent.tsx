@@ -159,7 +159,7 @@ const ACTIVITY_COLORS: Record<string, string> = {
   repost: "text-blue-400",
   poll: "text-indigo-400",
   prediction: "text-pink-400",
-  story: "text-cyan-400",
+  story: "text-accent",
   workout: "text-emerald-400",
 };
 
@@ -1286,9 +1286,9 @@ function FeedList({ activities, isLoading, error, emptyMessage, emptyDescription
     <Card className="p-10 text-center" data-testid={`empty-state-feed`}>
       <div className="flex flex-col items-center gap-5">
         <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-2xl blur-xl animate-pulse" />
-          <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-cyan-500/10 flex items-center justify-center">
-            <EmptyIcon className="w-8 h-8 text-cyan-400/60" />
+          <div className="absolute inset-0 bg-gradient-to-br from-accent/20 to-blue-500/20 rounded-2xl blur-xl animate-pulse" />
+          <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-border flex items-center justify-center">
+            <EmptyIcon className="w-8 h-8 text-accent/60" />
           </div>
         </div>
         <div className="space-y-2">

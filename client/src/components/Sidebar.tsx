@@ -164,9 +164,8 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
   const navSections = isPlayer ? playerSections : coachSections;
 
   return (
-    <div className="hidden md:flex flex-col w-64 bg-gradient-to-b from-[hsl(220,25%,8%)] via-[hsl(220,20%,6%)] to-[hsl(220,25%,4%)] border-r border-accent/[0.08] h-screen sticky top-0 overflow-y-auto backdrop-blur-2xl">
-      <div className="absolute inset-0 cyber-grid opacity-20 pointer-events-none" />
-      <div className="p-5 flex items-center gap-3 border-b border-accent/[0.08] bg-gradient-to-r from-accent/[0.02] to-transparent relative z-10">
+    <div className="hidden md:flex flex-col w-64 bg-sidebar border-r border-border h-screen sticky top-0 overflow-y-auto">
+      <div className="p-5 flex items-center gap-3 border-b border-border">
         <img src={caliberLogo} alt="Caliber Logo" className="h-9 w-9 rounded-lg shadow-lg shadow-black/20 object-contain" width={36} height={36} />
         <div className="flex-1">
           <h1 className="text-xl font-bold font-display text-white tracking-wider uppercase">CALIBER</h1>
@@ -188,7 +187,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         )}
       </div>
 
-      <div className="px-3 py-2 border-b border-accent/[0.08]">
+      <div className="px-3 py-2 border-b border-border">
         <SportToggle size="sm" showLabels={true} className="w-full justify-center" />
       </div>
 
@@ -209,17 +208,17 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
                   <Link key={item.href} href={item.href} className={cn(
                     "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 group font-medium text-base relative overflow-hidden",
                     isActive 
-                      ? "bg-gradient-to-r from-accent/[0.12] to-transparent text-white border-l-2 border-accent shadow-[0_0_20px_hsl(var(--accent)_/_0.1)_inset]" 
+                      ? "bg-accent/10 text-white" 
                       : isFeatured
                       ? "text-accent bg-accent/5"
                       : needsUpgrade
-                      ? "text-muted-foreground/50 hover:text-muted-foreground hover:bg-white/[0.02]"
-                      : "text-muted-foreground hover:text-accent hover:bg-accent/[0.05] hover:border-l-2 hover:border-accent/30"
+                      ? "text-muted-foreground/50"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   )} data-testid={`nav-${item.href.replace(/\//g, '-').replace(/^-/, '') || 'home'}`}>
                     <item.icon className={cn("w-4 h-4", isActive && "text-primary", isFeatured && "text-accent")} />
                     {item.label}
                     {item.badgeCount !== undefined && item.badgeCount > 0 && (
-                      <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] bg-gradient-to-r from-accent to-emerald-500 text-white rounded-full font-bold animate-pulse shadow-lg shadow-accent/30">
+                      <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] bg-accent text-white rounded-full font-bold">
                         {item.badgeCount > 99 ? '99+' : item.badgeCount}
                       </span>
                     )}
@@ -241,7 +240,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         ))}
       </nav>
 
-      <div className="p-3 border-t border-white/5">
+      <div className="p-3 border-t border-border">
         <Button 
           variant="ghost" 
           className="w-full justify-start text-muted-foreground"

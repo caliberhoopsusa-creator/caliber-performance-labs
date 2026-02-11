@@ -284,7 +284,7 @@ export default function ReelPage() {
               )}
 
               {gameInfo && (
-                <div className="glass-card rounded-lg px-3 py-2 inline-flex items-center gap-3 mb-3">
+                <div className="rounded-lg px-3 py-2 inline-flex items-center gap-3 mb-3">
                   <div className="text-xs text-white/60">
                     vs {gameInfo.opponent} • {format(new Date(gameInfo.date), "MMM d, yyyy")}
                   </div>

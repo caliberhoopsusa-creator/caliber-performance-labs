@@ -24,7 +24,7 @@ export function EventCard({ event, onEdit, onDelete }: EventCardProps) {
   const endTime = event.endTime ? new Date(event.endTime) : null;
 
   return (
-    <div className="glass-card rounded-lg p-4 space-y-3" data-testid={`event-card-${event.id}`}>
+    <div className="rounded-lg p-4 space-y-3" data-testid={`event-card-${event.id}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 flex-1 min-w-0">
           <div className={`p-2 rounded-lg bg-white/5 ${config.color}`}>

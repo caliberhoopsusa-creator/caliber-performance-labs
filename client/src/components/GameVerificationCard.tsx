@@ -96,7 +96,7 @@ export function GameVerificationCard({ game, onVerified }: Props) {
       exit={{ opacity: 0, y: -10 }}
       layout
     >
-      <Card className="p-4 bg-gradient-to-br from-black/60 to-black/30 border-white/10 hover:border-cyan-500/30 transition-colors">
+      <Card className="p-4 bg-gradient-to-br from-black/60 to-black/30 border-white/10 hover:border-accent/30 transition-colors">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">

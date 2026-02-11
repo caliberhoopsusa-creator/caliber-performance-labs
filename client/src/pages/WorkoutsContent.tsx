@@ -131,25 +131,25 @@ export default function WorkoutsContent() {
     <div className="space-y-6" data-testid="content-workouts">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 flex-1">
-          <Card className="glass-card" data-testid="stat-total-workouts">
+          <Card className="" data-testid="stat-total-workouts">
             <CardContent className="p-4">
               <div className="text-3xl font-display font-bold text-white">{stats.total}</div>
               <div className="text-xs text-muted-foreground uppercase tracking-wider">Total Workouts</div>
             </CardContent>
           </Card>
-          <Card className="glass-card" data-testid="stat-this-week">
+          <Card className="" data-testid="stat-this-week">
             <CardContent className="p-4">
               <div className="text-3xl font-display font-bold text-primary">{stats.thisWeek}</div>
               <div className="text-xs text-muted-foreground uppercase tracking-wider">This Week</div>
             </CardContent>
           </Card>
-          <Card className="glass-card" data-testid="stat-avg-intensity">
+          <Card className="" data-testid="stat-avg-intensity">
             <CardContent className="p-4">
               <div className="text-3xl font-display font-bold text-white">{stats.avgIntensity}/10</div>
               <div className="text-xs text-muted-foreground uppercase tracking-wider">Avg Intensity</div>
             </CardContent>
           </Card>
-          <Card className="glass-card" data-testid="stat-total-minutes">
+          <Card className="" data-testid="stat-total-minutes">
             <CardContent className="p-4">
               <div className="text-3xl font-display font-bold text-white">
                 {stats.totalMinutes >= 60 ? `${Math.floor(stats.totalMinutes / 60)}h` : `${stats.totalMinutes}m`}
@@ -172,7 +172,7 @@ export default function WorkoutsContent() {
           ))}
         </div>
       ) : groupedWorkouts.size === 0 ? (
-        <Card className="glass-card" data-testid="empty-workouts">
+        <Card className="" data-testid="empty-workouts">
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
             <div className="p-4 rounded-full bg-secondary/50 mb-4">
               <Dumbbell className="w-8 h-8 text-muted-foreground" />

@@ -58,10 +58,10 @@ export function FeatureTooltip({
   };
 
   const arrowClasses = {
-    top: "top-full left-1/2 -translate-x-1/2 border-t-cyan-500/30 border-x-transparent border-b-transparent",
-    bottom: "bottom-full left-1/2 -translate-x-1/2 border-b-cyan-500/30 border-x-transparent border-t-transparent",
-    left: "left-full top-1/2 -translate-y-1/2 border-l-cyan-500/30 border-y-transparent border-r-transparent",
-    right: "right-full top-1/2 -translate-y-1/2 border-r-cyan-500/30 border-y-transparent border-l-transparent",
+    top: "top-full left-1/2 -translate-x-1/2 border-t-accent/30 border-x-transparent border-b-transparent",
+    bottom: "bottom-full left-1/2 -translate-x-1/2 border-b-accent/30 border-x-transparent border-t-transparent",
+    left: "left-full top-1/2 -translate-y-1/2 border-l-accent/30 border-y-transparent border-r-transparent",
+    right: "right-full top-1/2 -translate-y-1/2 border-r-accent/30 border-y-transparent border-l-transparent",
   };
 
   const motionProps = {
@@ -81,7 +81,7 @@ export function FeatureTooltip({
             className={cn(
               "absolute z-50 w-64 p-3 rounded-lg",
               "bg-gradient-to-br from-[hsl(220,25%,12%)] to-[hsl(220,25%,8%)]",
-              "border border-cyan-500/30 shadow-lg shadow-cyan-500/10",
+              "border border-accent/30 shadow-lg",
               positionClasses[position]
             )}
             initial={motionProps[position].initial}
@@ -93,8 +93,8 @@ export function FeatureTooltip({
             <div className={cn("absolute w-0 h-0 border-8", arrowClasses[position])} />
             
             <div className="flex items-start gap-2">
-              <div className="flex-shrink-0 p-1.5 rounded-md bg-cyan-500/20">
-                <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+              <div className="flex-shrink-0 p-1.5 rounded-md bg-accent/20">
+                <Sparkles className="w-3.5 h-3.5 text-accent" />
               </div>
               
               <div className="flex-1 min-w-0">
@@ -143,7 +143,7 @@ export function InfoTooltip({ content, className }: InfoTooltipProps) {
       <AnimatePresence>
         {isHovered && (
           <motion.div
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-48 p-2 rounded-md bg-[hsl(220,25%,10%)] border border-cyan-500/20 shadow-lg"
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-48 p-2 rounded-md bg-[hsl(220,25%,10%)] border border-accent/20 shadow-lg"
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 5 }}
