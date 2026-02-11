@@ -7,7 +7,6 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import caliberLogo from "@assets/caliber-logo-orange.png";
-import dashboardPreview from "@/assets/images/dashboard-preview.png";
 
 const features = [
   { icon: BarChart3, title: "Performance Grades", description: "Instant A-F grades based on position-weighted stats after every game." },
@@ -143,18 +142,54 @@ export default function Landing() {
 
         <div className="relative max-w-5xl mx-auto mt-16">
           <div
-            className="absolute inset-0 -inset-x-12 -inset-y-12"
+            className="absolute inset-0 -inset-x-12 -inset-y-12 pointer-events-none"
             style={{
-              background: "radial-gradient(ellipse at 50% 50%, hsl(24 95% 53% / 0.15) 0%, transparent 70%)",
+              background: "radial-gradient(ellipse at 50% 50%, hsl(24 95% 53% / 0.12) 0%, transparent 70%)",
               filter: "blur(40px)",
             }}
           />
-          <img
-            src={dashboardPreview}
-            alt="Caliber Dashboard Preview"
-            className="relative w-full rounded-md border border-border shadow-2xl"
-            data-testid="img-dashboard-preview"
-          />
+          <div className="relative grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4" data-testid="hero-stat-preview">
+            {[
+              { grade: "A+", label: "Scoring", color: "text-green-400" },
+              { grade: "B+", label: "Defense", color: "text-blue-400" },
+              { grade: "A-", label: "Playmaking", color: "text-green-400" },
+              { grade: "B", label: "Rebounding", color: "text-accent" },
+            ].map((stat) => (
+              <div key={stat.label} className="bg-card border border-border rounded-md p-4 md:p-6 text-center space-y-1">
+                <span className={`text-3xl md:text-5xl font-display font-bold ${stat.color}`}>{stat.grade}</span>
+                <p className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+          <div className="relative grid grid-cols-3 gap-3 md:gap-4 mt-3 md:mt-4">
+            <div className="bg-card border border-border rounded-md p-4 md:p-6 flex items-center gap-3">
+              <div className="p-2 rounded-md bg-accent/10">
+                <Trophy className="w-5 h-5 text-accent" />
+              </div>
+              <div>
+                <p className="text-sm md:text-base font-semibold text-white">Rank #12</p>
+                <p className="text-xs text-muted-foreground">City Leaderboard</p>
+              </div>
+            </div>
+            <div className="bg-card border border-border rounded-md p-4 md:p-6 flex items-center gap-3">
+              <div className="p-2 rounded-md bg-accent/10">
+                <Award className="w-5 h-5 text-accent" />
+              </div>
+              <div>
+                <p className="text-sm md:text-base font-semibold text-white">8 Badges</p>
+                <p className="text-xs text-muted-foreground">Earned This Season</p>
+              </div>
+            </div>
+            <div className="bg-card border border-border rounded-md p-4 md:p-6 flex items-center gap-3">
+              <div className="p-2 rounded-md bg-accent/10">
+                <Zap className="w-5 h-5 text-accent" />
+              </div>
+              <div>
+                <p className="text-sm md:text-base font-semibold text-white">14 Day</p>
+                <p className="text-xs text-muted-foreground">Training Streak</p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -259,20 +294,64 @@ export default function Landing() {
               ))}
             </div>
 
-            <div className="relative">
-              <div
-                className="absolute inset-0 -inset-x-4 -inset-y-4"
-                style={{
-                  background: "radial-gradient(ellipse at 50% 50%, hsl(24 95% 53% / 0.08) 0%, transparent 70%)",
-                  filter: "blur(30px)",
-                }}
-              />
-              <img
-                src={dashboardPreview}
-                alt="Product Preview"
-                className="relative w-full rounded-md border border-border shadow-xl"
-                data-testid="img-product-preview"
-              />
+            <div className="relative bg-card border border-border rounded-md p-6 md:p-8" data-testid="showcase-preview">
+              {activeTab === "analytics" && (
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="text-center space-y-2">
+                    <BarChart3 className="w-8 h-8 text-accent mx-auto" />
+                    <p className="text-2xl md:text-3xl font-display font-bold text-white">A+</p>
+                    <p className="text-xs text-muted-foreground">Overall Grade</p>
+                  </div>
+                  <div className="text-center space-y-2">
+                    <Trophy className="w-8 h-8 text-accent mx-auto" />
+                    <p className="text-2xl md:text-3xl font-display font-bold text-white">24.5</p>
+                    <p className="text-xs text-muted-foreground">PPG Average</p>
+                  </div>
+                  <div className="text-center space-y-2">
+                    <Zap className="w-8 h-8 text-accent mx-auto" />
+                    <p className="text-2xl md:text-3xl font-display font-bold text-white">87%</p>
+                    <p className="text-xs text-muted-foreground">Consistency</p>
+                  </div>
+                </div>
+              )}
+              {activeTab === "social" && (
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="text-center space-y-2">
+                    <Users className="w-8 h-8 text-accent mx-auto" />
+                    <p className="text-2xl md:text-3xl font-display font-bold text-white">342</p>
+                    <p className="text-xs text-muted-foreground">Connections</p>
+                  </div>
+                  <div className="text-center space-y-2">
+                    <Award className="w-8 h-8 text-accent mx-auto" />
+                    <p className="text-2xl md:text-3xl font-display font-bold text-white">15</p>
+                    <p className="text-xs text-muted-foreground">Badges Shared</p>
+                  </div>
+                  <div className="text-center space-y-2">
+                    <Star className="w-8 h-8 text-accent mx-auto" />
+                    <p className="text-2xl md:text-3xl font-display font-bold text-white">28</p>
+                    <p className="text-xs text-muted-foreground">Highlights</p>
+                  </div>
+                </div>
+              )}
+              {activeTab === "recruiting" && (
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="text-center space-y-2">
+                    <Target className="w-8 h-8 text-accent mx-auto" />
+                    <p className="text-2xl md:text-3xl font-display font-bold text-white">12</p>
+                    <p className="text-xs text-muted-foreground">Schools Matched</p>
+                  </div>
+                  <div className="text-center space-y-2">
+                    <Video className="w-8 h-8 text-accent mx-auto" />
+                    <p className="text-2xl md:text-3xl font-display font-bold text-white">5</p>
+                    <p className="text-xs text-muted-foreground">Film Reels</p>
+                  </div>
+                  <div className="text-center space-y-2">
+                    <Shield className="w-8 h-8 text-accent mx-auto" />
+                    <p className="text-2xl md:text-3xl font-display font-bold text-white">3</p>
+                    <p className="text-xs text-muted-foreground">Coach Endorsements</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
