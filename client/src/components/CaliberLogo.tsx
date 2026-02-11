@@ -9,7 +9,7 @@ export function CaliberLogo({ size = 32, color = "#F97316", className }: Caliber
     <svg
       width={size}
       height={size}
-      viewBox="0 0 200 200"
+      viewBox="0 0 100 110"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
@@ -18,39 +18,27 @@ export function CaliberLogo({ size = 32, color = "#F97316", className }: Caliber
     >
       <path
         d="
-          M100 10
-          L170 40
-          L170 120
-          C170 160 140 185 100 195
-          C60 185 30 160 30 120
-          L30 40
-          Z
+          M26 8 L50 2 L74 8 L82 12 L82 34 L74 34 L74 28
+          C70 22 63 18 54 16 L50 16 C41 16 34 20 30 26
+          L28 30 L28 74 L30 78
+          C34 84 41 88 50 88 L54 88 C63 86 70 82 74 76
+          L74 70 L82 70 L82 82
+          C78 90 70 96 60 100 L50 102
+          C36 100 24 94 18 84 L16 78 L16 30
+          L18 20 Z
         "
-        stroke={color}
-        strokeWidth="14"
-        strokeLinejoin="round"
-        fill="none"
+        fill={color}
       />
       <path
         d="
-          M130 68
-          L110 68
-          C108 60 105 56 100 53
-          C94 50 88 50 82 53
-          C76 56 72 62 72 72
-          L72 128
-          C72 138 76 144 82 147
-          C88 150 94 150 100 147
-          C105 144 108 140 110 132
-          L130 132
-          C128 148 120 158 110 163
-          C102 167 94 167 86 163
-          C74 157 58 145 58 128
-          L58 72
-          C58 55 74 43 86 37
-          C94 33 102 33 110 37
-          C120 42 128 52 130 68
-          Z
+          M42 36 C46 32 50 31 54 32 C60 34 64 38 66 44
+          L66 48 L58 48 L58 46 C56 42 54 40 50 39
+          C48 39 46 40 44 42 L43 44 L43 68 L44 70
+          C46 72 48 73 50 73 C54 72 56 70 58 66
+          L58 64 L66 64 L66 68
+          C64 74 60 78 54 80 C50 81 46 80 42 78
+          C38 74 36 70 36 64 L36 48
+          C36 42 38 38 42 36 Z
         "
         fill={color}
       />
