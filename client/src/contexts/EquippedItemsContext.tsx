@@ -47,7 +47,7 @@ interface EffectLayer {
 // PREMIUM PROFILE SKINS - Elegant, subtle animations
 // ═══════════════════════════════════════════════════════════════════════════════
 const PROFILE_SKIN_STYLES: Record<string, ProfileSkinStyle> = {
-  "neon-grid": {
+  "grid-pattern": {
     background: `
       linear-gradient(135deg, rgba(234, 88, 12, 0.08) 0%, rgba(0, 100, 150, 0.05) 100%),
       repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(234, 88, 12, 0.15) 40px, rgba(234, 88, 12, 0.15) 41px),
@@ -79,7 +79,7 @@ const PROFILE_SKIN_STYLES: Record<string, ProfileSkinStyle> = {
       linear-gradient(180deg, rgba(0, 15, 25, 0.95) 0%, rgba(10, 20, 35, 0.9) 100%)
     `,
     borderColor: "rgba(0, 255, 136, 0.4)",
-    boxShadow: "0 0 35px rgba(0, 255, 136, 0.15), 0 0 60px rgba(0, 180, 255, 0.1)",
+    boxShadow: "0 0 35px rgba(234, 88, 12, 0.12), 0 0 60px rgba(234, 88, 12, 0.06)",
     animation: "auroraShiftSubtle 10s ease-in-out infinite",
   },
   "galaxy-swirl": {
@@ -136,7 +136,7 @@ const EFFECTS: Record<string, EffectConfig> = {
       },
       // Subtle rotating accent
       {
-        gradient: "conic-gradient(from 0deg at 50% 50%, transparent 0%, rgba(234, 88, 12, 0.1) 25%, transparent 50%, rgba(0, 200, 230, 0.08) 75%, transparent 100%)",
+        gradient: "conic-gradient(from 0deg at 50% 50%, transparent 0%, rgba(234, 88, 12, 0.1) 25%, transparent 50%, rgba(234, 88, 12, 0.06) 75%, transparent 100%)",
         animation: "gentleSpin 20s linear infinite",
         size: "400px",
         opacity: 0.4,

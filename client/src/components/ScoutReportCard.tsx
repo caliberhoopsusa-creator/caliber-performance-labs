@@ -303,7 +303,7 @@ export function ScoutReportCard({ playerId, playerName, position }: Props) {
                     <p className="text-2xl font-bold text-accent">{trustScore}%</p>
                   </div>
                   <div className="p-1.5 rounded-lg bg-white/5">
-                    <Shield className="w-4 h-4 text-accent" style={{ filter: "drop-shadow(0 0 6px #22D3EE)" }} />
+                    <Shield className="w-4 h-4 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(24, 95%, 53%))" }} />
                   </div>
                 </div>
                 <p className={cn("text-xs mt-1", trustLevel.color)}>{trustLevel.label}</p>

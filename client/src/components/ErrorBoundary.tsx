@@ -54,7 +54,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent pointer-events-none" />
 
           <div className="relative z-10 max-w-md w-full text-center space-y-6">
-            {/* Error icon container with cyber styling */}
+            {/* Error icon container */}
             <div className="w-24 h-24 mx-auto relative group">
               {/* Outer glow ring */}
               <div className="absolute inset-0 rounded-2xl border border-accent/30 group-hover:border-accent/60 transition-colors duration-300" />

@@ -854,7 +854,7 @@ function ShopItemCard({
 }
 
 const PROFILE_SKIN_STYLES: Record<string, { background: string; borderColor: string }> = {
-  "neon-grid": {
+  "grid-pattern": {
     background: "linear-gradient(135deg, hsl(24, 95%, 53%)15 0%, hsl(24, 95%, 53%)08 50%, transparent 50%), repeating-linear-gradient(0deg, transparent, transparent 8px, hsl(24, 95%, 53%)20 8px, hsl(24, 95%, 53%)20 9px), repeating-linear-gradient(90deg, transparent, transparent 8px, hsl(24, 95%, 53%)20 8px, hsl(24, 95%, 53%)20 9px)",
     borderColor: "hsl(24, 95%, 53%)60",
   },

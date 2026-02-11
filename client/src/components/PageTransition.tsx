@@ -30,31 +30,6 @@ const pageVariants = {
   },
 };
 
-// Cyber-style page transition with scan lines
-const cyberPageVariants = {
-  initial: {
-    opacity: 0,
-    y: 8,
-    scale: 0.99,
-  },
-  animate: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: {
-      duration: 0.25,
-      ease: [0.25, 0.46, 0.45, 0.94],
-    },
-  },
-  exit: {
-    opacity: 0,
-    y: -4,
-    transition: {
-      duration: 0.15,
-      ease: [0.25, 0.46, 0.45, 0.94],
-    },
-  },
-};
 
 export function PageTransition({ children }: PageTransitionProps) {
   const [location] = useLocation();
@@ -65,7 +40,7 @@ export function PageTransition({ children }: PageTransitionProps) {
     initial: { opacity: 1 },
     animate: { opacity: 1 },
     exit: { opacity: 1 },
-  } : cyberPageVariants;
+  } : pageVariants;
 
   return (
     <AnimatePresence mode="wait" initial={false}>
@@ -89,7 +64,7 @@ export function PageTransition({ children }: PageTransitionProps) {
               ease: "easeInOut",
             }}
           >
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-accent/10 to-transparent animate-scan-line-sweep" />
+
           </motion.div>
         )}
 
@@ -171,7 +146,7 @@ const slideInRight = {
   },
 };
 
-// Cyber scan-line effect variant
+// Page transition effect variant
 const scanLineEffect = {
   initial: { opacity: 0 },
   animate: {
@@ -196,8 +171,8 @@ const glowPulseEffect = {
   },
 };
 
-// Cyber page enter with scan lines (fast variant under 300ms total)
-const cyberPageEnter = {
+// Page enter (fast variant under 300ms total)
+const pageEnter = {
   initial: { opacity: 0, y: 12, scale: 0.98 },
   animate: {
     opacity: 1,
@@ -210,8 +185,8 @@ const cyberPageEnter = {
   },
 };
 
-// Cyber exit with fade
-const cyberPageExit = {
+// Page exit with fade
+const pageExit = {
   initial: { opacity: 1 },
   exit: {
     opacity: 0,
@@ -222,8 +197,8 @@ const cyberPageExit = {
   },
 };
 
-// Stagger with cyber effect
-const cyberStaggerContainer = {
+// Stagger container
+const staggerContainerFast = {
   animate: {
     transition: {
       staggerChildren: 0.04,
@@ -253,9 +228,9 @@ export const animations = {
   slideInRight,
   scanLineEffect,
   glowPulseEffect,
-  cyberPageEnter,
-  cyberPageExit,
-  cyberStaggerContainer,
+  pageEnter,
+  pageExit,
+  staggerContainerFast,
   glowScaleIn,
 };
 

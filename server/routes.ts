@@ -1767,7 +1767,7 @@ async function seedShopItems() {
       { name: "Midnight Purple", description: "Deep purple accent with mystique", category: "theme", type: "accent_color", value: "#7C3AED", coinPrice: 200, rarity: "rare", sortOrder: 8 },
       { name: "Rose Gold", description: "Elegant rose gold accent", category: "theme", type: "accent_color", value: "#F472B6", coinPrice: 250, rarity: "epic", sortOrder: 9 },
       { name: "Diamond Ice", description: "Premium icy white accent", category: "theme", type: "accent_color", value: "#E0F2FE", coinPrice: 500, rarity: "legendary", sortOrder: 10 },
-      { name: "Neon Grid", description: "Cyber grid background for your profile", category: "profile_skin", type: "card_background", value: "neon-grid", coinPrice: 200, rarity: "rare", sortOrder: 1 },
+      { name: "Grid Pattern", description: "Grid background for your profile", category: "profile_skin", type: "card_background", value: "grid-pattern", coinPrice: 200, rarity: "rare", sortOrder: 1 },
       { name: "Flame Burst", description: "Fiery gradient background", category: "profile_skin", type: "card_background", value: "flame-burst", coinPrice: 250, rarity: "rare", sortOrder: 2 },
       { name: "Aurora Glow", description: "Northern lights inspired background", category: "profile_skin", type: "card_background", value: "aurora-glow", coinPrice: 400, rarity: "epic", sortOrder: 3 },
       { name: "Galaxy Swirl", description: "Cosmic space background", category: "profile_skin", type: "card_background", value: "galaxy-swirl", coinPrice: 600, rarity: "legendary", sortOrder: 4 },

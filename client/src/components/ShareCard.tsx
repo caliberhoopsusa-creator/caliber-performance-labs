@@ -124,7 +124,7 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
         style={{
           width: 400,
           height: 500,
-          background: 'linear-gradient(160deg, hsl(195 100% 6%) 0%, hsl(200 80% 12%) 40%, hsl(190 90% 15%) 70%, hsl(185 70% 10%) 100%)',
+          background: 'linear-gradient(160deg, hsl(220 14% 6%) 0%, hsl(220 12% 10%) 40%, hsl(220 10% 12%) 70%, hsl(220 14% 8%) 100%)',
         }}
         data-testid="share-card"
       >
