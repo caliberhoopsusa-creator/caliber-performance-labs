@@ -192,7 +192,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
             <div className="flex items-center gap-4">
               <div className="relative">
                 <div className="absolute inset-[-3px] rounded-xl bg-gradient-to-br from-accent/40 to-accent/20 blur-sm" />
-                <CaliberLogo size={44} color={drawerThemeColor} className="relative" />
+                <CaliberLogo size={50} color={drawerThemeColor} className="relative" />
               </div>
               <div>
                 <h2 className="font-display font-bold text-foreground text-xl uppercase tracking-wider">Caliber</h2>

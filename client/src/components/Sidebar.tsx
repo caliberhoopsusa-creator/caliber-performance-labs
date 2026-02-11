@@ -169,9 +169,9 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
   return (
     <div className="hidden md:flex flex-col w-64 bg-sidebar border-r border-border h-screen sticky top-0 overflow-y-auto">
       <div className="p-5 flex items-center gap-3 border-b border-border">
-        <CaliberLogo size={36} color={sidebarThemeColor} />
+        <CaliberLogo size={44} color={sidebarThemeColor} />
         <div className="flex-1">
-          <h1 className="text-xl font-bold font-display text-foreground tracking-wider uppercase">CALIBER</h1>
+          <h1 className="text-xl font-bold font-display tracking-wider uppercase" style={{ color: sidebarThemeColor }}>CALIBER</h1>
           <button 
             onClick={handleRoleSwitch}
             disabled={isSwitchingRole}
