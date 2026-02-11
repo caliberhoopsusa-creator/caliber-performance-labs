@@ -207,7 +207,7 @@ export function GuidedOnboarding() {
                   <Activity className="w-4 h-4 text-accent" />
                 </div>
                 <div>
-                  <span className="text-sm font-semibold text-white">Quick Start</span>
+                  <span className="text-sm font-semibold text-foreground">Quick Start</span>
                   <span className="text-xs text-accent/70 ml-2" data-testid="text-onboarding-progress">
                     {completedCount}/{steps.length} completed
                   </span>
@@ -297,7 +297,7 @@ export function GuidedOnboarding() {
                           <h4
                             className={cn(
                               "text-sm font-medium",
-                              step.completed ? "text-accent" : "text-white"
+                              step.completed ? "text-accent" : "text-foreground"
                             )}
                           >
                             {step.title}

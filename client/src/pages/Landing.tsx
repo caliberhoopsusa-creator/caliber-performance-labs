@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { CaliberLogo } from "@/components/CaliberLogo";
+import { DarkModeToggle } from "@/components/DarkModeToggle";
 
 const features = [
   { icon: BarChart3, title: "Performance Grades", description: "Instant A-F grades based on position-weighted stats after every game." },
@@ -88,7 +89,7 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 flex-wrap">
             <CaliberLogo size={40} color="#F97316" />
-            <span className="text-xl font-bold font-display text-white tracking-wider uppercase">CALIBER</span>
+            <span className="text-xl font-bold font-display text-foreground tracking-wider uppercase">CALIBER</span>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <Link href="/pricing">
@@ -101,6 +102,7 @@ export default function Landing() {
                 Scout Hub
               </Button>
             </Link>
+            <DarkModeToggle />
             <Button asChild className="bg-accent text-white border-accent-border" data-testid="button-login">
               <a href="/api/login">Sign In</a>
             </Button>
@@ -116,7 +118,7 @@ export default function Landing() {
           </div>
 
           <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-bold tracking-tight leading-[0.95]">
-            <span className="text-white">YOUR GAME.</span>
+            <span className="text-foreground">YOUR GAME.</span>
             <br />
             <span className="text-accent">MEASURED.</span>
           </h1>
@@ -167,7 +169,7 @@ export default function Landing() {
                 <Trophy className="w-5 h-5 text-accent" />
               </div>
               <div>
-                <p className="text-sm md:text-base font-semibold text-white">Rank #12</p>
+                <p className="text-sm md:text-base font-semibold text-foreground">Rank #12</p>
                 <p className="text-xs text-muted-foreground">City Leaderboard</p>
               </div>
             </div>
@@ -176,7 +178,7 @@ export default function Landing() {
                 <Award className="w-5 h-5 text-accent" />
               </div>
               <div>
-                <p className="text-sm md:text-base font-semibold text-white">8 Badges</p>
+                <p className="text-sm md:text-base font-semibold text-foreground">8 Badges</p>
                 <p className="text-xs text-muted-foreground">Earned This Season</p>
               </div>
             </div>
@@ -185,7 +187,7 @@ export default function Landing() {
                 <Zap className="w-5 h-5 text-accent" />
               </div>
               <div>
-                <p className="text-sm md:text-base font-semibold text-white">14 Day</p>
+                <p className="text-sm md:text-base font-semibold text-foreground">14 Day</p>
                 <p className="text-xs text-muted-foreground">Training Streak</p>
               </div>
             </div>
@@ -222,7 +224,7 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <span className="text-accent text-xs uppercase tracking-widest font-semibold">FEATURES</span>
-            <h2 className="text-4xl md:text-5xl font-display font-bold text-white mt-4">
+            <h2 className="text-4xl md:text-5xl font-display font-bold text-foreground mt-4">
               Everything You Need to Dominate
             </h2>
             <p className="text-muted-foreground mt-4 max-w-xl mx-auto">
@@ -237,7 +239,7 @@ export default function Landing() {
                   <div className="w-10 h-10 rounded-md bg-accent/10 flex items-center justify-center">
                     <feature.icon className="w-5 h-5 text-accent" />
                   </div>
-                  <h3 className="font-display text-xl text-white" data-testid={`feature-${feature.title.toLowerCase().replace(/\s+/g, '-')}`}>
+                  <h3 className="font-display text-xl text-foreground" data-testid={`feature-${feature.title.toLowerCase().replace(/\s+/g, '-')}`}>
                     {feature.title}
                   </h3>
                   <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
@@ -260,7 +262,7 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <span className="text-accent text-xs uppercase tracking-widest font-semibold">PRODUCT</span>
-            <h2 className="text-4xl md:text-5xl font-display font-bold text-white mt-4">
+            <h2 className="text-4xl md:text-5xl font-display font-bold text-foreground mt-4">
               One Platform. Total Control.
             </h2>
           </div>
@@ -280,7 +282,7 @@ export default function Landing() {
                 >
                   <div className="flex items-center gap-3 mb-2">
                     <tab.icon className={`w-5 h-5 ${activeTab === tab.id ? "text-accent" : "text-muted-foreground"}`} />
-                    <h3 className={`font-display text-lg ${activeTab === tab.id ? "text-white" : "text-muted-foreground"}`}>
+                    <h3 className={`font-display text-lg ${activeTab === tab.id ? "text-foreground" : "text-muted-foreground"}`}>
                       {tab.title}
                     </h3>
                     <ChevronRight className={`w-4 h-4 ml-auto transition-transform ${activeTab === tab.id ? "rotate-90 text-accent" : "text-muted-foreground"}`} />
@@ -299,17 +301,17 @@ export default function Landing() {
                 <div className="grid grid-cols-3 gap-4">
                   <div className="text-center space-y-2">
                     <BarChart3 className="w-8 h-8 text-accent mx-auto" />
-                    <p className="text-2xl md:text-3xl font-display font-bold text-white">A+</p>
+                    <p className="text-2xl md:text-3xl font-display font-bold text-foreground">A+</p>
                     <p className="text-xs text-muted-foreground">Overall Grade</p>
                   </div>
                   <div className="text-center space-y-2">
                     <Trophy className="w-8 h-8 text-accent mx-auto" />
-                    <p className="text-2xl md:text-3xl font-display font-bold text-white">24.5</p>
+                    <p className="text-2xl md:text-3xl font-display font-bold text-foreground">24.5</p>
                     <p className="text-xs text-muted-foreground">PPG Average</p>
                   </div>
                   <div className="text-center space-y-2">
                     <Zap className="w-8 h-8 text-accent mx-auto" />
-                    <p className="text-2xl md:text-3xl font-display font-bold text-white">87%</p>
+                    <p className="text-2xl md:text-3xl font-display font-bold text-foreground">87%</p>
                     <p className="text-xs text-muted-foreground">Consistency</p>
                   </div>
                 </div>
@@ -318,17 +320,17 @@ export default function Landing() {
                 <div className="grid grid-cols-3 gap-4">
                   <div className="text-center space-y-2">
                     <Users className="w-8 h-8 text-accent mx-auto" />
-                    <p className="text-2xl md:text-3xl font-display font-bold text-white">342</p>
+                    <p className="text-2xl md:text-3xl font-display font-bold text-foreground">342</p>
                     <p className="text-xs text-muted-foreground">Connections</p>
                   </div>
                   <div className="text-center space-y-2">
                     <Award className="w-8 h-8 text-accent mx-auto" />
-                    <p className="text-2xl md:text-3xl font-display font-bold text-white">15</p>
+                    <p className="text-2xl md:text-3xl font-display font-bold text-foreground">15</p>
                     <p className="text-xs text-muted-foreground">Badges Shared</p>
                   </div>
                   <div className="text-center space-y-2">
                     <Star className="w-8 h-8 text-accent mx-auto" />
-                    <p className="text-2xl md:text-3xl font-display font-bold text-white">28</p>
+                    <p className="text-2xl md:text-3xl font-display font-bold text-foreground">28</p>
                     <p className="text-xs text-muted-foreground">Highlights</p>
                   </div>
                 </div>
@@ -337,17 +339,17 @@ export default function Landing() {
                 <div className="grid grid-cols-3 gap-4">
                   <div className="text-center space-y-2">
                     <Target className="w-8 h-8 text-accent mx-auto" />
-                    <p className="text-2xl md:text-3xl font-display font-bold text-white">12</p>
+                    <p className="text-2xl md:text-3xl font-display font-bold text-foreground">12</p>
                     <p className="text-xs text-muted-foreground">Schools Matched</p>
                   </div>
                   <div className="text-center space-y-2">
                     <Video className="w-8 h-8 text-accent mx-auto" />
-                    <p className="text-2xl md:text-3xl font-display font-bold text-white">5</p>
+                    <p className="text-2xl md:text-3xl font-display font-bold text-foreground">5</p>
                     <p className="text-xs text-muted-foreground">Film Reels</p>
                   </div>
                   <div className="text-center space-y-2">
                     <Shield className="w-8 h-8 text-accent mx-auto" />
-                    <p className="text-2xl md:text-3xl font-display font-bold text-white">3</p>
+                    <p className="text-2xl md:text-3xl font-display font-bold text-foreground">3</p>
                     <p className="text-xs text-muted-foreground">Coach Endorsements</p>
                   </div>
                 </div>
@@ -361,7 +363,7 @@ export default function Landing() {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <span className="text-accent text-xs uppercase tracking-widest font-semibold">BY THE NUMBERS</span>
-            <h2 className="text-4xl md:text-5xl font-display font-bold text-white mt-4">
+            <h2 className="text-4xl md:text-5xl font-display font-bold text-foreground mt-4">
               The Numbers Don't Lie
             </h2>
           </div>
@@ -383,7 +385,7 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <span className="text-accent text-xs uppercase tracking-widest font-semibold">TESTIMONIALS</span>
-            <h2 className="text-4xl md:text-5xl font-display font-bold text-white mt-4">
+            <h2 className="text-4xl md:text-5xl font-display font-bold text-foreground mt-4">
               Hear From Our Athletes
             </h2>
           </div>
@@ -401,7 +403,7 @@ export default function Landing() {
                       {testimonial.initials}
                     </div>
                     <div>
-                      <div className="text-sm font-medium text-white" data-testid={`testimonial-name-${index}`}>{testimonial.name}</div>
+                      <div className="text-sm font-medium text-foreground" data-testid={`testimonial-name-${index}`}>{testimonial.name}</div>
                       <div className="text-xs text-muted-foreground">{testimonial.title}</div>
                     </div>
                   </div>
@@ -425,7 +427,7 @@ export default function Landing() {
                   <item.icon className="w-5 h-5 text-accent" />
                 </div>
                 <div>
-                  <h3 className="font-display text-lg text-white" data-testid={`highlight-${item.title.toLowerCase().replace(/\s+/g, '-')}`}>
+                  <h3 className="font-display text-lg text-foreground" data-testid={`highlight-${item.title.toLowerCase().replace(/\s+/g, '-')}`}>
                     {item.title}
                   </h3>
                   <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
@@ -444,7 +446,7 @@ export default function Landing() {
           }}
         />
         <div className="relative max-w-3xl mx-auto text-center space-y-8">
-          <h2 className="text-4xl md:text-6xl font-display font-bold text-white">
+          <h2 className="text-4xl md:text-6xl font-display font-bold text-foreground">
             Ready to Find Your Caliber?
           </h2>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto">
@@ -477,7 +479,7 @@ export default function Landing() {
             <div className="md:col-span-2 space-y-4">
               <div className="flex items-center gap-3 flex-wrap">
                 <CaliberLogo size={40} color="#F97316" />
-                <span className="text-xl font-bold font-display text-white tracking-wider uppercase">CALIBER</span>
+                <span className="text-xl font-bold font-display text-foreground tracking-wider uppercase">CALIBER</span>
               </div>
               <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
                 The performance platform for serious athletes. Track your game, earn your rank, and get discovered.
@@ -485,7 +487,7 @@ export default function Landing() {
             </div>
 
             <div className="space-y-4">
-              <h4 className="font-display text-sm text-white uppercase tracking-wider">Platform</h4>
+              <h4 className="font-display text-sm text-foreground uppercase tracking-wider">Platform</h4>
               <div className="space-y-2">
                 <Link href="/pricing" className="block text-sm text-muted-foreground transition-colors" data-testid="footer-link-pricing">
                   Pricing
@@ -500,7 +502,7 @@ export default function Landing() {
             </div>
 
             <div className="space-y-4">
-              <h4 className="font-display text-sm text-white uppercase tracking-wider">Features</h4>
+              <h4 className="font-display text-sm text-foreground uppercase tracking-wider">Features</h4>
               <div className="space-y-2">
                 <span className="block text-sm text-muted-foreground">Performance Grades</span>
                 <span className="block text-sm text-muted-foreground">Skill Badges</span>

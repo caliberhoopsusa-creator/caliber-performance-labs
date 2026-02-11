@@ -121,7 +121,7 @@ export function QuickStat({ label, value, icon: Icon, trend, trendValue, classNa
         {Icon && <Icon className="w-3 h-3 md:w-4 md:h-4 text-accent/60" />}
       </div>
       <div className="flex items-baseline gap-1">
-        <span className="text-lg md:text-2xl font-bold text-white">{value}</span>
+        <span className="text-lg md:text-2xl font-bold text-foreground">{value}</span>
         {trend && trendValue && (
           <span className={cn(
             "text-[10px] font-medium",

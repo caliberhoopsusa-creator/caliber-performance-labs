@@ -171,7 +171,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
       <div className="p-5 flex items-center gap-3 border-b border-border">
         <CaliberLogo size={36} color={sidebarThemeColor} />
         <div className="flex-1">
-          <h1 className="text-xl font-bold font-display text-white tracking-wider uppercase">CALIBER</h1>
+          <h1 className="text-xl font-bold font-display text-foreground tracking-wider uppercase">CALIBER</h1>
           <button 
             onClick={handleRoleSwitch}
             disabled={isSwitchingRole}
@@ -211,7 +211,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
                   <Link key={item.href} href={item.href} className={cn(
                     "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 group font-medium text-base relative overflow-hidden",
                     isActive 
-                      ? "bg-accent/10 text-white" 
+                      ? "bg-accent/10 text-foreground" 
                       : isFeatured
                       ? "text-accent bg-accent/5"
                       : needsUpgrade

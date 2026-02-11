@@ -16,7 +16,7 @@ interface ComparisonBarChartProps {
 export function ComparisonBarChart({ stats, team1Name, team2Name }: ComparisonBarChartProps) {
   return (
     <div className="bg-gradient-to-br from-card to-card/50 border border-accent/20 rounded-2xl p-6 shadow-2xl animate-fade-up" data-testid="comparison-bar-chart">
-      <h3 className="text-xl font-bold font-display text-white mb-6 text-center uppercase tracking-widest">
+      <h3 className="text-xl font-bold font-display text-foreground mb-6 text-center uppercase tracking-widest">
         Statistical Comparison
       </h3>
       

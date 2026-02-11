@@ -1828,6 +1828,223 @@ export async function registerRoutes(
     }
   });
 
+  // GET /api/ticker - Stock-market-style stats ticker data
+  app.get('/api/ticker', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await authStorage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      const tickerItems: Array<{
+        type: "personal" | "leaderboard";
+        label: string;
+        value: string;
+        change: string | null;
+        direction: "up" | "down" | null;
+      }> = [];
+
+      const playerId = user.playerId;
+
+      if (playerId) {
+        const playerGames = await db
+          .select()
+          .from(games)
+          .where(eq(games.playerId, playerId))
+          .orderBy(desc(games.createdAt));
+
+        if (playerGames.length > 0) {
+          const totalPoints = playerGames.reduce((sum, g) => sum + (g.points || 0), 0);
+          const ppg = totalPoints / playerGames.length;
+
+          let ppgChange: string | null = null;
+          let ppgDirection: "up" | "down" | null = null;
+          if (playerGames.length >= 6) {
+            const recentHalf = playerGames.slice(0, Math.floor(playerGames.length / 2));
+            const olderHalf = playerGames.slice(Math.floor(playerGames.length / 2));
+            const recentAvg = recentHalf.reduce((s, g) => s + (g.points || 0), 0) / recentHalf.length;
+            const olderAvg = olderHalf.reduce((s, g) => s + (g.points || 0), 0) / olderHalf.length;
+            const diff = recentAvg - olderAvg;
+            if (Math.abs(diff) >= 0.1) {
+              ppgChange = (diff > 0 ? "+" : "") + diff.toFixed(1);
+              ppgDirection = diff > 0 ? "up" : "down";
+            }
+          }
+
+          tickerItems.push({
+            type: "personal",
+            label: "YOUR PPG",
+            value: ppg.toFixed(1),
+            change: ppgChange,
+            direction: ppgDirection,
+          });
+
+          const latestGrade = playerGames[0].grade || "N/A";
+          tickerItems.push({
+            type: "personal",
+            label: "YOUR GRADE",
+            value: latestGrade,
+            change: null,
+            direction: null,
+          });
+
+          const playersWithHigherAvg = await db
+            .select({ cnt: count() })
+            .from(games)
+            .where(ne(games.playerId, playerId))
+            .groupBy(games.playerId)
+            .having(sql`AVG(${games.points}) > ${ppg}`);
+
+          const rank = playersWithHigherAvg.length + 1;
+          tickerItems.push({
+            type: "personal",
+            label: "YOUR RANK",
+            value: `#${rank}`,
+            change: null,
+            direction: null,
+          });
+
+          const streakCount = playerGames.length;
+          tickerItems.push({
+            type: "personal",
+            label: "GAMES PLAYED",
+            value: `${streakCount} Games`,
+            change: null,
+            direction: null,
+          });
+        } else {
+          tickerItems.push(
+            { type: "personal", label: "YOUR PPG", value: "0.0", change: null, direction: null },
+            { type: "personal", label: "YOUR GRADE", value: "N/A", change: null, direction: null },
+            { type: "personal", label: "YOUR RANK", value: "N/A", change: null, direction: null },
+            { type: "personal", label: "GAMES PLAYED", value: "0 Games", change: null, direction: null },
+          );
+        }
+      }
+
+      const topScorerResult = await db
+        .select({
+          playerId: games.playerId,
+          avgPoints: sql<number>`AVG(${games.points})`.as("avg_points"),
+        })
+        .from(games)
+        .groupBy(games.playerId)
+        .orderBy(sql`AVG(${games.points}) DESC`)
+        .limit(1);
+
+      if (topScorerResult.length > 0) {
+        const topPlayer = await db
+          .select({ name: players.name })
+          .from(players)
+          .where(eq(players.id, topScorerResult[0].playerId))
+          .limit(1);
+
+        if (topPlayer.length > 0) {
+          const name = topPlayer[0].name;
+          const shortName = name.split(" ").length > 1
+            ? `${name.split(" ")[0]} ${name.split(" ")[1][0]}.`
+            : name;
+          tickerItems.push({
+            type: "leaderboard",
+            label: "TOP SCORER",
+            value: `${shortName} - ${Number(topScorerResult[0].avgPoints).toFixed(1)} PPG`,
+            change: null,
+            direction: null,
+          });
+        }
+      }
+
+      const gradeOrder = ['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D', 'F'];
+      const latestGames = await db
+        .select({
+          playerId: games.playerId,
+          grade: games.grade,
+        })
+        .from(games)
+        .where(sql`${games.grade} IS NOT NULL`)
+        .orderBy(desc(games.createdAt));
+
+      const playerLatestGrade: Record<number, string> = {};
+      for (const g of latestGames) {
+        if (!playerLatestGrade[g.playerId]) {
+          playerLatestGrade[g.playerId] = g.grade!;
+        }
+      }
+
+      let bestGradePlayerId: number | null = null;
+      let bestGradeValue = "N/A";
+      let bestGradeIdx = gradeOrder.length;
+      for (const [pid, grade] of Object.entries(playerLatestGrade)) {
+        const idx = gradeOrder.indexOf(grade);
+        if (idx !== -1 && idx < bestGradeIdx) {
+          bestGradeIdx = idx;
+          bestGradePlayerId = Number(pid);
+          bestGradeValue = grade;
+        }
+      }
+
+      if (bestGradePlayerId !== null) {
+        const topRatedPlayer = await db
+          .select({ name: players.name })
+          .from(players)
+          .where(eq(players.id, bestGradePlayerId))
+          .limit(1);
+
+        if (topRatedPlayer.length > 0) {
+          const name = topRatedPlayer[0].name;
+          const shortName = name.split(" ").length > 1
+            ? `${name.split(" ")[0]} ${name.split(" ")[1][0]}.`
+            : name;
+          tickerItems.push({
+            type: "leaderboard",
+            label: "TOP RATED",
+            value: `${shortName} - ${bestGradeValue}`,
+            change: null,
+            direction: null,
+          });
+        }
+      }
+
+      const allPlayerGameCounts = await db
+        .select({
+          playerId: games.playerId,
+          gameCount: count(),
+        })
+        .from(games)
+        .groupBy(games.playerId)
+        .orderBy(sql`COUNT(*) DESC`)
+        .limit(1);
+
+      if (allPlayerGameCounts.length > 0) {
+        const streakPlayer = await db
+          .select({ name: players.name })
+          .from(players)
+          .where(eq(players.id, allPlayerGameCounts[0].playerId))
+          .limit(1);
+
+        if (streakPlayer.length > 0) {
+          const name = streakPlayer[0].name;
+          const shortName = name.split(" ").length > 1
+            ? `${name.split(" ")[0]} ${name.split(" ")[1][0]}.`
+            : name;
+          tickerItems.push({
+            type: "leaderboard",
+            label: "MOST ACTIVE",
+            value: `${shortName} - ${allPlayerGameCounts[0].gameCount} Games`,
+            change: null,
+            direction: null,
+          });
+        }
+      }
+
+      res.json(tickerItems);
+    } catch (error) {
+      console.error('Error fetching ticker data:', error);
+      res.status(500).json({ message: 'Failed to fetch ticker data' });
+    }
+  });
+
   // Set user role (player or coach)
   app.post('/api/users/role', isAuthenticated, async (req: any, res) => {
     try {

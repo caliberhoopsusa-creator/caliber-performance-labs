@@ -8,6 +8,55 @@
   --font-display: 'Teko', sans-serif;
   --font-body: 'Inter', sans-serif;
 
+  --background: 0 0% 100%;
+  --foreground: 220 14% 10%;
+
+  --card: 220 10% 97%;
+  --card-foreground: 220 14% 10%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 220 14% 10%;
+
+  --primary: 220 14% 10%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 220 10% 93%;
+  --secondary-foreground: 220 14% 20%;
+
+  --muted: 220 10% 93%;
+  --muted-foreground: 220 8% 46%;
+
+  --border: 220 10% 90%;
+  --input: 220 10% 90%;
+
+  --ring: 220 14% 10%;
+
+  --sidebar-background: 220 10% 97%;
+  --sidebar-foreground: 220 14% 10%;
+  --sidebar-border: 220 10% 90%;
+
+  --grade-a: 142 71% 45%;
+  --grade-b: 142 71% 45%;
+  --grade-c: 48 96% 53%;
+  --grade-d: 350 89% 60%;
+  --grade-f: 0 84% 60%;
+
+  --gold: 45 93% 58%;
+  --platinum: 210 20% 80%;
+
+  --accent: 24 95% 53%;
+  --accent-foreground: 0 0% 100%;
+  --accent-border: 24 90% 43%;
+  --accent-hover: 24 85% 63%;
+
+  --sidebar-accent: 24 95% 53%;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-accent-border: 24 90% 43%;
+
+  --radius: 0.5rem;
+}
+
+.dark {
   --background: 220 14% 4%;
   --foreground: 0 0% 95%;
 
@@ -28,32 +77,12 @@
 
   --border: 220 10% 13%;
   --input: 220 10% 13%;
-  
+
   --ring: 0 0% 100%;
 
   --sidebar-background: 220 14% 6%;
   --sidebar-foreground: 0 0% 95%;
   --sidebar-border: 220 10% 11%;
-
-  --grade-a: 142 71% 45%;
-  --grade-b: 142 71% 45%;
-  --grade-c: 48 96% 53%;
-  --grade-d: 350 89% 60%;
-  --grade-f: 0 84% 60%;
-
-  --gold: 45 93% 58%;
-  --platinum: 210 20% 80%;
-  
-  --accent: 24 95% 53%;
-  --accent-foreground: 0 0% 100%;
-  --accent-border: 24 90% 43%;
-  --accent-hover: 24 85% 63%;
-  
-  --sidebar-accent: 24 95% 53%;
-  --sidebar-accent-foreground: 0 0% 100%;
-  --sidebar-accent-border: 24 90% 43%;
-
-  --radius: 0.5rem;
 }
 
 @layer base {
@@ -138,9 +167,9 @@
 
   .badge-elite {
     @apply relative inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider;
-    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
-    border: 1px solid rgba(255,255,255,0.15);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.05) inset;
+    background: hsl(var(--muted));
+    border: 1px solid hsl(var(--border));
+    box-shadow: 0 2px 8px hsl(var(--background) / 0.2);
   }
 
   .badge-elite::before {
@@ -148,7 +177,7 @@
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+    background: linear-gradient(180deg, hsl(var(--foreground) / 0.05) 0%, transparent 50%);
     pointer-events: none;
   }
 
@@ -195,7 +224,7 @@
 
   .focus-glow:focus {
     outline: none;
-    box-shadow: 0 0 0 2px rgba(255,255,255,0.2), 0 0 20px rgba(255,255,255,0.1);
+    box-shadow: 0 0 0 2px hsl(var(--foreground) / 0.2), 0 0 20px hsl(var(--foreground) / 0.1);
   }
 
   .grade-display {
@@ -233,7 +262,8 @@
   }
 
   .divider-fade {
-    @apply h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent;
+    @apply h-px w-full;
+    background: linear-gradient(to right, transparent, hsl(var(--border)), transparent);
   }
 
   .transition-premium {
@@ -268,11 +298,9 @@
   
   .mobile-card {
     @apply relative rounded-xl overflow-hidden;
-    background: linear-gradient(135deg, 
-      rgba(255, 255, 255, 0.04) 0%, 
-      rgba(255, 255, 255, 0.02) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    box-shadow: 0 4px 20px hsl(var(--background) / 0.15);
     transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
   
@@ -316,13 +344,11 @@
   
   .mobile-header-blur {
     @apply sticky top-0 z-40;
-    background: linear-gradient(180deg, 
-      rgba(10, 15, 25, 0.95) 0%, 
-      rgba(10, 15, 25, 0.85) 100%);
+    background: hsl(var(--background) / 0.92);
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-bottom: 1px solid hsl(var(--accent) / 0.08);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+    border-bottom: 1px solid hsl(var(--border) / 0.5);
+    box-shadow: 0 4px 20px hsl(var(--background) / 0.3);
   }
   
   .mobile-shimmer {
@@ -342,10 +368,10 @@
   
   .mobile-skeleton {
     @apply rounded-lg;
-    background: linear-gradient(90deg, 
-      hsl(220 12% 8%) 0%, 
-      hsl(220 12% 12%) 50%, 
-      hsl(220 12% 8%) 100%);
+    background: linear-gradient(90deg,
+      hsl(var(--muted)) 0%,
+      hsl(var(--muted) / 0.7) 50%,
+      hsl(var(--muted)) 100%);
     background-size: 200% 100%;
     animation: mobileShimmer 1.5s ease-in-out infinite;
   }
@@ -411,7 +437,7 @@
     position: absolute;
     inset: 1px;
     border-radius: 50%;
-    background: hsl(220 25% 7%);
+    background: hsl(var(--background));
   }
 }
 
@@ -427,11 +453,11 @@
 .skeleton-premium {
   background: linear-gradient(
     90deg,
-    hsl(220 12% 8%) 0%,
-    hsl(220 12% 12%) 20%,
-    hsl(220 12% 14%) 40%,
-    hsl(220 12% 12%) 60%,
-    hsl(220 12% 8%) 100%
+    hsl(var(--muted)) 0%,
+    hsl(var(--muted) / 0.7) 20%,
+    hsl(var(--muted) / 0.5) 40%,
+    hsl(var(--muted) / 0.7) 60%,
+    hsl(var(--muted)) 100%
   );
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.5s ease-in-out infinite;
@@ -666,7 +692,7 @@
   left: 50%;
   width: 8px;
   height: 8px;
-  background: rgba(255, 255, 255, 0.8);
+  background: hsl(var(--foreground) / 0.5);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   opacity: 0;
@@ -766,7 +792,7 @@
   }
 
   button:focus, a:focus, input:focus {
-    outline: 2px solid hsl(0 0% 100%);
+    outline: 2px solid hsl(var(--ring));
     outline-offset: 2px;
   }
   

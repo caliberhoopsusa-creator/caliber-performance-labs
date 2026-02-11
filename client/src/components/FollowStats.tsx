@@ -36,7 +36,7 @@ export function FollowStats({ playerId, onFollowersClick, onFollowingClick }: Fo
         className="flex flex-col items-center hover-elevate rounded-lg p-2 transition-all cursor-pointer"
         data-testid="button-view-followers"
       >
-        <span className="stat-value text-2xl text-white">{stats.followerCount}</span>
+        <span className="stat-value text-2xl text-foreground">{stats.followerCount}</span>
         <span className="stat-label flex items-center gap-1">
           <Users className="w-3 h-3" /> Followers
         </span>
@@ -47,7 +47,7 @@ export function FollowStats({ playerId, onFollowersClick, onFollowingClick }: Fo
         className="flex flex-col items-center hover-elevate rounded-lg p-2 transition-all cursor-pointer"
         data-testid="button-view-following"
       >
-        <span className="stat-value text-2xl text-white">{stats.followingCount}</span>
+        <span className="stat-value text-2xl text-foreground">{stats.followingCount}</span>
         <span className="stat-label flex items-center gap-1">
           <Users className="w-3 h-3" /> Following
         </span>

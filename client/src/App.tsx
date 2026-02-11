@@ -23,6 +23,8 @@ import { useOffline } from "@/hooks/use-offline";
 import { useToast } from "@/hooks/use-toast";
 import { useEquippedItems } from "@/contexts/EquippedItemsContext";
 import { CaliberLogo } from "@/components/CaliberLogo";
+import { DarkModeToggle } from "@/components/DarkModeToggle";
+import { StatsTicker } from "@/components/StatsTicker";
 import { Loader2, ChevronLeft, Coins, Package } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
@@ -187,7 +189,7 @@ function PublicPricing() {
       <header className="sticky top-0 z-50 backdrop-blur-lg bg-background/80 border-b border-border">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
           <Link href="/">
-            <Button variant="ghost" size="sm" className="text-white/70" data-testid="button-back-home">
+            <Button variant="ghost" size="sm" className="text-muted-foreground" data-testid="button-back-home">
               <ChevronLeft className="w-4 h-4 mr-1" />
               Back
             </Button>
@@ -303,9 +305,11 @@ function MainRouter() {
             </div>
             <div className="flex items-center gap-2 overflow-visible">
               <OfflineIndicator />
+              <DarkModeToggle />
               <NotificationBell />
             </div>
           </header>
+          <StatsTicker />
           <main className="relative z-10 flex-1 p-4 pb-24 md:px-8 md:pb-8 w-full max-w-[1600px] mx-auto overflow-x-hidden overflow-y-auto">
             <PageTransition>
               <Switch>
@@ -415,6 +419,15 @@ function MainRouter() {
 }
 
 function App() {
+  useEffect(() => {
+    const stored = localStorage.getItem("caliber-theme");
+    if (stored === "light") {
+      document.documentElement.classList.remove("dark");
+    } else {
+      document.documentElement.classList.add("dark");
+    }
+  }, []);
+
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>

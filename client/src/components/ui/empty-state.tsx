@@ -54,7 +54,7 @@ export function EmptyState({
       
       {/* Text content */}
       <h3 className={cn(
-        "font-display font-semibold text-white mb-2",
+        "font-display font-semibold text-foreground mb-2",
         isCompact ? "text-lg" : "text-xl"
       )}>
         {title}

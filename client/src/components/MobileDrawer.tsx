@@ -195,7 +195,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
                 <CaliberLogo size={44} color={drawerThemeColor} className="relative" />
               </div>
               <div>
-                <h2 className="font-display font-bold text-white text-xl uppercase tracking-wider">Caliber</h2>
+                <h2 className="font-display font-bold text-foreground text-xl uppercase tracking-wider">Caliber</h2>
                 <p className="text-[10px] text-accent/80 uppercase tracking-[0.2em] font-medium">{userRole} Mode</p>
               </div>
             </div>
@@ -278,7 +278,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
                                   ? "text-accent bg-accent/5 hover:bg-accent/10"
                                   : needsUpgrade
                                   ? "text-muted-foreground/60"
-                                  : "text-muted-foreground hover:text-white hover:bg-white/5"
+                                  : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
                               )}
                               data-testid={`mobile-drawer-${item.href.replace(/\//g, '-').replace(/^-/, '') || 'home'}`}
                             >
