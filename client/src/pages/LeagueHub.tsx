@@ -74,7 +74,7 @@ function generateJoinCode(): string {
 
 function LeagueCardSkeleton() {
   return (
-    <Card className="border-accent/[0.08] bg-gradient-to-br from-black/60 to-black/30 relative overflow-hidden">
+    <Card className="border-accent/[0.08] bg-gradient-to-br from-muted/80 to-muted/40 dark:from-black/60 dark:to-black/30 relative overflow-hidden">
       <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
       <CardContent className="p-5">
         <div className="flex items-start gap-4">
@@ -111,8 +111,8 @@ function LeagueCard({ league, index }: LeagueCardProps) {
         <Card
           className={cn(
             "group cursor-pointer transition-all duration-300 h-full overflow-hidden relative",
-            "bg-gradient-to-br from-black/60 to-black/30 backdrop-blur-sm",
-            "hover:scale-[1.02] hover:-translate-y-1 border-white/10",
+            "bg-gradient-to-br from-muted/80 to-muted/40 dark:from-black/60 dark:to-black/30 backdrop-blur-sm",
+            "hover:scale-[1.02] hover:-translate-y-1 border-border",
             "hover:border-accent/30"
           )}
           data-testid={`card-league-${league.id}`}
@@ -178,13 +178,13 @@ function LeagueCard({ league, index }: LeagueCardProps) {
                 {isBasketball ? "Basketball" : "Football"}
               </Badge>
 
-              <Badge variant="outline" className="text-xs gap-1 py-0.5 border-white/10 bg-white/5">
+              <Badge variant="outline" className="text-xs gap-1 py-0.5 border-border bg-white/5">
                 <Users className="w-3 h-3 text-accent" />
                 {league.teamCount ?? 0} / {league.maxTeams ?? 12} Teams
               </Badge>
 
               {league.gameFormat && (
-                <Badge variant="outline" className="text-xs gap-1 py-0.5 border-white/10 bg-white/5">
+                <Badge variant="outline" className="text-xs gap-1 py-0.5 border-border bg-white/5">
                   <Trophy className="w-3 h-3 text-accent" />
                   {GAME_FORMAT_LABELS[league.gameFormat] || league.gameFormat}
                 </Badge>
@@ -480,7 +480,7 @@ export default function LeagueHub() {
                   </Select>
                 </div>
 
-                <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-border">
                   <div>
                     <Label htmlFor="league-public" className="text-sm font-medium">
                       Public League
@@ -518,7 +518,7 @@ export default function LeagueHub() {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 border-b border-white/10 pb-1">
+      <div className="flex items-center gap-2 border-b border-border pb-1">
         <Button
           variant="ghost"
           size="sm"
@@ -575,7 +575,7 @@ export default function LeagueHub() {
           ))}
         </div>
       ) : filteredLeagues.length === 0 ? (
-        <Card className="border-white/10 bg-gradient-to-br from-black/60 to-black/30">
+        <Card className="border-border bg-gradient-to-br from-muted/80 to-muted/40 dark:from-black/60 dark:to-black/30">
           <CardContent className="flex flex-col items-center justify-center py-16">
             <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mb-4">
               <Trophy className="w-8 h-8 text-accent" />

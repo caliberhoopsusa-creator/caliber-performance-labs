@@ -133,7 +133,7 @@ function FeedActivityCard({ activity }: { activity: FeedActivity }) {
       <div className="relative z-10 flex gap-3">
         {activity.playerId && (
           <Link href={`/players/${activity.playerId}`}>
-            <Avatar className="w-10 h-10 border-2 border-white/10 cursor-pointer hover:border-accent/50 transition-colors shrink-0">
+            <Avatar className="w-10 h-10 border-2 border-border cursor-pointer hover:border-accent/50 transition-colors shrink-0">
               <AvatarFallback className="bg-gradient-to-br from-accent/20 to-secondary text-white font-display font-bold text-sm">
                 {initials}
               </AvatarFallback>
@@ -145,7 +145,7 @@ function FeedActivityCard({ activity }: { activity: FeedActivity }) {
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             {activity.playerName && activity.playerId && (
               <Link href={`/players/${activity.playerId}`}>
-                <span className="text-sm font-semibold text-white hover:text-accent transition-colors cursor-pointer">
+                <span className="text-sm font-semibold text-foreground hover:text-accent transition-colors cursor-pointer">
                   {activity.playerName}
                 </span>
               </Link>
@@ -156,7 +156,7 @@ function FeedActivityCard({ activity }: { activity: FeedActivity }) {
             </Badge>
           </div>
           
-          <p className="text-white font-medium text-sm leading-snug mb-1">
+          <p className="text-foreground font-medium text-sm leading-snug mb-1">
             {activity.headline}
           </p>
           
@@ -213,7 +213,7 @@ function PlayerCard({ player }: { player: PlayerWithStats }) {
       <div className="relative z-10 flex items-center gap-4">
         <div className="relative">
           <Link href={`/players/${player.id}`}>
-            <Avatar className="w-14 h-14 border-2 border-white/10 cursor-pointer hover:border-accent/50 transition-colors">
+            <Avatar className="w-14 h-14 border-2 border-border cursor-pointer hover:border-accent/50 transition-colors">
               <AvatarFallback className="bg-gradient-to-br from-accent/20 to-secondary text-white font-display font-bold text-lg">
                 {initials}
               </AvatarFallback>
@@ -230,7 +230,7 @@ function PlayerCard({ player }: { player: PlayerWithStats }) {
         <div className="flex-1 min-w-0">
           <Link href={`/players/${player.id}`}>
             <h3
-              className="text-base font-bold text-white leading-tight mb-0.5 truncate hover:text-accent transition-colors cursor-pointer"
+              className="text-base font-bold text-foreground leading-tight mb-0.5 truncate hover:text-accent transition-colors cursor-pointer"
               data-testid={`text-player-name-${player.id}`}
             >
               {player.name}
@@ -319,7 +319,7 @@ function FeedTab() {
         <div className="flex flex-col items-center gap-3">
           <TrendingUp className="w-12 h-12 text-muted-foreground/50" />
           <div>
-            <p className="text-white font-display font-medium mb-1">No updates yet</p>
+            <p className="text-foreground font-display font-medium mb-1">No updates yet</p>
             <p className="text-sm text-muted-foreground">
               Follow players to see their game stats, badges, and stories here
             </p>
@@ -366,7 +366,7 @@ function DiscoverTab() {
         <Input
           type="text"
           placeholder="Search players by name, position, or team..."
-          className="w-full bg-card border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-muted-foreground"
+          className="w-full bg-card border border-border rounded-xl py-4 pl-12 pr-4 text-foreground placeholder:text-muted-foreground"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           data-testid="input-search-players"
@@ -395,7 +395,7 @@ function DiscoverTab() {
             <div className="flex flex-col items-center gap-3">
               <UserPlus className="w-12 h-12 text-muted-foreground/50" />
               <div>
-                <p className="text-white font-display font-medium mb-1">No players found</p>
+                <p className="text-foreground font-display font-medium mb-1">No players found</p>
                 <p className="text-sm text-muted-foreground">
                   {search
                     ? "Try adjusting your search terms"
@@ -414,7 +414,7 @@ export default function ConnectContent() {
   return (
     <div className="space-y-6" data-testid="connect-content">
       <Tabs defaultValue="discover" className="w-full">
-        <TabsList className="w-full grid grid-cols-2 mb-4 bg-card border border-white/10" data-testid="tabs-connect">
+        <TabsList className="w-full grid grid-cols-2 mb-4 bg-card border border-border" data-testid="tabs-connect">
           <TabsTrigger value="discover" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-discover-players">
             <Search className="w-4 h-4" />
             Find Players

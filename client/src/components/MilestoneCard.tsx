@@ -126,7 +126,7 @@ export function MilestoneCard({ milestone, playerName, playerId }: MilestoneCard
           background: "linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(17,17,27,0.95) 50%, rgba(0,0,0,0.9) 100%)",
         }}
       >
-        <div className="absolute inset-0 border border-white/10 rounded-xl pointer-events-none z-10" />
+        <div className="absolute inset-0 border border-border rounded-xl pointer-events-none z-10" />
 
         <div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full blur-[80px] pointer-events-none"

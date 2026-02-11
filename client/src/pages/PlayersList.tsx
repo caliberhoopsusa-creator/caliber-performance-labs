@@ -102,9 +102,9 @@ const TIER_STYLES = {
     label: "Rising",
   },
   rookie: {
-    border: "border-white/10 hover:border-accent/30",
+    border: "border-border hover:border-accent/30",
     glow: "none",
-    badge: "bg-white/10 text-white/70",
+    badge: "bg-muted text-muted-foreground",
     icon: UserPlus,
     label: "Rookie",
   },
@@ -202,7 +202,7 @@ export default function PlayersList() {
 
   return (
     <div className="pb-24 md:pb-6 space-y-8">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 via-card to-black/60 border border-accent/20">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-muted/80 via-card to-muted/80 dark:from-black/60 dark:via-card dark:to-black/60 border border-accent/20">
         <div className="absolute inset-0 opacity-30" />
         <div className="absolute top-0 right-0 w-96 h-96 bg-accent/10 blur-[100px] rounded-full" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 blur-[80px] rounded-full" />
@@ -239,7 +239,7 @@ export default function PlayersList() {
                       Add Player
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="bg-card border-white/10 text-white max-w-md">
+                  <DialogContent className="bg-card border-border text-foreground max-w-md">
                     <DialogHeader>
                       <DialogTitle className="text-xl font-display">Add New Player</DialogTitle>
                       <DialogDescription className="text-muted-foreground">
@@ -293,7 +293,7 @@ export default function PlayersList() {
               variant="ghost" 
               size="sm" 
               onClick={clearFilters}
-              className="gap-1.5 text-muted-foreground hover:text-white"
+              className="gap-1.5 text-muted-foreground hover:text-foreground"
             >
               <X className="w-3.5 h-3.5" />
               Clear Filters
@@ -308,7 +308,7 @@ export default function PlayersList() {
               placeholder="Search players by name or team..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 bg-black/20 border-white/10 focus:border-accent/50"
+              className="pl-9 bg-muted/30 border-border focus:border-accent/50"
               data-testid="input-search-players"
             />
           </div>
@@ -323,7 +323,7 @@ export default function PlayersList() {
                   "capitalize transition-all",
                   positionFilter === position 
                     ? "bg-accent text-white border-transparent"
-                    : "border-white/10 hover:border-accent/30"
+                    : "border-border hover:border-accent/30"
                 )}
                 data-testid={`filter-position-${position.toLowerCase()}`}
               >
@@ -343,7 +343,7 @@ export default function PlayersList() {
             {search && (
               <Badge variant="outline" className="gap-1.5 border-accent/30 text-accent">
                 Search: "{search}"
-                <button onClick={() => setSearch("")} className="ml-1 hover:text-white">
+                <button onClick={() => setSearch("")} className="ml-1 hover:text-foreground">
                   <X className="w-3 h-3" />
                 </button>
               </Badge>
@@ -351,7 +351,7 @@ export default function PlayersList() {
             {positionFilter !== "All" && (
               <Badge variant="outline" className="gap-1.5 border-accent/30 text-accent">
                 Position: {positionFilter}
-                <button onClick={() => setPositionFilter("All")} className="ml-1 hover:text-white">
+                <button onClick={() => setPositionFilter("All")} className="ml-1 hover:text-foreground">
                   <X className="w-3 h-3" />
                 </button>
               </Badge>
@@ -362,7 +362,7 @@ export default function PlayersList() {
 
       {hasTeam ? (
         <Tabs defaultValue="roster" className="w-full">
-          <TabsList className="w-full grid grid-cols-2 mb-6 bg-black/40 border border-white/10 p-1 rounded-xl" data-testid="tabs-roster">
+          <TabsList className="w-full grid grid-cols-2 mb-6 bg-black/40 border border-border p-1 rounded-xl" data-testid="tabs-roster">
             <TabsTrigger 
               value="roster" 
               className="gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent/20 data-[state=active]:to-accent/10 data-[state=active]:border-accent/30 data-[state=active]:text-accent rounded-lg transition-all" 
@@ -431,7 +431,7 @@ export default function PlayersList() {
                     <Send className="w-5 h-5 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(24, 95%, 53%))" }} />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm text-white font-medium">Invite players to your team</p>
+                    <p className="text-sm text-foreground font-medium">Invite players to your team</p>
                     <p className="text-xs text-muted-foreground">Share your team code: <span className="text-accent font-bold">{primaryTeam?.code}</span></p>
                   </div>
                   <Button 
@@ -517,16 +517,16 @@ export default function PlayersList() {
       )}
 
       <AlertDialog open={!!playerToDelete} onOpenChange={(open) => !open && setPlayerToDelete(null)}>
-        <AlertDialogContent className="bg-card border-white/10 text-white">
+        <AlertDialogContent className="bg-card border-border text-foreground">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-display">Remove Player</AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground">
-              Are you sure you want to remove <span className="text-white font-semibold">{playerToDelete?.name}</span> from your roster? 
+              Are you sure you want to remove <span className="text-foreground font-semibold">{playerToDelete?.name}</span> from your roster? 
               This will also delete all of their game history and stats. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-secondary/30 border-white/10 text-white">
+            <AlertDialogCancel className="bg-secondary/30 border-border text-foreground">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
@@ -556,7 +556,7 @@ function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps)
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative overflow-hidden text-center py-20 border border-border rounded-2xl bg-gradient-to-br from-black/40 to-black/20"
+      className="relative overflow-hidden text-center py-20 border border-border rounded-2xl bg-gradient-to-br from-muted/60 to-muted/30 dark:from-black/40 dark:to-black/20"
     >
       <div className="absolute inset-0 opacity-10" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-accent/5 blur-[80px] rounded-full" />
@@ -571,7 +571,7 @@ function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps)
             />
           </div>
         </div>
-        <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
+        <h3 className="text-xl font-bold text-foreground mb-2">{title}</h3>
         <p className="text-muted-foreground max-w-sm mx-auto mb-6">{description}</p>
         {action}
       </div>
@@ -626,7 +626,7 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
               <Card
                 className={cn(
                   "h-full relative overflow-hidden transition-all duration-300",
-                  "bg-gradient-to-br from-black/60 to-black/30 backdrop-blur-xl",
+                  "bg-gradient-to-br from-muted/80 to-muted/40 dark:from-black/60 dark:to-black/30 backdrop-blur-xl",
                   tierStyle.border,
                   "hover:scale-[1.02]"
                 )}
@@ -658,13 +658,13 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="w-8 h-8 text-muted-foreground hover:text-white hover:bg-white/10"
+                        className="w-8 h-8 text-muted-foreground hover:text-foreground hover:bg-muted/50"
                         data-testid={`button-player-menu-${player.id}`}
                       >
                         <MoreVertical className="w-4 h-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="bg-card border-white/10 text-white">
+                    <DropdownMenuContent align="end" className="bg-card border-border text-foreground">
                       <DropdownMenuItem
                         onClick={() => navigate(`/players/${player.id}`)}
                         className="gap-2 cursor-pointer"
@@ -690,7 +690,7 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
                           >
                             <Pencil className="w-4 h-4" /> Edit Profile
                           </DropdownMenuItem>
-                          <DropdownMenuSeparator className="bg-white/10" />
+                          <DropdownMenuSeparator className="bg-border" />
                           <DropdownMenuItem
                             onClick={() => setPlayerToDelete({ id: player.id, name: player.name })}
                             className="gap-2 cursor-pointer text-red-600 dark:text-red-400 focus:text-red-700 dark:focus:text-red-300 focus:bg-red-500/10"
@@ -714,7 +714,7 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
                           tier === "elite" ? "border-yellow-400/40 text-yellow-700 dark:text-yellow-300" :
                           tier === "pro" ? "border-purple-400/40 text-purple-700 dark:text-purple-300" :
                           tier === "rising" ? "border-accent/40 text-accent" :
-                          "border-white/20 text-white/70"
+                          "border-border text-muted-foreground"
                         )}
                         style={tier !== "rookie" ? { 
                           boxShadow: tier === "elite" ? "0 0 25px rgba(234, 179, 8, 0.3)" :
@@ -728,7 +728,7 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
                       </motion.div>
                     </div>
                     
-                    <h3 className="text-xl font-bold font-display text-white mb-1 group-hover:text-accent transition-colors truncate">
+                    <h3 className="text-xl font-bold font-display text-foreground mb-1 group-hover:text-accent transition-colors truncate">
                       {player.name}
                     </h3>
                     <p className="text-sm text-muted-foreground mb-4 font-medium">
@@ -743,18 +743,18 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
                       </div>
                       {player.gamesPlayed > 0 && (
                         <div className="text-xs text-muted-foreground">
-                          <span className="text-white font-medium">{player.gamesPlayed}</span> games
+                          <span className="text-foreground font-medium">{player.gamesPlayed}</span> games
                         </div>
                       )}
                     </div>
                   </Link>
                   
-                  <div className="pt-4 border-t border-white/5 flex items-center gap-2">
+                  <div className="pt-4 border-t border-border/50 flex items-center gap-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => navigate(`/players/${player.id}`)}
-                      className="flex-1 gap-1.5 border-white/10 hover:border-accent/30 hover:bg-accent/10"
+                      className="flex-1 gap-1.5 border-border hover:border-accent/30 hover:bg-accent/10"
                       data-testid={`button-view-player-${player.id}`}
                     >
                       <Eye className="w-3.5 h-3.5" /> View
@@ -775,7 +775,7 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
                           variant="outline"
                           size="sm"
                           onClick={() => navigate(`/players/${player.id}?edit=true`)}
-                          className="flex-1 gap-1.5 border-white/10 hover:border-accent/30 hover:bg-accent/10"
+                          className="flex-1 gap-1.5 border-border hover:border-accent/30 hover:bg-accent/10"
                           data-testid={`button-edit-player-${player.id}`}
                         >
                           <Pencil className="w-3.5 h-3.5" /> Edit
@@ -832,7 +832,7 @@ function CreatePlayerForm({ onSuccess }: { onSuccess: () => void }) {
         <Input
           {...form.register("name")}
           placeholder="Enter player name"
-          className="bg-black/20 border-white/10 focus:border-accent/50"
+          className="bg-muted/30 border-border focus:border-accent/50"
           data-testid="input-player-name"
         />
         {form.formState.errors.name && (
@@ -847,10 +847,10 @@ function CreatePlayerForm({ onSuccess }: { onSuccess: () => void }) {
             value={form.watch("position")}
             onValueChange={(val) => form.setValue("position", val)}
           >
-            <SelectTrigger className="bg-black/20 border-white/10 focus:border-accent/50" data-testid="select-position">
+            <SelectTrigger className="bg-muted/30 border-border focus:border-accent/50" data-testid="select-position">
               <SelectValue placeholder="Select position" />
             </SelectTrigger>
-            <SelectContent className="bg-card border-white/10">
+            <SelectContent className="bg-card border-border">
               <SelectItem value="Guard">Guard</SelectItem>
               <SelectItem value="Forward">Forward</SelectItem>
               <SelectItem value="Center">Center</SelectItem>
@@ -864,7 +864,7 @@ function CreatePlayerForm({ onSuccess }: { onSuccess: () => void }) {
             {...form.register("jerseyNumber", { valueAsNumber: true })}
             type="number"
             placeholder="#"
-            className="bg-black/20 border-white/10 focus:border-accent/50"
+            className="bg-muted/30 border-border focus:border-accent/50"
             data-testid="input-jersey-number"
           />
         </div>
@@ -876,7 +876,7 @@ function CreatePlayerForm({ onSuccess }: { onSuccess: () => void }) {
           <Input
             {...form.register("height")}
             placeholder="e.g. 6'2"
-            className="bg-black/20 border-white/10 focus:border-accent/50"
+            className="bg-muted/30 border-border focus:border-accent/50"
             data-testid="input-height"
           />
         </div>
@@ -886,7 +886,7 @@ function CreatePlayerForm({ onSuccess }: { onSuccess: () => void }) {
           <Input
             {...form.register("team")}
             placeholder="Team name"
-            className="bg-black/20 border-white/10 focus:border-accent/50"
+            className="bg-muted/30 border-border focus:border-accent/50"
             data-testid="input-team"
           />
         </div>

@@ -286,7 +286,7 @@ export function PlayerProgression({ playerId, compact = false }: PlayerProgressi
                 className={cn(
                   "py-2 px-1 rounded-lg transition-all duration-300",
                   isCurrentTier && "bg-accent/15 border border-accent/30 shadow-lg shadow-accent/10",
-                  !isCurrentTier && isPastTier && "bg-white/5 border border-white/10",
+                  !isCurrentTier && isPastTier && "bg-muted/50 border border-border",
                   !isPastTier && "opacity-40"
                 )}
                 style={isCurrentTier && badgeStyle ? {

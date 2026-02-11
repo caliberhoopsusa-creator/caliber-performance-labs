@@ -326,7 +326,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
 
           {/* Footer with sign out */}
           <motion.div 
-            className="p-4 border-t border-accent/10 bg-gradient-to-t from-black/20 to-transparent"
+            className="p-4 border-t border-accent/10 bg-gradient-to-t from-muted/30 dark:from-black/20 to-transparent"
             initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.4, delay: 0.3 }}

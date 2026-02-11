@@ -88,11 +88,11 @@ export function HighlightUploader({ gameId, playerId }: HighlightUploaderProps) 
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-bold font-display text-white flex items-center gap-2">
+      <h3 className="text-lg font-bold font-display text-foreground flex items-center gap-2">
         <Film className="w-5 h-5 text-accent" /> Game Highlights
       </h3>
 
-      <div className="bg-secondary/20 backdrop-blur-sm p-5 rounded-xl border border-white/10 space-y-4">
+      <div className="bg-secondary/20 backdrop-blur-sm p-5 rounded-xl border border-border space-y-4">
         {uploadedVideoUrl ? (
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm text-green-400">
@@ -109,7 +109,7 @@ export function HighlightUploader({ gameId, playerId }: HighlightUploaderProps) 
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g., Game-winning three pointer"
-                  className="bg-secondary/30 border-white/10 text-white"
+                  className="bg-secondary/30 border-border text-foreground"
                   data-testid="input-highlight-title"
                 />
               </div>
@@ -122,7 +122,7 @@ export function HighlightUploader({ gameId, playerId }: HighlightUploaderProps) 
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Add details about this highlight..."
-                  className="bg-secondary/30 border-white/10 text-white min-h-[80px]"
+                  className="bg-secondary/30 border-border text-foreground min-h-[80px]"
                   data-testid="input-highlight-description"
                 />
               </div>
@@ -150,7 +150,7 @@ export function HighlightUploader({ gameId, playerId }: HighlightUploaderProps) 
                     setTitle("");
                     setDescription("");
                   }}
-                  className="border-white/10 text-white"
+                  className="border-border text-foreground"
                 >
                   Cancel
                 </Button>
@@ -201,7 +201,7 @@ export function HighlightUploader({ gameId, playerId }: HighlightUploaderProps) 
                   setUploadedVideoUrl(objectPath);
                 }
               }}
-              buttonClassName="w-full bg-secondary/50 border border-dashed border-white/20 hover:bg-secondary/70 hover:border-accent/50 text-white h-16"
+              buttonClassName="w-full bg-secondary/50 border border-dashed border-border hover:bg-secondary/70 hover:border-accent/50 text-foreground h-16"
             >
               <span className="flex items-center gap-2">
                 <Video className="w-5 h-5" />
@@ -229,13 +229,13 @@ export function HighlightUploader({ gameId, playerId }: HighlightUploaderProps) 
             {gameHighlights.map((clip) => (
               <div
                 key={clip.id}
-                className="flex items-center justify-between p-3 bg-secondary/10 rounded-lg border border-white/5"
+                className="flex items-center justify-between p-3 bg-secondary/10 rounded-lg border border-border/50"
                 data-testid={`highlight-clip-${clip.id}`}
               >
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <Video className="w-4 h-4 text-accent shrink-0" />
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-white truncate">{clip.title}</p>
+                    <p className="text-sm font-medium text-foreground truncate">{clip.title}</p>
                     {clip.description && (
                       <p className="text-xs text-muted-foreground truncate">{clip.description}</p>
                     )}

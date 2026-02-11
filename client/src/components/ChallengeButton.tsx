@@ -80,7 +80,7 @@ export default function ChallengeButton() {
       </Button>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="bg-card border-white/10 max-w-sm">
+        <DialogContent className="bg-card border-border max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Swords className="w-5 h-5 text-yellow-400" />

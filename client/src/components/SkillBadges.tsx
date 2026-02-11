@@ -171,7 +171,7 @@ function SkillBadgeCard({ badge, index }: SkillBadgeCardProps) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
             <span className={`font-semibold text-sm truncate ${colors.text}`}>{badge.name}</span>
-            <span className={`text-xs px-2 py-0.5 rounded-md font-bold backdrop-blur-sm border ${colors.text} bg-white/5 border-white/10`}>
+            <span className={`text-xs px-2 py-0.5 rounded-md font-bold backdrop-blur-sm border ${colors.text} bg-muted/50 border-border`}>
               {LEVEL_NAMES[badge.currentLevel]}
             </span>
           </div>
@@ -183,7 +183,7 @@ function SkillBadgeCard({ badge, index }: SkillBadgeCardProps) {
         <div className="relative">
           <Progress 
             value={progressPercent} 
-            className="h-2 bg-white/5"
+            className="h-2 bg-muted/50"
             data-testid={`progress-${badge.skillType}`}
           />
           {progressPercent > 0 && badge.currentLevel !== 'none' && (
@@ -223,7 +223,7 @@ export function SkillBadges({ playerId, position }: SkillBadgesProps) {
 
   if (isLoading) {
     return (
-      <Card className="p-6 border-white/5" data-testid="skill-badges-loading">
+      <Card className="p-6 border-border/50" data-testid="skill-badges-loading">
         <div className="animate-pulse space-y-3">
           <div className="h-4 bg-muted/30 rounded w-1/3"></div>
           <div className="grid grid-cols-2 gap-3">
@@ -244,7 +244,7 @@ export function SkillBadges({ playerId, position }: SkillBadgesProps) {
   const lockedBadges = filteredBadges.filter(b => b.currentLevel === 'none');
 
   return (
-    <Card className="p-6 border-white/5 overflow-hidden" data-testid="skill-badges">
+    <Card className="p-6 border-border/50 overflow-hidden" data-testid="skill-badges">
       <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
       
       <div className="relative z-10">
@@ -271,7 +271,7 @@ export function SkillBadges({ playerId, position }: SkillBadgesProps) {
         {lockedBadges.length > 0 && (
           <>
             {unlockedBadges.length > 0 && (
-              <div className="border-t border-white/5 pt-5 mt-5">
+              <div className="border-t border-border/50 pt-5 mt-5">
                 <p className="text-xs font-semibold text-muted-foreground/60 uppercase tracking-widest mb-3">Locked Badges</p>
               </div>
             )}

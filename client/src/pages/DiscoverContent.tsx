@@ -83,12 +83,12 @@ function TrendingPlayerCard({ entry }: { entry: LeaderboardEntry }) {
 
   return (
     <div
-      className="flex-shrink-0 w-48 p-4 rounded-xl border border-white/10 bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,7%)] space-y-3"
+      className="flex-shrink-0 w-48 p-4 rounded-xl border border-border bg-gradient-to-br from-card to-muted dark:from-[hsl(220,25%,10%)] dark:to-[hsl(220,25%,7%)] space-y-3"
       data-testid={`card-trending-player-${entry.playerId}`}
     >
       <div className="flex flex-col items-center text-center gap-2">
         <Link href={`/players/${entry.playerId}`}>
-          <Avatar className="w-14 h-14 border-2 border-white/10 cursor-pointer">
+          <Avatar className="w-14 h-14 border-2 border-border cursor-pointer">
             <AvatarFallback className="bg-gradient-to-br from-accent/20 to-secondary text-white font-bold text-lg">
               {initials}
             </AvatarFallback>
@@ -97,7 +97,7 @@ function TrendingPlayerCard({ entry }: { entry: LeaderboardEntry }) {
         <div className="min-w-0 w-full">
           <Link href={`/players/${entry.playerId}`}>
             <p
-              className="text-sm font-semibold text-white truncate cursor-pointer"
+              className="text-sm font-semibold text-foreground truncate cursor-pointer"
               data-testid={`text-trending-name-${entry.playerId}`}
             >
               {entry.playerName}
@@ -134,12 +134,12 @@ function SuggestedPlayerCard({ player }: { player: Player }) {
 
   return (
     <div
-      className="p-4 rounded-xl border border-white/10 bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,7%)]"
+      className="p-4 rounded-xl border border-border bg-gradient-to-br from-card to-muted dark:from-[hsl(220,25%,10%)] dark:to-[hsl(220,25%,7%)]"
       data-testid={`card-suggested-player-${player.id}`}
     >
       <div className="flex items-center gap-3">
         <Link href={`/players/${player.id}`}>
-          <Avatar className="w-12 h-12 border-2 border-white/10 cursor-pointer">
+          <Avatar className="w-12 h-12 border-2 border-border cursor-pointer">
             <AvatarFallback className="bg-gradient-to-br from-accent/20 to-secondary text-white font-bold">
               {initials}
             </AvatarFallback>
@@ -148,7 +148,7 @@ function SuggestedPlayerCard({ player }: { player: Player }) {
         <div className="flex-1 min-w-0">
           <Link href={`/players/${player.id}`}>
             <p
-              className="text-sm font-semibold text-white truncate cursor-pointer"
+              className="text-sm font-semibold text-foreground truncate cursor-pointer"
               data-testid={`text-suggested-name-${player.id}`}
             >
               {player.name}
@@ -234,7 +234,7 @@ export default function DiscoverContent() {
           <Compass className="w-5 h-5 text-accent" />
         </div>
         <div>
-          <h2 className="text-xl font-display font-bold text-white tracking-wide">Discover</h2>
+          <h2 className="text-xl font-display font-bold text-foreground tracking-wide">Discover</h2>
           <p className="text-xs text-muted-foreground">
             Find players, follow trends, and explore top performances
           </p>
@@ -247,7 +247,7 @@ export default function DiscoverContent() {
           placeholder="Search players by name..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10 bg-card border-white/10"
+          className="pl-10 bg-card border-border text-foreground"
           data-testid="input-search-players"
         />
       </div>
@@ -276,14 +276,14 @@ export default function DiscoverContent() {
           <section data-testid="section-trending">
             <div className="flex items-center gap-2 mb-4">
               <TrendingUp className="w-5 h-5 text-accent" />
-              <h3 className="text-lg font-display font-bold text-white tracking-wide">Trending Players</h3>
+              <h3 className="text-lg font-display font-bold text-foreground tracking-wide">Trending Players</h3>
             </div>
             {isLeaderboardLoading ? (
               <div className="flex gap-3 overflow-x-auto pb-2">
                 {[1, 2, 3, 4].map((i) => (
                   <div
                     key={i}
-                    className="flex-shrink-0 w-48 p-4 rounded-xl border border-white/10 animate-pulse space-y-3"
+                    className="flex-shrink-0 w-48 p-4 rounded-xl border border-border animate-pulse space-y-3"
                   >
                     <div className="flex flex-col items-center gap-2">
                       <div className="w-14 h-14 rounded-full bg-muted" />
@@ -310,7 +310,7 @@ export default function DiscoverContent() {
           <section data-testid="section-suggested">
             <div className="flex items-center gap-2 mb-4">
               <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-              <h3 className="text-lg font-display font-bold text-white tracking-wide">Suggested For You</h3>
+              <h3 className="text-lg font-display font-bold text-foreground tracking-wide">Suggested For You</h3>
             </div>
             {isPlayersLoading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -343,7 +343,7 @@ export default function DiscoverContent() {
           <section data-testid="section-top-performances">
             <div className="flex items-center gap-2 mb-4">
               <Trophy className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
-              <h3 className="text-lg font-display font-bold text-white tracking-wide">
+              <h3 className="text-lg font-display font-bold text-foreground tracking-wide">
                 Top Performances This Week
               </h3>
             </div>
@@ -369,7 +369,7 @@ export default function DiscoverContent() {
                   return (
                     <div
                       key={activity.id}
-                      className="flex items-center gap-3 p-3 rounded-xl border border-white/10 bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,7%)]"
+                      className="flex items-center gap-3 p-3 rounded-xl border border-border bg-gradient-to-br from-card to-muted dark:from-[hsl(220,25%,10%)] dark:to-[hsl(220,25%,7%)]"
                       data-testid={`card-performance-${activity.id}`}
                     >
                       <span className="text-lg font-bold text-muted-foreground w-6 text-center">
@@ -377,14 +377,14 @@ export default function DiscoverContent() {
                       </span>
                       {activity.playerId ? (
                         <Link href={`/players/${activity.playerId}`}>
-                          <Avatar className="w-9 h-9 border border-white/10 cursor-pointer shrink-0">
+                          <Avatar className="w-9 h-9 border border-border cursor-pointer shrink-0">
                             <AvatarFallback className="bg-gradient-to-br from-accent/20 to-secondary text-white text-xs font-bold">
                               {initials}
                             </AvatarFallback>
                           </Avatar>
                         </Link>
                       ) : (
-                        <Avatar className="w-9 h-9 border border-white/10 shrink-0">
+                        <Avatar className="w-9 h-9 border border-border shrink-0">
                           <AvatarFallback className="bg-gradient-to-br from-accent/20 to-secondary text-white text-xs font-bold">
                             {initials}
                           </AvatarFallback>
@@ -392,7 +392,7 @@ export default function DiscoverContent() {
                       )}
                       <div className="flex-1 min-w-0">
                         <p
-                          className="text-sm font-medium text-white truncate"
+                          className="text-sm font-medium text-foreground truncate"
                           data-testid={`text-performance-headline-${activity.id}`}
                         >
                           {activity.headline}

@@ -4,11 +4,11 @@ import { AlertCircle } from "lucide-react";
 export default function NotFound() {
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-background text-foreground">
-      <Card className="w-full max-w-md mx-4 bg-card border-white/10">
+      <Card className="w-full max-w-md mx-4 bg-card border-border">
         <CardContent className="pt-6">
           <div className="flex mb-4 gap-2">
             <AlertCircle className="h-8 w-8 text-red-500" />
-            <h1 className="text-2xl font-bold font-display text-white">404 Page Not Found</h1>
+            <h1 className="text-2xl font-bold font-display text-foreground">404 Page Not Found</h1>
           </div>
 
           <p className="mt-4 text-sm text-muted-foreground">

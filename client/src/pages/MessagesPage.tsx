@@ -216,7 +216,7 @@ export default function MessagesPage() {
   if (view === "chat") {
     return (
       <div className="flex flex-col h-full" data-testid="messages-chat-view">
-        <div className="flex items-center gap-3 p-4 border-b border-white/10">
+        <div className="flex items-center gap-3 p-4 border-b border-border">
           <Button
             variant="ghost"
             size="icon"
@@ -230,7 +230,7 @@ export default function MessagesPage() {
               {getInitials(otherPlayerName)}
             </AvatarFallback>
           </Avatar>
-          <span className="font-semibold text-white" data-testid="text-chat-player-name">
+          <span className="font-semibold text-foreground" data-testid="text-chat-player-name">
             {otherPlayerName}
           </span>
         </div>
@@ -265,7 +265,7 @@ export default function MessagesPage() {
                       className={`max-w-[75%] px-4 py-2.5 rounded-2xl ${
                         isMine
                           ? "bg-gradient-to-br from-accent to-blue-700 text-white rounded-br-md"
-                          : "bg-card border border-white/10 text-white rounded-bl-md"
+                          : "bg-card border border-border text-foreground rounded-bl-md"
                       }`}
                     >
                       <p className="text-sm break-words" data-testid={`text-message-content-${msg.id}`}>
@@ -288,13 +288,13 @@ export default function MessagesPage() {
           )}
         </ScrollArea>
 
-        <div className="flex items-center gap-2 p-4 border-t border-white/10">
+        <div className="flex items-center gap-2 p-4 border-t border-border">
           <Input
             value={messageText}
             onChange={(e) => setMessageText(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type a message..."
-            className="flex-1 bg-white/5 border-white/10"
+            className="flex-1 bg-muted/50 border-border"
             data-testid="input-message"
           />
           <Button
@@ -312,7 +312,7 @@ export default function MessagesPage() {
 
   return (
     <div className="flex flex-col h-full" data-testid="messages-inbox-view">
-      <div className="flex items-center justify-between gap-4 p-4 border-b border-white/10">
+      <div className="flex items-center justify-between gap-4 p-4 border-b border-border">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/20 to-blue-500/10 border border-accent/20 flex items-center justify-center">
             <MessageCircle className="w-5 h-5 text-accent" />
@@ -376,7 +376,7 @@ export default function MessagesPage() {
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-sm text-white" data-testid={`text-thread-name-${ts.thread.id}`}>
+                      <span className="font-semibold text-sm text-foreground" data-testid={`text-thread-name-${ts.thread.id}`}>
                         {otherName}
                       </span>
                       {ts.unreadCount > 0 && (
@@ -402,9 +402,9 @@ export default function MessagesPage() {
       </ScrollArea>
 
       <Dialog open={newMessageOpen} onOpenChange={setNewMessageOpen}>
-        <DialogContent className="bg-gradient-to-br from-black/95 to-black/80 border-white/10" data-testid="dialog-new-message">
+        <DialogContent className="bg-gradient-to-br from-muted/95 to-muted/80 dark:from-black/95 dark:to-black/80 border-border" data-testid="dialog-new-message">
           <DialogHeader>
-            <DialogTitle className="text-white">New Message</DialogTitle>
+            <DialogTitle className="text-foreground">New Message</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="relative">
@@ -413,7 +413,7 @@ export default function MessagesPage() {
                 placeholder="Search players..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 bg-white/5 border-white/10"
+                className="pl-9 bg-muted/50 border-border"
                 data-testid="input-search-players"
               />
             </div>
@@ -436,7 +436,7 @@ export default function MessagesPage() {
                           {getInitials(p.name)}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-sm font-medium text-white" data-testid={`text-player-name-${p.id}`}>
+                      <span className="text-sm font-medium text-foreground" data-testid={`text-player-name-${p.id}`}>
                         {p.name}
                       </span>
                     </div>

@@ -91,7 +91,7 @@ export default function StreakDisplay({ playerId }: { playerId: number }) {
   if (currentStreak === 0 && longestStreak === 0) return null;
 
   return (
-    <Card className="bg-gradient-to-br from-accent/10 via-black/20 to-accent/5 border-accent/20 overflow-hidden" data-testid="card-streak-display">
+    <Card className="bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20 overflow-hidden" data-testid="card-streak-display">
       <div className="p-4">
         <div className="flex items-center justify-between gap-2 mb-3">
           <div className="flex items-center gap-2">

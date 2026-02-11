@@ -1938,7 +1938,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
       </div>
       <div className="max-w-7xl mx-auto px-4 py-8">
         <Tabs defaultValue="roster" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7 max-w-4xl bg-card border border-white/10">
+          <TabsList className="grid w-full grid-cols-7 max-w-4xl bg-card border border-border">
             <TabsTrigger value="roster" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-roster">
               <UserCog className="w-4 h-4" />
               Roster

@@ -369,7 +369,7 @@ export default function ChallengesContent() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="bg-card border border-white/10">
+          <TabsList className="bg-card border border-border">
             <TabsTrigger value="active" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-active-challenges">
               <Flame className="w-4 h-4" />
               Active ({activeChallenges?.length || 0})

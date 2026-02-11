@@ -53,7 +53,7 @@ export default function PollsContent() {
   return (
     <div className="space-y-6" data-testid="polls-content">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="bg-card border border-white/10">
+        <TabsList className="bg-card border border-border">
           <TabsTrigger value="polls" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-polls-inner">
             <BarChart3 className="w-4 h-4" />
             Polls

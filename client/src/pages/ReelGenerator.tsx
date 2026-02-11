@@ -72,7 +72,7 @@ function ReelCoverCard({ data, selectedClips }: { data: ReelData; selectedClips:
             </div>
             <span className="text-sm font-black uppercase tracking-widest text-accent">Caliber</span>
           </div>
-          <Badge className="bg-white/10 text-white/70 border-white/10 text-[10px] no-default-hover-elevate no-default-active-elevate">
+          <Badge className="bg-muted text-white/70 border-border text-[10px] no-default-hover-elevate no-default-active-elevate">
             <Film className="w-3 h-3 mr-1" />
             Highlight Reel
           </Badge>
@@ -101,26 +101,26 @@ function ReelCoverCard({ data, selectedClips }: { data: ReelData; selectedClips:
           <div className="grid grid-cols-3 gap-3 w-full">
             {sport === 'basketball' ? (
               <>
-                <div className="rounded-xl bg-white/5 border border-white/10 p-2.5 text-center">
+                <div className="rounded-xl bg-muted/50 border border-border p-2.5 text-center">
                   <p className="text-xl font-black text-accent">{stat.ppg}</p>
                   <p className="text-[9px] text-white/50 uppercase">PPG</p>
                 </div>
-                <div className="rounded-xl bg-white/5 border border-white/10 p-2.5 text-center">
+                <div className="rounded-xl bg-muted/50 border border-border p-2.5 text-center">
                   <p className="text-xl font-black text-blue-400">{stat.rpg}</p>
                   <p className="text-[9px] text-white/50 uppercase">RPG</p>
                 </div>
-                <div className="rounded-xl bg-white/5 border border-white/10 p-2.5 text-center">
+                <div className="rounded-xl bg-muted/50 border border-border p-2.5 text-center">
                   <p className="text-xl font-black text-purple-400">{stat.apg}</p>
                   <p className="text-[9px] text-white/50 uppercase">APG</p>
                 </div>
               </>
             ) : (
               <>
-                <div className="rounded-xl bg-white/5 border border-white/10 p-2.5 text-center">
+                <div className="rounded-xl bg-muted/50 border border-border p-2.5 text-center">
                   <p className="text-xl font-black text-accent">{stat.tdpg}</p>
                   <p className="text-[9px] text-white/50 uppercase">TD/G</p>
                 </div>
-                <div className="rounded-xl bg-white/5 border border-white/10 p-2.5 text-center col-span-2">
+                <div className="rounded-xl bg-muted/50 border border-border p-2.5 text-center col-span-2">
                   <p className="text-xl font-black text-blue-400">{stat.ypg}</p>
                   <p className="text-[9px] text-white/50 uppercase">YDS/G</p>
                 </div>
@@ -274,7 +274,7 @@ export default function ReelGenerator() {
 
       <div className="grid md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-4">
-          <Card className="bg-black overflow-hidden border-white/10" data-testid="card-reel-preview">
+          <Card className="bg-card overflow-hidden border-border" data-testid="card-reel-preview">
             <div className="relative aspect-video">
               {currentClip ? (
                 <>

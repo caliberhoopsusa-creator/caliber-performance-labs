@@ -202,7 +202,7 @@ export function SkeletonChallengeCard({ className }: { className?: string }) {
 
 export function SkeletonLeaderboardHeader({ className }: { className?: string }) {
   return (
-    <div className={cn("relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 via-yellow-950/10 to-black/60 border border-yellow-500/20 p-6 md:p-8", className)}>
+    <div className={cn("relative overflow-hidden rounded-2xl bg-gradient-to-br from-muted/80 via-yellow-950/10 to-muted/80 dark:from-black/60 dark:via-yellow-950/10 dark:to-black/60 border border-yellow-500/20 p-6 md:p-8", className)}>
       <div className="absolute inset-0 opacity-20" />
       <div className="absolute top-0 right-0 w-80 h-80 bg-yellow-500/10 blur-[100px] rounded-full" />
       <div className="absolute bottom-0 left-0 w-48 h-48 bg-orange-500/10 blur-[60px] rounded-full" />

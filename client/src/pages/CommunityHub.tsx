@@ -77,7 +77,7 @@ export default function CommunityHub() {
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList 
-          className="w-full justify-start bg-card border border-white/10 p-1 rounded-xl overflow-x-auto flex-nowrap"
+          className="w-full justify-start bg-card border border-border p-1 rounded-xl overflow-x-auto flex-nowrap"
           data-testid="tabs-community"
         >
           <TabsTrigger 
