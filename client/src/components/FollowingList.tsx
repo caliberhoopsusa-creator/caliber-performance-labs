@@ -67,7 +67,7 @@ export function FollowingList({ playerId, showUnfollowButton = true }: Following
 
   return (
     <Card className="p-6">
-      <h3 className="text-lg font-bold font-display text-white mb-4 flex items-center gap-2">
+      <h3 className="text-lg font-bold font-display text-foreground mb-4 flex items-center gap-2">
         <Users className="w-5 h-5 text-accent" /> Following
       </h3>
 
@@ -81,7 +81,7 @@ export function FollowingList({ playerId, showUnfollowButton = true }: Following
           <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
             <Users className="w-8 h-8 text-accent/60" />
           </div>
-          <p className="text-white font-semibold mb-1">Not following anyone yet</p>
+          <p className="text-foreground font-semibold mb-1">Not following anyone yet</p>
           <p className="text-sm text-muted-foreground">Follow other players to see their updates and compare your progress</p>
         </motion.div>
       ) : (
@@ -103,7 +103,7 @@ export function FollowingList({ playerId, showUnfollowButton = true }: Following
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-white truncate">{player.name}</p>
+                  <p className="font-medium text-foreground truncate">{player.name}</p>
                   {player.position && (
                     <p className="text-xs text-muted-foreground">{player.position}</p>
                   )}

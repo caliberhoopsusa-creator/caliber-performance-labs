@@ -89,7 +89,7 @@ function StarRating({ value, size = "sm" }: { value: number; size?: "sm" | "md" 
             sizeClass,
             star <= stars
               ? "fill-accent text-accent"
-              : "text-slate-600"
+              : "text-muted-foreground"
           )}
         />
       ))}
@@ -99,7 +99,7 @@ function StarRating({ value, size = "sm" }: { value: number; size?: "sm" | "md" 
 
 function RecommendationSkeleton() {
   return (
-    <Card className="bg-gradient-to-br from-slate-900/80 to-slate-800/60 border-slate-700/50">
+    <Card className="border-border/50">
       <CardContent className="p-6 space-y-4">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -288,7 +288,7 @@ export function CoachRecommendations({
     <div className="space-y-6" data-testid="coach-recommendations">
       {isCoachViewing && (
         <Card
-          className="bg-gradient-to-br from-slate-900/80 to-slate-800/60 border-accent/20"
+          className="border-accent/20"
           data-testid="coach-actions-card"
         >
           <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-4">
@@ -296,7 +296,7 @@ export function CoachRecommendations({
               <div className="p-2 rounded-lg bg-accent/20">
                 <Quote className="w-5 h-5 text-accent" />
               </div>
-              <CardTitle className="font-display text-lg text-white tracking-wide">
+              <CardTitle className="font-display text-lg text-foreground tracking-wide">
                 Write a Recommendation
               </CardTitle>
             </div>
@@ -329,7 +329,7 @@ export function CoachRecommendations({
                         recommendation: e.target.value,
                       }))
                     }
-                    className="min-h-[120px] bg-slate-800/50 border-slate-600/50"
+                    className="min-h-[120px] bg-muted/50 border-border"
                     data-testid="textarea-recommendation"
                   />
                 </div>
@@ -347,7 +347,7 @@ export function CoachRecommendations({
                     >
                       <SelectTrigger
                         id="relationship"
-                        className="bg-slate-800/50 border-slate-600/50"
+                        className="bg-muted/50 border-border"
                         data-testid="select-relationship"
                       >
                         <SelectValue placeholder="Select relationship" />
@@ -383,7 +383,7 @@ export function CoachRecommendations({
                           yearsKnown: e.target.value,
                         }))
                       }
-                      className="bg-slate-800/50 border-slate-600/50"
+                      className="bg-muted/50 border-border"
                       data-testid="input-years-known"
                     />
                   </div>
@@ -397,12 +397,12 @@ export function CoachRecommendations({
                     {RATING_CATEGORIES.map(({ key, label, icon: Icon }) => (
                       <div
                         key={key}
-                        className="p-4 rounded-xl bg-slate-800/30 border border-slate-700/50 space-y-3"
+                        className="p-4 rounded-xl bg-muted/50 border border-border space-y-3"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <Icon className="w-4 h-4 text-accent" />
-                            <span className="text-sm text-white">{label}</span>
+                            <span className="text-sm text-foreground">{label}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <StarRating value={formData.ratings[key]} />
@@ -425,7 +425,7 @@ export function CoachRecommendations({
                   </div>
                 </div>
 
-                <div className="space-y-4 p-4 rounded-xl bg-slate-800/30 border border-slate-700/50">
+                <div className="space-y-4 p-4 rounded-xl bg-muted/50 border border-border">
                   <Label className="text-muted-foreground flex items-center gap-2">
                     <User className="w-4 h-4 text-accent" />
                     Coach Information
@@ -445,7 +445,7 @@ export function CoachRecommendations({
                             coachName: e.target.value,
                           }))
                         }
-                        className="bg-slate-800/50 border-slate-600/50"
+                        className="bg-muted/50 border-border"
                         data-testid="input-coach-name"
                       />
                     </div>
@@ -463,7 +463,7 @@ export function CoachRecommendations({
                             coachTitle: e.target.value,
                           }))
                         }
-                        className="bg-slate-800/50 border-slate-600/50"
+                        className="bg-muted/50 border-border"
                         data-testid="input-coach-title"
                       />
                     </div>
@@ -481,7 +481,7 @@ export function CoachRecommendations({
                             coachOrganization: e.target.value,
                           }))
                         }
-                        className="bg-slate-800/50 border-slate-600/50"
+                        className="bg-muted/50 border-border"
                         data-testid="input-coach-organization"
                       />
                     </div>
@@ -500,7 +500,7 @@ export function CoachRecommendations({
                             coachEmail: e.target.value,
                           }))
                         }
-                        className="bg-slate-800/50 border-slate-600/50"
+                        className="bg-muted/50 border-border"
                         data-testid="input-coach-email"
                       />
                     </div>
@@ -519,7 +519,7 @@ export function CoachRecommendations({
                             coachPhone: e.target.value,
                           }))
                         }
-                        className="bg-slate-800/50 border-slate-600/50"
+                        className="bg-muted/50 border-border"
                         data-testid="input-coach-phone"
                       />
                     </div>
@@ -581,7 +581,7 @@ export function CoachRecommendations({
       )}
 
       <Card
-        className="bg-gradient-to-br from-slate-900/80 to-slate-800/60 border-accent/20"
+        className="border-accent/20"
         data-testid="recommendations-list-card"
       >
         <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-4">
@@ -589,7 +589,7 @@ export function CoachRecommendations({
             <div className="p-2 rounded-lg bg-accent/20">
               <Quote className="w-5 h-5 text-accent" />
             </div>
-            <CardTitle className="font-display text-lg text-white tracking-wide">
+            <CardTitle className="font-display text-lg text-foreground tracking-wide">
               Coach Recommendations
             </CardTitle>
           </div>
@@ -616,7 +616,7 @@ export function CoachRecommendations({
               className="text-center py-12 text-muted-foreground"
               data-testid="empty-state"
             >
-              <Quote className="w-12 h-12 mx-auto mb-4 text-slate-600" />
+              <Quote className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
               <p className="text-lg">No recommendations yet</p>
               <p className="text-sm mt-1">
                 Coaches can write recommendations to highlight this player's abilities
@@ -627,7 +627,7 @@ export function CoachRecommendations({
               {publicRecommendations.map((rec) => (
                 <Card
                   key={rec.id}
-                  className="bg-gradient-to-br from-slate-800/50 to-slate-700/30 border-slate-600/30"
+                  className="border-border/50"
                   data-testid={`recommendation-card-${rec.id}`}
                 >
                   <CardContent className="p-6">
@@ -638,7 +638,7 @@ export function CoachRecommendations({
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <h4 className="font-semibold text-white">
+                            <h4 className="font-semibold text-foreground">
                               {rec.coachName}
                             </h4>
                             {rec.isVerified && (
@@ -688,7 +688,7 @@ export function CoachRecommendations({
                       )}
                     </div>
 
-                    <blockquote className="mt-4 pl-4 border-l-2 border-accent/30 text-slate-300 italic">
+                    <blockquote className="mt-4 pl-4 border-l-2 border-accent/30 text-muted-foreground italic">
                       "{rec.recommendation}"
                     </blockquote>
 
@@ -699,7 +699,7 @@ export function CoachRecommendations({
                       rec.characterRating) && (
                       <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
                         {rec.athleticAbilityRating && (
-                          <div className="text-center p-2 rounded-lg bg-slate-800/40">
+                          <div className="text-center p-2 rounded-lg bg-muted/50">
                             <p className="text-xs text-muted-foreground mb-1">
                               Athletic
                             </p>
@@ -707,7 +707,7 @@ export function CoachRecommendations({
                           </div>
                         )}
                         {rec.workEthicRating && (
-                          <div className="text-center p-2 rounded-lg bg-slate-800/40">
+                          <div className="text-center p-2 rounded-lg bg-muted/50">
                             <p className="text-xs text-muted-foreground mb-1">
                               Work Ethic
                             </p>
@@ -715,7 +715,7 @@ export function CoachRecommendations({
                           </div>
                         )}
                         {rec.coachabilityRating && (
-                          <div className="text-center p-2 rounded-lg bg-slate-800/40">
+                          <div className="text-center p-2 rounded-lg bg-muted/50">
                             <p className="text-xs text-muted-foreground mb-1">
                               Coachability
                             </p>
@@ -723,7 +723,7 @@ export function CoachRecommendations({
                           </div>
                         )}
                         {rec.leadershipRating && (
-                          <div className="text-center p-2 rounded-lg bg-slate-800/40">
+                          <div className="text-center p-2 rounded-lg bg-muted/50">
                             <p className="text-xs text-muted-foreground mb-1">
                               Leadership
                             </p>
@@ -731,7 +731,7 @@ export function CoachRecommendations({
                           </div>
                         )}
                         {rec.characterRating && (
-                          <div className="text-center p-2 rounded-lg bg-slate-800/40">
+                          <div className="text-center p-2 rounded-lg bg-muted/50">
                             <p className="text-xs text-muted-foreground mb-1">
                               Character
                             </p>

@@ -125,7 +125,7 @@ export default function Leaderboard() {
   if (isLoading) {
     return (
       <div className="space-y-6 pb-24 md:pb-8">
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 via-yellow-950/10 to-black/60 border border-yellow-500/20 p-6">
+        <div className="relative overflow-hidden rounded-2xl bg-card/80 border border-yellow-500/20 p-6">
           <div className="h-8 w-48 skeleton-premium rounded mb-2" />
           <div className="h-4 w-64 skeleton-premium rounded" />
         </div>
@@ -140,7 +140,7 @@ export default function Leaderboard() {
 
   return (
     <div className="space-y-6 pb-24 md:pb-8">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 via-yellow-950/10 to-black/60 border border-yellow-500/20">
+      <div className="relative overflow-hidden rounded-2xl bg-card/80 border border-yellow-500/20">
         <div className="absolute inset-0 opacity-20" />
         <div className="absolute top-0 right-0 w-80 h-80 bg-yellow-500/10 blur-[100px] rounded-full" />
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-accent/10 blur-[60px] rounded-full" />
@@ -189,14 +189,14 @@ export default function Leaderboard() {
         </div>
       </div>
 
-      <Card className="relative overflow-hidden bg-gradient-to-br from-black/60 to-black/30 border-white/10">
+      <Card className="relative overflow-hidden bg-card/80 border-border">
         <div className="absolute inset-x-[20%] top-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
         
         <CardContent className="p-4 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Filter className="w-4 h-4 text-accent" />
-              <span className="text-sm font-medium text-white">Filters</span>
+              <span className="text-sm font-medium text-foreground">Filters</span>
             </div>
             {hasFilters && (
               <Button 
@@ -219,13 +219,13 @@ export default function Leaderboard() {
                 placeholder="Search players..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 bg-black/20 border-white/10 focus:border-accent/50"
+                className="pl-9 bg-muted/50 border-border focus:border-accent/50"
                 data-testid="input-search"
               />
             </div>
             
             <Select value={stateFilter || "all"} onValueChange={(v) => setStateFilter(v === "all" ? "" : v)}>
-              <SelectTrigger className="bg-black/20 border-white/10" data-testid="select-state-filter">
+              <SelectTrigger className="bg-muted/50 border-border" data-testid="select-state-filter">
                 <SelectValue placeholder="All States" />
               </SelectTrigger>
               <SelectContent>
@@ -237,7 +237,7 @@ export default function Leaderboard() {
             </Select>
 
             <Select value={positionFilter || "all"} onValueChange={(v) => setPositionFilter(v === "all" ? "" : v)}>
-              <SelectTrigger className="bg-black/20 border-white/10" data-testid="select-position-filter">
+              <SelectTrigger className="bg-muted/50 border-border" data-testid="select-position-filter">
                 <SelectValue placeholder="All Positions" />
               </SelectTrigger>
               <SelectContent>
@@ -249,7 +249,7 @@ export default function Leaderboard() {
             </Select>
 
             <Select value={levelFilter || "all"} onValueChange={(v) => setLevelFilter(v === "all" ? "" : v)}>
-              <SelectTrigger className="bg-black/20 border-white/10" data-testid="select-level-filter">
+              <SelectTrigger className="bg-muted/50 border-border" data-testid="select-level-filter">
                 <SelectValue placeholder="All Levels" />
               </SelectTrigger>
               <SelectContent>
@@ -296,7 +296,7 @@ export default function Leaderboard() {
                           <div className={cn(
                             "w-16 h-16 rounded-xl flex items-center justify-center text-xl font-bold border-2",
                             rankStyle?.border,
-                            "bg-gradient-to-br from-white/10 to-white/5"
+                            "bg-gradient-to-br from-muted to-muted/50"
                           )}>
                             {entry.jerseyNumber || "#"}
                           </div>
@@ -311,7 +311,7 @@ export default function Leaderboard() {
                         </div>
                         
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-lg text-white truncate">{entry.name}</h3>
+                          <h3 className="font-bold text-lg text-foreground truncate">{entry.name}</h3>
                           <p className="text-sm text-muted-foreground">{entry.team || "No Team"}</p>
                           <p className="text-xs text-muted-foreground">{formatPositions(entry.position)}</p>
                         </div>
@@ -333,13 +333,13 @@ export default function Leaderboard() {
         </div>
       )}
 
-      <Card className="relative overflow-hidden bg-gradient-to-br from-black/60 to-black/30 border-white/10">
+      <Card className="relative overflow-hidden bg-card/80 border-border">
         <div className="absolute inset-x-[15%] top-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
         
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[700px]">
             <thead>
-              <tr className="bg-gradient-to-r from-accent/5 to-transparent border-b border-white/5">
+              <tr className="bg-gradient-to-r from-accent/5 to-transparent border-b border-border/50">
                 <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">Rank</th>
                 <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">Player</th>
                 <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">Grade</th>
@@ -361,7 +361,7 @@ export default function Leaderboard() {
                 <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">Games</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-border/50">
               {filteredLeaderboard.length === 0 ? (
                 <tr>
                   <td colSpan={isBasketball ? 8 : 8} className="px-6 py-4">
@@ -405,7 +405,7 @@ export default function Leaderboard() {
                                 {entry.jerseyNumber || "#"}
                               </div>
                               <div className="min-w-0">
-                                <p className="font-bold text-white group-hover:text-accent transition-colors truncate">
+                                <p className="font-bold text-foreground group-hover:text-accent transition-colors truncate">
                                   {entry.name}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
@@ -420,14 +420,14 @@ export default function Leaderboard() {
                         </td>
                         {isBasketball ? (
                           <>
-                            <td className="px-4 md:px-6 py-4 font-mono font-bold text-white">{entry.avgPoints ?? 0}</td>
+                            <td className="px-4 md:px-6 py-4 font-mono font-bold text-foreground">{entry.avgPoints ?? 0}</td>
                             <td className="px-4 md:px-6 py-4 font-mono text-accent/70">{entry.avgRebounds ?? 0}</td>
                             <td className="px-4 md:px-6 py-4 font-mono text-accent/70">{entry.avgAssists ?? 0}</td>
                             <td className="px-4 md:px-6 py-4 font-mono text-accent/70">{entry.fgPct ?? 0}%</td>
                           </>
                         ) : (
                           <>
-                            <td className="px-4 md:px-6 py-4 font-mono font-bold text-white">{entry.avgPassYds ?? 0}</td>
+                            <td className="px-4 md:px-6 py-4 font-mono font-bold text-foreground">{entry.avgPassYds ?? 0}</td>
                             <td className="px-4 md:px-6 py-4 font-mono text-accent/70">{entry.avgRushYds ?? 0}</td>
                             <td className="px-4 md:px-6 py-4 font-mono text-accent/70">{entry.avgRecYds ?? 0}</td>
                             <td className="px-4 md:px-6 py-4 font-mono text-accent/70">{entry.totalTDs ?? 0}</td>

@@ -53,7 +53,7 @@ export default function CommunityContent() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold font-display text-white tracking-wide flex items-center gap-3">
+        <h1 className="text-3xl font-bold font-display text-foreground tracking-wide flex items-center gap-3">
           <Users className="w-8 h-8 text-accent" />
           Community
         </h1>
@@ -63,7 +63,7 @@ export default function CommunityContent() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="bg-card border border-white/10">
+        <TabsList className="bg-card border border-border">
           <TabsTrigger value="polls" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-polls">
             <BarChart3 className="w-4 h-4" />
             Polls

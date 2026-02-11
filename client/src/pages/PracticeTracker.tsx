@@ -376,7 +376,7 @@ export default function PracticeTracker() {
       
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl md:text-4xl font-display font-bold uppercase tracking-wide bg-gradient-to-b from-white to-accent/20 bg-clip-text text-transparent">
+          <h2 className="text-3xl md:text-4xl font-display font-bold uppercase tracking-wide bg-gradient-to-b from-foreground to-accent/20 bg-clip-text text-transparent">
             {sport === 'basketball' ? 'Basketball' : 'Football'} Practice Tracker
           </h2>
           <p className="text-accent/50 font-medium">
@@ -532,9 +532,9 @@ export default function PracticeTracker() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
-          <Card className="bg-card/50 border-white/5">
+          <Card className="bg-card/50 border-border/50">
             <CardHeader>
-              <CardTitle className="text-lg font-display text-white flex items-center gap-2">
+              <CardTitle className="text-lg font-display text-foreground flex items-center gap-2">
                 <ClipboardList className="w-5 h-5 text-accent" />
                 Practice Sessions
               </CardTitle>
@@ -579,9 +579,9 @@ export default function PracticeTracker() {
         </div>
 
         <div className="space-y-4">
-          <Card className="bg-card/50 border-white/5" data-testid="card-attendance-summary">
+          <Card className="bg-card/50 border-border/50" data-testid="card-attendance-summary">
             <CardHeader>
-              <CardTitle className="text-lg font-display text-white flex items-center gap-2">
+              <CardTitle className="text-lg font-display text-foreground flex items-center gap-2">
                 <Users className="w-5 h-5 text-accent" />
                 Attendance Summary
               </CardTitle>
@@ -594,12 +594,12 @@ export default function PracticeTracker() {
                   const hasData = stats && stats.total > 0;
                   
                   return (
-                    <div key={player.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-white/5" data-testid={`attendance-summary-${player.id}`}>
+                    <div key={player.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50" data-testid={`attendance-summary-${player.id}`}>
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold">
                           {player.jerseyNumber || "#"}
                         </div>
-                        <span className="font-medium text-white text-sm">{player.name}</span>
+                        <span className="font-medium text-foreground text-sm">{player.name}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         {hasData ? (
@@ -625,9 +625,9 @@ export default function PracticeTracker() {
           </Card>
 
           {drills && drills.length > 0 && (
-            <Card className="bg-card/50 border-white/5" data-testid="card-drill-categories">
+            <Card className="bg-card/50 border-border/50" data-testid="card-drill-categories">
               <CardHeader>
-                <CardTitle className="text-lg font-display text-white flex items-center gap-2">
+                <CardTitle className="text-lg font-display text-foreground flex items-center gap-2">
                   <Target className="w-5 h-5 text-accent" />
                   Available Drills
                 </CardTitle>
@@ -717,12 +717,12 @@ function PracticeCard({
 
   return (
     <Collapsible open={isExpanded} onOpenChange={onToggle}>
-      <div className="rounded-lg border border-white/10 bg-secondary/20" data-testid={`practice-card-${practice.id}`}>
+      <div className="rounded-lg border border-border bg-secondary/20" data-testid={`practice-card-${practice.id}`}>
         <CollapsibleTrigger asChild>
-          <div className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/5 transition-colors" data-testid={`practice-toggle-${practice.id}`}>
+          <div className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/50 transition-colors" data-testid={`practice-toggle-${practice.id}`}>
             <div className="flex items-center gap-4">
               <div className="flex flex-col">
-                <span className="font-semibold text-white">{practice.title}</span>
+                <span className="font-semibold text-foreground">{practice.title}</span>
                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
@@ -756,7 +756,7 @@ function PracticeCard({
         </CollapsibleTrigger>
         
         <CollapsibleContent>
-          <div className="border-t border-white/10 p-4 space-y-4">
+          <div className="border-t border-border p-4 space-y-4">
             {practice.notes && (
               <div className="text-sm text-muted-foreground bg-secondary/30 p-3 rounded-lg">
                 {practice.notes}
@@ -764,7 +764,7 @@ function PracticeCard({
             )}
             
             <div className="flex items-center justify-between">
-              <h4 className="font-semibold text-white text-sm">Attendance</h4>
+              <h4 className="font-semibold text-foreground text-sm">Attendance</h4>
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" onClick={onMarkAllPresent} data-testid="button-mark-all-present">
                   <CheckCircle2 className="w-4 h-4 mr-1" />
@@ -782,7 +782,7 @@ function PracticeCard({
                 if (!record) return null;
                 
                 return (
-                  <div key={player.id} className="p-3 rounded-lg bg-secondary/20 border border-white/5" data-testid={`attendance-row-${player.id}`}>
+                  <div key={player.id} className="p-3 rounded-lg bg-secondary/20 border border-border/50" data-testid={`attendance-row-${player.id}`}>
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <Checkbox
@@ -793,7 +793,7 @@ function PracticeCard({
                         <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold">
                           {player.jerseyNumber || "#"}
                         </div>
-                        <span className="font-medium text-white">{player.name}</span>
+                        <span className="font-medium text-foreground">{player.name}</span>
                       </div>
                       {record.attended ? (
                         <CheckCircle2 className="w-5 h-5 text-green-400" />
@@ -834,7 +834,7 @@ function PracticeCard({
             </div>
 
             {drills.length > 0 && (
-              <div className="border-t border-white/10 pt-4">
+              <div className="border-t border-border pt-4">
                 <Collapsible open={drillScoresOpen} onOpenChange={setDrillScoresOpen}>
                   <CollapsibleTrigger asChild>
                     <Button variant="outline" className="w-full justify-between" data-testid="button-toggle-drill-scores">
@@ -874,7 +874,7 @@ function PracticeCard({
                                 <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold">
                                   {player.jerseyNumber || "#"}
                                 </div>
-                                <span className="font-medium text-white flex-1">{player.name}</span>
+                                <span className="font-medium text-foreground flex-1">{player.name}</span>
                                 <Input
                                   type="number"
                                   placeholder="Score"

@@ -100,7 +100,7 @@ export function ChallengesPanel({ playerId }: { playerId?: number }) {
             <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
               <Trophy className="w-8 h-8 text-accent/60" />
             </div>
-            <p className="text-white font-semibold mb-1">No active challenges</p>
+            <p className="text-foreground font-semibold mb-1">No active challenges</p>
             <p className="text-sm text-muted-foreground">Join or create challenges to compete with other players and push your limits</p>
           </motion.div>
         </CardContent>
@@ -260,7 +260,7 @@ export function ChallengeCard({ challengeId }: { challengeId: number }) {
                   key={entry.playerId}
                   className={`flex items-center justify-between p-2 rounded-lg ${
                     index === 0 ? 'bg-yellow-500/10 border border-yellow-500/30' :
-                    index === 1 ? 'bg-gray-400/10' :
+                    index === 1 ? 'bg-muted/50' :
                     index === 2 ? 'bg-amber-600/10' : 'bg-muted/30'
                   }`}
                   data-testid={`leaderboard-entry-${entry.playerId}`}
@@ -268,7 +268,7 @@ export function ChallengeCard({ challengeId }: { challengeId: number }) {
                   <div className="flex items-center gap-2">
                     <span className={`font-bold text-sm w-6 ${
                       index === 0 ? 'text-yellow-500' :
-                      index === 1 ? 'text-gray-400' :
+                      index === 1 ? 'text-muted-foreground' :
                       index === 2 ? 'text-amber-600' : 'text-muted-foreground'
                     }`}>
                       #{index + 1}

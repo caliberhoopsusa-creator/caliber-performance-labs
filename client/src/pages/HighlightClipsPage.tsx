@@ -111,7 +111,7 @@ export default function HighlightClipsPage() {
 
   return (
     <div className="pb-24 md:pb-6 space-y-8">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 via-card to-black/60 border border-accent/20">
+      <div className="relative overflow-hidden rounded-2xl bg-card/80 border border-accent/20">
         <div className="absolute inset-0 opacity-30" />
         <div className="absolute top-0 right-0 w-96 h-96 bg-accent/10 blur-[100px] rounded-full" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 blur-[80px] rounded-full" />
@@ -175,7 +175,7 @@ export default function HighlightClipsPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
             >
-              <Card className="bg-gradient-to-br from-black/60 to-black/30 border-white/10 hover:border-white/20 transition-all duration-300">
+              <Card className="bg-card/80 border-border transition-all duration-300">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
                     <div className={cn(
@@ -245,7 +245,7 @@ export default function HighlightClipsPage() {
               placeholder="Search highlights..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-black/20 border-white/10 focus:border-accent/50"
+              className="pl-9 bg-muted/50 border-border focus:border-accent/50"
               data-testid="input-search-clips"
             />
           </div>
@@ -267,7 +267,7 @@ export default function HighlightClipsPage() {
                 variant={filterGameId === game.id.toString() ? "default" : "outline"}
                 onClick={() => setFilterGameId(game.id.toString())}
                 className={cn(
-                  "border-white/10",
+                  "border-border",
                   filterGameId === game.id.toString() && "bg-accent "
                 )}
                 data-testid={`filter-game-${game.id}`}
@@ -276,7 +276,7 @@ export default function HighlightClipsPage() {
               </Button>
             ))}
             {(player?.games || []).length > 3 && (
-              <Badge variant="outline" className="border-white/20 text-muted-foreground">
+              <Badge variant="outline" className="border-border text-muted-foreground">
                 +{(player?.games || []).length - 3} more
               </Badge>
             )}
@@ -297,7 +297,7 @@ export default function HighlightClipsPage() {
         <div className="absolute inset-0 opacity-20" />
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-accent/20 to-purple-500/20 border border-white/10">
+            <div className="p-3 rounded-xl bg-gradient-to-br from-accent/20 to-purple-500/20 border border-border">
               <Sparkles className="w-8 h-8 text-accent" />
             </div>
             <div>

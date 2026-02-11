@@ -299,7 +299,7 @@ export function LivePractice({ practice, onEnd, onBack }: LivePracticeProps) {
             </Button>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-display font-bold text-white" data-testid="text-practice-title">
+                <h1 className="text-2xl font-display font-bold text-foreground" data-testid="text-practice-title">
                   {practice.title}
                 </h1>
                 <Badge className="bg-green-500/20 text-green-400 border-green-500/30 animate-pulse">
@@ -319,7 +319,7 @@ export function LivePractice({ practice, onEnd, onBack }: LivePracticeProps) {
             <div className="px-6 py-3 rounded-xl" data-testid="timer-display">
               <div className="flex items-center gap-3">
                 <Timer className="w-6 h-6 text-accent" />
-                <span className="text-3xl font-mono font-bold text-white tabular-nums">
+                <span className="text-3xl font-mono font-bold text-foreground tabular-nums">
                   {formatTime(elapsedSeconds)}
                 </span>
               </div>
@@ -338,7 +338,7 @@ export function LivePractice({ practice, onEnd, onBack }: LivePracticeProps) {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 bg-card border border-white/10" data-testid="tabs-practice-mode">
+        <TabsList className="grid w-full grid-cols-2 bg-card border border-border" data-testid="tabs-practice-mode">
           <TabsTrigger value="attendance" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-attendance">
             <Users className="w-4 h-4" /> Attendance
           </TabsTrigger>

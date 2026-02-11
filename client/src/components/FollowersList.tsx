@@ -44,7 +44,7 @@ export function FollowersList({ playerId }: FollowersListProps) {
 
   return (
     <Card className="p-6">
-      <h3 className="text-lg font-bold font-display text-white mb-4 flex items-center gap-2">
+      <h3 className="text-lg font-bold font-display text-foreground mb-4 flex items-center gap-2">
         <Users className="w-5 h-5 text-accent" /> Followers
       </h3>
 
@@ -58,7 +58,7 @@ export function FollowersList({ playerId }: FollowersListProps) {
           <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
             <Users className="w-8 h-8 text-accent/60" />
           </div>
-          <p className="text-white font-semibold mb-1">No followers yet</p>
+          <p className="text-foreground font-semibold mb-1">No followers yet</p>
           <p className="text-sm text-muted-foreground">Share your profile to build your following and connect with other players</p>
         </motion.div>
       ) : (
@@ -77,7 +77,7 @@ export function FollowersList({ playerId }: FollowersListProps) {
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-white truncate">{follower.name}</p>
+                <p className="font-medium text-foreground truncate">{follower.name}</p>
                 {follower.position && (
                   <p className="text-xs text-muted-foreground">{follower.position}</p>
                 )}

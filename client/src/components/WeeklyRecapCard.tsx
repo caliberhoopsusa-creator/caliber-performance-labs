@@ -276,7 +276,7 @@ export default function WeeklyRecapCard({ playerId }: { playerId: number }) {
           </div>
 
           <div className="flex flex-wrap gap-2 justify-center">
-            <Button variant="outline" size="sm" onClick={handleDownload} className="gap-1.5 border-white/10 text-white/70 bg-white/5" data-testid="button-download-recap">
+            <Button variant="outline" size="sm" onClick={handleDownload} className="gap-1.5 border-border text-muted-foreground bg-muted/50" data-testid="button-download-recap">
               <Download className="w-3.5 h-3.5" />
               Download
             </Button>

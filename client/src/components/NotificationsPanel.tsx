@@ -58,7 +58,7 @@ export function NotificationsPanel({ onClose }: NotificationsPanelProps) {
         <div className="flex justify-center py-2">
           <SportSpinner size="sm" />
         </div>
-        <div className="flex items-center justify-between border-b border-white/10 pb-3">
+        <div className="flex items-center justify-between border-b border-border pb-3">
           <Skeleton className="h-5 w-32" />
           <Skeleton className="h-8 w-24" />
         </div>
@@ -77,7 +77,7 @@ export function NotificationsPanel({ onClose }: NotificationsPanelProps) {
 
   return (
     <div className="w-80 rounded-lg overflow-hidden" data-testid="notifications-panel">
-      <div className="flex items-center justify-between p-4 border-b border-white/10">
+      <div className="flex items-center justify-between p-4 border-b border-border">
         <h3 className="font-display text-lg font-semibold tracking-wide">Notifications</h3>
         {unreadNotifications.length > 0 && (
           <Button
@@ -109,13 +109,13 @@ export function NotificationsPanel({ onClose }: NotificationsPanelProps) {
             <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
               <Bell className="w-8 h-8 text-accent/60" />
             </div>
-            <p className="text-white font-semibold mb-1">No notifications yet</p>
+            <p className="text-foreground font-semibold mb-1">No notifications yet</p>
             <p className="text-sm text-muted-foreground">
               We'll notify you about important updates
             </p>
           </motion.div>
         ) : (
-          <div className="divide-y divide-white/5">
+          <div className="divide-y divide-border/50">
             {notifications.map((notification) => {
               const IconComponent = notificationIcons[notification.notificationType] || Bell;
               const timeAgo = notification.createdAt

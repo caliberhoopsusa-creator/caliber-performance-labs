@@ -75,7 +75,7 @@ export function VerificationQueue({ compact = false, maxItems }: Props) {
 
   if (isLoading) {
     return (
-      <Card className="p-6 bg-gradient-to-br from-black/60 to-black/30 border-white/10">
+      <Card className="p-6 bg-card/80 border-border">
         <div className="flex items-center gap-2 mb-4">
           <Skeleton className="h-5 w-5" />
           <Skeleton className="h-6 w-40" />
@@ -91,13 +91,13 @@ export function VerificationQueue({ compact = false, maxItems }: Props) {
 
   if (error) {
     return (
-      <Card className="p-6 bg-gradient-to-br from-black/60 to-black/30 border-white/10">
+      <Card className="p-6 bg-card/80 border-border">
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2 text-red-400">
             <AlertCircle className="w-5 h-5" />
             <span>Failed to load verification queue</span>
           </div>
-          <p className="text-sm text-white/60">
+          <p className="text-sm text-muted-foreground">
             This usually happens when your session has expired. Try logging out and back in.
           </p>
           <a 
@@ -116,7 +116,7 @@ export function VerificationQueue({ compact = false, maxItems }: Props) {
 
   return (
     <Card className={cn(
-      "bg-gradient-to-br from-black/60 to-black/30 border-white/10",
+      "bg-card/80 border-border",
       compact ? "p-4" : "p-6"
     )}>
       <div className="flex items-center justify-between mb-4">
@@ -124,7 +124,7 @@ export function VerificationQueue({ compact = false, maxItems }: Props) {
           <div className="p-1.5 rounded-lg bg-accent/20 border border-accent/30">
             <Shield className="w-4 h-4 text-accent" style={{ filter: "drop-shadow(0 0 6px rgba(234, 88, 12, 0.6))" }} />
           </div>
-          <h3 className="text-lg font-bold text-white">Verification Queue</h3>
+          <h3 className="text-lg font-bold text-foreground">Verification Queue</h3>
           {totalUnverified > 0 && (
             <Badge 
               variant="outline" 
@@ -138,7 +138,7 @@ export function VerificationQueue({ compact = false, maxItems }: Props) {
 
       {totalUnverified > 0 && !compact && (
         <Tabs value={sportFilter} onValueChange={(v) => setSportFilter(v as typeof sportFilter)} className="mb-4">
-          <TabsList className="bg-black/40">
+          <TabsList className="bg-muted/80">
             <TabsTrigger value="all" className="data-[state=active]:bg-accent">
               All ({totalUnverified})
             </TabsTrigger>

@@ -64,7 +64,7 @@ export default function TeamComparison() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div>
-        <h2 className="text-3xl md:text-4xl font-display font-bold text-white uppercase tracking-tight" data-testid="text-page-title">
+        <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground uppercase tracking-tight" data-testid="text-page-title">
           Team Comparison
         </h2>
         <p className="text-muted-foreground font-medium">Compare aggregate stats between two teams</p>
@@ -74,10 +74,10 @@ export default function TeamComparison() {
         <div className="space-y-4">
           <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Team 1</label>
           <Select onValueChange={setTeam1} value={team1}>
-            <SelectTrigger className="bg-card border-white/10 text-white h-14" data-testid="select-team-1">
+            <SelectTrigger className="bg-card border-border text-foreground h-14" data-testid="select-team-1">
               <SelectValue placeholder="Select first team..." />
             </SelectTrigger>
-            <SelectContent className="bg-card border-white/10 text-white">
+            <SelectContent className="bg-card border-border text-foreground">
               {teamsLoading ? (
                 <SelectItem value="loading" disabled>Loading teams...</SelectItem>
               ) : teams?.length ? (
@@ -94,10 +94,10 @@ export default function TeamComparison() {
         <div className="space-y-4">
           <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Team 2</label>
           <Select onValueChange={setTeam2} value={team2}>
-            <SelectTrigger className="bg-card border-white/10 text-white h-14" data-testid="select-team-2">
+            <SelectTrigger className="bg-card border-border text-foreground h-14" data-testid="select-team-2">
               <SelectValue placeholder="Select second team..." />
             </SelectTrigger>
-            <SelectContent className="bg-card border-white/10 text-white">
+            <SelectContent className="bg-card border-border text-foreground">
               {teamsLoading ? (
                 <SelectItem value="loading" disabled>Loading teams...</SelectItem>
               ) : teams?.length ? (
@@ -158,8 +158,8 @@ export default function TeamComparison() {
             ]}
           />
 
-          <div className="bg-card border border-white/5 rounded-2xl p-6 shadow-xl">
-            <h3 className="text-xl font-bold font-display text-white mb-6 text-center uppercase tracking-widest flex items-center justify-center gap-2">
+          <div className="bg-card border border-border/50 rounded-2xl p-6 shadow-xl">
+            <h3 className="text-xl font-bold font-display text-foreground mb-6 text-center uppercase tracking-widest flex items-center justify-center gap-2">
               <Trophy className="w-5 h-5 text-accent" />
               Best Performers
             </h3>
@@ -174,12 +174,12 @@ export default function TeamComparison() {
                     const best = getBestPerformer(team1Stats, stat as "ppg" | "rpg" | "apg");
                     if (!best) return null;
                     return (
-                      <div key={stat} className="flex items-center justify-between bg-white/5 rounded-lg px-4 py-3" data-testid={`best-performer-team1-${stat}`}>
+                      <div key={stat} className="flex items-center justify-between bg-muted/50 rounded-lg px-4 py-3" data-testid={`best-performer-team1-${stat}`}>
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center text-xs font-bold">
                             {best.jerseyNumber || "#"}
                           </div>
-                          <span className="font-medium text-white">{best.name}</span>
+                          <span className="font-medium text-foreground">{best.name}</span>
                         </div>
                         <div className="text-right">
                           <span className="text-lg font-display font-bold text-accent">
@@ -202,15 +202,15 @@ export default function TeamComparison() {
                     const best = getBestPerformer(team2Stats, stat as "ppg" | "rpg" | "apg");
                     if (!best) return null;
                     return (
-                      <div key={stat} className="flex items-center justify-between bg-white/5 rounded-lg px-4 py-3" data-testid={`best-performer-team2-${stat}`}>
+                      <div key={stat} className="flex items-center justify-between bg-muted/50 rounded-lg px-4 py-3" data-testid={`best-performer-team2-${stat}`}>
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold">
+                          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold">
                             {best.jerseyNumber || "#"}
                           </div>
-                          <span className="font-medium text-white">{best.name}</span>
+                          <span className="font-medium text-foreground">{best.name}</span>
                         </div>
                         <div className="text-right">
-                          <span className="text-lg font-display font-bold text-white">
+                          <span className="text-lg font-display font-bold text-foreground">
                             {best[stat as "ppg" | "rpg" | "apg"]}
                           </span>
                           <span className="text-xs text-muted-foreground ml-1 uppercase">{stat}</span>

@@ -160,7 +160,7 @@ function EmptyState({ onGenerate, isGenerating }: { onGenerate: () => void; isGe
       <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
         <Dumbbell className="w-8 h-8 text-accent/60" />
       </div>
-      <p className="text-white font-semibold mb-1">No Drill Recommendations</p>
+      <p className="text-foreground font-semibold mb-1">No Drill Recommendations</p>
       <p className="text-sm text-muted-foreground mb-6">
         Generate AI-powered drill suggestions based on player weaknesses
       </p>

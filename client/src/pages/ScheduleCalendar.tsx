@@ -134,7 +134,7 @@ export default function ScheduleCalendar() {
     <div className="space-y-6" data-testid="schedule-calendar-page">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-display font-bold tracking-wide uppercase text-white flex items-center gap-3">
+          <h1 className="text-3xl font-display font-bold tracking-wide uppercase text-foreground flex items-center gap-3">
             <CalendarDays className="w-8 h-8 text-accent" />
             Schedule
           </h1>
@@ -150,7 +150,7 @@ export default function ScheduleCalendar() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <Card className="border-white/10">
+          <Card className="border-border">
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-xl font-display uppercase tracking-wide flex items-center gap-2">
@@ -222,8 +222,8 @@ export default function ScheduleCalendar() {
                           className={`
                             relative h-20 p-2 rounded-lg transition-all duration-200 text-left
                             ${isCurrentMonth 
-                              ? 'bg-white/5 hover:bg-white/10' 
-                              : 'bg-transparent text-muted-foreground/50 hover:bg-white/5'
+                              ? 'bg-muted/50 hover:bg-muted' 
+                              : 'bg-transparent text-muted-foreground/50 hover:bg-muted/50'
                             }
                             ${isSelected ? 'ring-2 ring-accent bg-accent/10' : ''}
                             ${isCurrentDay ? 'border border-accent/50' : ''}
@@ -271,7 +271,7 @@ export default function ScheduleCalendar() {
         </div>
 
         <div>
-          <Card className="border-white/10">
+          <Card className="border-border">
             <CardHeader>
               <CardTitle className="text-lg font-display uppercase tracking-wide">
                 Upcoming Events
@@ -312,7 +312,7 @@ export default function ScheduleCalendar() {
             </CardContent>
           </Card>
 
-          <Card className="border-white/10 mt-6">
+          <Card className="border-border mt-6">
             <CardHeader>
               <CardTitle className="text-lg font-display uppercase tracking-wide">
                 Event Types

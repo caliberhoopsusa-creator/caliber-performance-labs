@@ -34,8 +34,8 @@ export function HighlightClipCard({
       data-testid={`highlight-clip-card-${clip.id}`}
       className={cn(
         "relative overflow-hidden rounded-xl group cursor-pointer",
-        "bg-gradient-to-br from-black/60 to-black/30",
-        "border border-white/10 hover:border-accent/40",
+        "bg-card/80",
+        "border border-border hover:border-accent/40",
         "transition-all duration-300 hover:scale-[1.02]",
         "shadow-lg hover:shadow-accent/20",
         className
@@ -71,7 +71,7 @@ export function HighlightClipCard({
         </div>
 
         {clip.duration && (
-          <div className="absolute bottom-3 right-3 bg-black/80 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-md flex items-center gap-1 border border-white/10">
+          <div className="absolute bottom-3 right-3 bg-black/80 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-md flex items-center gap-1 border border-border">
             <Clock className="w-3 h-3 text-accent" />
             {formatDuration(clip.duration)}
           </div>
@@ -88,7 +88,7 @@ export function HighlightClipCard({
           <Button
             size="icon"
             variant="ghost"
-            className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/60 backdrop-blur-sm hover:bg-red-500/80 text-white border border-white/10 hover:border-red-500/50"
+            className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 bg-card/80 backdrop-blur-sm hover:bg-red-500/80 text-foreground border border-border hover:border-red-500/50"
             onClick={(e) => {
               e.stopPropagation();
               onDelete();
@@ -101,12 +101,12 @@ export function HighlightClipCard({
       </div>
 
       <div className="p-4 space-y-2">
-        <h3 className="font-bold text-white line-clamp-1 group-hover:text-accent transition-colors duration-300">
+        <h3 className="font-bold text-foreground line-clamp-1 group-hover:text-accent transition-colors duration-300">
           {clip.title}
         </h3>
 
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/5">
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50">
             <Eye className="w-3 h-3 text-accent" />
             <span data-testid={`text-view-count-${clip.id}`}>
               {clip.viewCount.toLocaleString()} views

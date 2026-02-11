@@ -160,7 +160,7 @@ export function ScoutReportCard({ playerId, playerName, position }: Props) {
 
   if (isLoading) {
     return (
-      <Card className="p-6 bg-gradient-to-br from-black/60 to-black/30 border-white/10 backdrop-blur-sm">
+      <Card className="p-6 bg-card/80 border-border backdrop-blur-sm">
         <div className="space-y-6">
           <div className="flex items-center gap-4">
             <Skeleton className="h-20 w-20 rounded-xl" />
@@ -186,7 +186,7 @@ export function ScoutReportCard({ playerId, playerName, position }: Props) {
       transition={{ duration: 0.5 }}
       data-testid="scout-report-card"
     >
-      <Card className="overflow-hidden bg-gradient-to-br from-black/60 to-black/30 border-white/10 backdrop-blur-sm">
+      <Card className="overflow-hidden bg-card/80 border-border backdrop-blur-sm">
         <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
         
         <div className="p-6 space-y-6">
@@ -223,7 +223,7 @@ export function ScoutReportCard({ playerId, playerName, position }: Props) {
               </motion.div>
               
               <div>
-                <h3 className="text-xl font-bold text-white" data-testid="scout-report-player-name">
+                <h3 className="text-xl font-bold text-foreground" data-testid="scout-report-player-name">
                   {playerName}
                 </h3>
                 <p className="text-sm text-accent/80" data-testid="scout-report-position">
@@ -232,7 +232,7 @@ export function ScoutReportCard({ playerId, playerName, position }: Props) {
                 <div className="flex items-center gap-2 mt-1">
                   <Badge 
                     variant="outline" 
-                    className="text-xs border-white/10 bg-white/5"
+                    className="text-xs border-border bg-muted/50"
                     data-testid="scout-report-rating-count"
                   >
                     {ratingCount} {ratingCount === 1 ? 'Rating' : 'Ratings'}
@@ -281,7 +281,7 @@ export function ScoutReportCard({ playerId, playerName, position }: Props) {
                     <p className="text-xs text-muted-foreground mb-1">Verified Games</p>
                     <p className="text-2xl font-bold text-emerald-400">{verificationCount}</p>
                   </div>
-                  <div className="p-1.5 rounded-lg bg-white/5">
+                  <div className="p-1.5 rounded-lg bg-muted/50">
                     <CheckCircle className="w-4 h-4 text-emerald-400" style={{ filter: "drop-shadow(0 0 6px #34D399)" }} />
                   </div>
                 </div>
@@ -302,7 +302,7 @@ export function ScoutReportCard({ playerId, playerName, position }: Props) {
                     <p className="text-xs text-muted-foreground mb-1">Trust Score</p>
                     <p className="text-2xl font-bold text-accent">{trustScore}%</p>
                   </div>
-                  <div className="p-1.5 rounded-lg bg-white/5">
+                  <div className="p-1.5 rounded-lg bg-muted/50">
                     <Shield className="w-4 h-4 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(24, 95%, 53%))" }} />
                   </div>
                 </div>
@@ -326,7 +326,7 @@ export function ScoutReportCard({ playerId, playerName, position }: Props) {
                       {latestProjection ? `${Math.round(latestProjection.confidenceScore * 100)}%` : "—"}
                     </p>
                   </div>
-                  <div className="p-1.5 rounded-lg bg-white/5">
+                  <div className="p-1.5 rounded-lg bg-muted/50">
                     <Brain className="w-4 h-4 text-purple-400" style={{ filter: "drop-shadow(0 0 6px #A855F7)" }} />
                   </div>
                 </div>
@@ -347,7 +347,7 @@ export function ScoutReportCard({ playerId, playerName, position }: Props) {
                     <p className="text-xs text-muted-foreground mb-1">Scout Ratings</p>
                     <p className="text-2xl font-bold text-accent">{ratingCount}</p>
                   </div>
-                  <div className="p-1.5 rounded-lg bg-white/5">
+                  <div className="p-1.5 rounded-lg bg-muted/50">
                     <Star className="w-4 h-4 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(24 95% 53%))" }} />
                   </div>
                 </div>
@@ -365,7 +365,7 @@ export function ScoutReportCard({ playerId, playerName, position }: Props) {
               <Card className="p-4 bg-gradient-to-br from-purple-500/10 to-accent/10 border-purple-500/20 backdrop-blur-sm">
                 <div className="flex items-center gap-2 mb-3">
                   <Sparkles className="w-4 h-4 text-purple-400" style={{ filter: "drop-shadow(0 0 6px #A855F7)" }} />
-                  <h4 className="text-sm font-semibold text-white">AI Projection Summary</h4>
+                  <h4 className="text-sm font-semibold text-foreground">AI Projection Summary</h4>
                   <Badge variant="outline" className="text-xs border-purple-500/30 text-purple-400">
                     {latestProjection.projectionType}
                   </Badge>
@@ -391,7 +391,7 @@ export function ScoutReportCard({ playerId, playerName, position }: Props) {
                 >
                   <div className="flex items-center gap-2 mb-3">
                     <Target className="w-4 h-4 text-emerald-400" style={{ filter: "drop-shadow(0 0 6px #34D399)" }} />
-                    <h4 className="text-sm font-semibold text-white">Key Strengths</h4>
+                    <h4 className="text-sm font-semibold text-foreground">Key Strengths</h4>
                   </div>
                   <ul className="space-y-2">
                     {strengths.map((strength, idx) => (
@@ -411,7 +411,7 @@ export function ScoutReportCard({ playerId, playerName, position }: Props) {
                 >
                   <div className="flex items-center gap-2 mb-3">
                     <AlertCircle className="w-4 h-4 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(24 95% 53%))" }} />
-                    <h4 className="text-sm font-semibold text-white">Areas to Improve</h4>
+                    <h4 className="text-sm font-semibold text-foreground">Areas to Improve</h4>
                   </div>
                   <ul className="space-y-2">
                     {weaknesses.map((weakness, idx) => (
@@ -430,7 +430,7 @@ export function ScoutReportCard({ playerId, playerName, position }: Props) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.45 }}
-            className="pt-4 border-t border-white/5"
+            className="pt-4 border-t border-border/50"
             data-testid="scout-report-trust-meter"
           >
             <div className="flex items-center justify-between mb-2">
@@ -439,7 +439,7 @@ export function ScoutReportCard({ playerId, playerName, position }: Props) {
             </div>
             <Progress 
               value={trustScore} 
-              className="h-2 bg-white/10"
+              className="h-2 bg-muted"
             />
             <div className="flex justify-between mt-2 text-xs text-muted-foreground">
               <span>{verificationCount} verified games</span>

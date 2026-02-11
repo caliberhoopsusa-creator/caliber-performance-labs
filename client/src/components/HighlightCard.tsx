@@ -89,7 +89,7 @@ export function HighlightCard({
 
   return (
     <Card className="group overflow-hidden bg-card/50 border-border hover-elevate transition-all duration-300">
-      <div className="relative aspect-[9/16] bg-gradient-to-br from-slate-900 to-slate-800 overflow-hidden">
+      <div className="relative aspect-[9/16] bg-card overflow-hidden">
         {clip.thumbnailUrl ? (
           <img
             src={clip.thumbnailUrl}

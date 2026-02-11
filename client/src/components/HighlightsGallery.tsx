@@ -87,7 +87,7 @@ export function HighlightsGallery({ playerId, isOwner = false }: HighlightsGalle
           <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
             <Film className="w-8 h-8 text-accent/60" />
           </div>
-          <p className="text-white font-semibold mb-1">Failed to load highlights</p>
+          <p className="text-foreground font-semibold mb-1">Failed to load highlights</p>
           <p className="text-sm text-muted-foreground">There was an error loading the highlights. Please try again later.</p>
         </motion.div>
       </div>
@@ -106,7 +106,7 @@ export function HighlightsGallery({ playerId, isOwner = false }: HighlightsGalle
           <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
             <Film className="w-8 h-8 text-accent/60" />
           </div>
-          <p className="text-white font-semibold mb-1">No highlights yet</p>
+          <p className="text-foreground font-semibold mb-1">No highlights yet</p>
           <p className="text-sm text-muted-foreground mb-6">Upload your best plays and moments to showcase your skills.</p>
           {isOwner && (
             <Button onClick={() => setIsUploadModalOpen(true)} className="gap-2" data-testid="button-add-highlight-empty">
@@ -154,7 +154,7 @@ export function HighlightsGallery({ playerId, isOwner = false }: HighlightsGalle
               onClick={() => handleClipClick(clip)}
               data-testid={`highlight-card-${clip.id}`}
             >
-              <div className="relative aspect-video bg-black/80">
+              <div className="relative aspect-video bg-card/80">
                 {clip.thumbnailUrl ? (
                   <>
                     <img
@@ -176,7 +176,7 @@ export function HighlightsGallery({ playerId, isOwner = false }: HighlightsGalle
                     <Film className="w-12 h-12 text-muted-foreground/50" />
                   </div>
                 )}
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute inset-0 bg-card/80 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <div className="w-14 h-14 rounded-full bg-accent/90 flex items-center justify-center">
                     <Play className="w-7 h-7 text-white ml-1" />
                   </div>
@@ -188,8 +188,8 @@ export function HighlightsGallery({ playerId, isOwner = false }: HighlightsGalle
                 )}
               </div>
 
-              <div className="p-4 bg-card/50 backdrop-blur-sm border-t border-white/5">
-                <h4 className="font-bold text-white text-sm mb-1 line-clamp-1">
+              <div className="p-4 bg-card/50 backdrop-blur-sm border-t border-border/50">
+                <h4 className="font-bold text-foreground text-sm mb-1 line-clamp-1">
                   {clip.title}
                 </h4>
 

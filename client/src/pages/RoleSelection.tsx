@@ -298,7 +298,7 @@ export default function RoleSelection() {
           <div className="mx-auto h-16 w-16 rounded-2xl bg-accent flex items-center justify-center text-primary-foreground shadow-lg shadow-accent/20 mb-4">
             <Activity className="w-8 h-8" />
           </div>
-          <h1 className="text-3xl font-bold font-display text-white tracking-wider uppercase">Choose Your Path</h1>
+          <h1 className="text-3xl font-bold font-display text-foreground tracking-wider uppercase">Choose Your Path</h1>
           <p className="text-muted-foreground mt-2">{getSubtitle()}</p>
         </div>
 
@@ -331,7 +331,7 @@ export default function RoleSelection() {
                   >
                     <div className="flex flex-col items-center gap-2">
                       <BasketballIcon className={`w-8 h-8 ${playerForm.sport === 'basketball' ? 'text-accent' : 'text-muted-foreground'}`} />
-                      <span className={`text-sm font-medium ${playerForm.sport === 'basketball' ? 'text-white' : 'text-muted-foreground'}`}>
+                      <span className={`text-sm font-medium ${playerForm.sport === 'basketball' ? 'text-foreground' : 'text-muted-foreground'}`}>
                         Basketball
                       </span>
                     </div>
@@ -347,7 +347,7 @@ export default function RoleSelection() {
                   >
                     <div className="flex flex-col items-center gap-2">
                       <FootballIcon className={`w-8 h-8 ${playerForm.sport === 'football' ? 'text-accent' : 'text-muted-foreground'}`} />
-                      <span className={`text-sm font-medium ${playerForm.sport === 'football' ? 'text-white' : 'text-muted-foreground'}`}>
+                      <span className={`text-sm font-medium ${playerForm.sport === 'football' ? 'text-foreground' : 'text-muted-foreground'}`}>
                         Football
                       </span>
                     </div>
@@ -365,8 +365,8 @@ export default function RoleSelection() {
                       className={`
                         cursor-pointer rounded-lg border p-2 text-center text-sm font-medium transition-all
                         ${playerForm.positions.includes(pos)
-                          ? 'border-accent bg-accent/10 text-white'
-                          : 'border-white/10 bg-secondary/30 text-muted-foreground hover:border-white/30 hover:bg-secondary/50'
+                          ? 'border-accent bg-accent/10 text-foreground'
+                          : 'border-border bg-secondary/30 text-muted-foreground hover:border-border hover:bg-secondary/50'
                         }
                       `}
                       data-testid={`position-${pos.toLowerCase()}`}
@@ -466,7 +466,7 @@ export default function RoleSelection() {
                     <Plus className="w-8 h-8 text-accent" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold font-display text-white tracking-wide uppercase">Create a Team</h3>
+                    <h3 className="text-xl font-bold font-display text-foreground tracking-wide uppercase">Create a Team</h3>
                     <p className="text-sm text-muted-foreground mt-1">
                       Start fresh and invite your players
                     </p>
@@ -487,7 +487,7 @@ export default function RoleSelection() {
                     <Users className="w-8 h-8 text-accent" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold font-display text-white tracking-wide uppercase">Join Existing Team</h3>
+                    <h3 className="text-xl font-bold font-display text-foreground tracking-wide uppercase">Join Existing Team</h3>
                     <p className="text-sm text-muted-foreground mt-1">
                       Have a team code? Join your team
                     </p>
@@ -613,7 +613,7 @@ export default function RoleSelection() {
                   <UserCircle className="w-8 h-8 text-accent" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold font-display text-white tracking-wide uppercase">I'm a Player</h3>
+                  <h3 className="text-xl font-bold font-display text-foreground tracking-wide uppercase">I'm a Player</h3>
                   <p className="text-sm text-muted-foreground mt-1">
                     Track my own stats, earn badges, and level up my game
                   </p>
@@ -634,7 +634,7 @@ export default function RoleSelection() {
                   <ClipboardList className="w-8 h-8 text-accent" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold font-display text-white tracking-wide uppercase">I'm a Coach</h3>
+                  <h3 className="text-xl font-bold font-display text-foreground tracking-wide uppercase">I'm a Coach</h3>
                   <p className="text-sm text-muted-foreground mt-1">
                     Manage my roster, analyze players, and scout talent
                   </p>

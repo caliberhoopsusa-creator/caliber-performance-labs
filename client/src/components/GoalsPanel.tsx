@@ -166,7 +166,7 @@ export function GoalsPanel({ playerId, games }: GoalsPanelProps) {
     <div className="space-y-6">
       <Card className="p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold font-display text-white flex items-center gap-2">
+          <h3 className="text-lg font-bold font-display text-foreground flex items-center gap-2">
             <Target className="w-5 h-5 text-accent" /> Goals
           </h3>
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -288,11 +288,11 @@ export function GoalsPanel({ playerId, games }: GoalsPanelProps) {
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <div className="relative mb-4">
               <div className="absolute inset-0 bg-gradient-to-br from-accent/20 to-blue-500/20 rounded-2xl blur-xl animate-pulse-slow" />
-              <div className="relative w-14 h-14 flex items-center justify-center rounded-2xl bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-border">
+              <div className="relative w-14 h-14 flex items-center justify-center rounded-2xl bg-muted/50 border border-border">
                 <Target className="w-7 h-7 text-accent/60" />
               </div>
             </div>
-            <h3 className="font-display font-semibold text-white mb-1">Set Your First Goal</h3>
+            <h3 className="font-display font-semibold text-foreground mb-1">Set Your First Goal</h3>
             <p className="text-sm text-muted-foreground max-w-xs mb-4">
               Goals help track progress and keep players motivated. Set targets for points, assists, or grades.
             </p>
@@ -394,7 +394,7 @@ export function GoalsPanel({ playerId, games }: GoalsPanelProps) {
       </Card>
 
       <Card className="p-5">
-        <h3 className="text-lg font-bold font-display text-white flex items-center gap-2 mb-4">
+        <h3 className="text-lg font-bold font-display text-foreground flex items-center gap-2 mb-4">
           <Flame className="w-5 h-5 text-accent" /> Current Streaks
         </h3>
 

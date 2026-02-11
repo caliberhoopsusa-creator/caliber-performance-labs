@@ -31,7 +31,7 @@ export function PullToRefreshIndicator({
     >
       <div className={cn(
         "flex items-center justify-center w-10 h-10 rounded-full mt-2",
-        "bg-slate-800/90 backdrop-blur-sm border border-accent/30",
+        "bg-card/90 backdrop-blur-sm border border-accent/30",
         shouldTrigger && "border-accent/60"
       )}>
         <motion.div

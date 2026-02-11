@@ -120,7 +120,7 @@ export default function VideoAnalysis() {
     <Paywall requiredTier="pro" featureName="AI Video Analysis">
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div>
-        <h2 className="text-3xl md:text-4xl font-display font-bold text-white uppercase tracking-tight">Video Analysis</h2>
+        <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground uppercase tracking-tight">Video Analysis</h2>
         <p className="text-muted-foreground font-medium">Upload game footage or enter play-by-play to extract stats with AI</p>
       </div>
 
@@ -128,16 +128,16 @@ export default function VideoAnalysis() {
         {/* Input Section */}
         <div className="space-y-6">
           {/* Player Selection */}
-          <Card className="bg-card border-white/5">
+          <Card className="bg-card border-border/50">
             <CardHeader>
               <CardTitle className="text-lg font-display uppercase tracking-wider">Select Player</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <Select value={selectedPlayer} onValueChange={setSelectedPlayer}>
-                <SelectTrigger className="bg-background border-white/10" data-testid="select-player">
+                <SelectTrigger className="bg-background border-border" data-testid="select-player">
                   <SelectValue placeholder="Choose a player or enter custom..." />
                 </SelectTrigger>
-                <SelectContent className="bg-card border-white/10">
+                <SelectContent className="bg-card border-border">
                   {players?.map((p) => (
                     <SelectItem key={p.id} value={String(p.id)}>{p.name} ({p.position})</SelectItem>
                   ))}
@@ -150,7 +150,7 @@ export default function VideoAnalysis() {
                   placeholder="Player name..."
                   value={customPlayerName}
                   onChange={(e) => setCustomPlayerName(e.target.value)}
-                  className="bg-background border-white/10"
+                  className="bg-background border-border"
                   data-testid="input-custom-player"
                 />
               )}
@@ -159,7 +159,7 @@ export default function VideoAnalysis() {
 
           {/* Analysis Input Tabs */}
           <Tabs defaultValue="video" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-card border border-white/10">
+            <TabsList className="grid w-full grid-cols-2 bg-card border border-border">
               <TabsTrigger value="video" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-video">
                 <Video className="w-4 h-4" /> Video Upload
               </TabsTrigger>
@@ -169,12 +169,12 @@ export default function VideoAnalysis() {
             </TabsList>
 
             <TabsContent value="video">
-              <Card className="bg-card border-white/5">
+              <Card className="bg-card border-border/50">
                 <CardContent className="pt-6 space-y-4">
                   <div 
                     className={cn(
                       "border-2 border-dashed rounded-xl p-8 text-center transition-colors",
-                      videoFile ? "border-accent/50 bg-accent/5" : "border-white/10 hover:border-white/20"
+                      videoFile ? "border-accent/50 bg-accent/5" : "border-border hover:border-border"
                     )}
                   >
                     <input
@@ -189,13 +189,13 @@ export default function VideoAnalysis() {
                       {videoFile ? (
                         <div className="space-y-2">
                           <CheckCircle className="w-12 h-12 mx-auto text-accent" />
-                          <p className="font-medium text-white">{videoFile.name}</p>
+                          <p className="font-medium text-foreground">{videoFile.name}</p>
                           <p className="text-sm text-muted-foreground">{(videoFile.size / 1024 / 1024).toFixed(1)} MB</p>
                         </div>
                       ) : (
                         <div className="space-y-2">
                           <Upload className="w-12 h-12 mx-auto text-muted-foreground" />
-                          <p className="font-medium text-white">Drop video or click to upload</p>
+                          <p className="font-medium text-foreground">Drop video or click to upload</p>
                           <p className="text-sm text-muted-foreground">MP4, WebM, MOV (max 50MB)</p>
                         </div>
                       )}
@@ -225,7 +225,7 @@ export default function VideoAnalysis() {
             </TabsContent>
 
             <TabsContent value="text">
-              <Card className="bg-card border-white/5">
+              <Card className="bg-card border-border/50">
                 <CardContent className="pt-6 space-y-4">
                   <Textarea
                     placeholder="Enter play-by-play notes...
@@ -238,7 +238,7 @@ Example:
 - Q3: Blocks opponent's shot at the rim"
                     value={playByPlay}
                     onChange={(e) => setPlayByPlay(e.target.value)}
-                    className="min-h-[200px] bg-background border-white/10"
+                    className="min-h-[200px] bg-background border-border"
                     data-testid="textarea-play-by-play"
                   />
 
@@ -269,7 +269,7 @@ Example:
         {/* Results Section */}
         <div className="space-y-6">
           {result ? (
-            <Card className="bg-card border-white/5 animate-in zoom-in-95 duration-300">
+            <Card className="bg-card border-border/50 animate-in zoom-in-95 duration-300">
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span className="font-display uppercase tracking-wider">Extracted Stats</span>
@@ -287,7 +287,7 @@ Example:
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="text-center p-4 bg-accent/10 rounded-xl border border-accent/20">
-                  <h3 className="text-xl font-display font-bold text-white">{result.playerName}</h3>
+                  <h3 className="text-xl font-display font-bold text-foreground">{result.playerName}</h3>
                 </div>
 
                 {/* Main Stats */}
@@ -311,41 +311,41 @@ Example:
                     AI-Calculated Advanced Metrics
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="p-3 bg-white/5 rounded-lg">
+                    <div className="p-3 bg-muted/50 rounded-lg">
                       <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Hustle Score</div>
                       <div className="flex items-center gap-2">
-                        <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+                        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                           <div 
                             className="h-full bg-green-500 transition-all duration-500"
                             style={{ width: `${result.stats.hustleScore}%` }}
                           />
                         </div>
-                        <span className="font-mono font-bold text-white">{result.stats.hustleScore}</span>
+                        <span className="font-mono font-bold text-foreground">{result.stats.hustleScore}</span>
                       </div>
                     </div>
-                    <div className="p-3 bg-white/5 rounded-lg">
+                    <div className="p-3 bg-muted/50 rounded-lg">
                       <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Defense Rating</div>
                       <div className="flex items-center gap-2">
-                        <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+                        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                           <div 
                             className="h-full bg-blue-500 transition-all duration-500"
                             style={{ width: `${result.stats.defenseRating}%` }}
                           />
                         </div>
-                        <span className="font-mono font-bold text-white">{result.stats.defenseRating}</span>
+                        <span className="font-mono font-bold text-foreground">{result.stats.defenseRating}</span>
                       </div>
                     </div>
-                    <div className="p-3 bg-white/5 rounded-lg">
+                    <div className="p-3 bg-muted/50 rounded-lg">
                       <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Plus/Minus</div>
                       <div className={cn(
                         "font-mono font-bold text-xl",
                         (result.stats.plusMinus ?? 0) > 0 ? "text-green-500" : 
-                        (result.stats.plusMinus ?? 0) < 0 ? "text-red-500" : "text-white"
+                        (result.stats.plusMinus ?? 0) < 0 ? "text-red-500" : "text-foreground"
                       )}>
                         {(result.stats.plusMinus ?? 0) > 0 ? "+" : ""}{result.stats.plusMinus ?? 0}
                       </div>
                     </div>
-                    <div className="p-3 bg-white/5 rounded-lg">
+                    <div className="p-3 bg-muted/50 rounded-lg">
                       <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">PER</div>
                       <div className="font-mono font-bold text-xl text-purple-400">
                         {(result.stats.per ?? 15).toFixed(1)}
@@ -361,9 +361,9 @@ Example:
                 </div>
 
                 {result.observations && (
-                  <div className="p-4 bg-white/5 rounded-lg">
+                  <div className="p-4 bg-muted/50 rounded-lg">
                     <div className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Scout Notes</div>
-                    <p className="text-white/80 text-sm leading-relaxed">{result.observations}</p>
+                    <p className="text-muted-foreground text-sm leading-relaxed">{result.observations}</p>
                   </div>
                 )}
 
@@ -381,7 +381,7 @@ Example:
               </CardContent>
             </Card>
           ) : (
-            <Card className="bg-card border-white/5">
+            <Card className="bg-card border-border/50">
               <CardContent className="py-16 text-center">
                 <AlertCircle className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
                 <h3 className="text-lg font-medium text-muted-foreground">No Analysis Yet</h3>
@@ -399,14 +399,14 @@ Example:
 function StatBox({ label, value, icon: Icon, color, size = "md", negative = false }: any) {
   return (
     <div className={cn(
-      "p-3 bg-white/5 rounded-lg text-center",
+      "p-3 bg-muted/50 rounded-lg text-center",
       size === "sm" && "p-2"
     )}>
       {Icon && <Icon className={cn("w-5 h-5 mx-auto mb-1", color)} />}
       <div className={cn(
         "font-mono font-bold",
         size === "sm" ? "text-lg" : "text-2xl",
-        negative ? "text-red-400" : "text-white"
+        negative ? "text-red-400" : "text-foreground"
       )}>
         {value}
       </div>

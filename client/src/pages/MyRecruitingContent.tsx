@@ -325,7 +325,7 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
           <Button
             variant="outline"
             onClick={handleCopyLink}
-            className="border-white/20 text-white/80 hover:bg-white/10"
+            className="border-border text-muted-foreground hover:bg-muted"
             data-testid="button-copy-link"
           >
             {copiedLink ? (
@@ -342,49 +342,49 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
         <SkeletonQuickStatsGrid data-testid="quick-stats-skeleton" />
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4" data-testid="quick-stats-panel">
-          <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-border">
+          <Card className="bg-card border-border">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
                   <School className="w-5 h-5 text-accent" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-white" data-testid="stat-schools-count">{schoolsCount}</p>
+                  <p className="text-2xl font-bold text-foreground" data-testid="stat-schools-count">{schoolsCount}</p>
                   <p className="text-xs text-muted-foreground">Schools Interested</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-border">
+          <Card className="bg-card border-border">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
                   <Mail className="w-5 h-5 text-emerald-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-white" data-testid="stat-contacted-count">{contactedCount}</p>
+                  <p className="text-2xl font-bold text-foreground" data-testid="stat-contacted-count">{contactedCount}</p>
                   <p className="text-xs text-muted-foreground">Schools Contacted</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-border">
+          <Card className="bg-card border-border">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
                   <Eye className="w-5 h-5 text-purple-400" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-white" data-testid="stat-profile-views">{profileViews?.totalViews || 0}</p>
+                  <p className="text-2xl font-bold text-foreground" data-testid="stat-profile-views">{profileViews?.totalViews || 0}</p>
                   <p className="text-xs text-muted-foreground">Profile Views</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-border">
+          <Card className="bg-card border-border">
             <CardContent className="pt-6">
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
@@ -392,11 +392,11 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
                     <User className="w-4 h-4 text-accent" />
                     <p className="text-xs text-muted-foreground">Profile Complete</p>
                   </div>
-                  <p className="text-sm font-bold text-white" data-testid="stat-profile-completeness">{profileCompleteness}%</p>
+                  <p className="text-sm font-bold text-foreground" data-testid="stat-profile-completeness">{profileCompleteness}%</p>
                 </div>
                 <Progress 
                   value={profileCompleteness} 
-                  className="h-2 bg-white/10"
+                  className="h-2 bg-muted"
                   data-testid="progress-profile-completeness"
                 />
               </div>
@@ -407,9 +407,9 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
 
       <div className="grid lg:grid-cols-5 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-border">
+          <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-lg font-display text-white flex items-center gap-2">
+              <CardTitle className="text-lg font-display text-foreground flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-accent" />
                 Recruiting Timeline
               </CardTitle>
@@ -445,7 +445,7 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
 
           {nextMilestone && player?.graduationYear && (
             <Card 
-              className="bg-gradient-to-br from-accent/10 via-[hsl(220,25%,8%)] to-[hsl(220,25%,6%)] border-accent/20 shadow-[0_0_30px_rgba(6,182,212,0.1)]"
+              className="bg-gradient-to-br from-accent/10 to-card border-accent/20 shadow-[0_0_30px_rgba(6,182,212,0.1)]"
               data-testid="whats-next-card"
             >
               <CardHeader className="pb-2">
@@ -455,7 +455,7 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <h3 className="text-xl font-display font-bold text-white mb-1" data-testid="next-milestone-title">
+                <h3 className="text-xl font-display font-bold text-foreground mb-1" data-testid="next-milestone-title">
                   {nextMilestone.title}
                 </h3>
                 <p className="text-sm text-accent mb-2" data-testid="next-milestone-period">
@@ -472,9 +472,9 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
         </div>
 
         <div className="lg:col-span-3">
-          <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-border">
+          <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between gap-4 flex-wrap">
-              <CardTitle className="text-lg font-display text-white flex items-center gap-2">
+              <CardTitle className="text-lg font-display text-foreground flex items-center gap-2">
                 <Target className="w-5 h-5 text-accent" />
                 My Interested Schools
               </CardTitle>
@@ -505,7 +505,7 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
                     return (
                       <div
                         key={interest.id}
-                        className="group relative p-4 rounded-xl bg-white/5 border border-white/10 hover:border-accent/30 transition-all duration-300"
+                        className="group relative p-4 rounded-xl bg-muted/50 border border-border hover:border-accent/30 transition-all duration-300"
                         data-testid={`interest-card-${interest.collegeId}`}
                       >
                         <div className="flex items-start justify-between gap-4">
@@ -520,7 +520,7 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
                             </div>
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <h4 className="font-semibold text-white truncate" data-testid={`college-name-${interest.collegeId}`}>
+                                <h4 className="font-semibold text-foreground truncate" data-testid={`college-name-${interest.collegeId}`}>
                                   {interest.college.name}
                                 </h4>
                                 <Badge 
@@ -595,7 +595,7 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
               ) : (
                 <div className="text-center py-12" data-testid="empty-interests">
                   <School className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-white mb-2">No Schools Saved Yet</h3>
+                  <h3 className="text-lg font-semibold text-foreground mb-2">No Schools Saved Yet</h3>
                   <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
                     Start building your college list by browsing schools that match your skills and preferences.
                   </p>
@@ -614,11 +614,11 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
         </div>
       </div>
 
-      <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-border" data-testid="cta-section">
+      <Card className="bg-card border-border" data-testid="cta-section">
         <CardContent className="py-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="text-center md:text-left">
-              <h3 className="text-xl font-display font-bold text-white mb-2">
+              <h3 className="text-xl font-display font-bold text-foreground mb-2">
                 {profileCompleteness < 80 
                   ? "Complete Your Profile to Stand Out"
                   : "Keep Building Your Recruiting Profile"

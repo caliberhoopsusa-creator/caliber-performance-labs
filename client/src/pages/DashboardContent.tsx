@@ -169,7 +169,7 @@ export default function DashboardContent() {
     const isActive = sortKey === sortKeyName;
     return (
       <TableHead 
-        className="cursor-pointer hover:bg-white/5 transition-colors"
+        className="cursor-pointer hover:bg-muted/50 transition-colors"
         onClick={() => handleSort(sortKeyName)}
         data-testid={`sort-${sortKeyName}`}
       >
@@ -190,7 +190,7 @@ export default function DashboardContent() {
       <div className="space-y-8 animate-in fade-in duration-500">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <Card key={i} className="bg-gradient-to-br from-card to-card/50 border-white/5">
+            <Card key={i} className="bg-gradient-to-br from-card to-card/50 border-border/50">
               <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
                 <Skeleton className="h-4 w-24 bg-muted/30" />
                 <Skeleton className="h-5 w-5 rounded-full bg-muted/30" />
@@ -206,7 +206,7 @@ export default function DashboardContent() {
         <Skeleton className="h-16 w-full rounded-lg bg-muted/20" />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="bg-card/50 border-white/5 lg:col-span-2">
+          <Card className="bg-card/50 border-border/50 lg:col-span-2">
             <CardHeader>
               <Skeleton className="h-6 w-40 bg-muted/30" />
             </CardHeader>
@@ -217,7 +217,7 @@ export default function DashboardContent() {
             </CardContent>
           </Card>
 
-          <Card className="bg-card/50 border-white/5">
+          <Card className="bg-card/50 border-border/50">
             <CardHeader>
               <Skeleton className="h-6 w-32 bg-muted/30" />
             </CardHeader>
@@ -232,7 +232,7 @@ export default function DashboardContent() {
           </Card>
         </div>
 
-        <Card className="bg-card/50 border-white/5">
+        <Card className="bg-card/50 border-border/50">
           <CardHeader>
             <div className="flex items-center justify-between">
               <Skeleton className="h-6 w-40 bg-muted/30" />
@@ -246,7 +246,7 @@ export default function DashboardContent() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-white/5">
+                  <tr className="border-b border-border/50">
                     {[1, 2, 3, 4, 5].map((i) => (
                       <th key={i} className="text-left py-3 px-4">
                         <Skeleton className="h-4 w-16 bg-muted/20" />
@@ -256,7 +256,7 @@ export default function DashboardContent() {
                 </thead>
                 <tbody>
                   {[1, 2, 3, 4, 5].map((rowIdx) => (
-                    <tr key={rowIdx} className="border-b border-white/5">
+                    <tr key={rowIdx} className="border-b border-border/50">
                       {[1, 2, 3, 4, 5].map((colIdx) => (
                         <td key={colIdx} className="py-3 px-4">
                           <Skeleton className="h-4 w-20 bg-muted/20" />
@@ -287,61 +287,61 @@ export default function DashboardContent() {
     <Paywall requiredTier="coach_pro" featureName="Team Dashboard">
       <div className="space-y-8 animate-in fade-in duration-500">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-card to-card/50 border-white/5" data-testid="card-total-games">
+        <Card className="bg-gradient-to-br from-card to-card/50 border-border/50" data-testid="card-total-games">
           <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Total Games</CardTitle>
             <Activity className="w-5 h-5 text-accent" />
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-display font-bold text-white">{teamStats.totalGamesPlayed}</div>
+            <div className="text-4xl font-display font-bold text-foreground">{teamStats.totalGamesPlayed}</div>
             <p className="text-xs text-muted-foreground mt-1">Across {teamStats.totalPlayers} players</p>
           </CardContent>
         </Card>
 
         {effectiveSport === 'basketball' ? (
           <>
-            <Card className="bg-gradient-to-br from-card to-card/50 border-white/5" data-testid="card-team-ppg">
+            <Card className="bg-gradient-to-br from-card to-card/50 border-border/50" data-testid="card-team-ppg">
               <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Team PPG</CardTitle>
                 <Target className="w-5 h-5 text-accent" />
               </CardHeader>
               <CardContent>
-                <div className="text-4xl font-display font-bold text-white">{teamStats.teamPpg}</div>
+                <div className="text-4xl font-display font-bold text-foreground">{teamStats.teamPpg}</div>
                 <p className="text-xs text-muted-foreground mt-1">Average points per player</p>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-card to-card/50 border-white/5" data-testid="card-team-rpg">
+            <Card className="bg-gradient-to-br from-card to-card/50 border-border/50" data-testid="card-team-rpg">
               <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Team RPG</CardTitle>
                 <TrendingUp className="w-5 h-5 text-green-400" />
               </CardHeader>
               <CardContent>
-                <div className="text-4xl font-display font-bold text-white">{teamStats.teamRpg}</div>
+                <div className="text-4xl font-display font-bold text-foreground">{teamStats.teamRpg}</div>
                 <p className="text-xs text-muted-foreground mt-1">Average rebounds per player</p>
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-card to-card/50 border-white/5" data-testid="card-team-apg">
+            <Card className="bg-gradient-to-br from-card to-card/50 border-border/50" data-testid="card-team-apg">
               <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Team APG</CardTitle>
                 <Zap className="w-5 h-5 text-blue-400" />
               </CardHeader>
               <CardContent>
-                <div className="text-4xl font-display font-bold text-white">{teamStats.teamApg}</div>
+                <div className="text-4xl font-display font-bold text-foreground">{teamStats.teamApg}</div>
                 <p className="text-xs text-muted-foreground mt-1">Average assists per player</p>
               </CardContent>
             </Card>
           </>
         ) : (
           <>
-            <Card className="bg-gradient-to-br from-card to-card/50 border-white/5" data-testid="card-team-yds">
+            <Card className="bg-gradient-to-br from-card to-card/50 border-border/50" data-testid="card-team-yds">
               <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Total YDS/G</CardTitle>
                 <Target className="w-5 h-5 text-accent" />
               </CardHeader>
               <CardContent>
-                <div className="text-4xl font-display font-bold text-white">
+                <div className="text-4xl font-display font-bold text-foreground">
                   {filteredAndSortedPlayers.length > 0 
                     ? Math.round(filteredAndSortedPlayers.reduce((acc, p) => acc + (p.passYpg || 0) + (p.rushYpg || 0) + (p.recYpg || 0), 0) / filteredAndSortedPlayers.length)
                     : 0}
@@ -350,13 +350,13 @@ export default function DashboardContent() {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-card to-card/50 border-white/5" data-testid="card-team-tds">
+            <Card className="bg-gradient-to-br from-card to-card/50 border-border/50" data-testid="card-team-tds">
               <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">TD/G</CardTitle>
                 <TrendingUp className="w-5 h-5 text-green-400" />
               </CardHeader>
               <CardContent>
-                <div className="text-4xl font-display font-bold text-white">
+                <div className="text-4xl font-display font-bold text-foreground">
                   {filteredAndSortedPlayers.length > 0 
                     ? (filteredAndSortedPlayers.reduce((acc, p) => acc + (p.tdsPerGame || 0), 0) / filteredAndSortedPlayers.length).toFixed(1)
                     : 0}
@@ -365,13 +365,13 @@ export default function DashboardContent() {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-card to-card/50 border-white/5" data-testid="card-team-tackles">
+            <Card className="bg-gradient-to-br from-card to-card/50 border-border/50" data-testid="card-team-tackles">
               <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">TCK/G</CardTitle>
                 <Zap className="w-5 h-5 text-blue-400" />
               </CardHeader>
               <CardContent>
-                <div className="text-4xl font-display font-bold text-white">
+                <div className="text-4xl font-display font-bold text-foreground">
                   {filteredAndSortedPlayers.length > 0 
                     ? (filteredAndSortedPlayers.reduce((acc, p) => acc + (p.tackles || 0), 0) / filteredAndSortedPlayers.length).toFixed(1)
                     : 0}
@@ -386,9 +386,9 @@ export default function DashboardContent() {
       <VerificationQueue compact maxItems={5} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="bg-card/50 border-white/5" data-testid="card-best-performers">
+        <Card className="bg-card/50 border-border/50" data-testid="card-best-performers">
           <CardHeader>
-            <CardTitle className="text-lg font-display text-white flex items-center gap-2">
+            <CardTitle className="text-lg font-display text-foreground flex items-center gap-2">
               <Trophy className="w-5 h-5 text-accent" />
               Best Performers
             </CardTitle>
@@ -403,7 +403,7 @@ export default function DashboardContent() {
                         <Target className="w-5 h-5 text-accent" />
                         <div>
                           <p className="text-xs text-accent uppercase font-bold">Top Scorer</p>
-                          <p className="text-white font-semibold">{bestPerformers.topScorer.name}</p>
+                          <p className="text-foreground font-semibold">{bestPerformers.topScorer.name}</p>
                         </div>
                       </div>
                       <Badge variant="secondary" className="bg-accent/20 text-accent">
@@ -419,7 +419,7 @@ export default function DashboardContent() {
                         <TrendingUp className="w-5 h-5 text-green-400" />
                         <div>
                           <p className="text-xs text-green-400 uppercase font-bold">Top Rebounder</p>
-                          <p className="text-white font-semibold">{bestPerformers.topRebounder.name}</p>
+                          <p className="text-foreground font-semibold">{bestPerformers.topRebounder.name}</p>
                         </div>
                       </div>
                       <Badge variant="secondary" className="bg-green-500/20 text-green-300">
@@ -435,7 +435,7 @@ export default function DashboardContent() {
                         <Medal className="w-5 h-5 text-blue-400" />
                         <div>
                           <p className="text-xs text-blue-400 uppercase font-bold">Top Assister</p>
-                          <p className="text-white font-semibold">{bestPerformers.topAssister.name}</p>
+                          <p className="text-foreground font-semibold">{bestPerformers.topAssister.name}</p>
                         </div>
                       </div>
                       <Badge variant="secondary" className="bg-blue-500/20 text-blue-300">
@@ -457,7 +457,7 @@ export default function DashboardContent() {
                         <Target className="w-5 h-5 text-accent" />
                         <div>
                           <p className="text-xs text-accent uppercase font-bold">Top Passer</p>
-                          <p className="text-white font-semibold">{footballBestPerformers.topPasser.name}</p>
+                          <p className="text-foreground font-semibold">{footballBestPerformers.topPasser.name}</p>
                         </div>
                       </div>
                       <Badge variant="secondary" className="bg-accent/20 text-accent">
@@ -473,7 +473,7 @@ export default function DashboardContent() {
                         <TrendingUp className="w-5 h-5 text-green-400" />
                         <div>
                           <p className="text-xs text-green-400 uppercase font-bold">Top Rusher</p>
-                          <p className="text-white font-semibold">{footballBestPerformers.topRusher.name}</p>
+                          <p className="text-foreground font-semibold">{footballBestPerformers.topRusher.name}</p>
                         </div>
                       </div>
                       <Badge variant="secondary" className="bg-green-500/20 text-green-300">
@@ -489,7 +489,7 @@ export default function DashboardContent() {
                         <Shield className="w-5 h-5 text-red-400" />
                         <div>
                           <p className="text-xs text-red-400 uppercase font-bold">Top Tackler</p>
-                          <p className="text-white font-semibold">{footballBestPerformers.topTackler.name}</p>
+                          <p className="text-foreground font-semibold">{footballBestPerformers.topTackler.name}</p>
                         </div>
                       </div>
                       <Badge variant="secondary" className="bg-red-500/20 text-red-300">
@@ -506,9 +506,9 @@ export default function DashboardContent() {
           </CardContent>
         </Card>
 
-        <Card className="bg-card/50 border-white/5" data-testid="card-position-distribution">
+        <Card className="bg-card/50 border-border/50" data-testid="card-position-distribution">
           <CardHeader>
-            <CardTitle className="text-lg font-display text-white flex items-center gap-2">
+            <CardTitle className="text-lg font-display text-foreground flex items-center gap-2">
               <Users className="w-5 h-5 text-accent" />
               Position Distribution
             </CardTitle>
@@ -519,7 +519,7 @@ export default function DashboardContent() {
                 <div>
                   <div className="flex justify-between mb-1">
                     <span className="text-sm text-muted-foreground">Guards</span>
-                    <span className="text-sm font-bold text-white">{positionDistribution.Guard}</span>
+                    <span className="text-sm font-bold text-foreground">{positionDistribution.Guard}</span>
                   </div>
                   <div className="h-3 bg-secondary/30 rounded-full overflow-hidden">
                     <div 
@@ -531,7 +531,7 @@ export default function DashboardContent() {
                 <div>
                   <div className="flex justify-between mb-1">
                     <span className="text-sm text-muted-foreground">Wings</span>
-                    <span className="text-sm font-bold text-white">{positionDistribution.Wing}</span>
+                    <span className="text-sm font-bold text-foreground">{positionDistribution.Wing}</span>
                   </div>
                   <div className="h-3 bg-secondary/30 rounded-full overflow-hidden">
                     <div 
@@ -543,7 +543,7 @@ export default function DashboardContent() {
                 <div>
                   <div className="flex justify-between mb-1">
                     <span className="text-sm text-muted-foreground">Bigs</span>
-                    <span className="text-sm font-bold text-white">{positionDistribution.Big}</span>
+                    <span className="text-sm font-bold text-foreground">{positionDistribution.Big}</span>
                   </div>
                   <div className="h-3 bg-secondary/30 rounded-full overflow-hidden">
                     <div 
@@ -571,7 +571,7 @@ export default function DashboardContent() {
                     <div key={key}>
                       <div className="flex justify-between mb-1">
                         <span className="text-xs text-muted-foreground">{label}</span>
-                        <span className="text-xs font-bold text-white">{count}</span>
+                        <span className="text-xs font-bold text-foreground">{count}</span>
                       </div>
                       <div className="h-2 bg-secondary/30 rounded-full overflow-hidden">
                         <div 
@@ -587,9 +587,9 @@ export default function DashboardContent() {
           </CardContent>
         </Card>
 
-        <Card className="bg-card/50 border-white/5" data-testid="card-recent-activity">
+        <Card className="bg-card/50 border-border/50" data-testid="card-recent-activity">
           <CardHeader>
-            <CardTitle className="text-lg font-display text-white flex items-center gap-2">
+            <CardTitle className="text-lg font-display text-foreground flex items-center gap-2">
               <Calendar className="w-5 h-5 text-accent" />
               Recent Activity
             </CardTitle>
@@ -604,11 +604,11 @@ export default function DashboardContent() {
                     className="block"
                   >
                     <div 
-                      className="flex items-center justify-between p-2 rounded-lg hover:bg-white/5 transition-colors"
+                      className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors"
                       data-testid={`recent-game-${index}`}
                     >
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-white truncate">{game.playerName}</p>
+                        <p className="text-sm font-medium text-foreground truncate">{game.playerName}</p>
                         <p className="text-xs text-muted-foreground">vs {game.opponent} • {new Date(game.date).toLocaleDateString()}</p>
                       </div>
                       <div className="flex items-center gap-2">
@@ -636,16 +636,16 @@ export default function DashboardContent() {
         </Card>
       </div>
 
-      <Card className="bg-card/50 border-white/5">
+      <Card className="bg-card/50 border-border/50">
         <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <CardTitle className="text-xl font-display text-white flex items-center gap-2">
+          <CardTitle className="text-xl font-display text-foreground flex items-center gap-2">
             <Crosshair className="w-5 h-5 text-accent" />
             Roster Performance
           </CardTitle>
           <div className="flex items-center gap-3">
             {hasMixedSports && (
               <Tabs value={sportFilter} onValueChange={(v) => { setSportFilter(v as SportFilter); setPositionFilter("All"); }}>
-                <TabsList className="bg-card border border-white/10">
+                <TabsList className="bg-card border border-border">
                   <TabsTrigger value="all" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="sport-filter-all">All</TabsTrigger>
                   <TabsTrigger value="basketball" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="sport-filter-basketball">Basketball</TabsTrigger>
                   <TabsTrigger value="football" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="sport-filter-football">Football</TabsTrigger>
@@ -653,10 +653,10 @@ export default function DashboardContent() {
               </Tabs>
             )}
             <Select value={positionFilter} onValueChange={setPositionFilter} data-testid="select-position-filter">
-              <SelectTrigger className="w-[140px] bg-secondary/30 border-white/10" data-testid="filter-position-trigger">
+              <SelectTrigger className="w-[140px] bg-secondary/30 border-border" data-testid="filter-position-trigger">
                 <SelectValue placeholder="Filter Position" />
               </SelectTrigger>
-              <SelectContent className="bg-card border-white/10">
+              <SelectContent className="bg-card border-border">
                 <SelectItem value="All" data-testid="filter-all">All Positions</SelectItem>
                 {availablePositions.map((pos) => (
                   <SelectItem key={pos} value={pos} data-testid={`filter-${pos.toLowerCase()}`}>
@@ -671,7 +671,7 @@ export default function DashboardContent() {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="border-white/5 hover:bg-transparent">
+                <TableRow className="border-border/50 hover:bg-transparent">
                   <SortableHeader label="Player" sortKeyName="name" />
                   <SortableHeader label="Position" sortKeyName="position" />
                   <SortableHeader label="Grade" sortKeyName="avgGradeScore" />
@@ -707,16 +707,16 @@ export default function DashboardContent() {
                   filteredAndSortedPlayers.map((player) => (
                     <TableRow 
                       key={player.id} 
-                      className="border-white/5 hover:bg-white/5 transition-colors cursor-pointer"
+                      className="border-border/50 hover:bg-muted/50 transition-colors cursor-pointer"
                       data-testid={`player-row-${player.id}`}
                     >
                       <TableCell>
                         <Link href={`/players/${player.id}`} className="flex items-center gap-3" data-testid={`link-player-${player.id}`}>
-                          <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-sm font-bold font-display text-secondary-foreground border border-white/10">
+                          <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-sm font-bold font-display text-secondary-foreground border border-border">
                             {player.jerseyNumber || "#"}
                           </div>
                           <div>
-                            <p className="font-semibold text-white">{player.name}</p>
+                            <p className="font-semibold text-foreground">{player.name}</p>
                             {player.team && <p className="text-xs text-muted-foreground">{player.team}</p>}
                           </div>
                         </Link>

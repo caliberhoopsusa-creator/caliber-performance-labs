@@ -46,12 +46,12 @@ export function VideoPlayerModal({ clip, isOpen, onClose }: VideoPlayerModalProp
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl w-full p-0 gap-0 bg-black/95 border-white/10">
+      <DialogContent className="max-w-4xl w-full p-0 gap-0 bg-background border-border">
         <div className="relative">
           <Button
             size="icon"
             variant="ghost"
-            className="absolute top-4 right-4 z-50 text-white hover:bg-white/20"
+            className="absolute top-4 right-4 z-50 text-foreground hover:bg-muted"
             onClick={onClose}
             data-testid="button-close-video-modal"
           >
@@ -71,10 +71,10 @@ export function VideoPlayerModal({ clip, isOpen, onClose }: VideoPlayerModalProp
           </div>
         </div>
 
-        <div className="p-6 bg-card border-t border-white/10">
+        <div className="p-6 bg-card border-t border-border">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
-              <h2 className="font-display text-2xl font-bold text-white uppercase tracking-wide mb-2">
+              <h2 className="font-display text-2xl font-bold text-foreground uppercase tracking-wide mb-2">
                 {clip.title}
               </h2>
               

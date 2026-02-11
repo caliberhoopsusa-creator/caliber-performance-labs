@@ -225,7 +225,7 @@ export default function Highlights() {
           <div className="absolute inset-0 bg-accent/20 blur-3xl rounded-full" />
           <Film className="w-20 h-20 text-accent relative z-10 mb-6" />
         </div>
-        <h2 className="text-2xl font-bold text-white mb-2">No Player Profile</h2>
+        <h2 className="text-2xl font-bold text-foreground mb-2">No Player Profile</h2>
         <p className="text-muted-foreground text-center max-w-md">
           Create a player profile to start uploading and managing your highlight clips.
         </p>
@@ -237,7 +237,7 @@ export default function Highlights() {
     <div className="min-h-screen p-4 md:p-6 space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-3">
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
             <div className="relative">
               <div className="absolute inset-0 bg-accent/30 blur-xl rounded-full" />
               <Film className="w-8 h-8 text-accent relative z-10" />
@@ -500,7 +500,7 @@ export default function Highlights() {
               <div className="absolute inset-0 bg-accent/20 blur-2xl rounded-full" />
               <Film className="w-16 h-16 text-accent relative z-10" />
             </div>
-            <h3 className="text-xl font-semibold text-white mb-2">No Highlights Yet</h3>
+            <h3 className="text-xl font-semibold text-foreground mb-2">No Highlights Yet</h3>
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
               Upload your best plays and add TikTok-style stat overlays to share with scouts and fans.
             </p>

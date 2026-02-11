@@ -107,7 +107,7 @@ export default function AnalyzeGame() {
 
   return (
     <div className="pb-24 md:pb-8 space-y-8">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 via-card to-black/60 border border-accent/20">
+      <div className="relative overflow-hidden rounded-2xl bg-card/80 border border-accent/20">
         <div className="absolute inset-0 opacity-30" />
         <div className="absolute top-0 right-0 w-96 h-96 bg-accent/10 blur-[100px] rounded-full" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent/5 blur-[80px] rounded-full" />
@@ -116,7 +116,7 @@ export default function AnalyzeGame() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-2">
               <div className="flex items-center gap-3">
-                <Link href="/players" className="text-muted-foreground hover:text-white transition-colors p-2 -ml-2" data-testid="link-back">
+                <Link href="/players" className="text-muted-foreground hover:text-foreground transition-colors p-2 -ml-2" data-testid="link-back">
                   <ArrowLeft className="w-5 h-5" />
                 </Link>
                 <div className="flex items-center gap-2">
@@ -139,7 +139,7 @@ export default function AnalyzeGame() {
                 <div key={step.id} className="flex items-center">
                   <div className={cn(
                     "flex items-center gap-2 px-3 py-2 rounded-lg transition-all",
-                    "bg-black/30 border border-white/10"
+                    "bg-muted/80 border border-border"
                   )}>
                     <div className={cn(
                       "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
@@ -150,7 +150,7 @@ export default function AnalyzeGame() {
                     <span className="text-xs text-muted-foreground hidden lg:inline">{step.label}</span>
                   </div>
                   {index < STEPS.length - 1 && (
-                    <div className="w-4 h-px bg-white/10 mx-1" />
+                    <div className="w-4 h-px bg-border mx-1" />
                   )}
                 </div>
               ))}
@@ -413,7 +413,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
     >
       <motion.section 
         variants={sectionVariants}
-        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 to-black/30 border border-accent/20"
+        className="relative overflow-hidden rounded-2xl bg-card/80 border border-accent/20"
       >
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
         <div className="p-6">
@@ -432,10 +432,10 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
                   onValueChange={(val) => form.setValue("playerId", Number(val))} 
                   defaultValue={preselectedPlayerId}
                 >
-                  <SelectTrigger className="bg-black/20 border-white/10 text-white h-11 focus:border-accent/50 transition-colors" data-testid="select-player">
+                  <SelectTrigger className="bg-muted/50 border-border text-foreground h-11 focus:border-accent/50 transition-colors" data-testid="select-player">
                     <SelectValue placeholder="Select a player..." />
                   </SelectTrigger>
-                  <SelectContent className="bg-card border-white/10 text-white">
+                  <SelectContent className="bg-card border-border text-foreground">
                     {players
                       .filter((p: any) => p.sport === sport || String(p.id) === preselectedPlayerId)
                       .map((p: any) => {
@@ -449,7 +449,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
                   </SelectContent>
                 </Select>
               ) : (
-                <div className="flex items-center h-11 px-3 rounded-md bg-black/20 border border-white/10 text-white" data-testid="text-player-name">
+                <div className="flex items-center h-11 px-3 rounded-md bg-muted/50 border border-border text-foreground" data-testid="text-player-name">
                   {selectedPlayer ? (
                     <span>{selectedPlayer.name} (#{selectedPlayer.jerseyNumber}) - {selectedPlayer.sport === 'football' && FOOTBALL_POSITION_LABELS[selectedPlayer.position as FootballPosition] ? FOOTBALL_POSITION_LABELS[selectedPlayer.position as FootballPosition] : selectedPlayer.position}</span>
                   ) : (
@@ -462,18 +462,18 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
             
             <div className="space-y-2">
               <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Opponent</label>
-              <Input {...form.register("opponent")} placeholder="vs. Team Name" className="bg-black/20 border-white/10 text-white h-11 focus:border-accent/50 transition-colors" />
+              <Input {...form.register("opponent")} placeholder="vs. Team Name" className="bg-muted/50 border-border text-foreground h-11 focus:border-accent/50 transition-colors" />
               {form.formState.errors.opponent && <p className="text-red-400 text-xs">Opponent required</p>}
             </div>
 
             <div className="space-y-2">
               <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Date</label>
-              <Input type="date" {...form.register("date")} className="bg-black/20 border-white/10 text-white h-11 focus:border-accent/50 transition-colors" />
+              <Input type="date" {...form.register("date")} className="bg-muted/50 border-border text-foreground h-11 focus:border-accent/50 transition-colors" />
             </div>
 
             <div className="space-y-2">
               <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Result</label>
-              <Input {...form.register("result")} placeholder="W 105-98" className="bg-black/20 border-white/10 text-white h-11 focus:border-accent/50 transition-colors" />
+              <Input {...form.register("result")} placeholder="W 105-98" className="bg-muted/50 border-border text-foreground h-11 focus:border-accent/50 transition-colors" />
             </div>
           </div>
         </div>
@@ -483,7 +483,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
         <>
           <motion.section 
             variants={sectionVariants}
-            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 to-black/30 border border-accent/20"
+            className="relative overflow-hidden rounded-2xl bg-card/80 border border-accent/20"
           >
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
             <div className="p-6">
@@ -509,7 +509,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
 
           <motion.section 
             variants={sectionVariants}
-            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 to-black/30 border border-accent/20"
+            className="relative overflow-hidden rounded-2xl bg-card/80 border border-accent/20"
           >
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
             <div className="p-6">
@@ -521,9 +521,9 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-black/30 p-4 rounded-xl border border-white/10 space-y-4">
+                <div className="bg-muted/80 p-4 rounded-xl border border-border space-y-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-bold text-white">Field Goals</h4>
+                    <h4 className="text-sm font-bold text-foreground">Field Goals</h4>
                     <span className={cn(
                       "text-lg font-mono font-bold",
                       fgPercent !== '—' && parseFloat(fgPercent) >= 50 ? "text-green-400" : 
@@ -537,9 +537,9 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
                     <NumberInput label="Attempted" name="fgAttempted" register={form.register} />
                   </div>
                 </div>
-                <div className="bg-black/30 p-4 rounded-xl border border-white/10 space-y-4">
+                <div className="bg-muted/80 p-4 rounded-xl border border-border space-y-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-bold text-white">3-Pointers</h4>
+                    <h4 className="text-sm font-bold text-foreground">3-Pointers</h4>
                     <span className={cn(
                       "text-lg font-mono font-bold",
                       threePercent !== '—' && parseFloat(threePercent) >= 40 ? "text-green-400" : 
@@ -553,9 +553,9 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
                     <NumberInput label="Attempted" name="threeAttempted" register={form.register} />
                   </div>
                 </div>
-                <div className="bg-black/30 p-4 rounded-xl border border-white/10 space-y-4">
+                <div className="bg-muted/80 p-4 rounded-xl border border-border space-y-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-bold text-white">Free Throws</h4>
+                    <h4 className="text-sm font-bold text-foreground">Free Throws</h4>
                     <span className={cn(
                       "text-lg font-mono font-bold",
                       ftPercent !== '—' && parseFloat(ftPercent) >= 80 ? "text-green-400" : 
@@ -586,7 +586,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
                     </div>
                     <div className="text-center">
                       <p className="text-xs text-muted-foreground uppercase font-bold">Calc. Points</p>
-                      <p className="text-2xl font-mono font-bold text-white">{calculatedPoints}</p>
+                      <p className="text-2xl font-mono font-bold text-foreground">{calculatedPoints}</p>
                     </div>
                   </div>
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -594,7 +594,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
                       type="checkbox" 
                       checked={autoCalcPoints}
                       onChange={(e) => setAutoCalcPoints(e.target.checked)}
-                      className="w-4 h-4 rounded border-white/20 bg-black/30 text-accent focus:ring-accent"
+                      className="w-4 h-4 rounded border-border bg-muted/80 text-accent focus:ring-accent"
                       data-testid="checkbox-auto-calc-points"
                     />
                     <span className="text-sm text-muted-foreground">Auto-fill points from shooting</span>
@@ -608,7 +608,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
         <>
           <motion.section 
             variants={sectionVariants}
-            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 to-black/30 border border-accent/20"
+            className="relative overflow-hidden rounded-2xl bg-card/80 border border-accent/20"
           >
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
             <div className="p-6">
@@ -622,7 +622,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
               </h3>
 
               {!playerId && (
-                <div className="text-center text-muted-foreground py-8 border border-dashed border-white/10 rounded-xl bg-black/20">
+                <div className="text-center text-muted-foreground py-8 border border-dashed border-border rounded-xl bg-muted/50">
                   Select a player to see position-specific stat fields
                 </div>
               )}
@@ -637,8 +637,8 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
                         className={cn(
                           "flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-all",
                           selectedFootballPositions.includes(pos)
-                            ? "border-accent bg-accent/20 text-white"
-                            : "border-white/10 bg-black/20 text-muted-foreground hover:border-accent/50"
+                            ? "border-accent bg-accent/20 text-foreground"
+                            : "border-border bg-muted/50 text-muted-foreground hover:border-accent/50"
                         )}
                       >
                         <input
@@ -678,7 +678,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
               )}
 
               {playerId && !effectiveFootballPosition && !hasValidFootballPosition && selectedFootballPositions.length === 0 && (
-                <div className="text-center text-muted-foreground py-4 border border-dashed border-white/10 rounded-xl bg-black/20">
+                <div className="text-center text-muted-foreground py-4 border border-dashed border-border rounded-xl bg-muted/50">
                   Select a football position above to see relevant stat fields
                 </div>
               )}
@@ -688,7 +688,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
           {playerId && effectiveFootballPosition && (
             <motion.section 
               variants={sectionVariants}
-              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 to-black/30 border border-accent/20"
+              className="relative overflow-hidden rounded-2xl bg-card/80 border border-accent/20"
             >
               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
               <div className="p-6">
@@ -702,7 +702,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {hasPosition(['QB']) && (
                     <>
-                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                      <div className="bg-muted/80 p-4 rounded-xl border border-border">
                         <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Completion %</p>
                         <p className="text-2xl font-mono font-bold text-accent">
                           {(form.watch('passAttempts') || 0) > 0 
@@ -710,7 +710,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
                             : '—'}
                         </p>
                       </div>
-                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                      <div className="bg-muted/80 p-4 rounded-xl border border-border">
                         <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Yards Per Attempt</p>
                         <p className="text-2xl font-mono font-bold text-accent">
                           {(form.watch('passAttempts') || 0) > 0 
@@ -718,7 +718,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
                             : '—'}
                         </p>
                       </div>
-                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                      <div className="bg-muted/80 p-4 rounded-xl border border-border">
                         <p className="text-xs text-muted-foreground uppercase font-bold mb-2">TD:INT Ratio</p>
                         <p className="text-2xl font-mono font-bold text-accent">
                           {form.watch('passingTouchdowns') || 0}:{form.watch('interceptions') || 0}
@@ -729,7 +729,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
 
                   {hasPosition(['RB']) && (
                     <>
-                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                      <div className="bg-muted/80 p-4 rounded-xl border border-border">
                         <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Yards Per Carry</p>
                         <p className="text-2xl font-mono font-bold text-accent">
                           {(form.watch('carries') || 0) > 0 
@@ -737,13 +737,13 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
                             : '—'}
                         </p>
                       </div>
-                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                      <div className="bg-muted/80 p-4 rounded-xl border border-border">
                         <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Total Yards</p>
                         <p className="text-2xl font-mono font-bold text-accent">
                           {(form.watch('rushingYards') || 0) + (form.watch('receivingYards') || 0)}
                         </p>
                       </div>
-                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                      <div className="bg-muted/80 p-4 rounded-xl border border-border">
                         <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Total TDs</p>
                         <p className="text-2xl font-mono font-bold text-accent">
                           {(form.watch('rushingTouchdowns') || 0) + (form.watch('receivingTouchdowns') || 0)}
@@ -754,7 +754,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
 
                   {hasPosition(['WR', 'TE']) && (
                     <>
-                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                      <div className="bg-muted/80 p-4 rounded-xl border border-border">
                         <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Catch Rate</p>
                         <p className="text-2xl font-mono font-bold text-accent">
                           {(form.watch('targets') || 0) > 0 
@@ -762,7 +762,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
                             : '—'}
                         </p>
                       </div>
-                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                      <div className="bg-muted/80 p-4 rounded-xl border border-border">
                         <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Yards Per Catch</p>
                         <p className="text-2xl font-mono font-bold text-accent">
                           {(form.watch('receptions') || 0) > 0 
@@ -770,7 +770,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
                             : '—'}
                         </p>
                       </div>
-                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                      <div className="bg-muted/80 p-4 rounded-xl border border-border">
                         <p className="text-xs text-muted-foreground uppercase font-bold mb-2">TDs</p>
                         <p className="text-2xl font-mono font-bold text-accent">
                           {form.watch('receivingTouchdowns') || 0}
@@ -781,19 +781,19 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
 
                   {hasPosition(['DL', 'LB', 'DB']) && (
                     <>
-                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                      <div className="bg-muted/80 p-4 rounded-xl border border-border">
                         <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Total Tackles</p>
                         <p className="text-2xl font-mono font-bold text-accent">
                           {form.watch('tackles') || 0}
                         </p>
                       </div>
-                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                      <div className="bg-muted/80 p-4 rounded-xl border border-border">
                         <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Playmaker Stats</p>
                         <p className="text-2xl font-mono font-bold text-accent">
                           {(form.watch('sacks') || 0) + (form.watch('defensiveInterceptions') || 0) + (form.watch('forcedFumbles') || 0)}
                         </p>
                       </div>
-                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                      <div className="bg-muted/80 p-4 rounded-xl border border-border">
                         <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Pass Deflections</p>
                         <p className="text-2xl font-mono font-bold text-accent">
                           {form.watch('passDeflections') || 0}
@@ -804,7 +804,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
 
                   {position === 'K' && (
                     <>
-                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                      <div className="bg-muted/80 p-4 rounded-xl border border-border">
                         <p className="text-xs text-muted-foreground uppercase font-bold mb-2">FG %</p>
                         <p className="text-2xl font-mono font-bold text-accent">
                           {(form.watch('fieldGoalsAttempted') || 0) > 0 
@@ -812,7 +812,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
                             : '—'}
                         </p>
                       </div>
-                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                      <div className="bg-muted/80 p-4 rounded-xl border border-border">
                         <p className="text-xs text-muted-foreground uppercase font-bold mb-2">XP %</p>
                         <p className="text-2xl font-mono font-bold text-accent">
                           {(form.watch('extraPointsAttempted') || 0) > 0 
@@ -820,7 +820,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
                             : '—'}
                         </p>
                       </div>
-                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                      <div className="bg-muted/80 p-4 rounded-xl border border-border">
                         <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Total Points</p>
                         <p className="text-2xl font-mono font-bold text-accent">
                           {((form.watch('fieldGoalsMade') || 0) * 3) + (form.watch('extraPointsMade') || 0)}
@@ -831,7 +831,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
 
                   {position === 'P' && (
                     <>
-                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                      <div className="bg-muted/80 p-4 rounded-xl border border-border">
                         <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Punt Average</p>
                         <p className="text-2xl font-mono font-bold text-accent">
                           {(form.watch('punts') || 0) > 0 
@@ -839,13 +839,13 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
                             : '—'}
                         </p>
                       </div>
-                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                      <div className="bg-muted/80 p-4 rounded-xl border border-border">
                         <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Total Punts</p>
                         <p className="text-2xl font-mono font-bold text-accent">
                           {form.watch('punts') || 0}
                         </p>
                       </div>
-                      <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+                      <div className="bg-muted/80 p-4 rounded-xl border border-border">
                         <p className="text-xs text-muted-foreground uppercase font-bold mb-2">Total Yards</p>
                         <p className="text-2xl font-mono font-bold text-accent">
                           {form.watch('puntYards') || 0}
@@ -862,7 +862,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
                           {...form.register('pancakeBlocks', { valueAsNumber: true })}
                           type="number"
                           min="0"
-                          className="bg-black/20 border-white/10 focus:border-accent/50 transition-colors"
+                          className="bg-muted/50 border-border focus:border-accent/50 transition-colors"
                           data-testid="input-pancake-blocks"
                         />
                       </div>
@@ -872,7 +872,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
                           {...form.register('sacksAllowed', { valueAsNumber: true })}
                           type="number"
                           min="0"
-                          className="bg-black/20 border-white/10 focus:border-accent/50 transition-colors"
+                          className="bg-muted/50 border-border focus:border-accent/50 transition-colors"
                           data-testid="input-sacks-allowed"
                         />
                       </div>
@@ -882,7 +882,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
                           {...form.register('penalties', { valueAsNumber: true })}
                           type="number"
                           min="0"
-                          className="bg-black/20 border-white/10 focus:border-accent/50 transition-colors"
+                          className="bg-muted/50 border-border focus:border-accent/50 transition-colors"
                           data-testid="input-penalties"
                         />
                       </div>
@@ -897,7 +897,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
 
       <motion.section 
         variants={sectionVariants}
-        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 to-black/30 border border-accent/20"
+        className="relative overflow-hidden rounded-2xl bg-card/80 border border-accent/20"
       >
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
         <div className="p-6">
@@ -910,7 +910,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
 
           {sport === 'basketball' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+              <div className="bg-muted/80 p-4 rounded-xl border border-border">
                 <div className="flex items-center justify-between mb-3">
                   <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Defense Rating</label>
                   <span className={cn(
@@ -922,7 +922,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
                     {calculatedDefenseRating}
                   </span>
                 </div>
-                <div className="h-2 bg-black/50 rounded-full overflow-hidden">
+                <div className="h-2 bg-muted rounded-full overflow-hidden">
                   <div 
                     className={cn(
                       "h-full rounded-full transition-all duration-300",
@@ -938,7 +938,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
                 </p>
               </div>
               
-              <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+              <div className="bg-muted/80 p-4 rounded-xl border border-border">
                 <div className="flex items-center justify-between mb-3">
                   <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Hustle Score</label>
                   <span className={cn(
@@ -950,7 +950,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
                     {calculatedHustleScore}
                   </span>
                 </div>
-                <div className="h-2 bg-black/50 rounded-full overflow-hidden">
+                <div className="h-2 bg-muted rounded-full overflow-hidden">
                   <div 
                     className={cn(
                       "h-full rounded-full transition-all duration-300",
@@ -970,7 +970,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
 
           {sport === 'football' && (
             <div className="mb-6">
-              <div className="bg-black/30 p-4 rounded-xl border border-white/10">
+              <div className="bg-muted/80 p-4 rounded-xl border border-border">
                 <div className="flex items-center justify-between mb-3">
                   <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Hustle Score</label>
                   <span className={cn(
@@ -982,7 +982,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
                     {calculatedHustleScore}
                   </span>
                 </div>
-                <div className="h-2 bg-black/50 rounded-full overflow-hidden">
+                <div className="h-2 bg-muted rounded-full overflow-hidden">
                   <div 
                     className={cn(
                       "h-full rounded-full transition-all duration-300",
@@ -1005,7 +1005,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
             <Textarea 
               {...form.register("notes")} 
               placeholder="Add specific observations, areas for improvement, or key moments..."
-              className="bg-black/20 border-white/10 text-white min-h-[100px] focus:border-accent/50 transition-colors"
+              className="bg-muted/50 border-border text-foreground min-h-[100px] focus:border-accent/50 transition-colors"
             />
           </div>
         </div>
@@ -1042,7 +1042,7 @@ function NumberInput({ label, name, register }: any) {
         type="number" 
         inputMode="numeric"
         {...register(name, { valueAsNumber: true })} 
-        className="bg-black/20 border-white/10 text-white text-center font-mono focus:border-accent/50 h-12 md:h-10 text-base transition-colors" 
+        className="bg-muted/50 border-border text-foreground text-center font-mono focus:border-accent/50 h-12 md:h-10 text-base transition-colors" 
         data-testid={`input-${name}`}
       />
     </div>
@@ -1115,7 +1115,7 @@ function ReportCardView({ game, onReset }: { game: any, onReset: () => void }) {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-black/60 to-black/30 border border-accent/20 shadow-2xl"
+      <div className="relative overflow-hidden rounded-3xl bg-card/80 border border-accent/20 shadow-2xl"
       >
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
         <div className="bg-gradient-to-b from-accent/10 to-transparent p-8 text-center relative">
@@ -1163,7 +1163,7 @@ function ReportCardView({ game, onReset }: { game: any, onReset: () => void }) {
             <h3 className="text-lg font-bold font-display text-white flex items-center gap-2">
               <Trophy className="w-5 h-5 text-accent" /> Scouting Report
             </h3>
-            <div className="bg-black/30 p-5 rounded-xl border border-white/10">
+            <div className="bg-muted/80 p-5 rounded-xl border border-border">
               <p className="text-muted-foreground leading-relaxed text-sm">
                 {game.feedback}
               </p>
@@ -1173,13 +1173,13 @@ function ReportCardView({ game, onReset }: { game: any, onReset: () => void }) {
           <div className="grid grid-cols-2 gap-4">
             {isFootball ? (
               <>
-                <div className="p-4 bg-black/30 rounded-xl border border-white/10">
+                <div className="p-4 bg-muted/80 rounded-xl border border-border">
                   <span className="text-xs text-muted-foreground uppercase font-bold">Total Yards</span>
                   <p className="text-xl font-display font-bold text-white mt-1">
                     {(game.passingYards || 0) + (game.rushingYards || 0) + (game.receivingYards || 0)} <span className="text-sm text-muted-foreground">YDS</span>
                   </p>
                 </div>
-                <div className="p-4 bg-black/30 rounded-xl border border-white/10">
+                <div className="p-4 bg-muted/80 rounded-xl border border-border">
                   <span className="text-xs text-muted-foreground uppercase font-bold">Turnovers</span>
                   <p className="text-xl font-display font-bold text-white mt-1">
                     {(game.interceptions || 0) + (game.fumbles || 0)} <span className="text-sm text-muted-foreground">TO</span>
@@ -1188,13 +1188,13 @@ function ReportCardView({ game, onReset }: { game: any, onReset: () => void }) {
               </>
             ) : (
               <>
-                <div className="p-4 bg-black/30 rounded-xl border border-white/10">
+                <div className="p-4 bg-muted/80 rounded-xl border border-border">
                   <span className="text-xs text-muted-foreground uppercase font-bold">Shooting</span>
                   <p className="text-xl font-display font-bold text-white mt-1">
                     {game.fgMade}/{game.fgAttempted} <span className="text-sm text-muted-foreground">FG</span>
                   </p>
                 </div>
-                <div className="p-4 bg-black/30 rounded-xl border border-white/10">
+                <div className="p-4 bg-muted/80 rounded-xl border border-border">
                   <span className="text-xs text-muted-foreground uppercase font-bold">Turnovers</span>
                   <p className="text-xl font-display font-bold text-white mt-1">
                     {game.turnovers} <span className="text-sm text-muted-foreground">TO</span>
@@ -1216,7 +1216,7 @@ function ReportCardView({ game, onReset }: { game: any, onReset: () => void }) {
           <HighlightUploader gameId={game.id} playerId={game.playerId} />
 
           <div className="flex gap-4 pt-2">
-            <Button onClick={onReset} variant="outline" className="flex-1 border-white/10 hover:bg-white/5 text-white">
+            <Button onClick={onReset} variant="outline" className="flex-1 border-border hover:bg-muted/50 text-foreground">
               Close Report
             </Button>
             <Link href={`/players/${game.playerId}`} className="flex-1">

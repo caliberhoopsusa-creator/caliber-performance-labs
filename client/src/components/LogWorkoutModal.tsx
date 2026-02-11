@@ -301,7 +301,7 @@ export function LogWorkoutModal({ playerId }: LogWorkoutModalProps) {
                 Workout Video (optional)
               </label>
               {videoUrl ? (
-                <div className="flex items-center gap-2 p-3 bg-secondary/30 rounded-lg border border-white/10">
+                <div className="flex items-center gap-2 p-3 bg-secondary/30 rounded-lg border border-border">
                   <Video className="w-4 h-4 text-green-400" />
                   <span className="text-sm text-green-400 flex-1">Video uploaded</span>
                   <Button
@@ -358,7 +358,7 @@ export function LogWorkoutModal({ playerId }: LogWorkoutModalProps) {
                       setVideoUrl(objectPath);
                     }
                   }}
-                  buttonClassName="w-full bg-secondary/50 border border-dashed border-white/20 text-white"
+                  buttonClassName="w-full bg-secondary/50 border border-dashed border-border text-foreground"
                 >
                   <span className="flex items-center gap-2">
                     <Video className="w-4 h-4" />

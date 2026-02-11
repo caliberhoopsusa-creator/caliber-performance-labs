@@ -241,7 +241,7 @@ function EndorsementStars({ value }: { value: number }) {
           key={star}
           className={cn(
             "w-3 h-3",
-            star <= stars ? "fill-accent text-accent" : "text-slate-600"
+            star <= stars ? "fill-accent text-accent" : "text-muted-foreground/30"
           )}
         />
       ))}
@@ -263,7 +263,7 @@ function EndorsementItem({ endorsement }: { endorsement: CoachEndorsement }) {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-white print:text-black">{endorsement.coachName}</span>
+            <span className="font-semibold text-foreground print:text-black">{endorsement.coachName}</span>
             <EndorsementStars value={avgRating} />
           </div>
           {(endorsement.coachTitle || endorsement.coachOrganization) && (

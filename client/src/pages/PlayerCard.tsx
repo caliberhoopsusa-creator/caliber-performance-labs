@@ -113,7 +113,7 @@ export default function PlayerCard() {
   if (!player) {
     return (
       <div className="flex flex-col items-center justify-center h-[80vh] text-center">
-        <h2 className="text-2xl font-display font-bold text-white mb-2">Player Not Found</h2>
+        <h2 className="text-2xl font-display font-bold text-foreground mb-2">Player Not Found</h2>
         <Link href="/players" className="text-accent hover:underline">Return to Roster</Link>
       </div>
     );
@@ -124,7 +124,7 @@ export default function PlayerCard() {
   if (gameId && singleGame) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4">
-        <Link href={`/players/${id}`} className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-white transition-colors uppercase tracking-wider mb-6">
+        <Link href={`/players/${id}`} className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider mb-6">
           <ArrowLeft className="w-4 h-4" /> Back to Profile
         </Link>
         <GameCard 
@@ -179,7 +179,7 @@ export default function PlayerCard() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
-      <Link href={`/players/${id}`} className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-white transition-colors uppercase tracking-wider mb-6">
+      <Link href={`/players/${id}`} className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider mb-6">
         <ArrowLeft className="w-4 h-4" /> Back to Profile
       </Link>
 

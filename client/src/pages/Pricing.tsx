@@ -214,7 +214,7 @@ export default function Pricing() {
             Premium Plans
           </div>
           
-          <h1 className="text-4xl md:text-5xl font-bold font-display tracking-tight text-white" data-testid="text-pricing-title">
+          <h1 className="text-4xl md:text-5xl font-bold font-display tracking-tight text-foreground" data-testid="text-pricing-title">
             Upgrade Your <span className="text-accent">Game</span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mt-4">
@@ -232,7 +232,7 @@ export default function Pricing() {
               variant="outline" 
               onClick={() => portalMutation.mutate()}
               disabled={portalMutation.isPending}
-              className="border-white/10"
+              className="border-border"
               data-testid="button-manage-billing"
             >
               {portalMutation.isPending ? (
@@ -250,10 +250,10 @@ export default function Pricing() {
         <section className="space-y-8">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
-              <h2 className="text-2xl font-bold font-display text-white" data-testid="text-subscription-plans-title">
+              <h2 className="text-2xl font-bold font-display text-foreground" data-testid="text-subscription-plans-title">
                 Subscription Plans
               </h2>
-              <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent min-w-[40px]" />
+              <div className="h-px flex-1 bg-gradient-to-r from-border to-transparent min-w-[40px]" />
             </div>
             {subscriptionPlans.some((p) => hasYearlyOption(p.prices)) && (
               <div className="flex items-center gap-1 rounded-xl p-1.5">
@@ -291,7 +291,7 @@ export default function Pricing() {
               return (
                 <Card 
                   key={product.id} 
-                  className={`relative overflow-hidden transition-all duration-300 ${isPopular ? "border-accent/30 shadow-xl shadow-accent/10" : "border-white/5"}`}
+                  className={`relative overflow-hidden transition-all duration-300 ${isPopular ? "border-accent/30 shadow-xl shadow-accent/10" : "border-border/50"}`}
                   data-testid={`card-plan-${product.id}`}
                 >
                   {isPopular && (
@@ -316,7 +316,7 @@ export default function Pricing() {
                     {price ? (
                       <div className="space-y-1">
                         <div className="flex items-baseline gap-2">
-                          <span className="text-5xl font-bold font-display text-white">
+                          <span className="text-5xl font-bold font-display text-foreground">
                             {formatPrice(price.unit_amount, price.currency)}
                           </span>
                           {price.recurring && (
@@ -378,10 +378,10 @@ export default function Pricing() {
       {oneTimePurchases.length > 0 && (
         <section className="space-y-8">
           <div className="flex items-center gap-3">
-            <h2 className="text-2xl font-bold font-display text-white" data-testid="text-one-time-purchases-title">
+            <h2 className="text-2xl font-bold font-display text-foreground" data-testid="text-one-time-purchases-title">
               One-Time Purchases
             </h2>
-            <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
+            <div className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -392,7 +392,7 @@ export default function Pricing() {
               const IconComponent = icon;
 
               return (
-                <Card key={product.id} className="border-white/5 overflow-hidden" data-testid={`card-purchase-${product.id}`}>
+                <Card key={product.id} className="border-border/50 overflow-hidden" data-testid={`card-purchase-${product.id}`}>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-3">
                       <div className="p-2 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/10">
@@ -404,7 +404,7 @@ export default function Pricing() {
                   </CardHeader>
                   <CardContent className="space-y-5">
                     {price ? (
-                      <div className="text-4xl font-bold font-display text-white">
+                      <div className="text-4xl font-bold font-display text-foreground">
                         {formatPrice(price.unit_amount, price.currency)}
                       </div>
                     ) : (
@@ -447,9 +447,9 @@ export default function Pricing() {
       )}
 
       {products.length === 0 && !productsLoading && (
-        <Card className="text-center py-16 border-white/5">
+        <Card className="text-center py-16 border-border/50">
           <CardContent>
-            <div className="w-16 h-16 rounded-full bg-card border border-white/10 flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 rounded-full bg-card border border-border flex items-center justify-center mx-auto mb-4">
               <Sparkles className="w-8 h-8 text-muted-foreground" />
             </div>
             <p className="text-muted-foreground text-lg">

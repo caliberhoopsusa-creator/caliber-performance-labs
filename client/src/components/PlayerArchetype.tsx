@@ -110,7 +110,7 @@ const ARCHETYPE_COLORS: Record<ArchetypeId, { bg: string; border: string; text: 
   glue_guy: {
     bg: "from-slate-500/20 to-gray-500/20",
     border: "border-slate-400/40",
-    text: "text-slate-300",
+    text: "text-slate-400",
     glow: "shadow-slate-500/20",
   },
   sharpshooter: {
@@ -149,7 +149,7 @@ const FOOTBALL_ARCHETYPE_COLORS: Record<FootballArchetypeId, { bg: string; borde
   game_manager: {
     bg: "from-slate-500/20 to-gray-500/20",
     border: "border-slate-400/40",
-    text: "text-slate-300",
+    text: "text-slate-400",
     glow: "shadow-slate-500/20",
   },
   power_back: {
@@ -191,7 +191,7 @@ const FOOTBALL_ARCHETYPE_COLORS: Record<FootballArchetypeId, { bg: string; borde
   blocking_te: {
     bg: "from-stone-500/20 to-gray-500/20",
     border: "border-stone-400/40",
-    text: "text-stone-300",
+    text: "text-stone-400",
     glow: "shadow-stone-500/20",
   },
   receiving_te: {
@@ -372,7 +372,7 @@ export function PlayerArchetype({
           <div className="flex items-start gap-4">
             <div className={cn(
               "w-14 h-14 rounded-xl flex items-center justify-center",
-              "bg-gradient-to-br from-white/10 to-white/5",
+              "bg-gradient-to-br from-muted to-muted/50",
               "border",
               primaryColors.border
             )}>
@@ -394,14 +394,14 @@ export function PlayerArchetype({
             </div>
           </div>
           
-          <p className="mt-4 text-sm text-white/80 leading-relaxed">
+          <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
             {primaryArchetype.description}
           </p>
         </div>
       </div>
 
       {secondaryArchetype && (
-        <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/5 border border-white/10">
+        <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-muted/50 border border-border">
           <ChevronRight className="w-4 h-4 text-muted-foreground" />
           <div className="flex items-center gap-2">
             {(() => {
@@ -543,7 +543,7 @@ function FootballPlayerArchetype({
           <div className="flex items-start gap-4">
             <div className={cn(
               "w-14 h-14 rounded-xl flex items-center justify-center",
-              "bg-gradient-to-br from-white/10 to-white/5",
+              "bg-gradient-to-br from-muted to-muted/50",
               "border",
               primaryColors.border
             )}>
@@ -565,14 +565,14 @@ function FootballPlayerArchetype({
             </div>
           </div>
           
-          <p className="mt-4 text-sm text-white/80 leading-relaxed">
+          <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
             {primaryArchetype.description}
           </p>
         </div>
       </div>
 
       {secondaryArchetype && (
-        <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-white/5 border border-white/10">
+        <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-muted/50 border border-border">
           <ChevronRight className="w-4 h-4 text-muted-foreground" />
           <div className="flex items-center gap-2">
             {(() => {

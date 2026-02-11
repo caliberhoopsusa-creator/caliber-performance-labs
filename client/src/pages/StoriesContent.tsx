@@ -106,7 +106,7 @@ function StoryRing({
       <motion.span 
         className={cn(
           "text-xs font-medium truncate max-w-[70px]",
-          isViewed ? "text-muted-foreground" : "text-white"
+          isViewed ? "text-muted-foreground" : "text-foreground"
         )}
         initial={{ opacity: 0, y: 4 }}
         animate={{ opacity: 1, y: 0 }}
@@ -855,10 +855,10 @@ function CreateStoryDialog({
             </div>
           </div>
 
-          <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm text-white">Expires in 24 hours</span>
+              <span className="text-sm text-foreground">Expires in 24 hours</span>
             </div>
             <Switch
               checked={expiresIn24h}
@@ -945,7 +945,7 @@ export default function StoriesContent() {
     <div className="space-y-6 animate-in fade-in duration-500" data-testid="page-stories">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl md:text-4xl font-display font-bold bg-gradient-to-b from-white to-accent/20 bg-clip-text text-transparent tracking-wide flex items-center gap-3">
+          <h1 className="text-3xl md:text-4xl font-display font-bold bg-gradient-to-b from-foreground to-accent/20 bg-clip-text text-transparent tracking-wide flex items-center gap-3">
             <Camera className="w-8 h-8 text-accent" />
             Stories
           </h1>
@@ -981,7 +981,7 @@ export default function StoriesContent() {
             <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
               <Camera className="w-8 h-8 text-accent/60" />
             </div>
-            <p className="text-white font-display font-semibold mb-1">No stories yet</p>
+            <p className="text-foreground font-display font-semibold mb-1">No stories yet</p>
             <p className="text-sm text-muted-foreground mb-4">
               Be the first to share a story!
             </p>

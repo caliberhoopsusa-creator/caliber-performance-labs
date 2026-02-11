@@ -299,7 +299,7 @@ export function NcaaEligibilityChecklist({ playerId }: NcaaEligibilityChecklistP
   if (isLoading) {
     return (
       <Card
-        className="bg-gradient-to-br from-slate-900/80 to-slate-800/60 border-accent/20"
+        className="border-accent/20"
         data-testid="ncaa-eligibility-loading"
       >
         <CardHeader>
@@ -322,7 +322,7 @@ export function NcaaEligibilityChecklist({ playerId }: NcaaEligibilityChecklistP
 
   return (
     <Card
-      className="bg-gradient-to-br from-slate-900/80 to-slate-800/60 border-accent/20"
+      className="border-accent/20"
       data-testid="ncaa-eligibility-checklist"
     >
       <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0 pb-4">
@@ -330,7 +330,7 @@ export function NcaaEligibilityChecklist({ playerId }: NcaaEligibilityChecklistP
           <div className="p-2 rounded-lg bg-accent/20">
             <GraduationCap className="w-6 h-6 text-accent" />
           </div>
-          <CardTitle className="font-display text-xl text-white tracking-wide">
+          <CardTitle className="font-display text-xl text-foreground tracking-wide">
             NCAA Eligibility Checklist
           </CardTitle>
         </div>
@@ -356,7 +356,7 @@ export function NcaaEligibilityChecklist({ playerId }: NcaaEligibilityChecklistP
           </div>
           <Progress
             value={completionPercentage}
-            className="h-3 bg-slate-700/50"
+            className="h-3 bg-muted/50"
             data-testid="progress-bar"
           />
         </div>
@@ -368,7 +368,7 @@ export function NcaaEligibilityChecklist({ playerId }: NcaaEligibilityChecklistP
             onValueChange={(value) => handleDivisionChange(value as Division)}
           >
             <SelectTrigger
-              className="w-full bg-slate-800/50 border-slate-600/50 text-white"
+              className="w-full bg-muted/50 border-border"
               data-testid="select-division"
             >
               <SelectValue placeholder="Select division" />
@@ -395,17 +395,17 @@ export function NcaaEligibilityChecklist({ playerId }: NcaaEligibilityChecklistP
             {divisionReq.type === "full" ? (
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div className="text-muted-foreground">Total Courses:</div>
-                <div className="text-white">{divisionReq.data.totalCourses}</div>
+                <div className="text-foreground">{divisionReq.data.totalCourses}</div>
                 <div className="text-muted-foreground">English:</div>
-                <div className="text-white">{divisionReq.data.english}</div>
+                <div className="text-foreground">{divisionReq.data.english}</div>
                 <div className="text-muted-foreground">Math:</div>
-                <div className="text-white">{divisionReq.data.math}</div>
+                <div className="text-foreground">{divisionReq.data.math}</div>
                 <div className="text-muted-foreground">Science:</div>
-                <div className="text-white">{divisionReq.data.science}</div>
+                <div className="text-foreground">{divisionReq.data.science}</div>
                 <div className="text-muted-foreground">Social Science:</div>
-                <div className="text-white">{divisionReq.data.socialScience}</div>
+                <div className="text-foreground">{divisionReq.data.socialScience}</div>
                 <div className="text-muted-foreground">Minimum Core GPA:</div>
-                <div className="text-white">{divisionReq.data.minCoreGpa}</div>
+                <div className="text-foreground">{divisionReq.data.minCoreGpa}</div>
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">{divisionReq.text}</p>
@@ -422,9 +422,9 @@ export function NcaaEligibilityChecklist({ playerId }: NcaaEligibilityChecklistP
                 className="space-y-3"
                 data-testid={`category-${category.id}`}
               >
-                <div className="flex items-center gap-2 pb-2 border-b border-slate-700/50">
+                <div className="flex items-center gap-2 pb-2 border-b border-border">
                   <IconComponent className="w-5 h-5 text-accent" />
-                  <h3 className="font-semibold text-white">{category.title}</h3>
+                  <h3 className="font-semibold text-foreground">{category.title}</h3>
                 </div>
 
                 <div className="space-y-3 pl-2">
@@ -438,7 +438,7 @@ export function NcaaEligibilityChecklist({ playerId }: NcaaEligibilityChecklistP
                           onClick={() => handleCheckboxChange(item.key)}
                           className={cn(
                             "w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200",
-                            "hover:bg-slate-800/50 group cursor-pointer text-left",
+                            "hover:bg-muted/50 group cursor-pointer text-left",
                             isChecked && "bg-emerald-500/10"
                           )}
                           data-testid={`checkbox-${item.id}`}
@@ -449,7 +449,7 @@ export function NcaaEligibilityChecklist({ playerId }: NcaaEligibilityChecklistP
                               "w-6 h-6 rounded-full flex items-center justify-center transition-all",
                               isChecked
                                 ? "bg-emerald-500 text-white"
-                                : "bg-slate-700/50 text-slate-400 group-hover:bg-slate-600/50"
+                                : "bg-muted/50 text-muted-foreground group-hover:bg-muted"
                             )}
                           >
                             {isChecked ? (
@@ -461,7 +461,7 @@ export function NcaaEligibilityChecklist({ playerId }: NcaaEligibilityChecklistP
                           <span
                             className={cn(
                               "text-sm transition-colors",
-                              isChecked ? "text-emerald-400" : "text-white/80"
+                              isChecked ? "text-emerald-400" : "text-foreground/80"
                             )}
                           >
                             {item.label}
@@ -486,7 +486,7 @@ export function NcaaEligibilityChecklist({ playerId }: NcaaEligibilityChecklistP
                               : handleTextChange(item.key, e.target.value)
                           }
                           placeholder={item.placeholder}
-                          className="bg-slate-800/50 border-slate-600/50 text-white placeholder:text-slate-500"
+                          className="bg-muted/50 border-border placeholder:text-muted-foreground"
                           data-testid={`input-${item.id}`}
                         />
                       </div>

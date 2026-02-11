@@ -376,12 +376,12 @@ export function PlayerRatingsSection({ playerId, isOwnProfile, sport = 'basketba
                 </div>
               )}
             </div>
-            <div className="p-2 rounded-lg bg-white/5">
+            <div className="p-2 rounded-lg bg-muted/50">
               <Star className="w-6 h-6 text-accent" style={{ filter: "drop-shadow(0 0 8px hsl(24 95% 53%))" }} />
             </div>
           </div>
           {aiRating?.ratingBand && (
-            <Badge variant="outline" className="mt-2 text-xs border-white/20">
+            <Badge variant="outline" className="mt-2 text-xs border-border">
               {aiRating.ratingBand}
             </Badge>
           )}
@@ -410,7 +410,7 @@ export function PlayerRatingsSection({ playerId, isOwnProfile, sport = 'basketba
                 </div>
               )}
             </div>
-            <div className="p-2 rounded-lg bg-white/5">
+            <div className="p-2 rounded-lg bg-muted/50">
               <TrendingUp className="w-6 h-6 text-purple-400" style={{ filter: "drop-shadow(0 0 8px #A855F7)" }} />
             </div>
           </div>
@@ -441,7 +441,7 @@ export function PlayerRatingsSection({ playerId, isOwnProfile, sport = 'basketba
                 </div>
               )}
             </div>
-            <div className="p-2 rounded-lg bg-white/5">
+            <div className="p-2 rounded-lg bg-muted/50">
               <CheckCircle className="w-6 h-6 text-emerald-400" style={{ filter: "drop-shadow(0 0 8px #34D399)" }} />
             </div>
           </div>
@@ -462,11 +462,11 @@ export function PlayerRatingsSection({ playerId, isOwnProfile, sport = 'basketba
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.4 }}
         >
-          <Card className="p-6 bg-gradient-to-br from-black/60 to-black/30 border-white/10">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
+          <Card className="p-6 bg-card/80 border-border">
+            <h3 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4">
               <Crosshair className="w-5 h-5 text-accent" style={{ filter: "drop-shadow(0 0 8px hsl(24, 95%, 53%))" }} />
               Sub-Score Breakdown
-              <Badge variant="outline" className="ml-2 text-xs border-white/20 capitalize">
+              <Badge variant="outline" className="ml-2 text-xs border-border capitalize">
                 {sport}
               </Badge>
             </h3>
@@ -483,7 +483,7 @@ export function PlayerRatingsSection({ playerId, isOwnProfile, sport = 'basketba
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: index * 0.05 }}
-                    className="p-4 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-colors"
+                    className="p-4 rounded-xl bg-muted/50 border border-border hover:border-border transition-colors"
                     data-testid={`sub-score-${key}`}
                   >
                     <div className="flex items-center gap-2 mb-2">
@@ -517,8 +517,8 @@ export function PlayerRatingsSection({ playerId, isOwnProfile, sport = 'basketba
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15, duration: 0.4 }}
         >
-          <Card className="p-6 bg-gradient-to-br from-black/60 to-black/30 border-white/10">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
+          <Card className="p-6 bg-card/80 border-border">
+            <h3 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4">
               <Brain className="w-5 h-5 text-blue-400" style={{ filter: "drop-shadow(0 0 8px #3B82F6)" }} />
               AI Analysis
             </h3>
@@ -571,8 +571,8 @@ export function PlayerRatingsSection({ playerId, isOwnProfile, sport = 'basketba
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25, duration: 0.4 }}
         >
-          <Card className="p-6 bg-gradient-to-br from-black/60 to-black/30 border-white/10">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
+          <Card className="p-6 bg-card/80 border-border">
+            <h3 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4">
               <Award className="w-5 h-5 text-accent" style={{ filter: "drop-shadow(0 0 8px hsl(24 95% 53%))" }} />
               Performance Milestones
             </h3>
@@ -612,9 +612,9 @@ export function PlayerRatingsSection({ playerId, isOwnProfile, sport = 'basketba
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.4 }}
         >
-          <Card className="p-6 bg-gradient-to-br from-black/60 to-black/30 border-white/10">
+          <Card className="p-6 bg-card/80 border-border">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-purple-400" style={{ filter: "drop-shadow(0 0 8px #A855F7)" }} />
                 Projection Factors
               </h3>
@@ -629,7 +629,7 @@ export function PlayerRatingsSection({ playerId, isOwnProfile, sport = 'basketba
             </div>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-              <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+              <div className="p-3 rounded-lg bg-muted/50 border border-border">
                 <p className="text-xs text-muted-foreground mb-1">Trajectory</p>
                 <p className={cn(
                   "text-xl font-bold",
@@ -639,7 +639,7 @@ export function PlayerRatingsSection({ playerId, isOwnProfile, sport = 'basketba
                   {aiProjection.projection.trajectoryScore}
                 </p>
               </div>
-              <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+              <div className="p-3 rounded-lg bg-muted/50 border border-border">
                 <p className="text-xs text-muted-foreground mb-1">Translation</p>
                 <p className={cn(
                   "text-xl font-bold",
@@ -649,7 +649,7 @@ export function PlayerRatingsSection({ playerId, isOwnProfile, sport = 'basketba
                   {aiProjection.projection.translationScore}
                 </p>
               </div>
-              <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+              <div className="p-3 rounded-lg bg-muted/50 border border-border">
                 <p className="text-xs text-muted-foreground mb-1">Upside</p>
                 <p className={cn(
                   "text-xl font-bold",
@@ -659,7 +659,7 @@ export function PlayerRatingsSection({ playerId, isOwnProfile, sport = 'basketba
                   {aiProjection.projection.upsideScore}
                 </p>
               </div>
-              <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+              <div className="p-3 rounded-lg bg-muted/50 border border-border">
                 <p className="text-xs text-muted-foreground mb-1">Risk</p>
                 <p className={cn(
                   "text-xl font-bold",
@@ -690,9 +690,9 @@ export function PlayerRatingsSection({ playerId, isOwnProfile, sport = 'basketba
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.35, duration: 0.4 }}
       >
-        <Card className="p-6 bg-gradient-to-br from-black/60 to-black/30 border-white/10">
+        <Card className="p-6 bg-card/80 border-border">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+            <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-purple-400" style={{ filter: "drop-shadow(0 0 8px #A855F7)" }} />
               Gemini AI Analysis
               {!isPremium && (
@@ -755,9 +755,9 @@ export function PlayerRatingsSection({ playerId, isOwnProfile, sport = 'basketba
               {latestProjection.projectedStats && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
                   {Object.entries(latestProjection.projectedStats).slice(0, 4).map(([key, value]) => (
-                    <div key={key} className="p-3 rounded-lg bg-white/5 border border-white/10">
+                    <div key={key} className="p-3 rounded-lg bg-muted/50 border border-border">
                       <p className="text-xs text-muted-foreground uppercase">{key.replace(/_/g, ' ')}</p>
-                      <p className="text-lg font-bold text-white">{String(value)}</p>
+                      <p className="text-lg font-bold text-foreground">{String(value)}</p>
                     </div>
                   ))}
                 </div>
@@ -773,7 +773,7 @@ export function PlayerRatingsSection({ playerId, isOwnProfile, sport = 'basketba
       </motion.div>
 
       <Dialog open={showRatingDialog} onOpenChange={setShowRatingDialog}>
-        <DialogContent className="bg-card border-white/10 text-white">
+        <DialogContent className="bg-card border-border text-foreground">
           <DialogHeader>
             <DialogTitle>Rate Player</DialogTitle>
           </DialogHeader>
@@ -788,7 +788,7 @@ export function PlayerRatingsSection({ playerId, isOwnProfile, sport = 'basketba
                   max={100}
                   value={ratingForm.overallRating}
                   onChange={(e) => setRatingForm(prev => ({ ...prev, overallRating: parseInt(e.target.value) || 0 }))}
-                  className="w-24 bg-black/40 border-white/10"
+                  className="w-24 bg-muted/80 border-border"
                   data-testid="input-overall-rating"
                 />
                 <Progress value={ratingForm.overallRating} className="flex-1" />
@@ -807,7 +807,7 @@ export function PlayerRatingsSection({ playerId, isOwnProfile, sport = 'basketba
                   max={100}
                   value={ratingForm.potentialRating}
                   onChange={(e) => setRatingForm(prev => ({ ...prev, potentialRating: parseInt(e.target.value) || 0 }))}
-                  className="w-24 bg-black/40 border-white/10"
+                  className="w-24 bg-muted/80 border-border"
                   data-testid="input-potential-rating"
                 />
                 <Progress value={ratingForm.potentialRating} className="flex-1" />
@@ -823,7 +823,7 @@ export function PlayerRatingsSection({ playerId, isOwnProfile, sport = 'basketba
                 value={ratingForm.notes}
                 onChange={(e) => setRatingForm(prev => ({ ...prev, notes: e.target.value }))}
                 placeholder="Add notes about this player's strengths, weaknesses, or potential..."
-                className="bg-black/40 border-white/10 min-h-[100px]"
+                className="bg-muted/80 border-border min-h-[100px]"
                 data-testid="input-rating-notes"
               />
             </div>
@@ -832,7 +832,7 @@ export function PlayerRatingsSection({ playerId, isOwnProfile, sport = 'basketba
             <Button
               variant="outline"
               onClick={() => setShowRatingDialog(false)}
-              className="border-white/10"
+              className="border-border"
             >
               Cancel
             </Button>

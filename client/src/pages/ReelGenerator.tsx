@@ -211,7 +211,7 @@ export default function ReelGenerator() {
     return (
       <div className="text-center py-20">
         <Film className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-        <h2 className="text-xl font-bold text-white mb-2">Player Profile Required</h2>
+        <h2 className="text-xl font-bold text-foreground mb-2">Player Profile Required</h2>
         <p className="text-muted-foreground">Create a player profile to build your highlight reel.</p>
       </div>
     );
@@ -229,7 +229,7 @@ export default function ReelGenerator() {
     return (
       <div className="text-center py-20">
         <Film className="w-16 h-16 mx-auto text-purple-400/30 mb-4" />
-        <h2 className="text-xl font-bold text-white mb-2">No Highlights Yet</h2>
+        <h2 className="text-xl font-bold text-foreground mb-2">No Highlights Yet</h2>
         <p className="text-muted-foreground mb-4">Upload highlight clips to build your reel.</p>
         <Button onClick={() => window.location.href = '/highlights'} data-testid="button-go-highlights">
           Upload Highlights
@@ -240,7 +240,7 @@ export default function ReelGenerator() {
 
   return (
     <div className="pb-24 md:pb-8 space-y-6" data-testid="page-reel-generator">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-950/40 via-black/40 to-card border border-purple-500/20">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-950/40 via-card/80 to-card border border-purple-500/20">
         <div className="absolute inset-0 opacity-10" />
         <div className="relative z-10 p-6 md:p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -386,15 +386,15 @@ export default function ReelGenerator() {
                 onClick={() => setCurrentClipIndex(index)}
                 className={cn(
                   "flex-shrink-0 w-24 h-16 rounded-md overflow-hidden border-2 transition-all cursor-pointer",
-                  index === currentClipIndex ? "border-accent" : "border-white/10"
+                  index === currentClipIndex ? "border-accent" : "border-border"
                 )}
                 data-testid={`button-timeline-clip-${clip.id}`}
               >
                 {clip.thumbnailUrl ? (
                   <img src={clip.thumbnailUrl} alt={clip.title} className="w-full h-full object-cover" loading="lazy" />
                 ) : (
-                  <div className="w-full h-full bg-white/5 flex items-center justify-center">
-                    <Film className="w-4 h-4 text-white/30" />
+                  <div className="w-full h-full bg-muted/50 flex items-center justify-center">
+                    <Film className="w-4 h-4 text-muted-foreground" />
                   </div>
                 )}
               </button>
@@ -403,7 +403,7 @@ export default function ReelGenerator() {
         </div>
 
         <div className="space-y-4">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
             <Film className="w-4 h-4 text-purple-400" />
             Select Clips ({selectedClipIds.size}/{data.clips.length})
           </h3>
@@ -416,7 +416,7 @@ export default function ReelGenerator() {
                   "p-3 cursor-pointer transition-all border",
                   selectedClipIds.has(clip.id) 
                     ? "bg-purple-500/10 border-purple-500/30" 
-                    : "bg-black/20 border-white/5"
+                    : "bg-muted/50 border-border/50"
                 )}
                 onClick={() => toggleClip(clip.id)}
                 data-testid={`card-clip-select-${clip.id}`}
@@ -428,7 +428,7 @@ export default function ReelGenerator() {
                     data-testid={`checkbox-clip-${clip.id}`}
                   />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white truncate">{clip.title}</p>
+                    <p className="text-sm font-medium text-foreground truncate">{clip.title}</p>
                     <div className="flex items-center gap-3 mt-0.5 flex-wrap">
                       <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                         <Eye className="w-3 h-3" />{clip.viewCount}

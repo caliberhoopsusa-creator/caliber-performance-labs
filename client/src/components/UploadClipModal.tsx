@@ -165,7 +165,7 @@ export function UploadClipModal({
                 <div className="flex items-center justify-center gap-3">
                   <Film className="w-8 h-8 text-accent" />
                   <div className="text-left">
-                    <p className="font-medium text-white">{selectedFile.name}</p>
+                    <p className="font-medium text-foreground">{selectedFile.name}</p>
                     <p className="text-sm text-muted-foreground">
                       {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
                     </p>

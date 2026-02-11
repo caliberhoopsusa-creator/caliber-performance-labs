@@ -110,7 +110,7 @@ interface QuickStatProps {
 export function QuickStat({ label, value, icon: Icon, trend, trendValue, className }: QuickStatProps) {
   return (
     <div className={cn(
-      "flex flex-col p-3 rounded-lg bg-slate-800/50 border border-slate-700/50",
+      "flex flex-col p-3 rounded-lg bg-muted/50 border border-border/50",
       "touch-manipulation active:scale-[0.98] transition-transform",
       className
     )}>

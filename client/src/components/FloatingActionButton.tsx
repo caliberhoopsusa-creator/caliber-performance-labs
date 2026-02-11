@@ -72,7 +72,7 @@ export function FloatingActionButton({ userRole, playerId }: FloatingActionButto
                     className="flex items-center gap-3"
                     data-testid={`fab-action-${action.label.toLowerCase().replace(/\s+/g, '-')}`}
                   >
-                    <span className="bg-slate-800/90 backdrop-blur-sm text-white text-sm font-medium px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap">
+                    <span className="bg-card/90 backdrop-blur-sm text-foreground text-sm font-medium px-3 py-1.5 rounded-lg shadow-lg whitespace-nowrap border border-border">
                       {action.label}
                     </span>
                     <div className={cn(

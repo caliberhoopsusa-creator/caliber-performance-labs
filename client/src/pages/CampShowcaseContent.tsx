@@ -249,7 +249,7 @@ function EventCard({ eventData, isSaved, onToggleSave, isPending }: EventCardPro
     <Card
       className={cn(
         "relative overflow-hidden transition-all duration-300 hover-elevate",
-        "bg-gradient-to-br from-[hsl(220,25%,10%)] via-[hsl(220,20%,8%)] to-[hsl(220,25%,6%)]",
+        "bg-card",
         "border-border"
       )}
       data-testid={`event-card-${event.id}`}
@@ -274,7 +274,7 @@ function EventCard({ eventData, isSaved, onToggleSave, isPending }: EventCardPro
                 </Badge>
               )}
             </div>
-            <h3 className="font-semibold text-white text-lg leading-tight line-clamp-2">
+            <h3 className="font-semibold text-foreground text-lg leading-tight line-clamp-2">
               {event.name}
             </h3>
           </div>
@@ -299,7 +299,7 @@ function EventCard({ eventData, isSaved, onToggleSave, isPending }: EventCardPro
         <div className="space-y-2 text-sm">
           <div className="flex items-center gap-2 text-muted-foreground">
             <Calendar className="w-4 h-4 text-accent flex-shrink-0" />
-            <span className="text-white">{formatDateRange(event.startDate, event.endDate)}</span>
+            <span className="text-foreground">{formatDateRange(event.startDate, event.endDate)}</span>
           </div>
 
           <div className="flex items-center gap-2 text-muted-foreground">
@@ -327,7 +327,7 @@ function EventCard({ eventData, isSaved, onToggleSave, isPending }: EventCardPro
               <DollarSign className="w-4 h-4 text-accent" />
               <span className={cn(
                 "font-medium",
-                event.isFree ? "text-emerald-400" : "text-white"
+                event.isFree ? "text-emerald-400" : "text-foreground"
               )}>
                 {formatCost(event.cost, event.isFree)}
               </span>
@@ -365,7 +365,7 @@ function EventCard({ eventData, isSaved, onToggleSave, isPending }: EventCardPro
 
 function EventCardSkeleton() {
   return (
-    <Card className="p-4 md:p-5 bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-border">
+    <Card className="p-4 md:p-5 bg-card border-border">
       <div className="space-y-4">
         <div className="flex items-start justify-between gap-3">
           <div className="space-y-2 flex-1">
@@ -600,7 +600,7 @@ export default function CampShowcaseContent() {
       <Card
         className={cn(
           "p-4 relative overflow-hidden",
-          "bg-gradient-to-br from-[hsl(220,25%,10%)] via-[hsl(220,20%,8%)] to-[hsl(220,25%,6%)]",
+          "bg-card",
           "border-border"
         )}
         data-testid="filter-controls"
@@ -615,7 +615,7 @@ export default function CampShowcaseContent() {
 
           <Select value={stateFilter} onValueChange={setStateFilter}>
             <SelectTrigger
-              className="w-[160px] bg-white/5 border-accent/20 text-white"
+              className="w-[160px] bg-muted/50 border-accent/20 text-foreground"
               data-testid="select-state-filter"
             >
               <SelectValue placeholder="Select State" />
@@ -631,7 +631,7 @@ export default function CampShowcaseContent() {
 
           <Select value={eventTypeFilter} onValueChange={setEventTypeFilter}>
             <SelectTrigger
-              className="w-[160px] bg-white/5 border-accent/20 text-white"
+              className="w-[160px] bg-muted/50 border-accent/20 text-foreground"
               data-testid="select-event-type-filter"
             >
               <SelectValue placeholder="Event Type" />
@@ -685,7 +685,7 @@ export default function CampShowcaseContent() {
           <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20 flex items-center justify-center mb-6">
             <Target className="w-12 h-12 text-accent" />
           </div>
-          <h3 className="text-xl font-semibold text-white mb-2">No Events Found</h3>
+          <h3 className="text-xl font-semibold text-foreground mb-2">No Events Found</h3>
           <p className="text-muted-foreground max-w-md">
             {hasActiveFilters
               ? "No upcoming events match your filters. Try adjusting your search criteria."
@@ -705,9 +705,9 @@ export default function CampShowcaseContent() {
       )}
 
       <Dialog open={isAddEventDialogOpen} onOpenChange={setIsAddEventDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-[hsl(220,25%,12%)] to-[hsl(220,25%,8%)] border-accent/20">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card border-accent/20">
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold text-white">Create Recruiting Event</DialogTitle>
+            <DialogTitle className="text-xl font-semibold text-foreground">Create Recruiting Event</DialogTitle>
             <DialogDescription className="text-muted-foreground">
               Add a new camp, showcase, or combine for your team.
             </DialogDescription>
@@ -723,7 +723,7 @@ export default function CampShowcaseContent() {
                     <FormLabel className="text-muted-foreground">Team *</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="bg-white/5 border-accent/20 text-white" data-testid="select-team">
+                        <SelectTrigger className="bg-muted/50 border-accent/20 text-foreground" data-testid="select-team">
                           <SelectValue placeholder="Select a team" />
                         </SelectTrigger>
                       </FormControl>
@@ -749,7 +749,7 @@ export default function CampShowcaseContent() {
                     <FormControl>
                       <Input
                         placeholder="e.g., Summer Basketball Camp 2026"
-                        className="bg-white/5 border-accent/20 text-white placeholder:text-muted-foreground"
+                        className="bg-muted/50 border-accent/20 text-foreground placeholder:text-muted-foreground"
                         data-testid="input-event-name"
                         {...field}
                       />
@@ -768,7 +768,7 @@ export default function CampShowcaseContent() {
                       <FormLabel className="text-muted-foreground">Event Type *</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className="bg-white/5 border-accent/20 text-white" data-testid="select-event-type">
+                          <SelectTrigger className="bg-muted/50 border-accent/20 text-foreground" data-testid="select-event-type">
                             <SelectValue placeholder="Select type" />
                           </SelectTrigger>
                         </FormControl>
@@ -793,7 +793,7 @@ export default function CampShowcaseContent() {
                       <FormLabel className="text-muted-foreground">Sport *</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className="bg-white/5 border-accent/20 text-white" data-testid="select-sport">
+                          <SelectTrigger className="bg-muted/50 border-accent/20 text-foreground" data-testid="select-sport">
                             <SelectValue placeholder="Select sport" />
                           </SelectTrigger>
                         </FormControl>
@@ -817,7 +817,7 @@ export default function CampShowcaseContent() {
                     <FormControl>
                       <Input
                         placeholder="e.g., Central High School Gymnasium"
-                        className="bg-white/5 border-accent/20 text-white placeholder:text-muted-foreground"
+                        className="bg-muted/50 border-accent/20 text-foreground placeholder:text-muted-foreground"
                         data-testid="input-location"
                         {...field}
                       />
@@ -837,7 +837,7 @@ export default function CampShowcaseContent() {
                       <FormControl>
                         <Input
                           placeholder="e.g., Los Angeles"
-                          className="bg-white/5 border-accent/20 text-white placeholder:text-muted-foreground"
+                          className="bg-muted/50 border-accent/20 text-foreground placeholder:text-muted-foreground"
                           data-testid="input-city"
                           {...field}
                         />
@@ -855,7 +855,7 @@ export default function CampShowcaseContent() {
                       <FormLabel className="text-muted-foreground">State</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className="bg-white/5 border-accent/20 text-white" data-testid="select-state">
+                          <SelectTrigger className="bg-muted/50 border-accent/20 text-foreground" data-testid="select-state">
                             <SelectValue placeholder="Select state" />
                           </SelectTrigger>
                         </FormControl>
@@ -883,7 +883,7 @@ export default function CampShowcaseContent() {
                       <FormControl>
                         <Input
                           type="date"
-                          className="bg-white/5 border-accent/20 text-white"
+                          className="bg-muted/50 border-accent/20 text-foreground"
                           data-testid="input-start-date"
                           {...field}
                         />
@@ -902,7 +902,7 @@ export default function CampShowcaseContent() {
                       <FormControl>
                         <Input
                           type="date"
-                          className="bg-white/5 border-accent/20 text-white"
+                          className="bg-muted/50 border-accent/20 text-foreground"
                           data-testid="input-end-date"
                           {...field}
                         />
@@ -921,7 +921,7 @@ export default function CampShowcaseContent() {
                       <FormControl>
                         <Input
                           type="date"
-                          className="bg-white/5 border-accent/20 text-white"
+                          className="bg-muted/50 border-accent/20 text-foreground"
                           data-testid="input-registration-deadline"
                           {...field}
                         />
@@ -945,7 +945,7 @@ export default function CampShowcaseContent() {
                           step="0.01"
                           min="0"
                           placeholder="e.g., 150.00"
-                          className="bg-white/5 border-accent/20 text-white placeholder:text-muted-foreground"
+                          className="bg-muted/50 border-accent/20 text-foreground placeholder:text-muted-foreground"
                           data-testid="input-cost"
                           disabled={form.watch("isFree")}
                           {...field}
@@ -986,7 +986,7 @@ export default function CampShowcaseContent() {
                       <Input
                         type="url"
                         placeholder="https://..."
-                        className="bg-white/5 border-accent/20 text-white placeholder:text-muted-foreground"
+                        className="bg-muted/50 border-accent/20 text-foreground placeholder:text-muted-foreground"
                         data-testid="input-registration-url"
                         {...field}
                       />
@@ -1006,7 +1006,7 @@ export default function CampShowcaseContent() {
                       <Input
                         type="email"
                         placeholder="coach@example.com"
-                        className="bg-white/5 border-accent/20 text-white placeholder:text-muted-foreground"
+                        className="bg-muted/50 border-accent/20 text-foreground placeholder:text-muted-foreground"
                         data-testid="input-contact-email"
                         {...field}
                       />
@@ -1025,7 +1025,7 @@ export default function CampShowcaseContent() {
                     <FormControl>
                       <Textarea
                         placeholder="Describe your event, what to expect, what to bring, etc."
-                        className="bg-white/5 border-accent/20 text-white placeholder:text-muted-foreground resize-none"
+                        className="bg-muted/50 border-accent/20 text-foreground placeholder:text-muted-foreground resize-none"
                         rows={4}
                         data-testid="textarea-description"
                         {...field}

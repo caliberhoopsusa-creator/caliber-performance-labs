@@ -266,7 +266,7 @@ export default function DiscoverHighlights() {
 
   return (
     <div className="pb-24 md:pb-8 space-y-4">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 via-purple-950/20 to-black/60 border border-purple-500/20">
+      <div className="relative overflow-hidden rounded-2xl bg-card/80 border border-purple-500/20">
         <div className="absolute inset-0 opacity-20" />
         <div className="absolute top-0 right-0 w-80 h-80 bg-purple-500/10 blur-[100px] rounded-full" />
         
@@ -289,7 +289,7 @@ export default function DiscoverHighlights() {
             
             <div className="flex items-center gap-3">
               <Select value={sort} onValueChange={setSort}>
-                <SelectTrigger className="w-[140px] bg-black/20 border-white/10" data-testid="select-sort">
+                <SelectTrigger className="w-[140px] bg-muted/50 border-border" data-testid="select-sort">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -324,9 +324,9 @@ export default function DiscoverHighlights() {
           <p className="text-muted-foreground">Loading highlights...</p>
         </div>
       ) : clips.length === 0 ? (
-        <Card className="p-12 text-center bg-gradient-to-br from-black/60 to-black/30 border-white/10">
+        <Card className="p-12 text-center bg-card/80 border-border">
           <Film className="w-16 h-16 mx-auto text-purple-400/30 mb-4" />
-          <h3 className="text-xl font-bold text-white mb-2">No Highlights Yet</h3>
+          <h3 className="text-xl font-bold text-foreground mb-2">No Highlights Yet</h3>
           <p className="text-muted-foreground mb-4">
             Be the first to upload a highlight clip and showcase your skills!
           </p>
@@ -342,7 +342,7 @@ export default function DiscoverHighlights() {
               variant="ghost"
               onClick={() => goToClip('up')} 
               disabled={activeIndex === 0}
-              className="bg-black/40 backdrop-blur-sm border border-white/10"
+              className="bg-card/80 backdrop-blur-sm border border-border"
               data-testid="button-prev-clip"
             >
               <ChevronUp className="w-5 h-5" />
@@ -352,7 +352,7 @@ export default function DiscoverHighlights() {
               variant="ghost"
               onClick={() => goToClip('down')} 
               disabled={activeIndex === clips.length - 1}
-              className="bg-black/40 backdrop-blur-sm border border-white/10"
+              className="bg-card/80 backdrop-blur-sm border border-border"
               data-testid="button-next-clip"
             >
               <ChevronDown className="w-5 h-5" />

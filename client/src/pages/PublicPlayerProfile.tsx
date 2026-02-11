@@ -154,7 +154,7 @@ function formatPosition(position: string | null | undefined): string {
 
 function PublicPlayerProfileSkeleton() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[hsl(220,25%,6%)] via-[hsl(220,20%,5%)] to-[hsl(220,25%,4%)] text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
         <div className="flex items-center gap-4">
           <Skeleton className="w-24 h-24 rounded-full" />
@@ -261,7 +261,7 @@ export default function PublicPlayerProfile() {
 
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[hsl(220,25%,6%)] via-[hsl(220,20%,5%)] to-[hsl(220,25%,4%)] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <Card className="p-8 text-center max-w-md">
           <User className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
           <h2 className="text-xl font-bold mb-2">Player Not Found</h2>
@@ -285,10 +285,10 @@ export default function PublicPlayerProfile() {
                      stats.performanceTrend === 'declining' ? 'text-red-400' : 'text-gray-400';
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[hsl(220,25%,6%)] via-[hsl(220,20%,5%)] to-[hsl(220,25%,4%)] text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="absolute inset-0 pointer-events-none opacity-30" />
       
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-[hsl(220,25%,6%)]/80 border-b border-border">
+      <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-blue-600 flex items-center justify-center">
@@ -399,7 +399,7 @@ export default function PublicPlayerProfile() {
                   <div className="text-xs text-muted-foreground uppercase mb-1">Overall</div>
                   <div 
                     className={cn(
-                      "w-16 h-16 rounded-xl flex items-center justify-center text-2xl font-bold text-white bg-gradient-to-br",
+                      "w-16 h-16 rounded-xl flex items-center justify-center text-2xl font-bold text-foreground bg-gradient-to-br",
                       getGradeColor(stats.averageGrade)
                     )}
                     data-testid="badge-overall-grade"
@@ -428,7 +428,7 @@ export default function PublicPlayerProfile() {
         <Card className="bg-gradient-to-r from-accent/10 via-accent/5 to-accent/10 border-accent/20 overflow-hidden" data-testid="card-scout-me">
           <div className="p-4 md:p-6 flex flex-col md:flex-row items-center gap-4">
             <div className="flex-1 text-center md:text-left">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2 justify-center md:justify-start">
+              <h3 className="text-lg font-bold text-foreground flex items-center gap-2 justify-center md:justify-start">
                 <Target className="w-5 h-5 text-accent" />
                 Interested in Recruiting {player.name.split(' ')[0]}?
               </h3>
@@ -471,25 +471,25 @@ export default function PublicPlayerProfile() {
           {isFootball ? (
             <>
               <Card className="p-4 text-center border-border bg-card/50">
-                <div className="text-2xl md:text-3xl font-bold text-white font-display" data-testid="stat-total-tds">
+                <div className="text-2xl md:text-3xl font-bold text-foreground font-display" data-testid="stat-total-tds">
                   {stats.football.totalTDs}
                 </div>
                 <div className="text-xs text-muted-foreground uppercase">Total TDs</div>
               </Card>
               <Card className="p-4 text-center border-border bg-card/50">
-                <div className="text-2xl md:text-3xl font-bold text-white font-display" data-testid="stat-rushing-ypg">
+                <div className="text-2xl md:text-3xl font-bold text-foreground font-display" data-testid="stat-rushing-ypg">
                   {stats.football.rushingYpg}
                 </div>
                 <div className="text-xs text-muted-foreground uppercase">Rush YPG</div>
               </Card>
               <Card className="p-4 text-center border-border bg-card/50">
-                <div className="text-2xl md:text-3xl font-bold text-white font-display" data-testid="stat-passing-ypg">
+                <div className="text-2xl md:text-3xl font-bold text-foreground font-display" data-testid="stat-passing-ypg">
                   {stats.football.passingYpg}
                 </div>
                 <div className="text-xs text-muted-foreground uppercase">Pass YPG</div>
               </Card>
               <Card className="p-4 text-center border-border bg-card/50">
-                <div className="text-2xl md:text-3xl font-bold text-white font-display" data-testid="stat-games-played">
+                <div className="text-2xl md:text-3xl font-bold text-foreground font-display" data-testid="stat-games-played">
                   {stats.gamesPlayed}
                 </div>
                 <div className="text-xs text-muted-foreground uppercase">Games</div>
@@ -498,25 +498,25 @@ export default function PublicPlayerProfile() {
           ) : (
             <>
               <Card className="p-4 text-center border-border bg-card/50">
-                <div className="text-2xl md:text-3xl font-bold text-white font-display" data-testid="stat-ppg">
+                <div className="text-2xl md:text-3xl font-bold text-foreground font-display" data-testid="stat-ppg">
                   {stats.basketball.ppg}
                 </div>
                 <div className="text-xs text-muted-foreground uppercase">PPG</div>
               </Card>
               <Card className="p-4 text-center border-border bg-card/50">
-                <div className="text-2xl md:text-3xl font-bold text-white font-display" data-testid="stat-rpg">
+                <div className="text-2xl md:text-3xl font-bold text-foreground font-display" data-testid="stat-rpg">
                   {stats.basketball.rpg}
                 </div>
                 <div className="text-xs text-muted-foreground uppercase">RPG</div>
               </Card>
               <Card className="p-4 text-center border-border bg-card/50">
-                <div className="text-2xl md:text-3xl font-bold text-white font-display" data-testid="stat-apg">
+                <div className="text-2xl md:text-3xl font-bold text-foreground font-display" data-testid="stat-apg">
                   {stats.basketball.apg}
                 </div>
                 <div className="text-xs text-muted-foreground uppercase">APG</div>
               </Card>
               <Card className="p-4 text-center border-border bg-card/50">
-                <div className="text-2xl md:text-3xl font-bold text-white font-display" data-testid="stat-games-played">
+                <div className="text-2xl md:text-3xl font-bold text-foreground font-display" data-testid="stat-games-played">
                   {stats.gamesPlayed}
                 </div>
                 <div className="text-xs text-muted-foreground uppercase">Games</div>
@@ -578,7 +578,7 @@ export default function PublicPlayerProfile() {
                 {recentGames.map((game) => (
                   <div 
                     key={game.id} 
-                    className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10"
+                    className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border"
                     data-testid={`highlight-game-${game.id}`}
                   >
                     <div className="flex-1 min-w-0">
@@ -597,7 +597,7 @@ export default function PublicPlayerProfile() {
                       </div>
                       <div 
                         className={cn(
-                          "w-10 h-10 rounded-lg flex items-center justify-center font-bold text-white bg-gradient-to-br text-sm",
+                          "w-10 h-10 rounded-lg flex items-center justify-center font-bold text-foreground bg-gradient-to-br text-sm",
                           getGradeColor(game.grade || 'C')
                         )}
                       >
@@ -674,21 +674,21 @@ export default function PublicPlayerProfile() {
             </h2>
             <div className="grid gap-3">
               {endorsements.map((e: any) => (
-                <Card key={e.id} className="p-4 bg-white/5 border-white/10" data-testid={`public-endorsement-${e.id}`}>
+                <Card key={e.id} className="p-4 bg-muted/50 border-border" data-testid={`public-endorsement-${e.id}`}>
                   <div className="flex items-start gap-3">
-                    <Avatar className="w-8 h-8 border border-white/10">
+                    <Avatar className="w-8 h-8 border border-border">
                       <AvatarFallback className="bg-accent/20 text-accent text-xs font-bold">
                         {e.coachName?.split(" ").map((n: string) => n[0]).join("").slice(0, 2)}
                       </AvatarFallback>
                     </Avatar>
                     <div>
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <span className="text-sm font-bold text-white">{e.coachName}</span>
-                        <Badge className="text-[10px] bg-white/5 border-white/10 no-default-hover-elevate no-default-active-elevate">
+                        <span className="text-sm font-bold text-foreground">{e.coachName}</span>
+                        <Badge className="text-[10px] bg-muted/50 border-border no-default-hover-elevate no-default-active-elevate">
                           {e.skillCategory?.replace('_', ' ')}
                         </Badge>
                       </div>
-                      <p className="text-sm text-white/70">{e.content}</p>
+                      <p className="text-sm text-foreground/70">{e.content}</p>
                     </div>
                   </div>
                 </Card>
@@ -708,23 +708,23 @@ export default function PublicPlayerProfile() {
             </h2>
             <div className="grid gap-3 sm:grid-cols-2">
               {highlights.map((clip: any) => (
-                <Card key={clip.id} className="overflow-hidden border-white/10 bg-white/5" data-testid={`public-highlight-${clip.id}`}>
+                <Card key={clip.id} className="overflow-hidden border-border bg-muted/50" data-testid={`public-highlight-${clip.id}`}>
                   {clip.thumbnailUrl ? (
-                    <div className="relative aspect-video bg-black/40">
+                    <div className="relative aspect-video bg-card">
                       <img src={clip.thumbnailUrl} alt={clip.title || 'Highlight'} className="w-full h-full object-cover" />
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-12 h-12 rounded-full bg-black/60 flex items-center justify-center border border-white/20">
+                        <div className="w-12 h-12 rounded-full bg-card/80 flex items-center justify-center border border-border">
                           <Play className="w-5 h-5 text-white ml-0.5" />
                         </div>
                       </div>
                     </div>
                   ) : (
                     <div className="aspect-video bg-gradient-to-br from-accent/10 to-blue-600/10 flex items-center justify-center">
-                      <Film className="w-10 h-10 text-white/20" />
+                      <Film className="w-10 h-10 text-muted-foreground/20" />
                     </div>
                   )}
                   <div className="p-3">
-                    <h4 className="text-sm font-bold text-white truncate">{clip.title || 'Highlight Clip'}</h4>
+                    <h4 className="text-sm font-bold text-foreground truncate">{clip.title || 'Highlight Clip'}</h4>
                     {clip.description && (
                       <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{clip.description}</p>
                     )}

@@ -132,7 +132,7 @@ function ScoutPlayerCard({ player, sport, index }: ScoutPlayerCardProps) {
         <Card 
           className={cn(
             "group cursor-pointer transition-all duration-300 h-full overflow-hidden relative",
-            "bg-gradient-to-br from-black/60 to-black/30 backdrop-blur-sm",
+            "bg-card/80 backdrop-blur-sm",
             "hover:scale-[1.02] hover:-translate-y-1",
             tierStyles.border,
             isRecruitReady && "ring-1 ring-green-500/30"
@@ -181,12 +181,12 @@ function ScoutPlayerCard({ player, sport, index }: ScoutPlayerCardProps) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2 mb-1">
                   <div className="min-w-0">
-                    <h3 className="font-bold text-white truncate group-hover:text-accent transition-colors">
+                    <h3 className="font-bold text-foreground truncate group-hover:text-accent transition-colors">
                       {player.name}
                     </h3>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <span className="text-accent/80">{positionLabel}</span>
-                      {player.height && <span className="text-white/50">• {player.height}</span>}
+                      {player.height && <span className="text-muted-foreground">• {player.height}</span>}
                     </div>
                   </div>
                   {player.avgGrade && (
@@ -196,19 +196,19 @@ function ScoutPlayerCard({ player, sport, index }: ScoutPlayerCardProps) {
 
                 <div className="flex flex-wrap items-center gap-1.5 mt-2">
                   {player.school && (
-                    <Badge variant="outline" className="text-xs gap-1 py-0.5 border-white/10 bg-white/5">
+                    <Badge variant="outline" className="text-xs gap-1 py-0.5 border-border bg-muted/50">
                       <GraduationCap className="w-3 h-3 text-accent" />
                       {player.school}
                     </Badge>
                   )}
                   {(player.city || player.state) && (
-                    <Badge variant="outline" className="text-xs gap-1 py-0.5 border-white/10 bg-white/5">
+                    <Badge variant="outline" className="text-xs gap-1 py-0.5 border-border bg-muted/50">
                       <MapPin className="w-3 h-3 text-accent" />
                       {player.city && player.state ? `${player.city}, ${player.state}` : player.state || player.city}
                     </Badge>
                   )}
                   {player.graduationYear && (
-                    <Badge variant="outline" className="text-xs py-0.5 border-white/10 bg-white/5">
+                    <Badge variant="outline" className="text-xs py-0.5 border-border bg-muted/50">
                       Class of {player.graduationYear}
                     </Badge>
                   )}
@@ -384,7 +384,7 @@ function ScoutPlayerCard({ player, sport, index }: ScoutPlayerCardProps) {
                   #{player.countryRank} USA
                 </Badge>
               )}
-              <Badge variant="outline" className="text-xs border-white/10 bg-white/5">
+              <Badge variant="outline" className="text-xs border-border bg-muted/50">
                 {player.gamesPlayed} games
               </Badge>
             </div>
@@ -414,7 +414,7 @@ function StatDisplay({ value, label, isText }: { value: string | number; label: 
 
 function PlayerCardSkeleton() {
   return (
-    <Card className="border-accent/[0.08] bg-gradient-to-br from-black/60 to-black/30 relative overflow-hidden">
+    <Card className="border-accent/[0.08] bg-card/80 relative overflow-hidden">
       <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
       <CardContent className="p-5">
         <div className="flex gap-4">
@@ -528,7 +528,7 @@ export default function ScoutHub() {
 
   return (
     <div className="pb-24 md:pb-6 space-y-6" data-testid="page-scout-hub">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 via-card to-black/60 border border-accent/20">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-card/80 via-card to-card/80 border border-accent/20">
         <div className="absolute inset-0 opacity-30" />
         <div className="absolute top-0 right-0 w-96 h-96 bg-accent/10 blur-[100px] rounded-full" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 blur-[80px] rounded-full" />
@@ -550,7 +550,7 @@ export default function ScoutHub() {
               </p>
             </div>
 
-            <div className="flex items-center gap-2 px-2 py-1.5 rounded-xl bg-black/40 border border-accent/20 backdrop-blur-sm">
+            <div className="flex items-center gap-2 px-2 py-1.5 rounded-xl bg-muted/80 border border-accent/20 backdrop-blur-sm">
               <Button
                 variant={sport === 'basketball' ? 'default' : 'ghost'}
                 size="sm"
@@ -582,7 +582,7 @@ export default function ScoutHub() {
         </div>
       </div>
 
-      <Card className="relative overflow-hidden bg-gradient-to-br from-black/60 to-black/30 border-accent/20 backdrop-blur-sm">
+      <Card className="relative overflow-hidden bg-card/80 border-accent/20 backdrop-blur-sm">
         <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
         <CardContent className="p-5">
           <div className="flex items-center gap-3 mb-5">
@@ -604,7 +604,7 @@ export default function ScoutHub() {
                   placeholder="Search by name, school, or team..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 bg-black/40 border-accent/20 focus:border-accent/50 placeholder:text-muted-foreground/50"
+                  className="pl-9 bg-muted/80 border-accent/20 focus:border-accent/50 placeholder:text-muted-foreground/50"
                   data-testid="input-scout-search"
                 />
               </div>
@@ -613,7 +613,7 @@ export default function ScoutHub() {
             <div>
               <label className="text-xs text-accent/80 mb-1.5 block font-medium">Position</label>
               <Select value={position} onValueChange={setPosition}>
-                <SelectTrigger className="bg-black/40 border-accent/20 focus:border-accent/50" data-testid="select-scout-position">
+                <SelectTrigger className="bg-muted/80 border-accent/20 focus:border-accent/50" data-testid="select-scout-position">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -636,7 +636,7 @@ export default function ScoutHub() {
             <div>
               <label className="text-xs text-accent/80 mb-1.5 block font-medium">State</label>
               <Select value={state} onValueChange={setState}>
-                <SelectTrigger className="bg-black/40 border-accent/20 focus:border-accent/50" data-testid="select-scout-state">
+                <SelectTrigger className="bg-muted/80 border-accent/20 focus:border-accent/50" data-testid="select-scout-state">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -651,7 +651,7 @@ export default function ScoutHub() {
             <div>
               <label className="text-xs text-accent/80 mb-1.5 block font-medium">Class Year</label>
               <Select value={graduationYear} onValueChange={setGraduationYear}>
-                <SelectTrigger className="bg-black/40 border-accent/20 focus:border-accent/50" data-testid="select-scout-year">
+                <SelectTrigger className="bg-muted/80 border-accent/20 focus:border-accent/50" data-testid="select-scout-year">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -666,7 +666,7 @@ export default function ScoutHub() {
             <div>
               <label className="text-xs text-accent/80 mb-1.5 block font-medium">Min Grade</label>
               <Select value={minGrade} onValueChange={setMinGrade}>
-                <SelectTrigger className="bg-black/40 border-accent/20 focus:border-accent/50" data-testid="select-scout-grade">
+                <SelectTrigger className="bg-muted/80 border-accent/20 focus:border-accent/50" data-testid="select-scout-grade">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -695,7 +695,7 @@ export default function ScoutHub() {
                     Min PPG
                   </label>
                   <Select value={minPpg} onValueChange={setMinPpg}>
-                    <SelectTrigger className="bg-black/40 border-accent/20 focus:border-accent/50" data-testid="select-scout-ppg">
+                    <SelectTrigger className="bg-muted/80 border-accent/20 focus:border-accent/50" data-testid="select-scout-ppg">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -716,7 +716,7 @@ export default function ScoutHub() {
                       Min Pass YDS
                     </label>
                     <Select value={minPassingYds} onValueChange={setMinPassingYds}>
-                      <SelectTrigger className="bg-black/40 border-accent/20 focus:border-accent/50" data-testid="select-scout-pass-yds">
+                      <SelectTrigger className="bg-muted/80 border-accent/20 focus:border-accent/50" data-testid="select-scout-pass-yds">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -734,7 +734,7 @@ export default function ScoutHub() {
                       Min Rush YDS
                     </label>
                     <Select value={minRushingYds} onValueChange={setMinRushingYds}>
-                      <SelectTrigger className="bg-black/40 border-accent/20 focus:border-accent/50" data-testid="select-scout-rush-yds">
+                      <SelectTrigger className="bg-muted/80 border-accent/20 focus:border-accent/50" data-testid="select-scout-rush-yds">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -752,7 +752,7 @@ export default function ScoutHub() {
                       Min Rec YDS
                     </label>
                     <Select value={minReceivingYds} onValueChange={setMinReceivingYds}>
-                      <SelectTrigger className="bg-black/40 border-accent/20 focus:border-accent/50" data-testid="select-scout-rec-yds">
+                      <SelectTrigger className="bg-muted/80 border-accent/20 focus:border-accent/50" data-testid="select-scout-rec-yds">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -772,7 +772,7 @@ export default function ScoutHub() {
                   Sort By
                 </label>
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="bg-black/40 border-accent/20 focus:border-accent/50" data-testid="select-scout-sort">
+                  <SelectTrigger className="bg-muted/80 border-accent/20 focus:border-accent/50" data-testid="select-scout-sort">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -840,7 +840,7 @@ export default function ScoutHub() {
           ))}
         </div>
       ) : (
-        <Card className="border-accent/[0.08] bg-gradient-to-br from-black/60 to-black/30 relative overflow-hidden">
+        <Card className="border-accent/[0.08] bg-card/80 relative overflow-hidden">
           <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
           <CardContent className="py-8">
             <EmptyState

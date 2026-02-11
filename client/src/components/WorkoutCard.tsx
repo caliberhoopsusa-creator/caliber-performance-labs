@@ -98,7 +98,7 @@ export function WorkoutCard({ workout, onDelete, isDeleting }: WorkoutCardProps)
             <Icon className="w-5 h-5" />
           </div>
           <div className="flex-1 min-w-0">
-            <h4 className="font-semibold text-white truncate">{workout.title}</h4>
+            <h4 className="font-semibold text-foreground truncate">{workout.title}</h4>
             <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
               <span className="flex items-center gap-1">
                 <Clock className="w-3 h-3" />
@@ -111,7 +111,7 @@ export function WorkoutCard({ workout, onDelete, isDeleting }: WorkoutCardProps)
               <div className="mt-3 space-y-1">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">Intensity</span>
-                  <span className="text-white font-medium">{workout.intensity}/10</span>
+                  <span className="text-foreground font-medium">{workout.intensity}/10</span>
                 </div>
                 <Progress 
                   value={workout.intensity * 10} 
@@ -210,8 +210,8 @@ export function WorkoutCard({ workout, onDelete, isDeleting }: WorkoutCardProps)
                 Your browser does not support the video tag.
               </video>
             </div>
-            <div className="p-4 bg-card border-t border-white/10">
-              <h3 className="font-display text-lg font-bold text-white">{workout.title}</h3>
+            <div className="p-4 bg-card border-t border-border">
+              <h3 className="font-display text-lg font-bold text-foreground">{workout.title}</h3>
               <p className="text-sm text-muted-foreground capitalize">{workout.workoutType} • {workout.duration} min</p>
             </div>
           </DialogContent>

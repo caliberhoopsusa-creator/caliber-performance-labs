@@ -115,7 +115,7 @@ export default function EndorsementSection({ playerId, playerName }: Endorsement
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <MessageSquareQuote className="w-5 h-5 text-accent" />
-          <h3 className="text-lg font-bold text-white">Coach Endorsements</h3>
+          <h3 className="text-lg font-bold text-foreground">Coach Endorsements</h3>
           {endorsements.length > 0 && (
             <Badge className="bg-accent/10 text-accent border-accent/20 no-default-hover-elevate no-default-active-elevate">
               {endorsements.length}
@@ -130,7 +130,7 @@ export default function EndorsementSection({ playerId, playerName }: Endorsement
                 Endorse
               </Button>
             </DialogTrigger>
-            <DialogContent className="bg-card border-white/10">
+            <DialogContent className="bg-card border-border">
               <DialogHeader>
                 <DialogTitle>Endorse {playerName}</DialogTitle>
               </DialogHeader>
@@ -159,7 +159,7 @@ export default function EndorsementSection({ playerId, playerName }: Endorsement
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
                     placeholder="Write a brief endorsement about this player's skills..."
-                    className="min-h-[100px] bg-black/20 border-white/10"
+                    className="min-h-[100px] bg-muted/50 border-border"
                     maxLength={500}
                     data-testid="input-endorsement-content"
                   />
@@ -181,8 +181,8 @@ export default function EndorsementSection({ playerId, playerName }: Endorsement
       </div>
 
       {endorsements.length === 0 ? (
-        <Card className="p-6 text-center bg-black/20 border-white/5">
-          <MessageSquareQuote className="w-10 h-10 mx-auto text-white/10 mb-2" />
+        <Card className="p-6 text-center bg-muted/50 border-border/50">
+          <MessageSquareQuote className="w-10 h-10 mx-auto text-muted-foreground/30 mb-2" />
           <p className="text-sm text-muted-foreground">
             {isCoach ? `Be the first to endorse ${playerName}!` : "No coach endorsements yet."}
           </p>
@@ -195,17 +195,17 @@ export default function EndorsementSection({ playerId, playerName }: Endorsement
             const isOwn = user?.id === endorsement.coachUserId;
             
             return (
-              <Card key={endorsement.id} className="p-4 bg-black/20 border-white/5" data-testid={`endorsement-${endorsement.id}`}>
+              <Card key={endorsement.id} className="p-4 bg-muted/50 border-border/50" data-testid={`endorsement-${endorsement.id}`}>
                 <div className="flex items-start gap-3">
-                  <Avatar className="w-9 h-9 border border-white/10">
+                  <Avatar className="w-9 h-9 border border-border">
                     <AvatarFallback className="bg-accent/20 text-accent text-xs font-bold">
                       {endorsement.coachName.split(" ").map(n => n[0]).join("").slice(0, 2)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className="text-sm font-bold text-white">{endorsement.coachName}</span>
-                      <Badge className={cn("text-[10px] no-default-hover-elevate no-default-active-elevate", catInfo.color, "bg-white/5 border-white/10")}>
+                      <span className="text-sm font-bold text-foreground">{endorsement.coachName}</span>
+                      <Badge className={cn("text-[10px] no-default-hover-elevate no-default-active-elevate", catInfo.color, "bg-muted/50 border-border")}>
                         <CatIcon className="w-3 h-3 mr-1" />
                         {catInfo.label}
                       </Badge>
@@ -213,7 +213,7 @@ export default function EndorsementSection({ playerId, playerName }: Endorsement
                         {formatDistanceToNow(new Date(endorsement.createdAt), { addSuffix: true })}
                       </span>
                     </div>
-                    <p className="text-sm text-white/80 leading-relaxed">{endorsement.content}</p>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{endorsement.content}</p>
                   </div>
                   {isOwn && (
                     <Button

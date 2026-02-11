@@ -27,11 +27,11 @@ export function EventCard({ event, onEdit, onDelete }: EventCardProps) {
     <div className="rounded-lg p-4 space-y-3" data-testid={`event-card-${event.id}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 flex-1 min-w-0">
-          <div className={`p-2 rounded-lg bg-white/5 ${config.color}`}>
+          <div className={`p-2 rounded-lg bg-muted/50 ${config.color}`}>
             <Icon className="w-5 h-5" />
           </div>
           <div className="flex-1 min-w-0">
-            <h4 className="font-semibold text-white truncate" data-testid={`event-title-${event.id}`}>
+            <h4 className="font-semibold text-foreground truncate" data-testid={`event-title-${event.id}`}>
               {event.title}
             </h4>
             <p className="text-xs text-muted-foreground uppercase tracking-wide">
@@ -44,7 +44,7 @@ export function EventCard({ event, onEdit, onDelete }: EventCardProps) {
             <Button 
               size="icon" 
               variant="ghost" 
-              className="h-8 w-8 text-muted-foreground hover:text-white"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
               onClick={() => onEdit(event)}
               data-testid={`button-edit-event-${event.id}`}
             >
@@ -82,7 +82,7 @@ export function EventCard({ event, onEdit, onDelete }: EventCardProps) {
       </div>
 
       {event.description && (
-        <p className="text-sm text-muted-foreground border-t border-white/10 pt-3">
+        <p className="text-sm text-muted-foreground border-t border-border pt-3">
           {event.description}
         </p>
       )}

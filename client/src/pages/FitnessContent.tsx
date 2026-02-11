@@ -185,7 +185,7 @@ function RecoveryGauge({ score }: { score: number }) {
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-3xl font-display font-bold text-white">{score}</span>
+        <span className="text-3xl font-display font-bold text-foreground">{score}</span>
         <span className="text-xs text-muted-foreground uppercase tracking-wider">Recovery</span>
       </div>
     </div>
@@ -354,7 +354,7 @@ export default function FitnessContent() {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] text-center p-8" data-testid="fitness-no-player">
         <Heart className="w-16 h-16 text-muted-foreground mb-4" />
-        <h2 className="text-2xl font-display font-bold text-white mb-2">
+        <h2 className="text-2xl font-display font-bold text-foreground mb-2">
           Player Profile Required
         </h2>
         <p className="text-muted-foreground max-w-md">
@@ -437,7 +437,7 @@ export default function FitnessContent() {
                   <Moon className="w-4 h-4 text-indigo-400" />
                   <span className="text-xs uppercase tracking-wider">Sleep</span>
                 </div>
-                <div className="text-3xl font-display font-bold text-white">
+                <div className="text-3xl font-display font-bold text-foreground">
                   {todayStats.sleepHours.toFixed(1)}h
                 </div>
                 <div className="text-sm text-muted-foreground">
@@ -452,7 +452,7 @@ export default function FitnessContent() {
                   <Activity className="w-4 h-4 text-pink-400" />
                   <span className="text-xs uppercase tracking-wider">HRV</span>
                 </div>
-                <div className="text-3xl font-display font-bold text-white">
+                <div className="text-3xl font-display font-bold text-foreground">
                   {todayStats.hrvScore}
                 </div>
                 <div className="text-sm text-muted-foreground">
@@ -467,7 +467,7 @@ export default function FitnessContent() {
                   <Zap className="w-4 h-4 text-yellow-400" />
                   <span className="text-xs uppercase tracking-wider">Readiness</span>
                 </div>
-                <div className="text-3xl font-display font-bold text-white">
+                <div className="text-3xl font-display font-bold text-foreground">
                   {todayStats.readinessScore}%
                 </div>
                 <div className="text-sm text-muted-foreground">Game day readiness</div>
@@ -480,7 +480,7 @@ export default function FitnessContent() {
                   <TrendingUp className="w-4 h-4 text-orange-400" />
                   <span className="text-xs uppercase tracking-wider">Strain</span>
                 </div>
-                <div className="text-3xl font-display font-bold text-white">
+                <div className="text-3xl font-display font-bold text-foreground">
                   {todayStats.strainScore.toFixed(1)}
                 </div>
                 <div className="text-sm text-muted-foreground">Daily strain score</div>
@@ -760,7 +760,7 @@ export default function FitnessContent() {
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
                   <div className="w-2 h-2 rounded-full bg-emerald-400 mt-2" />
                   <div>
-                    <p className="text-sm text-white font-medium">
+                    <p className="text-sm text-foreground font-medium">
                       Your best games happen after 8+ hours of sleep
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -772,7 +772,7 @@ export default function FitnessContent() {
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-accent/10 border border-accent/20">
                   <div className="w-2 h-2 rounded-full bg-accent mt-2" />
                   <div>
-                    <p className="text-sm text-white font-medium">
+                    <p className="text-sm text-foreground font-medium">
                       Recovery above 70 correlates with fewer turnovers
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -784,7 +784,7 @@ export default function FitnessContent() {
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
                   <div className="w-2 h-2 rounded-full bg-indigo-400 mt-2" />
                   <div>
-                    <p className="text-sm text-white font-medium">
+                    <p className="text-sm text-foreground font-medium">
                       Your HRV peaks on rest days after back-to-back games
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -797,7 +797,7 @@ export default function FitnessContent() {
           </Card>
 
           <div>
-            <h3 className="text-xl font-display font-bold text-white mb-4 uppercase tracking-tight">
+            <h3 className="text-xl font-display font-bold text-foreground mb-4 uppercase tracking-tight">
               Connect Wearables
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -813,7 +813,7 @@ export default function FitnessContent() {
                       <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-accent/20 to-blue-500/20 flex items-center justify-center mb-4 text-accent">
                         {wearable.icon}
                       </div>
-                      <h4 className="font-display font-bold text-white text-lg mb-2">
+                      <h4 className="font-display font-bold text-foreground text-lg mb-2">
                         {wearable.name}
                       </h4>
                       {wearable.comingSoon ? (

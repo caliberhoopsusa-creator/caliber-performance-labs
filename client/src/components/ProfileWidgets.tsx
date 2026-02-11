@@ -113,7 +113,7 @@ export function ProfileWidgets({ games, selectedWidgets, onWidgetsChange, isOwnP
               <div className="flex items-center gap-3">
                 <widget.icon className="w-5 h-5 text-accent" />
                 <div>
-                  <p className="font-medium text-white">{widget.label}</p>
+                  <p className="font-medium text-foreground">{widget.label}</p>
                   <p className="text-xs text-muted-foreground">{widget.description}</p>
                 </div>
               </div>
@@ -263,7 +263,7 @@ function TrendsWidget({ games, isFootball, position }: { games: Game[]; isFootba
     
     return (
       <Card className="p-4 animate-fade-up" data-testid="widget-trends">
-        <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+        <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-accent" /> Performance Trends
         </h3>
         <div className="h-48">
@@ -298,7 +298,7 @@ function TrendsWidget({ games, isFootball, position }: { games: Game[]; isFootba
 
   return (
     <Card className="p-4 animate-fade-up" data-testid="widget-trends">
-      <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+      <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
         <TrendingUp className="w-4 h-4 text-accent" /> Performance Trends
       </h3>
       <div className="h-48">
@@ -357,7 +357,7 @@ function GradesWidget({ games }: { games: Game[] }) {
 
   return (
     <Card className="p-4 animate-fade-up" data-testid="widget-grades">
-      <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+      <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
         <Award className="w-4 h-4 text-accent" /> Grade History
       </h3>
       <div className="h-48">
@@ -522,7 +522,7 @@ function RadarWidget({ games, isFootball, position }: { games: Game[]; isFootbal
 
   return (
     <Card className="p-4 animate-fade-up" data-testid="widget-radar">
-      <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+      <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
         <Target className="w-4 h-4 text-accent" /> Skill Breakdown
       </h3>
       <div className="h-48">
@@ -631,7 +631,7 @@ function AveragesWidget({ games, isFootball, position }: { games: Game[]; isFoot
   if (isFootball) {
     return (
       <Card className="p-4 animate-fade-up" data-testid="widget-averages">
-        <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+        <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
           <BarChart3 className="w-4 h-4 text-accent" /> Season Averages
         </h3>
         <div className={`grid gap-2 text-center`} style={{ gridTemplateColumns: `repeat(${positionStats.length}, 1fr)` }}>
@@ -648,7 +648,7 @@ function AveragesWidget({ games, isFootball, position }: { games: Game[]; isFoot
 
   return (
     <Card className="p-4 animate-fade-up" data-testid="widget-averages">
-      <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+      <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
         <BarChart3 className="w-4 h-4 text-accent" /> Season Averages
       </h3>
       <div className="grid grid-cols-5 gap-2 text-center">
@@ -697,7 +697,7 @@ function ShootingWidget({ games }: { games: Game[] }) {
 
   return (
     <Card className="p-4 animate-fade-up" data-testid="widget-shooting">
-      <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+      <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
         <Activity className="w-4 h-4 text-accent" /> Shooting Splits
       </h3>
       <div className="grid grid-cols-3 gap-3 text-center">
@@ -738,7 +738,7 @@ function EfficiencyWidget({ games }: { games: Game[] }) {
 
   return (
     <Card className="p-4 animate-fade-up" data-testid="widget-efficiency">
-      <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+      <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
         <Activity className="w-4 h-4 text-accent" /> Efficiency Stats
       </h3>
       <div className="grid grid-cols-3 gap-3 text-center">

@@ -47,7 +47,7 @@ export default function CompareContent() {
     <Paywall requiredTier="pro" featureName="Head-to-Head Comparison">
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div>
-        <h2 className="text-2xl md:text-3xl font-display font-bold text-white uppercase tracking-tight">Head-to-Head</h2>
+        <h2 className="text-2xl md:text-3xl font-display font-bold text-foreground uppercase tracking-tight">Head-to-Head</h2>
         <p className="text-muted-foreground font-medium">Compare performance metrics between two players</p>
       </div>
 
@@ -55,10 +55,10 @@ export default function CompareContent() {
         <div className="space-y-4">
           <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Player 1</label>
           <Select onValueChange={setP1Id} value={p1Id}>
-            <SelectTrigger className="bg-card border-white/10 text-white h-14" data-testid="select-player-1">
+            <SelectTrigger className="bg-card border-border text-foreground h-14" data-testid="select-player-1">
               <SelectValue placeholder="Select first player..." />
             </SelectTrigger>
-            <SelectContent className="bg-card border-white/10 text-white">
+            <SelectContent className="bg-card border-border text-foreground">
               {players?.map((p: any) => (
                 <SelectItem key={p.id} value={String(p.id)} disabled={String(p.id) === p2Id}>{p.name}</SelectItem>
               ))}
@@ -69,10 +69,10 @@ export default function CompareContent() {
         <div className="space-y-4">
           <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Player 2</label>
           <Select onValueChange={setP2Id} value={p2Id}>
-            <SelectTrigger className="bg-card border-white/10 text-white h-14" data-testid="select-player-2">
+            <SelectTrigger className="bg-card border-border text-foreground h-14" data-testid="select-player-2">
               <SelectValue placeholder="Select second player..." />
             </SelectTrigger>
-            <SelectContent className="bg-card border-white/10 text-white">
+            <SelectContent className="bg-card border-border text-foreground">
               {players?.map((p: any) => (
                 <SelectItem key={p.id} value={String(p.id)} disabled={String(p.id) === p1Id}>{p.name}</SelectItem>
               ))}
@@ -89,13 +89,13 @@ export default function CompareContent() {
 
       {comparison && (
         <div className="space-y-6 animate-in zoom-in-95 duration-500">
-          <div className="grid grid-cols-2 gap-px bg-white/5 border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
+          <div className="grid grid-cols-2 gap-px bg-muted/50 border border-border/50 rounded-2xl overflow-hidden shadow-2xl">
             <ComparisonCard player={comparison.player1} side="left" />
             <ComparisonCard player={comparison.player2} side="right" />
           </div>
 
-          <div className="bg-card border border-white/5 rounded-2xl p-8 shadow-xl">
-            <h3 className="text-xl font-bold font-display text-white mb-8 text-center uppercase tracking-widest">Statistical Comparison</h3>
+          <div className="bg-card border border-border/50 rounded-2xl p-8 shadow-xl">
+            <h3 className="text-xl font-bold font-display text-foreground mb-8 text-center uppercase tracking-widest">Statistical Comparison</h3>
             <div className="space-y-8">
               {isFootball ? (
                 <>
@@ -160,11 +160,11 @@ function ComparisonCard({ player, side }: any) {
       "p-8 flex flex-col items-center gap-6",
       side === "left" ? "bg-accent/5" : "bg-secondary/5"
     )}>
-      <div className="w-24 h-24 rounded-full bg-background border-4 border-white/10 flex items-center justify-center text-4xl font-display font-bold text-white shadow-xl">
+      <div className="w-24 h-24 rounded-full bg-background border-4 border-border flex items-center justify-center text-4xl font-display font-bold text-foreground shadow-xl">
         {player.jerseyNumber || "#"}
       </div>
       <div className="text-center">
-        <h3 className="text-2xl font-bold font-display text-white uppercase tracking-tight">{player.name}</h3>
+        <h3 className="text-2xl font-bold font-display text-foreground uppercase tracking-tight">{player.name}</h3>
         <p className="text-sm text-muted-foreground font-medium">{player.position} • {player.team}</p>
       </div>
     </div>
@@ -182,13 +182,13 @@ function StatRow({ label, v1, v2, suffix = "" }: any) {
         <span>{label}</span>
         <span className={cn(n2 > n1 && "text-accent")}>{v2}{suffix}</span>
       </div>
-      <div className="flex h-2 w-full bg-white/5 rounded-full overflow-hidden">
+      <div className="flex h-2 w-full bg-muted/50 rounded-full overflow-hidden">
         <div 
-          className={cn("h-full transition-all duration-500", n1 > n2 ? "bg-accent" : "bg-white/20")} 
+          className={cn("h-full transition-all duration-500", n1 > n2 ? "bg-accent" : "bg-muted")} 
           style={{ width: `${(n1 / (n1 + n2)) * 100}%` }} 
         />
         <div 
-          className={cn("h-full transition-all duration-500", n2 > n1 ? "bg-accent" : "bg-white/20")} 
+          className={cn("h-full transition-all duration-500", n2 > n1 ? "bg-accent" : "bg-muted")} 
           style={{ width: `${(n2 / (n1 + n2)) * 100}%` }} 
         />
       </div>

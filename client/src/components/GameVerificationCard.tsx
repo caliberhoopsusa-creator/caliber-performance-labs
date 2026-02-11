@@ -96,14 +96,14 @@ export function GameVerificationCard({ game, onVerified }: Props) {
       exit={{ opacity: 0, y: -10 }}
       layout
     >
-      <Card className="p-4 bg-gradient-to-br from-black/60 to-black/30 border-white/10 hover:border-accent/30 transition-colors">
+      <Card className="p-4 bg-card/80 border-border hover:border-accent/30 transition-colors">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <span className="font-semibold text-white truncate" data-testid={`text-player-name-${game.id}`}>
+              <span className="font-semibold text-foreground truncate" data-testid={`text-player-name-${game.id}`}>
                 {game.playerName}
               </span>
-              <Badge variant="outline" className="text-xs border-white/20 capitalize">
+              <Badge variant="outline" className="text-xs border-border capitalize">
                 {game.playerPosition}
               </Badge>
               <Badge 
@@ -146,35 +146,35 @@ export function GameVerificationCard({ game, onVerified }: Props) {
                 exit={{ opacity: 0, height: 0 }}
                 className="mb-3"
               >
-                <div className="grid grid-cols-3 gap-2 py-2 border-t border-white/10">
+                <div className="grid grid-cols-3 gap-2 py-2 border-t border-border">
                   {isBasketball ? (
                     <>
-                      <div className="text-center p-2 rounded bg-white/5">
+                      <div className="text-center p-2 rounded bg-muted/50">
                         <p className="text-xs text-muted-foreground">Points</p>
-                        <p className="text-lg font-bold text-white">{game.points ?? 0}</p>
+                        <p className="text-lg font-bold text-foreground">{game.points ?? 0}</p>
                       </div>
-                      <div className="text-center p-2 rounded bg-white/5">
+                      <div className="text-center p-2 rounded bg-muted/50">
                         <p className="text-xs text-muted-foreground">Rebounds</p>
-                        <p className="text-lg font-bold text-white">{game.rebounds ?? 0}</p>
+                        <p className="text-lg font-bold text-foreground">{game.rebounds ?? 0}</p>
                       </div>
-                      <div className="text-center p-2 rounded bg-white/5">
+                      <div className="text-center p-2 rounded bg-muted/50">
                         <p className="text-xs text-muted-foreground">Assists</p>
-                        <p className="text-lg font-bold text-white">{game.assists ?? 0}</p>
+                        <p className="text-lg font-bold text-foreground">{game.assists ?? 0}</p>
                       </div>
                     </>
                   ) : (
                     <>
-                      <div className="text-center p-2 rounded bg-white/5">
+                      <div className="text-center p-2 rounded bg-muted/50">
                         <p className="text-xs text-muted-foreground">Pass Yds</p>
-                        <p className="text-lg font-bold text-white">{game.passingYards ?? 0}</p>
+                        <p className="text-lg font-bold text-foreground">{game.passingYards ?? 0}</p>
                       </div>
-                      <div className="text-center p-2 rounded bg-white/5">
+                      <div className="text-center p-2 rounded bg-muted/50">
                         <p className="text-xs text-muted-foreground">Rush Yds</p>
-                        <p className="text-lg font-bold text-white">{game.rushingYards ?? 0}</p>
+                        <p className="text-lg font-bold text-foreground">{game.rushingYards ?? 0}</p>
                       </div>
-                      <div className="text-center p-2 rounded bg-white/5">
+                      <div className="text-center p-2 rounded bg-muted/50">
                         <p className="text-xs text-muted-foreground">Tackles</p>
-                        <p className="text-lg font-bold text-white">{game.tackles ?? 0}</p>
+                        <p className="text-lg font-bold text-foreground">{game.tackles ?? 0}</p>
                       </div>
                     </>
                   )}
@@ -183,7 +183,7 @@ export function GameVerificationCard({ game, onVerified }: Props) {
                 <div className="mt-3">
                   <label className="text-xs text-muted-foreground mb-1 block">Verification Method</label>
                   <Select value={verificationMethod} onValueChange={setVerificationMethod}>
-                    <SelectTrigger className="bg-black/40 border-white/10" data-testid={`select-method-${game.id}`}>
+                    <SelectTrigger className="bg-muted/80 border-border" data-testid={`select-method-${game.id}`}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -223,7 +223,7 @@ export function GameVerificationCard({ game, onVerified }: Props) {
               size="sm"
               variant="ghost"
               onClick={() => setExpanded(!expanded)}
-              className="text-muted-foreground hover:text-white"
+              className="text-muted-foreground hover:text-foreground"
               data-testid={`button-expand-${game.id}`}
             >
               {expanded ? (

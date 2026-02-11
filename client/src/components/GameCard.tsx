@@ -124,7 +124,7 @@ export function GameCard({ game, playerName, badges = [], showShareButton = true
         </div>
 
         <div className="mb-4">
-          <h2 className="text-2xl font-display font-bold text-white uppercase tracking-tight leading-none">
+          <h2 className="text-2xl font-display font-bold text-foreground uppercase tracking-tight leading-none">
             {playerName}
           </h2>
           <p className="text-sm text-muted-foreground font-medium mt-1">
@@ -166,23 +166,23 @@ export function GameCard({ game, playerName, badges = [], showShareButton = true
                 { label: "INT", value: game.defensiveInterceptions || 0 },
               ].map((stat) => (
                 <div key={stat.label} className="text-center p-2 rounded-lg bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/10 transition-all duration-300 hover:border-accent/30 hover:from-accent/15 hover:to-accent/8">
-                  <div className="stat-value text-white">{stat.value}</div>
+                  <div className="stat-value text-foreground">{stat.value}</div>
                   <div className="stat-label">{stat.label}</div>
                 </div>
               ))}
             </div>
 
-            <div className="flex justify-center gap-3 mb-4 py-3 px-2 rounded-lg bg-gradient-to-r from-white/[0.02] to-transparent border border-white/5">
+            <div className="flex justify-center gap-3 mb-4 py-3 px-2 rounded-lg bg-muted/50 border border-border/50">
               <div className="text-center px-3 py-1 rounded-md bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/10 transition-all duration-300 hover:border-blue-500/20 hover:from-blue-500/15 flex-1">
-                <div className="stat-value text-white text-2xl">{game.passingYards || 0}</div>
+                <div className="stat-value text-foreground text-2xl">{game.passingYards || 0}</div>
                 <div className="stat-label">PASS YDS</div>
               </div>
               <div className="text-center px-3 py-1 rounded-md bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/10 transition-all duration-300 hover:border-purple-500/20 hover:from-purple-500/15 flex-1">
-                <div className="stat-value text-white text-2xl">{game.rushingYards || 0}</div>
+                <div className="stat-value text-foreground text-2xl">{game.rushingYards || 0}</div>
                 <div className="stat-label">RUSH YDS</div>
               </div>
               <div className="text-center px-3 py-1 rounded-md bg-gradient-to-br from-accent/10 to-accent/5 border border-border transition-all duration-300 hover:border-accent/20 hover:from-accent/15 flex-1">
-                <div className="stat-value text-white text-2xl">{game.receivingYards || 0}</div>
+                <div className="stat-value text-foreground text-2xl">{game.receivingYards || 0}</div>
                 <div className="stat-label">REC YDS</div>
               </div>
             </div>
@@ -224,23 +224,23 @@ export function GameCard({ game, playerName, badges = [], showShareButton = true
                 { label: "BLK", value: game.blocks },
               ].map((stat) => (
                 <div key={stat.label} className="text-center p-2 rounded-lg bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/10 transition-all duration-300 hover:border-accent/30 hover:from-accent/15 hover:to-accent/8">
-                  <div className="stat-value text-white">{stat.value}</div>
+                  <div className="stat-value text-foreground">{stat.value}</div>
                   <div className="stat-label">{stat.label}</div>
                 </div>
               ))}
             </div>
 
-            <div className="flex justify-center gap-3 mb-4 py-3 px-2 rounded-lg bg-gradient-to-r from-white/[0.02] to-transparent border border-white/5">
+            <div className="flex justify-center gap-3 mb-4 py-3 px-2 rounded-lg bg-muted/50 border border-border/50">
               <div className="text-center px-3 py-1 rounded-md bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/10 transition-all duration-300 hover:border-blue-500/20 hover:from-blue-500/15 flex-1">
-                <div className="stat-value text-white text-2xl">{fgPct}%</div>
+                <div className="stat-value text-foreground text-2xl">{fgPct}%</div>
                 <div className="stat-label">FG</div>
               </div>
               <div className="text-center px-3 py-1 rounded-md bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/10 transition-all duration-300 hover:border-purple-500/20 hover:from-purple-500/15 flex-1">
-                <div className="stat-value text-white text-2xl">{threePct}%</div>
+                <div className="stat-value text-foreground text-2xl">{threePct}%</div>
                 <div className="stat-label">3PT</div>
               </div>
               <div className="text-center px-3 py-1 rounded-md bg-gradient-to-br from-accent/10 to-accent/5 border border-border transition-all duration-300 hover:border-accent/20 hover:from-accent/15 flex-1">
-                <div className="stat-value text-white text-2xl">{ftPct}%</div>
+                <div className="stat-value text-foreground text-2xl">{ftPct}%</div>
                 <div className="stat-label">FT</div>
               </div>
             </div>

@@ -76,10 +76,10 @@ function XPToast({ notification, onComplete }: XPToastProps) {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2 }}
-              className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 text-xs"
+              className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted text-xs"
             >
               {getBonusIcon()}
-              <span className="text-white/70">
+              <span className="text-muted-foreground">
                 {notification.bonus.multiplier 
                   ? `${notification.bonus.multiplier}x Bonus!`
                   : "Bonus!"}
@@ -87,7 +87,7 @@ function XPToast({ notification, onComplete }: XPToastProps) {
             </motion.div>
           )}
         </div>
-        <span className="text-xs text-white/60">{notification.reason}</span>
+        <span className="text-xs text-muted-foreground">{notification.reason}</span>
       </div>
     </motion.div>
   );

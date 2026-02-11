@@ -87,10 +87,10 @@ function PostComments({ postId, teamId, sessionId, currentMember }: {
   };
 
   return (
-    <div className="mt-2 pt-2 border-t border-white/5">
+    <div className="mt-2 pt-2 border-t border-border/50">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-white transition-colors"
+        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
         data-testid={`button-toggle-comments-${postId}`}
       >
         <MessageSquare className="w-3 h-3" />
@@ -252,9 +252,9 @@ export function TeamBoard({ team, sessionId, onBack }: TeamBoardProps) {
             <Users className="w-7 h-7 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold font-display text-white tracking-wide truncate">{team.name}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold font-display text-foreground tracking-wide truncate">{team.name}</h1>
             <div className="flex items-center gap-3 mt-1 flex-wrap">
-              <code className="text-sm bg-black/30 backdrop-blur px-2 py-0.5 rounded font-mono tracking-widest text-accent">{team.code}</code>
+              <code className="text-sm bg-muted/80 backdrop-blur px-2 py-0.5 rounded font-mono tracking-widest text-accent">{team.code}</code>
               <span className="text-sm text-muted-foreground">{members.length} members</span>
               {isCoach && (
                 <Badge variant="secondary" className="text-xs bg-accent/20 text-accent border-accent/30">
@@ -278,7 +278,7 @@ export function TeamBoard({ team, sessionId, onBack }: TeamBoardProps) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-3 mb-6 p-4 rounded-xl bg-gradient-to-br from-secondary/40 to-secondary/20 border border-white/5">
+              <form onSubmit={handleSubmit} className="space-y-3 mb-6 p-4 rounded-xl bg-gradient-to-br from-secondary/40 to-secondary/20 border border-border/50">
                 <div className="flex gap-2 items-center">
                   <Select value={postType} onValueChange={(v: any) => setPostType(v)}>
                     <SelectTrigger className="w-[140px]" data-testid="select-post-type">

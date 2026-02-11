@@ -222,7 +222,7 @@ export function RecruitingTimeline({ graduationYear, sport, className }: Recruit
                   "absolute left-3 top-4 w-6 h-6 rounded-full flex items-center justify-center z-10",
                   status === 'past' && "bg-emerald-500/20",
                   status === 'current' && "bg-accent shadow-[0_0_12px_rgba(6,182,212,0.6)]",
-                  status === 'future' && "bg-white/10 border border-white/20"
+                  status === 'future' && "bg-muted border border-border"
                 )}
                 data-testid={`milestone-icon-${milestone.id}`}
               >
@@ -231,7 +231,7 @@ export function RecruitingTimeline({ graduationYear, sport, className }: Recruit
                 ) : status === 'current' ? (
                   <CalendarDays className="w-3.5 h-3.5 text-white" />
                 ) : (
-                  <Circle className="w-3 h-3 text-white/40" />
+                  <Circle className="w-3 h-3 text-muted-foreground/40" />
                 )}
               </div>
               
@@ -259,7 +259,7 @@ export function RecruitingTimeline({ graduationYear, sport, className }: Recruit
                 <h4 
                   className={cn(
                     "font-display text-lg font-semibold tracking-wide",
-                    status === 'current' ? "text-white" : status === 'past' ? "text-muted-foreground" : "text-white/90"
+                    status === 'current' ? "text-foreground" : status === 'past' ? "text-muted-foreground" : "text-foreground"
                   )}
                   data-testid={`milestone-title-${milestone.id}`}
                 >
@@ -269,7 +269,7 @@ export function RecruitingTimeline({ graduationYear, sport, className }: Recruit
                 <p 
                   className={cn(
                     "text-sm leading-relaxed",
-                    status === 'current' ? "text-white/80" : "text-muted-foreground"
+                    status === 'current' ? "text-muted-foreground" : "text-muted-foreground"
                   )}
                   data-testid={`milestone-description-${milestone.id}`}
                 >

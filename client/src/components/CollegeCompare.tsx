@@ -121,7 +121,7 @@ function ComparisonStat({
         <span className="text-sm">{label}</span>
       </div>
       {values.map((value, i) => (
-        <div key={i} className="text-center font-semibold text-white">
+        <div key={i} className="text-center font-semibold text-foreground">
           {formatValue(value)}
         </div>
       ))}
@@ -144,7 +144,7 @@ function CollegeCard({
     return (
       <Card className={cn(
         "relative overflow-hidden flex flex-col items-center justify-center min-h-[200px]",
-        "bg-gradient-to-br from-[hsl(220,25%,10%)] via-[hsl(220,20%,8%)] to-[hsl(220,25%,6%)]",
+        "bg-card",
         "border-dashed border-accent/20"
       )}>
         <Plus className="w-8 h-8 text-muted-foreground mb-2" />
@@ -158,16 +158,15 @@ function CollegeCard({
   return (
     <Card className={cn(
       "relative overflow-hidden",
-      "bg-gradient-to-br from-[hsl(220,25%,10%)] via-[hsl(220,20%,8%)] to-[hsl(220,25%,6%)]",
-      "border-border",
-      "shadow-[0_4px_24px_rgba(0,0,0,0.4)]"
+      "bg-card",
+      "border-border"
     )}>
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
       
       <Button
         variant="ghost"
         size="icon"
-        className="absolute top-2 right-2 h-6 w-6 rounded-full bg-white/10 hover:bg-white/20"
+        className="absolute top-2 right-2 h-6 w-6 rounded-full bg-muted hover:bg-muted"
         onClick={onRemove}
         data-testid={`button-remove-college-${slot}`}
       >
@@ -185,7 +184,7 @@ function CollegeCard({
           </span>
         </div>
 
-        <h3 className="font-display text-lg font-bold text-white">
+        <h3 className="font-display text-lg font-bold text-foreground">
           {college.shortName || college.name}
         </h3>
         <p className="text-xs text-muted-foreground mb-2">{college.city}, {college.state}</p>
@@ -204,7 +203,7 @@ function CollegeCard({
         {matchScore !== undefined && (
           <div className="mt-3 flex items-center gap-2">
             <Target className="w-4 h-4 text-accent" />
-            <span className="text-sm font-semibold text-white">{matchScore}% Match</span>
+            <span className="text-sm font-semibold text-foreground">{matchScore}% Match</span>
           </div>
         )}
       </div>
@@ -284,13 +283,13 @@ export function CollegeCompare({ open, onOpenChange }: CollegeCompareProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={cn(
         "max-w-4xl max-h-[90vh] overflow-y-auto",
-        "bg-gradient-to-br from-[hsl(220,25%,10%)] via-[hsl(220,20%,8%)] to-[hsl(220,25%,6%)]",
+        "bg-card",
         "border-accent/20"
       )}>
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
         
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl font-display text-white">
+          <DialogTitle className="flex items-center gap-2 text-xl font-display text-foreground">
             <Trophy className="w-5 h-5 text-accent" />
             Compare Schools
           </DialogTitle>
@@ -311,12 +310,12 @@ export function CollegeCompare({ open, onOpenChange }: CollegeCompareProps) {
                   onValueChange={(value) => handleSelectCollege(slot, value)}
                 >
                   <SelectTrigger 
-                    className="bg-white/5 border-accent/20"
+                    className="bg-muted/50 border-accent/20"
                     data-testid={`select-college-${slot}`}
                   >
                     <SelectValue placeholder="Select a school..." />
                   </SelectTrigger>
-                  <SelectContent className="bg-[hsl(220,25%,10%)] border-accent/20 max-h-[300px]">
+                  <SelectContent className="bg-card border-accent/20 max-h-[300px]">
                     {availableColleges(slot).map(college => (
                       <SelectItem 
                         key={college.id} 
@@ -359,12 +358,12 @@ export function CollegeCompare({ open, onOpenChange }: CollegeCompareProps) {
           {hasSelectedColleges && (
             <Card className={cn(
               "p-5 relative overflow-hidden",
-              "bg-gradient-to-br from-[hsl(220,25%,10%)] via-[hsl(220,20%,8%)] to-[hsl(220,25%,6%)]",
+              "bg-card",
               "border-border"
             )}>
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
               
-              <h4 className="font-display text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <h4 className="font-display text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-accent" />
                 Comparison
               </h4>

@@ -26,7 +26,7 @@ export function SharedGoalsList() {
   if (sharedGoals.length === 0) {
     return (
       <Card className="p-5">
-        <h3 className="text-lg font-bold font-display text-white flex items-center gap-2 mb-4">
+        <h3 className="text-lg font-bold font-display text-foreground flex items-center gap-2 mb-4">
           <Users className="w-5 h-5 text-accent" /> Goals Shared With Me
         </h3>
         <div className="text-center py-6 text-muted-foreground">
@@ -50,7 +50,7 @@ export function SharedGoalsList() {
 
   return (
     <Card className="p-5">
-      <h3 className="text-lg font-bold font-display text-white flex items-center gap-2 mb-4">
+      <h3 className="text-lg font-bold font-display text-foreground flex items-center gap-2 mb-4">
         <Users className="w-5 h-5 text-accent" /> Goals Shared With Me
       </h3>
 

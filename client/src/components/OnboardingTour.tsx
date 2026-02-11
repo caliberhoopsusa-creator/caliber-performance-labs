@@ -145,7 +145,7 @@ export function OnboardingTour({ forceShow = false, onComplete }: OnboardingTour
               transition={{ repeat: Infinity, duration: 3 }}
             />
             
-            <div className="relative bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,20%,6%)] border border-accent/20 rounded-2xl p-8 space-y-6">
+            <div className="relative bg-card border border-accent/20 rounded-2xl p-8 space-y-6">
               <motion.div
                 className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${step.gradient}`}
                 layoutId="progress-bar"
@@ -182,7 +182,7 @@ export function OnboardingTour({ forceShow = false, onComplete }: OnboardingTour
                     </div>
                   </motion.div>
                   
-                  <h2 className="text-2xl font-display font-bold text-white tracking-wide" data-testid="text-tour-title">
+                  <h2 className="text-2xl font-display font-bold text-foreground tracking-wide" data-testid="text-tour-title">
                     {step.title}
                   </h2>
                   <p className="text-muted-foreground leading-relaxed" data-testid="text-tour-description">
@@ -201,7 +201,7 @@ export function OnboardingTour({ forceShow = false, onComplete }: OnboardingTour
                         ? `bg-gradient-to-r ${s.gradient}`
                         : index < currentStep
                         ? "bg-accent/50"
-                        : "bg-white/20"
+                        : "bg-muted"
                     }`}
                     animate={{ width: index === currentStep ? 32 : 8 }}
                     transition={{ type: "spring", damping: 20, stiffness: 300 }}

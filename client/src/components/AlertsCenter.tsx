@@ -355,7 +355,7 @@ export function AlertsCenter({ playerId }: AlertsCenterProps) {
             <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
               <Bell className="w-8 h-8 text-accent/60" />
             </div>
-            <p className="text-white font-semibold mb-1">No alerts to display</p>
+            <p className="text-foreground font-semibold mb-1">No alerts to display</p>
             <p className="text-sm text-muted-foreground">
               {(filterType || filterSeverity) 
                 ? "Try adjusting your filters" 

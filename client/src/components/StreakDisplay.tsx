@@ -103,7 +103,7 @@ export default function StreakDisplay({ playerId }: { playerId: number }) {
             </motion.div>
             <h3 className="text-sm font-bold uppercase tracking-wider text-accent">Activity Streak</h3>
           </div>
-          <Badge className={cn("text-[10px]", streakInfo.color, "bg-white/5 border-white/10")}>
+          <Badge className={cn("text-[10px]", streakInfo.color, "bg-muted/50 border-border")}>
             {streakInfo.label}
           </Badge>
         </div>
@@ -132,7 +132,7 @@ export default function StreakDisplay({ playerId }: { playerId: number }) {
                 </span>
               )}
             </div>
-            <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+            <div className="h-2 bg-muted/50 rounded-full overflow-hidden">
               <motion.div
                 className="h-full bg-gradient-to-r from-accent to-accent/80 rounded-full"
                 initial={{ width: 0 }}
@@ -165,8 +165,8 @@ export default function StreakDisplay({ playerId }: { playerId: number }) {
                 className={cn(
                   "w-9 h-9 rounded-full flex items-center justify-center border transition-all",
                   achieved
-                    ? `bg-white/10 border-white/20 ${milestone.color}`
-                    : "bg-white/5 border-white/5 text-white/20"
+                    ? `bg-muted border-border ${milestone.color}`
+                    : "bg-muted/50 border-border/50 text-muted-foreground/40"
                 )}
                 title={`${milestone.label}: ${achieved ? 'Achieved!' : `${milestone.days - currentStreak} days to go`}`}
                 data-testid={`badge-streak-${milestone.days}`}

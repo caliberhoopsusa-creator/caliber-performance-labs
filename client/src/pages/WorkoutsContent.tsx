@@ -119,7 +119,7 @@ export default function WorkoutsContent() {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] text-center p-8" data-testid="workouts-no-player">
         <Dumbbell className="w-16 h-16 text-muted-foreground mb-4" />
-        <h2 className="text-2xl font-display font-bold text-white mb-2">Player Profile Required</h2>
+        <h2 className="text-2xl font-display font-bold text-foreground mb-2">Player Profile Required</h2>
         <p className="text-muted-foreground max-w-md">
           You need a player profile to track workouts. Please set up your profile first.
         </p>
@@ -133,7 +133,7 @@ export default function WorkoutsContent() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 flex-1">
           <Card className="" data-testid="stat-total-workouts">
             <CardContent className="p-4">
-              <div className="text-3xl font-display font-bold text-white">{stats.total}</div>
+              <div className="text-3xl font-display font-bold text-foreground">{stats.total}</div>
               <div className="text-xs text-muted-foreground uppercase tracking-wider">Total Workouts</div>
             </CardContent>
           </Card>
@@ -145,13 +145,13 @@ export default function WorkoutsContent() {
           </Card>
           <Card className="" data-testid="stat-avg-intensity">
             <CardContent className="p-4">
-              <div className="text-3xl font-display font-bold text-white">{stats.avgIntensity}/10</div>
+              <div className="text-3xl font-display font-bold text-foreground">{stats.avgIntensity}/10</div>
               <div className="text-xs text-muted-foreground uppercase tracking-wider">Avg Intensity</div>
             </CardContent>
           </Card>
           <Card className="" data-testid="stat-total-minutes">
             <CardContent className="p-4">
-              <div className="text-3xl font-display font-bold text-white">
+              <div className="text-3xl font-display font-bold text-foreground">
                 {stats.totalMinutes >= 60 ? `${Math.floor(stats.totalMinutes / 60)}h` : `${stats.totalMinutes}m`}
               </div>
               <div className="text-xs text-muted-foreground uppercase tracking-wider">Total Time</div>
@@ -177,7 +177,7 @@ export default function WorkoutsContent() {
             <div className="p-4 rounded-full bg-secondary/50 mb-4">
               <Dumbbell className="w-8 h-8 text-muted-foreground" />
             </div>
-            <h3 className="text-xl font-display font-bold text-white mb-2">No Workouts Yet</h3>
+            <h3 className="text-xl font-display font-bold text-foreground mb-2">No Workouts Yet</h3>
             <p className="text-muted-foreground max-w-sm mb-6">
               Start logging your training sessions to track your progress and build consistency.
             </p>

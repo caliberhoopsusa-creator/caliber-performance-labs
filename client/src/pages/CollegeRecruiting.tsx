@@ -100,7 +100,7 @@ export default function CollegeRecruiting() {
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <h1 className="font-display text-3xl md:text-4xl font-bold text-white tracking-tight flex items-center gap-3">
+            <h1 className="font-display text-3xl md:text-4xl font-bold text-foreground tracking-tight flex items-center gap-3">
               <GraduationCap className="w-8 h-8 text-accent" />
               College Recruiting
             </h1>
@@ -151,7 +151,7 @@ export default function CollegeRecruiting() {
       </div>
 
       {playerLoading ? (
-        <Card className="p-4 md:p-6 bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-border">
+        <Card className="p-4 md:p-6 bg-card border-border">
           <div className="flex flex-wrap gap-4">
             <Skeleton className="h-6 w-32" />
             <Skeleton className="h-6 w-24" />
@@ -162,7 +162,7 @@ export default function CollegeRecruiting() {
       ) : player ? (
         <Card className={cn(
           "p-4 md:p-6 relative overflow-hidden",
-          "bg-gradient-to-br from-[hsl(220,25%,10%)] via-[hsl(220,20%,8%)] to-[hsl(220,25%,6%)]",
+          "bg-card",
           "border-border"
         )}>
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
@@ -170,7 +170,7 @@ export default function CollegeRecruiting() {
           <div className="flex flex-wrap items-center gap-3 md:gap-4">
             <div className="flex items-center gap-2">
               <User className="w-4 h-4 text-accent" />
-              <span className="font-semibold text-white">{player.name}</span>
+              <span className="font-semibold text-foreground">{player.name}</span>
               <Badge variant="outline" className="border-accent/30 text-accent">
                 {player.position}
               </Badge>
@@ -179,7 +179,7 @@ export default function CollegeRecruiting() {
             {player.gpa && (
               <div className="flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">GPA: <span className="text-white font-medium">{player.gpa}</span></span>
+                <span className="text-sm text-muted-foreground">GPA: <span className="text-foreground font-medium">{player.gpa}</span></span>
               </div>
             )}
             
@@ -193,7 +193,7 @@ export default function CollegeRecruiting() {
             )}
             
             {player.graduationYear && (
-              <Badge variant="secondary" className="bg-white/10 text-white">
+              <Badge variant="secondary" className="bg-muted text-foreground">
                 Class of {player.graduationYear}
               </Badge>
             )}
@@ -214,13 +214,13 @@ export default function CollegeRecruiting() {
               placeholder="Search schools by name, city, state, or conference..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-10 bg-white/5 border-accent/20 focus:border-accent/50 placeholder:text-muted-foreground/60"
+              className="pl-10 pr-10 bg-muted/50 border-accent/20 focus:border-accent/50 placeholder:text-muted-foreground/60"
               data-testid="input-school-search"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 aria-label="Clear search"
                 data-testid="button-clear-search"
               >
@@ -252,7 +252,7 @@ export default function CollegeRecruiting() {
       {matchesLoading ? (
         <div className="grid gap-4 md:gap-6 md:grid-cols-2">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i} className="p-4 md:p-5 bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-border">
+            <Card key={i} className="p-4 md:p-5 bg-card border-border">
               <div className="flex gap-4">
                 <Skeleton className="w-16 h-16 rounded-xl" />
                 <div className="flex-1 space-y-2">
@@ -272,7 +272,7 @@ export default function CollegeRecruiting() {
           <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20 flex items-center justify-center mb-6">
             <GraduationCap className="w-12 h-12 text-accent" />
           </div>
-          <h3 className="text-xl font-semibold text-white mb-2" data-testid="text-empty-title">
+          <h3 className="text-xl font-semibold text-foreground mb-2" data-testid="text-empty-title">
             No College Matches Yet
           </h3>
           <p className="text-muted-foreground max-w-md mb-6" data-testid="text-empty-description">

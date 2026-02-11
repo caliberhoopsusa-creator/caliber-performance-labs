@@ -154,7 +154,7 @@ function CircularProgress({ value, size = 64, strokeWidth = 6 }: { value: number
     <div className="relative" style={{ width: size, height: size }}>
       <svg className="transform -rotate-90" width={size} height={size}>
         <circle
-          className="stroke-white/10"
+          className="stroke-border"
           strokeWidth={strokeWidth}
           fill="none"
           r={radius}
@@ -176,7 +176,7 @@ function CircularProgress({ value, size = 64, strokeWidth = 6 }: { value: number
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-lg font-bold text-white">{value}%</span>
+        <span className="text-lg font-bold text-foreground">{value}%</span>
       </div>
     </div>
   );
@@ -191,9 +191,9 @@ function ScoreBar({ label, value, icon: Icon }: { label: string; value: number |
       <div className="flex-1">
         <div className="flex justify-between items-center mb-1">
           <span className="text-xs text-muted-foreground">{label}</span>
-          <span className="text-xs font-medium text-white">{score}%</span>
+          <span className="text-xs font-medium text-foreground">{score}%</span>
         </div>
-        <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
           <div 
             className={cn(
               "h-full rounded-full transition-all duration-500",
@@ -288,9 +288,8 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
   return (
     <Card className={cn(
       "relative overflow-hidden transition-all duration-300",
-      "bg-gradient-to-br from-[hsl(220,25%,10%)] via-[hsl(220,20%,8%)] to-[hsl(220,25%,6%)]",
-      "border-border",
-      "shadow-[0_4px_24px_rgba(0,0,0,0.4)]"
+      "bg-card",
+      "border-border"
     )}>
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
       
@@ -309,7 +308,7 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <h3 className="font-display text-lg font-bold text-white truncate">
+                <h3 className="font-display text-lg font-bold text-foreground truncate">
                   {college.shortName || college.name}
                 </h3>
                 <p className="text-sm text-muted-foreground truncate">{college.name}</p>
@@ -354,14 +353,14 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
           
           return (
             <div className={cn(
-              "grid gap-2 mt-4 p-3 rounded-lg bg-white/5 border border-white/10",
+              "grid gap-2 mt-4 p-3 rounded-lg bg-muted/50 border border-border",
               visibleStats === 1 ? "grid-cols-1" :
               visibleStats === 2 ? "grid-cols-2" :
               visibleStats === 3 ? "grid-cols-3" : "grid-cols-4"
             )}>
               {hasRecord && (
                 <div className="text-center">
-                  <div className="text-lg font-bold text-white">{college.winsLastSeason}-{college.lossesLastSeason}</div>
+                  <div className="text-lg font-bold text-foreground">{college.winsLastSeason}-{college.lossesLastSeason}</div>
                   <div className="text-[10px] text-muted-foreground uppercase">Record</div>
                 </div>
               )}
@@ -427,28 +426,28 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
                       <div className="flex items-center gap-2">
                         <Users className="w-3.5 h-3.5 text-muted-foreground" />
                         <span className="text-muted-foreground">Coach:</span>
-                        <span className="text-white/90 truncate">{college.headCoachName}</span>
+                        <span className="text-foreground truncate">{college.headCoachName}</span>
                       </div>
                     )}
                     {college.headCoachRecord && (
                       <div className="flex items-center gap-2">
                         <TrendingUp className="w-3.5 h-3.5 text-muted-foreground" />
                         <span className="text-muted-foreground">Record:</span>
-                        <span className="text-white/90">{college.headCoachRecord}</span>
+                        <span className="text-foreground">{college.headCoachRecord}</span>
                       </div>
                     )}
                     {college.conferenceRecord && (
                       <div className="flex items-center gap-2">
                         <Medal className="w-3.5 h-3.5 text-muted-foreground" />
                         <span className="text-muted-foreground">Conf:</span>
-                        <span className="text-white/90">{college.conferenceRecord}</span>
+                        <span className="text-foreground">{college.conferenceRecord}</span>
                       </div>
                     )}
                     {college.tournamentAppearances !== null && (
                       <div className="flex items-center gap-2">
                         <Trophy className="w-3.5 h-3.5 text-muted-foreground" />
                         <span className="text-muted-foreground">{college.sport === 'basketball' ? 'March Madness' : 'Bowl Games'}:</span>
-                        <span className="text-white/90">{college.tournamentAppearances}</span>
+                        <span className="text-foreground">{college.tournamentAppearances}</span>
                       </div>
                     )}
                     {college.finalFourAppearances !== null && college.finalFourAppearances > 0 && (
@@ -462,7 +461,7 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
                       <div className="flex items-center gap-2">
                         <Award className="w-3.5 h-3.5 text-muted-foreground" />
                         <span className="text-muted-foreground">Conf Titles:</span>
-                        <span className="text-white/90">{college.conferenceChampionships}</span>
+                        <span className="text-foreground">{college.conferenceChampionships}</span>
                       </div>
                     )}
                   </div>
@@ -482,28 +481,28 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
                       <div className="flex items-center gap-2">
                         <Star className="w-3.5 h-3.5 text-muted-foreground" />
                         <span className="text-muted-foreground">NBA Players:</span>
-                        <span className="text-white/90">{college.nbaPlayersProduced}</span>
+                        <span className="text-foreground">{college.nbaPlayersProduced}</span>
                       </div>
                     )}
                     {college.sport === 'football' && college.nflPlayersProduced !== null && (
                       <div className="flex items-center gap-2">
                         <Star className="w-3.5 h-3.5 text-muted-foreground" />
                         <span className="text-muted-foreground">NFL Players:</span>
-                        <span className="text-white/90">{college.nflPlayersProduced}</span>
+                        <span className="text-foreground">{college.nflPlayersProduced}</span>
                       </div>
                     )}
                     {college.averageMinutesForFreshmen !== null && (
                       <div className="flex items-center gap-2">
                         <Clock className="w-3.5 h-3.5 text-muted-foreground" />
                         <span className="text-muted-foreground">Freshman Minutes:</span>
-                        <span className="text-white/90">{college.averageMinutesForFreshmen} avg</span>
+                        <span className="text-foreground">{college.averageMinutesForFreshmen} avg</span>
                       </div>
                     )}
                     {college.currentRosterSize !== null && (
                       <div className="flex items-center gap-2">
                         <Users className="w-3.5 h-3.5 text-muted-foreground" />
                         <span className="text-muted-foreground">Roster:</span>
-                        <span className="text-white/90">{college.currentRosterSize} players</span>
+                        <span className="text-foreground">{college.currentRosterSize} players</span>
                       </div>
                     )}
                     {college.incomingRecruitingClass !== null && (
@@ -534,7 +533,7 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
                             ? "border-emerald-500/50 text-emerald-400" 
                             : college.niLOpportunities === 'Medium'
                             ? "border-accent/50 text-accent"
-                            : "border-gray-500/50 text-gray-400"
+                            : "border-gray-500/50 text-muted-foreground"
                         )}>
                           {college.niLOpportunities}
                         </Badge>
@@ -544,21 +543,21 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
                       <div className="flex items-center gap-2">
                         <BarChart3 className="w-3.5 h-3.5 text-muted-foreground" />
                         <span className="text-muted-foreground">Budget:</span>
-                        <span className="text-white/90">{college.athleticBudget}</span>
+                        <span className="text-foreground">{college.athleticBudget}</span>
                       </div>
                     )}
                     {college.averageAttendance !== null && (
                       <div className="flex items-center gap-2">
                         <Users className="w-3.5 h-3.5 text-muted-foreground" />
                         <span className="text-muted-foreground">Avg Attendance:</span>
-                        <span className="text-white/90">{college.averageAttendance.toLocaleString()}</span>
+                        <span className="text-foreground">{college.averageAttendance.toLocaleString()}</span>
                       </div>
                     )}
                     {college.academicAllAmericans !== null && college.academicAllAmericans > 0 && (
                       <div className="flex items-center gap-2">
                         <BookOpen className="w-3.5 h-3.5 text-muted-foreground" />
                         <span className="text-muted-foreground">Academic All-Americans:</span>
-                        <span className="text-white/90">{college.academicAllAmericans}</span>
+                        <span className="text-foreground">{college.academicAllAmericans}</span>
                       </div>
                     )}
                   </div>
@@ -571,7 +570,7 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
                     <Trophy className="w-3.5 h-3.5" />
                     Strengths for Program
                   </h4>
-                  <p className="text-sm text-white/80">{match.strengthsForProgram}</p>
+                  <p className="text-sm text-muted-foreground">{match.strengthsForProgram}</p>
                 </div>
               )}
               
@@ -581,17 +580,17 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
                     <Target className="w-3.5 h-3.5" />
                     Development Areas
                   </h4>
-                  <p className="text-sm text-white/80">{match.developmentAreas}</p>
+                  <p className="text-sm text-muted-foreground">{match.developmentAreas}</p>
                 </div>
               )}
               
-              <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+              <div className="p-3 rounded-lg bg-muted/50 border border-border">
                 <h4 className="text-xs font-semibold text-accent uppercase tracking-wider mb-2 flex items-center gap-2">
                   <MapPin className="w-3.5 h-3.5" />
                   Location & Info
                 </h4>
                 <div className="space-y-1.5 text-sm">
-                  <p className="text-white/80">
+                  <p className="text-foreground">
                     {college.city}, {college.state}
                     {college.region && <span className="text-muted-foreground"> ({college.region})</span>}
                   </p>
@@ -675,7 +674,7 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
               onClick={() => onToggleSave(match.id)}
               className={cn(
                 "transition-colors",
-                match.isSaved ? "text-accent hover:text-accent/80" : "text-muted-foreground hover:text-white"
+                match.isSaved ? "text-accent hover:text-accent/80" : "text-muted-foreground hover:text-foreground"
               )}
               data-testid={`button-save-${match.id}`}
             >
@@ -694,7 +693,7 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
 
 function CollegeMatchSkeleton() {
   return (
-    <Card className="p-4 md:p-5 bg-gradient-to-br from-[hsl(220,25%,10%)] to-[hsl(220,25%,6%)] border-border">
+    <Card className="p-4 md:p-5 bg-card border-border">
       <div className="flex gap-4">
         <Skeleton className="w-14 h-14 md:w-16 md:h-16 rounded-xl" />
         <div className="flex-1 space-y-2">

@@ -80,7 +80,7 @@ export function FeatureTooltip({
           <motion.div
             className={cn(
               "absolute z-50 w-64 p-3 rounded-lg",
-              "bg-gradient-to-br from-[hsl(220,25%,12%)] to-[hsl(220,25%,8%)]",
+              "bg-card",
               "border border-accent/30 shadow-lg",
               positionClasses[position]
             )}
@@ -99,7 +99,7 @@ export function FeatureTooltip({
               
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
-                  <h4 className="text-sm font-semibold text-white truncate">
+                  <h4 className="text-sm font-semibold text-foreground truncate">
                     {title}
                   </h4>
                   <Button
@@ -143,7 +143,7 @@ export function InfoTooltip({ content, className }: InfoTooltipProps) {
       <AnimatePresence>
         {isHovered && (
           <motion.div
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-48 p-2 rounded-md bg-[hsl(220,25%,10%)] border border-accent/20 shadow-lg"
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-48 p-2 rounded-md bg-card border border-accent/20 shadow-lg"
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 5 }}

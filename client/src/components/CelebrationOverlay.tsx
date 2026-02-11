@@ -162,7 +162,7 @@ export function CelebrationOverlay({
         >
           <div
             className={cn(
-              "relative px-4 py-3 rounded-xl backdrop-blur-xl border border-white/20",
+              "relative px-4 py-3 rounded-xl backdrop-blur-xl border border-border",
               "bg-gradient-to-br",
               config.bgColor,
               "shadow-lg max-w-[280px]"
@@ -198,7 +198,7 @@ export function CelebrationOverlay({
                 }}
                 className={cn(
                   "w-10 h-10 shrink-0 rounded-full flex items-center justify-center",
-                  "bg-gradient-to-br from-white/10 to-white/5 border",
+                  "bg-gradient-to-br from-muted to-muted/50 border",
                   config.color.replace("text-", "border-")
                 )}
               >
@@ -223,7 +223,7 @@ export function CelebrationOverlay({
                     initial={{ scale: 0.5, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: 0.2, type: "spring" }}
-                    className="text-2xl font-display font-bold text-white leading-tight"
+                    className="text-2xl font-display font-bold text-foreground leading-tight"
                   >
                     {value}
                   </motion.span>
@@ -234,7 +234,7 @@ export function CelebrationOverlay({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.3 }}
-                    className="text-xs text-white/60 truncate"
+                    className="text-xs text-muted-foreground truncate"
                   >
                     {subtitle || config.subtitle}
                   </motion.span>

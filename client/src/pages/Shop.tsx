@@ -217,7 +217,7 @@ export default function Shop() {
           <div className="absolute inset-0 bg-accent/20 blur-3xl rounded-full" />
           <Lock className="w-20 h-20 text-accent relative z-10 mb-6" />
         </div>
-        <h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-white to-accent bg-clip-text text-transparent">
+        <h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent">
           Sign in to access the Shop
         </h2>
         <p className="text-muted-foreground text-center max-w-md">
@@ -229,7 +229,7 @@ export default function Shop() {
 
   return (
     <div className="pb-24 md:pb-6 space-y-8">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 via-card to-black/60 border border-accent/20">
+      <div className="relative overflow-hidden rounded-2xl bg-card/80 border border-accent/20">
         <div className="absolute inset-0 opacity-30" />
         <div className="absolute top-0 right-0 w-96 h-96 bg-accent/10 blur-[100px] rounded-full" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-yellow-500/10 blur-[80px] rounded-full" />
@@ -242,7 +242,7 @@ export default function Shop() {
                 <span className="text-xs uppercase tracking-wider text-accent font-semibold">Premium Store</span>
               </div>
               <h1 className="text-3xl md:text-4xl font-bold">
-                <span className="bg-gradient-to-r from-white via-accent to-accent bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-foreground via-accent to-accent bg-clip-text text-transparent">
                   Caliber Shop
                 </span>
               </h1>
@@ -302,10 +302,10 @@ export default function Shop() {
               <Card
                 className={cn(
                   "relative overflow-hidden transition-all duration-300 hover:scale-[1.03] cursor-pointer group",
-                  "bg-gradient-to-br from-black/60 to-black/30",
+                  "bg-card/80",
                   pkg.popular 
                     ? "border-yellow-500/50 ring-1 ring-yellow-500/30" 
-                    : "border-white/10 hover:border-yellow-500/30"
+                    : "border-border hover:border-yellow-500/30"
                 )}
                 style={pkg.popular ? { boxShadow: "0 0 30px rgba(234, 179, 8, 0.2)" } : {}}
                 data-testid={`coin-package-${pkg.id}`}
@@ -398,7 +398,7 @@ export default function Shop() {
               <Button
                 size="icon"
                 variant="outline"
-                className="h-8 w-8 border-white/10"
+                className="h-8 w-8 border-border"
                 onClick={() => setFeaturedIndex((prev) => (prev - 1 + featuredItems.length) % featuredItems.length)}
                 data-testid="btn-featured-prev"
               >
@@ -407,7 +407,7 @@ export default function Shop() {
               <Button
                 size="icon"
                 variant="outline"
-                className="h-8 w-8 border-white/10"
+                className="h-8 w-8 border-border"
                 onClick={() => setFeaturedIndex((prev) => (prev + 1) % featuredItems.length)}
                 data-testid="btn-featured-next"
               >
@@ -416,7 +416,7 @@ export default function Shop() {
             </div>
           </div>
           
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-950/30 to-black/40 border border-purple-500/20 p-6">
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-950/30 to-card/80 border border-purple-500/20 p-6">
             <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 blur-[80px] rounded-full" />
             <AnimatePresence mode="wait">
               {featuredItems[featuredIndex] && (
@@ -449,7 +449,7 @@ export default function Shop() {
                   key={idx}
                   className={cn(
                     "w-2 h-2 rounded-full transition-all",
-                    idx === featuredIndex ? "bg-purple-400 w-4" : "bg-white/20 hover:bg-white/40"
+                    idx === featuredIndex ? "bg-purple-400 w-4" : "bg-muted hover:bg-muted-foreground"
                   )}
                   onClick={() => setFeaturedIndex(idx)}
                   data-testid={`featured-dot-${idx}`}
@@ -480,7 +480,7 @@ export default function Shop() {
               placeholder="Search items..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-black/20 border-white/10 focus:border-accent/50"
+              className="pl-9 bg-muted/50 border-border focus:border-accent/50"
               data-testid="input-shop-search"
             />
           </div>
@@ -504,7 +504,7 @@ export default function Shop() {
         </div>
 
         <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
-          <TabsList className="w-full h-auto p-1.5 bg-black/40 border border-white/10 rounded-xl grid grid-cols-5 gap-1">
+          <TabsList className="w-full h-auto p-1.5 bg-muted/80 border border-border rounded-xl grid grid-cols-5 gap-1">
             {Object.keys(SHOP_CATEGORIES).map((key) => {
               const Icon = CATEGORY_ICONS[key] || Palette;
               const count = categoryItemCounts[key] || 0;
@@ -521,7 +521,7 @@ export default function Shop() {
                 >
                   <Icon className="w-5 h-5" />
                   <span className="text-[11px] font-medium hidden sm:block">{CATEGORY_LABELS[key]}</span>
-                  <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 bg-white/10 hidden md:flex">
+                  <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 bg-muted hidden md:flex">
                     {count}
                   </Badge>
                 </TabsTrigger>
@@ -542,17 +542,17 @@ export default function Shop() {
             {itemsLoading ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                  <Card key={i} className="animate-pulse bg-black/20 border-white/5">
+                  <Card key={i} className="animate-pulse bg-muted/50 border-border/50">
                     <CardContent className="p-4">
-                      <div className="aspect-square rounded-lg bg-white/5 mb-3" />
-                      <div className="h-4 bg-white/5 rounded mb-2" />
-                      <div className="h-3 bg-white/5 rounded w-2/3" />
+                      <div className="aspect-square rounded-lg bg-muted/50 mb-3" />
+                      <div className="h-4 bg-muted/50 rounded mb-2" />
+                      <div className="h-3 bg-muted/50 rounded w-2/3" />
                     </CardContent>
                   </Card>
                 ))}
               </div>
             ) : filteredItems.length === 0 ? (
-              <Card className="bg-black/20 border-white/5">
+              <Card className="bg-muted/50 border-border/50">
                 <CardContent className="flex flex-col items-center justify-center py-16">
                   <div className="relative mb-4">
                     <div className="absolute inset-0 bg-muted-foreground/10 blur-2xl rounded-full" />
@@ -606,7 +606,7 @@ export default function Shop() {
         <div className="absolute inset-0 opacity-20" />
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-accent/20 to-purple-500/20 border border-white/10">
+            <div className="p-3 rounded-xl bg-gradient-to-br from-accent/20 to-purple-500/20 border border-border">
               <Gift className="w-8 h-8 text-accent" />
             </div>
             <div>
@@ -756,7 +756,7 @@ function ShopItemCard({
       <Card 
         className={cn(
           "relative overflow-hidden transition-all duration-300 hover:scale-[1.02] group",
-          "bg-gradient-to-br from-black/60 to-black/30 border-white/10 hover:border-white/20",
+          "bg-card/80 border-border hover:border-border",
           item.equipped && "ring-2 ring-accent ring-offset-2 ring-offset-background"
         )}
         style={{ boxShadow: rarity.glow }}
@@ -802,7 +802,7 @@ function ShopItemCard({
             )}
           </div>
 
-          <div className="pt-2 border-t border-white/5">
+          <div className="pt-2 border-t border-border/50">
             {item.owned ? (
               <Button
                 size="sm"
@@ -926,7 +926,7 @@ function PreviewContent({ item, size = "normal" }: { item: ShopItem; size?: "nor
   
   if (item.category === "profile_skin" && item.value && PROFILE_SKIN_STYLES[item.value]) {
     return (
-      <div className={cn(cardSize, "rounded-lg border-2 border-white/20 flex items-center justify-center")} style={getPreviewStyle(item)}>
+      <div className={cn(cardSize, "rounded-lg border-2 border-border flex items-center justify-center")} style={getPreviewStyle(item)}>
         <User className={cn(iconSize, "text-white/70")} />
       </div>
     );

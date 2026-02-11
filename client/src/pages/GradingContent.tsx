@@ -72,11 +72,11 @@ export default function GradingContent() {
   return (
     <div className="space-y-10 animate-in fade-in duration-500 pb-20">
       <div>
-        <h2 className="text-2xl md:text-3xl font-display font-bold text-white uppercase tracking-tight">Grading System</h2>
+        <h2 className="text-2xl md:text-3xl font-display font-bold text-foreground uppercase tracking-tight">Grading System</h2>
         <p className="text-muted-foreground font-medium">How Caliber calculates performance grades</p>
       </div>
 
-      <Card className="bg-card border-white/5">
+      <Card className="bg-card border-border/50">
         <CardHeader>
           <CardTitle className="font-display uppercase tracking-wider flex items-center gap-3">
             <TrendingUp className="w-5 h-5 text-accent" />
@@ -86,13 +86,13 @@ export default function GradingContent() {
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
             {gradeScale.map((g) => (
-              <div key={g.grade} className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/5">
+              <div key={g.grade} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border border-border/50">
                 <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center font-display font-bold text-white", g.color)}>
                   {g.grade}
                 </div>
                 <div>
                   <div className="text-xs text-muted-foreground font-mono">{g.range}</div>
-                  <div className="text-xs text-white/70">{g.description}</div>
+                  <div className="text-xs text-muted-foreground">{g.description}</div>
                 </div>
               </div>
             ))}
@@ -100,7 +100,7 @@ export default function GradingContent() {
         </CardContent>
       </Card>
 
-      <Card className="bg-card border-white/5">
+      <Card className="bg-card border-border/50">
         <CardHeader>
           <CardTitle className="font-display uppercase tracking-wider flex items-center gap-3">
             <Target className="w-5 h-5 text-accent" />
@@ -116,10 +116,10 @@ export default function GradingContent() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {baseWeights.map((w) => (
-              <div key={w.stat} className="flex items-center gap-4 p-4 rounded-lg bg-white/5 border border-white/5">
+              <div key={w.stat} className="flex items-center gap-4 p-4 rounded-lg bg-muted/50 border border-border/50">
                 <w.icon className={cn("w-8 h-8", w.weight.startsWith("+") ? "text-green-500" : "text-red-500")} />
                 <div>
-                  <div className="font-bold text-white">{w.stat}</div>
+                  <div className="font-bold text-foreground">{w.stat}</div>
                   <div className={cn("font-mono text-sm font-bold", w.weight.startsWith("+") ? "text-green-500" : "text-red-500")}>
                     {w.weight}
                   </div>
@@ -131,7 +131,7 @@ export default function GradingContent() {
         </CardContent>
       </Card>
 
-      <Card className="bg-card border-white/5">
+      <Card className="bg-card border-border/50">
         <CardHeader>
           <CardTitle className="font-display uppercase tracking-wider flex items-center gap-3">
             <Activity className="w-5 h-5 text-accent" />
@@ -141,17 +141,17 @@ export default function GradingContent() {
         <CardContent>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {positionAdjustments.map((pos) => (
-              <div key={pos.position} className="rounded-xl overflow-hidden border border-white/10">
+              <div key={pos.position} className="rounded-xl overflow-hidden border border-border">
                 <div className={cn("p-4 flex items-center gap-3", pos.color)}>
                   <pos.icon className="w-6 h-6 text-white" />
                   <h3 className="font-display font-bold text-white uppercase tracking-wider">{pos.position}</h3>
                 </div>
-                <div className="p-5 space-y-4 bg-white/5">
+                <div className="p-5 space-y-4 bg-muted/50">
                   <p className="text-sm text-muted-foreground">{pos.description}</p>
                   <div className="space-y-2">
                     {pos.adjustments.map((adj) => (
                       <div key={adj.stat} className="flex items-center justify-between p-2 rounded bg-background/50">
-                        <span className="text-white font-medium">{adj.stat}</span>
+                        <span className="text-foreground font-medium">{adj.stat}</span>
                         <div className="text-right">
                           <span className={cn("font-mono font-bold", adj.change.startsWith("+") ? "text-green-500" : adj.change.startsWith("-") ? "text-red-500" : "text-yellow-500")}>
                             {adj.change}
@@ -168,7 +168,7 @@ export default function GradingContent() {
         </CardContent>
       </Card>
 
-      <Card className="bg-card border-white/5">
+      <Card className="bg-card border-border/50">
         <CardHeader>
           <CardTitle className="font-display uppercase tracking-wider flex items-center gap-3">
             <Zap className="w-5 h-5 text-accent" />
@@ -178,14 +178,14 @@ export default function GradingContent() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {bonuses.map((b, i) => (
-              <div key={i} className="flex items-center justify-between p-4 rounded-lg bg-white/5 border border-white/5">
+              <div key={i} className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border border-border/50">
                 <div className="flex items-center gap-3">
                   {b.type === "bonus" ? (
                     <TrendingUp className="w-5 h-5 text-green-500" />
                   ) : (
                     <AlertTriangle className="w-5 h-5 text-red-500" />
                   )}
-                  <span className="text-white">{b.condition}</span>
+                  <span className="text-foreground">{b.condition}</span>
                 </div>
                 <Badge variant={b.type === "bonus" ? "default" : "destructive"} className={b.type === "bonus" ? "bg-green-500/20 text-green-500 border-green-500/30" : ""}>
                   {b.effect}
@@ -199,7 +199,7 @@ export default function GradingContent() {
         </CardContent>
       </Card>
 
-      <Card className="bg-card border-white/5">
+      <Card className="bg-card border-border/50">
         <CardHeader>
           <CardTitle className="font-display uppercase tracking-wider">Example: Guard with 18 PTS, 4 REB, 8 AST, 2 STL, 0 BLK, 3 TO, 2 FOULS</CardTitle>
         </CardHeader>
@@ -212,7 +212,7 @@ export default function GradingContent() {
             <div className="text-green-500">+ Steals: 2 × 2.5 = +5</div>
             <div className="text-red-500">- Turnovers (Guard): 3 × 3.0 = -9</div>
             <div className="text-red-500">- Fouls: 2 × 1.0 = -2</div>
-            <div className="border-t border-white/10 pt-2 mt-2 text-white font-bold">
+            <div className="border-t border-border pt-2 mt-2 text-foreground font-bold">
               Total Score: 84 → Grade: A
             </div>
           </div>

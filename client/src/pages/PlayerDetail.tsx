@@ -347,11 +347,11 @@ function InventorySection() {
                             />
                           ) : item.category === 'theme' ? (
                             <div 
-                              className="w-12 h-12 rounded-lg border border-white/20"
+                              className="w-12 h-12 rounded-lg border border-border"
                               style={{ backgroundColor: item.value }}
                             />
                           ) : (
-                            <div className="w-12 h-12 rounded-lg bg-white/5 flex items-center justify-center">
+                            <div className="w-12 h-12 rounded-lg bg-muted/50 flex items-center justify-center">
                               <Gem className="w-6 h-6 text-muted-foreground" />
                             </div>
                           )}
@@ -450,7 +450,7 @@ function PlayerDetailSkeleton() {
           <Skeleton className="h-5 w-40 mb-4 skeleton-premium rounded" />
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center gap-4 p-3 rounded-lg border border-white/5">
+              <div key={i} className="flex items-center gap-4 p-3 rounded-lg border border-border/50">
                 <Skeleton className="h-10 w-10 rounded-lg skeleton-premium" />
                 <div className="flex-1 space-y-2">
                   <Skeleton className="h-4 w-32 rounded" />
@@ -479,14 +479,14 @@ function CoachToolsSection({ playerId, games }: CoachToolsSectionProps) {
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="p-6">
-          <h3 className="text-lg font-bold font-display text-white mb-4 flex items-center gap-2">
+          <h3 className="text-lg font-bold font-display text-foreground mb-4 flex items-center gap-2">
             <Target className="w-5 h-5 text-accent" /> Coach Goals
           </h3>
           <CoachGoals playerId={playerId} />
         </Card>
 
         <Card className="p-6">
-          <h3 className="text-lg font-bold font-display text-white mb-4 flex items-center gap-2">
+          <h3 className="text-lg font-bold font-display text-foreground mb-4 flex items-center gap-2">
             <Dumbbell className="w-5 h-5 text-accent" /> Drill Recommendations
           </h3>
           <DrillRecommendations playerId={playerId} />
@@ -496,17 +496,17 @@ function CoachToolsSection({ playerId, games }: CoachToolsSectionProps) {
       {games.length > 0 && selectedGameId && (
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold font-display text-white flex items-center gap-2">
+            <h3 className="text-lg font-bold font-display text-foreground flex items-center gap-2">
               <ClipboardList className="w-5 h-5 text-accent" /> Game Notes
             </h3>
             <Select
               value={selectedGameId?.toString() || ""}
               onValueChange={(val) => setSelectedGameId(parseInt(val))}
             >
-              <SelectTrigger className="w-auto bg-secondary/30 border-white/10" data-testid="select-game-for-notes">
+              <SelectTrigger className="w-auto bg-secondary/30 border-border" data-testid="select-game-for-notes">
                 <SelectValue placeholder="Select a game" />
               </SelectTrigger>
-              <SelectContent className="bg-card border-white/10">
+              <SelectContent className="bg-card border-border">
                 {games.map(game => (
                   <SelectItem key={game.id} value={game.id.toString()}>
                     vs {game.opponent} - {format(new Date(game.date), 'MMM dd, yyyy')}
@@ -525,7 +525,7 @@ function CoachToolsSection({ playerId, games }: CoachToolsSectionProps) {
 
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold font-display text-white flex items-center gap-2">
+          <h3 className="text-lg font-bold font-display text-foreground flex items-center gap-2">
             <FileText className="w-5 h-5 text-accent" /> Player Report Card
           </h3>
           <Button 
@@ -694,7 +694,7 @@ function AccoladesSection({ playerId, isOwnProfile }: AccoladesSectionProps) {
   return (
     <Card className="p-6" data-testid="accolades-section">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-bold font-display text-white flex items-center gap-2">
+        <h3 className="text-lg font-bold font-display text-foreground flex items-center gap-2">
           <Trophy className="w-5 h-5 text-accent" /> Achievements & Accolades
         </h3>
         {isOwnProfile && (
@@ -739,7 +739,7 @@ function AccoladesSection({ playerId, isOwnProfile }: AccoladesSectionProps) {
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <h5 className="font-bold text-white truncate">{accolade.title}</h5>
+                          <h5 className="font-bold text-foreground truncate">{accolade.title}</h5>
                           {(accolade.season || accolade.dateEarned) && (
                             <p className="text-xs text-muted-foreground mt-0.5">
                               {accolade.season && <span>{accolade.season}</span>}
@@ -776,7 +776,7 @@ function AccoladesSection({ playerId, isOwnProfile }: AccoladesSectionProps) {
                                   <Trash2 className="w-3 h-3" />
                                 </Button>
                               </AlertDialogTrigger>
-                              <AlertDialogContent className="bg-card border-white/10 text-white">
+                              <AlertDialogContent className="bg-card border-border">
                                 <AlertDialogHeader>
                                   <AlertDialogTitle>Delete Accolade?</AlertDialogTitle>
                                   <AlertDialogDescription className="text-muted-foreground">
@@ -784,7 +784,7 @@ function AccoladesSection({ playerId, isOwnProfile }: AccoladesSectionProps) {
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
-                                  <AlertDialogCancel className="bg-secondary text-white border-transparent">
+                                  <AlertDialogCancel className="bg-secondary border-transparent">
                                     Cancel
                                   </AlertDialogCancel>
                                   <AlertDialogAction
@@ -809,7 +809,7 @@ function AccoladesSection({ playerId, isOwnProfile }: AccoladesSectionProps) {
       )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-card border-white/10 text-white">
+        <DialogContent className="sm:max-w-[425px] bg-card border-border">
           <DialogHeader>
             <DialogTitle className="text-xl font-display uppercase tracking-wide">
               {editingId ? "Edit Accolade" : "Add Accolade"}
@@ -831,11 +831,11 @@ function AccoladesSection({ playerId, isOwnProfile }: AccoladesSectionProps) {
                     <FormLabel className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Type</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger className="bg-secondary/30 border-white/10 text-white" data-testid="select-accolade-type">
+                        <SelectTrigger className="bg-secondary/30 border-border" data-testid="select-accolade-type">
                           <SelectValue placeholder="Select type" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="bg-card border-white/10 text-white">
+                      <SelectContent className="bg-card border-border">
                         <SelectItem value="championship">Championship</SelectItem>
                         <SelectItem value="career_high">Career High</SelectItem>
                         <SelectItem value="award">Award</SelectItem>
@@ -859,7 +859,7 @@ function AccoladesSection({ playerId, isOwnProfile }: AccoladesSectionProps) {
                       <Input
                         {...field}
                         placeholder="e.g., State Championship, Career High: 45 Points"
-                        className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20"
+                        className="bg-secondary/30 border-border placeholder:text-muted-foreground/50"
                         data-testid="input-accolade-title"
                       />
                     </FormControl>
@@ -879,7 +879,7 @@ function AccoladesSection({ playerId, isOwnProfile }: AccoladesSectionProps) {
                         {...field}
                         placeholder="Add details about this achievement..."
                         rows={3}
-                        className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20 resize-none"
+                        className="bg-secondary/30 border-border placeholder:text-muted-foreground/50 resize-none"
                         data-testid="textarea-accolade-description"
                       />
                     </FormControl>
@@ -899,7 +899,7 @@ function AccoladesSection({ playerId, isOwnProfile }: AccoladesSectionProps) {
                         <Input
                           {...field}
                           placeholder="e.g., 2024-25"
-                          className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20"
+                          className="bg-secondary/30 border-border placeholder:text-muted-foreground/50"
                           data-testid="input-accolade-season"
                         />
                       </FormControl>
@@ -918,7 +918,7 @@ function AccoladesSection({ playerId, isOwnProfile }: AccoladesSectionProps) {
                         <Input
                           type="date"
                           {...field}
-                          className="bg-secondary/30 border-white/10 text-white"
+                          className="bg-secondary/30 border-border"
                           data-testid="input-accolade-date"
                         />
                       </FormControl>
@@ -1148,7 +1148,7 @@ function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: n
             onClick={() => setLocation('/community?tab=messages')}
             variant="outline"
             size="sm"
-            className="gap-2 border-white/10"
+            className="gap-2 border-border"
             data-testid="button-message-player"
           >
             <MessageCircle className="w-4 h-4" /> Message
@@ -1157,26 +1157,26 @@ function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: n
         </div>
       )}
 
-      <Card className="p-5 bg-gradient-to-br from-black/60 to-black/30 border-white/10" data-testid="section-social-overview">
+      <Card className="p-5 bg-card/80 border-border" data-testid="section-social-overview">
         <div className="flex items-center gap-3 mb-4">
           <div className="p-1.5 rounded-lg bg-purple-500/20 border border-purple-500/30">
             <Users className="w-4 h-4 text-purple-400" />
           </div>
-          <h3 className="text-sm font-bold uppercase tracking-wider bg-gradient-to-r from-white to-purple-300 bg-clip-text text-transparent">
+          <h3 className="text-sm font-bold uppercase tracking-wider bg-gradient-to-r from-foreground to-purple-300 bg-clip-text text-transparent">
             Social Overview
           </h3>
         </div>
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center" data-testid="stat-followers-activity">
-            <div className="text-2xl font-bold text-white">{followStats?.followerCount ?? 0}</div>
+            <div className="text-2xl font-bold text-foreground">{followStats?.followerCount ?? 0}</div>
             <div className="text-xs text-muted-foreground">Followers</div>
           </div>
           <div className="text-center" data-testid="stat-following-activity">
-            <div className="text-2xl font-bold text-white">{followStats?.followingCount ?? 0}</div>
+            <div className="text-2xl font-bold text-foreground">{followStats?.followingCount ?? 0}</div>
             <div className="text-xs text-muted-foreground">Following</div>
           </div>
           <div className="text-center" data-testid="stat-posts-activity">
-            <div className="text-2xl font-bold text-white">{feedActivities.length}</div>
+            <div className="text-2xl font-bold text-foreground">{feedActivities.length}</div>
             <div className="text-xs text-muted-foreground">Posts</div>
           </div>
         </div>
@@ -1187,7 +1187,7 @@ function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: n
           <div className="p-1.5 rounded-lg bg-accent/20 border border-accent/30">
             <Rss className="w-4 h-4 text-accent" />
           </div>
-          <h3 className="text-sm font-bold uppercase tracking-wider bg-gradient-to-r from-white to-accent bg-clip-text text-transparent">
+          <h3 className="text-sm font-bold uppercase tracking-wider bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent">
             Recent Activity
           </h3>
         </div>
@@ -1195,7 +1195,7 @@ function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: n
         {feedLoading ? (
           <div className="space-y-3">
             {[1, 2, 3].map(i => (
-              <Card key={i} className="p-4 animate-pulse border-white/10">
+              <Card key={i} className="p-4 animate-pulse border-border">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-muted" />
                   <div className="flex-1">
@@ -1207,7 +1207,7 @@ function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: n
             ))}
           </div>
         ) : recentActivities.length === 0 ? (
-          <Card className="p-8 text-center border-white/10">
+          <Card className="p-8 text-center border-border">
             <Rss className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">No activity yet</p>
             <p className="text-xs text-muted-foreground/60 mt-1">
@@ -1222,15 +1222,15 @@ function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: n
               return (
                 <Card 
                   key={activity.id} 
-                  className="p-3 border-white/10 hover-elevate"
+                  className="p-3 border-border hover-elevate"
                   data-testid={`activity-item-${activity.id}`}
                 >
                   <div className="flex items-start gap-3">
-                    <div className={`p-1.5 rounded-lg bg-white/5 border border-white/10 flex-shrink-0`}>
+                    <div className={`p-1.5 rounded-lg bg-muted/50 border border-border flex-shrink-0`}>
                       <Icon className={`w-4 h-4 ${colorClass}`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white truncate">{activity.headline}</p>
+                      <p className="text-sm font-medium text-foreground truncate">{activity.headline}</p>
                       {activity.subtext && (
                         <p className="text-xs text-muted-foreground truncate mt-0.5">{activity.subtext}</p>
                       )}
@@ -1252,7 +1252,7 @@ function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: n
             <div className="p-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/30">
               <Dumbbell className="w-4 h-4 text-emerald-400" />
             </div>
-            <h3 className="text-sm font-bold uppercase tracking-wider bg-gradient-to-r from-white to-emerald-300 bg-clip-text text-transparent">
+            <h3 className="text-sm font-bold uppercase tracking-wider bg-gradient-to-r from-foreground to-emerald-300 bg-clip-text text-transparent">
               Recent Workouts
             </h3>
           </div>
@@ -1260,14 +1260,14 @@ function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: n
           {workoutsLoading ? (
             <div className="space-y-3">
               {[1, 2].map(i => (
-                <Card key={i} className="p-4 animate-pulse border-white/10">
+                <Card key={i} className="p-4 animate-pulse border-border">
                   <div className="h-4 bg-muted rounded w-3/4 mb-1" />
                   <div className="h-3 bg-muted rounded w-1/2" />
                 </Card>
               ))}
             </div>
           ) : recentWorkouts.length === 0 ? (
-            <Card className="p-6 text-center border-white/10">
+            <Card className="p-6 text-center border-border">
               <Dumbbell className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
               <p className="text-sm text-muted-foreground">No workouts logged yet</p>
               <p className="text-xs text-muted-foreground/60 mt-1">Log workouts to track your training</p>
@@ -1277,7 +1277,7 @@ function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: n
               {recentWorkouts.map((workout: any) => (
                 <Card 
                   key={workout.id} 
-                  className="p-3 border-white/10 hover-elevate"
+                  className="p-3 border-border hover-elevate"
                   data-testid={`workout-item-${workout.id}`}
                 >
                   <div className="flex items-center justify-between gap-3">
@@ -1286,7 +1286,7 @@ function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: n
                         <Dumbbell className="w-4 h-4 text-emerald-400" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-white truncate">{workout.title}</p>
+                        <p className="text-sm font-medium text-foreground truncate">{workout.title}</p>
                         <div className="flex items-center gap-2 mt-0.5">
                           <span className="text-xs text-muted-foreground">{workout.duration} min</span>
                           {workout.intensity && (
@@ -1581,7 +1581,7 @@ export default function PlayerDetail() {
               <AlertTriangle className="w-8 h-8 text-destructive" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white mb-2">Failed to load player</h2>
+              <h2 className="text-xl font-bold text-foreground mb-2">Failed to load player</h2>
               <p className="text-muted-foreground mb-4">
                 There was an error loading this player's profile.
               </p>
@@ -1609,7 +1609,7 @@ export default function PlayerDetail() {
               <User className="w-8 h-8 text-accent/60" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white mb-2">Player not found</h2>
+              <h2 className="text-xl font-bold text-foreground mb-2">Player not found</h2>
               <p className="text-muted-foreground mb-4">
                 This player profile doesn't exist or has been removed.
               </p>
@@ -1833,7 +1833,7 @@ export default function PlayerDetail() {
 
   return (
     <div className="space-y-6 animate-fade-in pb-20 w-full">
-      <Link href="/players" className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-white transition-colors duration-200 uppercase tracking-wider animate-fade-up delay-100">
+      <Link href="/players" className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-colors duration-200 uppercase tracking-wider animate-fade-up delay-100">
         <ArrowLeft className="w-4 h-4" /> Back to Roster
       </Link>
       
@@ -2334,8 +2334,8 @@ export default function PlayerDetail() {
               return (
                 <>
                   <GreetingIcon className="w-5 h-5 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(24 95% 53% / 0.5))" }} />
-                  <span className="text-lg font-display text-white/90">
-                    {greeting.text}, <span className="bg-gradient-to-r from-white to-accent bg-clip-text text-transparent font-bold">{player.name.split(' ')[0]}</span>
+                  <span className="text-lg font-display text-foreground/90">
+                    {greeting.text}, <span className="bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent font-bold">{player.name.split(' ')[0]}</span>
                   </span>
                 </>
               );
@@ -2351,38 +2351,38 @@ export default function PlayerDetail() {
           transition={{ delay: 0.2, duration: 0.4 }}
           className="overflow-x-auto scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0"
         >
-          <TabsList className="w-max md:w-auto inline-flex bg-black/40 backdrop-blur-sm border border-white/10 p-1 rounded-xl">
+          <TabsList className="w-max md:w-auto inline-flex bg-muted/80 backdrop-blur-sm border border-border p-1 rounded-xl">
             <TabsTrigger 
               value="overview" 
-              className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-white" 
+              className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-foreground" 
               data-testid="tab-overview"
             >
               <BarChart3 className="w-4 h-4" /> Overview
             </TabsTrigger>
             <TabsTrigger 
               value="highlights" 
-              className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-white" 
+              className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-foreground" 
               data-testid="tab-highlights"
             >
               <Film className="w-4 h-4" /> Highlights
             </TabsTrigger>
             <TabsTrigger 
               value="accolades" 
-              className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-white" 
+              className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-foreground" 
               data-testid="tab-accolades"
             >
               <Trophy className="w-4 h-4" /> Accolades
             </TabsTrigger>
             <TabsTrigger 
               value="activity" 
-              className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-white" 
+              className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-foreground" 
               data-testid="tab-activity"
             >
               <Rss className="w-4 h-4" /> Activity
             </TabsTrigger>
             <TabsTrigger 
               value="coach" 
-              className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-white" 
+              className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-foreground" 
               data-testid="tab-coach"
             >
               <Phone className="w-4 h-4" /> Coach
@@ -2390,7 +2390,7 @@ export default function PlayerDetail() {
             {isFootball && (
               <TabsTrigger 
                 value="scouting" 
-                className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-white" 
+                className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-foreground" 
                 data-testid="tab-scouting"
               >
                 <Crosshair className="w-4 h-4" /> Scouting
@@ -2399,7 +2399,7 @@ export default function PlayerDetail() {
             {isOwnProfile && (
               <TabsTrigger 
                 value="inventory" 
-                className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-white" 
+                className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-foreground" 
                 data-testid="tab-inventory"
               >
                 <Package className="w-4 h-4" /> Inventory
@@ -2428,12 +2428,12 @@ export default function PlayerDetail() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.12, duration: 0.4 }}
           >
-            <Card className="p-6 bg-gradient-to-br from-black/60 to-black/30 border-white/10">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
+            <Card className="p-6 bg-card/80 border-border">
+              <h3 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4">
                 <div className="p-1.5 rounded-lg bg-accent/20 border border-accent/30">
                   <Star className="w-4 h-4 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(24 95% 53% / 0.6))" }} />
                 </div>
-                <span className="bg-gradient-to-r from-white to-accent bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent">
                   Ratings & Trust Score
                 </span>
               </h3>
@@ -2484,22 +2484,22 @@ export default function PlayerDetail() {
                 <div className="p-1.5 rounded-lg bg-accent/20 border border-accent/30">
                   <Zap className="w-4 h-4 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(var(--accent) / 0.6))" }} />
                 </div>
-                <span className="bg-gradient-to-r from-white to-accent bg-clip-text text-transparent">XP Rewards</span>
+                <span className="bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent">XP Rewards</span>
               </h4>
               <div className="grid grid-cols-2 gap-2 text-sm relative z-10">
-                <div className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 border border-white/5 hover:border-accent/20 transition-colors">
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50 border border-border/50 hover:border-accent/20 transition-colors">
                   <span className="text-muted-foreground">Log a Game</span>
                   <span className="font-bold text-accent">+50 XP</span>
                 </div>
-                <div className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 border border-white/5 hover:border-accent/20 transition-colors">
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50 border border-border/50 hover:border-accent/20 transition-colors">
                   <span className="text-muted-foreground">Earn Badge</span>
                   <span className="font-bold text-accent">+25 XP</span>
                 </div>
-                <div className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 border border-white/5 hover:border-accent/20 transition-colors">
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50 border border-border/50 hover:border-accent/20 transition-colors">
                   <span className="text-muted-foreground">A Grade</span>
                   <span className="font-bold text-accent">+30 XP</span>
                 </div>
-                <div className="flex items-center justify-between p-2.5 rounded-lg bg-white/5 border border-white/5 hover:border-accent/20 transition-colors">
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50 border border-border/50 hover:border-accent/20 transition-colors">
                   <span className="text-muted-foreground">A+ Grade</span>
                   <span className="font-bold text-accent">+50 XP</span>
                 </div>
@@ -2581,7 +2581,7 @@ export default function PlayerDetail() {
               <div className="p-2 rounded-lg bg-accent/10 border border-accent/20">
                 <Medal className="w-5 h-5 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(var(--accent) / 0.6))" }} />
               </div>
-              <h3 className="text-lg font-bold font-display bg-gradient-to-r from-white to-accent bg-clip-text text-transparent">
+              <h3 className="text-lg font-bold font-display bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent">
                 Skill Badges
               </h3>
             </div>
@@ -2599,7 +2599,7 @@ export default function PlayerDetail() {
                 <div className="p-2 rounded-lg bg-accent/10 border border-accent/20">
                   <BarChart3 className="w-5 h-5 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(var(--accent) / 0.6))" }} />
                 </div>
-                <h3 className="text-lg font-bold font-display bg-gradient-to-r from-white to-accent bg-clip-text text-transparent">
+                <h3 className="text-lg font-bold font-display bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent">
                   Season Statistics
                 </h3>
               </div>
@@ -2710,7 +2710,7 @@ export default function PlayerDetail() {
                 <div className="p-2 rounded-lg bg-purple-500/10 border border-purple-500/20">
                   <TrendingUp className="w-5 h-5 text-purple-400" style={{ filter: "drop-shadow(0 0 6px rgba(168, 85, 247, 0.6))" }} />
                 </div>
-                <h3 className="text-lg font-bold font-display bg-gradient-to-r from-white to-purple-300 bg-clip-text text-transparent">
+                <h3 className="text-lg font-bold font-display bg-gradient-to-r from-foreground to-purple-300 bg-clip-text text-transparent">
                   Player Profile
                 </h3>
               </div>
@@ -2760,7 +2760,7 @@ export default function PlayerDetail() {
               )}
             </div>
             {games.length > 0 && (
-              <div className="grid grid-cols-2 gap-3 mt-2 pt-3 border-t border-white/5">
+              <div className="grid grid-cols-2 gap-3 mt-2 pt-3 border-t border-border/50">
                 <div>
                   <span className="text-xs text-muted-foreground block mb-1">Strengths</span>
                   {strengths.map((s, i) => (
@@ -2794,7 +2794,7 @@ export default function PlayerDetail() {
               <div className="p-2 rounded-lg bg-accent/10 border border-accent/20">
                 <Medal className="w-5 h-5 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(24 95% 53% / 0.6))" }} />
               </div>
-              <h3 className="text-lg font-bold font-display bg-gradient-to-r from-white to-accent bg-clip-text text-transparent">
+              <h3 className="text-lg font-bold font-display bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent">
                 Top 5 Games
               </h3>
             </div>
@@ -2833,7 +2833,7 @@ export default function PlayerDetail() {
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2 mb-1">
-                          <span className="text-sm font-bold text-white">vs {game.opponent}</span>
+                          <span className="text-sm font-bold text-foreground">vs {game.opponent}</span>
                           {index === 0 && (
                             <span className="text-xs font-bold text-accent bg-accent/20 px-2 py-0.5 rounded">Best Game</span>
                           )}
@@ -2845,13 +2845,13 @@ export default function PlayerDetail() {
                       
                       <div className="flex items-center gap-4 sm:gap-6">
                         {isFootball ? (
-                          <div className="hidden sm:flex gap-4 text-sm font-medium text-white/80">
+                          <div className="hidden sm:flex gap-4 text-sm font-medium text-foreground/80">
                             <span><span className="text-muted-foreground text-xs">YDS</span> {(game.passingYards || 0) + (game.rushingYards || 0) + (game.receivingYards || 0)}</span>
                             <span><span className="text-muted-foreground text-xs">TDs</span> {(game.passingTouchdowns || 0) + (game.rushingTouchdowns || 0) + (game.receivingTouchdowns || 0)}</span>
                             <span className="text-accent"><span className="text-accent/60 text-xs">RTG</span> {game.grade || "—"}</span>
                           </div>
                         ) : (
-                          <div className="hidden sm:flex gap-4 text-sm font-medium text-white/80">
+                          <div className="hidden sm:flex gap-4 text-sm font-medium text-foreground/80">
                             <span><span className="text-muted-foreground text-xs">PTS</span> {game.points}</span>
                             <span><span className="text-muted-foreground text-xs">REB</span> {game.rebounds}</span>
                             <span><span className="text-muted-foreground text-xs">AST</span> {game.assists}</span>
@@ -2868,21 +2868,21 @@ export default function PlayerDetail() {
                   </CollapsibleTrigger>
                   
                   <CollapsibleContent>
-                    <div className="px-4 pb-4 pt-2 border-t border-white/5">
+                    <div className="px-4 pb-4 pt-2 border-t border-border/50">
                       {isFootball ? (
                         <>
                           <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
                             <div className="text-center">
                               <div className="text-xs text-muted-foreground mb-1">Pass YDS</div>
-                              <div className="text-lg font-bold text-white">{game.passingYards || 0}</div>
+                              <div className="text-lg font-bold text-foreground">{game.passingYards || 0}</div>
                             </div>
                             <div className="text-center">
                               <div className="text-xs text-muted-foreground mb-1">Rush YDS</div>
-                              <div className="text-lg font-bold text-white">{game.rushingYards || 0}</div>
+                              <div className="text-lg font-bold text-foreground">{game.rushingYards || 0}</div>
                             </div>
                             <div className="text-center">
                               <div className="text-xs text-muted-foreground mb-1">Rec YDS</div>
-                              <div className="text-lg font-bold text-white">{game.receivingYards || 0}</div>
+                              <div className="text-lg font-bold text-foreground">{game.receivingYards || 0}</div>
                             </div>
                             <div className="text-center">
                               <div className="text-xs text-accent/60 mb-1">Total TDs</div>
@@ -2890,18 +2890,18 @@ export default function PlayerDetail() {
                             </div>
                             <div className="text-center">
                               <div className="text-xs text-muted-foreground mb-1">Tackles</div>
-                              <div className="text-lg font-bold text-white">{game.tackles || 0}</div>
+                              <div className="text-lg font-bold text-foreground">{game.tackles || 0}</div>
                             </div>
                             <div className="text-center">
                               <div className="text-xs text-muted-foreground mb-1">Sacks</div>
-                              <div className="text-lg font-bold text-white">{game.sacks || 0}</div>
+                              <div className="text-lg font-bold text-foreground">{game.sacks || 0}</div>
                             </div>
                           </div>
                           
-                          <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 mt-4 pt-4 border-t border-white/5">
+                          <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 mt-4 pt-4 border-t border-border/50">
                             <div className="text-center">
                               <div className="text-xs text-muted-foreground mb-1">COMP</div>
-                              <div className="text-sm font-medium text-white">
+                              <div className="text-sm font-medium text-foreground">
                                 {game.completions || 0}/{game.passAttempts || 0}
                                 <span className="text-muted-foreground ml-1">
                                   ({game.passAttempts ? ((game.completions || 0) / game.passAttempts * 100).toFixed(0) : 0}%)
@@ -2910,11 +2910,11 @@ export default function PlayerDetail() {
                             </div>
                             <div className="text-center">
                               <div className="text-xs text-muted-foreground mb-1">Carries</div>
-                              <div className="text-sm font-medium text-white">{game.carries || 0}</div>
+                              <div className="text-sm font-medium text-foreground">{game.carries || 0}</div>
                             </div>
                             <div className="text-center">
                               <div className="text-xs text-muted-foreground mb-1">Receptions</div>
-                              <div className="text-sm font-medium text-white">{game.receptions || 0}/{game.targets || 0}</div>
+                              <div className="text-sm font-medium text-foreground">{game.receptions || 0}/{game.targets || 0}</div>
                             </div>
                             <div className="text-center">
                               <div className="text-xs text-muted-foreground mb-1">Turnovers</div>
@@ -2927,15 +2927,15 @@ export default function PlayerDetail() {
                           <div className="grid grid-cols-3 sm:grid-cols-7 gap-4">
                             <div className="text-center">
                               <div className="text-xs text-muted-foreground mb-1">Points</div>
-                              <div className="text-lg font-bold text-white">{game.points}</div>
+                              <div className="text-lg font-bold text-foreground">{game.points}</div>
                             </div>
                             <div className="text-center">
                               <div className="text-xs text-muted-foreground mb-1">Rebounds</div>
-                              <div className="text-lg font-bold text-white">{game.rebounds}</div>
+                              <div className="text-lg font-bold text-foreground">{game.rebounds}</div>
                             </div>
                             <div className="text-center">
                               <div className="text-xs text-muted-foreground mb-1">Assists</div>
-                              <div className="text-lg font-bold text-white">{game.assists}</div>
+                              <div className="text-lg font-bold text-foreground">{game.assists}</div>
                             </div>
                             <div className="text-center">
                               <div className="text-xs text-accent/60 mb-1">PER</div>
@@ -2943,22 +2943,22 @@ export default function PlayerDetail() {
                             </div>
                             <div className="text-center">
                               <div className="text-xs text-muted-foreground mb-1">Steals</div>
-                              <div className="text-lg font-bold text-white">{game.steals}</div>
+                              <div className="text-lg font-bold text-foreground">{game.steals}</div>
                             </div>
                             <div className="text-center">
                               <div className="text-xs text-muted-foreground mb-1">Blocks</div>
-                              <div className="text-lg font-bold text-white">{game.blocks}</div>
+                              <div className="text-lg font-bold text-foreground">{game.blocks}</div>
                             </div>
                             <div className="text-center">
                               <div className="text-xs text-muted-foreground mb-1">Minutes</div>
-                              <div className="text-lg font-bold text-white">{game.minutes}</div>
+                              <div className="text-lg font-bold text-foreground">{game.minutes}</div>
                             </div>
                           </div>
                           
-                          <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-white/5">
+                          <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-border/50">
                             <div className="text-center">
                               <div className="text-xs text-muted-foreground mb-1">FG</div>
-                              <div className="text-sm font-medium text-white">
+                              <div className="text-sm font-medium text-foreground">
                                 {game.fgMade}/{game.fgAttempted}
                                 <span className="text-muted-foreground ml-1">
                                   ({game.fgAttempted ? ((game.fgMade / game.fgAttempted) * 100).toFixed(0) : 0}%)
@@ -2967,7 +2967,7 @@ export default function PlayerDetail() {
                             </div>
                             <div className="text-center">
                               <div className="text-xs text-muted-foreground mb-1">3PT</div>
-                              <div className="text-sm font-medium text-white">
+                              <div className="text-sm font-medium text-foreground">
                                 {game.threeMade}/{game.threeAttempted}
                                 <span className="text-muted-foreground ml-1">
                                   ({game.threeAttempted ? ((game.threeMade / game.threeAttempted) * 100).toFixed(0) : 0}%)
@@ -2976,7 +2976,7 @@ export default function PlayerDetail() {
                             </div>
                             <div className="text-center">
                               <div className="text-xs text-muted-foreground mb-1">FT</div>
-                              <div className="text-sm font-medium text-white">
+                              <div className="text-sm font-medium text-foreground">
                                 {game.ftMade}/{game.ftAttempted}
                                 <span className="text-muted-foreground ml-1">
                                   ({game.ftAttempted ? ((game.ftMade / game.ftAttempted) * 100).toFixed(0) : 0}%)
@@ -2989,7 +2989,7 @@ export default function PlayerDetail() {
                       
                       {isFootball ? (
                         (game.efficiencyGrade || game.playmakingGrade || game.ballSecurityGrade || game.impactGrade) && (
-                          <div className="mt-4 pt-4 border-t border-white/5">
+                          <div className="mt-4 pt-4 border-t border-border/50">
                             <div className="text-xs text-muted-foreground mb-3 uppercase tracking-wider font-medium">Category Grades</div>
                             <div className="grid grid-cols-4 gap-2">
                               {[
@@ -3018,7 +3018,7 @@ export default function PlayerDetail() {
                         )
                       ) : (
                         (game.defensiveGrade || game.shootingGrade || game.reboundingGrade || game.passingGrade) && (
-                          <div className="mt-4 pt-4 border-t border-white/5">
+                          <div className="mt-4 pt-4 border-t border-border/50">
                             <div className="text-xs text-muted-foreground mb-3 uppercase tracking-wider font-medium">Category Grades</div>
                             <div className="grid grid-cols-4 gap-2">
                               {[
@@ -3048,13 +3048,13 @@ export default function PlayerDetail() {
                       )}
                       
                       {game.feedback && (
-                        <div className="mt-4 pt-4 border-t border-white/5">
+                        <div className="mt-4 pt-4 border-t border-border/50">
                           <div className="text-xs text-muted-foreground mb-2">Coach Notes</div>
-                          <p className="text-sm text-white/80">{game.feedback}</p>
+                          <p className="text-sm text-foreground/80">{game.feedback}</p>
                         </div>
                       )}
                       
-                      <div className="mt-4 pt-4 border-t border-white/5">
+                      <div className="mt-4 pt-4 border-t border-border/50">
                         <SocialEngagement gameId={game.id} />
                       </div>
                       
@@ -3092,17 +3092,17 @@ export default function PlayerDetail() {
             transition={{ delay: 0.45, duration: 0.4 }}
           >
             <Tabs defaultValue="history" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-4 bg-black/40 backdrop-blur-sm border border-white/10 p-1 rounded-xl">
+              <TabsList className="grid w-full grid-cols-2 mb-4 bg-muted/80 backdrop-blur-sm border border-border p-1 rounded-xl">
                 <TabsTrigger 
                   value="history" 
-                  className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-white" 
+                  className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-foreground" 
                   data-testid="tab-game-history"
                 >
                   <ClipboardList className="w-4 h-4" /> Game History
                 </TabsTrigger>
                 <TabsTrigger 
                   value="highlights" 
-                  className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-white" 
+                  className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-foreground" 
                   data-testid="tab-highlights"
                 >
                   <Film className="w-4 h-4" /> Highlights
@@ -3112,7 +3112,7 @@ export default function PlayerDetail() {
         <TabsContent value="history">
           <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold font-display text-white flex items-center gap-2">
+              <h3 className="text-lg font-bold font-display text-foreground flex items-center gap-2">
                 <ClipboardList className="w-5 h-5 text-accent" /> Game History
               </h3>
               {games.length > 5 && (
@@ -3142,13 +3142,13 @@ export default function PlayerDetail() {
                 </div>
               ) : (
                 displayedGames.map(game => (
-                  <div key={game.id} className="bg-secondary/20 hover:bg-secondary/40 border border-white/5 p-4 rounded-xl transition-colors group">
+                  <div key={game.id} className="bg-secondary/20 hover:bg-secondary/40 border border-border/50 p-4 rounded-xl transition-colors group">
                     <div className="flex justify-between items-start mb-3">
                       <div>
                         <div className="text-xs text-muted-foreground font-bold uppercase tracking-wider mb-0.5">
                           {format(new Date(game.date), 'MMM dd, yyyy')}
                         </div>
-                        <div className="text-sm font-bold text-white truncate max-w-[120px]">
+                        <div className="text-sm font-bold text-foreground truncate max-w-[120px]">
                           vs {game.opponent}
                         </div>
                       </div>
@@ -3167,7 +3167,7 @@ export default function PlayerDetail() {
                             <div 
                               key={cat.label}
                               data-testid={`${cat.testId}-history-${game.id}`}
-                              className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/5 border border-white/10"
+                              className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted/50 border border-border"
                             >
                               <cat.icon className="w-2.5 h-2.5 text-muted-foreground" />
                               <span className={cn("text-[10px] font-bold", getGradeColor(cat.value || "").text)}>
@@ -3189,7 +3189,7 @@ export default function PlayerDetail() {
                             <div 
                               key={cat.label}
                               data-testid={`${cat.testId}-history-${game.id}`}
-                              className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/5 border border-white/10"
+                              className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted/50 border border-border"
                             >
                               <cat.icon className="w-2.5 h-2.5 text-muted-foreground" />
                               <span className={cn("text-[10px] font-bold", getGradeColor(cat.value || "").text)}>
@@ -3201,16 +3201,16 @@ export default function PlayerDetail() {
                       )
                     )}
                     
-                    <div className="flex justify-between items-end border-t border-white/5 pt-3 mt-1">
+                    <div className="flex justify-between items-end border-t border-border/50 pt-3 mt-1">
                       <div className="flex items-center gap-4">
                         {isFootball ? (
-                          <div className="flex gap-3 text-xs font-medium text-white/80">
+                          <div className="flex gap-3 text-xs font-medium text-foreground/80">
                             <span><span className="text-muted-foreground">YDS</span> {(game.passingYards || 0) + (game.rushingYards || 0) + (game.receivingYards || 0)}</span>
                             <span><span className="text-muted-foreground">TDs</span> {(game.passingTouchdowns || 0) + (game.rushingTouchdowns || 0) + (game.receivingTouchdowns || 0)}</span>
                             <span className="text-accent"><span className="text-accent/60">RTG</span> {game.grade || "—"}</span>
                           </div>
                         ) : (
-                          <div className="flex gap-3 text-xs font-medium text-white/80">
+                          <div className="flex gap-3 text-xs font-medium text-foreground/80">
                             <span><span className="text-muted-foreground">PTS</span> {game.points}</span>
                             <span><span className="text-muted-foreground">REB</span> {game.rebounds}</span>
                             <span><span className="text-muted-foreground">AST</span> {game.assists}</span>
@@ -3234,7 +3234,7 @@ export default function PlayerDetail() {
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </AlertDialogTrigger>
-                          <AlertDialogContent className="bg-card border-white/10 text-white">
+                          <AlertDialogContent className="bg-card border-border">
                             <AlertDialogHeader>
                               <AlertDialogTitle>Delete Game Log?</AlertDialogTitle>
                               <AlertDialogDescription className="text-muted-foreground">
@@ -3242,7 +3242,7 @@ export default function PlayerDetail() {
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel className="bg-secondary text-white border-transparent">Cancel</AlertDialogCancel>
+                              <AlertDialogCancel className="bg-secondary border-transparent">Cancel</AlertDialogCancel>
                               <AlertDialogAction onClick={() => deleteGame(game.id)} className="bg-destructive text-destructive-foreground">Delete</AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
@@ -3259,7 +3259,7 @@ export default function PlayerDetail() {
         <TabsContent value="highlights">
           <Card className="p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold font-display text-white flex items-center gap-2">
+              <h3 className="text-lg font-bold font-display text-foreground flex items-center gap-2">
                 <Film className="w-5 h-5 text-accent" /> Highlights
               </h3>
             </div>
@@ -3314,7 +3314,7 @@ export default function PlayerDetail() {
       </Tabs>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[500px] bg-card border-white/10 text-white max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[500px] bg-card border-border max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl font-display uppercase tracking-wide">Edit Profile</DialogTitle>
             <DialogDescription className="text-muted-foreground">
@@ -3327,7 +3327,7 @@ export default function PlayerDetail() {
               <div className="relative">
                 <Avatar className="w-24 h-24 border-4 border-accent/20">
                   {editForm.photoUrl && <AvatarImage src={editForm.photoUrl} alt="Profile" width={96} height={96} />}
-                  <AvatarFallback className="bg-gradient-to-br from-accent/30 to-accent/10 text-2xl font-display font-bold text-white">
+                  <AvatarFallback className="bg-gradient-to-br from-accent/30 to-accent/10 text-2xl font-display font-bold text-foreground">
                     {editForm.name ? getInitials(editForm.name) : "?"}
                   </AvatarFallback>
                 </Avatar>
@@ -3362,7 +3362,7 @@ export default function PlayerDetail() {
                   value={editForm.name || ""}
                   onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))}
                   placeholder="LeBron James"
-                  className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20"
+                  className="bg-secondary/30 border-border placeholder:text-muted-foreground/50"
                   data-testid="input-edit-name"
                 />
               </div>
@@ -3379,7 +3379,7 @@ export default function PlayerDetail() {
                     }}
                     placeholder="hoopstar23"
                     maxLength={20}
-                    className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20 pl-8"
+                    className="bg-secondary/30 border-border placeholder:text-muted-foreground/50 pl-8"
                     data-testid="input-edit-username"
                   />
                 </div>
@@ -3399,7 +3399,7 @@ export default function PlayerDetail() {
                         cursor-pointer rounded-lg border p-2 text-center text-sm font-medium transition-all
                         ${editPositions.includes(pos)
                           ? 'border-accent bg-accent/10 text-white'
-                          : 'border-white/10 bg-secondary/30 text-muted-foreground hover:border-white/30 hover:bg-secondary/50'
+                          : 'border-border bg-secondary/30 text-muted-foreground hover:border-border hover:bg-secondary/50'
                         }
                       `}
                       data-testid={`position-edit-${pos.toLowerCase()}`}
@@ -3428,7 +3428,7 @@ export default function PlayerDetail() {
                   value={editForm.jerseyNumber || ""}
                   onChange={(e) => setEditForm((prev) => ({ ...prev, jerseyNumber: e.target.value ? Number(e.target.value) : undefined }))}
                   placeholder="23"
-                  className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20"
+                  className="bg-secondary/30 border-border placeholder:text-muted-foreground/50"
                   data-testid="input-edit-jersey"
                 />
               </div>
@@ -3440,7 +3440,7 @@ export default function PlayerDetail() {
                     value={editForm.height || ""}
                     onChange={(e) => setEditForm((prev) => ({ ...prev, height: e.target.value }))}
                     placeholder="6'8"
-                    className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20"
+                    className="bg-secondary/30 border-border placeholder:text-muted-foreground/50"
                     data-testid="input-edit-height"
                   />
                 </div>
@@ -3450,7 +3450,7 @@ export default function PlayerDetail() {
                     value={editForm.team || ""}
                     onChange={(e) => setEditForm((prev) => ({ ...prev, team: e.target.value }))}
                     placeholder="Lakers"
-                    className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20"
+                    className="bg-secondary/30 border-border placeholder:text-muted-foreground/50"
                     data-testid="input-edit-team"
                   />
                 </div>
@@ -3463,16 +3463,16 @@ export default function PlayerDetail() {
                   onChange={(e) => setEditForm((prev) => ({ ...prev, bio: e.target.value }))}
                   placeholder="Tell us about yourself as a player..."
                   rows={3}
-                  className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20 resize-none"
+                  className="bg-secondary/30 border-border placeholder:text-muted-foreground/50 resize-none"
                   data-testid="textarea-edit-bio"
                 />
               </div>
 
-              <div className="pt-4 border-t border-white/10">
+              <div className="pt-4 border-t border-border">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <Eye className="w-4 h-4 text-accent" />
-                    <span className="text-sm font-bold text-white">Recruiting Visibility</span>
+                    <span className="text-sm font-bold text-foreground">Recruiting Visibility</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground">Open to Opportunities</span>
@@ -3496,7 +3496,7 @@ export default function PlayerDetail() {
                       value={editForm.school || ""}
                       onChange={(e) => setEditForm((prev) => ({ ...prev, school: e.target.value }))}
                       placeholder="Lincoln High"
-                      className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20"
+                      className="bg-secondary/30 border-border placeholder:text-muted-foreground/50"
                       data-testid="input-edit-school"
                     />
                   </div>
@@ -3506,10 +3506,10 @@ export default function PlayerDetail() {
                       value={editForm.graduationYear?.toString() || ""}
                       onValueChange={(val) => setEditForm((prev) => ({ ...prev, graduationYear: val ? Number(val) : undefined }))}
                     >
-                      <SelectTrigger className="bg-secondary/30 border-white/10 text-white" data-testid="select-edit-graduation-year">
+                      <SelectTrigger className="bg-secondary/30 border-border" data-testid="select-edit-graduation-year">
                         <SelectValue placeholder="Year" />
                       </SelectTrigger>
-                      <SelectContent className="bg-card border-white/10 text-white">
+                      <SelectContent className="bg-card border-border">
                         {[2024, 2025, 2026, 2027, 2028, 2029, 2030].map((year) => (
                           <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
                         ))}
@@ -3536,7 +3536,7 @@ export default function PlayerDetail() {
                         }
                       }}
                       placeholder="3.50"
-                      className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20"
+                      className="bg-secondary/30 border-border placeholder:text-muted-foreground/50"
                       data-testid="input-edit-gpa"
                     />
                   </div>
@@ -3551,7 +3551,7 @@ export default function PlayerDetail() {
                       value={editForm.city || ""}
                       onChange={(e) => setEditForm((prev) => ({ ...prev, city: e.target.value }))}
                       placeholder="Los Angeles"
-                      className="bg-secondary/30 border-white/10 text-white placeholder:text-white/20"
+                      className="bg-secondary/30 border-border placeholder:text-muted-foreground/50"
                       data-testid="input-edit-city"
                     />
                   </div>
@@ -3561,10 +3561,10 @@ export default function PlayerDetail() {
                       value={editForm.state || ""}
                       onValueChange={(val) => setEditForm((prev) => ({ ...prev, state: val }))}
                     >
-                      <SelectTrigger className="bg-secondary/30 border-white/10 text-white" data-testid="select-edit-state">
+                      <SelectTrigger className="bg-secondary/30 border-border" data-testid="select-edit-state">
                         <SelectValue placeholder="State" />
                       </SelectTrigger>
-                      <SelectContent className="bg-card border-white/10 text-white max-h-60">
+                      <SelectContent className="bg-card border-border max-h-60">
                         {["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"].map((st) => (
                           <SelectItem key={st} value={st}>{st}</SelectItem>
                         ))}
@@ -3598,7 +3598,7 @@ export default function PlayerDetail() {
                   )}
                 </div>
                 {editForm.bannerUrl && (
-                  <div className="mt-2 rounded-lg overflow-hidden border border-white/10">
+                  <div className="mt-2 rounded-lg overflow-hidden border border-border">
                     <img src={editForm.bannerUrl} alt="Banner preview" className="w-full h-24 object-cover" loading="lazy" />
                   </div>
                 )}
@@ -3618,9 +3618,9 @@ export default function PlayerDetail() {
       </Dialog>
 
       <Sheet open={showFollowersSheet} onOpenChange={setShowFollowersSheet}>
-        <SheetContent className="bg-background border-l border-white/10">
+        <SheetContent className="bg-background border-l border-border">
           <SheetHeader>
-            <SheetTitle className="font-display text-xl text-white uppercase tracking-wider">
+            <SheetTitle className="font-display text-xl uppercase tracking-wider">
               Followers
             </SheetTitle>
           </SheetHeader>
@@ -3631,9 +3631,9 @@ export default function PlayerDetail() {
       </Sheet>
 
       <Sheet open={showFollowingSheet} onOpenChange={setShowFollowingSheet}>
-        <SheetContent className="bg-background border-l border-white/10">
+        <SheetContent className="bg-background border-l border-border">
           <SheetHeader>
-            <SheetTitle className="font-display text-xl text-white uppercase tracking-wider">
+            <SheetTitle className="font-display text-xl uppercase tracking-wider">
               Following
             </SheetTitle>
           </SheetHeader>

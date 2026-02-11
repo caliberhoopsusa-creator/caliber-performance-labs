@@ -88,17 +88,17 @@ function ActivitySkeleton({ index }: { index: number }) {
       transition={{ duration: 0.3, delay: index * 0.05 }}
     >
       <Card 
-        className="p-4 bg-gradient-to-br from-black/60 to-black/30 border-white/10" 
+        className="p-4 bg-card/80 border-border" 
         data-testid="skeleton-activity"
       >
         <div className="flex items-start gap-4">
-          <Skeleton className="w-12 h-12 rounded-xl shrink-0 bg-white/5" />
+          <Skeleton className="w-12 h-12 rounded-xl shrink-0 bg-muted/50" />
           <div className="flex-1 space-y-2">
-            <Skeleton className="h-5 w-3/4 bg-white/5" />
-            <Skeleton className="h-4 w-1/2 bg-white/5" />
+            <Skeleton className="h-5 w-3/4 bg-muted/50" />
+            <Skeleton className="h-4 w-1/2 bg-muted/50" />
             <div className="flex items-center gap-2 mt-2">
-              <Skeleton className="h-5 w-20 rounded-full bg-white/5" />
-              <Skeleton className="h-3 w-16 bg-white/5" />
+              <Skeleton className="h-5 w-20 rounded-full bg-muted/50" />
+              <Skeleton className="h-3 w-16 bg-muted/50" />
             </div>
           </div>
         </div>
@@ -131,7 +131,7 @@ function ActivityCard({ activity, index }: { activity: FeedActivity; index: numb
       <Card
         className={cn(
           "p-4 relative overflow-hidden transition-all duration-300",
-          "bg-gradient-to-br from-black/60 to-black/30 border-white/10",
+          "bg-card/80 border-border",
           "hover:border-accent/30",
           activity.playerId && "cursor-pointer hover:scale-[1.01]"
         )}
@@ -148,7 +148,7 @@ function ActivityCard({ activity, index }: { activity: FeedActivity; index: numb
           <div 
             className={cn(
               "w-12 h-12 rounded-xl flex items-center justify-center shrink-0",
-              "bg-gradient-to-br from-white/10 to-white/5 border border-white/10"
+              "bg-muted/50 border border-border"
             )}
           >
             <Icon 
@@ -159,7 +159,7 @@ function ActivityCard({ activity, index }: { activity: FeedActivity; index: numb
 
           <div className="flex-1 min-w-0">
             <h3 
-              className="text-base font-bold text-white leading-tight mb-1"
+              className="text-base font-bold text-foreground leading-tight mb-1"
               data-testid={`text-headline-${activity.id}`}
             >
               {activity.headline}
@@ -178,7 +178,7 @@ function ActivityCard({ activity, index }: { activity: FeedActivity; index: numb
               {activity.playerName && (
                 <Badge 
                   variant="secondary" 
-                  className="text-xs bg-white/10 border-white/10 hover:bg-white/20"
+                  className="text-xs bg-muted border-border"
                   data-testid={`badge-player-${activity.id}`}
                 >
                   {activity.playerName}
@@ -235,7 +235,7 @@ function FeedList({ activities, isLoading, error, emptyMessage, emptyDescription
         transition={{ duration: 0.3 }}
       >
         <Card 
-          className="p-8 text-center bg-gradient-to-br from-black/60 to-black/30 border-red-500/20" 
+          className="p-8 text-center bg-card/80 border-red-500/20" 
           data-testid="error-container"
         >
           <div className="flex flex-col items-center gap-4">
@@ -281,7 +281,7 @@ function FeedList({ activities, isLoading, error, emptyMessage, emptyDescription
         transition={{ duration: 0.3 }}
       >
         <Card 
-          className="p-10 text-center bg-gradient-to-br from-black/60 to-black/30 border-white/10" 
+          className="p-10 text-center bg-card/80 border-border" 
           data-testid="empty-container"
         >
           <div className="flex flex-col items-center gap-5">
@@ -305,7 +305,7 @@ function FeedList({ activities, isLoading, error, emptyMessage, emptyDescription
               </motion.div>
             </div>
             <div className="space-y-2">
-              <p className="text-white font-bold text-xl">{emptyMessage}</p>
+              <p className="text-foreground font-bold text-xl">{emptyMessage}</p>
               <p className="text-sm text-muted-foreground max-w-sm mx-auto">
                 {emptyDescription}
               </p>
@@ -360,7 +360,7 @@ export default function Newsfeed() {
 
   return (
     <div className="pb-24 md:pb-6 space-y-8" data-testid="page-newsfeed">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-black/60 via-card to-black/60 border border-accent/20">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-card/80 via-card to-card/80 border border-accent/20">
         <div className="absolute inset-0 opacity-30" />
         <div className="absolute top-0 right-0 w-96 h-96 bg-accent/10 blur-[100px] rounded-full" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 blur-[80px] rounded-full" />
@@ -406,7 +406,7 @@ export default function Newsfeed() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList 
-          className="w-full h-auto p-1.5 bg-black/40 border border-white/10 rounded-xl grid grid-cols-3 gap-1" 
+          className="w-full h-auto p-1.5 bg-muted/80 border border-border rounded-xl grid grid-cols-3 gap-1" 
           data-testid="tabs-feed"
         >
           {(["all", "following", "team"] as const).map((tab) => {
