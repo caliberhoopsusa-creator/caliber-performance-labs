@@ -1,4 +1,4 @@
-import { useRoute, Link } from "wouter";
+import { useRoute, Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -177,6 +177,7 @@ function PublicPlayerProfileSkeleton() {
 
 export default function PublicPlayerProfile() {
   const [, params] = useRoute("/profile/:id/public");
+  const [, setLocation] = useLocation();
   const playerId = Number(params?.id);
   const { toast } = useToast();
 
@@ -559,7 +560,7 @@ export default function PublicPlayerProfile() {
             <Button 
               className="w-full mt-4 gap-2" 
               variant="outline"
-              onClick={() => window.location.href = 'mailto:contact@caliber.app'}
+              onClick={() => setLocation('/community?tab=messages')}
               data-testid="button-contact-player"
             >
               <Mail className="w-4 h-4" />

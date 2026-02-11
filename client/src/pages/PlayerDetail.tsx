@@ -2231,6 +2231,16 @@ export default function PlayerDetail() {
                       initialIsFollowing={isFollowingPlayer}
                     />
                   )}
+                  {isAuthenticated && !isOwnProfile && (
+                    <Button
+                      size="sm"
+                      className="gap-1.5 bg-accent text-white border-accent"
+                      onClick={() => navigate('/community?tab=messages')}
+                      data-testid="button-message-player-header"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" /> Message
+                    </Button>
+                  )}
                   {isOwnProfile && (
                     <Button 
                       onClick={() => setIsEditDialogOpen(true)} 
