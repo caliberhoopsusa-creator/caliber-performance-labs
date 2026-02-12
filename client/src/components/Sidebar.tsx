@@ -126,6 +126,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
   ];
 
   const playerMoreItems: NavItem[] = [
+    { href: "/video", label: "Video Analysis", icon: Video, premium: "pro" },
     { href: "/schedule", label: "Schedule", icon: CalendarDays },
     { href: "/highlights", label: "Highlights", icon: Film },
     { href: "/reel-builder", label: "Reel Builder", icon: Wand2, sport: 'basketball' },
