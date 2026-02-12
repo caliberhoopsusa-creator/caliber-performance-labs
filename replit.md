@@ -1,7 +1,7 @@
 # Caliber Performance Labs
 
 ## Overview
-Caliber is a multi-sport player analytics and performance tracking application, currently supporting basketball and football. It helps users manage player rosters, log game statistics, and provides automated, position-weighted performance feedback. The application aims to be a leading solution in sports analytics, offering features like player leaderboards, head-to-head comparisons, performance trendlines, gamification, and AI-powered analysis to aid player development, scouting, and coaching.
+Caliber is a basketball-focused player analytics and performance tracking application. It helps users manage player rosters, log game statistics, and provides automated, position-weighted performance feedback. The application aims to be a leading solution in sports analytics, offering features like player leaderboards, head-to-head comparisons, performance trendlines, gamification, and AI-powered analysis to aid player development, scouting, and coaching. Note: Football support is archived (data model preserved in DB) but the UI is locked to basketball only.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
