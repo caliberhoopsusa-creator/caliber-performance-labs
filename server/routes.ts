@@ -15691,12 +15691,10 @@ Only respond with the JSON array, no other text.`;
     }
   });
 
-  app.post("/api/players/:playerId/athletic-measurements", isAuthenticated, async (req, res) => {
+  app.post("/api/players/:playerId/athletic-measurements", isAuthenticated, async (req: any, res) => {
     try {
       const playerId = parseInt(req.params.playerId);
-      const userId = req.session?.userId || (req as any).user?.id;
-      const player = await storage.getPlayer(playerId);
-      if (!player || player.userId !== userId) {
+      if (!await canModifyPlayer(req, playerId)) {
         return res.status(403).json({ message: "Not authorized" });
       }
       const data = { ...req.body, playerId };
