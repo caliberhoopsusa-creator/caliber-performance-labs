@@ -28,6 +28,74 @@ import type { PlayerStory } from "@shared/schema";
 
 type StoryWithPlayer = PlayerStory & { playerName: string; playerUsername: string | null; playerPhoto: string | null };
 
+function PullToRefresh({ onRefresh, children }: { onRefresh: () => Promise<void>; children: React.ReactNode }) {
+  const [pulling, setPulling] = useState(false);
+  const [pullDistance, setPullDistance] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const startY = useRef(0);
+  const threshold = 80;
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (containerRef.current && containerRef.current.scrollTop === 0) {
+      startY.current = e.touches[0].clientY;
+      setPulling(true);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!pulling) return;
+    const diff = e.touches[0].clientY - startY.current;
+    if (diff > 0) {
+      setPullDistance(Math.min(diff * 0.5, 120));
+    }
+  };
+
+  const handleTouchEnd = async () => {
+    if (pullDistance > threshold) {
+      setRefreshing(true);
+      await onRefresh();
+      setRefreshing(false);
+    }
+    setPulling(false);
+    setPullDistance(0);
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      className="relative"
+    >
+      {(pullDistance > 0 || refreshing) && (
+        <div
+          className="flex items-center justify-center"
+          style={{ height: refreshing ? 60 : pullDistance }}
+          data-testid="pull-to-refresh-indicator"
+        >
+          <motion.div
+            animate={refreshing ? { rotate: 360 } : { y: [0, -5, 0] }}
+            transition={refreshing ? { repeat: Infinity, duration: 0.8, ease: "linear" } : { repeat: Infinity, duration: 0.5 }}
+          >
+            <svg width="32" height="32" viewBox="0 0 32 32" className="text-accent" data-testid="pull-to-refresh-ball">
+              <circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" strokeWidth="2" />
+              <path d="M2 16 Q16 10 30 16" fill="none" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M2 16 Q16 22 30 16" fill="none" stroke="currentColor" strokeWidth="1.5" />
+              <line x1="16" y1="2" x2="16" y2="30" stroke="currentColor" strokeWidth="1.5" />
+            </svg>
+          </motion.div>
+          {pullDistance > threshold && !refreshing && (
+            <span className="text-xs text-muted-foreground ml-2">Release to refresh</span>
+          )}
+        </div>
+      )}
+      {children}
+    </div>
+  );
+}
+
 interface StoryPlayer {
   playerId: number;
   playerName: string;
@@ -56,11 +124,34 @@ function InlineStoryViewer({
 
   const currentStory = playerStories[storyIndex];
 
+  const [tappedReaction, setTappedReaction] = useState<string | null>(null);
+
   const viewMutation = useMutation({
     mutationFn: async (storyId: number) => {
       await apiRequest("POST", `/api/stories/${storyId}/view`, { sessionId });
     },
   });
+
+  const reactionMutation = useMutation({
+    mutationFn: async ({ storyId, reaction }: { storyId: number; reaction: string }) => {
+      await apiRequest("POST", `/api/stories/${storyId}/reactions`, { sessionId, reaction });
+    },
+  });
+
+  const handleReaction = (reaction: string) => {
+    if (!currentStory) return;
+    setTappedReaction(reaction);
+    reactionMutation.mutate({ storyId: currentStory.id, reaction });
+    setTimeout(() => setTappedReaction(null), 400);
+  };
+
+  const reactionButtons = [
+    { type: 'fire', icon: Flame },
+    { type: 'heart', icon: Heart },
+    { type: 'thumbsup', icon: ThumbsUp },
+    { type: 'star', icon: Star },
+    { type: 'strong', icon: Zap },
+  ] as const;
 
   useEffect(() => {
     if (currentStory) viewMutation.mutate(currentStory.id);
@@ -204,6 +295,26 @@ function InlineStoryViewer({
           <Eye className="w-4 h-4" />
           <span>{currentStory.viewCount || 0} views</span>
         </div>
+      </div>
+
+      <div
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 bg-black/40 backdrop-blur-sm rounded-full px-4 py-2"
+        onClick={e => e.stopPropagation()}
+        data-testid="story-reaction-bar"
+      >
+        {reactionButtons.map(({ type, icon: Icon }) => (
+          <motion.button
+            key={type}
+            onClick={() => handleReaction(type)}
+            animate={tappedReaction === type ? { scale: [1, 1.5, 1] } : { scale: 1 }}
+            transition={{ duration: 0.35 }}
+            className="w-10 h-10 rounded-full flex items-center justify-center hover-elevate"
+            data-testid={`story-reaction-${type}`}
+            aria-label={`React with ${type}`}
+          >
+            <Icon className="w-5 h-5 text-white" />
+          </motion.button>
+        ))}
       </div>
 
       <button
@@ -829,12 +940,27 @@ function ActionBar({
               aria-label="Like"
               data-testid={`button-reaction-heart`}
             >
-              <motion.div
-                animate={likeAnimating ? { scale: [1, 1.3, 1] } : {}}
-                transition={{ duration: 0.3 }}
-              >
-                <Heart className={cn("w-5 h-5", hasLiked ? "text-red-500 fill-red-500" : "")} />
-              </motion.div>
+              <div className="relative flex items-center justify-center">
+                <motion.div
+                  animate={likeAnimating ? { scale: [1, 1.4, 0.9, 1.15, 1] } : {}}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Heart className={cn("w-5 h-5", hasLiked ? "text-red-500 fill-red-500" : "")} />
+                </motion.div>
+                <AnimatePresence>
+                  {likeAnimating && hasLiked && (
+                    <motion.div
+                      className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                      initial={{ scale: 0.5, opacity: 0.8 }}
+                      animate={{ scale: 2.5, opacity: 0 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <div className="w-5 h-5 rounded-full border-2 border-red-500" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </Button>
 
             <Button
@@ -1207,9 +1333,131 @@ function DefaultContent({ activity }: { activity: FeedActivity }) {
   );
 }
 
-function ActivityCard({ activity, index, currentUserName, currentPlayerId }: { activity: FeedActivity; index: number; currentUserName: string; currentPlayerId?: number | null }) {
+function FeedStreakBanner({ currentPlayerId }: { currentPlayerId: number }) {
+  const checkInMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", `/api/players/${currentPlayerId}/check-in`);
+      return res.json();
+    },
+    onSuccess: () => {
+      globalQueryClient.invalidateQueries({ queryKey: ['/api/players', currentPlayerId, 'activity-streaks'] });
+    },
+    onError: () => {},
+  });
+
+  useEffect(() => {
+    checkInMutation.mutate();
+  }, [currentPlayerId]);
+
+  const { data: streaks } = useQuery<{ id: number; playerId: number; streakType: string; currentStreak: number; longestStreak: number }[]>({
+    queryKey: ['/api/players', currentPlayerId, 'activity-streaks'],
+    queryFn: async () => {
+      const res = await fetch(`/api/players/${currentPlayerId}/activity-streaks`);
+      if (!res.ok) throw new Error("Failed to fetch streaks");
+      return res.json();
+    },
+  });
+
+  const dailyStreak = streaks?.find(s => s.streakType === 'daily_login' || s.streakType === 'daily_game');
+  const currentStreak = dailyStreak?.currentStreak || 0;
+
+  if (currentStreak <= 0) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={cn(
+        "inline-flex items-center gap-2 rounded-full px-4 py-2",
+        currentStreak >= 3 ? "bg-accent/10" : "bg-muted/50"
+      )}
+      data-testid="feed-streak-banner"
+    >
+      {currentStreak >= 7 ? (
+        <motion.div
+          animate={{ scale: [1, 1.15, 1] }}
+          transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+        >
+          <Flame className="w-4 h-4 text-accent" />
+        </motion.div>
+      ) : (
+        <Flame className={cn("w-4 h-4", currentStreak >= 3 ? "text-accent" : "text-muted-foreground")} />
+      )}
+      <span className={cn("text-sm font-bold", currentStreak >= 3 ? "text-accent" : "text-foreground")}>
+        {currentStreak} day streak
+      </span>
+    </motion.div>
+  );
+}
+
+function ProfileViewsCard({ currentPlayerId }: { currentPlayerId: number }) {
+  const [, setLocation] = useLocation();
+
+  const { data } = useQuery<{ totalViews: number; recentViews: { viewerUserId: string; viewedAt: string }[]; viewsByDay: Record<string, number> }>({
+    queryKey: ['/api/players', currentPlayerId, 'profile-views'],
+    queryFn: async () => {
+      const res = await fetch(`/api/players/${currentPlayerId}/profile-views`);
+      if (!res.ok) throw new Error("Failed to fetch profile views");
+      return res.json();
+    },
+  });
+
+  if (!data || data.totalViews <= 0) return null;
+
+  const recentCount = data.recentViews?.length || 0;
+
+  return (
+    <Card className="border-accent/20 p-3" data-testid="card-profile-views">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-2">
+          <Eye className="w-4 h-4 text-accent" />
+          <span className="text-sm font-semibold text-foreground">Profile Views</span>
+          <Badge variant="secondary" className="text-xs">{data.totalViews}</Badge>
+        </div>
+        <button
+          onClick={() => setLocation(`/players/${currentPlayerId}`)}
+          className="text-xs text-accent font-medium"
+          data-testid="link-view-profile-details"
+        >
+          View Details
+        </button>
+      </div>
+      {recentCount > 0 && (
+        <p className="text-xs text-muted-foreground mt-1.5">
+          {recentCount} {recentCount === 1 ? 'view' : 'views'} this week
+        </p>
+      )}
+    </Card>
+  );
+}
+
+function ActivityCard({ activity, index, currentUserName, currentPlayerId, isActive }: { activity: FeedActivity; index: number; currentUserName: string; currentPlayerId?: number | null; isActive?: boolean }) {
   const [, setLocation] = useLocation();
   const [showComments, setShowComments] = useState(false);
+  const [showDoubleTapHeart, setShowDoubleTapHeart] = useState(false);
+  const queryClient = useQueryClient();
+  const sessionId = getSessionId();
+  const lastTapRef = useRef<number>(0);
+
+  const doubleTapLikeMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest('POST', `/api/feed/${activity.id}/reactions`, {
+        sessionId,
+        reactionType: "heart",
+        playerName: currentUserName,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/feed', activity.id, 'reactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/feed', activity.id, 'user-reactions', sessionId] });
+    },
+  });
+
+  const handleDoubleTapLike = () => {
+    setShowDoubleTapHeart(true);
+    doubleTapLikeMutation.mutate();
+    setTimeout(() => setShowDoubleTapHeart(false), 800);
+  };
 
   const handleProfileClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -1255,6 +1503,9 @@ function ActivityCard({ activity, index, currentUserName, currentPlayerId }: { a
                 {getInitials(displayName)}
               </AvatarFallback>
             </Avatar>
+            {isActive && (
+              <div className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-card" data-testid={`indicator-active-${activity.id}`} />
+            )}
             <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center bg-card border-2 border-card">
               <Icon className={cn("w-2.5 h-2.5", iconColor)} />
             </div>
@@ -1280,7 +1531,37 @@ function ActivityCard({ activity, index, currentUserName, currentPlayerId }: { a
           </span>
         </div>
 
-        {renderContent()}
+        <div className="relative" onDoubleClick={handleDoubleTapLike} onTouchEnd={(e) => {
+            const now = Date.now();
+            if (now - lastTapRef.current < 300) {
+              handleDoubleTapLike();
+              lastTapRef.current = 0;
+            } else {
+              lastTapRef.current = now;
+            }
+          }}>
+          {renderContent()}
+          <AnimatePresence>
+            {showDoubleTapHeart && (
+              <motion.div
+                data-testid="double-tap-heart-overlay"
+                className="absolute inset-0 flex items-center justify-center pointer-events-none z-10"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <motion.div
+                  initial={{ scale: 0, opacity: 1 }}
+                  animate={{ scale: [0, 1.2, 1], opacity: [1, 1, 0] }}
+                  transition={{ duration: 0.8, times: [0, 0.4, 1] }}
+                >
+                  <Heart className="w-20 h-20 text-white fill-white drop-shadow-lg" />
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         <div className="border-t border-border">
           <ActionBar
@@ -1405,9 +1686,10 @@ interface FeedListProps {
   isFetchingNextPage?: boolean;
   onLoadMore?: () => void;
   variant?: 'post' | 'alert';
+  activePlayerIds?: Set<number>;
 }
 
-function FeedList({ activities, isLoading, error, emptyMessage, emptyDescription, emptyIcon: EmptyIcon, currentUserName, currentPlayerId, hasNextPage, isFetchingNextPage, onLoadMore, variant = 'post' }: FeedListProps) {
+function FeedList({ activities, isLoading, error, emptyMessage, emptyDescription, emptyIcon: EmptyIcon, currentUserName, currentPlayerId, hasNextPage, isFetchingNextPage, onLoadMore, variant = 'post', activePlayerIds }: FeedListProps) {
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -1480,7 +1762,7 @@ function FeedList({ activities, isLoading, error, emptyMessage, emptyDescription
             </Card>
           ) : (
             activities.map((activity, idx) => (
-              <ActivityCard key={activity.id} activity={activity} index={idx} currentUserName={currentUserName} currentPlayerId={currentPlayerId} />
+              <ActivityCard key={activity.id} activity={activity} index={idx} currentUserName={currentUserName} currentPlayerId={currentPlayerId} isActive={activity.playerId ? activePlayerIds?.has(activity.playerId) : false} />
             ))
           )}
           {onLoadMore && hasNextPage && (
@@ -1532,6 +1814,24 @@ function FeedList({ activities, isLoading, error, emptyMessage, emptyDescription
   );
 }
 
+function useActivityHeartbeat(playerId: number | null | undefined) {
+  const heartbeatMutation = useMutation({
+    mutationFn: async () => {
+      if (!playerId) return;
+      await apiRequest("POST", `/api/players/${playerId}/heartbeat`);
+    },
+  });
+
+  useEffect(() => {
+    if (!playerId) return;
+    heartbeatMutation.mutate();
+    const interval = setInterval(() => {
+      heartbeatMutation.mutate();
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [playerId]);
+}
+
 const TAB_ICONS = {
   all: Rss,
   following: UserCheck,
@@ -1553,6 +1853,8 @@ export default function FeedContent() {
   const currentUserName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Anonymous' : 'Anonymous';
   const { shouldShow: shouldShowGettingStarted } = useGuidedOnboarding();
 
+  useActivityHeartbeat(user?.playerId);
+
   const { 
     data: allData,
     isLoading: allLoading, 
@@ -1573,6 +1875,28 @@ export default function FeedContent() {
   });
 
   const allActivities = allData?.pages.flatMap(page => page.items);
+
+  const playerIds = Array.from(new Set(
+    (allActivities || []).map(a => a.playerId).filter((id): id is number => id != null)
+  ));
+
+  const { data: activityStatusData } = useQuery<{ playerId: number; lastActiveAt: string | null }[]>({
+    queryKey: ['/api/players/activity-status', playerIds.join(',')],
+    queryFn: async () => {
+      if (playerIds.length === 0) return [];
+      const res = await fetch(`/api/players/activity-status?ids=${playerIds.join(',')}`);
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: playerIds.length > 0,
+    refetchInterval: 60000,
+  });
+
+  const activePlayerIds = new Set(
+    (activityStatusData || [])
+      .filter(s => s.lastActiveAt && (Date.now() - new Date(s.lastActiveAt).getTime()) < 5 * 60 * 1000)
+      .map(s => s.playerId)
+  );
 
   const latestId = allData?.pages[0]?.items[0]?.id;
 
@@ -1632,9 +1956,17 @@ export default function FeedContent() {
 
   const alertActivities = alertsData?.pages.flatMap(page => page.items);
 
+  const handleRefresh = async () => {
+    await globalQueryClient.invalidateQueries({ queryKey: ['/api/feed'] });
+    await globalQueryClient.invalidateQueries({ queryKey: ['/api/stories/active'] });
+  };
+
   return (
-    <div className="space-y-5" data-testid="feed-content">
+    <PullToRefresh onRefresh={handleRefresh}>
+      <div className="space-y-5" data-testid="feed-content">
       <StoriesRow currentPlayerId={user?.playerId} currentUserName={currentUserName} />
+      {user?.playerId && <FeedStreakBanner currentPlayerId={user.playerId} />}
+      {user?.playerId && <ProfileViewsCard currentPlayerId={user.playerId} />}
       <GettingStartedCard />
       {user?.playerId && !shouldShowGettingStarted && <DiscoveryCards currentPlayerId={user.playerId} />}
       {user?.playerId && (
@@ -1699,6 +2031,7 @@ export default function FeedContent() {
               hasNextPage={hasNextPage}
               isFetchingNextPage={isFetchingNextPage}
               onLoadMore={() => fetchNextPage()}
+              activePlayerIds={activePlayerIds}
             />
           </div>
         </TabsContent>
@@ -1714,6 +2047,7 @@ export default function FeedContent() {
               emptyIcon={UserCheck}
               currentUserName={currentUserName}
               currentPlayerId={user?.playerId}
+              activePlayerIds={activePlayerIds}
             />
           </div>
         </TabsContent>
@@ -1729,6 +2063,7 @@ export default function FeedContent() {
               emptyIcon={UsersRound}
               currentUserName={currentUserName}
               currentPlayerId={user?.playerId}
+              activePlayerIds={activePlayerIds}
             />
           </div>
         </TabsContent>
@@ -1752,6 +2087,8 @@ export default function FeedContent() {
           </div>
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </PullToRefresh>
   );
 }
+

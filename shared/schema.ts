@@ -38,6 +38,7 @@ export const players = pgTable("players", {
   // Coach-assigned roster role
   rosterRole: text("roster_role").default("rotation"), // 'starter', 'rotation', 'bench', 'development'
   username: text("username").unique(),
+  lastActiveAt: timestamp("last_active_at"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
   userIdIdx: index("players_user_id_idx").on(table.userId),

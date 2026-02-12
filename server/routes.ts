@@ -2376,6 +2376,20 @@ export async function registerRoutes(
     }
   });
 
+  app.get('/api/players/activity-status', async (req, res) => {
+    try {
+      const idsParam = req.query.ids as string;
+      if (!idsParam) return res.status(400).json({ message: "Missing ids query parameter" });
+      const playerIds = idsParam.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+      if (playerIds.length === 0) return res.status(400).json({ message: "No valid player IDs provided" });
+      const results = await db.select({ playerId: players.id, lastActiveAt: players.lastActiveAt }).from(players).where(inArray(players.id, playerIds));
+      res.json(results);
+    } catch (error) {
+      console.error('Error fetching activity status:', error);
+      res.status(500).json({ message: "Failed to fetch activity status" });
+    }
+  });
+
   // --- Sharing Endpoints ---
 
   // GET /api/players/:id/public - Public player profile for coaches/recruiters (no auth required)
@@ -3308,6 +3322,22 @@ export async function registerRoutes(
     } catch (error) {
       console.error('Error checking in:', error);
       res.status(500).json({ message: "Failed to check in" });
+    }
+  });
+
+  app.post('/api/players/:id/heartbeat', isAuthenticated, async (req: any, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      if (isNaN(playerId)) return res.status(400).json({ message: "Invalid player ID" });
+      const canModify = await canModifyPlayer(req, playerId);
+      if (!canModify) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      await db.update(players).set({ lastActiveAt: new Date() }).where(eq(players.id, playerId));
+      res.json({ ok: true });
+    } catch (error) {
+      console.error('Error updating heartbeat:', error);
+      res.status(500).json({ message: "Failed to update heartbeat" });
     }
   });
 
