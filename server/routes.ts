@@ -6746,7 +6746,7 @@ Respond in this exact JSON format:
 
   const VALID_MEDIA_TYPES = ['text', 'image', 'video'];
   
-  app.post('/api/stories', async (req, res) => {
+  app.post('/api/stories', isAuthenticated, async (req: any, res) => {
     try {
       const { playerId, templateId, headline, stats, sessionId, isPublic, imageUrl, videoUrl, mediaType, caption, expiresIn24h } = req.body;
 
@@ -6754,10 +6754,12 @@ Respond in this exact JSON format:
         return res.status(400).json({ message: 'PlayerId and headline are required' });
       }
 
-      // Validate mediaType
+      if (!await canModifyPlayer(req, playerId)) {
+        return res.status(403).json({ message: 'You can only post stories for yourself' });
+      }
+
       const validatedMediaType = mediaType && VALID_MEDIA_TYPES.includes(mediaType) ? mediaType : 'text';
 
-      // Validate that media URLs are provided when mediaType requires them
       if (validatedMediaType === 'image' && !imageUrl) {
         return res.status(400).json({ message: 'Image URL is required for image stories' });
       }
