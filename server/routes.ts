@@ -15681,6 +15681,42 @@ Only respond with the JSON array, no other text.`;
     }
   });
 
+  app.get("/api/players/:playerId/athletic-measurements", async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.playerId);
+      const measurements = await storage.getPlayerAthleticMeasurements(playerId);
+      res.json(measurements);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get athletic measurements" });
+    }
+  });
+
+  app.post("/api/players/:playerId/athletic-measurements", isAuthenticated, async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.playerId);
+      const userId = req.session?.userId || (req as any).user?.id;
+      const player = await storage.getPlayer(playerId);
+      if (!player || player.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      const data = { ...req.body, playerId };
+      const measurement = await storage.createAthleticMeasurement(data);
+      res.status(201).json(measurement);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create athletic measurement" });
+    }
+  });
+
+  app.delete("/api/players/:playerId/athletic-measurements/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteAthleticMeasurement(id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete athletic measurement" });
+    }
+  });
+
   await seedDatabase();
 
   return httpServer;

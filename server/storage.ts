@@ -14,7 +14,7 @@ import {
   recruitPosts, recruitInterests,
   playerRatings, statVerifications, skillChallenges, challengeResults, performanceMilestones, aiProjections, highlightVerifications, eventIntegrations, eventGameLinks,
   leagues, leagueTeams, leagueTeamRosters, leagueGames, leagueRivalries,
-  colleges, playerCollegeMatches, fitnessData, wearableConnections, profileViews,
+  colleges, playerCollegeMatches, fitnessData, wearableConnections, profileViews, athleticMeasurements,
   type Player, type InsertPlayer,
   type Game, type InsertGame,
   type UpdateGameRequest,
@@ -101,7 +101,8 @@ import {
   type PlayerCollegeMatch, type InsertPlayerCollegeMatch,
   type FitnessData, type InsertFitnessData,
   type WearableConnection, type InsertWearableConnection,
-  type ProfileView, type InsertProfileView
+  type ProfileView, type InsertProfileView,
+  type AthleticMeasurement, type InsertAthleticMeasurement
 } from "@shared/schema";
 import { eq, desc, and, count, gte, lte, lt, sql, or, isNull, inArray } from "drizzle-orm";
 
@@ -648,6 +649,11 @@ export interface IStorage {
   getPlayerWearableConnections(playerId: number): Promise<WearableConnection[]>;
   updateWearableConnection(id: number, updates: Partial<WearableConnection>): Promise<WearableConnection | undefined>;
   deleteWearableConnection(id: number): Promise<void>;
+
+  createAthleticMeasurement(data: InsertAthleticMeasurement): Promise<AthleticMeasurement>;
+  getPlayerAthleticMeasurements(playerId: number): Promise<AthleticMeasurement[]>;
+  getLatestAthleticMeasurement(playerId: number): Promise<AthleticMeasurement | null>;
+  deleteAthleticMeasurement(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3809,6 +3815,29 @@ export class DatabaseStorage implements IStorage {
         eq(savedPosts.playerId, playerId)
       ));
     return (result?.count || 0) > 0;
+  }
+
+  async createAthleticMeasurement(data: InsertAthleticMeasurement): Promise<AthleticMeasurement> {
+    const [result] = await db.insert(athleticMeasurements).values(data).returning();
+    return result;
+  }
+
+  async getPlayerAthleticMeasurements(playerId: number): Promise<AthleticMeasurement[]> {
+    return await db.select().from(athleticMeasurements)
+      .where(eq(athleticMeasurements.playerId, playerId))
+      .orderBy(desc(athleticMeasurements.measuredAt));
+  }
+
+  async getLatestAthleticMeasurement(playerId: number): Promise<AthleticMeasurement | null> {
+    const [result] = await db.select().from(athleticMeasurements)
+      .where(eq(athleticMeasurements.playerId, playerId))
+      .orderBy(desc(athleticMeasurements.measuredAt))
+      .limit(1);
+    return result || null;
+  }
+
+  async deleteAthleticMeasurement(id: number): Promise<void> {
+    await db.delete(athleticMeasurements).where(eq(athleticMeasurements.id, id));
   }
 }
 

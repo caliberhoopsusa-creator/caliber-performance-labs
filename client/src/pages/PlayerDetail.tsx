@@ -6,6 +6,7 @@ import { PlayerProgression } from "@/components/PlayerProgression";
 import { ProfileWidgets } from "@/components/ProfileWidgets";
 import { SkillBadges } from "@/components/SkillBadges";
 import { PersonalBests } from "@/components/PersonalBests";
+import { AthleticMeasurements } from "@/components/AthleticMeasurements";
 import { GameNotes } from "@/components/GameNotes";
 import { DrillRecommendations } from "@/components/DrillRecommendations";
 import { CoachGoals } from "@/components/CoachGoals";
@@ -2616,6 +2617,15 @@ export default function PlayerDetail() {
             className="mb-6"
           >
             <PersonalBests games={games} />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.28, duration: 0.4 }}
+            className="mb-6"
+          >
+            <AthleticMeasurements playerId={player.id} isOwnProfile={isOwnProfile} />
           </motion.div>
 
           <motion.div 

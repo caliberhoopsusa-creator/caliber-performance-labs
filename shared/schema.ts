@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, decimal, date, index, unique, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, decimal, date, index, unique, uniqueIndex, real } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -2640,6 +2640,24 @@ export type FitnessData = typeof fitnessData.$inferSelect;
 export const insertWearableConnectionSchema = createInsertSchema(wearableConnections).omit({ id: true, createdAt: true });
 export type InsertWearableConnection = z.infer<typeof insertWearableConnectionSchema>;
 export type WearableConnection = typeof wearableConnections.$inferSelect;
+
+// === ATHLETIC MEASUREMENTS (Basketball Combine-style Testing) ===
+export const athleticMeasurements = pgTable("athletic_measurements", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").references(() => players.id, { onDelete: "cascade" }).notNull(),
+  courtSprintSeconds: real("court_sprint_seconds"),
+  standingVerticalInches: real("standing_vertical_inches"),
+  maxVerticalInches: real("max_vertical_inches"),
+  benchPressReps: integer("bench_press_reps"),
+  measuredAt: timestamp("measured_at").defaultNow(),
+  notes: text("notes"),
+}, (table) => ({
+  playerIdIdx: index("athletic_measurements_player_id_idx").on(table.playerId),
+}));
+
+export type AthleticMeasurement = typeof athleticMeasurements.$inferSelect;
+export const insertAthleticMeasurementSchema = createInsertSchema(athleticMeasurements).omit({ id: true, measuredAt: true });
+export type InsertAthleticMeasurement = z.infer<typeof insertAthleticMeasurementSchema>;
 
 // === MILESTONE DEFINITIONS ===
 export const MILESTONE_DEFINITIONS = {
