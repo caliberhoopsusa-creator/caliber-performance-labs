@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,8 @@ import {
   Menu, LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, 
   Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, 
   UsersRound, CalendarCheck, Eye, UserCircle, LogOut, CreditCard, Lock, Dumbbell, 
-  CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, Bell, ShoppingBag, GraduationCap, Radio
+  CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, Bell, ShoppingBag, GraduationCap, Radio,
+  ChevronDown, ChevronRight, BookOpen, Wand2, Medal
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CaliberLogo } from "@/components/CaliberLogo";
@@ -16,7 +17,7 @@ import { useEquippedItems } from "@/contexts/EquippedItemsContext";
 import { useSubscription, type SubscriptionTier } from "@/hooks/use-subscription";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { SportToggle } from "@/components/SportToggle";
+import { SportToggle, useSport } from "@/components/SportToggle";
 
 type NavItem = {
   href: string;
@@ -24,6 +25,7 @@ type NavItem = {
   icon: React.ComponentType<{ className?: string }>;
   featured?: boolean;
   premium?: SubscriptionTier;
+  sport?: 'basketball' | 'football';
 };
 
 type NavSection = {
@@ -44,8 +46,23 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
   const { toast } = useToast();
   const prefersReducedMotion = useReducedMotion();
   
+  const [moreExpanded, setMoreExpanded] = useState(() => {
+    try {
+      return localStorage.getItem("caliber_sidebar_more_expanded") === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("caliber_sidebar_more_expanded", String(moreExpanded));
+    } catch {}
+  }, [moreExpanded]);
+
   const { equippedTheme } = useEquippedItems();
   const drawerThemeColor = equippedTheme?.item?.value || '#F97316';
+  const currentSport = useSport();
   const isPlayer = userRole === 'player';
 
   const handleRoleSwitch = () => {
@@ -62,7 +79,6 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
         const errorMessage = error?.message || 'Failed to switch mode';
         const errorType = error?.type;
         
-        // Show session expiry message
         if (errorType === 'session_expired') {
           toast({ 
             title: 'Session Expired', 
@@ -72,7 +88,6 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
           return;
         }
         
-        // Show network error
         if (errorType === 'network_error') {
           toast({ 
             title: 'Network Error', 
@@ -93,75 +108,88 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
 
   const playerSections: NavSection[] = [
     {
-      title: "My Game",
+      title: "Essentials",
       items: [
+        { href: "/community?tab=feed", label: "Feed", icon: Rss },
         { href: playerId ? `/players/${playerId}` : "/", label: "Player Profile", icon: UserCircle },
         { href: "/analyze", label: "Log Game", icon: PlusCircle },
-        { href: "/schedule", label: "Schedule", icon: CalendarDays },
         { href: "/performance", label: "Performance", icon: Activity },
-        { href: "/recruiting", label: "Recruiting", icon: GraduationCap },
       ],
     },
     {
-      title: "Explore",
+      title: "Community",
       items: [
-        { href: "/scout", label: "Scout Hub", icon: Eye },
-        { href: "/analytics", label: "Analytics", icon: BarChart3 },
         { href: "/community", label: "Community", icon: UsersRound },
-        { href: "/teams", label: "Teams", icon: Users },
-      ],
-    },
-    {
-      title: "Account",
-      items: [
-        { href: "/shop", label: "Shop", icon: ShoppingBag },
-        { href: "/pricing", label: "Pricing", icon: CreditCard },
+        { href: "/discover/highlights", label: "Discover", icon: Film },
+        { href: "/community?tab=stories", label: "Stories", icon: BookOpen },
       ],
     },
   ];
 
+  const playerMoreItems: NavItem[] = [
+    { href: "/schedule", label: "Schedule", icon: CalendarDays },
+    { href: "/highlights", label: "Highlights", icon: Film },
+    { href: "/reel-builder", label: "Reel Builder", icon: Wand2, sport: 'basketball' },
+    { href: "/scout", label: "Scout Hub", icon: Eye },
+    { href: "/analytics", label: "Analytics", icon: BarChart3 },
+    { href: "/recruiting", label: "Recruiting", icon: GraduationCap },
+    { href: "/leagues", label: "League Hub", icon: Medal },
+    { href: "/teams", label: "Teams", icon: Users },
+  ];
+
+  const playerAccountSection: NavSection = {
+    title: "Account",
+    items: [
+      { href: "/shop", label: "Shop", icon: ShoppingBag },
+      { href: "/pricing", label: "Pricing", icon: CreditCard },
+    ],
+  };
+
   const coachSections: NavSection[] = [
     {
-      title: "Main",
+      title: "Essentials",
       items: [
         { href: "/", label: "Dashboard", icon: LayoutDashboard },
         { href: "/players", label: "Players", icon: Users },
         { href: "/analyze", label: "Log Game", icon: PlusCircle },
-        { href: "/schedule", label: "Schedule", icon: CalendarDays },
+        { href: "/coach", label: "Coach Hub", icon: ClipboardList },
       ],
     },
     {
-      title: "Explore",
+      title: "Game Day",
       items: [
-        { href: "/scout", label: "Scout Hub", icon: Eye },
-        { href: "/analytics", label: "Analytics", icon: BarChart3 },
-        { href: "/community", label: "Community", icon: UsersRound },
-        { href: "/teams", label: "Teams", icon: MessageSquare },
-      ],
-    },
-    {
-      title: "Coach Tools",
-      items: [
-        { href: "/coach/hub", label: "Team Hub", icon: ClipboardList, premium: "coach_pro" },
         { href: "/live-game", label: "Live Game", icon: Radio },
-        { href: "/coach/practices", label: "Practices", icon: CalendarCheck, premium: "coach_pro" },
-        { href: "/coach/lineups", label: "Lineups", icon: UsersRound, premium: "coach_pro" },
-        { href: "/coach/scouting", label: "Scouting", icon: Eye, premium: "coach_pro" },
-        { href: "/coach/alerts", label: "Alerts", icon: Bell, premium: "coach_pro" },
         { href: "/report-card", label: "Report Cards", icon: FileText },
         { href: "/video", label: "Video Analysis", icon: Video, premium: "pro" },
       ],
     },
-    {
-      title: "Account",
-      items: [
-        { href: "/shop", label: "Shop", icon: ShoppingBag },
-        { href: "/pricing", label: "Pricing", icon: CreditCard },
-      ],
-    },
   ];
 
-  const sections = isPlayer ? playerSections : coachSections;
+  const coachMoreItems: NavItem[] = [
+    { href: "/schedule", label: "Schedule", icon: CalendarDays },
+    { href: "/scout", label: "Scout Hub", icon: Eye },
+    { href: "/analytics", label: "Analytics", icon: BarChart3 },
+    { href: "/community", label: "Community", icon: UsersRound },
+    { href: "/leagues", label: "League Hub", icon: Medal },
+    { href: "/teams", label: "Teams", icon: MessageSquare },
+    { href: "/discover/highlights", label: "Discover", icon: Film },
+  ];
+
+  const coachAccountSection: NavSection = {
+    title: "Account",
+    items: [
+      { href: "/shop", label: "Shop", icon: ShoppingBag },
+      { href: "/pricing", label: "Pricing", icon: CreditCard },
+    ],
+  };
+
+  const rawSections = isPlayer ? playerSections : coachSections;
+  const moreItems = (isPlayer ? playerMoreItems : coachMoreItems).filter(item => !item.sport || item.sport === currentSport);
+  const accountSection = isPlayer ? playerAccountSection : coachAccountSection;
+  const sections = rawSections.map(section => ({
+    ...section,
+    items: section.items.filter(item => !item.sport || item.sport === currentSport),
+  }));
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -321,6 +349,136 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
                   </motion.div>
                 ))}
               </AnimatePresence>
+
+              {moreItems.length > 0 && (
+                <motion.div
+                  initial={prefersReducedMotion ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.4, delay: sections.length * 0.1, ease: "easeOut" }}
+                >
+                  <button
+                    onClick={() => setMoreExpanded(!moreExpanded)}
+                    className="flex items-center gap-2 w-full text-[10px] uppercase font-semibold text-accent/50 tracking-[0.2em] px-3 mb-2 cursor-pointer transition-colors"
+                    data-testid="button-mobile-more-toggle"
+                  >
+                    <span className="w-2 h-px bg-gradient-to-r from-accent/40 to-transparent" />
+                    {moreExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                    More
+                  </button>
+                  {moreExpanded && (
+                    <div className="space-y-1">
+                      {moreItems.map((item, itemIndex) => {
+                        const isActive = location === item.href;
+                        const needsUpgrade = item.premium && !hasAccess(item.premium);
+                        const isFeatured = item.featured && !isActive;
+                        
+                        return (
+                          <motion.div
+                            key={item.href}
+                            initial={prefersReducedMotion ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={prefersReducedMotion ? { duration: 0 } : {
+                              duration: 0.3,
+                              delay: itemIndex * 0.05,
+                              ease: "easeOut"
+                            }}
+                            whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
+                            whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }}
+                          >
+                            <Link 
+                              href={item.href}
+                              onClick={() => setOpen(false)}
+                              className={cn(
+                                "mobile-menu-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium min-h-11 touch-target",
+                                "transition-all duration-200",
+                                isActive && "mobile-menu-item-active",
+                                isActive 
+                                  ? "text-accent bg-accent/15" 
+                                  : isFeatured
+                                  ? "text-accent bg-accent/5 hover:bg-accent/10"
+                                  : needsUpgrade
+                                  ? "text-muted-foreground/60"
+                                  : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
+                              )}
+                              data-testid={`mobile-drawer-${item.href.replace(/\//g, '-').replace(/^-/, '') || 'home'}`}
+                            >
+                              <motion.div 
+                                className={cn(
+                                  "p-1.5 rounded-lg transition-all duration-300 flex-shrink-0",
+                                  isActive 
+                                    ? "bg-accent/30" 
+                                    : "bg-white/[0.04]"
+                                )}
+                              >
+                                <item.icon className={cn(
+                                  "w-4 h-4 transition-all duration-300",
+                                  isActive && "text-accent"
+                                )} />
+                              </motion.div>
+                              <span className="flex-1 truncate">{item.label}</span>
+                              {needsUpgrade && (
+                                <div className="p-1 rounded bg-white/5 flex-shrink-0">
+                                  <Lock className="w-3 h-3 text-muted-foreground/50" />
+                                </div>
+                              )}
+                            </Link>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+
+              <motion.div
+                initial={prefersReducedMotion ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.4, delay: (sections.length + 1) * 0.1, ease: "easeOut" }}
+              >
+                <h3 className="text-[10px] uppercase font-semibold text-accent/50 tracking-[0.2em] px-3 mb-2 flex items-center gap-2">
+                  <span className="w-2 h-px bg-gradient-to-r from-accent/40 to-transparent" />
+                  {accountSection.title}
+                </h3>
+                <div className="space-y-1">
+                  {accountSection.items.map((item, itemIndex) => {
+                    const isActive = location === item.href;
+                    return (
+                      <motion.div
+                        key={item.href}
+                        whileHover={prefersReducedMotion ? undefined : { scale: 1.02 }}
+                        whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }}
+                      >
+                        <Link 
+                          href={item.href}
+                          onClick={() => setOpen(false)}
+                          className={cn(
+                            "mobile-menu-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium min-h-11 touch-target",
+                            "transition-all duration-200",
+                            isActive && "mobile-menu-item-active",
+                            isActive 
+                              ? "text-accent bg-accent/15" 
+                              : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
+                          )}
+                          data-testid={`mobile-drawer-${item.href.replace(/\//g, '-').replace(/^-/, '') || 'home'}`}
+                        >
+                          <motion.div 
+                            className={cn(
+                              "p-1.5 rounded-lg transition-all duration-300 flex-shrink-0",
+                              isActive ? "bg-accent/30" : "bg-white/[0.04]"
+                            )}
+                          >
+                            <item.icon className={cn(
+                              "w-4 h-4 transition-all duration-300",
+                              isActive && "text-accent"
+                            )} />
+                          </motion.div>
+                          <span className="flex-1 truncate">{item.label}</span>
+                        </Link>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </motion.div>
             </nav>
           </ScrollArea>
 

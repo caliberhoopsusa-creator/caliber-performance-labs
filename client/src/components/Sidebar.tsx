@@ -1,5 +1,6 @@
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, ShoppingBag, ClipboardCheck, Medal, GraduationCap, Heart, Radio, Wand2 } from "lucide-react";
+import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, ShoppingBag, ClipboardCheck, Medal, GraduationCap, Heart, Radio, Wand2, ChevronDown, ChevronRight, BookOpen } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -10,18 +11,21 @@ import { Button } from "@/components/ui/button";
 import { useSubscription, type SubscriptionTier } from "@/hooks/use-subscription";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { SportToggle } from "@/components/SportToggle";
+import { SportToggle, useSport } from "@/components/SportToggle";
+
+type NavItem = {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  featured?: boolean;
+  premium?: SubscriptionTier;
+  badgeCount?: number;
+  sport?: 'basketball' | 'football';
+};
 
 type NavSection = {
   title: string;
-  items: {
-    href: string;
-    label: string;
-    icon: React.ComponentType<{ className?: string }>;
-    featured?: boolean;
-    premium?: SubscriptionTier;
-    badgeCount?: number;
-  }[];
+  items: NavItem[];
 };
 
 type SidebarProps = {
@@ -35,14 +39,26 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
   const { switchRole, isSwitchingRole, switchRoleError } = useAuth();
   const { toast } = useToast();
 
-  // For players: show their profile and limited options
-  // For coaches: show full navigation with all coach tools
+  const [moreExpanded, setMoreExpanded] = useState(() => {
+    try {
+      return localStorage.getItem("caliber_sidebar_more_expanded") === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("caliber_sidebar_more_expanded", String(moreExpanded));
+    } catch {}
+  }, [moreExpanded]);
+
   const { equippedTheme } = useEquippedItems();
   const sidebarThemeColor = equippedTheme?.item?.value || '#F97316';
+  const currentSport = useSport();
   const isPlayer = userRole === 'player';
   const isCoach = userRole === 'coach';
 
-  // Fetch pending verification count for coaches
   const { data: pendingGames } = useQuery<{ id: number }[]>({
     queryKey: ['/api/coach/unverified-games'],
     enabled: isCoach,
@@ -62,7 +78,6 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         const errorMessage = error?.message || 'Failed to switch mode';
         const errorType = error?.type;
         
-        // Show session expiry message
         if (errorType === 'session_expired') {
           toast({ 
             title: 'Session Expired', 
@@ -72,7 +87,6 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
           return;
         }
         
-        // Show network error
         if (errorType === 'network_error') {
           toast({ 
             title: 'Network Error', 
@@ -93,78 +107,88 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
 
   const playerSections: NavSection[] = [
     {
-      title: "My Game",
+      title: "Essentials",
       items: [
         { href: "/community?tab=feed", label: "Feed", icon: Rss },
         { href: playerId ? `/players/${playerId}` : "/", label: "Player Profile", icon: UserCircle },
         { href: "/analyze", label: "Log Game", icon: PlusCircle },
-        { href: "/schedule", label: "Schedule", icon: CalendarDays },
-        { href: "/highlights", label: "Highlights", icon: Film },
-        { href: "/reel-builder", label: "Reel Builder", icon: Wand2 },
-        { href: "/discover/highlights", label: "Discover", icon: Film },
         { href: "/performance", label: "Performance", icon: Activity },
-        { href: "/recruiting", label: "Recruiting", icon: GraduationCap },
       ],
     },
     {
-      title: "Explore",
+      title: "Community",
       items: [
         { href: "/community", label: "Community", icon: UsersRound },
-        { href: "/scout", label: "Scout Hub", icon: Eye },
-        { href: "/analytics", label: "Analytics", icon: BarChart3 },
-        { href: "/leagues", label: "League Hub", icon: Medal },
-        { href: "/teams", label: "Teams", icon: Users },
-      ],
-    },
-    {
-      title: "Account",
-      items: [
-        { href: "/shop", label: "Shop", icon: ShoppingBag },
-        { href: "/pricing", label: "Pricing", icon: CreditCard },
+        { href: "/discover/highlights", label: "Discover", icon: Film },
+        { href: "/community?tab=stories", label: "Stories", icon: BookOpen },
       ],
     },
   ];
 
+  const playerMoreItems: NavItem[] = [
+    { href: "/schedule", label: "Schedule", icon: CalendarDays },
+    { href: "/highlights", label: "Highlights", icon: Film },
+    { href: "/reel-builder", label: "Reel Builder", icon: Wand2, sport: 'basketball' },
+    { href: "/scout", label: "Scout Hub", icon: Eye },
+    { href: "/analytics", label: "Analytics", icon: BarChart3 },
+    { href: "/recruiting", label: "Recruiting", icon: GraduationCap },
+    { href: "/leagues", label: "League Hub", icon: Medal },
+    { href: "/teams", label: "Teams", icon: Users },
+  ];
+
+  const playerAccountSection: NavSection = {
+    title: "Account",
+    items: [
+      { href: "/shop", label: "Shop", icon: ShoppingBag },
+      { href: "/pricing", label: "Pricing", icon: CreditCard },
+    ],
+  };
+
   const coachSections: NavSection[] = [
     {
-      title: "Main",
+      title: "Essentials",
       items: [
         { href: "/", label: "Dashboard", icon: LayoutDashboard },
         { href: "/players", label: "Players", icon: Users },
         { href: "/analyze", label: "Log Game", icon: PlusCircle },
-        { href: "/schedule", label: "Schedule", icon: CalendarDays },
-      ],
-    },
-    {
-      title: "Explore",
-      items: [
-        { href: "/discover/highlights", label: "Discover", icon: Film },
-        { href: "/scout", label: "Scout Hub", icon: Eye },
-        { href: "/analytics", label: "Analytics", icon: BarChart3 },
-        { href: "/leagues", label: "League Hub", icon: Medal },
-        { href: "/community", label: "Community", icon: UsersRound },
-        { href: "/teams", label: "Teams", icon: MessageSquare },
-      ],
-    },
-    {
-      title: "Coach Tools",
-      items: [
         { href: "/coach", label: "Coach Hub", icon: ClipboardList, featured: pendingCount > 0, badgeCount: pendingCount },
+      ],
+    },
+    {
+      title: "Game Day",
+      items: [
         { href: "/live-game", label: "Live Game", icon: Radio },
         { href: "/report-card", label: "Report Cards", icon: FileText },
         { href: "/video", label: "Video Analysis", icon: Video, premium: "pro" },
       ],
     },
-    {
-      title: "Account",
-      items: [
-        { href: "/shop", label: "Shop", icon: ShoppingBag },
-        { href: "/pricing", label: "Pricing", icon: CreditCard },
-      ],
-    },
   ];
 
-  const navSections = isPlayer ? playerSections : coachSections;
+  const coachMoreItems: NavItem[] = [
+    { href: "/schedule", label: "Schedule", icon: CalendarDays },
+    { href: "/scout", label: "Scout Hub", icon: Eye },
+    { href: "/analytics", label: "Analytics", icon: BarChart3 },
+    { href: "/community", label: "Community", icon: UsersRound },
+    { href: "/leagues", label: "League Hub", icon: Medal },
+    { href: "/teams", label: "Teams", icon: MessageSquare },
+    { href: "/discover/highlights", label: "Discover", icon: Film },
+  ];
+
+  const coachAccountSection: NavSection = {
+    title: "Account",
+    items: [
+      { href: "/shop", label: "Shop", icon: ShoppingBag },
+      { href: "/pricing", label: "Pricing", icon: CreditCard },
+    ],
+  };
+
+  const rawSections = isPlayer ? playerSections : coachSections;
+  const moreItems = (isPlayer ? playerMoreItems : coachMoreItems).filter(item => !item.sport || item.sport === currentSport);
+  const accountSection = isPlayer ? playerAccountSection : coachAccountSection;
+  const navSections = rawSections.map(section => ({
+    ...section,
+    items: section.items.filter(item => !item.sport || item.sport === currentSport),
+  }));
 
   return (
     <div className="hidden md:flex flex-col w-64 bg-sidebar border-r border-border h-screen sticky top-0 overflow-y-auto">
@@ -241,6 +265,76 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
             </div>
           </div>
         ))}
+
+        {moreItems.length > 0 && (
+          <div>
+            <button
+              onClick={() => setMoreExpanded(!moreExpanded)}
+              className="flex items-center gap-2 w-full text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest mb-1.5 px-3 cursor-pointer transition-colors"
+              data-testid="button-more-toggle"
+            >
+              {moreExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+              More
+            </button>
+            {moreExpanded && (
+              <div className="space-y-0.5">
+                {moreItems.map((item) => {
+                  const baseHref = item.href.split('?')[0];
+                  const isActive = location === item.href || 
+                    location === baseHref ||
+                    (item.href.includes('/players/') && location.includes('/players/') && location === item.href);
+                  const needsUpgrade = item.premium && !hasAccess(item.premium);
+                  const isFeatured = item.featured && !isActive;
+                  return (
+                    <Link key={item.href} href={item.href} className={cn(
+                      "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 group font-medium text-base relative overflow-hidden",
+                      isActive 
+                        ? "bg-accent/10 text-foreground" 
+                        : isFeatured
+                        ? "text-accent bg-accent/5"
+                        : needsUpgrade
+                        ? "text-muted-foreground/50"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    )} data-testid={`nav-${item.href.replace(/\//g, '-').replace(/^-/, '') || 'home'}`}>
+                      <item.icon className={cn("w-4 h-4", isActive && "text-accent", isFeatured && "text-accent")} />
+                      {item.label}
+                      {item.badgeCount !== undefined && item.badgeCount > 0 && (
+                        <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] bg-accent text-white rounded-full font-bold">
+                          {item.badgeCount > 99 ? '99+' : item.badgeCount}
+                        </span>
+                      )}
+                      {needsUpgrade && !isActive && (
+                        <span className="ml-auto inline-flex items-center gap-1 text-[9px] text-muted-foreground/70">
+                          <Lock className="w-3 h-3" />
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        <div>
+          <h3 className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest mb-1.5 px-3">{accountSection.title}</h3>
+          <div className="space-y-0.5">
+            {accountSection.items.map((item) => {
+              const isActive = location === item.href;
+              return (
+                <Link key={item.href} href={item.href} className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 group font-medium text-base relative overflow-hidden",
+                  isActive 
+                    ? "bg-accent/10 text-foreground" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                )} data-testid={`nav-${item.href.replace(/\//g, '-').replace(/^-/, '') || 'home'}`}>
+                  <item.icon className={cn("w-4 h-4", isActive && "text-accent")} />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
       </nav>
 
       <div className="p-3 border-t border-border">

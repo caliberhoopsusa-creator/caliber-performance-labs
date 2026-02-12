@@ -22,6 +22,8 @@ import { useToast } from "@/hooks/use-toast";
 import WeeklyRecapCard from "@/components/WeeklyRecapCard";
 import StreakDisplay from "@/components/StreakDisplay";
 import ChallengeButton from "@/components/ChallengeButton";
+import DiscoveryCards from "@/components/DiscoveryCards";
+import { GettingStartedCard, useGuidedOnboarding } from "@/components/GuidedOnboarding";
 import type { PlayerStory } from "@shared/schema";
 
 type StoryWithPlayer = PlayerStory & { playerName: string };
@@ -1321,6 +1323,7 @@ export default function FeedContent() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const currentUserName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Anonymous' : 'Anonymous';
+  const { shouldShow: shouldShowGettingStarted } = useGuidedOnboarding();
 
   const { 
     data: allData,
@@ -1404,6 +1407,8 @@ export default function FeedContent() {
   return (
     <div className="space-y-5" data-testid="feed-content">
       <StoriesRow currentPlayerId={user?.playerId} currentUserName={currentUserName} />
+      <GettingStartedCard />
+      {user?.playerId && !shouldShowGettingStarted && <DiscoveryCards currentPlayerId={user.playerId} />}
       {user?.playerId && (
         <div className="flex items-center flex-wrap gap-3">
           <StreakDisplay playerId={user.playerId} />

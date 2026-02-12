@@ -11,7 +11,6 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { OfflineBanner, OfflineIndicator } from "@/components/OfflineBanner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OnboardingTour } from "@/components/OnboardingTour";
-import { GuidedOnboarding } from "@/components/GuidedOnboarding";
 import { SportProvider } from "@/components/SportToggle";
 import { PageTransition } from "@/components/PageTransition";
 import { ThemeProvider } from "@/contexts/ThemeContext";
@@ -290,7 +289,6 @@ function MainRouter() {
   return (
     <>
       <OnboardingTour />
-      <GuidedOnboarding />
       <SyncHandler />
       <SessionExpiryHandler />
       <OfflineBanner />

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { X, ChevronRight, ChevronLeft, Trophy, Activity, Video, Target, Sparkles } from "lucide-react";
+import { X, ChevronRight, ChevronLeft, Trophy, Activity, Video, Target, Sparkles, Users, GraduationCap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
@@ -14,7 +14,7 @@ interface TourStep {
 const tourSteps: TourStep[] = [
   {
     title: "Welcome to Caliber!",
-    description: "Your personal basketball performance lab. Let's show you around and get you started on your journey to greatness.",
+    description: "Your personal sports performance platform. Let's show you around and get you started on your journey to greatness.",
     icon: <Sparkles className="w-8 h-8" />,
     gradient: "from-accent to-blue-600",
   },
@@ -31,10 +31,22 @@ const tourSteps: TourStep[] = [
     gradient: "from-accent to-accent/80",
   },
   {
+    title: "Connect with Players",
+    description: "Follow teammates, share workouts, and build your sports network. See what others are working on in the Community feed.",
+    icon: <Users className="w-8 h-8" />,
+    gradient: "from-blue-500 to-cyan-600",
+  },
+  {
     title: "AI Video Analysis",
     description: "Upload game footage and let our AI extract stats automatically. No more manual tracking - just play and let us handle the rest.",
     icon: <Video className="w-8 h-8" />,
     gradient: "from-emerald-500 to-teal-600",
+  },
+  {
+    title: "Get Recruited",
+    description: "Build your recruiting profile, get matched with college programs, and track your recruiting journey.",
+    icon: <GraduationCap className="w-8 h-8" />,
+    gradient: "from-amber-500 to-orange-600",
   },
   {
     title: "Track Your Progress",
@@ -193,44 +205,57 @@ export function OnboardingTour({ forceShow = false, onComplete }: OnboardingTour
 
               <div className="flex items-center justify-center gap-2">
                 {tourSteps.map((s, index) => (
-                  <motion.div
+                  <motion.button
                     key={index}
                     layout
-                    className={`h-2 rounded-full ${
+                    onClick={() => setCurrentStep(index)}
+                    className={`h-2 rounded-full transition-all ${
                       index === currentStep
-                        ? `bg-gradient-to-r ${s.gradient}`
+                        ? `bg-gradient-to-r ${s.gradient} cursor-pointer`
                         : index < currentStep
-                        ? "bg-accent/50"
-                        : "bg-muted"
+                        ? "bg-accent/50 cursor-pointer"
+                        : "bg-muted cursor-pointer"
                     }`}
                     animate={{ width: index === currentStep ? 32 : 8 }}
                     transition={{ type: "spring", damping: 20, stiffness: 300 }}
+                    data-testid={`button-tour-dot-${index}`}
                   />
                 ))}
               </div>
 
-              <div className="flex items-center justify-between gap-4 pt-2">
+              <div className="flex flex-col gap-4 pt-2">
+                <div className="flex items-center justify-between gap-4">
+                  <Button
+                    variant="ghost"
+                    onClick={handlePrev}
+                    disabled={currentStep === 0}
+                    className="gap-1"
+                    data-testid="button-tour-prev"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    Back
+                  </Button>
+
+                  <motion.div whileTap={{ scale: 0.95 }}>
+                    <Button
+                      onClick={handleNext}
+                      className={`gap-1 min-w-[120px] bg-gradient-to-r ${step.gradient} border-0 shadow-lg`}
+                      data-testid="button-tour-next"
+                    >
+                      {isLastStep ? "Get Started" : "Next"}
+                      {!isLastStep && <ChevronRight className="w-4 h-4" />}
+                    </Button>
+                  </motion.div>
+                </div>
+                
                 <Button
                   variant="ghost"
-                  onClick={handlePrev}
-                  disabled={currentStep === 0}
-                  className="gap-1"
-                  data-testid="button-tour-prev"
+                  onClick={handleSkip}
+                  className="text-muted-foreground text-sm"
+                  data-testid="button-tour-skip-text"
                 >
-                  <ChevronLeft className="w-4 h-4" />
-                  Back
+                  Skip Tour
                 </Button>
-
-                <motion.div whileTap={{ scale: 0.95 }}>
-                  <Button
-                    onClick={handleNext}
-                    className={`gap-1 min-w-[120px] bg-gradient-to-r ${step.gradient} border-0 shadow-lg`}
-                    data-testid="button-tour-next"
-                  >
-                    {isLastStep ? "Get Started" : "Next"}
-                    {!isLastStep && <ChevronRight className="w-4 h-4" />}
-                  </Button>
-                </motion.div>
               </div>
             </div>
           </motion.div>
