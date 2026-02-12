@@ -273,7 +273,7 @@ export default function PublicRecruitProfile() {
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-[hsl(220,15%,8%)]/90 border-b border-white/[0.06]">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <CaliberLogo size={28} color="#F97316" />
+            <CaliberLogo size={28} color="#E8192C" />
           </div>
           <Button
             variant="outline"
@@ -641,7 +641,7 @@ export default function PublicRecruitProfile() {
           </div>
 
           <div className="text-center pb-8">
-            <CaliberLogo size={20} color="#F97316" className="mx-auto opacity-30" />
+            <CaliberLogo size={20} color="#E8192C" className="mx-auto opacity-30" />
             <p className="text-[10px] text-white/15 mt-1.5">Powered by Caliber Performance Labs</p>
           </div>
         </div>

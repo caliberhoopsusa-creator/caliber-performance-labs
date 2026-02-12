@@ -91,7 +91,7 @@ const GRADE_COLORS: Record<string, string> = {
   "C+": "#fbbf24",
   "C": "#f59e0b",
   "C-": "#fcd34d",
-  "D+": "#f97316",
+  "D+": "#E8192C",
   "D": "#ea580c",
   "D-": "#fb923c",
   "F": "#ef4444",

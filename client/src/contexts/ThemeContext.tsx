@@ -22,7 +22,7 @@ interface ThemeContextValue {
   refreshTheme: () => void;
 }
 
-const DEFAULT_ACCENT_COLOR = "#F97316";
+const DEFAULT_ACCENT_COLOR = "#E8192C";
 
 const ThemeContext = createContext<ThemeContextValue>({
   themeData: null,

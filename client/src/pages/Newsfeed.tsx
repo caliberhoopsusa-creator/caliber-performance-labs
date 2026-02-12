@@ -70,7 +70,7 @@ const ACTIVITY_COLORS: Record<string, string> = {
 };
 
 const ACTIVITY_GLOW: Record<string, string> = {
-  game: "#F97316",
+  game: "#E8192C",
   badge: "#FBBF24",
   streak: "#EF4444",
   goal: "#10B981",

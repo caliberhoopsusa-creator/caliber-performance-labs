@@ -22,7 +22,7 @@ interface ShareCardCreatorProps {
 
 const COLOR_OPTIONS = [
   { name: "white", value: "#FFFFFF" },
-  { name: "orange", value: "#F97316" },
+  { name: "orange", value: "#E8192C" },
   { name: "red", value: "#EF4444" },
   { name: "blue", value: "#3B82F6" },
   { name: "green", value: "#22C55E" },
@@ -40,7 +40,7 @@ export function ShareCardCreator({
   const cardRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
-  const [statColor, setStatColor] = useState("#F97316");
+  const [statColor, setStatColor] = useState("#E8192C");
   const [cardFormat, setCardFormat] = useState<'story' | 'post'>('post');
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();

@@ -35,7 +35,7 @@ function BasketballSpinner({ size, className }: { size: number; className?: stri
         width={size} height={size} viewBox="0 0 40 40"
         style={{ animation: "basketball-bounce 0.8s ease-in-out infinite" }}
       >
-        <circle cx="20" cy="20" r="18" fill="#F97316" />
+        <circle cx="20" cy="20" r="18" fill="#E8192C" />
         <path d="M2 20 Q20 16 38 20" stroke="#C2410C" strokeWidth="1.2" fill="none" opacity="0.6" />
         <path d="M20 2 Q16 20 20 38" stroke="#C2410C" strokeWidth="1.2" fill="none" opacity="0.6" />
         <path d="M6 8 Q14 20 6 32" stroke="#C2410C" strokeWidth="1" fill="none" opacity="0.4" />

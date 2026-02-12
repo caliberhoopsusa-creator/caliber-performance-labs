@@ -77,7 +77,14 @@ export default function Landing() {
   const [activeTab, setActiveTab] = useState("analytics");
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      <div 
+        className="fixed inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.05]"
+        style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)`,
+          backgroundSize: '32px 32px',
+        }}
+      />
       <style>{`
         @keyframes marquee {
           0% { transform: translateX(0); }
@@ -88,7 +95,7 @@ export default function Landing() {
       <nav className="sticky top-0 z-[100] bg-background/80 backdrop-blur-lg border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 flex-wrap">
-            <CaliberLogo size={40} color="#F97316" />
+            <CaliberLogo size={40} color="#E8192C" />
             <span className="text-xl font-bold font-display text-foreground tracking-wider uppercase">CALIBER</span>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
@@ -111,6 +118,8 @@ export default function Landing() {
       </nav>
 
       <section className="relative pt-24 pb-16 px-4">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-accent/5 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-20 right-1/4 w-72 h-72 bg-accent/3 rounded-full blur-[100px] pointer-events-none" />
         <div className="text-center max-w-4xl mx-auto space-y-6">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card/50 text-sm text-muted-foreground mb-4">
             <Star className="w-4 h-4 text-accent" />
@@ -146,7 +155,7 @@ export default function Landing() {
           <div
             className="absolute inset-0 -inset-x-12 -inset-y-12 pointer-events-none"
             style={{
-              background: "radial-gradient(ellipse at 50% 50%, hsl(24 95% 53% / 0.12) 0%, transparent 70%)",
+              background: "radial-gradient(ellipse at 50% 50%, hsl(355 85% 50% / 0.12) 0%, transparent 70%)",
               filter: "blur(40px)",
             }}
           />
@@ -442,7 +451,7 @@ export default function Landing() {
         <div
           className="absolute inset-0"
           style={{
-            background: "radial-gradient(ellipse at 50% 50%, hsl(24 95% 53% / 0.06) 0%, transparent 60%)",
+            background: "radial-gradient(ellipse at 50% 50%, hsl(355 85% 50% / 0.06) 0%, transparent 60%)",
           }}
         />
         <div className="relative max-w-3xl mx-auto text-center space-y-8">
@@ -478,7 +487,7 @@ export default function Landing() {
           <div className="grid md:grid-cols-4 gap-12 mb-12">
             <div className="md:col-span-2 space-y-4">
               <div className="flex items-center gap-3 flex-wrap">
-                <CaliberLogo size={40} color="#F97316" />
+                <CaliberLogo size={40} color="#E8192C" />
                 <span className="text-xl font-bold font-display text-foreground tracking-wider uppercase">CALIBER</span>
               </div>
               <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">

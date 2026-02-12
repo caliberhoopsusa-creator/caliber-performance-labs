@@ -195,7 +195,7 @@ function PublicPricing() {
           </Link>
           <Link href="/">
             <div className="flex items-center gap-2">
-              <CaliberLogo size={28} color="#F97316" />
+              <CaliberLogo size={28} color="#E8192C" />
               <span className="font-display text-xl font-bold tracking-tight text-accent">CALIBER</span>
             </div>
           </Link>
@@ -211,7 +211,7 @@ function PublicPricing() {
 
 function AuthenticatedLogo() {
   const { equippedTheme } = useEquippedItems();
-  const themeColor = equippedTheme?.item?.value || '#F97316';
+  const themeColor = equippedTheme?.item?.value || '#E8192C';
 
   return (
     <Link href="/">

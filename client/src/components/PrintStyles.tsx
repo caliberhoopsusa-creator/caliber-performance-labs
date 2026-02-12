@@ -174,7 +174,7 @@ export function PrintStyles() {
         .grade-a { background: #22c55e !important; color: white !important; }
         .grade-b { background: #3b82f6 !important; color: white !important; }
         .grade-c { background: #eab308 !important; color: black !important; }
-        .grade-d { background: #f97316 !important; color: white !important; }
+        .grade-d { background: #E8192C !important; color: white !important; }
         .grade-f { background: #ef4444 !important; color: white !important; }
 
         .progress-bar {

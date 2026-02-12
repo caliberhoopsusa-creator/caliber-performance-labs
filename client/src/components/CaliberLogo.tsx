@@ -42,7 +42,7 @@ function createMask(): Promise<string> {
   });
 }
 
-export function CaliberLogo({ size = 32, color = "#F97316", className }: CaliberLogoProps) {
+export function CaliberLogo({ size = 32, color = "#E8192C", className }: CaliberLogoProps) {
   const [maskUrl, setMaskUrl] = useState(cachedMaskUrl);
   const mounted = useRef(true);
 

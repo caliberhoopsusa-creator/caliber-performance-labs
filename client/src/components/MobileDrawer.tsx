@@ -61,7 +61,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
   }, [moreExpanded]);
 
   const { equippedTheme } = useEquippedItems();
-  const drawerThemeColor = equippedTheme?.item?.value || '#F97316';
+  const drawerThemeColor = equippedTheme?.item?.value || '#E8192C';
   const currentSport = useSport();
   const isPlayer = userRole === 'player';
 

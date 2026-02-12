@@ -44,14 +44,14 @@
   --gold: 45 93% 58%;
   --platinum: 210 20% 80%;
 
-  --accent: 24 95% 53%;
+  --accent: 355 85% 50%;
   --accent-foreground: 0 0% 100%;
-  --accent-border: 24 90% 43%;
-  --accent-hover: 24 85% 63%;
+  --accent-border: 355 80% 40%;
+  --accent-hover: 355 80% 60%;
 
-  --sidebar-accent: 24 95% 53%;
+  --sidebar-accent: 355 85% 50%;
   --sidebar-accent-foreground: 0 0% 100%;
-  --sidebar-accent-border: 24 90% 43%;
+  --sidebar-accent-border: 355 80% 40%;
 
   --radius: 0.5rem;
 }
