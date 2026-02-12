@@ -2,14 +2,16 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
 import {
   useDrillRecommendations,
   useGenerateDrillRecommendations,
   useDeleteDrillRecommendation,
+  useCompleteDrillRecommendation,
   type DrillRecommendation,
 } from "@/hooks/use-basketball";
-import { Sparkles, X, Star, Target, Dumbbell, AlertTriangle, ArrowRight } from "lucide-react";
+import { Sparkles, X, Star, Target, Dumbbell, AlertTriangle, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 
@@ -50,24 +52,38 @@ function PriorityStars({ priority }: { priority: number }) {
 function RecommendationCard({
   recommendation,
   onDelete,
+  onComplete,
   isDeleting,
+  isCompleting,
 }: {
   recommendation: DrillRecommendation;
   onDelete: () => void;
+  onComplete: () => void;
   isDeleting: boolean;
+  isCompleting: boolean;
 }) {
-  const categoryClass = CATEGORY_COLORS[recommendation.drillCategory.toLowerCase()] || 
+  const categoryClass = CATEGORY_COLORS[recommendation.drillCategory?.toLowerCase() || ""] || 
     "bg-muted text-muted-foreground border-border";
+  const isCompleted = !!recommendation.completedAt;
 
   return (
     <div
-      className="p-4 rounded-md border border-border bg-card/50 space-y-3"
+      className={cn(
+        "p-4 rounded-md border border-border bg-card/50 space-y-3",
+        isCompleted && "opacity-60"
+      )}
       data-testid={`drill-recommendation-${recommendation.id}`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-sm" data-testid={`drill-name-${recommendation.id}`}>
+            <span
+              className={cn(
+                "font-semibold text-sm",
+                isCompleted && "line-through"
+              )}
+              data-testid={`drill-name-${recommendation.id}`}
+            >
               {recommendation.drillName}
             </span>
             <Badge 
@@ -77,6 +93,11 @@ function RecommendationCard({
             >
               {recommendation.drillCategory}
             </Badge>
+            {isCompleted && (
+              <span className="text-xs text-green-500 font-medium" data-testid={`drill-completed-label-${recommendation.id}`}>
+                Completed
+              </span>
+            )}
           </div>
           <p 
             className="text-sm text-muted-foreground mt-1" 
@@ -85,16 +106,37 @@ function RecommendationCard({
             {recommendation.reason}
           </p>
         </div>
-        <Button
-          size="icon"
-          variant="ghost"
-          className="h-7 w-7 text-muted-foreground hover:text-destructive shrink-0"
-          onClick={onDelete}
-          disabled={isDeleting}
-          data-testid={`button-delete-recommendation-${recommendation.id}`}
-        >
-          <X className="w-4 h-4" />
-        </Button>
+        <div className="flex items-center gap-1 shrink-0">
+          <Button
+            size="icon"
+            variant="ghost"
+            className={cn(
+              isCompleted
+                ? "text-green-500"
+                : "text-muted-foreground"
+            )}
+            onClick={onComplete}
+            disabled={isCompleting}
+            data-testid={`button-complete-recommendation-${recommendation.id}`}
+          >
+            <CheckCircle2
+              className={cn(
+                "w-4 h-4",
+                isCompleted && "fill-green-500"
+              )}
+            />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="text-muted-foreground"
+            onClick={onDelete}
+            disabled={isDeleting}
+            data-testid={`button-delete-recommendation-${recommendation.id}`}
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
 
       <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/50">
@@ -172,6 +214,7 @@ export function DrillRecommendations({ playerId }: DrillRecommendationsProps) {
   const { data: recommendations = [], isLoading } = useDrillRecommendations(playerId);
   const generateMutation = useGenerateDrillRecommendations();
   const deleteMutation = useDeleteDrillRecommendation();
+  const completeMutation = useCompleteDrillRecommendation();
 
   const handleGenerate = () => {
     generateMutation.mutate(playerId);
@@ -181,19 +224,39 @@ export function DrillRecommendations({ playerId }: DrillRecommendationsProps) {
     deleteMutation.mutate({ id, playerId });
   };
 
+  const handleComplete = (id: number) => {
+    completeMutation.mutate({ id, playerId });
+  };
+
   if (isLoading) {
     return <LoadingSkeleton />;
   }
 
-  const sortedRecommendations = [...recommendations].sort((a, b) => b.priority - a.priority);
+  const sortedRecommendations = [...recommendations].sort((a, b) => {
+    const aCompleted = a.completedAt ? 1 : 0;
+    const bCompleted = b.completedAt ? 1 : 0;
+    if (aCompleted !== bCompleted) return aCompleted - bCompleted;
+    return b.priority - a.priority;
+  });
+
+  const completedCount = recommendations.filter(r => !!r.completedAt).length;
+  const totalCount = recommendations.length;
+  const progressPercent = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
 
   return (
     <Card className="p-4" data-testid="drill-recommendations">
       <div className="flex items-center justify-between gap-2 mb-4">
-        <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-          <Target className="w-4 h-4 text-accent" />
-          Drill Recommendations
-        </h4>
+        <div className="flex items-center gap-2">
+          <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+            <Target className="w-4 h-4 text-accent" />
+            Drill Recommendations
+          </h4>
+          {totalCount > 0 && (
+            <span className="text-xs text-muted-foreground" data-testid="drill-completion-count">
+              {completedCount} of {totalCount} completed
+            </span>
+          )}
+        </div>
         {sortedRecommendations.length > 0 && (
           <Button
             size="sm"
@@ -209,6 +272,12 @@ export function DrillRecommendations({ playerId }: DrillRecommendationsProps) {
         )}
       </div>
 
+      {totalCount > 0 && (
+        <div className="mb-4" data-testid="drill-completion-progress">
+          <Progress value={progressPercent} className="h-1.5" />
+        </div>
+      )}
+
       {sortedRecommendations.length === 0 ? (
         <EmptyState onGenerate={handleGenerate} isGenerating={generateMutation.isPending} />
       ) : (
@@ -218,7 +287,9 @@ export function DrillRecommendations({ playerId }: DrillRecommendationsProps) {
               key={rec.id}
               recommendation={rec}
               onDelete={() => handleDelete(rec.id)}
+              onComplete={() => handleComplete(rec.id)}
               isDeleting={deleteMutation.isPending && deleteMutation.variables?.id === rec.id}
+              isCompleting={completeMutation.isPending && completeMutation.variables?.id === rec.id}
             />
           ))}
         </div>

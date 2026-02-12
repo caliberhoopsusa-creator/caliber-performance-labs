@@ -1125,6 +1125,7 @@ export const drillRecommendations = pgTable("drill_recommendations", {
   priority: integer("priority").notNull(), // 1-5, higher = more important
   weakStat: text("weak_stat"), // which stat needs improvement
   isActive: boolean("is_active").default(true).notNull(),
+  completedAt: timestamp("completed_at"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
   playerIdIdx: index("drill_recommendations_player_id_idx").on(table.playerId),

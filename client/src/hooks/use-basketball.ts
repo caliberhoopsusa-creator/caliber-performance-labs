@@ -1198,6 +1198,7 @@ export type DrillRecommendation = {
   reason: string;
   weakStat: string;
   priority: number;
+  completedAt: string | null;
   createdAt: string;
 };
 
@@ -1239,6 +1240,22 @@ export function useDeleteDrillRecommendation() {
     mutationFn: async (data: { id: number; playerId: number }) => {
       const res = await fetch(`/api/drill-recommendations/${data.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete drill recommendation");
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/players', variables.playerId, 'drill-recommendations'] });
+    },
+  });
+}
+
+export function useCompleteDrillRecommendation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { id: number; playerId: number }) => {
+      const res = await fetch(`/api/players/${data.playerId}/drill-recommendations/${data.id}/complete`, {
+        method: "PATCH",
+      });
+      if (!res.ok) throw new Error("Failed to complete drill recommendation");
+      return res.json();
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['/api/players', variables.playerId, 'drill-recommendations'] });

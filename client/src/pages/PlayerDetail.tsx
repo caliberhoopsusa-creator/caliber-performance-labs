@@ -5,6 +5,7 @@ import { SocialEngagement } from "@/components/SocialEngagement";
 import { PlayerProgression } from "@/components/PlayerProgression";
 import { ProfileWidgets } from "@/components/ProfileWidgets";
 import { SkillBadges } from "@/components/SkillBadges";
+import { PersonalBests } from "@/components/PersonalBests";
 import { GameNotes } from "@/components/GameNotes";
 import { DrillRecommendations } from "@/components/DrillRecommendations";
 import { CoachGoals } from "@/components/CoachGoals";
@@ -2586,6 +2587,15 @@ export default function PlayerDetail() {
               </h3>
             </div>
             <SkillBadges playerId={player.id} position={player.position} />
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.27, duration: 0.4 }}
+            className="mb-6"
+          >
+            <PersonalBests games={games} />
           </motion.div>
 
           <motion.div 

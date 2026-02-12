@@ -3010,12 +3010,21 @@ export async function registerRoutes(
       }
       
       // Create feed activity for the game (player already fetched above)
+      const fgAttempted = input.fgAttempted ?? 0;
+      const fgMade = input.fgMade ?? 0;
+      const stl = input.steals ?? 0;
+      const blk = input.blocks ?? 0;
+      const fgPct = fgAttempted > 0 ? Math.round((fgMade / fgAttempted) * 100) : null;
+      const statParts = [`${input.rebounds} REB`, `${input.assists} AST`];
+      if (stl > 0) statParts.push(`${stl} STL`);
+      if (blk > 0) statParts.push(`${blk} BLK`);
+      const fgLine = fgPct !== null ? ` | FG: ${fgMade}/${fgAttempted} (${fgPct}%)` : '';
       await storage.createFeedActivity({
         activityType: 'game',
         playerId: input.playerId,
         gameId: game.id,
         headline: `${player?.name || 'Player'} dropped ${input.points} PTS vs ${input.opponent}`,
-        subtext: `Grade: ${grade} | ${input.rebounds} REB, ${input.assists} AST`,
+        subtext: `Grade: ${grade} | ${statParts.join(', ')}${fgLine}`,
       });
       
       // Create feed activities for badges earned
@@ -8080,6 +8089,23 @@ Only respond with the JSON array, no other text.`;
     } catch (err) {
       console.error('Delete recommendation error:', err);
       res.status(500).json({ error: 'Error deleting recommendation' });
+    }
+  });
+
+  app.patch('/api/players/:playerId/drill-recommendations/:id/complete', requiresSubscription, async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const existing = await storage.getDrillRecommendations(Number(req.params.playerId));
+      const rec = existing.find(r => r.id === id);
+      if (!rec) {
+        return res.status(404).json({ error: 'Recommendation not found' });
+      }
+      const newCompletedAt = rec.completedAt ? null : new Date();
+      const updated = await storage.completeDrillRecommendation(id, newCompletedAt);
+      res.json(updated);
+    } catch (err) {
+      console.error('Complete recommendation error:', err);
+      res.status(500).json({ error: 'Error completing recommendation' });
     }
   });
 

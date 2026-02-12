@@ -399,6 +399,7 @@ export interface IStorage {
   getDrillRecommendations(playerId: number): Promise<DrillRecommendation[]>;
   updateDrillRecommendation(id: number, data: Partial<InsertDrillRecommendation>): Promise<DrillRecommendation>;
   deleteDrillRecommendation(id: number): Promise<void>;
+  completeDrillRecommendation(id: number, completedAt: Date | null): Promise<DrillRecommendation>;
 
   // Follows
   createFollow(followerPlayerId: number | null, followerUserId: string | null, followeePlayerId: number): Promise<Follow>;
@@ -2118,6 +2119,11 @@ export class DatabaseStorage implements IStorage {
     await db.delete(drillRecommendations).where(eq(drillRecommendations.id, id));
   }
 
+  async completeDrillRecommendation(id: number, completedAt: Date | null): Promise<DrillRecommendation> {
+    const [updated] = await db.update(drillRecommendations).set({ completedAt }).where(eq(drillRecommendations.id, id)).returning();
+    return updated;
+  }
+
   // Follows
   async createFollow(followerPlayerId: number | null, followerUserId: string | null, followeePlayerId: number): Promise<Follow> {
     const [newFollow] = await db.insert(follows).values({ 
@@ -2549,22 +2555,6 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(trainingGroups)
       .where(eq(trainingGroups.isPublic, true))
       .orderBy(desc(trainingGroups.createdAt));
-  }
-
-  // Direct Messages
-  async createDmThread(): Promise<DmThread> {
-    const [newThread] = await db.insert(dmThreads).values({}).returning();
-    return newThread;
-  }
-
-  async addDmParticipant(participant: InsertDmParticipant): Promise<DmParticipant> {
-    const [newParticipant] = await db.insert(dmParticipants).values(participant).returning();
-    return newParticipant;
-  }
-
-  async createDmMessage(message: InsertDmMessage): Promise<DmMessage> {
-    const [newMessage] = await db.insert(dmMessages).values(message).returning();
-    return newMessage;
   }
 
   async getUserDmThreads(userId: string): Promise<DmThread[]> {
@@ -3622,6 +3612,11 @@ export class DatabaseStorage implements IStorage {
   async addDmParticipant(participant: InsertDmParticipant): Promise<DmParticipant> {
     const [result] = await db.insert(dmParticipants).values(participant).returning();
     return result;
+  }
+
+  async createDmMessage(message: InsertDmMessage): Promise<DmMessage> {
+    const [newMessage] = await db.insert(dmMessages).values(message).returning();
+    return newMessage;
   }
 
   async getDmParticipants(threadId: number): Promise<DmParticipant[]> {

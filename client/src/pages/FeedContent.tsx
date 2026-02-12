@@ -745,10 +745,16 @@ function parseGameSubtext(subtext: string | null) {
   const gradeMatch = subtext.match(/Grade:\s*([A-F][+-]?)/i);
   const rebMatch = subtext.match(/(\d+)\s*REB/i);
   const astMatch = subtext.match(/(\d+)\s*AST/i);
+  const stlMatch = subtext.match(/(\d+)\s*STL/i);
+  const blkMatch = subtext.match(/(\d+)\s*BLK/i);
+  const fgMatch = subtext.match(/FG:\s*(\d+)\/(\d+)\s*\((\d+)%\)/i);
   return {
     grade: gradeMatch?.[1] || null,
     reb: rebMatch ? parseInt(rebMatch[1]) : null,
     ast: astMatch ? parseInt(astMatch[1]) : null,
+    stl: stlMatch ? parseInt(stlMatch[1]) : null,
+    blk: blkMatch ? parseInt(blkMatch[1]) : null,
+    fgPct: fgMatch ? parseInt(fgMatch[3]) : null,
   };
 }
 
@@ -838,6 +844,25 @@ function GameContent({ activity }: { activity: FeedActivity }) {
             </div>
           )}
         </div>
+        {(stats?.stl != null || stats?.blk != null || stats?.fgPct != null) && (
+          <div className="flex items-center justify-center gap-4 pt-2 mt-2 border-t border-border/50 flex-wrap">
+            {stats.stl != null && stats.stl > 0 && (
+              <span className="text-xs text-muted-foreground">
+                <span className="font-semibold text-foreground">{stats.stl}</span> STL
+              </span>
+            )}
+            {stats.blk != null && stats.blk > 0 && (
+              <span className="text-xs text-muted-foreground">
+                <span className="font-semibold text-foreground">{stats.blk}</span> BLK
+              </span>
+            )}
+            {stats.fgPct != null && (
+              <span className="text-xs text-muted-foreground">
+                <span className="font-semibold text-foreground">{stats.fgPct}%</span> FG
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
