@@ -8,8 +8,7 @@ import { Activity, UserCircle, ClipboardList, ChevronRight, Loader2, Users, Plus
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useSport, useSportContext } from "@/components/SportToggle";
-import { BASKETBALL_POSITIONS, FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS, type Sport } from "@shared/sports-config";
+import { BASKETBALL_POSITIONS } from "@shared/sports-config";
 
 type RoleType = 'player' | 'coach' | null;
 type CoachStep = 'select-team-action' | 'create-team' | 'join-team' | null;
@@ -26,27 +25,12 @@ function BasketballIcon({ className }: { className?: string }) {
   );
 }
 
-function FootballIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <ellipse cx="12" cy="12" rx="10" ry="6" stroke="currentColor" strokeWidth="2" fill="none" transform="rotate(-30 12 12)"/>
-      <path d="M7 12L17 12" stroke="currentColor" strokeWidth="1.5"/>
-      <path d="M9 10L9 14" stroke="currentColor" strokeWidth="1"/>
-      <path d="M11 9L11 15" stroke="currentColor" strokeWidth="1"/>
-      <path d="M13 9L13 15" stroke="currentColor" strokeWidth="1"/>
-      <path d="M15 10L15 14" stroke="currentColor" strokeWidth="1"/>
-    </svg>
-  );
-}
-
 export default function RoleSelection() {
-  const defaultSport = useSport();
-  const sportContext = useSportContext();
   const [selectedRole, setSelectedRole] = useState<RoleType>(null);
   const [coachStep, setCoachStep] = useState<CoachStep>(null);
   const [playerForm, setPlayerForm] = useState({
     name: '',
-    sport: defaultSport as Sport,
+    sport: 'basketball' as const,
     positions: [] as string[],
     height: '',
     team: '',
@@ -61,12 +45,6 @@ export default function RoleSelection() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const handleSportChange = (sport: Sport) => {
-    setPlayerForm(prev => ({ ...prev, sport, positions: [] }));
-    // Update the sport context (which also persists to localStorage)
-    sportContext.setSport(sport);
-  };
-  
   const togglePosition = (position: string) => {
     setPlayerForm(prev => ({
       ...prev,
@@ -77,16 +55,10 @@ export default function RoleSelection() {
   };
 
   const getPositionsForSport = () => {
-    if (playerForm.sport === 'football') {
-      return FOOTBALL_POSITIONS;
-    }
     return BASKETBALL_POSITIONS;
   };
 
   const getPositionLabel = (position: string) => {
-    if (playerForm.sport === 'football' && position in FOOTBALL_POSITION_LABELS) {
-      return FOOTBALL_POSITION_LABELS[position as keyof typeof FOOTBALL_POSITION_LABELS];
-    }
     return position;
   };
 
@@ -108,10 +80,10 @@ export default function RoleSelection() {
   });
 
   const createPlayerMutation = useMutation({
-    mutationFn: async (data: { name: string; sport: Sport; position: string; height: string; team: string; jerseyNumber: string; teamCode: string }) => {
+    mutationFn: async (data: { name: string; position: string; height: string; team: string; jerseyNumber: string; teamCode: string }) => {
       const result = await apiRequest('POST', '/api/users/create-player-profile', {
         name: data.name,
-        sport: data.sport,
+        sport: 'basketball',
         position: data.position,
         height: data.height || undefined,
         team: data.team || undefined,
@@ -315,44 +287,6 @@ export default function RoleSelection() {
                   className="mt-1"
                   data-testid="input-player-name"
                 />
-              </div>
-
-              <div>
-                <Label>Sport *</Label>
-                <div className="grid grid-cols-2 gap-3 mt-2">
-                  <div
-                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                      playerForm.sport === 'basketball'
-                        ? 'border-accent bg-accent/10'
-                        : 'border-border hover:border-muted-foreground/50'
-                    }`}
-                    onClick={() => handleSportChange('basketball')}
-                    data-testid="card-sport-basketball"
-                  >
-                    <div className="flex flex-col items-center gap-2">
-                      <BasketballIcon className={`w-8 h-8 ${playerForm.sport === 'basketball' ? 'text-accent' : 'text-muted-foreground'}`} />
-                      <span className={`text-sm font-medium ${playerForm.sport === 'basketball' ? 'text-foreground' : 'text-muted-foreground'}`}>
-                        Basketball
-                      </span>
-                    </div>
-                  </div>
-                  <div
-                    className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                      playerForm.sport === 'football'
-                        ? 'border-accent bg-accent/10'
-                        : 'border-border hover:border-muted-foreground/50'
-                    }`}
-                    onClick={() => handleSportChange('football')}
-                    data-testid="card-sport-football"
-                  >
-                    <div className="flex flex-col items-center gap-2">
-                      <FootballIcon className={`w-8 h-8 ${playerForm.sport === 'football' ? 'text-accent' : 'text-muted-foreground'}`} />
-                      <span className={`text-sm font-medium ${playerForm.sport === 'football' ? 'text-foreground' : 'text-muted-foreground'}`}>
-                        Football
-                      </span>
-                    </div>
-                  </div>
-                </div>
               </div>
 
               <div>

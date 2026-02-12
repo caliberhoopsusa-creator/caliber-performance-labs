@@ -130,7 +130,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
     { href: "/video", label: "Video Analysis", icon: Video, premium: "pro" },
     { href: "/schedule", label: "Schedule", icon: CalendarDays },
     { href: "/highlights", label: "Highlights", icon: Film },
-    { href: "/reel-builder", label: "Reel Builder", icon: Wand2, sport: 'basketball' },
+    { href: "/reel-builder", label: "Reel Builder", icon: Wand2 },
     { href: "/scout", label: "Scout Hub", icon: Eye },
     { href: "/analytics", label: "Analytics", icon: BarChart3 },
     { href: "/recruiting", label: "Recruiting", icon: GraduationCap },
@@ -246,12 +246,6 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
               </Button>
             </motion.div>
             
-            <div className="flex flex-col gap-2">
-              <span className="text-[10px] uppercase font-semibold text-accent/60 tracking-[0.2em] px-1">
-                Sport Mode
-              </span>
-              <SportToggle size="sm" showLabels={true} className="w-full justify-center" />
-            </div>
           </div>
 
           {/* Navigation with enhanced styling */}

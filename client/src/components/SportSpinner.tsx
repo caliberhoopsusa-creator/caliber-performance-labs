@@ -1,4 +1,3 @@
-import { useSport } from "@/components/SportToggle";
 import { cn } from "@/lib/utils";
 
 const SIZES = { sm: 24, md: 40, lg: 56 };
@@ -12,18 +11,7 @@ export function SportSpinner({
   sport?: "basketball" | "football"; 
   className?: string;
 }) {
-  let detectedSport: string = "basketball";
-  try {
-    detectedSport = useSport();
-  } catch {
-    // useSport might not be in context
-  }
-  const sport = sportProp || detectedSport;
   const px = SIZES[size];
-
-  if (sport === "football") {
-    return <FootballSpinner size={px} className={className} />;
-  }
   return <BasketballSpinner size={px} className={className} />;
 }
 

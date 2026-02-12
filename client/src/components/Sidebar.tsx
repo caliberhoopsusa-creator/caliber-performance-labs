@@ -129,7 +129,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
     { href: "/video", label: "Video Analysis", icon: Video, premium: "pro" },
     { href: "/schedule", label: "Schedule", icon: CalendarDays },
     { href: "/highlights", label: "Highlights", icon: Film },
-    { href: "/reel-builder", label: "Reel Builder", icon: Wand2, sport: 'basketball' },
+    { href: "/reel-builder", label: "Reel Builder", icon: Wand2 },
     { href: "/scout", label: "Scout Hub", icon: Eye },
     { href: "/analytics", label: "Analytics", icon: BarChart3 },
     { href: "/recruiting", label: "Recruiting", icon: GraduationCap },
@@ -213,10 +213,6 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
             <AlertsBadge />
           </Link>
         )}
-      </div>
-
-      <div className="px-3 py-2 border-b border-border">
-        <SportToggle size="sm" showLabels={true} className="w-full justify-center" />
       </div>
 
       <nav className="flex-1 p-3 space-y-5">
