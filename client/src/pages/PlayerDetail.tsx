@@ -6,7 +6,6 @@ import { PlayerProgression } from "@/components/PlayerProgression";
 import { ProfileWidgets } from "@/components/ProfileWidgets";
 import { SkillBadges } from "@/components/SkillBadges";
 import { PersonalBests } from "@/components/PersonalBests";
-import { AthleticMeasurements } from "@/components/AthleticMeasurements";
 import { GameNotes } from "@/components/GameNotes";
 import { DrillRecommendations } from "@/components/DrillRecommendations";
 import { CoachGoals } from "@/components/CoachGoals";
@@ -58,7 +57,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ObjectUploader } from "@/components/ObjectUploader";
-import { BADGE_DEFINITIONS, type Badge, type Game, type Player } from "@shared/schema";
+import { BADGE_DEFINITIONS, type Badge, type Game, type Player, type AthleticMeasurement } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Label } from "@/components/ui/label";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
@@ -1362,6 +1361,13 @@ export default function PlayerDetail() {
   const [expandedGameId, setExpandedGameId] = useState<number | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editForm, setEditForm] = useState<PlayerUpdate>({});
+  const [athleticForm, setAthleticForm] = useState<{
+    courtSprintSeconds?: number;
+    standingVerticalInches?: number;
+    maxVerticalInches?: number;
+    benchPressReps?: number;
+    benchPressWeight?: number;
+  }>({});
   const [editPositions, setEditPositions] = useState<string[]>([]);
   const [showFollowersSheet, setShowFollowersSheet] = useState(false);
   const [showFollowingSheet, setShowFollowingSheet] = useState(false);
@@ -1384,6 +1390,11 @@ export default function PlayerDetail() {
   const isOwnProfile = useMemo(() => {
     return user?.playerId === id;
   }, [user?.playerId, id]);
+
+  const { data: athleticMeasurementsData = [] } = useQuery<AthleticMeasurement[]>({
+    queryKey: ['/api/players', id, 'athletic-measurements'],
+    enabled: isOwnProfile,
+  });
 
   const { data: sharedGameIds = [] } = useQuery<number[]>({
     queryKey: ['/api/games/shared-ids'],
@@ -1443,8 +1454,20 @@ export default function PlayerDetail() {
         graduationYear: player.graduationYear || undefined,
         gpa: player.gpa ? parseFloat(player.gpa) : undefined,
       });
+      const latestMeasurement = athleticMeasurementsData?.[0];
+      if (latestMeasurement) {
+        setAthleticForm({
+          courtSprintSeconds: latestMeasurement.courtSprintSeconds ?? undefined,
+          standingVerticalInches: latestMeasurement.standingVerticalInches ?? undefined,
+          maxVerticalInches: latestMeasurement.maxVerticalInches ?? undefined,
+          benchPressReps: latestMeasurement.benchPressReps ?? undefined,
+          benchPressWeight: latestMeasurement.benchPressWeight ?? undefined,
+        });
+      } else {
+        setAthleticForm({});
+      }
     }
-  }, [player, isEditDialogOpen]);
+  }, [player, isEditDialogOpen, athleticMeasurementsData]);
 
   const toggleEditPosition = (pos: string) => {
     setEditPositions(prev => {
@@ -1457,7 +1480,7 @@ export default function PlayerDetail() {
     });
   };
 
-  const handleSaveProfile = () => {
+  const handleSaveProfile = async () => {
     const updatedForm = { ...editForm, position: editPositions.join(',') };
     if (updatedForm.username === '') {
       delete updatedForm.username;
@@ -1481,6 +1504,24 @@ export default function PlayerDetail() {
         },
       }
     );
+
+    const hasAthleticData = athleticForm.courtSprintSeconds || athleticForm.standingVerticalInches || 
+      athleticForm.maxVerticalInches || athleticForm.benchPressReps || athleticForm.benchPressWeight;
+    if (hasAthleticData && player) {
+      try {
+        await apiRequest("POST", `/api/players/${player.id}/athletic-measurements`, {
+          playerId: player.id,
+          courtSprintSeconds: athleticForm.courtSprintSeconds || null,
+          standingVerticalInches: athleticForm.standingVerticalInches || null,
+          maxVerticalInches: athleticForm.maxVerticalInches || null,
+          benchPressReps: athleticForm.benchPressReps || null,
+          benchPressWeight: athleticForm.benchPressWeight || null,
+        });
+        queryClient.invalidateQueries({ queryKey: ['/api/players', id, 'athletic-measurements'] });
+      } catch (e) {
+        console.error("Failed to save athletic measurements", e);
+      }
+    }
   };
 
   const handleWidgetsChange = (widgets: string[]) => {
@@ -2619,15 +2660,6 @@ export default function PlayerDetail() {
             <PersonalBests games={games} />
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.28, duration: 0.4 }}
-            className="mb-6"
-          >
-            <AthleticMeasurements playerId={player.id} isOwnProfile={isOwnProfile} />
-          </motion.div>
-
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -3634,6 +3666,73 @@ export default function PlayerDetail() {
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-border">
+                <div className="flex items-center gap-2 mb-4">
+                  <Dumbbell className="w-4 h-4 text-accent" />
+                  <span className="text-sm font-bold text-foreground uppercase tracking-wider">Athletic Testing</span>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">3/4 Court Sprint</label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={athleticForm.courtSprintSeconds || ""}
+                      onChange={(e) => setAthleticForm((prev) => ({ ...prev, courtSprintSeconds: e.target.value ? parseFloat(e.target.value) : undefined }))}
+                      placeholder="3.25 sec"
+                      className="bg-secondary/30 border-border placeholder:text-muted-foreground/50"
+                      data-testid="input-court-sprint"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Standing Vertical</label>
+                    <Input
+                      type="number"
+                      step="0.5"
+                      value={athleticForm.standingVerticalInches || ""}
+                      onChange={(e) => setAthleticForm((prev) => ({ ...prev, standingVerticalInches: e.target.value ? parseFloat(e.target.value) : undefined }))}
+                      placeholder='28"'
+                      className="bg-secondary/30 border-border placeholder:text-muted-foreground/50"
+                      data-testid="input-standing-vertical"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Max Vertical</label>
+                    <Input
+                      type="number"
+                      step="0.5"
+                      value={athleticForm.maxVerticalInches || ""}
+                      onChange={(e) => setAthleticForm((prev) => ({ ...prev, maxVerticalInches: e.target.value ? parseFloat(e.target.value) : undefined }))}
+                      placeholder='34"'
+                      className="bg-secondary/30 border-border placeholder:text-muted-foreground/50"
+                      data-testid="input-max-vertical"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Bench Press Reps</label>
+                    <Input
+                      type="number"
+                      value={athleticForm.benchPressReps || ""}
+                      onChange={(e) => setAthleticForm((prev) => ({ ...prev, benchPressReps: e.target.value ? parseInt(e.target.value) : undefined }))}
+                      placeholder="12"
+                      className="bg-secondary/30 border-border placeholder:text-muted-foreground/50"
+                      data-testid="input-bench-reps"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Bench Press Weight</label>
+                    <Input
+                      type="number"
+                      value={athleticForm.benchPressWeight || ""}
+                      onChange={(e) => setAthleticForm((prev) => ({ ...prev, benchPressWeight: e.target.value ? parseInt(e.target.value) : undefined }))}
+                      placeholder="185 lbs"
+                      className="bg-secondary/30 border-border placeholder:text-muted-foreground/50"
+                      data-testid="input-bench-weight"
+                    />
                   </div>
                 </div>
               </div>

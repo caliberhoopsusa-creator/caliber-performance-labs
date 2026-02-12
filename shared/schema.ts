@@ -2649,6 +2649,7 @@ export const athleticMeasurements = pgTable("athletic_measurements", {
   standingVerticalInches: real("standing_vertical_inches"),
   maxVerticalInches: real("max_vertical_inches"),
   benchPressReps: integer("bench_press_reps"),
+  benchPressWeight: integer("bench_press_weight"),
   measuredAt: timestamp("measured_at").defaultNow(),
   notes: text("notes"),
 }, (table) => ({
