@@ -9,7 +9,8 @@ import {
   useDeleteDrillRecommendation,
   type DrillRecommendation,
 } from "@/hooks/use-basketball";
-import { Sparkles, X, Star, Target, Dumbbell, AlertTriangle } from "lucide-react";
+import { Sparkles, X, Star, Target, Dumbbell, AlertTriangle, ArrowRight } from "lucide-react";
+import { Link } from "wouter";
 import { cn } from "@/lib/utils";
 
 interface DrillRecommendationsProps {
@@ -222,6 +223,20 @@ export function DrillRecommendations({ playerId }: DrillRecommendationsProps) {
           ))}
         </div>
       )}
+
+      <div className="mt-4 pt-3 border-t border-border/50">
+        <Link href="/performance?tab=workouts">
+          <Button
+            variant="ghost"
+            className="w-full gap-2 text-sm text-muted-foreground"
+            data-testid="link-go-to-workouts"
+          >
+            <Dumbbell className="w-4 h-4" />
+            Go to Workouts
+            <ArrowRight className="w-4 h-4 ml-auto" />
+          </Button>
+        </Link>
+      </div>
     </Card>
   );
 }
