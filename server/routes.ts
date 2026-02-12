@@ -16,7 +16,7 @@ import { registerObjectStorageRoutes } from "./replit_integrations/object_storag
 import { setupAuth, registerAuthRoutes, isAuthenticated, authStorage } from "./replit_integrations/auth";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 import { users } from "@shared/models/auth";
-import { eq, sql, and, desc, or, inArray, gte, lte, count, max, ne } from "drizzle-orm";
+import { eq, sql, and, desc, or, inArray, gte, lte, count, max, ne, ilike } from "drizzle-orm";
 import { db } from "./db";
 import type { RequestHandler } from "express";
 
@@ -15450,6 +15450,137 @@ Only respond with the JSON array, no other text.`;
     }
   });
 
+  // === PUBLIC PLAYER DIRECTORY (No auth required) ===
+  app.get('/api/public/players/directory', async (req, res) => {
+    try {
+      const { position, state, graduationYear, minGrade, search, sort = 'grade', page = '1', limit = '20' } = req.query as Record<string, string>;
+
+      const pageNum = Math.max(1, parseInt(page) || 1);
+      const limitNum = Math.min(50, Math.max(1, parseInt(limit) || 20));
+      const offset = (pageNum - 1) * limitNum;
+
+      const GRADE_VALUES: Record<string, number> = {
+        'A+': 100, 'A': 95, 'A-': 90,
+        'B+': 88, 'B': 85, 'B-': 80,
+        'C+': 78, 'C': 75, 'C-': 70,
+        'D+': 68, 'D': 65, 'D-': 60,
+        'F': 50,
+      };
+
+      const conditions: any[] = [
+        eq(players.openToOpportunities, true),
+        eq(players.sport, 'basketball'),
+      ];
+
+      if (position) conditions.push(eq(players.position, position));
+      if (state) conditions.push(eq(players.state, state));
+      if (graduationYear) conditions.push(eq(players.graduationYear, parseInt(graduationYear)));
+      if (search) conditions.push(ilike(players.name, `%${search}%`));
+
+      const matchingPlayers = await db.select()
+        .from(players)
+        .where(and(...conditions));
+
+      const enrichedPlayers = await Promise.all(matchingPlayers.map(async (player) => {
+        const playerGames = await storage.getGamesByPlayerId(player.id);
+        const playerBadges = await storage.getPlayerBadges(player.id);
+
+        const gamesPlayed = playerGames.length;
+        const ppg = gamesPlayed ? playerGames.reduce((acc, g) => acc + g.points, 0) / gamesPlayed : 0;
+        const rpg = gamesPlayed ? playerGames.reduce((acc, g) => acc + g.rebounds, 0) / gamesPlayed : 0;
+        const apg = gamesPlayed ? playerGames.reduce((acc, g) => acc + g.assists, 0) / gamesPlayed : 0;
+
+        let averageGrade: string | null = null;
+        let gradeValue = 0;
+        if (gamesPlayed > 0) {
+          const totalValue = playerGames.reduce((acc, g) => {
+            const grade = g.grade?.trim().toUpperCase() || '';
+            return acc + (GRADE_VALUES[grade] || 0);
+          }, 0);
+          gradeValue = totalValue / gamesPlayed;
+
+          if (gradeValue >= 97) averageGrade = 'A+';
+          else if (gradeValue >= 92) averageGrade = 'A';
+          else if (gradeValue >= 87) averageGrade = 'A-';
+          else if (gradeValue >= 84) averageGrade = 'B+';
+          else if (gradeValue >= 81) averageGrade = 'B';
+          else if (gradeValue >= 77) averageGrade = 'B-';
+          else if (gradeValue >= 74) averageGrade = 'C+';
+          else if (gradeValue >= 71) averageGrade = 'C';
+          else if (gradeValue >= 67) averageGrade = 'C-';
+          else if (gradeValue >= 64) averageGrade = 'D+';
+          else if (gradeValue >= 61) averageGrade = 'D';
+          else if (gradeValue >= 55) averageGrade = 'D-';
+          else averageGrade = 'F';
+        }
+
+        const lastGame = playerGames.length > 0 ?
+          [...playerGames].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0] : null;
+
+        return {
+          id: player.id,
+          name: player.name,
+          username: player.username,
+          photoUrl: player.photoUrl,
+          position: player.position,
+          city: player.city,
+          state: player.state,
+          school: player.school,
+          graduationYear: player.graduationYear,
+          height: player.height,
+          gpa: player.gpa ? parseFloat(player.gpa as any) : null,
+          currentTier: player.currentTier,
+          totalXp: player.totalXp,
+          openToOpportunities: player.openToOpportunities,
+          highlightVideoUrl: player.highlightVideoUrl,
+          gamesPlayed,
+          averageGrade,
+          gradeValue,
+          ppg: Math.round(ppg * 10) / 10,
+          rpg: Math.round(rpg * 10) / 10,
+          apg: Math.round(apg * 10) / 10,
+          badgeCount: playerBadges.length,
+          lastGameDate: lastGame ? lastGame.date : null,
+        };
+      }));
+
+      let filtered = enrichedPlayers;
+      if (minGrade) {
+        const minGradeValue = GRADE_VALUES[minGrade.toUpperCase()] || 0;
+        filtered = enrichedPlayers.filter(p => p.gradeValue >= minGradeValue);
+      }
+
+      if (sort === 'recent') {
+        filtered.sort((a, b) => {
+          if (!a.lastGameDate && !b.lastGameDate) return 0;
+          if (!a.lastGameDate) return 1;
+          if (!b.lastGameDate) return -1;
+          return new Date(b.lastGameDate).getTime() - new Date(a.lastGameDate).getTime();
+        });
+      } else if (sort === 'xp') {
+        filtered.sort((a, b) => b.totalXp - a.totalXp);
+      } else {
+        filtered.sort((a, b) => b.gradeValue - a.gradeValue);
+      }
+
+      const total = filtered.length;
+      const totalPages = Math.ceil(total / limitNum);
+      const paged = filtered.slice(offset, offset + limitNum);
+
+      const responseData = paged.map(({ gradeValue, ...rest }) => rest);
+
+      res.json({
+        players: responseData,
+        total,
+        page: pageNum,
+        totalPages,
+      });
+    } catch (error) {
+      console.error('Error fetching player directory:', error);
+      res.status(500).json({ message: "Failed to fetch player directory" });
+    }
+  });
+
   // === PUBLIC RECRUITING PROFILE (No auth required) ===
   app.get('/api/public/players/:id/profile', async (req, res) => {
     try {
@@ -15607,6 +15738,7 @@ Only respond with the JSON array, no other text.`;
           stateRank: player.stateRank,
           countryRank: player.countryRank,
           openToOpportunities: player.openToOpportunities,
+          highlightVideoUrl: player.highlightVideoUrl,
         },
         overallGrade,
         gamesPlayed: allGames.length,

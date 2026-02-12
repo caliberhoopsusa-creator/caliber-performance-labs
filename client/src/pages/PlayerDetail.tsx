@@ -33,7 +33,7 @@ import { GradeBadge } from "@/components/GradeBadge";
 import { PlayerArchetype } from "@/components/PlayerArchetype";
 import { EliteAchievements } from "@/components/EliteAchievements";
 import { CaliberBadge } from "@/components/CaliberBadge";
-import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Trophy, Share2, BarChart3, Medal, User, Users, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye, BookOpen, Phone, Save, Crosshair, ShieldCheck, PlayCircle, AlertTriangle, Package, Sparkles, Palette, Crown, Gem, CircleDot, Rss, MessageCircle, Sun, Cloud, Moon, Send } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Trophy, Share2, BarChart3, Medal, User, Users, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye, BookOpen, Phone, Save, Crosshair, ShieldCheck, PlayCircle, AlertTriangle, Package, Sparkles, Palette, Crown, Gem, CircleDot, Rss, MessageCircle, Sun, Cloud, Moon, Send, Ruler, Calendar, Video, Circle } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS, FOOTBALL_POSITION_STATS, type FootballPosition } from "@shared/sports-config";
 import { useSport } from "@/components/SportToggle";
@@ -63,6 +63,7 @@ import { Label } from "@/components/ui/label";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Badge as UIBadge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   AlertDialog,
@@ -373,6 +374,77 @@ function InventorySection() {
             );
           })}
         </div>
+      )}
+    </Card>
+  );
+}
+
+function RecruitingReadiness({ player }: { player: any }) {
+  const fields = [
+    { label: "Profile Photo", filled: !!player.photoUrl, icon: Camera },
+    { label: "Bio", filled: !!player.bio, icon: FileText },
+    { label: "Height", filled: !!player.height, icon: Ruler },
+    { label: "School", filled: !!player.school, icon: GraduationCap },
+    { label: "Class Year", filled: !!player.graduationYear, icon: Calendar },
+    { label: "Location", filled: !!(player.city && player.state), icon: MapPin },
+    { label: "GPA", filled: player.gpa != null, icon: BookOpen },
+    { label: "Highlight Video", filled: !!player.highlightVideoUrl, icon: Video },
+  ];
+
+  const filled = fields.filter(f => f.filled).length;
+  const total = fields.length;
+  const pct = Math.round((filled / total) * 100);
+  const isOpen = player.openToOpportunities;
+
+  return (
+    <Card className="p-4" data-testid="card-recruiting-readiness">
+      <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+        <h3 className="text-sm font-bold font-display uppercase tracking-wider flex items-center gap-2">
+          <Target className="w-4 h-4 text-accent" /> Recruiting Readiness
+        </h3>
+        <UIBadge variant="secondary" className={`text-xs ${pct === 100 ? 'bg-emerald-500/15 text-emerald-400' : 'bg-accent/15 text-accent'}`} data-testid="badge-readiness-pct">
+          {pct}%
+        </UIBadge>
+      </div>
+
+      <div className="h-2 rounded-full bg-muted overflow-hidden mb-3">
+        <div
+          className={`h-full rounded-full transition-all duration-500 ${pct === 100 ? 'bg-emerald-500' : 'bg-accent'}`}
+          style={{ width: `${pct}%` }}
+          data-testid="progress-readiness"
+        />
+      </div>
+
+      <div className="space-y-1.5">
+        {fields.map(field => {
+          const Icon = field.icon;
+          return (
+            <div key={field.label} className="flex items-center gap-2 text-sm" data-testid={`readiness-field-${field.label.toLowerCase().replace(/\s+/g, '-')}`}>
+              {field.filled ? (
+                <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              ) : (
+                <Circle className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+              )}
+              <Icon className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+              <span className={field.filled ? "text-foreground" : "text-muted-foreground"}>{field.label}</span>
+            </div>
+          );
+        })}
+      </div>
+
+      {!isOpen && (
+        <div className="mt-3 p-2.5 rounded-md bg-accent/10 border border-accent/20">
+          <p className="text-xs text-accent flex items-center gap-1.5">
+            <Eye className="w-3.5 h-3.5 shrink-0" />
+            Turn on "Open to Opportunities" in settings to appear in the Player Directory
+          </p>
+        </div>
+      )}
+
+      {pct < 100 && (
+        <p className="text-xs text-muted-foreground mt-3">
+          Complete your profile to attract more recruiters. Edit your profile to fill in missing fields.
+        </p>
       )}
     </Card>
   );
@@ -1453,6 +1525,7 @@ export default function PlayerDetail() {
         school: player.school || "",
         graduationYear: player.graduationYear || undefined,
         gpa: player.gpa ? parseFloat(player.gpa) : undefined,
+        highlightVideoUrl: player.highlightVideoUrl || "",
       });
       const latestMeasurement = athleticMeasurementsData?.[0];
       if (latestMeasurement) {
@@ -2405,6 +2478,10 @@ export default function PlayerDetail() {
             })()}
           </div>
         </motion.div>
+      )}
+
+      {isOwnProfile && player && (
+        <RecruitingReadiness player={player} />
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -3562,6 +3639,20 @@ export default function PlayerDetail() {
                   className="bg-secondary/30 border-border placeholder:text-muted-foreground/50 resize-none"
                   data-testid="textarea-edit-bio"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider flex items-center gap-1">
+                  <Film className="w-3 h-3" /> Highlight Video URL
+                </label>
+                <Input
+                  value={editForm.highlightVideoUrl || ""}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, highlightVideoUrl: e.target.value }))}
+                  placeholder="YouTube or Hudl link to your highlights"
+                  className="bg-secondary/30 border-border placeholder:text-muted-foreground/50"
+                  data-testid="input-highlight-video-url"
+                />
+                <p className="text-xs text-muted-foreground">Link recruiters to your highlight reel</p>
               </div>
 
               <div className="pt-4 border-t border-border">

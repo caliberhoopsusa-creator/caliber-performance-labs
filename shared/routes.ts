@@ -74,6 +74,7 @@ export const api = {
         graduationYear: z.number().optional(),
         widgetPreferences: z.string().optional(),
         gpa: z.number().min(0).max(4).optional(),
+        highlightVideoUrl: z.string().optional(),
       }),
       responses: {
         200: z.custom<typeof players.$inferSelect>(),

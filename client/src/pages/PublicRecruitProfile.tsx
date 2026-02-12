@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Loader2, MapPin, GraduationCap, Trophy, Award, Share2, ExternalLink, Star, Target, Activity, TrendingUp, TrendingDown, Minus, Flame, Mail, Copy, Shield, Zap, Clock, CheckCircle, Eye, BookOpen } from "lucide-react";
+import { Loader2, MapPin, GraduationCap, Trophy, Award, Share2, ExternalLink, Star, Target, Activity, TrendingUp, TrendingDown, Minus, Flame, Mail, Copy, Shield, Zap, Clock, CheckCircle, Eye, BookOpen, Video } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { CaliberLogo } from "@/components/CaliberLogo";
@@ -39,6 +39,7 @@ interface PublicProfileData {
     stateRank: number | null;
     countryRank: number | null;
     openToOpportunities: boolean | null;
+    highlightVideoUrl: string | null;
   };
   overallGrade: string | null;
   gamesPlayed: number;
@@ -150,6 +151,17 @@ const BADGE_ICONS: Record<string, typeof Target> = {
   xp_1000: Star,
   xp_5000: Star,
 };
+
+function getYouTubeEmbedUrl(url: string): string | null {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+  ];
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return `https://www.youtube.com/embed/${match[1]}`;
+  }
+  return null;
+}
 
 function getInitials(name: string): string {
   return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
@@ -387,6 +399,39 @@ export default function PublicRecruitProfile() {
         </div>
 
         <div className="px-4 mt-5 space-y-4">
+          {player.highlightVideoUrl && (
+            <Card className="p-4 mt-4" data-testid="card-highlight-video">
+              <h2 className="text-sm font-bold font-display uppercase tracking-wider mb-3 flex items-center gap-2 text-white/70">
+                <Video className="w-4 h-4 text-accent" /> Highlight Reel
+              </h2>
+              <div className="rounded-lg overflow-hidden bg-black aspect-video">
+                {getYouTubeEmbedUrl(player.highlightVideoUrl) ? (
+                  <iframe
+                    src={getYouTubeEmbedUrl(player.highlightVideoUrl)!}
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    title="Highlight Reel"
+                    data-testid="iframe-highlight-video"
+                  />
+                ) : (
+                  <a
+                    href={player.highlightVideoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center h-full text-white/50 hover:text-accent transition-colors"
+                    data-testid="link-highlight-video"
+                  >
+                    <div className="text-center space-y-2">
+                      <ExternalLink className="w-8 h-8 mx-auto" />
+                      <p className="text-sm font-medium">Watch Highlights</p>
+                    </div>
+                  </a>
+                )}
+              </div>
+            </Card>
+          )}
+
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             <Card className="p-3 text-center">
               <p className="text-[10px] text-white/40 uppercase tracking-widest mb-0.5">Games</p>

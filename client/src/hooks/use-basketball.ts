@@ -104,6 +104,7 @@ export type PlayerUpdate = {
   school?: string;
   graduationYear?: number;
   gpa?: number;
+  highlightVideoUrl?: string;
   widgetPreferences?: string;
   username?: string;
 };
