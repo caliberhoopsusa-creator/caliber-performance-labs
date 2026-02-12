@@ -11,24 +11,13 @@ import { Upload, X, Download, Share2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { type Game } from "@shared/schema";
 import { format } from "date-fns";
+import caliberLogo from "@assets/Screenshot_2026-02-11_at_5.31.57_PM_1770916393022.png";
 
 interface ShareCardCreatorProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   game: Game;
   playerName: string;
-}
-
-function getGradeColor(grade: string): string {
-  const letter = grade.charAt(0).toUpperCase();
-  switch (letter) {
-    case 'A': return '#22C55E';
-    case 'B': return '#22C55E';
-    case 'C': return '#EAB308';
-    case 'D': return '#F97316';
-    case 'F': return '#EF4444';
-    default: return '#6B7280';
-  }
 }
 
 const COLOR_OPTIONS = [
@@ -59,7 +48,6 @@ export function ShareCardCreator({
   const cardWidth = cardFormat === 'story' ? 360 : 480;
   const cardHeight = cardFormat === 'story' ? 640 : 480;
 
-  const grade = game.grade || "—";
   const gameDate = new Date(game.date);
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -193,18 +181,17 @@ export function ShareCardCreator({
                   padding: cardFormat === 'story' ? '24px 20px' : '20px 24px',
                 }}
               >
-                <div
+                <img
+                  src={caliberLogo}
+                  alt="Caliber"
                   style={{
-                    color: statColor,
-                    fontSize: cardFormat === 'story' ? 20 : 18,
-                    fontWeight: 800,
-                    letterSpacing: '0.3em',
-                    textTransform: 'uppercase' as const,
-                    textAlign: 'center' as const,
+                    width: cardFormat === 'story' ? 48 : 40,
+                    height: cardFormat === 'story' ? 48 : 40,
+                    objectFit: 'contain',
+                    filter: 'brightness(0) invert(1)',
+                    opacity: 0.9,
                   }}
-                >
-                  CALIBER
-                </div>
+                />
 
                 <div
                   style={{
@@ -219,7 +206,7 @@ export function ShareCardCreator({
                     <div
                       style={{
                         color: statColor,
-                        fontSize: cardFormat === 'story' ? 28 : 24,
+                        fontSize: cardFormat === 'story' ? 22 : 18,
                         fontWeight: 800,
                         textTransform: 'uppercase' as const,
                         letterSpacing: '0.05em',
@@ -230,8 +217,8 @@ export function ShareCardCreator({
                     <div
                       style={{
                         color: 'rgba(255,255,255,0.8)',
-                        fontSize: cardFormat === 'story' ? 16 : 14,
-                        marginTop: 4,
+                        fontSize: cardFormat === 'story' ? 13 : 12,
+                        marginTop: 3,
                       }}
                     >
                       vs {game.opponent}
@@ -239,8 +226,8 @@ export function ShareCardCreator({
                     <div
                       style={{
                         color: 'rgba(255,255,255,0.5)',
-                        fontSize: 12,
-                        marginTop: 4,
+                        fontSize: 11,
+                        marginTop: 3,
                       }}
                     >
                       {format(gameDate, 'MMMM d, yyyy')}
@@ -260,7 +247,7 @@ export function ShareCardCreator({
                       <div
                         style={{
                           color: statColor,
-                          fontSize: cardFormat === 'story' ? 56 : 48,
+                          fontSize: cardFormat === 'story' ? 44 : 36,
                           fontWeight: 800,
                           lineHeight: 1,
                         }}
@@ -270,7 +257,7 @@ export function ShareCardCreator({
                       <div
                         style={{
                           color: 'rgba(255,255,255,0.6)',
-                          fontSize: 11,
+                          fontSize: 10,
                           textTransform: 'uppercase' as const,
                           letterSpacing: '0.1em',
                           marginTop: 4,
@@ -283,7 +270,7 @@ export function ShareCardCreator({
                     <div
                       style={{
                         width: 1,
-                        height: 40,
+                        height: 32,
                         background: 'rgba(255,255,255,0.2)',
                       }}
                     />
@@ -292,7 +279,7 @@ export function ShareCardCreator({
                       <div
                         style={{
                           color: statColor,
-                          fontSize: cardFormat === 'story' ? 56 : 48,
+                          fontSize: cardFormat === 'story' ? 44 : 36,
                           fontWeight: 800,
                           lineHeight: 1,
                         }}
@@ -302,7 +289,7 @@ export function ShareCardCreator({
                       <div
                         style={{
                           color: 'rgba(255,255,255,0.6)',
-                          fontSize: 11,
+                          fontSize: 10,
                           textTransform: 'uppercase' as const,
                           letterSpacing: '0.1em',
                           marginTop: 4,
@@ -315,7 +302,7 @@ export function ShareCardCreator({
                     <div
                       style={{
                         width: 1,
-                        height: 40,
+                        height: 32,
                         background: 'rgba(255,255,255,0.2)',
                       }}
                     />
@@ -324,7 +311,7 @@ export function ShareCardCreator({
                       <div
                         style={{
                           color: statColor,
-                          fontSize: cardFormat === 'story' ? 56 : 48,
+                          fontSize: cardFormat === 'story' ? 44 : 36,
                           fontWeight: 800,
                           lineHeight: 1,
                         }}
@@ -334,7 +321,7 @@ export function ShareCardCreator({
                       <div
                         style={{
                           color: 'rgba(255,255,255,0.6)',
-                          fontSize: 11,
+                          fontSize: 10,
                           textTransform: 'uppercase' as const,
                           letterSpacing: '0.1em',
                           marginTop: 4,
@@ -343,23 +330,6 @@ export function ShareCardCreator({
                         AST
                       </div>
                     </div>
-                  </div>
-
-                  <div
-                    style={{
-                      width: cardFormat === 'story' ? 52 : 44,
-                      height: cardFormat === 'story' ? 52 : 44,
-                      borderRadius: 8,
-                      backgroundColor: getGradeColor(grade),
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: '#FFFFFF',
-                      fontSize: cardFormat === 'story' ? 24 : 20,
-                      fontWeight: 800,
-                    }}
-                  >
-                    {grade}
                   </div>
 
                   {(game.steals > 0 || game.blocks > 0) && (
