@@ -3009,24 +3009,6 @@ export async function registerRoutes(
         });
       }
       
-      // Create feed activity for the game (player already fetched above)
-      const fgAttempted = input.fgAttempted ?? 0;
-      const fgMade = input.fgMade ?? 0;
-      const stl = input.steals ?? 0;
-      const blk = input.blocks ?? 0;
-      const fgPct = fgAttempted > 0 ? Math.round((fgMade / fgAttempted) * 100) : null;
-      const statParts = [`${input.rebounds} REB`, `${input.assists} AST`];
-      if (stl > 0) statParts.push(`${stl} STL`);
-      if (blk > 0) statParts.push(`${blk} BLK`);
-      const fgLine = fgPct !== null ? ` | FG: ${fgMade}/${fgAttempted} (${fgPct}%)` : '';
-      await storage.createFeedActivity({
-        activityType: 'game',
-        playerId: input.playerId,
-        gameId: game.id,
-        headline: `${player?.name || 'Player'} dropped ${input.points} PTS vs ${input.opponent}`,
-        subtext: `Grade: ${grade} | ${statParts.join(', ')}${fgLine}`,
-      });
-      
       // Create feed activities for badges earned
       const badgeNames: Record<string, string> = {
         twenty_piece: "20-Piece",
@@ -3549,6 +3531,76 @@ export async function registerRoutes(
       streakInGracePeriod,
       hoursUntilStreakLost: streakInGracePeriod ? hoursUntilStreakLost : 0,
     });
+  });
+
+  // --- Share Game to Feed ---
+
+  app.get('/api/games/shared-ids', isAuthenticated, async (req: any, res) => {
+    try {
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user || !user.playerId) {
+        return res.json([]);
+      }
+      const results = await db.select({ gameId: feedActivities.gameId })
+        .from(feedActivities)
+        .where(and(eq(feedActivities.activityType, 'game'), eq(feedActivities.playerId, user.playerId)));
+      const ids = results.map(r => r.gameId).filter(Boolean);
+      res.json(ids);
+    } catch (error) {
+      console.error('Error fetching shared game IDs:', error);
+      res.status(500).json({ message: 'Failed to fetch shared game IDs' });
+    }
+  });
+
+  app.post('/api/games/:id/share', isAuthenticated, async (req: any, res) => {
+    try {
+      const gameId = Number(req.params.id);
+      const user = await authStorage.getUser(req.user.claims.sub);
+      if (!user || !user.playerId) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const game = await storage.getGame(gameId);
+      if (!game) {
+        return res.status(404).json({ message: 'Game not found' });
+      }
+
+      if (game.playerId !== user.playerId) {
+        return res.status(403).json({ message: 'You can only share your own games' });
+      }
+
+      const existing = await db.select().from(feedActivities)
+        .where(and(eq(feedActivities.activityType, 'game'), eq(feedActivities.gameId, gameId)))
+        .limit(1);
+
+      if (existing.length > 0) {
+        return res.status(409).json({ message: 'Game already shared to feed' });
+      }
+
+      const player = await storage.getPlayer(game.playerId);
+      const fgAttempted = game.fgAttempted ?? 0;
+      const fgMade = game.fgMade ?? 0;
+      const stl = game.steals ?? 0;
+      const blk = game.blocks ?? 0;
+      const fgPct = fgAttempted > 0 ? Math.round((fgMade / fgAttempted) * 100) : null;
+      const statParts = [`${game.rebounds} REB`, `${game.assists} AST`];
+      if (stl > 0) statParts.push(`${stl} STL`);
+      if (blk > 0) statParts.push(`${blk} BLK`);
+      const fgLine = fgPct !== null ? ` | FG: ${fgMade}/${fgAttempted} (${fgPct}%)` : '';
+
+      const activity = await storage.createFeedActivity({
+        activityType: 'game',
+        playerId: game.playerId,
+        gameId: game.id,
+        headline: `${player?.name || 'Player'} dropped ${game.points} PTS vs ${game.opponent}`,
+        subtext: `Grade: ${game.grade} | ${statParts.join(', ')}${fgLine}`,
+      });
+
+      res.json(activity);
+    } catch (error) {
+      console.error('Error sharing game to feed:', error);
+      res.status(500).json({ message: 'Failed to share game to feed' });
+    }
   });
 
   // --- Likes ---

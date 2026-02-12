@@ -26,13 +26,13 @@ import { useAuth } from "@/hooks/use-auth";
 import { useEquippedItems } from "@/contexts/EquippedItemsContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useRoute, Link, useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { StatCard } from "@/components/StatCard";
 import { GradeBadge } from "@/components/GradeBadge";
 import { PlayerArchetype } from "@/components/PlayerArchetype";
 import { EliteAchievements } from "@/components/EliteAchievements";
 import { CaliberBadge } from "@/components/CaliberBadge";
-import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Trophy, Share2, BarChart3, Medal, User, Users, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye, BookOpen, Phone, Save, Crosshair, ShieldCheck, PlayCircle, AlertTriangle, Package, Sparkles, Palette, Crown, Gem, CircleDot, Rss, MessageCircle, Sun, Cloud, Moon } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Trophy, Share2, BarChart3, Medal, User, Users, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye, BookOpen, Phone, Save, Crosshair, ShieldCheck, PlayCircle, AlertTriangle, Package, Sparkles, Palette, Crown, Gem, CircleDot, Rss, MessageCircle, Sun, Cloud, Moon, Send } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS, FOOTBALL_POSITION_STATS, type FootballPosition } from "@shared/sports-config";
 import { useSport } from "@/components/SportToggle";
@@ -1382,6 +1382,25 @@ export default function PlayerDetail() {
   const isOwnProfile = useMemo(() => {
     return user?.playerId === id;
   }, [user?.playerId, id]);
+
+  const { data: sharedGameIds = [] } = useQuery<number[]>({
+    queryKey: ['/api/games/shared-ids'],
+    enabled: isOwnProfile,
+  });
+
+  const shareToFeedMutation = useMutation({
+    mutationFn: async (gameId: number) => {
+      const res = await apiRequest('POST', `/api/games/${gameId}/share`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/games/shared-ids'] });
+      toast({ title: "Shared to Feed", description: "Your game has been posted to the feed." });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Share Failed", description: error.message, variant: "destructive" });
+    },
+  });
 
   const isFollowingPlayer = useMemo(() => {
     return currentUserFollowing.some(f => f.playerId === id);
@@ -3069,6 +3088,30 @@ export default function PlayerDetail() {
                       </div>
                       
                       <div className="flex justify-end gap-2 mt-4">
+                        {isOwnProfile && (
+                          sharedGameIds.includes(game.id) ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled
+                              className="gap-1 opacity-60"
+                              data-testid={`button-share-to-feed-${game.id}`}
+                            >
+                              <CheckCircle className="w-3.5 h-3.5" /> Shared
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => shareToFeedMutation.mutate(game.id)}
+                              disabled={shareToFeedMutation.isPending}
+                              className="gap-1"
+                              data-testid={`button-share-to-feed-${game.id}`}
+                            >
+                              <Send className="w-3.5 h-3.5" /> Share to Feed
+                            </Button>
+                          )
+                        )}
                         <Button 
                           variant="ghost" 
                           size="sm"
