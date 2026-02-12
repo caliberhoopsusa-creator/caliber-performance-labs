@@ -27,6 +27,7 @@ export const players = pgTable("players", {
   graduationYear: integer("graduation_year"), // Class year (e.g., 2025)
   level: text("level"), // 'middle_school', 'high_school', 'college'
   gpa: decimal("gpa", { precision: 3, scale: 2 }), // Academic GPA (0.00 - 4.00) for high school players
+  highlightVideoUrl: text("highlight_video_url"), // YouTube/Hudl highlight reel URL
   // Coach contact info
   coachName: text("coach_name"),
   coachPhone: text("coach_phone"),
