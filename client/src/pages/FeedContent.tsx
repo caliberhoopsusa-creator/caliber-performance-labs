@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { Target, Award, Repeat2, BarChart3, Users, Camera, Flame, Trophy, Zap, Rss, UserCheck, UsersRound, Heart, ArrowUp, MessageCircle, Send, Trash2, Reply, Bookmark, Dumbbell, Clock, Swords, Quote, Bell, MoreHorizontal, Share2, Plus } from "lucide-react";
+import { Target, Award, Repeat2, BarChart3, Users, Camera, Flame, Trophy, Zap, Rss, UserCheck, UsersRound, Heart, ArrowUp, MessageCircle, Send, Trash2, Reply, Bookmark, Dumbbell, Clock, Swords, Quote, Bell, MoreHorizontal, Share2, Plus, X, ChevronLeft, ChevronRight, Eye, User, Star, ThumbsUp, Image, Video } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { apiRequest, queryClient as globalQueryClient } from "@/lib/queryClient";
@@ -36,8 +36,196 @@ interface StoryPlayer {
   hasActiveStory: boolean;
 }
 
+function InlineStoryViewer({
+  stories,
+  initialPlayerIndex,
+  onClose,
+}: {
+  stories: StoryWithPlayer[];
+  initialPlayerIndex: number;
+  onClose: () => void;
+}) {
+  const playerIds = Array.from(new Set(stories.map(s => s.playerId)));
+  const [playerIndex, setPlayerIndex] = useState(initialPlayerIndex);
+  const currentPlayerId = playerIds[playerIndex];
+  const playerStories = stories.filter(s => s.playerId === currentPlayerId);
+  const [storyIndex, setStoryIndex] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const sessionId = getSessionId();
+
+  const currentStory = playerStories[storyIndex];
+
+  const viewMutation = useMutation({
+    mutationFn: async (storyId: number) => {
+      await apiRequest("POST", `/api/stories/${storyId}/view`, { sessionId });
+    },
+  });
+
+  useEffect(() => {
+    if (currentStory) viewMutation.mutate(currentStory.id);
+  }, [currentStory?.id]);
+
+  const goNext = useCallback(() => {
+    if (storyIndex < playerStories.length - 1) {
+      setStoryIndex(prev => prev + 1);
+    } else if (playerIndex < playerIds.length - 1) {
+      setPlayerIndex(prev => prev + 1);
+      setStoryIndex(0);
+    } else {
+      onClose();
+    }
+  }, [storyIndex, playerStories.length, playerIndex, playerIds.length, onClose]);
+
+  const goPrev = useCallback(() => {
+    if (storyIndex > 0) {
+      setStoryIndex(prev => prev - 1);
+    } else if (playerIndex > 0) {
+      setPlayerIndex(prev => prev - 1);
+      setStoryIndex(0);
+    }
+  }, [storyIndex, playerIndex]);
+
+  useEffect(() => {
+    setProgress(0);
+    const duration = currentStory?.mediaType === 'video' ? 15000 : 5000;
+    const interval = 50;
+    const increment = (interval / duration) * 100;
+    timerRef.current = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) { goNext(); return 0; }
+        return prev + increment;
+      });
+    }, interval);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [storyIndex, playerIndex]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowLeft') goPrev();
+      if (e.key === 'ArrowRight') goNext();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose, goPrev, goNext]);
+
+  if (!currentStory) return null;
+
+  const parsedStats: { points?: number; rebounds?: number; assists?: number } | null = (() => {
+    try { return currentStory.stats ? JSON.parse(currentStory.stats) : null; } catch { return null; }
+  })();
+
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleContainerClick = (e: React.MouseEvent) => {
+    if (e.target !== containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    if (x < rect.width / 3) goPrev();
+    else if (x > (rect.width * 2) / 3) goNext();
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      className="fixed inset-0 bg-black z-50 flex items-center justify-center"
+      onClick={handleContainerClick}
+      data-testid="inline-story-viewer"
+    >
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute top-4 right-4 z-10 text-white"
+        onClick={(e) => { e.stopPropagation(); onClose(); }}
+        data-testid="button-close-inline-story"
+        aria-label="Close story"
+      >
+        <X className="w-6 h-6" />
+      </Button>
+
+      <div className="absolute top-4 left-4 right-16 flex gap-1 z-10" onClick={e => e.stopPropagation()}>
+        {playerStories.map((_, idx) => (
+          <div key={idx} className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-accent rounded-full"
+              style={{ width: idx < storyIndex ? '100%' : idx === storyIndex ? `${progress}%` : '0%', transition: 'width 0.05s linear' }}
+            />
+          </div>
+        ))}
+      </div>
+
+      <div className="absolute top-12 left-4 flex items-center gap-3 z-10" onClick={e => e.stopPropagation()}>
+        <div className="w-10 h-10 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center overflow-hidden">
+          {currentStory.playerPhoto ? (
+            <img src={currentStory.playerPhoto} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <User className="w-5 h-5 text-accent" />
+          )}
+        </div>
+        <div>
+          <p className="text-white font-semibold text-sm">{currentStory.playerName}</p>
+          <p className="text-white/60 text-xs">
+            {currentStory.playerUsername ? `@${currentStory.playerUsername}` : ''} {currentStory.playerUsername ? '·' : ''} {formatDistanceToNow(new Date(currentStory.createdAt!), { addSuffix: true })}
+          </p>
+        </div>
+      </div>
+
+      <div className="absolute inset-x-0 bottom-0 top-24 flex flex-col items-center justify-center p-4 pointer-events-none">
+        <div className="pointer-events-auto">
+          {currentStory.mediaType === 'image' && currentStory.imageUrl && (
+            <img src={currentStory.imageUrl} alt={currentStory.headline} className="max-h-[60vh] max-w-full object-contain rounded-md" data-testid="inline-story-image" />
+          )}
+          {currentStory.mediaType === 'video' && currentStory.videoUrl && (
+            <video src={currentStory.videoUrl} autoPlay muted loop playsInline className="max-h-[60vh] max-w-full object-contain rounded-md" data-testid="inline-story-video" />
+          )}
+          {currentStory.mediaType === 'text' && (
+            <Star className="w-24 h-24 text-accent/40" />
+          )}
+        </div>
+        <div className="mt-4 text-center max-w-md pointer-events-auto">
+          <h2 className="text-2xl font-bold text-white mb-2">{currentStory.headline}</h2>
+          {currentStory.caption && <p className="text-white/80 text-sm mb-4">{currentStory.caption}</p>}
+          {parsedStats && (
+            <div className="flex justify-center gap-6 mb-4">
+              {parsedStats.points !== undefined && (
+                <div className="text-center"><p className="text-3xl font-bold text-accent">{parsedStats.points}</p><p className="text-xs text-white/60 uppercase">Points</p></div>
+              )}
+              {parsedStats.rebounds !== undefined && (
+                <div className="text-center"><p className="text-3xl font-bold text-accent">{parsedStats.rebounds}</p><p className="text-xs text-white/60 uppercase">Rebounds</p></div>
+              )}
+              {parsedStats.assists !== undefined && (
+                <div className="text-center"><p className="text-3xl font-bold text-accent">{parsedStats.assists}</p><p className="text-xs text-white/60 uppercase">Assists</p></div>
+              )}
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-2 text-white/60 text-sm mt-4 pointer-events-auto">
+          <Eye className="w-4 h-4" />
+          <span>{currentStory.viewCount || 0} views</span>
+        </div>
+      </div>
+
+      <button
+        className="absolute left-0 top-0 bottom-0 w-1/4 z-20"
+        onClick={(e) => { e.stopPropagation(); goPrev(); }}
+        data-testid="button-prev-inline-story"
+        aria-label="Previous story"
+      />
+      <button
+        className="absolute right-0 top-0 bottom-0 w-1/4 z-20"
+        onClick={(e) => { e.stopPropagation(); goNext(); }}
+        data-testid="button-next-inline-story"
+        aria-label="Next story"
+      />
+    </div>
+  );
+}
+
 function StoriesRow({ currentPlayerId, currentUserName }: { currentPlayerId?: number | null; currentUserName: string }) {
   const [, setLocation] = useLocation();
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerPlayerIndex, setViewerPlayerIndex] = useState(0);
 
   const { data: activeStories = [], isLoading } = useQuery<StoryWithPlayer[]>({
     queryKey: ["/api/stories/active"],
@@ -63,6 +251,11 @@ function StoriesRow({ currentPlayerId, currentUserName }: { currentPlayerId?: nu
     }
   }
 
+  const handleStoryClick = (playerIndex: number) => {
+    setViewerPlayerIndex(playerIndex);
+    setViewerOpen(true);
+  };
+
   if (isLoading) {
     return (
       <div className="flex gap-4 pb-2 overflow-x-auto scrollbar-hide" data-testid="stories-row">
@@ -79,48 +272,50 @@ function StoriesRow({ currentPlayerId, currentUserName }: { currentPlayerId?: nu
   if (storyPlayers.length === 0 && !currentPlayerId) return null;
 
   return (
-    <div className="flex gap-4 p-2 overflow-x-auto scrollbar-hide" data-testid="stories-row">
-      {currentPlayerId && (
-        <button
-          onClick={() => setLocation("/community?tab=stories")}
-          className="flex flex-col items-center gap-1.5 shrink-0"
-          data-testid="story-avatar-your"
-        >
-          <div className="relative">
-            <Avatar className="w-16 h-16">
-              <AvatarFallback className="text-sm font-semibold bg-muted text-muted-foreground">
-                {getInitials(currentUserName)}
-              </AvatarFallback>
+    <>
+      <div className="flex gap-4 p-2 overflow-x-auto scrollbar-hide" data-testid="stories-row">
+        {storyPlayers.map((sp, idx) => (
+          <button
+            key={sp.playerId}
+            onClick={() => handleStoryClick(idx)}
+            className="flex flex-col items-center gap-1.5 shrink-0"
+            data-testid={`story-avatar-${sp.playerId}`}
+          >
+            <Avatar className={cn("w-16 h-16", sp.hasActiveStory && "ring-2 ring-accent ring-offset-2 ring-offset-background")}>
+              {sp.playerPhoto ? (
+                <img src={sp.playerPhoto} alt={sp.playerName} className="w-full h-full object-cover" />
+              ) : (
+                <AvatarFallback className="text-sm font-semibold bg-muted text-muted-foreground">
+                  {getInitials(sp.playerName)}
+                </AvatarFallback>
+              )}
             </Avatar>
-            <div className="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-accent flex items-center justify-center border-2 border-background">
-              <Plus className="w-3 h-3 text-accent-foreground" />
+            <span className="text-[11px] text-muted-foreground truncate max-w-[64px]">
+              {sp.playerUsername ? `@${sp.playerUsername}` : sp.playerName.split(" ")[0]}
+            </span>
+          </button>
+        ))}
+        {currentPlayerId && (
+          <button
+            onClick={() => setLocation("/community?tab=stories")}
+            className="flex flex-col items-center gap-1.5 shrink-0"
+            data-testid="story-add-button"
+          >
+            <div className="w-16 h-16 rounded-full border-2 border-dashed border-muted-foreground/40 flex items-center justify-center">
+              <Plus className="w-6 h-6 text-muted-foreground" />
             </div>
-          </div>
-          <span className="text-[11px] text-muted-foreground truncate max-w-[64px]">Your Story</span>
-        </button>
+            <span className="text-[11px] text-muted-foreground truncate max-w-[64px]">Add Story</span>
+          </button>
+        )}
+      </div>
+      {viewerOpen && activeStories.length > 0 && (
+        <InlineStoryViewer
+          stories={activeStories}
+          initialPlayerIndex={viewerPlayerIndex}
+          onClose={() => setViewerOpen(false)}
+        />
       )}
-      {storyPlayers.map((sp) => (
-        <button
-          key={sp.playerId}
-          onClick={() => setLocation("/community?tab=stories")}
-          className="flex flex-col items-center gap-1.5 shrink-0"
-          data-testid={`story-avatar-${sp.playerId}`}
-        >
-          <Avatar className={cn("w-16 h-16", sp.hasActiveStory && "ring-2 ring-accent ring-offset-2 ring-offset-background")}>
-            {sp.playerPhoto ? (
-              <img src={sp.playerPhoto} alt={sp.playerName} className="w-full h-full object-cover" />
-            ) : (
-              <AvatarFallback className="text-sm font-semibold bg-muted text-muted-foreground">
-                {getInitials(sp.playerName)}
-              </AvatarFallback>
-            )}
-          </Avatar>
-          <span className="text-[11px] text-muted-foreground truncate max-w-[64px]">
-            {sp.playerUsername ? `@${sp.playerUsername}` : sp.playerName.split(" ")[0]}
-          </span>
-        </button>
-      ))}
-    </div>
+    </>
   );
 }
 
