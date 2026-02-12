@@ -26,11 +26,13 @@ import DiscoveryCards from "@/components/DiscoveryCards";
 import { GettingStartedCard, useGuidedOnboarding } from "@/components/GuidedOnboarding";
 import type { PlayerStory } from "@shared/schema";
 
-type StoryWithPlayer = PlayerStory & { playerName: string };
+type StoryWithPlayer = PlayerStory & { playerName: string; playerUsername: string | null; playerPhoto: string | null };
 
 interface StoryPlayer {
   playerId: number;
   playerName: string;
+  playerUsername: string | null;
+  playerPhoto: string | null;
   hasActiveStory: boolean;
 }
 
@@ -54,6 +56,8 @@ function StoriesRow({ currentPlayerId, currentUserName }: { currentPlayerId?: nu
       storyPlayers.push({
         playerId: story.playerId,
         playerName: story.playerName,
+        playerUsername: story.playerUsername,
+        playerPhoto: story.playerPhoto,
         hasActiveStory: true,
       });
     }
@@ -75,7 +79,7 @@ function StoriesRow({ currentPlayerId, currentUserName }: { currentPlayerId?: nu
   if (storyPlayers.length === 0 && !currentPlayerId) return null;
 
   return (
-    <div className="flex gap-4 pb-2 overflow-x-auto scrollbar-hide" data-testid="stories-row">
+    <div className="flex gap-4 p-2 overflow-x-auto scrollbar-hide" data-testid="stories-row">
       {currentPlayerId && (
         <button
           onClick={() => setLocation("/community?tab=stories")}
@@ -98,17 +102,21 @@ function StoriesRow({ currentPlayerId, currentUserName }: { currentPlayerId?: nu
       {storyPlayers.map((sp) => (
         <button
           key={sp.playerId}
-          onClick={() => setLocation(`/players/${sp.playerId}`)}
+          onClick={() => setLocation("/community?tab=stories")}
           className="flex flex-col items-center gap-1.5 shrink-0"
           data-testid={`story-avatar-${sp.playerId}`}
         >
           <Avatar className={cn("w-16 h-16", sp.hasActiveStory && "ring-2 ring-accent ring-offset-2 ring-offset-background")}>
-            <AvatarFallback className="text-sm font-semibold bg-muted text-muted-foreground">
-              {getInitials(sp.playerName)}
-            </AvatarFallback>
+            {sp.playerPhoto ? (
+              <img src={sp.playerPhoto} alt={sp.playerName} className="w-full h-full object-cover" />
+            ) : (
+              <AvatarFallback className="text-sm font-semibold bg-muted text-muted-foreground">
+                {getInitials(sp.playerName)}
+              </AvatarFallback>
+            )}
           </Avatar>
           <span className="text-[11px] text-muted-foreground truncate max-w-[64px]">
-            {sp.playerName.split(" ")[0]}
+            {sp.playerUsername ? `@${sp.playerUsername}` : sp.playerName.split(" ")[0]}
           </span>
         </button>
       ))}

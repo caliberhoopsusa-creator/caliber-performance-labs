@@ -26,7 +26,7 @@ function generateSessionId(): string {
   return sessionId;
 }
 
-type StoryWithPlayer = PlayerStory & { playerName: string };
+type StoryWithPlayer = PlayerStory & { playerName: string; playerUsername: string | null; playerPhoto: string | null };
 
 const REACTIONS = [
   { key: 'fire', icon: Flame, label: 'Fire', color: 'text-accent' },
@@ -85,8 +85,8 @@ function StoryRing({
             animate={{ scale: 1 }}
             transition={{ delay: 0.1 }}
           >
-            {story.imageUrl ? (
-              <img src={story.imageUrl} alt="" className="w-full h-full object-cover" loading="lazy" width={56} height={56} />
+            {(story as any).playerPhoto ? (
+              <img src={(story as any).playerPhoto} alt="" className="w-full h-full object-cover" loading="lazy" width={56} height={56} />
             ) : (
               <User className="w-6 h-6 text-accent" />
             )}
@@ -112,7 +112,7 @@ function StoryRing({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15 }}
       >
-        {story.playerName.split(' ')[0]}
+        {(story as any).playerUsername ? `@${(story as any).playerUsername}` : story.playerName.split(' ')[0]}
       </motion.span>
     </motion.button>
   );
@@ -285,7 +285,11 @@ function StoryViewer({
             animate={{ scale: 1 }}
             transition={{ delay: 0.1, type: "spring", stiffness: 400 }}
           >
-            <User className="w-5 h-5 text-accent" />
+            {(currentStory as any).playerPhoto ? (
+              <img src={(currentStory as any).playerPhoto} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <User className="w-5 h-5 text-accent" />
+            )}
           </motion.div>
           <motion.div
             initial={{ opacity: 0 }}
@@ -294,7 +298,7 @@ function StoryViewer({
           >
             <p className="text-white font-semibold text-sm">{currentStory.playerName}</p>
             <p className="text-white/60 text-xs">
-              {formatDistanceToNow(new Date(currentStory.createdAt!), { addSuffix: true })}
+              {(currentStory as any).playerUsername ? `@${(currentStory as any).playerUsername}` : ''} · {formatDistanceToNow(new Date(currentStory.createdAt!), { addSuffix: true })}
             </p>
           </motion.div>
         </motion.div>

@@ -285,8 +285,8 @@ export interface IStorage {
   // Player Stories
   createPlayerStory(story: InsertPlayerStory): Promise<PlayerStory>;
   getPlayerStories(playerId: number): Promise<PlayerStory[]>;
-  getPublicStories(limit?: number): Promise<(PlayerStory & { playerName: string })[]>;
-  getActiveStories(limit?: number): Promise<(PlayerStory & { playerName: string })[]>;
+  getPublicStories(limit?: number): Promise<(PlayerStory & { playerName: string; playerUsername: string | null; playerPhoto: string | null })[]>;
+  getActiveStories(limit?: number): Promise<(PlayerStory & { playerName: string; playerUsername: string | null; playerPhoto: string | null })[]>;
   getStory(id: number): Promise<PlayerStory | undefined>;
   updateStory(id: number, data: Partial<InsertPlayerStory>): Promise<PlayerStory | undefined>;
   deleteStory(id: number): Promise<void>;
@@ -1606,7 +1606,7 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(playerStories).where(eq(playerStories.playerId, playerId)).orderBy(desc(playerStories.createdAt));
   }
 
-  async getPublicStories(limit: number = 20): Promise<(PlayerStory & { playerName: string })[]> {
+  async getPublicStories(limit: number = 20): Promise<(PlayerStory & { playerName: string; playerUsername: string | null; playerPhoto: string | null })[]> {
     const results = await db
       .select({
         id: playerStories.id,
@@ -1624,6 +1624,8 @@ export class DatabaseStorage implements IStorage {
         viewCount: playerStories.viewCount,
         createdAt: playerStories.createdAt,
         playerName: players.name,
+        playerUsername: players.username,
+        playerPhoto: players.photoUrl,
       })
       .from(playerStories)
       .innerJoin(players, eq(playerStories.playerId, players.id))
@@ -1634,7 +1636,7 @@ export class DatabaseStorage implements IStorage {
     return results;
   }
 
-  async getActiveStories(limit: number = 20): Promise<(PlayerStory & { playerName: string })[]> {
+  async getActiveStories(limit: number = 20): Promise<(PlayerStory & { playerName: string; playerUsername: string | null; playerPhoto: string | null })[]> {
     const now = new Date();
     const results = await db
       .select({
@@ -1653,6 +1655,8 @@ export class DatabaseStorage implements IStorage {
         viewCount: playerStories.viewCount,
         createdAt: playerStories.createdAt,
         playerName: players.name,
+        playerUsername: players.username,
+        playerPhoto: players.photoUrl,
       })
       .from(playerStories)
       .innerJoin(players, eq(playerStories.playerId, players.id))
