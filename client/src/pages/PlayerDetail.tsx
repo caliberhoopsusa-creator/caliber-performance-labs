@@ -19,6 +19,7 @@ import { FollowingList } from "@/components/FollowingList";
 import { ShareModal } from "@/components/ShareModal";
 import { ShareablePlayerCard } from "@/components/ShareablePlayerCard";
 import { ShareableGameCard } from "@/components/ShareableGameCard";
+import { ShareCardCreator } from "@/components/ShareCardCreator";
 import { ShareableBadgeCard } from "@/components/ShareableBadgeCard";
 import { HighlightsGallery } from "@/components/HighlightsGallery";
 import { PlayerRatingsSection } from "@/components/PlayerRatingsSection";
@@ -3719,24 +3720,15 @@ export default function PlayerDetail() {
       </ShareModal>
 
       {selectedShareGame && (
-        <ShareModal
+        <ShareCardCreator
           open={showGameShareModal}
           onOpenChange={(open) => {
             setShowGameShareModal(open);
             if (!open) setSelectedShareGame(null);
           }}
-          title="Share Game Card"
-          shareUrl={`${window.location.origin}/players/${id}?gameId=${selectedShareGame.id}`}
-          shareText={`Check out my game vs ${selectedShareGame.opponent} on Caliber!`}
-          assetId={`game-${selectedShareGame.id}`}
-        >
-          <ShareableGameCard
-            game={selectedShareGame}
-            playerName={player.name}
-            badges={badges.filter((b: Badge) => b.gameId === selectedShareGame.id)}
-            aspectRatio="16:9"
-          />
-        </ShareModal>
+          game={selectedShareGame}
+          playerName={player.name}
+        />
       )}
 
       {selectedShareBadge && (
