@@ -1119,6 +1119,8 @@ export const drillRecommendations = pgTable("drill_recommendations", {
   id: serial("id").primaryKey(),
   playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
   drillId: integer("drill_id").references(() => drills.id, { onDelete: "set null" }),
+  drillName: text("drill_name"),
+  drillCategory: text("drill_category"),
   reason: text("reason").notNull(), // why this drill is recommended
   priority: integer("priority").notNull(), // 1-5, higher = more important
   weakStat: text("weak_stat"), // which stat needs improvement

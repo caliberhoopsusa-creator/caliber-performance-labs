@@ -7918,7 +7918,7 @@ Respond in this exact JSON format:
   });
 
   // --- Drill Recommendations ---
-  app.post('/api/players/:playerId/drill-recommendations/generate', requiresCoachPro, async (req, res) => {
+  app.post('/api/players/:playerId/drill-recommendations/generate', requiresSubscription, async (req, res) => {
     try {
       const playerId = Number(req.params.playerId);
       const player = await storage.getPlayer(playerId);
@@ -7926,20 +7926,18 @@ Respond in this exact JSON format:
         return res.status(404).json({ error: 'Player not found' });
       }
 
-      // Analyze player's recent games to find weaknesses
       const recentGames = player.games.slice(0, 10);
-      const drills = await storage.getDrills();
-      const recommendations: any[] = [];
 
       if (recentGames.length === 0) {
-        return res.json({ message: 'No games to analyze', recommendations: [] });
+        return res.json({ message: 'Log some games first to get personalized drill recommendations', recommendations: [] });
       }
 
-      // Calculate averages
       const avgPoints = recentGames.reduce((acc, g) => acc + g.points, 0) / recentGames.length;
       const avgRebounds = recentGames.reduce((acc, g) => acc + g.rebounds, 0) / recentGames.length;
       const avgAssists = recentGames.reduce((acc, g) => acc + g.assists, 0) / recentGames.length;
       const avgTurnovers = recentGames.reduce((acc, g) => acc + g.turnovers, 0) / recentGames.length;
+      const avgSteals = recentGames.reduce((acc, g) => acc + g.steals, 0) / recentGames.length;
+      const avgBlocks = recentGames.reduce((acc, g) => acc + g.blocks, 0) / recentGames.length;
       const avgFgPct = recentGames.reduce((acc, g) => {
         const fga = g.fgAttempted || 1;
         return acc + (g.fgMade / fga);
@@ -7948,8 +7946,10 @@ Respond in this exact JSON format:
         const attempts = g.threeAttempted || 1;
         return acc + (g.threeMade / attempts);
       }, 0) / recentGames.length;
+      const avgFtPct = recentGames.reduce((acc, g) => {
+        return acc + (g.ftMade / (g.ftAttempted || 1));
+      }, 0) / recentGames.length;
 
-      // Identify weaknesses and recommend drills
       const weaknesses: { stat: string; priority: number; reason: string }[] = [];
 
       if (avgFgPct < 0.4) {
@@ -7958,10 +7958,13 @@ Respond in this exact JSON format:
       if (avgThreePct < 0.3) {
         weaknesses.push({ stat: 'shooting', priority: 4, reason: `Low 3PT% (${(avgThreePct * 100).toFixed(1)}%)` });
       }
+      if (avgFtPct < 0.65) {
+        weaknesses.push({ stat: 'shooting', priority: 4, reason: `Low FT% (${(avgFtPct * 100).toFixed(1)}%)` });
+      }
       if (avgTurnovers > 3) {
         weaknesses.push({ stat: 'dribbling', priority: 5, reason: `High turnovers (${avgTurnovers.toFixed(1)} per game)` });
       }
-      // Support multi-position players - check if they have this position
+
       const positionsList = (player.position || '').split(',').map(p => p.trim());
       if (positionsList.includes('Guard') && avgAssists < 3) {
         weaknesses.push({ stat: 'passing', priority: 4, reason: `Low assists for Guard (${avgAssists.toFixed(1)} per game)` });
@@ -7969,21 +7972,87 @@ Respond in this exact JSON format:
       if (positionsList.includes('Big') && avgRebounds < 5) {
         weaknesses.push({ stat: 'rebounding', priority: 4, reason: `Low rebounds for Big (${avgRebounds.toFixed(1)} per game)` });
       }
+      if (positionsList.includes('Guard') && avgSteals < 1) {
+        weaknesses.push({ stat: 'defense', priority: 3, reason: `Low steals for Guard (${avgSteals.toFixed(1)} per game)` });
+      }
+      if (positionsList.includes('Big') && avgBlocks < 1) {
+        weaknesses.push({ stat: 'defense', priority: 3, reason: `Low blocks for Big (${avgBlocks.toFixed(1)} per game)` });
+      }
+      if (avgTurnovers > 2 && (avgAssists / (avgTurnovers || 1)) < 1.5) {
+        weaknesses.push({ stat: 'passing', priority: 4, reason: `Poor assist/TO ratio (${(avgAssists / (avgTurnovers || 1)).toFixed(1)}:1)` });
+      }
 
-      // Match drills to weaknesses
-      for (const weakness of weaknesses) {
-        const matchingDrills = drills.filter(d => d.category === weakness.stat || d.targetStat === weakness.stat);
-        for (const drill of matchingDrills.slice(0, 2)) {
-          const recommendation = await storage.createDrillRecommendation({
-            playerId,
-            drillId: drill.id,
-            reason: weakness.reason,
-            priority: weakness.priority,
-            weakStat: weakness.stat,
-            isActive: true,
-          });
-          recommendations.push({ ...recommendation, drill });
+      if (weaknesses.length === 0) {
+        weaknesses.push({ stat: 'conditioning', priority: 2, reason: 'Well-rounded player - focus on conditioning and mental game' });
+      }
+
+      const weaknessDescriptions = weaknesses.map(w => `${w.stat}: ${w.reason}`).join('\n');
+      const prompt = `You are a basketball training expert. Based on this player's weaknesses, generate exactly ${Math.min(weaknesses.length * 2, 8)} specific drill recommendations.
+
+Player: ${player.name}, Position: ${player.position || 'Guard'}
+Recent game averages: ${avgPoints.toFixed(1)} PPG, ${avgRebounds.toFixed(1)} RPG, ${avgAssists.toFixed(1)} APG, ${avgTurnovers.toFixed(1)} TOPG, ${(avgFgPct * 100).toFixed(1)}% FG, ${(avgThreePct * 100).toFixed(1)}% 3PT
+
+Weaknesses identified:
+${weaknessDescriptions}
+
+For each drill, respond in this exact JSON format (array of objects):
+[
+  {
+    "drillName": "Name of specific drill",
+    "drillCategory": "one of: shooting, dribbling, passing, defense, conditioning, footwork, rebounding, finishing",
+    "reason": "Why this drill helps this specific weakness",
+    "weakStat": "the weakness category this addresses",
+    "priority": number between 1-5
+  }
+]
+
+Only respond with the JSON array, no other text.`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+      });
+
+      let aiDrills: any[] = [];
+      try {
+        const text = response.text || '';
+        const jsonMatch = text.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          aiDrills = JSON.parse(jsonMatch[0]);
         }
+      } catch (parseErr) {
+        console.error('Failed to parse AI drill response:', parseErr);
+      }
+
+      if (aiDrills.length === 0) {
+        for (const weakness of weaknesses.slice(0, 4)) {
+          aiDrills.push({
+            drillName: `${weakness.stat.charAt(0).toUpperCase() + weakness.stat.slice(1)} Development Drill`,
+            drillCategory: weakness.stat,
+            reason: weakness.reason,
+            weakStat: weakness.stat,
+            priority: weakness.priority,
+          });
+        }
+      }
+
+      const recommendations: any[] = [];
+      for (const drill of aiDrills.slice(0, 8)) {
+        const recommendation = await storage.createDrillRecommendation({
+          playerId,
+          drillId: null,
+          drillName: drill.drillName || 'Training Drill',
+          drillCategory: drill.drillCategory || 'conditioning',
+          reason: drill.reason || 'AI-recommended drill',
+          priority: Math.min(5, Math.max(1, drill.priority || 3)),
+          weakStat: drill.weakStat || drill.drillCategory || 'general',
+          isActive: true,
+        });
+        recommendations.push({
+          ...recommendation,
+          drillName: recommendation.drillName || drill.drillName,
+          drillCategory: recommendation.drillCategory || drill.drillCategory,
+        });
       }
 
       res.status(201).json({ recommendations });
@@ -7993,7 +8062,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.get('/api/players/:playerId/drill-recommendations', requiresCoachPro, async (req, res) => {
+  app.get('/api/players/:playerId/drill-recommendations', requiresSubscription, async (req, res) => {
     try {
       const playerId = Number(req.params.playerId);
       const recommendations = await storage.getDrillRecommendations(playerId);
@@ -8004,7 +8073,7 @@ Respond in this exact JSON format:
     }
   });
 
-  app.delete('/api/drill-recommendations/:id', requiresCoachPro, async (req, res) => {
+  app.delete('/api/drill-recommendations/:id', requiresSubscription, async (req, res) => {
     try {
       await storage.deleteDrillRecommendation(Number(req.params.id));
       res.status(204).send();
