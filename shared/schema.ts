@@ -28,6 +28,12 @@ export const players = pgTable("players", {
   level: text("level"), // 'middle_school', 'high_school', 'college'
   gpa: decimal("gpa", { precision: 3, scale: 2 }), // Academic GPA (0.00 - 4.00) for high school players
   highlightVideoUrl: text("highlight_video_url"), // YouTube/Hudl highlight reel URL
+  profileVisibility: text("profile_visibility").default("public"), // 'public', 'link_only', 'hidden'
+  showEmail: boolean("show_email").default(false),
+  showPhone: boolean("show_phone").default(false),
+  showSchool: boolean("show_school").default(true),
+  showGpa: boolean("show_gpa").default(true),
+  openToRecruiting: boolean("open_to_recruiting").default(false), // Boosts in recruiter search
   scoutingReport: text("scouting_report"),
   scoutingReportGeneratedAt: timestamp("scouting_report_generated_at"),
   // Coach contact info
@@ -2778,6 +2784,81 @@ export const recruitingContacts = pgTable("recruiting_contacts", {
 export const insertRecruitingContactSchema = createInsertSchema(recruitingContacts).omit({ id: true, date: true });
 export type InsertRecruitingContact = z.infer<typeof insertRecruitingContactSchema>;
 export type RecruitingContact = typeof recruitingContacts.$inferSelect;
+
+// === RECRUITER ROLE TABLES ===
+
+export const recruiterProfiles = pgTable("recruiter_profiles", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull().unique(), // Links to auth user
+  schoolName: text("school_name").notNull(),
+  division: text("division").notNull(), // 'D1', 'D2', 'D3', 'NAIA', 'JUCO'
+  title: text("title").notNull(), // 'Head Coach', 'Assistant Coach', 'Recruiting Coordinator', etc.
+  schoolEmail: text("school_email").notNull(), // Must be .edu
+  phone: text("phone"),
+  schoolLogoUrl: text("school_logo_url"),
+  bio: text("bio"),
+  state: text("state"),
+  conference: text("conference"), // 'SEC', 'Big 10', etc.
+  sport: text("sport").notNull().default("basketball"),
+  isVerified: boolean("is_verified").notNull().default(false), // Admin-verified
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  userIdIdx: index("recruiter_profiles_user_id_idx").on(table.userId),
+}));
+
+export const insertRecruiterProfileSchema = createInsertSchema(recruiterProfiles).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertRecruiterProfile = z.infer<typeof insertRecruiterProfileSchema>;
+export type RecruiterProfile = typeof recruiterProfiles.$inferSelect;
+
+export const recruiterBookmarks = pgTable("recruiter_bookmarks", {
+  id: serial("id").primaryKey(),
+  recruiterId: integer("recruiter_id").notNull().references(() => recruiterProfiles.id, { onDelete: "cascade" }),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  recruiterPlayerIdx: unique("recruiter_bookmark_unique").on(table.recruiterId, table.playerId),
+}));
+
+export const insertRecruiterBookmarkSchema = createInsertSchema(recruiterBookmarks).omit({ id: true, createdAt: true });
+export type InsertRecruiterBookmark = z.infer<typeof insertRecruiterBookmarkSchema>;
+export type RecruiterBookmark = typeof recruiterBookmarks.$inferSelect;
+
+export const recruiterInterestSignals = pgTable("recruiter_interest_signals", {
+  id: serial("id").primaryKey(),
+  recruiterId: integer("recruiter_id").notNull().references(() => recruiterProfiles.id, { onDelete: "cascade" }),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  signalType: text("signal_type").notNull(), // 'watching', 'interested', 'requesting_film'
+  message: text("message"), // Optional message to player
+  isRead: boolean("is_read").notNull().default(false), // Has the player seen this?
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertRecruiterInterestSignalSchema = createInsertSchema(recruiterInterestSignals).omit({ id: true, createdAt: true });
+export type InsertRecruiterInterestSignal = z.infer<typeof insertRecruiterInterestSignalSchema>;
+export type RecruiterInterestSignal = typeof recruiterInterestSignals.$inferSelect;
+
+export const recruiterProfileViews = pgTable("recruiter_profile_views", {
+  id: serial("id").primaryKey(),
+  recruiterId: integer("recruiter_id").notNull().references(() => recruiterProfiles.id, { onDelete: "cascade" }),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  viewedAt: timestamp("viewed_at").defaultNow(),
+});
+
+export const recruiterBlocks = pgTable("recruiter_blocks", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  recruiterId: integer("recruiter_id").notNull().references(() => recruiterProfiles.id, { onDelete: "cascade" }),
+  reason: text("reason"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  blockUniqueIdx: unique("recruiter_block_unique").on(table.playerId, table.recruiterId),
+}));
+
+export const insertRecruiterBlockSchema = createInsertSchema(recruiterBlocks).omit({ id: true, createdAt: true });
+export type InsertRecruiterBlock = z.infer<typeof insertRecruiterBlockSchema>;
+export type RecruiterBlock = typeof recruiterBlocks.$inferSelect;
 
 export const RECRUITING_STATUSES = {
   researching: { label: "Researching", color: "#6B7280" },
