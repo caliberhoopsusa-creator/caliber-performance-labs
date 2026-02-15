@@ -2870,6 +2870,90 @@ export async function registerRoutes(
     }
   });
 
+  function generateImprovementTips(game: any, position: string): Array<{area: string, stat: string, tip: string}> {
+    const tips: Array<{area: string, stat: string, tip: string, priority: number}> = [];
+
+    const fgPct = game.fgAttempted > 0 ? (game.fgMade / game.fgAttempted) * 100 : null;
+    const threePct = game.threeAttempted > 0 ? (game.threeMade / game.threeAttempted) * 100 : null;
+    const ftPct = game.ftAttempted > 0 ? (game.ftMade / game.ftAttempted) * 100 : null;
+
+    if (fgPct !== null && fgPct < 40) {
+      tips.push({
+        area: "Shooting",
+        stat: `FG ${Math.round(fgPct)}%`,
+        tip: "Focus on shot selection — try getting closer to the basket or using screens to create open looks.",
+        priority: 40 - fgPct
+      });
+    }
+
+    if (threePct !== null && game.threeAttempted >= 3 && threePct < 30 && position !== "Big") {
+      tips.push({
+        area: "3-Point Shooting",
+        stat: `3PT ${Math.round(threePct)}%`,
+        tip: "Work on catch-and-shoot drills — practice 50 three-pointers from your favorite spots before next game.",
+        priority: 30 - threePct
+      });
+    }
+
+    if (ftPct !== null && game.ftAttempted >= 3 && ftPct < 65) {
+      tips.push({
+        area: "Free Throws",
+        stat: `FT ${Math.round(ftPct)}%`,
+        tip: "Shoot 30 free throws at the end of every practice — consistency comes from routine.",
+        priority: 65 - ftPct
+      });
+    }
+
+    const turnoverThreshold = position === "Guard" ? 4 : 3;
+    if (game.turnovers >= turnoverThreshold) {
+      tips.push({
+        area: "Ball Security",
+        stat: `${game.turnovers} TO`,
+        tip: "Protect the ball — keep your dribble low in traffic and look for the simple pass.",
+        priority: game.turnovers * 5
+      });
+    }
+
+    if (position === "Guard" && game.assists < 3) {
+      tips.push({
+        area: "Playmaking",
+        stat: `${game.assists} AST`,
+        tip: "Look to create for teammates — try making one extra pass per possession to find the open man.",
+        priority: (3 - game.assists) * 8
+      });
+    }
+
+    if (position === "Big" && game.rebounds < 5) {
+      tips.push({
+        area: "Rebounding",
+        stat: `${game.rebounds} REB`,
+        tip: "Box out on every shot — focus on positioning and anticipating where the ball will bounce.",
+        priority: (5 - game.rebounds) * 6
+      });
+    }
+
+    if ((position === "Wing" || position === "Guard") && game.rebounds < 3) {
+      tips.push({
+        area: "Rebounding",
+        stat: `${game.rebounds} REB`,
+        tip: "Crash the boards on missed shots — guards who rebound create fast break opportunities.",
+        priority: (3 - game.rebounds) * 4
+      });
+    }
+
+    if ((game.steals || 0) === 0 && (game.blocks || 0) === 0) {
+      tips.push({
+        area: "Defense",
+        stat: "0 STL, 0 BLK",
+        tip: "Stay active on defense — focus on staying in a low stance and anticipating passes in the lane.",
+        priority: 10
+      });
+    }
+
+    tips.sort((a, b) => b.priority - a.priority);
+    return tips.slice(0, 2).map(({ area, stat, tip }) => ({ area, stat, tip }));
+  }
+
   // Create game - requires auth, players can only log for themselves
   app.post(api.games.create.path, isAuthenticated, async (req: any, res) => {
     try {
@@ -3236,6 +3320,8 @@ export async function registerRoutes(
       // Calculate advanced metrics for the game
       const advancedMetrics = calculateAdvancedMetrics(input);
       
+      const improvementTips = sport === 'basketball' ? generateImprovementTips(game, player?.position || '') : [];
+
       res.status(201).json({ 
         ...game, 
         xpEarned, 
@@ -3245,7 +3331,8 @@ export async function registerRoutes(
         currentTier: updatedPlayer.currentTier,
         advancedMetrics,
         newRecords,
-        completedGoals
+        completedGoals,
+        improvementTips
       });
     } catch (err) {
       if (err instanceof z.ZodError) {

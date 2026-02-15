@@ -1190,6 +1190,30 @@ function ReportCardView({ game, onReset }: { game: any, onReset: () => void }) {
             </div>
           </div>
 
+          {game.improvementTips && game.improvementTips.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="text-lg font-bold font-display text-white flex items-center gap-2">
+                <Target className="w-5 h-5 text-accent" /> What to Work On
+              </h3>
+              <div className="space-y-3">
+                {game.improvementTips.map((tip: {area: string, stat: string, tip: string}, index: number) => (
+                  <div key={index} className="flex gap-3 p-4 bg-muted/80 rounded-xl border border-border" data-testid={`improvement-tip-${index}`}>
+                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
+                      <TrendingUp className="w-5 h-5 text-accent" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <span className="text-sm font-bold text-foreground">{tip.area}</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-accent/10 text-accent font-semibold">{tip.stat}</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{tip.tip}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-4">
             {isFootball ? (
               <>
