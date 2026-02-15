@@ -105,7 +105,12 @@ import {
   type AthleticMeasurement, type InsertAthleticMeasurement,
   recruitingTargets, recruitingContacts,
   type RecruitingTarget, type InsertRecruitingTarget,
-  type RecruitingContact, type InsertRecruitingContact
+  type RecruitingContact, type InsertRecruitingContact,
+  recruiterProfiles, recruiterBookmarks, recruiterInterestSignals, recruiterProfileViews, recruiterBlocks,
+  type RecruiterProfile, type InsertRecruiterProfile,
+  type RecruiterBookmark, type InsertRecruiterBookmark,
+  type RecruiterInterestSignal, type InsertRecruiterInterestSignal,
+  type RecruiterBlock, type InsertRecruiterBlock
 } from "@shared/schema";
 import { eq, desc, and, count, gte, lte, lt, sql, or, isNull, inArray } from "drizzle-orm";
 
@@ -668,6 +673,35 @@ export interface IStorage {
   // Recruiting Contacts
   getRecruitingContacts(targetId: number): Promise<RecruitingContact[]>;
   createRecruitingContact(contact: InsertRecruitingContact): Promise<RecruitingContact>;
+
+  // Recruiter Profiles
+  getRecruiterProfileByUserId(userId: string): Promise<RecruiterProfile | undefined>;
+  getRecruiterProfile(id: number): Promise<RecruiterProfile | undefined>;
+  createRecruiterProfile(profile: InsertRecruiterProfile): Promise<RecruiterProfile>;
+  updateRecruiterProfile(id: number, updates: Partial<RecruiterProfile>): Promise<RecruiterProfile | undefined>;
+
+  // Recruiter Bookmarks
+  getRecruiterBookmarks(recruiterId: number): Promise<RecruiterBookmark[]>;
+  createRecruiterBookmark(bookmark: InsertRecruiterBookmark): Promise<RecruiterBookmark>;
+  deleteRecruiterBookmark(recruiterId: number, playerId: number): Promise<void>;
+  getRecruiterBookmarkForPlayer(recruiterId: number, playerId: number): Promise<RecruiterBookmark | undefined>;
+
+  // Recruiter Interest Signals
+  getSignalsForPlayer(playerId: number): Promise<RecruiterInterestSignal[]>;
+  getSignalsByRecruiter(recruiterId: number): Promise<RecruiterInterestSignal[]>;
+  createInterestSignal(signal: InsertRecruiterInterestSignal): Promise<RecruiterInterestSignal>;
+  markSignalsRead(playerId: number): Promise<void>;
+
+  // Recruiter Profile Views
+  logProfileView(recruiterId: number, playerId: number): Promise<void>;
+  getProfileViewsForPlayer(playerId: number): Promise<any[]>;
+  getRecruiterProfileViewCount(playerId: number): Promise<number>;
+
+  // Recruiter Blocks
+  blockRecruiter(playerId: number, recruiterId: number, reason?: string): Promise<RecruiterBlock>;
+  unblockRecruiter(playerId: number, recruiterId: number): Promise<void>;
+  getBlockedRecruiters(playerId: number): Promise<RecruiterBlock[]>;
+  isRecruiterBlocked(playerId: number, recruiterId: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3889,6 +3923,120 @@ export class DatabaseStorage implements IStorage {
   async createRecruitingContact(contact: InsertRecruitingContact): Promise<RecruitingContact> {
     const [created] = await db.insert(recruitingContacts).values(contact).returning();
     return created;
+  }
+
+  async getRecruiterProfileByUserId(userId: string): Promise<RecruiterProfile | undefined> {
+    const [profile] = await db.select().from(recruiterProfiles).where(eq(recruiterProfiles.userId, userId));
+    return profile;
+  }
+
+  async getRecruiterProfile(id: number): Promise<RecruiterProfile | undefined> {
+    const [profile] = await db.select().from(recruiterProfiles).where(eq(recruiterProfiles.id, id));
+    return profile;
+  }
+
+  async createRecruiterProfile(profile: InsertRecruiterProfile): Promise<RecruiterProfile> {
+    const [created] = await db.insert(recruiterProfiles).values(profile).returning();
+    return created;
+  }
+
+  async updateRecruiterProfile(id: number, updates: Partial<RecruiterProfile>): Promise<RecruiterProfile | undefined> {
+    const [updated] = await db.update(recruiterProfiles).set(updates).where(eq(recruiterProfiles.id, id)).returning();
+    return updated;
+  }
+
+  async getRecruiterBookmarks(recruiterId: number): Promise<RecruiterBookmark[]> {
+    return await db.select().from(recruiterBookmarks).where(eq(recruiterBookmarks.recruiterId, recruiterId)).orderBy(desc(recruiterBookmarks.createdAt));
+  }
+
+  async createRecruiterBookmark(bookmark: InsertRecruiterBookmark): Promise<RecruiterBookmark> {
+    const [created] = await db.insert(recruiterBookmarks).values(bookmark).returning();
+    return created;
+  }
+
+  async deleteRecruiterBookmark(recruiterId: number, playerId: number): Promise<void> {
+    await db.delete(recruiterBookmarks).where(and(eq(recruiterBookmarks.recruiterId, recruiterId), eq(recruiterBookmarks.playerId, playerId)));
+  }
+
+  async getRecruiterBookmarkForPlayer(recruiterId: number, playerId: number): Promise<RecruiterBookmark | undefined> {
+    const [bookmark] = await db.select().from(recruiterBookmarks).where(and(eq(recruiterBookmarks.recruiterId, recruiterId), eq(recruiterBookmarks.playerId, playerId)));
+    return bookmark;
+  }
+
+  async getSignalsForPlayer(playerId: number): Promise<any[]> {
+    return await db.select({
+      id: recruiterInterestSignals.id,
+      signalType: recruiterInterestSignals.signalType,
+      message: recruiterInterestSignals.message,
+      isRead: recruiterInterestSignals.isRead,
+      createdAt: recruiterInterestSignals.createdAt,
+      recruiterName: recruiterProfiles.schoolName,
+      recruiterTitle: recruiterProfiles.title,
+      recruiterDivision: recruiterProfiles.division,
+      recruiterId: recruiterProfiles.id,
+      isVerified: recruiterProfiles.isVerified,
+    }).from(recruiterInterestSignals)
+      .innerJoin(recruiterProfiles, eq(recruiterInterestSignals.recruiterId, recruiterProfiles.id))
+      .where(eq(recruiterInterestSignals.playerId, playerId))
+      .orderBy(desc(recruiterInterestSignals.createdAt));
+  }
+
+  async getSignalsByRecruiter(recruiterId: number): Promise<RecruiterInterestSignal[]> {
+    return await db.select().from(recruiterInterestSignals).where(eq(recruiterInterestSignals.recruiterId, recruiterId)).orderBy(desc(recruiterInterestSignals.createdAt));
+  }
+
+  async createInterestSignal(signal: InsertRecruiterInterestSignal): Promise<RecruiterInterestSignal> {
+    const [created] = await db.insert(recruiterInterestSignals).values(signal).returning();
+    return created;
+  }
+
+  async markSignalsRead(playerId: number): Promise<void> {
+    await db.update(recruiterInterestSignals)
+      .set({ isRead: true })
+      .where(eq(recruiterInterestSignals.playerId, playerId));
+  }
+
+  async logProfileView(recruiterId: number, playerId: number): Promise<void> {
+    await db.insert(recruiterProfileViews).values({ recruiterId, playerId });
+  }
+
+  async getProfileViewsForPlayer(playerId: number): Promise<any[]> {
+    return await db.select({
+      id: recruiterProfileViews.id,
+      viewedAt: recruiterProfileViews.viewedAt,
+      recruiterName: recruiterProfiles.schoolName,
+      recruiterTitle: recruiterProfiles.title,
+      recruiterDivision: recruiterProfiles.division,
+      recruiterState: recruiterProfiles.state,
+      recruiterId: recruiterProfiles.id,
+      isVerified: recruiterProfiles.isVerified,
+    }).from(recruiterProfileViews)
+      .innerJoin(recruiterProfiles, eq(recruiterProfileViews.recruiterId, recruiterProfiles.id))
+      .where(eq(recruiterProfileViews.playerId, playerId))
+      .orderBy(desc(recruiterProfileViews.viewedAt));
+  }
+
+  async getRecruiterProfileViewCount(playerId: number): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)` }).from(recruiterProfileViews).where(eq(recruiterProfileViews.playerId, playerId));
+    return Number(result[0]?.count || 0);
+  }
+
+  async blockRecruiter(playerId: number, recruiterId: number, reason?: string): Promise<RecruiterBlock> {
+    const [block] = await db.insert(recruiterBlocks).values({ playerId, recruiterId, reason: reason || null }).returning();
+    return block;
+  }
+
+  async unblockRecruiter(playerId: number, recruiterId: number): Promise<void> {
+    await db.delete(recruiterBlocks).where(and(eq(recruiterBlocks.playerId, playerId), eq(recruiterBlocks.recruiterId, recruiterId)));
+  }
+
+  async getBlockedRecruiters(playerId: number): Promise<RecruiterBlock[]> {
+    return await db.select().from(recruiterBlocks).where(eq(recruiterBlocks.playerId, playerId));
+  }
+
+  async isRecruiterBlocked(playerId: number, recruiterId: number): Promise<boolean> {
+    const [block] = await db.select().from(recruiterBlocks).where(and(eq(recruiterBlocks.playerId, playerId), eq(recruiterBlocks.recruiterId, recruiterId)));
+    return !!block;
   }
 }
 

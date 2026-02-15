@@ -9,7 +9,7 @@ import {
   Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, 
   UsersRound, CalendarCheck, Eye, UserCircle, LogOut, CreditCard, Lock, Dumbbell, 
   CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, Bell, ShoppingBag, GraduationCap,
-  ChevronDown, ChevronRight, BookOpen, Wand2, Medal
+  ChevronDown, ChevronRight, BookOpen, Wand2, Medal, Binoculars, Search, Bookmark
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CaliberLogo } from "@/components/CaliberLogo";
@@ -64,9 +64,12 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
   const drawerThemeColor = equippedTheme?.item?.value || '#E8192C';
   const currentSport = useSport();
   const isPlayer = userRole === 'player';
+  const isCoach = userRole === 'coach';
+  const isRecruiter = userRole === 'recruiter';
 
   const handleRoleSwitch = () => {
-    const newRole = isPlayer ? 'coach' : 'player';
+    if (isRecruiter) return;
+    const newRole: 'player' | 'coach' = isPlayer ? 'coach' : 'player';
     switchRole(newRole, {
       onSuccess: () => {
         toast({ 
@@ -122,6 +125,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
         { href: "/community", label: "Community", icon: UsersRound },
         { href: "/discover/highlights", label: "Discover", icon: Film },
         { href: "/community?tab=stories", label: "Stories", icon: BookOpen },
+        { href: "/whos-watching", label: "Who's Watching", icon: Binoculars },
       ],
     },
   ];
@@ -183,9 +187,31 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
     ],
   };
 
-  const rawSections = isPlayer ? playerSections : coachSections;
-  const moreItems = (isPlayer ? playerMoreItems : coachMoreItems).filter(item => !item.sport || item.sport === currentSport);
-  const accountSection = isPlayer ? playerAccountSection : coachAccountSection;
+  const recruiterSections: NavSection[] = [
+    {
+      title: "Recruiting",
+      items: [
+        { href: "/recruiter", label: "Search Players", icon: Search },
+        { href: "/recruiter?tab=bookmarks", label: "Bookmarks", icon: Bookmark },
+        { href: "/discover/players", label: "Player Directory", icon: Users },
+      ],
+    },
+  ];
+
+  const recruiterMoreItems: NavItem[] = [
+    { href: "/discover/highlights", label: "Discover", icon: Film },
+  ];
+
+  const recruiterAccountSection: NavSection = {
+    title: "Account",
+    items: [
+      { href: "/pricing", label: "Pricing", icon: CreditCard },
+    ],
+  };
+
+  const rawSections = isRecruiter ? recruiterSections : isPlayer ? playerSections : coachSections;
+  const moreItems = (isRecruiter ? recruiterMoreItems : isPlayer ? playerMoreItems : coachMoreItems).filter(item => !item.sport || item.sport === currentSport);
+  const accountSection = isRecruiter ? recruiterAccountSection : isPlayer ? playerAccountSection : coachAccountSection;
   const sections = rawSections.map(section => ({
     ...section,
     items: section.items.filter(item => !item.sport || item.sport === currentSport),
@@ -224,7 +250,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
               </div>
               <div>
                 <h2 className="font-display font-bold text-foreground text-xl uppercase tracking-wider">Caliber</h2>
-                <p className="text-[10px] text-accent/80 uppercase tracking-[0.2em] font-medium">{userRole} Mode</p>
+                <p className="text-[10px] text-accent/80 uppercase tracking-[0.2em] font-medium">{isRecruiter ? "Recruiter" : isPlayer ? "Player" : "Coach"} Mode</p>
               </div>
             </div>
           </div>
@@ -236,12 +262,12 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
                 variant="outline"
                 size="sm"
                 onClick={handleRoleSwitch}
-                disabled={isSwitchingRole}
+                disabled={isSwitchingRole || isRecruiter}
                 className="w-full text-xs border-accent/20 bg-accent/5 min-h-11 touch-target"
                 data-testid="button-mobile-role-switch"
               >
-                <ArrowLeftRight className="w-3.5 h-3.5 mr-2 text-accent" />
-                Switch to {isPlayer ? 'Coach' : 'Player'} Mode
+                {!isRecruiter && <ArrowLeftRight className="w-3.5 h-3.5 mr-2 text-accent" />}
+                Switch to {isRecruiter ? "Recruiter" : isPlayer ? 'Coach' : 'Player'} Mode
               </Button>
             </motion.div>
             

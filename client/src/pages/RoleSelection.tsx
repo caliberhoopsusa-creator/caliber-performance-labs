@@ -4,13 +4,14 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Activity, UserCircle, ClipboardList, ChevronRight, Loader2, Users, Plus, ArrowLeft } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Activity, UserCircle, ClipboardList, ChevronRight, Loader2, Users, Plus, ArrowLeft, GraduationCap } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { BASKETBALL_POSITIONS } from "@shared/sports-config";
 
-type RoleType = 'player' | 'coach' | null;
+type RoleType = 'player' | 'coach' | 'recruiter' | null;
 type CoachStep = 'select-team-action' | 'create-team' | 'join-team' | null;
 
 function BasketballIcon({ className }: { className?: string }) {
@@ -36,6 +37,16 @@ export default function RoleSelection() {
     team: '',
     jerseyNumber: '',
     teamCode: '',
+  });
+  const [recruiterForm, setRecruiterForm] = useState({
+    schoolName: '',
+    division: '',
+    title: '',
+    schoolEmail: '',
+    phone: '',
+    state: '',
+    conference: '',
+    bio: '',
   });
   const [teamForm, setTeamForm] = useState({
     name: '',
@@ -63,7 +74,7 @@ export default function RoleSelection() {
   };
 
   const setRoleMutation = useMutation({
-    mutationFn: async (role: 'player' | 'coach') => {
+    mutationFn: async (role: 'player' | 'coach' | 'recruiter') => {
       return await apiRequest('POST', '/api/users/role', { role });
     },
     onSuccess: () => {
@@ -199,9 +210,36 @@ export default function RoleSelection() {
     },
   });
 
+  const createRecruiterProfileMutation = useMutation({
+    mutationFn: async (data: { schoolName: string; division: string; title: string; schoolEmail: string; phone?: string; state?: string; conference?: string; bio?: string }) => {
+      return await apiRequest('POST', '/api/recruiter/profile', data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/users/me'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/recruiter/profile'] });
+      toast({
+        title: "Profile Created",
+        description: "Your recruiter profile has been created!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create recruiter profile",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCoachSelect = async () => {
     setSelectedRole('coach');
     setCoachStep('select-team-action');
+  };
+
+  const handleRecruiterSelect = async () => {
+    await setRoleMutation.mutateAsync('recruiter');
+    setSelectedRole('recruiter');
   };
 
   const handlePlayerSelect = async () => {
@@ -225,6 +263,36 @@ export default function RoleSelection() {
       position: playerForm.positions.join(','),
     };
     await createPlayerMutation.mutateAsync(formData);
+  };
+
+  const handleRecruiterProfileSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!recruiterForm.schoolName || !recruiterForm.division || !recruiterForm.title || !recruiterForm.schoolEmail) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!recruiterForm.schoolEmail.endsWith('.edu')) {
+      toast({
+        title: "Invalid Email",
+        description: "School email must end in .edu",
+        variant: "destructive",
+      });
+      return;
+    }
+    await createRecruiterProfileMutation.mutateAsync({
+      schoolName: recruiterForm.schoolName,
+      division: recruiterForm.division,
+      title: recruiterForm.title,
+      schoolEmail: recruiterForm.schoolEmail,
+      phone: recruiterForm.phone || undefined,
+      state: recruiterForm.state || undefined,
+      conference: recruiterForm.conference || undefined,
+      bio: recruiterForm.bio || undefined,
+    });
   };
 
   const handleCreateTeamSubmit = async (e: React.FormEvent) => {
@@ -253,10 +321,11 @@ export default function RoleSelection() {
     await joinTeamMutation.mutateAsync({ code: teamForm.code });
   };
 
-  const isLoading = setRoleMutation.isPending || createPlayerMutation.isPending || createTeamMutation.isPending || joinTeamMutation.isPending;
+  const isLoading = setRoleMutation.isPending || createPlayerMutation.isPending || createTeamMutation.isPending || joinTeamMutation.isPending || createRecruiterProfileMutation.isPending;
 
   const getSubtitle = () => {
     if (selectedRole === 'player') return "Let's set up your player profile";
+    if (selectedRole === 'recruiter') return "Let's set up your recruiter profile";
     if (coachStep === 'select-team-action') return "Do you have an existing team or want to create one?";
     if (coachStep === 'create-team') return "Create your team and start building your roster";
     if (coachStep === 'join-team') return "Enter the team code to join an existing team";
@@ -274,7 +343,130 @@ export default function RoleSelection() {
           <p className="text-muted-foreground mt-2">{getSubtitle()}</p>
         </div>
 
-        {selectedRole === 'player' ? (
+        {selectedRole === 'recruiter' ? (
+          <Card className="p-6 bg-card border-border">
+            <form onSubmit={handleRecruiterProfileSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="schoolName">School Name *</Label>
+                <Input
+                  id="schoolName"
+                  placeholder="e.g., University of Alabama"
+                  value={recruiterForm.schoolName}
+                  onChange={(e) => setRecruiterForm(prev => ({ ...prev, schoolName: e.target.value }))}
+                  className="mt-1"
+                  data-testid="input-school-name"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="division">Division *</Label>
+                <Select
+                  value={recruiterForm.division}
+                  onValueChange={(value) => setRecruiterForm(prev => ({ ...prev, division: value }))}
+                >
+                  <SelectTrigger className="mt-1" data-testid="select-division">
+                    <SelectValue placeholder="Select division" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="D1">D1</SelectItem>
+                    <SelectItem value="D2">D2</SelectItem>
+                    <SelectItem value="D3">D3</SelectItem>
+                    <SelectItem value="NAIA">NAIA</SelectItem>
+                    <SelectItem value="JUCO">JUCO</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="recruiterTitle">Title *</Label>
+                <Input
+                  id="recruiterTitle"
+                  placeholder="e.g., Head Coach, Recruiting Coordinator"
+                  value={recruiterForm.title}
+                  onChange={(e) => setRecruiterForm(prev => ({ ...prev, title: e.target.value }))}
+                  className="mt-1"
+                  data-testid="input-recruiter-title"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="schoolEmail">School Email * <span className="text-xs text-muted-foreground font-normal">(must end in .edu)</span></Label>
+                <Input
+                  id="schoolEmail"
+                  type="email"
+                  placeholder="you@school.edu"
+                  value={recruiterForm.schoolEmail}
+                  onChange={(e) => setRecruiterForm(prev => ({ ...prev, schoolEmail: e.target.value }))}
+                  className="mt-1"
+                  data-testid="input-school-email"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="recruiterPhone">Phone</Label>
+                  <Input
+                    id="recruiterPhone"
+                    placeholder="(optional)"
+                    value={recruiterForm.phone}
+                    onChange={(e) => setRecruiterForm(prev => ({ ...prev, phone: e.target.value }))}
+                    className="mt-1"
+                    data-testid="input-recruiter-phone"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="recruiterState">State</Label>
+                  <Input
+                    id="recruiterState"
+                    placeholder="(optional)"
+                    value={recruiterForm.state}
+                    onChange={(e) => setRecruiterForm(prev => ({ ...prev, state: e.target.value }))}
+                    className="mt-1"
+                    data-testid="input-recruiter-state"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="conference">Conference</Label>
+                <Input
+                  id="conference"
+                  placeholder="e.g., SEC, Big 10 (optional)"
+                  value={recruiterForm.conference}
+                  onChange={(e) => setRecruiterForm(prev => ({ ...prev, conference: e.target.value }))}
+                  className="mt-1"
+                  data-testid="input-conference"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="recruiterBio">Bio</Label>
+                <Textarea
+                  id="recruiterBio"
+                  placeholder="Tell us about yourself (optional)"
+                  value={recruiterForm.bio}
+                  onChange={(e) => setRecruiterForm(prev => ({ ...prev, bio: e.target.value }))}
+                  className="mt-1"
+                  data-testid="input-recruiter-bio"
+                />
+              </div>
+
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={isLoading}
+                data-testid="button-create-recruiter-profile"
+              >
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <ChevronRight className="w-4 h-4 mr-2" />
+                )}
+                Create Recruiter Profile
+              </Button>
+            </form>
+          </Card>
+        ) : selectedRole === 'player' ? (
           <Card className="p-6 bg-card border-border">
             <form onSubmit={handlePlayerProfileSubmit} className="space-y-4">
               <div>
@@ -536,7 +728,7 @@ export default function RoleSelection() {
             </form>
           </Card>
         ) : (
-          <div className="grid sm:grid-cols-2 gap-4">
+          <div className="grid sm:grid-cols-3 gap-4">
             <Card 
               className="p-6 bg-card border-border hover-elevate cursor-pointer group"
               onClick={handlePlayerSelect}
@@ -575,6 +767,27 @@ export default function RoleSelection() {
                 </div>
                 <Button variant="outline" className="w-full" disabled={isLoading} data-testid="button-select-coach">
                   {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Select Coach"}
+                </Button>
+              </div>
+            </Card>
+
+            <Card 
+              className="p-6 bg-card border-border hover-elevate cursor-pointer group"
+              onClick={handleRecruiterSelect}
+              data-testid="card-select-recruiter"
+            >
+              <div className="text-center space-y-4">
+                <div className="mx-auto w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
+                  <GraduationCap className="w-8 h-8 text-accent" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold font-display text-foreground tracking-wide uppercase">I'm a Recruiter</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Discover talented players, track prospects, and connect with recruits
+                  </p>
+                </div>
+                <Button variant="outline" className="w-full" disabled={isLoading} data-testid="button-select-recruiter">
+                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Select Recruiter"}
                 </Button>
               </div>
             </Card>

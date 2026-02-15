@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, ShoppingBag, ClipboardCheck, Medal, GraduationCap, Heart, Wand2, ChevronDown, ChevronRight, BookOpen } from "lucide-react";
+import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, ShoppingBag, ClipboardCheck, Medal, GraduationCap, Heart, Wand2, ChevronDown, ChevronRight, BookOpen, Binoculars, Search, Bookmark } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -58,6 +58,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
   const currentSport = useSport();
   const isPlayer = userRole === 'player';
   const isCoach = userRole === 'coach';
+  const isRecruiter = userRole === 'recruiter';
 
   const { data: pendingGames } = useQuery<{ id: number }[]>({
     queryKey: ['/api/coach/unverified-games'],
@@ -66,7 +67,8 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
   const pendingCount = pendingGames?.length ?? 0;
 
   const handleRoleSwitch = () => {
-    const newRole = isPlayer ? 'coach' : 'player';
+    if (isRecruiter) return;
+    const newRole: 'player' | 'coach' = isPlayer ? 'coach' : 'player';
     switchRole(newRole, {
       onSuccess: () => {
         toast({ 
@@ -121,6 +123,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         { href: "/community", label: "Community", icon: UsersRound },
         { href: "/discover/highlights", label: "Discover", icon: Film },
         { href: "/community?tab=stories", label: "Stories", icon: BookOpen },
+        { href: "/whos-watching", label: "Who's Watching", icon: Binoculars },
       ],
     },
   ];
@@ -182,9 +185,31 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
     ],
   };
 
-  const rawSections = isPlayer ? playerSections : coachSections;
-  const moreItems = (isPlayer ? playerMoreItems : coachMoreItems).filter(item => !item.sport || item.sport === currentSport);
-  const accountSection = isPlayer ? playerAccountSection : coachAccountSection;
+  const recruiterSections: NavSection[] = [
+    {
+      title: "Recruiting",
+      items: [
+        { href: "/recruiter", label: "Search Players", icon: Search },
+        { href: "/recruiter?tab=bookmarks", label: "Bookmarks", icon: Bookmark },
+        { href: "/discover/players", label: "Player Directory", icon: Users },
+      ],
+    },
+  ];
+
+  const recruiterMoreItems: NavItem[] = [
+    { href: "/discover/highlights", label: "Discover", icon: Film },
+  ];
+
+  const recruiterAccountSection: NavSection = {
+    title: "Account",
+    items: [
+      { href: "/pricing", label: "Pricing", icon: CreditCard },
+    ],
+  };
+
+  const rawSections = isRecruiter ? recruiterSections : isPlayer ? playerSections : coachSections;
+  const moreItems = (isRecruiter ? recruiterMoreItems : isPlayer ? playerMoreItems : coachMoreItems).filter(item => !item.sport || item.sport === currentSport);
+  const accountSection = isRecruiter ? recruiterAccountSection : isPlayer ? playerAccountSection : coachAccountSection;
   const navSections = rawSections.map(section => ({
     ...section,
     items: section.items.filter(item => !item.sport || item.sport === currentSport),
@@ -203,8 +228,8 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
             data-testid="button-switch-role"
             aria-label={`Switch to ${isPlayer ? 'Coach' : 'Player'} Mode`}
           >
-            {isPlayer ? "Player" : "Coach"} Mode
-            <ArrowLeftRight className="w-3 h-3" />
+            {isRecruiter ? "Recruiter" : isPlayer ? "Player" : "Coach"} Mode
+            {!isRecruiter && <ArrowLeftRight className="w-3 h-3" />}
           </button>
         </div>
         {isCoach && (
@@ -358,8 +383,14 @@ type MobileNavProps = {
 export function MobileNav({ userRole, playerId }: MobileNavProps) {
   const [location] = useLocation();
   const isPlayer = userRole === 'player';
+  const isRecruiter = userRole === 'recruiter';
   
-  const navItems = isPlayer ? [
+  const navItems = isRecruiter ? [
+    { href: "/recruiter", icon: Search, label: "Search" },
+    { href: "/recruiter?tab=bookmarks", icon: Bookmark, label: "Saved" },
+    { href: "/discover/players", icon: Users, label: "Directory" },
+    { href: "/discover/highlights", icon: Film, label: "Discover" },
+  ] : isPlayer ? [
     { href: "/community", icon: Rss, label: "Feed" },
     { href: "/analyze", icon: PlusCircle, label: "Log", featured: true },
     { href: playerId ? `/players/${playerId}` : "/players", icon: UserCircle, label: "Profile" },

@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, badges, headToHeadChallenges, statVerifications, playerCollegeMatches, playerCollegeInterests, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema, insertWearableConnectionSchema, recruitingEvents, insertRecruitingEventSchema, type RecruitingEvent, playerEventRegistrations, insertPlayerEventRegistrationSchema, colleges, ncaaEligibilityProgress, insertNcaaEligibilityProgressSchema, coachRecommendations, insertCoachRecommendationSchema, teams, teamMembers, skillBadges, activityStreaks, feedActivities, feedComments, feedCommentLikes, type InsertFeedComment, type FeedComment, highlightClips, personalRecords, playerGoals, recruitingTargets, recruitingContacts, insertRecruitingTargetSchema, insertRecruitingContactSchema, DIVISION_BENCHMARKS, BENCHMARK_STAT_LABELS } from "@shared/schema";
+import { players, games, badges, headToHeadChallenges, statVerifications, playerCollegeMatches, playerCollegeInterests, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema, insertWearableConnectionSchema, recruitingEvents, insertRecruitingEventSchema, type RecruitingEvent, playerEventRegistrations, insertPlayerEventRegistrationSchema, colleges, ncaaEligibilityProgress, insertNcaaEligibilityProgressSchema, coachRecommendations, insertCoachRecommendationSchema, teams, teamMembers, skillBadges, activityStreaks, feedActivities, feedComments, feedCommentLikes, type InsertFeedComment, type FeedComment, highlightClips, personalRecords, recruiterBlocks, playerGoals, recruitingTargets, recruitingContacts, insertRecruitingTargetSchema, insertRecruitingContactSchema, DIVISION_BENCHMARKS, BENCHMARK_STAT_LABELS } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { calculateAIRating, calculateProjection, type GameStats, type PlayerMetrics, type PeerStats, type AIRatingResult, type ProjectionResult } from "@shared/ai-rating-engine";
 import type { Sport } from "@shared/sports-config";
@@ -2045,12 +2045,12 @@ export async function registerRoutes(
     }
   });
 
-  // Set user role (player or coach)
+  // Set user role (player, coach, or recruiter)
   app.post('/api/users/role', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { role } = z.object({
-        role: z.enum(['player', 'coach'])
+        role: z.enum(['player', 'coach', 'recruiter'])
       }).parse(req.body);
       
       const updatedUser = await authStorage.updateUserRole(userId, role);
@@ -16654,6 +16654,391 @@ The email should:
       weeklyFocus,
       benchmarks: nextBenchmark,
     });
+  });
+
+  // === RECRUITER FEATURES ===
+
+  app.post("/api/recruiter/profile", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ message: "Not authenticated" });
+
+      const existing = await storage.getRecruiterProfileByUserId(userId);
+      if (existing) return res.status(400).json({ message: "Recruiter profile already exists" });
+
+      const { schoolName, division, title, schoolEmail, phone, bio, state, conference } = req.body;
+
+      if (!schoolName || !division || !title || !schoolEmail) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      if (!schoolEmail.toLowerCase().endsWith('.edu')) {
+        return res.status(400).json({ message: "School email must be a .edu address" });
+      }
+
+      const profile = await storage.createRecruiterProfile({
+        userId,
+        schoolName,
+        division,
+        title,
+        schoolEmail: schoolEmail.toLowerCase(),
+        phone: phone || null,
+        bio: bio || null,
+        state: state || null,
+        conference: conference || null,
+        sport: "basketball",
+        isVerified: false,
+      });
+
+      res.status(201).json(profile);
+    } catch (error) {
+      console.error("Error creating recruiter profile:", error);
+      res.status(500).json({ message: "Failed to create recruiter profile" });
+    }
+  });
+
+  app.get("/api/recruiter/profile", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ message: "Not authenticated" });
+
+      const profile = await storage.getRecruiterProfileByUserId(userId);
+      if (!profile) return res.status(404).json({ message: "Recruiter profile not found" });
+
+      res.json(profile);
+    } catch (error) {
+      console.error("Error getting recruiter profile:", error);
+      res.status(500).json({ message: "Failed to get recruiter profile" });
+    }
+  });
+
+  app.patch("/api/recruiter/profile", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ message: "Not authenticated" });
+
+      const profile = await storage.getRecruiterProfileByUserId(userId);
+      if (!profile) return res.status(404).json({ message: "Recruiter profile not found" });
+
+      const updates = req.body;
+      if (updates.schoolEmail && !updates.schoolEmail.toLowerCase().endsWith('.edu')) {
+        return res.status(400).json({ message: "School email must be a .edu address" });
+      }
+
+      const updated = await storage.updateRecruiterProfile(profile.id, { ...updates, updatedAt: new Date() });
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating recruiter profile:", error);
+      res.status(500).json({ message: "Failed to update recruiter profile" });
+    }
+  });
+
+  app.get("/api/recruiter/profile/:id", async (req, res) => {
+    try {
+      const profile = await storage.getRecruiterProfile(parseInt(req.params.id));
+      if (!profile) return res.status(404).json({ message: "Recruiter not found" });
+      res.json(profile);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get recruiter profile" });
+    }
+  });
+
+  app.post("/api/admin/recruiter/:id/verify", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ message: "Not authenticated" });
+
+      if (!isAppOwner(userId)) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const updated = await storage.updateRecruiterProfile(parseInt(req.params.id), { isVerified: true, updatedAt: new Date() });
+      if (!updated) return res.status(404).json({ message: "Recruiter not found" });
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to verify recruiter" });
+    }
+  });
+
+  app.get("/api/recruiter/players", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ message: "Not authenticated" });
+
+      const recruiterProfile = await storage.getRecruiterProfileByUserId(userId);
+      if (!recruiterProfile) return res.status(403).json({ message: "Recruiter profile required" });
+
+      const allPlayers = await storage.getPlayers();
+
+      const blockedByPlayers = await db.select({ playerId: recruiterBlocks.playerId })
+        .from(recruiterBlocks)
+        .where(eq(recruiterBlocks.recruiterId, recruiterProfile.id));
+      const blockedPlayerIds = new Set(blockedByPlayers.map(b => b.playerId));
+
+      let filteredPlayers = allPlayers.filter(p => {
+        if (p.sport !== 'basketball') return false;
+        if (p.profileVisibility === 'hidden') return false;
+        if (blockedPlayerIds.has(p.id)) return false;
+        return true;
+      });
+
+      const { position, state, graduationYear, minGrade, openToRecruiting } = req.query;
+      if (position) filteredPlayers = filteredPlayers.filter(p => p.position === position);
+      if (state) filteredPlayers = filteredPlayers.filter(p => p.state === state);
+      if (graduationYear) filteredPlayers = filteredPlayers.filter(p => p.graduationYear === parseInt(graduationYear as string));
+      if (openToRecruiting === 'true') filteredPlayers = filteredPlayers.filter(p => p.openToRecruiting);
+
+      filteredPlayers.sort((a, b) => {
+        if (a.openToRecruiting && !b.openToRecruiting) return -1;
+        if (!a.openToRecruiting && b.openToRecruiting) return 1;
+        return (a.name || '').localeCompare(b.name || '');
+      });
+
+      const result = filteredPlayers.map(p => ({
+        id: p.id,
+        name: p.name,
+        position: p.position,
+        height: p.height,
+        team: p.team,
+        school: p.showSchool ? p.school : null,
+        state: p.state,
+        city: p.city,
+        graduationYear: p.graduationYear,
+        gpa: p.showGpa ? p.gpa : null,
+        level: p.level,
+        photoUrl: p.photoUrl,
+        currentTier: p.currentTier,
+        totalXp: p.totalXp,
+        openToRecruiting: p.openToRecruiting,
+        highlightVideoUrl: p.highlightVideoUrl,
+        username: p.username,
+      }));
+
+      res.json(result);
+    } catch (error) {
+      console.error("Error searching players:", error);
+      res.status(500).json({ message: "Failed to search players" });
+    }
+  });
+
+  app.get("/api/recruiter/bookmarks", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ message: "Not authenticated" });
+
+      const profile = await storage.getRecruiterProfileByUserId(userId);
+      if (!profile) return res.status(403).json({ message: "Recruiter profile required" });
+
+      const bookmarks = await storage.getRecruiterBookmarks(profile.id);
+      res.json(bookmarks);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get bookmarks" });
+    }
+  });
+
+  app.post("/api/recruiter/bookmarks/:playerId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ message: "Not authenticated" });
+
+      const profile = await storage.getRecruiterProfileByUserId(userId);
+      if (!profile) return res.status(403).json({ message: "Recruiter profile required" });
+
+      const playerId = parseInt(req.params.playerId);
+      const existing = await storage.getRecruiterBookmarkForPlayer(profile.id, playerId);
+      if (existing) return res.status(400).json({ message: "Already bookmarked" });
+
+      const bookmark = await storage.createRecruiterBookmark({
+        recruiterId: profile.id,
+        playerId,
+        notes: req.body.notes || null,
+      });
+      res.status(201).json(bookmark);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to bookmark player" });
+    }
+  });
+
+  app.delete("/api/recruiter/bookmarks/:playerId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ message: "Not authenticated" });
+
+      const profile = await storage.getRecruiterProfileByUserId(userId);
+      if (!profile) return res.status(403).json({ message: "Recruiter profile required" });
+
+      await storage.deleteRecruiterBookmark(profile.id, parseInt(req.params.playerId));
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to remove bookmark" });
+    }
+  });
+
+  app.post("/api/recruiter/signals/:playerId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ message: "Not authenticated" });
+
+      const profile = await storage.getRecruiterProfileByUserId(userId);
+      if (!profile) return res.status(403).json({ message: "Recruiter profile required" });
+
+      const playerId = parseInt(req.params.playerId);
+      const { signalType, message } = req.body;
+
+      if (!['watching', 'interested', 'requesting_film'].includes(signalType)) {
+        return res.status(400).json({ message: "Invalid signal type" });
+      }
+
+      const blocked = await storage.isRecruiterBlocked(playerId, profile.id);
+      if (blocked) return res.status(403).json({ message: "Cannot send signal to this player" });
+
+      const signal = await storage.createInterestSignal({
+        recruiterId: profile.id,
+        playerId,
+        signalType,
+        message: message || null,
+        isRead: false,
+      });
+      res.status(201).json(signal);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to send signal" });
+    }
+  });
+
+  app.post("/api/recruiter/views/:playerId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ message: "Not authenticated" });
+
+      const profile = await storage.getRecruiterProfileByUserId(userId);
+      if (!profile) return res.status(403).json({ message: "Recruiter profile required" });
+
+      await storage.logProfileView(profile.id, parseInt(req.params.playerId));
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to log view" });
+    }
+  });
+
+  app.get("/api/players/:playerId/whos-watching", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ message: "Not authenticated" });
+
+      const playerId = parseInt(req.params.playerId);
+      const player = await storage.getPlayer(playerId);
+      if (!player || player.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const [views, signals, viewCount, blockedRecruiters] = await Promise.all([
+        storage.getProfileViewsForPlayer(playerId),
+        storage.getSignalsForPlayer(playerId),
+        storage.getRecruiterProfileViewCount(playerId),
+        storage.getBlockedRecruiters(playerId),
+      ]);
+
+      await storage.markSignalsRead(playerId);
+
+      const unreadSignals = signals.filter((s: any) => !s.isRead).length;
+
+      res.json({
+        views,
+        signals,
+        totalViews: viewCount,
+        unreadSignals,
+        blockedRecruiters,
+      });
+    } catch (error) {
+      console.error("Error getting who's watching:", error);
+      res.status(500).json({ message: "Failed to get recruiter activity" });
+    }
+  });
+
+  app.patch("/api/players/:playerId/visibility", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ message: "Not authenticated" });
+
+      const playerId = parseInt(req.params.playerId);
+      const player = await storage.getPlayer(playerId);
+      if (!player || player.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const { profileVisibility, showEmail, showPhone, showSchool, showGpa, openToRecruiting } = req.body;
+
+      const updates: any = {};
+      if (profileVisibility !== undefined) updates.profileVisibility = profileVisibility;
+      if (showEmail !== undefined) updates.showEmail = showEmail;
+      if (showPhone !== undefined) updates.showPhone = showPhone;
+      if (showSchool !== undefined) updates.showSchool = showSchool;
+      if (showGpa !== undefined) updates.showGpa = showGpa;
+      if (openToRecruiting !== undefined) updates.openToRecruiting = openToRecruiting;
+
+      const updated = await storage.updatePlayer(playerId, updates);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating visibility:", error);
+      res.status(500).json({ message: "Failed to update visibility" });
+    }
+  });
+
+  app.post("/api/players/:playerId/block-recruiter/:recruiterId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ message: "Not authenticated" });
+
+      const playerId = parseInt(req.params.playerId);
+      const player = await storage.getPlayer(playerId);
+      if (!player || player.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const block = await storage.blockRecruiter(playerId, parseInt(req.params.recruiterId), req.body.reason);
+      res.status(201).json(block);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to block recruiter" });
+    }
+  });
+
+  app.delete("/api/players/:playerId/block-recruiter/:recruiterId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ message: "Not authenticated" });
+
+      const playerId = parseInt(req.params.playerId);
+      const player = await storage.getPlayer(playerId);
+      if (!player || player.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      await storage.unblockRecruiter(playerId, parseInt(req.params.recruiterId));
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to unblock recruiter" });
+    }
+  });
+
+  app.get("/api/players/:playerId/signal-count", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ message: "Not authenticated" });
+
+      const playerId = parseInt(req.params.playerId);
+      const player = await storage.getPlayer(playerId);
+      if (!player || player.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const signals = await storage.getSignalsForPlayer(playerId);
+      const unread = signals.filter((s: any) => !s.isRead).length;
+      const total = signals.length;
+
+      res.json({ unread, total });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get signal count" });
+    }
   });
 
   await seedDatabase();

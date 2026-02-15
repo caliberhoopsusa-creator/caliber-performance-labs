@@ -67,6 +67,8 @@ import PublicRecruitProfile from "./pages/PublicRecruitProfile";
 import PlayerDirectory from "./pages/PlayerDirectory";
 import DiscoverHighlights from "./pages/DiscoverHighlights";
 import ChallengePage from "./pages/ChallengePage";
+import RecruiterDashboard from "@/pages/RecruiterDashboard";
+import WhosWatching from "@/pages/WhosWatching";
 import NotFound from "./pages/not-found";
 
 interface ExtendedUser {
@@ -314,6 +316,8 @@ function MainRouter() {
                 <Route path="/">
                   {extendedUser.role === 'player' && extendedUser.playerId ? (
                     <Redirect to="/community?tab=feed" />
+                  ) : extendedUser.role === 'recruiter' ? (
+                    <Redirect to="/recruiter" />
                   ) : (
                     <Dashboard />
                   )}
@@ -393,6 +397,8 @@ function MainRouter() {
                 <Route path="/shop" component={Shop} />
                 <Route path="/leagues" component={LeagueHub} />
                 <Route path="/leagues/:id" component={LeagueDetail} />
+                <Route path="/recruiter" component={RecruiterDashboard} />
+                <Route path="/whos-watching" component={WhosWatching} />
                 <Route path="/recruiting" component={RecruitingHub} />
                 <Route path="/college-recruiting">
                   <Redirect to="/recruiting?tab=schools" />
