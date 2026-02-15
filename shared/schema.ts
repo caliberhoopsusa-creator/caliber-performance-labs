@@ -2738,6 +2738,90 @@ export const insertCoinTransactionSchema = createInsertSchema(coinTransactions).
 export type InsertCoinTransaction = z.infer<typeof insertCoinTransactionSchema>;
 export type CoinTransaction = typeof coinTransactions.$inferSelect;
 
+// === RECRUITING GAME PLAN ===
+
+export const recruitingTargets = pgTable("recruiting_targets", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull(),
+  collegeName: text("college_name").notNull(),
+  division: text("division").notNull(), // 'D1', 'D2', 'D3', 'NAIA', 'JUCO'
+  state: text("state"),
+  status: text("status").notNull().default("researching"), // 'researching', 'contacted', 'responded', 'interested', 'offer', 'committed', 'passed'
+  contactName: text("contact_name"),
+  contactEmail: text("contact_email"),
+  contactTitle: text("contact_title"),
+  lastContactDate: timestamp("last_contact_date"),
+  followUpDate: timestamp("follow_up_date"),
+  notes: text("notes"),
+  generatedEmail: text("generated_email"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  playerIdIdx: index("recruiting_targets_player_id_idx").on(table.playerId),
+}));
+
+export const insertRecruitingTargetSchema = createInsertSchema(recruitingTargets).omit({ id: true, createdAt: true, generatedEmail: true });
+export type InsertRecruitingTarget = z.infer<typeof insertRecruitingTargetSchema>;
+export type RecruitingTarget = typeof recruitingTargets.$inferSelect;
+
+export const recruitingContacts = pgTable("recruiting_contacts", {
+  id: serial("id").primaryKey(),
+  targetId: integer("target_id").notNull(),
+  playerId: integer("player_id").notNull(),
+  type: text("type").notNull(), // 'email', 'phone', 'in_person', 'camp', 'visit'
+  date: timestamp("date").defaultNow(),
+  notes: text("notes"),
+  response: text("response"), // 'none', 'positive', 'neutral', 'negative'
+}, (table) => ({
+  targetIdIdx: index("recruiting_contacts_target_id_idx").on(table.targetId),
+}));
+
+export const insertRecruitingContactSchema = createInsertSchema(recruitingContacts).omit({ id: true, date: true });
+export type InsertRecruitingContact = z.infer<typeof insertRecruitingContactSchema>;
+export type RecruitingContact = typeof recruitingContacts.$inferSelect;
+
+export const RECRUITING_STATUSES = {
+  researching: { label: "Researching", color: "#6B7280" },
+  contacted: { label: "Contacted", color: "#3B82F6" },
+  responded: { label: "Responded", color: "#8B5CF6" },
+  interested: { label: "Interested", color: "#F59E0B" },
+  offer: { label: "Offer", color: "#10B981" },
+  committed: { label: "Committed", color: "#EF4444" },
+  passed: { label: "Passed", color: "#9CA3AF" },
+} as const;
+
+// === DEVELOPMENT ROADMAP BENCHMARKS ===
+// Position-specific stat benchmarks by division level (per-game averages)
+export const DIVISION_BENCHMARKS = {
+  Guard: {
+    D1: { ppg: 15, rpg: 3, apg: 5, spg: 1.5, fgPct: 45, threePct: 36, ftPct: 78 },
+    D2: { ppg: 12, rpg: 2.5, apg: 4, spg: 1.2, fgPct: 42, threePct: 33, ftPct: 74 },
+    D3: { ppg: 10, rpg: 2, apg: 3.5, spg: 1.0, fgPct: 40, threePct: 30, ftPct: 70 },
+    NAIA: { ppg: 8, rpg: 2, apg: 3, spg: 0.8, fgPct: 38, threePct: 28, ftPct: 68 },
+  },
+  Wing: {
+    D1: { ppg: 14, rpg: 5, apg: 3, spg: 1.2, fgPct: 46, threePct: 35, ftPct: 76 },
+    D2: { ppg: 11, rpg: 4, apg: 2.5, spg: 1.0, fgPct: 43, threePct: 32, ftPct: 72 },
+    D3: { ppg: 9, rpg: 3.5, apg: 2, spg: 0.8, fgPct: 40, threePct: 29, ftPct: 68 },
+    NAIA: { ppg: 7, rpg: 3, apg: 1.5, spg: 0.7, fgPct: 38, threePct: 27, ftPct: 66 },
+  },
+  Big: {
+    D1: { ppg: 13, rpg: 8, apg: 2, spg: 0.8, fgPct: 52, threePct: 30, ftPct: 70 },
+    D2: { ppg: 10, rpg: 7, apg: 1.5, spg: 0.6, fgPct: 48, threePct: 27, ftPct: 66 },
+    D3: { ppg: 8, rpg: 6, apg: 1.2, spg: 0.5, fgPct: 45, threePct: 25, ftPct: 64 },
+    NAIA: { ppg: 7, rpg: 5, apg: 1, spg: 0.4, fgPct: 42, threePct: 23, ftPct: 62 },
+  },
+} as const;
+
+export const BENCHMARK_STAT_LABELS: Record<string, string> = {
+  ppg: "Points Per Game",
+  rpg: "Rebounds Per Game",
+  apg: "Assists Per Game",
+  spg: "Steals Per Game",
+  fgPct: "FG%",
+  threePct: "3PT%",
+  ftPct: "FT%",
+};
+
 // === SHOP CONSTANTS ===
 export const SHOP_CATEGORIES = {
   theme: { name: "Themes", description: "Change your app's accent color and style", icon: "Palette" },
