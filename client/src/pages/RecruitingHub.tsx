@@ -7,14 +7,18 @@ import {
   GraduationCap, 
   School, 
   Calendar,
-  Target
+  Target,
+  Crosshair,
+  TrendingUp
 } from "lucide-react";
 import MyRecruitingContent from "./MyRecruitingContent";
 import CollegeRecruitingContent from "./CollegeRecruitingContent";
 import CampShowcaseContent from "./CampShowcaseContent";
+import RecruitingGamePlan from "./RecruitingGamePlan";
+import DevelopmentRoadmap from "./DevelopmentRoadmap";
 
-type TabValue = "journey" | "schools" | "events";
-const VALID_TABS: TabValue[] = ["journey", "schools", "events"];
+type TabValue = "journey" | "schools" | "events" | "gameplan" | "roadmap";
+const VALID_TABS: TabValue[] = ["journey", "schools", "events", "gameplan", "roadmap"];
 
 function isValidTab(tab: string | null): tab is TabValue {
   return tab !== null && VALID_TABS.includes(tab as TabValue);
@@ -24,6 +28,7 @@ export default function RecruitingHub() {
   const { user } = useAuth();
   const search = useSearch();
   const [, setLocation] = useLocation();
+  const playerId = (user as any)?.playerId;
   
   const searchParams = new URLSearchParams(search);
   const tabFromUrl = searchParams.get("tab");
@@ -85,6 +90,24 @@ export default function RecruitingHub() {
             <span className="sm:hidden">Journey</span>
           </TabsTrigger>
           <TabsTrigger 
+            value="gameplan" 
+            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
+            data-testid="tab-gameplan"
+          >
+            <Crosshair className="w-4 h-4" />
+            <span className="hidden sm:inline">Game Plan</span>
+            <span className="sm:hidden">Plan</span>
+          </TabsTrigger>
+          <TabsTrigger 
+            value="roadmap" 
+            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
+            data-testid="tab-roadmap"
+          >
+            <TrendingUp className="w-4 h-4" />
+            <span className="hidden sm:inline">Development</span>
+            <span className="sm:hidden">Dev</span>
+          </TabsTrigger>
+          <TabsTrigger 
             value="schools" 
             className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
             data-testid="tab-schools"
@@ -106,6 +129,26 @@ export default function RecruitingHub() {
 
         <TabsContent value="journey" className="mt-6">
           <MyRecruitingContent onTabChange={handleTabChange} />
+        </TabsContent>
+
+        <TabsContent value="gameplan" className="mt-6">
+          {playerId ? (
+            <RecruitingGamePlan playerId={playerId} />
+          ) : (
+            <div className="text-center py-12 text-muted-foreground">
+              Create a player profile to access your recruiting game plan.
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="roadmap" className="mt-6">
+          {playerId ? (
+            <DevelopmentRoadmap playerId={playerId} />
+          ) : (
+            <div className="text-center py-12 text-muted-foreground">
+              Create a player profile to see your development roadmap.
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="schools" className="mt-6">

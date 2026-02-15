@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, badges, headToHeadChallenges, statVerifications, playerCollegeMatches, playerCollegeInterests, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema, insertWearableConnectionSchema, recruitingEvents, insertRecruitingEventSchema, type RecruitingEvent, playerEventRegistrations, insertPlayerEventRegistrationSchema, colleges, ncaaEligibilityProgress, insertNcaaEligibilityProgressSchema, coachRecommendations, insertCoachRecommendationSchema, teams, teamMembers, skillBadges, activityStreaks, feedActivities, feedComments, feedCommentLikes, type InsertFeedComment, type FeedComment, highlightClips, personalRecords, playerGoals } from "@shared/schema";
+import { players, games, badges, headToHeadChallenges, statVerifications, playerCollegeMatches, playerCollegeInterests, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema, insertWearableConnectionSchema, recruitingEvents, insertRecruitingEventSchema, type RecruitingEvent, playerEventRegistrations, insertPlayerEventRegistrationSchema, colleges, ncaaEligibilityProgress, insertNcaaEligibilityProgressSchema, coachRecommendations, insertCoachRecommendationSchema, teams, teamMembers, skillBadges, activityStreaks, feedActivities, feedComments, feedCommentLikes, type InsertFeedComment, type FeedComment, highlightClips, personalRecords, playerGoals, recruitingTargets, recruitingContacts, insertRecruitingTargetSchema, insertRecruitingContactSchema, DIVISION_BENCHMARKS, BENCHMARK_STAT_LABELS } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { calculateAIRating, calculateProjection, type GameStats, type PlayerMetrics, type PeerStats, type AIRatingResult, type ProjectionResult } from "@shared/ai-rating-engine";
 import type { Sport } from "@shared/sports-config";
@@ -16411,6 +16411,249 @@ Only respond with the JSON array, no other text.`;
     } catch (error) {
       res.status(500).json({ message: "Failed to delete athletic measurement" });
     }
+  });
+
+  // === RECRUITING GAME PLAN ===
+
+  app.get("/api/players/:playerId/recruiting-targets", async (req, res) => {
+    const playerId = parseInt(req.params.playerId);
+    const targets = await storage.getRecruitingTargets(playerId);
+    res.json(targets);
+  });
+
+  app.post("/api/players/:playerId/recruiting-targets", async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.playerId);
+      const existing = await storage.getRecruitingTargets(playerId);
+      if (existing.length >= 15) {
+        return res.status(400).json({ message: "Maximum of 15 target schools allowed" });
+      }
+      const input = insertRecruitingTargetSchema.parse({ ...req.body, playerId });
+      const target = await storage.createRecruitingTarget(input);
+      res.status(201).json(target);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
+  app.patch("/api/recruiting-targets/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    const target = await storage.updateRecruitingTarget(id, req.body);
+    if (!target) return res.status(404).json({ message: "Target not found" });
+    res.json(target);
+  });
+
+  app.delete("/api/recruiting-targets/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    await storage.deleteRecruitingTarget(id);
+    res.json({ success: true });
+  });
+
+  app.get("/api/recruiting-targets/:targetId/contacts", async (req, res) => {
+    const targetId = parseInt(req.params.targetId);
+    const contacts = await storage.getRecruitingContacts(targetId);
+    res.json(contacts);
+  });
+
+  app.post("/api/recruiting-targets/:targetId/contacts", async (req, res) => {
+    try {
+      const targetId = parseInt(req.params.targetId);
+      const target = await storage.getRecruitingTarget(targetId);
+      if (!target) return res.status(404).json({ message: "Target not found" });
+      
+      const input = insertRecruitingContactSchema.parse({ ...req.body, targetId, playerId: target.playerId });
+      const contact = await storage.createRecruitingContact(input);
+      
+      await storage.updateRecruitingTarget(targetId, {
+        lastContactDate: new Date(),
+        status: target.status === 'researching' ? 'contacted' : target.status
+      });
+      
+      res.status(201).json(contact);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message });
+      }
+      throw err;
+    }
+  });
+
+  app.post("/api/recruiting-targets/:id/generate-email", async (req, res) => {
+    const id = parseInt(req.params.id);
+    const target = await storage.getRecruitingTarget(id);
+    if (!target) return res.status(404).json({ message: "Target not found" });
+    
+    const player = await storage.getPlayer(target.playerId);
+    if (!player) return res.status(404).json({ message: "Player not found" });
+    
+    const playerGames = player.games.filter(g => g.sport === 'basketball');
+    const gamesCount = playerGames.length;
+    
+    let avgStats = { ppg: 0, rpg: 0, apg: 0, fgPct: 0 };
+    if (gamesCount > 0) {
+      const totals = playerGames.reduce((acc, g) => ({
+        pts: acc.pts + (g.points || 0),
+        reb: acc.reb + (g.rebounds || 0),
+        ast: acc.ast + (g.assists || 0),
+        fgm: acc.fgm + (g.fgMade || 0),
+        fga: acc.fga + (g.fgAttempted || 0),
+      }), { pts: 0, reb: 0, ast: 0, fgm: 0, fga: 0 });
+      
+      avgStats = {
+        ppg: Math.round((totals.pts / gamesCount) * 10) / 10,
+        rpg: Math.round((totals.reb / gamesCount) * 10) / 10,
+        apg: Math.round((totals.ast / gamesCount) * 10) / 10,
+        fgPct: totals.fga > 0 ? Math.round((totals.fgm / totals.fga) * 1000) / 10 : 0,
+      };
+    }
+
+    try {
+      const prompt = `Write a brief, professional recruiting intro email from a high school basketball player to a college coach. Keep it under 150 words, friendly but respectful. Do NOT include subject line or email headers - just the body text.
+
+Player Info:
+- Name: ${player.name}
+- Position: ${player.position}
+- Height: ${player.height || 'Not specified'}
+- School: ${player.school || 'Not specified'}
+- Graduation Year: ${player.graduationYear || 'Not specified'}
+- GPA: ${player.gpa || 'Not specified'}
+- Stats (${gamesCount} games): ${avgStats.ppg} PPG, ${avgStats.rpg} RPG, ${avgStats.apg} APG, ${avgStats.fgPct}% FG
+- Grade: ${playerGames.length > 0 ? playerGames[playerGames.length - 1].grade : 'N/A'}
+- Tier: ${player.currentTier}
+
+Target School: ${target.collegeName} (${target.division})
+${target.contactName ? `Coach: ${target.contactName}` : ''}
+
+The email should:
+1. Express genuine interest in the program
+2. Briefly highlight key stats and achievements
+3. Mention academic readiness
+4. Ask about opportunities to be evaluated
+5. Keep a humble, eager tone`;
+
+      const result = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+      });
+      const emailText = result.text || '';
+      
+      await storage.updateRecruitingTarget(id, { generatedEmail: emailText });
+      
+      res.json({ email: emailText });
+    } catch (error) {
+      console.error('Error generating email:', error);
+      res.status(500).json({ message: "Failed to generate email" });
+    }
+  });
+
+  // === DEVELOPMENT ROADMAP ===
+
+  app.get("/api/players/:playerId/development-roadmap", async (req, res) => {
+    const playerId = parseInt(req.params.playerId);
+    const player = await storage.getPlayer(playerId);
+    if (!player) return res.status(404).json({ message: "Player not found" });
+    
+    const playerGames = player.games.filter(g => g.sport === 'basketball');
+    if (playerGames.length < 3) {
+      return res.json({ 
+        ready: false, 
+        message: "Log at least 3 games to unlock your Development Roadmap",
+        gamesNeeded: 3 - playerGames.length
+      });
+    }
+    
+    const position = player.position as 'Guard' | 'Wing' | 'Big';
+    const benchmarks = DIVISION_BENCHMARKS[position] || DIVISION_BENCHMARKS.Guard;
+    
+    const gamesCount = playerGames.length;
+    const totals = playerGames.reduce((acc, g) => ({
+      pts: acc.pts + (g.points || 0),
+      reb: acc.reb + (g.rebounds || 0),
+      ast: acc.ast + (g.assists || 0),
+      stl: acc.stl + (g.steals || 0),
+      fgm: acc.fgm + (g.fgMade || 0),
+      fga: acc.fga + (g.fgAttempted || 0),
+      thrm: acc.thrm + (g.threeMade || 0),
+      thra: acc.thra + (g.threeAttempted || 0),
+      ftm: acc.ftm + (g.ftMade || 0),
+      fta: acc.fta + (g.ftAttempted || 0),
+    }), { pts: 0, reb: 0, ast: 0, stl: 0, fgm: 0, fga: 0, thrm: 0, thra: 0, ftm: 0, fta: 0 });
+    
+    const playerStats = {
+      ppg: Math.round((totals.pts / gamesCount) * 10) / 10,
+      rpg: Math.round((totals.reb / gamesCount) * 10) / 10,
+      apg: Math.round((totals.ast / gamesCount) * 10) / 10,
+      spg: Math.round((totals.stl / gamesCount) * 10) / 10,
+      fgPct: totals.fga > 0 ? Math.round((totals.fgm / totals.fga) * 1000) / 10 : 0,
+      threePct: totals.thra > 0 ? Math.round((totals.thrm / totals.thra) * 1000) / 10 : 0,
+      ftPct: totals.fta > 0 ? Math.round((totals.ftm / totals.fta) * 1000) / 10 : 0,
+    };
+    
+    const divisions = ['D1', 'D2', 'D3', 'NAIA'] as const;
+    let currentLevel = 'Below NAIA';
+    let nextLevel = 'NAIA';
+    
+    for (const div of divisions) {
+      const bench = benchmarks[div];
+      const statKeys = Object.keys(bench) as (keyof typeof bench)[];
+      const metCount = statKeys.filter(key => playerStats[key] >= bench[key]).length;
+      const pct = metCount / statKeys.length;
+      if (pct >= 0.6) {
+        currentLevel = div;
+        const nextIdx = divisions.indexOf(div) - 1;
+        nextLevel = nextIdx >= 0 ? divisions[nextIdx] : 'Above D1';
+      }
+    }
+    
+    const nextBenchmark = currentLevel === 'Above D1' ? benchmarks.D1 : benchmarks[nextLevel as keyof typeof benchmarks] || benchmarks.NAIA;
+    
+    const gaps: Array<{stat: string, label: string, current: number, target: number, gap: number, percentOfTarget: number}> = [];
+    const statKeys = Object.keys(nextBenchmark) as (keyof typeof nextBenchmark)[];
+    
+    for (const key of statKeys) {
+      const current = playerStats[key];
+      const target = nextBenchmark[key];
+      const gap = target - current;
+      const percentOfTarget = Math.min(Math.round((current / target) * 100), 100);
+      
+      gaps.push({
+        stat: key,
+        label: BENCHMARK_STAT_LABELS[key] || key,
+        current,
+        target,
+        gap: Math.round(gap * 10) / 10,
+        percentOfTarget,
+      });
+    }
+    
+    const sortedGaps = [...gaps].sort((a, b) => a.percentOfTarget - b.percentOfTarget);
+    
+    const weeklyFocus = sortedGaps.filter(g => g.gap > 0).slice(0, 3).map(g => ({
+      stat: g.stat,
+      label: g.label,
+      current: g.current,
+      target: g.target,
+      improvement: `+${g.gap > 1 ? Math.ceil(g.gap) : g.gap}`,
+    }));
+    
+    const totalPct = gaps.reduce((sum, g) => sum + g.percentOfTarget, 0);
+    const overallPercentile = Math.round(totalPct / gaps.length);
+    
+    res.json({
+      ready: true,
+      position,
+      gamesAnalyzed: gamesCount,
+      playerStats,
+      currentLevel,
+      nextLevel,
+      overallPercentile,
+      gaps,
+      weeklyFocus,
+      benchmarks: nextBenchmark,
+    });
   });
 
   await seedDatabase();

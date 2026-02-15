@@ -102,7 +102,10 @@ import {
   type FitnessData, type InsertFitnessData,
   type WearableConnection, type InsertWearableConnection,
   type ProfileView, type InsertProfileView,
-  type AthleticMeasurement, type InsertAthleticMeasurement
+  type AthleticMeasurement, type InsertAthleticMeasurement,
+  recruitingTargets, recruitingContacts,
+  type RecruitingTarget, type InsertRecruitingTarget,
+  type RecruitingContact, type InsertRecruitingContact
 } from "@shared/schema";
 import { eq, desc, and, count, gte, lte, lt, sql, or, isNull, inArray } from "drizzle-orm";
 
@@ -654,6 +657,17 @@ export interface IStorage {
   getPlayerAthleticMeasurements(playerId: number): Promise<AthleticMeasurement[]>;
   getLatestAthleticMeasurement(playerId: number): Promise<AthleticMeasurement | null>;
   deleteAthleticMeasurement(id: number): Promise<void>;
+
+  // Recruiting Targets
+  getRecruitingTargets(playerId: number): Promise<RecruitingTarget[]>;
+  getRecruitingTarget(id: number): Promise<RecruitingTarget | undefined>;
+  createRecruitingTarget(target: InsertRecruitingTarget): Promise<RecruitingTarget>;
+  updateRecruitingTarget(id: number, updates: Partial<RecruitingTarget>): Promise<RecruitingTarget | undefined>;
+  deleteRecruitingTarget(id: number): Promise<void>;
+
+  // Recruiting Contacts
+  getRecruitingContacts(targetId: number): Promise<RecruitingContact[]>;
+  createRecruitingContact(contact: InsertRecruitingContact): Promise<RecruitingContact>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3842,6 +3856,39 @@ export class DatabaseStorage implements IStorage {
 
   async deleteAthleticMeasurement(id: number): Promise<void> {
     await db.delete(athleticMeasurements).where(eq(athleticMeasurements.id, id));
+  }
+
+  async getRecruitingTargets(playerId: number): Promise<RecruitingTarget[]> {
+    return await db.select().from(recruitingTargets).where(eq(recruitingTargets.playerId, playerId)).orderBy(recruitingTargets.createdAt);
+  }
+
+  async getRecruitingTarget(id: number): Promise<RecruitingTarget | undefined> {
+    const [target] = await db.select().from(recruitingTargets).where(eq(recruitingTargets.id, id));
+    return target;
+  }
+
+  async createRecruitingTarget(target: InsertRecruitingTarget): Promise<RecruitingTarget> {
+    const [created] = await db.insert(recruitingTargets).values(target).returning();
+    return created;
+  }
+
+  async updateRecruitingTarget(id: number, updates: Partial<RecruitingTarget>): Promise<RecruitingTarget | undefined> {
+    const [updated] = await db.update(recruitingTargets).set(updates).where(eq(recruitingTargets.id, id)).returning();
+    return updated;
+  }
+
+  async deleteRecruitingTarget(id: number): Promise<void> {
+    await db.delete(recruitingContacts).where(eq(recruitingContacts.targetId, id));
+    await db.delete(recruitingTargets).where(eq(recruitingTargets.id, id));
+  }
+
+  async getRecruitingContacts(targetId: number): Promise<RecruitingContact[]> {
+    return await db.select().from(recruitingContacts).where(eq(recruitingContacts.targetId, targetId)).orderBy(recruitingContacts.date);
+  }
+
+  async createRecruitingContact(contact: InsertRecruitingContact): Promise<RecruitingContact> {
+    const [created] = await db.insert(recruitingContacts).values(contact).returning();
+    return created;
   }
 }
 
