@@ -20,6 +20,7 @@ import { ShareModal } from "@/components/ShareModal";
 import { ShareablePlayerCard } from "@/components/ShareablePlayerCard";
 import { ShareableGameCard } from "@/components/ShareableGameCard";
 import { ShareCardCreator } from "@/components/ShareCardCreator";
+import { RecruitingCard } from "@/components/RecruitingCard";
 import { ShareableBadgeCard } from "@/components/ShareableBadgeCard";
 import { HighlightsGallery } from "@/components/HighlightsGallery";
 import { PlayerRatingsSection } from "@/components/PlayerRatingsSection";
@@ -33,7 +34,7 @@ import { GradeBadge } from "@/components/GradeBadge";
 import { PlayerArchetype } from "@/components/PlayerArchetype";
 import { EliteAchievements } from "@/components/EliteAchievements";
 import { CaliberBadge } from "@/components/CaliberBadge";
-import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Trophy, Share2, BarChart3, Medal, User, Users, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye, BookOpen, Phone, Save, Crosshair, ShieldCheck, PlayCircle, AlertTriangle, Package, Sparkles, Palette, Crown, Gem, CircleDot, Rss, MessageCircle, Sun, Cloud, Moon, Send, Ruler, Calendar, Video, Circle } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Trophy, Share2, BarChart3, Medal, User, Users, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye, BookOpen, Phone, Save, Crosshair, ShieldCheck, PlayCircle, AlertTriangle, Package, Sparkles, Palette, Crown, Gem, CircleDot, Rss, MessageCircle, Sun, Cloud, Moon, Send, Ruler, Calendar, Video, Circle, RefreshCw, Loader2 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS, FOOTBALL_POSITION_STATS, type FootballPosition } from "@shared/sports-config";
 import { useSport } from "@/components/SportToggle";
@@ -445,6 +446,90 @@ function RecruitingReadiness({ player }: { player: any }) {
         <p className="text-xs text-muted-foreground mt-3">
           Complete your profile to attract more recruiters. Edit your profile to fill in missing fields.
         </p>
+      )}
+    </Card>
+  );
+}
+
+function ScoutingReportCard({ player }: { player: any }) {
+  const { toast } = useToast();
+  const { data: reportData, isLoading: reportLoading } = useQuery<{ report: string | null; generatedAt: string | null }>({
+    queryKey: ['/api/players', player.id, 'scouting-report'],
+    queryFn: async () => {
+      const res = await fetch(`/api/players/${player.id}/scouting-report`);
+      if (!res.ok) return { report: null, generatedAt: null };
+      return res.json();
+    },
+  });
+
+  const generateMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest('POST', `/api/players/${player.id}/scouting-report`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/players', player.id, 'scouting-report'] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to generate scouting report", variant: "destructive" });
+    },
+  });
+
+  return (
+    <Card className="p-4" data-testid="card-scouting-report">
+      <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+        <h3 className="text-sm font-bold font-display uppercase tracking-wider flex items-center gap-2">
+          <FileText className="w-4 h-4 text-accent" /> AI Scouting Report
+        </h3>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => generateMutation.mutate()}
+          disabled={generateMutation.isPending}
+          data-testid="button-generate-scouting-report"
+        >
+          {generateMutation.isPending ? (
+            <>
+              <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
+              Generating...
+            </>
+          ) : reportData?.report ? (
+            <>
+              <RefreshCw className="w-3.5 h-3.5 mr-1" />
+              Regenerate
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-3.5 h-3.5 mr-1" />
+              Generate Report
+            </>
+          )}
+        </Button>
+      </div>
+
+      {reportLoading ? (
+        <div className="space-y-2">
+          <div className="h-4 bg-muted rounded w-full animate-pulse" />
+          <div className="h-4 bg-muted rounded w-5/6 animate-pulse" />
+          <div className="h-4 bg-muted rounded w-4/6 animate-pulse" />
+        </div>
+      ) : reportData?.report ? (
+        <div className="space-y-3">
+          <div className="text-sm text-foreground leading-relaxed whitespace-pre-line" data-testid="text-scouting-report">
+            {reportData.report}
+          </div>
+          {reportData.generatedAt && (
+            <p className="text-xs text-muted-foreground">
+              Generated {format(new Date(reportData.generatedAt), 'MMM d, yyyy')}
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className="text-center py-6">
+          <Sparkles className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">Generate an AI-powered scouting report based on your game stats.</p>
+          <p className="text-xs text-muted-foreground mt-1">Requires at least 3 logged games.</p>
+        </div>
       )}
     </Card>
   );
@@ -1432,6 +1517,7 @@ export default function PlayerDetail() {
   const [showAllGames, setShowAllGames] = useState(false);
   const [expandedGameId, setExpandedGameId] = useState<number | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [recruitingCardOpen, setRecruitingCardOpen] = useState(false);
   const [editForm, setEditForm] = useState<PlayerUpdate>({});
   const [athleticForm, setAthleticForm] = useState<{
     courtSprintSeconds?: number;
@@ -2424,8 +2510,19 @@ export default function PlayerDetail() {
                   >
                     <Rss className="w-3.5 h-3.5" /> Share Recruiting Profile
                   </Button>
+                  {isOwnProfile && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setRecruitingCardOpen(true)}
+                      className="gap-1.5"
+                      data-testid="button-recruiting-card"
+                    >
+                      <Share2 className="w-3.5 h-3.5" /> Recruiting Card
+                    </Button>
+                  )}
                   <Link href={`/report-card?player=${player.id}`}>
-                    <Button variant="outline" size="sm" className="gap-1.5" data-testid="button-generate-report">
+                    <Button variant="outline" size="sm" className="gap-1.5" data-testid="button-view-report-card">
                       <FileText className="w-3.5 h-3.5" /> Report
                     </Button>
                   </Link>
@@ -2481,7 +2578,26 @@ export default function PlayerDetail() {
       )}
 
       {isOwnProfile && player && (
-        <RecruitingReadiness player={player} />
+        <>
+          <RecruitingReadiness player={player} />
+          <ScoutingReportCard player={player} />
+        </>
+      )}
+
+      {isOwnProfile && player && (
+        <RecruitingCard
+          open={recruitingCardOpen}
+          onOpenChange={setRecruitingCardOpen}
+          player={player}
+          stats={{
+            gamesPlayed: games?.length || 0,
+            averageGrade: averageGrade !== "—" ? averageGrade : null,
+            ppg: parseFloat(avgPoints) || 0,
+            rpg: parseFloat(avgReb) || 0,
+            apg: parseFloat(avgAst) || 0,
+            badgeCount: badges?.length || 0,
+          }}
+        />
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

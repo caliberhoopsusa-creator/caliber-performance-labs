@@ -4841,6 +4841,134 @@ Respond in this exact JSON format:
     }
   });
 
+  // GET scouting report (public)
+  app.get('/api/players/:id/scouting-report', async (req: any, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      const player = await storage.getPlayer(playerId);
+      if (!player) return res.status(404).json({ message: "Player not found" });
+      res.json({
+        report: (player as any).scoutingReport || null,
+        generatedAt: (player as any).scoutingReportGeneratedAt?.toISOString() || null,
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch scouting report" });
+    }
+  });
+
+  // POST generate scouting report (authenticated, owner-only)
+  app.post('/api/players/:id/scouting-report', isAuthenticated, async (req: any, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      const player = await storage.getPlayer(playerId);
+      if (!player) return res.status(404).json({ message: "Player not found" });
+      
+      const authorized = await canModifyPlayer(req, playerId);
+      if (!authorized) return res.status(403).json({ message: "Not authorized" });
+
+      const playerGames = await storage.getGamesByPlayerId(playerId);
+      const playerBadges = await storage.getPlayerBadges(playerId);
+
+      if (playerGames.length < 3) {
+        return res.status(400).json({ message: "Need at least 3 games logged to generate a scouting report" });
+      }
+
+      const gamesPlayed = playerGames.length;
+      const ppg = (playerGames.reduce((a, g) => a + g.points, 0) / gamesPlayed).toFixed(1);
+      const rpg = (playerGames.reduce((a, g) => a + g.rebounds, 0) / gamesPlayed).toFixed(1);
+      const apg = (playerGames.reduce((a, g) => a + g.assists, 0) / gamesPlayed).toFixed(1);
+      const spg = (playerGames.reduce((a, g) => a + (g.steals || 0), 0) / gamesPlayed).toFixed(1);
+      const bpg = (playerGames.reduce((a, g) => a + (g.blocks || 0), 0) / gamesPlayed).toFixed(1);
+
+      const GRADE_VALUES: Record<string, number> = {
+        'A+': 100, 'A': 95, 'A-': 90, 'B+': 88, 'B': 85, 'B-': 80,
+        'C+': 78, 'C': 75, 'C-': 70, 'D+': 68, 'D': 65, 'D-': 60, 'F': 50,
+      };
+      const totalGradeValue = playerGames.reduce((acc, g) => acc + (GRADE_VALUES[g.grade?.trim().toUpperCase() || ''] || 0), 0);
+      const avgGradeValue = totalGradeValue / gamesPlayed;
+      let averageGrade = 'N/A';
+      if (avgGradeValue >= 97) averageGrade = 'A+';
+      else if (avgGradeValue >= 92) averageGrade = 'A';
+      else if (avgGradeValue >= 87) averageGrade = 'A-';
+      else if (avgGradeValue >= 84) averageGrade = 'B+';
+      else if (avgGradeValue >= 81) averageGrade = 'B';
+      else if (avgGradeValue >= 77) averageGrade = 'B-';
+      else if (avgGradeValue >= 74) averageGrade = 'C+';
+      else if (avgGradeValue >= 71) averageGrade = 'C';
+      else if (avgGradeValue >= 67) averageGrade = 'C-';
+      else if (avgGradeValue >= 64) averageGrade = 'D+';
+      else if (avgGradeValue >= 61) averageGrade = 'D';
+      else if (avgGradeValue >= 55) averageGrade = 'D-';
+      else averageGrade = 'F';
+
+      const sortedGames = [...playerGames].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      let trend = 'stable';
+      if (sortedGames.length >= 6) {
+        const recentAvg = sortedGames.slice(0, 3).reduce((acc, g) => acc + (GRADE_VALUES[g.grade?.trim().toUpperCase() || ''] || 0), 0) / 3;
+        const previousAvg = sortedGames.slice(3, 6).reduce((acc, g) => acc + (GRADE_VALUES[g.grade?.trim().toUpperCase() || ''] || 0), 0) / 3;
+        if (recentAvg > previousAvg + 3) trend = 'improving';
+        else if (recentAvg < previousAvg - 3) trend = 'declining';
+      }
+
+      const badgeNames = playerBadges.map(b => {
+        const def = (BADGE_DEFINITIONS as any)[b.badgeType];
+        return def ? def.name : b.badgeType;
+      });
+
+      const { name, position, height, school, graduationYear, city, state, currentTier } = player;
+
+      const prompt = `You are an elite basketball scout writing a professional scouting report for a recruiting evaluation. Write a concise, professional 3-4 paragraph scouting report based on the following player data. Use basketball terminology. Be honest but constructive - highlight strengths prominently and frame weaknesses as areas of development. Write in third person.
+
+Player: ${name}
+Position: ${position}
+Height: ${height || 'Not listed'}
+School: ${school || 'Not listed'}
+Class: ${graduationYear ? `Class of ${graduationYear}` : 'Not listed'}
+Location: ${[city, state].filter(Boolean).join(', ') || 'Not listed'}
+Games Played: ${gamesPlayed}
+Overall Grade: ${averageGrade}
+Performance Trend: ${trend}
+
+Season Averages:
+- Points: ${ppg} PPG
+- Rebounds: ${rpg} RPG
+- Assists: ${apg} APG
+- Steals: ${spg} SPG
+- Blocks: ${bpg} BPG
+
+Badges Earned: ${badgeNames.join(', ') || 'None yet'}
+Tier: ${currentTier}
+
+Write a scouting report that a college coach would find useful. Include:
+1. A summary of the player's game and role
+2. Key strengths with specific stat references
+3. Areas for development
+4. Overall evaluation and potential
+
+Keep it to 3-4 short paragraphs. No headers or bullet points - write in flowing prose. Do not use the word "prospect" more than once.`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+      });
+
+      const reportText = response.text?.trim() || '';
+      if (!reportText) {
+        return res.status(500).json({ message: "AI failed to generate report" });
+      }
+
+      await db.update(players).set({
+        scoutingReport: reportText,
+        scoutingReportGeneratedAt: new Date(),
+      }).where(eq(players.id, playerId));
+
+      res.json({ report: reportText, generatedAt: new Date().toISOString() });
+    } catch (error) {
+      console.error('Error generating scouting report:', error);
+      res.status(500).json({ message: "Failed to generate scouting report" });
+    }
+  });
+
   // Text-based play analysis (for manual play-by-play input) - Premium Feature
   app.post('/api/analyze-plays', requiresSubscription, async (req: any, res) => {
     try {

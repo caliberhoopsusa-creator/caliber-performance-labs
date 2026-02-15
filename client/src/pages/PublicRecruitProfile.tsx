@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Loader2, MapPin, GraduationCap, Trophy, Award, Share2, ExternalLink, Star, Target, Activity, TrendingUp, TrendingDown, Minus, Flame, Mail, Copy, Shield, Zap, Clock, CheckCircle, Eye, BookOpen, Video } from "lucide-react";
+import { Loader2, MapPin, GraduationCap, Trophy, Award, Share2, ExternalLink, Star, Target, Activity, TrendingUp, TrendingDown, Minus, Flame, Mail, Copy, Shield, Zap, Clock, CheckCircle, Eye, BookOpen, Video, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { CaliberLogo } from "@/components/CaliberLogo";
@@ -214,6 +214,16 @@ export default function PublicRecruitProfile() {
     queryFn: async () => {
       const res = await fetch(`/api/public/players/${id}/profile`);
       if (!res.ok) throw new Error('Player not found');
+      return res.json();
+    },
+    enabled: !!id,
+  });
+
+  const { data: reportData } = useQuery<{ report: string | null; generatedAt: string | null }>({
+    queryKey: ['/api/players', id, 'scouting-report'],
+    queryFn: async () => {
+      const res = await fetch(`/api/players/${id}/scouting-report`);
+      if (!res.ok) return { report: null, generatedAt: null };
       return res.json();
     },
     enabled: !!id,
@@ -533,6 +543,22 @@ export default function PublicRecruitProfile() {
               </div>
             )}
           </Card>
+
+          {reportData?.report && (
+            <Card className="p-4">
+              <h2 className="text-sm font-bold font-display uppercase tracking-wider mb-3 flex items-center gap-2 text-white/70">
+                <FileText className="w-4 h-4 text-accent" /> Scouting Report
+              </h2>
+              <div className="text-sm text-white/70 leading-relaxed whitespace-pre-line" data-testid="text-public-scouting-report">
+                {reportData.report}
+              </div>
+              {reportData.generatedAt && (
+                <p className="text-[10px] text-white/30 mt-3">
+                  AI-generated report - {format(new Date(reportData.generatedAt), 'MMM d, yyyy')}
+                </p>
+              )}
+            </Card>
+          )}
 
           {bestGame && (
             <Card className="p-4">
