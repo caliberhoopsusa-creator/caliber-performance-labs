@@ -109,33 +109,28 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
 
   const playerSections: NavSection[] = [
     {
-      title: "Essentials",
+      title: "Main",
       items: [
+        { href: playerId ? `/players/${playerId}` : "/", label: "My Profile", icon: UserCircle },
         { href: "/community?tab=feed", label: "Feed", icon: Rss },
-        { href: playerId ? `/players/${playerId}` : "/", label: "Player Profile", icon: UserCircle },
+        { href: "/discover/highlights", label: "Highlights", icon: Film },
+        { href: "/recruiting", label: "Recruiting", icon: GraduationCap },
         { href: "/analyze", label: "Log Game", icon: PlusCircle },
-        { href: "/performance", label: "Performance", icon: Activity },
-      ],
-    },
-    {
-      title: "Community",
-      items: [
-        { href: "/community", label: "Community", icon: UsersRound },
-        { href: "/discover/highlights", label: "Discover", icon: Film },
-        { href: "/community?tab=stories", label: "Stories", icon: BookOpen },
-        { href: "/whos-watching", label: "Who's Watching", icon: Binoculars },
       ],
     },
   ];
 
   const playerMoreItems: NavItem[] = [
+    { href: "/performance", label: "Performance", icon: Activity },
+    { href: "/analytics", label: "Analytics", icon: BarChart3 },
+    { href: "/whos-watching", label: "Who's Watching", icon: Binoculars },
+    { href: "/community", label: "Community", icon: UsersRound },
+    { href: "/community?tab=stories", label: "Stories", icon: BookOpen },
     { href: "/video", label: "Video Analysis", icon: Video, premium: "pro" },
-    { href: "/schedule", label: "Schedule", icon: CalendarDays },
-    { href: "/highlights", label: "Highlights", icon: Film },
+    { href: "/highlights", label: "My Highlights", icon: Camera },
     { href: "/reel-builder", label: "Reel Builder", icon: Wand2 },
     { href: "/scout", label: "Scout Hub", icon: Eye },
-    { href: "/analytics", label: "Analytics", icon: BarChart3 },
-    { href: "/recruiting", label: "Recruiting", icon: GraduationCap },
+    { href: "/schedule", label: "Schedule", icon: CalendarDays },
     { href: "/leagues", label: "League Hub", icon: Medal },
     { href: "/teams", label: "Teams", icon: Users },
   ];
@@ -391,11 +386,11 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
     { href: "/discover/players", icon: Users, label: "Directory" },
     { href: "/discover/highlights", icon: Film, label: "Discover" },
   ] : isPlayer ? [
-    { href: "/community", icon: Rss, label: "Feed" },
+    { href: playerId ? `/players/${playerId}` : "/", icon: UserCircle, label: "Profile" },
+    { href: "/community?tab=feed", icon: Rss, label: "Feed" },
     { href: "/analyze", icon: PlusCircle, label: "Log", featured: true },
-    { href: playerId ? `/players/${playerId}` : "/players", icon: UserCircle, label: "Profile" },
-    { href: "/analytics", icon: BarChart3, label: "Analytics" },
-    { href: "/discover/highlights", icon: Film, label: "Discover" },
+    { href: "/recruiting", icon: GraduationCap, label: "Recruiting" },
+    { href: "/discover/highlights", icon: Film, label: "Highlights" },
   ] : [
     { href: "/", icon: LayoutDashboard, label: "Home" },
     { href: "/analyze", icon: PlusCircle, label: "Log", featured: true },
