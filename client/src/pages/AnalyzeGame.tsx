@@ -25,6 +25,7 @@ import { FOOTBALL_POSITION_STATS, FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS, 
 import { motion } from "framer-motion";
 import { useXPNotification, XP_ACTIONS } from "@/components/XPToast";
 import { useCelebrationContext } from "@/components/CelebrationOverlay";
+import { useToast } from "@/hooks/use-toast";
 
 const FOOTBALL_STAT_LABELS: Record<string, string> = {
   completions: "Completions",
@@ -100,7 +101,26 @@ export default function AnalyzeGame() {
   
   const { data: players } = usePlayers();
   const { mutate, isPending, data: resultGame } = useCreateGame();
-  
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (resultGame && (resultGame as any).newRecords && (resultGame as any).newRecords.length > 0) {
+      const newRecords = (resultGame as any).newRecords;
+      toast({
+        title: "New Career High!",
+        description: `You set ${newRecords.length} new personal record${newRecords.length > 1 ? 's' : ''}!`,
+      });
+    }
+    
+    if ((resultGame as any)?.completedGoals && (resultGame as any).completedGoals.length > 0) {
+      const completed = (resultGame as any).completedGoals;
+      toast({
+        title: "Goal Completed!",
+        description: `You hit ${completed.length} goal${completed.length > 1 ? 's' : ''}! Keep pushing!`,
+      });
+    }
+  }, [resultGame, toast]);
+
   if (resultGame) {
     return <ReportCardView game={resultGame} onReset={() => window.location.reload()} />;
   }

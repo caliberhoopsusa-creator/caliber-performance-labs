@@ -34,7 +34,7 @@ import { GradeBadge } from "@/components/GradeBadge";
 import { PlayerArchetype } from "@/components/PlayerArchetype";
 import { EliteAchievements } from "@/components/EliteAchievements";
 import { CaliberBadge } from "@/components/CaliberBadge";
-import { ArrowLeft, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Trophy, Share2, BarChart3, Medal, User, Users, ChevronRight, ChevronDown, TrendingUp, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye, BookOpen, Phone, Save, Crosshair, ShieldCheck, PlayCircle, AlertTriangle, Package, Sparkles, Palette, Crown, Gem, CircleDot, Rss, MessageCircle, Sun, Cloud, Moon, Send, Ruler, Calendar, Video, Circle, RefreshCw, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowUp, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, CheckCircle2, Flame, Trophy, Share2, BarChart3, Medal, User, Users, ChevronRight, ChevronDown, TrendingUp, TrendingDown, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye, BookOpen, Phone, Save, Crosshair, ShieldCheck, PlayCircle, AlertTriangle, Package, Sparkles, Palette, Crown, Gem, CircleDot, Rss, MessageCircle, Sun, Cloud, Moon, Send, Ruler, Calendar, Video, Circle, RefreshCw, Loader2 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS, FOOTBALL_POSITION_STATS, type FootballPosition } from "@shared/sports-config";
 import { useSport } from "@/components/SportToggle";
@@ -529,6 +529,324 @@ function ScoutingReportCard({ player }: { player: any }) {
           <Sparkles className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
           <p className="text-sm text-muted-foreground">Generate an AI-powered scouting report based on your game stats.</p>
           <p className="text-xs text-muted-foreground mt-1">Requires at least 3 logged games.</p>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+const GOAL_STAT_OPTIONS = [
+  { value: 'ppg', label: 'Points Per Game (PPG)', unit: '' },
+  { value: 'rpg', label: 'Rebounds Per Game (RPG)', unit: '' },
+  { value: 'apg', label: 'Assists Per Game (APG)', unit: '' },
+  { value: 'spg', label: 'Steals Per Game (SPG)', unit: '' },
+  { value: 'fg_pct', label: 'Field Goal %', unit: '%' },
+  { value: 'three_pct', label: '3-Point %', unit: '%' },
+  { value: 'games_played', label: 'Games Played', unit: '' },
+];
+
+const TIMEFRAME_OPTIONS = [
+  { value: 'weekly', label: 'This Week' },
+  { value: 'monthly', label: 'This Month' },
+  { value: 'season', label: 'Season' },
+];
+
+function GoalTracker({ playerId }: { playerId: number }) {
+  const [showAddGoal, setShowAddGoal] = useState(false);
+  const [newGoalStat, setNewGoalStat] = useState('ppg');
+  const [newGoalTarget, setNewGoalTarget] = useState('');
+  const [newGoalTimeframe, setNewGoalTimeframe] = useState('season');
+  const { toast } = useToast();
+
+  const { data: goals, isLoading } = useQuery<Array<{
+    id: number;
+    statName: string;
+    targetValue: string;
+    currentValue: string;
+    timeframe: string;
+    status: string;
+    completedAt: string | null;
+    createdAt: string;
+  }>>({
+    queryKey: ['/api/players', playerId, 'player-goals'],
+    queryFn: async () => {
+      const res = await fetch(`/api/players/${playerId}/player-goals`);
+      if (!res.ok) return [];
+      return res.json();
+    },
+  });
+
+  const createGoalMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest('POST', `/api/players/${playerId}/player-goals`, {
+        statName: newGoalStat,
+        targetValue: newGoalTarget,
+        timeframe: newGoalTimeframe,
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/players', playerId, 'player-goals'] });
+      setShowAddGoal(false);
+      setNewGoalTarget('');
+      toast({ title: "Goal Created", description: "Track your progress as you play!" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to create goal", variant: "destructive" });
+    },
+  });
+
+  const deleteGoalMutation = useMutation({
+    mutationFn: async (goalId: number) => {
+      await apiRequest('DELETE', `/api/players/${playerId}/player-goals/${goalId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/players', playerId, 'player-goals'] });
+    },
+  });
+
+  const activeGoals = goals?.filter(g => g.status === 'active') || [];
+  const completedGoals = goals?.filter(g => g.status === 'completed') || [];
+
+  return (
+    <Card className="p-4" data-testid="card-goal-tracker">
+      <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+        <h3 className="text-sm font-bold font-display uppercase tracking-wider flex items-center gap-2">
+          <Target className="w-4 h-4 text-accent" /> Goals
+        </h3>
+        <Button variant="ghost" size="icon" onClick={() => setShowAddGoal(!showAddGoal)} data-testid="button-add-goal">
+          <Plus className="w-4 h-4" />
+        </Button>
+      </div>
+
+      {showAddGoal && (
+        <div className="bg-muted/50 rounded-md p-3 mb-3 space-y-2" data-testid="form-add-goal">
+          <Select value={newGoalStat} onValueChange={setNewGoalStat}>
+            <SelectTrigger data-testid="select-goal-stat">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {GOAL_STAT_OPTIONS.map(opt => (
+                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="flex gap-2 flex-wrap">
+            <Input
+              type="number"
+              placeholder="Target value"
+              value={newGoalTarget}
+              onChange={e => setNewGoalTarget(e.target.value)}
+              className="flex-1"
+              data-testid="input-goal-target"
+            />
+            <Select value={newGoalTimeframe} onValueChange={setNewGoalTimeframe}>
+              <SelectTrigger className="w-28" data-testid="select-goal-timeframe">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {TIMEFRAME_OPTIONS.map(opt => (
+                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button
+            size="sm"
+            onClick={() => createGoalMutation.mutate()}
+            disabled={!newGoalTarget || createGoalMutation.isPending}
+            className="w-full"
+            data-testid="button-submit-goal"
+          >
+            {createGoalMutation.isPending ? 'Creating...' : 'Set Goal'}
+          </Button>
+        </div>
+      )}
+
+      {activeGoals.length === 0 && completedGoals.length === 0 && !showAddGoal && (
+        <div className="text-center py-4">
+          <Target className="w-6 h-6 text-muted-foreground mx-auto mb-1.5" />
+          <p className="text-xs text-muted-foreground">Set stat goals to track your progress</p>
+        </div>
+      )}
+
+      {activeGoals.map(goal => {
+        const current = parseFloat(goal.currentValue);
+        const target = parseFloat(goal.targetValue);
+        const progress = Math.min(100, target > 0 ? (current / target) * 100 : 0);
+        const statLabel = GOAL_STAT_OPTIONS.find(o => o.value === goal.statName)?.label || goal.statName;
+        const timeLabel = TIMEFRAME_OPTIONS.find(o => o.value === goal.timeframe)?.label || goal.timeframe;
+        const unit = GOAL_STAT_OPTIONS.find(o => o.value === goal.statName)?.unit || '';
+
+        return (
+          <div key={goal.id} className="mb-3 last:mb-0" data-testid={`goal-${goal.id}`}>
+            <div className="flex items-center justify-between gap-2 mb-1 flex-wrap">
+              <p className="text-xs font-medium">{statLabel}</p>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] text-muted-foreground">{timeLabel}</span>
+                <button onClick={() => deleteGoalMutation.mutate(goal.id)} className="text-muted-foreground hover-elevate p-1 rounded" data-testid={`button-delete-goal-${goal.id}`}>
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+            <div className="h-2 bg-muted rounded-full overflow-hidden">
+              <div
+                className="h-full bg-accent rounded-full transition-all duration-500"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between gap-2 mt-1 flex-wrap">
+              <span className="text-[10px] text-muted-foreground">{current.toFixed(1)}{unit}</span>
+              <span className="text-[10px] text-muted-foreground">Target: {target}{unit}</span>
+            </div>
+          </div>
+        );
+      })}
+
+      {completedGoals.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-border">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2">Completed</p>
+          {completedGoals.slice(0, 3).map(goal => {
+            const statLabel = GOAL_STAT_OPTIONS.find(o => o.value === goal.statName)?.label || goal.statName;
+            return (
+              <div key={goal.id} className="flex items-center gap-2 mb-1.5" data-testid={`goal-completed-${goal.id}`}>
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                <span className="text-xs text-muted-foreground">{statLabel}: {parseFloat(goal.targetValue)}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function PersonalRecordsCard({ playerId }: { playerId: number }) {
+  const { data: records } = useQuery<Array<{
+    id: number;
+    statName: string;
+    value: number;
+    achievedAt: string | null;
+  }>>({
+    queryKey: ['/api/players', playerId, 'personal-records'],
+    queryFn: async () => {
+      const res = await fetch(`/api/players/${playerId}/personal-records`);
+      if (!res.ok) return [];
+      return res.json();
+    },
+  });
+
+  if (!records || records.length === 0) return null;
+
+  const STAT_DISPLAY: Record<string, { label: string; icon: typeof Flame }> = {
+    points: { label: 'PTS', icon: Zap },
+    rebounds: { label: 'REB', icon: ArrowUp },
+    assists: { label: 'AST', icon: Share2 },
+    steals: { label: 'STL', icon: Shield },
+    blocks: { label: 'BLK', icon: ShieldCheck },
+    threeMade: { label: '3PM', icon: Target },
+  };
+
+  return (
+    <Card className="p-4" data-testid="card-personal-records">
+      <h3 className="text-sm font-bold font-display uppercase tracking-wider flex items-center gap-2 mb-3">
+        <Trophy className="w-4 h-4 text-accent" /> Career Highs
+      </h3>
+      <div className="grid grid-cols-3 gap-2">
+        {records.map(record => {
+          const display = STAT_DISPLAY[record.statName] || { label: record.statName, icon: Award };
+          const Icon = display.icon;
+          return (
+            <div key={record.id} className="bg-muted/50 rounded-md p-3 text-center" data-testid={`record-${record.statName}`}>
+              <Icon className="w-3.5 h-3.5 text-muted-foreground mx-auto mb-1" />
+              <p className="text-lg font-bold font-display">{record.value}</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{display.label}</p>
+            </div>
+          );
+        })}
+      </div>
+    </Card>
+  );
+}
+
+function WeeklyRecapSection({ playerId, playerName }: { playerId: number; playerName: string }) {
+  const { data: recap } = useQuery<{
+    hasData: boolean;
+    playerName?: string;
+    gamesPlayed?: number;
+    avgGrade?: string;
+    ppg?: number;
+    rpg?: number;
+    apg?: number;
+    ppgChange?: number;
+    badgesEarned?: number;
+    bestGame?: { id: number; opponent: string; points: number; rebounds: number; assists: number; grade: string } | null;
+  }>({
+    queryKey: ['/api/players', playerId, 'weekly-recap'],
+    queryFn: async () => {
+      const res = await fetch(`/api/players/${playerId}/weekly-recap`);
+      if (!res.ok) return { hasData: false };
+      return res.json();
+    },
+  });
+
+  if (!recap?.hasData) return null;
+
+  const GRADE_COLORS: Record<string, string> = {
+    'A+': 'text-emerald-500', 'A': 'text-emerald-500', 'A-': 'text-emerald-500',
+    'B+': 'text-blue-500', 'B': 'text-blue-500', 'B-': 'text-blue-500',
+    'C+': 'text-amber-500', 'C': 'text-amber-500', 'C-': 'text-amber-500',
+    'D+': 'text-orange-500', 'D': 'text-orange-500', 'D-': 'text-orange-500',
+    'F': 'text-red-500',
+  };
+
+  return (
+    <Card className="p-4" data-testid="card-weekly-recap">
+      <h3 className="text-sm font-bold font-display uppercase tracking-wider flex items-center gap-2 mb-3">
+        <Calendar className="w-4 h-4 text-accent" /> This Week
+      </h3>
+      
+      <div className="grid grid-cols-4 gap-2 mb-3">
+        <div className="bg-muted/50 rounded-md p-2.5 text-center">
+          <p className="text-lg font-bold font-display">{recap.gamesPlayed}</p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Games</p>
+        </div>
+        <div className="bg-muted/50 rounded-md p-2.5 text-center">
+          <p className={`text-lg font-bold font-display ${GRADE_COLORS[recap.avgGrade || ''] || ''}`}>{recap.avgGrade}</p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Grade</p>
+        </div>
+        <div className="bg-muted/50 rounded-md p-2.5 text-center">
+          <p className="text-lg font-bold font-display">{recap.ppg}</p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">PPG</p>
+        </div>
+        <div className="bg-muted/50 rounded-md p-2.5 text-center">
+          <p className="text-lg font-bold font-display">{recap.badgesEarned}</p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Badges</p>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between gap-2 flex-wrap text-xs text-muted-foreground">
+        <div className="flex items-center gap-1.5">
+          <span>{recap.rpg} RPG</span>
+          <span className="text-border">|</span>
+          <span>{recap.apg} APG</span>
+        </div>
+        {recap.ppgChange !== undefined && recap.ppgChange !== 0 && (
+          <div className={`flex items-center gap-0.5 ${recap.ppgChange > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+            {recap.ppgChange > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+            <span>{recap.ppgChange > 0 ? '+' : ''}{recap.ppgChange} PPG vs last week</span>
+          </div>
+        )}
+      </div>
+
+      {recap.bestGame && (
+        <div className="mt-3 pt-3 border-t border-border">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Best Game</p>
+          <p className="text-xs">
+            <span className="font-medium">vs {recap.bestGame.opponent}</span>
+            <span className="text-muted-foreground"> — {recap.bestGame.points}pts, {recap.bestGame.rebounds}reb, {recap.bestGame.assists}ast</span>
+            {recap.bestGame.grade && <span className={`ml-1 font-bold ${GRADE_COLORS[recap.bestGame.grade] || ''}`}>{recap.bestGame.grade}</span>}
+          </p>
         </div>
       )}
     </Card>
@@ -2583,6 +2901,10 @@ export default function PlayerDetail() {
           <ScoutingReportCard player={player} />
         </>
       )}
+      {player && <PersonalRecordsCard playerId={player.id} />}
+      {player && <WeeklyRecapSection playerId={player.id} playerName={player.name} />}
+
+      {isOwnProfile && player && <GoalTracker playerId={player.id} />}
 
       {isOwnProfile && player && (
         <RecruitingCard

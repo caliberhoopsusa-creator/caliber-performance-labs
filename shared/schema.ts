@@ -2698,6 +2698,42 @@ export const insertUserInventorySchema = createInsertSchema(userInventory).omit(
 export type InsertUserInventory = z.infer<typeof insertUserInventorySchema>;
 export type UserInventory = typeof userInventory.$inferSelect;
 
+// === PERSONAL RECORDS (Career Highs) ===
+export const personalRecords = pgTable("personal_records", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  statName: text("stat_name").notNull(), // 'points', 'rebounds', 'assists', 'steals', 'blocks', 'threeMade'
+  value: integer("value").notNull(),
+  gameId: integer("game_id").references(() => games.id, { onDelete: "set null" }),
+  previousValue: integer("previous_value"), // what the old record was
+  achievedAt: timestamp("achieved_at").defaultNow(),
+}, (table) => ({
+  playerStatIdx: unique("personal_records_player_stat").on(table.playerId, table.statName),
+}));
+
+export const insertPersonalRecordSchema = createInsertSchema(personalRecords).omit({ id: true, achievedAt: true });
+export type InsertPersonalRecord = z.infer<typeof insertPersonalRecordSchema>;
+export type PersonalRecord = typeof personalRecords.$inferSelect;
+
+// === PLAYER GOALS (Stat-based goals with timeframes) ===
+export const playerGoals = pgTable("player_goals", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  statName: text("stat_name").notNull(), // 'ppg', 'rpg', 'apg', 'spg', 'fg_pct', 'three_pct', 'games_played'
+  targetValue: decimal("target_value", { precision: 6, scale: 2 }).notNull(),
+  currentValue: decimal("current_value", { precision: 6, scale: 2 }).notNull().default("0"),
+  timeframe: text("timeframe").notNull().default("season"), // 'weekly', 'monthly', 'season'
+  status: text("status").notNull().default("active"), // 'active', 'completed', 'failed'
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  playerIdIdx: index("player_goals_player_id_idx").on(table.playerId),
+}));
+
+export const insertPlayerGoalSchema = createInsertSchema(playerGoals).omit({ id: true, currentValue: true, status: true, completedAt: true, createdAt: true });
+export type InsertPlayerGoal = z.infer<typeof insertPlayerGoalSchema>;
+export type PlayerGoal = typeof playerGoals.$inferSelect;
+
 export const insertCoinTransactionSchema = createInsertSchema(coinTransactions).omit({ id: true, createdAt: true });
 export type InsertCoinTransaction = z.infer<typeof insertCoinTransactionSchema>;
 export type CoinTransaction = typeof coinTransactions.$inferSelect;

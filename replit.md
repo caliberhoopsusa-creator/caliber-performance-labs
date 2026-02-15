@@ -47,7 +47,10 @@ Preferred communication style: Simple, everyday language.
 - **Feed Comments & Replies**: Threaded commenting on all feed activity items with nested replies, comment likes, and delete. Tables: `feed_comments`, `feed_comment_likes`. APIs: `GET/POST /api/feed/:activityId/comments`, `POST /api/feed/comments/:id/like`.
 - **Feed Repost with Caption**: Share any feed activity to your own feed with optional caption. API: `POST /api/feed/:activityId/repost`.
 - **Enhanced Social Profiles**: Bio display with "add bio" prompt, profile completion bar (8 fields tracked), activity summary (badges, games this month) alongside follower/following counts.
-- **Celebration System**: Full-screen confetti/particle overlays for achievements and XP gain toasts.
+- **Personal Bests**: Automatic career high detection on game logging. Tracks points, rebounds, assists, steals, blocks, and 3-pointers made. Shows career highs grid on player profiles. Celebration toast on new records. Table: `personal_records`. APIs: `GET /api/players/:id/personal-records`. Detection runs automatically in game creation flow.
+- **Weekly Performance Recap**: Auto-generated weekly summary showing games played, average grade, PPG/RPG/APG, badges earned, best game, and week-over-week PPG change. Displayed on player profile. API: `GET /api/players/:id/weekly-recap`.
+- **Goal Setting & Tracking**: Players set stat goals (PPG, RPG, APG, SPG, FG%, 3PT%, games played) with weekly/monthly/season timeframes. Progress bars on profile. Auto-updates when games are logged. Celebration toast on goal completion. Table: `player_goals`. APIs: `GET/POST /api/players/:id/player-goals`, `DELETE /api/players/:id/player-goals/:goalId`.
+- **Celebration System**: Full-screen confetti/particle overlays for achievements, XP gain toasts, career high toasts, and goal completion toasts.
 - **Skeleton Loading**: Comprehensive skeleton loading states on key pages for improved perceived performance.
 - **Live Game Mode**: Coach-only real-time stat tracking with multi-player selection, large tap-target buttons, undo functionality, haptic feedback, audio cues, and offline capability with data syncing.
 - **Scheduling**: Practice scheduler and calendar.

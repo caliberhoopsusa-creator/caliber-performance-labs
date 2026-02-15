@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, badges, headToHeadChallenges, statVerifications, playerCollegeMatches, playerCollegeInterests, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema, insertWearableConnectionSchema, recruitingEvents, insertRecruitingEventSchema, type RecruitingEvent, playerEventRegistrations, insertPlayerEventRegistrationSchema, colleges, ncaaEligibilityProgress, insertNcaaEligibilityProgressSchema, coachRecommendations, insertCoachRecommendationSchema, teams, teamMembers, skillBadges, activityStreaks, feedActivities, feedComments, feedCommentLikes, type InsertFeedComment, type FeedComment, highlightClips } from "@shared/schema";
+import { players, games, badges, headToHeadChallenges, statVerifications, playerCollegeMatches, playerCollegeInterests, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema, insertWearableConnectionSchema, recruitingEvents, insertRecruitingEventSchema, type RecruitingEvent, playerEventRegistrations, insertPlayerEventRegistrationSchema, colleges, ncaaEligibilityProgress, insertNcaaEligibilityProgressSchema, coachRecommendations, insertCoachRecommendationSchema, teams, teamMembers, skillBadges, activityStreaks, feedActivities, feedComments, feedCommentLikes, type InsertFeedComment, type FeedComment, highlightClips, personalRecords, playerGoals } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { calculateAIRating, calculateProjection, type GameStats, type PlayerMetrics, type PeerStats, type AIRatingResult, type ProjectionResult } from "@shared/ai-rating-engine";
 import type { Sport } from "@shared/sports-config";
@@ -2987,6 +2987,126 @@ export async function registerRoutes(
 
       const game = await storage.createGame(gameData);
       
+      // Check for personal records (career highs)
+      const newRecords: Array<{statName: string, value: number, previousValue: number | null}> = [];
+      const TRACKED_STATS = [
+        { name: 'points', field: 'points' },
+        { name: 'rebounds', field: 'rebounds' },
+        { name: 'assists', field: 'assists' },
+        { name: 'steals', field: 'steals' },
+        { name: 'blocks', field: 'blocks' },
+        { name: 'threeMade', field: 'threeMade' },
+      ];
+
+      for (const stat of TRACKED_STATS) {
+        const statValue = (input as any)[stat.field] || 0;
+        if (statValue <= 0) continue;
+        
+        const existingRecord = await db.select().from(personalRecords)
+          .where(and(
+            eq(personalRecords.playerId, input.playerId),
+            eq(personalRecords.statName, stat.name)
+          ))
+          .limit(1);
+        
+        if (existingRecord.length === 0) {
+          await db.insert(personalRecords).values({
+            playerId: input.playerId,
+            statName: stat.name,
+            value: statValue,
+            gameId: game.id,
+            previousValue: null,
+          });
+          if (statValue >= 10 || (stat.name === 'threeMade' && statValue >= 3) || (stat.name === 'steals' && statValue >= 3) || (stat.name === 'blocks' && statValue >= 3)) {
+            newRecords.push({ statName: stat.name, value: statValue, previousValue: null });
+          }
+        } else if (statValue > existingRecord[0].value) {
+          const prev = existingRecord[0].value;
+          await db.update(personalRecords).set({
+            value: statValue,
+            gameId: game.id,
+            previousValue: prev,
+            achievedAt: new Date(),
+          }).where(eq(personalRecords.id, existingRecord[0].id));
+          newRecords.push({ statName: stat.name, value: statValue, previousValue: prev });
+        }
+      }
+
+      const STAT_LABELS: Record<string, string> = {
+        points: 'Points', rebounds: 'Rebounds', assists: 'Assists',
+        steals: 'Steals', blocks: 'Blocks', threeMade: '3-Pointers Made',
+      };
+      for (const record of newRecords) {
+        await storage.createFeedActivity({
+          activityType: 'badge',
+          playerId: input.playerId,
+          gameId: game.id,
+          headline: `${player?.name || 'Player'} set a new career high: ${record.value} ${STAT_LABELS[record.statName] || record.statName}!`,
+          subtext: record.previousValue ? `Previous best: ${record.previousValue}` : `First milestone recorded`,
+        });
+      }
+
+      // Update goal progress
+      const completedGoals: Array<{statName: string, targetValue: string}> = [];
+      const activeGoals = await db.select().from(playerGoals)
+        .where(and(eq(playerGoals.playerId, input.playerId), eq(playerGoals.status, 'active')));
+
+      const allPlayerGames = await storage.getGamesByPlayerId(input.playerId);
+      for (const goal of activeGoals) {
+        const now = new Date();
+        let filteredGames = allPlayerGames;
+        if (goal.timeframe === 'weekly') {
+          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          filteredGames = allPlayerGames.filter(g => new Date(g.date) >= weekAgo);
+        } else if (goal.timeframe === 'monthly') {
+          const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          filteredGames = allPlayerGames.filter(g => new Date(g.date) >= monthAgo);
+        }
+        
+        let currentValue = 0;
+        if (filteredGames.length > 0) {
+          switch (goal.statName) {
+            case 'ppg': currentValue = filteredGames.reduce((a, g) => a + g.points, 0) / filteredGames.length; break;
+            case 'rpg': currentValue = filteredGames.reduce((a, g) => a + g.rebounds, 0) / filteredGames.length; break;
+            case 'apg': currentValue = filteredGames.reduce((a, g) => a + g.assists, 0) / filteredGames.length; break;
+            case 'spg': currentValue = filteredGames.reduce((a, g) => a + (g.steals || 0), 0) / filteredGames.length; break;
+            case 'fg_pct': {
+              const m = filteredGames.reduce((a, g) => a + g.fgMade, 0);
+              const att = filteredGames.reduce((a, g) => a + g.fgAttempted, 0);
+              currentValue = att > 0 ? (m / att) * 100 : 0;
+              break;
+            }
+            case 'three_pct': {
+              const m = filteredGames.reduce((a, g) => a + g.threeMade, 0);
+              const att = filteredGames.reduce((a, g) => a + g.threeAttempted, 0);
+              currentValue = att > 0 ? (m / att) * 100 : 0;
+              break;
+            }
+            case 'games_played': currentValue = filteredGames.length; break;
+          }
+        }
+        
+        const wasActive = goal.status === 'active';
+        const isNowComplete = currentValue >= parseFloat(goal.targetValue as string);
+        
+        await db.update(playerGoals).set({
+          currentValue: currentValue.toFixed(2),
+          status: isNowComplete ? 'completed' : 'active',
+          completedAt: isNowComplete && wasActive ? new Date() : goal.completedAt,
+        }).where(eq(playerGoals.id, goal.id));
+        
+        if (isNowComplete && wasActive) {
+          completedGoals.push({ statName: goal.statName, targetValue: goal.targetValue as string });
+          await storage.createFeedActivity({
+            activityType: 'goal',
+            playerId: input.playerId,
+            gameId: game.id,
+            headline: `${player?.name || 'Player'} completed a goal!`,
+            subtext: `Target: ${goal.targetValue} ${goal.statName.toUpperCase().replace('_', ' ')}`,
+          });
+        }
+      }
+
       // Check and award badges after game creation
       const awardedBadges = await checkAndAwardBadges(input.playerId, game.id, input, grade);
       
@@ -3123,7 +3243,9 @@ export async function registerRoutes(
         newTier, 
         totalXp: updatedPlayer.totalXp, 
         currentTier: updatedPlayer.currentTier,
-        advancedMetrics 
+        advancedMetrics,
+        newRecords,
+        completedGoals
       });
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -3192,6 +3314,203 @@ export async function registerRoutes(
     });
     
     res.json(allBadges);
+  });
+
+  // --- Personal Records ---
+
+  app.get('/api/players/:id/personal-records', async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      const records = await db.select().from(personalRecords).where(eq(personalRecords.playerId, playerId));
+      res.json(records);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch personal records" });
+    }
+  });
+
+  // --- Player Goals (stat-based with timeframes) ---
+
+  app.get('/api/players/:id/player-goals', async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      const goals = await db.select().from(playerGoals)
+        .where(eq(playerGoals.playerId, playerId))
+        .orderBy(desc(playerGoals.createdAt));
+      res.json(goals);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch goals" });
+    }
+  });
+
+  app.post('/api/players/:id/player-goals', isAuthenticated, async (req: any, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      if (!await canModifyPlayer(req, playerId)) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      
+      const { statName, targetValue, timeframe } = req.body;
+      if (!statName || !targetValue) {
+        return res.status(400).json({ message: "statName and targetValue are required" });
+      }
+      
+      const playerGames = await storage.getGamesByPlayerId(playerId);
+      let currentValue = 0;
+      
+      const now = new Date();
+      let filteredGames = playerGames;
+      if (timeframe === 'weekly') {
+        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        filteredGames = playerGames.filter(g => new Date(g.date) >= weekAgo);
+      } else if (timeframe === 'monthly') {
+        const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        filteredGames = playerGames.filter(g => new Date(g.date) >= monthAgo);
+      }
+      
+      if (filteredGames.length > 0) {
+        switch (statName) {
+          case 'ppg': currentValue = filteredGames.reduce((a, g) => a + g.points, 0) / filteredGames.length; break;
+          case 'rpg': currentValue = filteredGames.reduce((a, g) => a + g.rebounds, 0) / filteredGames.length; break;
+          case 'apg': currentValue = filteredGames.reduce((a, g) => a + g.assists, 0) / filteredGames.length; break;
+          case 'spg': currentValue = filteredGames.reduce((a, g) => a + (g.steals || 0), 0) / filteredGames.length; break;
+          case 'fg_pct': {
+            const totalMade = filteredGames.reduce((a, g) => a + g.fgMade, 0);
+            const totalAttempted = filteredGames.reduce((a, g) => a + g.fgAttempted, 0);
+            currentValue = totalAttempted > 0 ? (totalMade / totalAttempted) * 100 : 0;
+            break;
+          }
+          case 'three_pct': {
+            const totalMade = filteredGames.reduce((a, g) => a + g.threeMade, 0);
+            const totalAttempted = filteredGames.reduce((a, g) => a + g.threeAttempted, 0);
+            currentValue = totalAttempted > 0 ? (totalMade / totalAttempted) * 100 : 0;
+            break;
+          }
+          case 'games_played': currentValue = filteredGames.length; break;
+        }
+      }
+      
+      const status = currentValue >= parseFloat(targetValue) ? 'completed' : 'active';
+      
+      const [goal] = await db.insert(playerGoals).values({
+        playerId,
+        statName,
+        targetValue,
+        currentValue: currentValue.toFixed(2),
+        timeframe: timeframe || 'season',
+        status,
+        completedAt: status === 'completed' ? new Date() : null,
+      }).returning();
+      
+      res.status(201).json(goal);
+    } catch (error) {
+      console.error('Error creating goal:', error);
+      res.status(500).json({ message: "Failed to create goal" });
+    }
+  });
+
+  app.delete('/api/players/:id/player-goals/:goalId', isAuthenticated, async (req: any, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      if (!await canModifyPlayer(req, playerId)) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      
+      await db.delete(playerGoals).where(
+        and(eq(playerGoals.id, parseInt(req.params.goalId)), eq(playerGoals.playerId, playerId))
+      );
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete goal" });
+    }
+  });
+
+  // --- Weekly Recap ---
+
+  app.get('/api/players/:id/weekly-recap', async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      const player = await storage.getPlayer(playerId);
+      if (!player) return res.status(404).json({ message: "Player not found" });
+      
+      const allGames = await storage.getGamesByPlayerId(playerId);
+      const now = new Date();
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const thisWeekGames = allGames.filter(g => new Date(g.date) >= weekAgo);
+      const prevWeekStart = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+      const lastWeekGames = allGames.filter(g => {
+        const d = new Date(g.date);
+        return d >= prevWeekStart && d < weekAgo;
+      });
+      
+      if (thisWeekGames.length === 0) {
+        return res.json({ hasData: false });
+      }
+      
+      const gamesPlayed = thisWeekGames.length;
+      const ppg = thisWeekGames.reduce((a, g) => a + g.points, 0) / gamesPlayed;
+      const rpg = thisWeekGames.reduce((a, g) => a + g.rebounds, 0) / gamesPlayed;
+      const apg = thisWeekGames.reduce((a, g) => a + g.assists, 0) / gamesPlayed;
+      
+      const GRADE_VALUES: Record<string, number> = {
+        'A+': 100, 'A': 95, 'A-': 90, 'B+': 88, 'B': 85, 'B-': 80,
+        'C+': 78, 'C': 75, 'C-': 70, 'D+': 68, 'D': 65, 'D-': 60, 'F': 50,
+      };
+      const avgGradeValue = thisWeekGames.reduce((acc, g) => acc + (GRADE_VALUES[g.grade?.trim().toUpperCase() || ''] || 0), 0) / gamesPlayed;
+      let avgGrade = 'N/A';
+      if (avgGradeValue >= 97) avgGrade = 'A+';
+      else if (avgGradeValue >= 92) avgGrade = 'A';
+      else if (avgGradeValue >= 87) avgGrade = 'A-';
+      else if (avgGradeValue >= 84) avgGrade = 'B+';
+      else if (avgGradeValue >= 81) avgGrade = 'B';
+      else if (avgGradeValue >= 77) avgGrade = 'B-';
+      else if (avgGradeValue >= 74) avgGrade = 'C+';
+      else if (avgGradeValue >= 71) avgGrade = 'C';
+      else if (avgGradeValue >= 67) avgGrade = 'C-';
+      else if (avgGradeValue >= 64) avgGrade = 'D+';
+      else if (avgGradeValue >= 61) avgGrade = 'D';
+      else if (avgGradeValue >= 55) avgGrade = 'D-';
+      else avgGrade = 'F';
+      
+      let ppgChange = 0;
+      if (lastWeekGames.length > 0) {
+        const lastPpg = lastWeekGames.reduce((a, g) => a + g.points, 0) / lastWeekGames.length;
+        ppgChange = ppg - lastPpg;
+      }
+      
+      const playerBadges = await storage.getPlayerBadges(playerId);
+      const weeklyBadges = playerBadges.filter(b => b.earnedAt && new Date(b.earnedAt) >= weekAgo);
+      
+      const bestGame = thisWeekGames.reduce((best, g) => {
+        const score = g.points + g.rebounds * 1.2 + g.assists * 1.5;
+        const bestScore = best.points + best.rebounds * 1.2 + best.assists * 1.5;
+        return score > bestScore ? g : best;
+      }, thisWeekGames[0]);
+      
+      res.json({
+        hasData: true,
+        playerName: player.name,
+        weekStart: weekAgo.toISOString(),
+        weekEnd: now.toISOString(),
+        gamesPlayed,
+        avgGrade,
+        ppg: parseFloat(ppg.toFixed(1)),
+        rpg: parseFloat(rpg.toFixed(1)),
+        apg: parseFloat(apg.toFixed(1)),
+        ppgChange: parseFloat(ppgChange.toFixed(1)),
+        badgesEarned: weeklyBadges.length,
+        bestGame: bestGame ? {
+          id: bestGame.id,
+          opponent: bestGame.opponent,
+          points: bestGame.points,
+          rebounds: bestGame.rebounds,
+          assists: bestGame.assists,
+          grade: bestGame.grade,
+        } : null,
+      });
+    } catch (error) {
+      console.error('Error getting weekly recap:', error);
+      res.status(500).json({ message: "Failed to get weekly recap" });
+    }
   });
 
   // --- Goals ---
