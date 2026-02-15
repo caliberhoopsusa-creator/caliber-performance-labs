@@ -65,7 +65,6 @@ import RecruitingHub from "./pages/RecruitingHub";
 import PublicPlayerProfile from "./pages/PublicPlayerProfile";
 import PublicRecruitProfile from "./pages/PublicRecruitProfile";
 import PlayerDirectory from "./pages/PlayerDirectory";
-import LiveGameMode from "./pages/LiveGameMode";
 import DiscoverHighlights from "./pages/DiscoverHighlights";
 import ChallengePage from "./pages/ChallengePage";
 import NotFound from "./pages/not-found";
@@ -401,10 +400,6 @@ function MainRouter() {
                 <Route path="/camps-showcases">
                   <Redirect to="/recruiting?tab=events" />
                 </Route>
-                <Route path="/fitness">
-                  <Redirect to="/performance?tab=fitness" />
-                </Route>
-                <Route path="/live-game" component={LiveGameMode} />
                 <Route component={NotFound} />
               </Switch>
             </PageTransition>

@@ -8,7 +8,7 @@ import {
   Menu, LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, 
   Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, 
   UsersRound, CalendarCheck, Eye, UserCircle, LogOut, CreditCard, Lock, Dumbbell, 
-  CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, Bell, ShoppingBag, GraduationCap, Radio,
+  CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, Bell, ShoppingBag, GraduationCap,
   ChevronDown, ChevronRight, BookOpen, Wand2, Medal
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -159,7 +159,6 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
     {
       title: "Game Day",
       items: [
-        { href: "/live-game", label: "Live Game", icon: Radio },
         { href: "/report-card", label: "Report Cards", icon: FileText },
         { href: "/video", label: "Video Analysis", icon: Video, premium: "pro" },
       ],

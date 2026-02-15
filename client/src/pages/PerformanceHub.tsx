@@ -4,15 +4,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HelpTooltip } from "@/components/HelpTooltip";
 import { 
   Zap, 
-  Dumbbell,
-  Heart
+  Dumbbell
 } from "lucide-react";
 
 import WorkoutsContent from "./WorkoutsContent";
-import FitnessContent from "./FitnessContent";
 
-type TabValue = "workouts" | "fitness";
-const VALID_TABS: TabValue[] = ["workouts", "fitness"];
+type TabValue = "workouts";
+const VALID_TABS: TabValue[] = ["workouts"];
 
 function isValidTab(tab: string | null): tab is TabValue {
   return tab !== null && VALID_TABS.includes(tab as TabValue);
@@ -54,14 +52,14 @@ export default function PerformanceHub() {
                 Performance Hub
               </h1>
               <HelpTooltip
-                content="Log your workouts and track fitness data from wearables. Monitor sleep, recovery, and training intensity."
+                content="Log your workouts and track your training progress and intensity."
                 side="right"
                 iconSize="md"
                 testId="button-help-performance-hub"
               />
             </div>
             <p className="text-sm text-muted-foreground">
-              Track your training, workouts, and fitness metrics
+              Track your training and workouts
             </p>
           </div>
         </div>
@@ -80,22 +78,10 @@ export default function PerformanceHub() {
             <Dumbbell className="w-4 h-4" />
             <span>Workouts</span>
           </TabsTrigger>
-          <TabsTrigger 
-            value="fitness" 
-            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
-            data-testid="tab-fitness"
-          >
-            <Heart className="w-4 h-4" />
-            <span>Fitness</span>
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="workouts" className="mt-6">
           <WorkoutsContent />
-        </TabsContent>
-
-        <TabsContent value="fitness" className="mt-6">
-          <FitnessContent />
         </TabsContent>
       </Tabs>
     </div>

@@ -52,12 +52,12 @@ Preferred communication style: Simple, everyday language.
 - **Goal Setting & Tracking**: Players set stat goals (PPG, RPG, APG, SPG, FG%, 3PT%, games played) with weekly/monthly/season timeframes. Progress bars on profile. Auto-updates when games are logged. Celebration toast on goal completion. Table: `player_goals`. APIs: `GET/POST /api/players/:id/player-goals`, `DELETE /api/players/:id/player-goals/:goalId`.
 - **Celebration System**: Full-screen confetti/particle overlays for achievements, XP gain toasts, career high toasts, and goal completion toasts.
 - **Skeleton Loading**: Comprehensive skeleton loading states on key pages for improved perceived performance.
-- **Live Game Mode**: Coach-only real-time stat tracking with multi-player selection, large tap-target buttons, undo functionality, haptic feedback, audio cues, and offline capability with data syncing.
+- **Live Game Mode**: [HIDDEN FROM UI] Coach-only real-time stat tracking. Code preserved but removed from navigation/routing to keep focus on core player experience.
 - **Scheduling**: Practice scheduler and calendar.
-- **Coach Features**: Team dashboard, game notes, lineup analysis, practice tracking with live mode, AI-generated drill recommendations, and one-click game verification queue.
+- **Coach Features**: Team dashboard, game notes, lineup analysis, practice tracking, AI-generated drill recommendations, and one-click game verification queue.
 - **Trust & Verification**: Player ratings by coaches, stat verifications, skill challenges, AI analysis for highlight verification, and secure cross-team verification prevention.
 - **Subscription & Monetization**: Tiered subscription model (Free, Pro, Coach Pro) integrated with Stripe.
-- **Wearable Integration**: Fitness dashboard with manual entry and Fitbit OAuth integration, with preparations for Apple Health, Google Fit, and WHOOP.
+- **Wearable Integration**: [HIDDEN FROM UI] Fitness dashboard with manual entry and Fitbit OAuth integration. Code preserved but removed from navigation/routing to keep focus on core player experience.
 - **Unified Hubs**: Consolidated tabbed interfaces for Community, Coach, Recruiting, Performance, and Analytics features, with URL parameter navigation and backwards compatibility for old routes.
   - **Community Hub**: Activity feed, Instagram-style stories, polls, player connection, direct messages, discover/explore, and saved posts features.
   - **Coach Hub**: Team overview, game verification, player endorsements, practice tracking, lineup management, scouting, and performance alerts.
