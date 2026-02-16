@@ -2938,6 +2938,13 @@ export default function PlayerDetail() {
               <BarChart3 className="w-4 h-4" /> Overview
             </TabsTrigger>
             <TabsTrigger 
+              value="games" 
+              className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-foreground" 
+              data-testid="tab-games"
+            >
+              <ClipboardList className="w-4 h-4" /> Games
+            </TabsTrigger>
+            <TabsTrigger 
               value="highlights" 
               className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-foreground" 
               data-testid="tab-highlights"
@@ -3036,135 +3043,6 @@ export default function PlayerDetail() {
               />
             </motion.div>
           )}
-
-          <MilestonesSection playerId={player.id} playerName={player.name} />
-
-          <MemorySection playerId={player.id} />
-
-          <EndorsementSection playerId={player.id} playerName={player.name} />
-
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.4 }}
-            className="grid grid-cols-1 md:grid-cols-2 gap-6"
-          >
-            <PlayerProgression playerId={player.id} />
-            
-            <div 
-              className="relative overflow-hidden rounded-xl border border-accent/20 p-5"
-              style={{ 
-                background: `linear-gradient(135deg, hsl(var(--accent) / 0.05) 0%, rgba(0, 0, 0, 0.4) 100%)`,
-              }}
-            >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 blur-[60px] rounded-full pointer-events-none" />
-              <h4 className="text-sm font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-accent/20 border border-accent/30">
-                  <Zap className="w-4 h-4 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(var(--accent) / 0.6))" }} />
-                </div>
-                <span className="bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent">XP Rewards</span>
-              </h4>
-              <div className="grid grid-cols-2 gap-2 text-sm relative z-10">
-                <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50 border border-border/50 hover:border-accent/20 transition-colors">
-                  <span className="text-muted-foreground">Log a Game</span>
-                  <span className="font-bold text-accent">+50 XP</span>
-                </div>
-                <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50 border border-border/50 hover:border-accent/20 transition-colors">
-                  <span className="text-muted-foreground">Earn Badge</span>
-                  <span className="font-bold text-accent">+25 XP</span>
-                </div>
-                <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50 border border-border/50 hover:border-accent/20 transition-colors">
-                  <span className="text-muted-foreground">A Grade</span>
-                  <span className="font-bold text-accent">+30 XP</span>
-                </div>
-                <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50 border border-border/50 hover:border-accent/20 transition-colors">
-                  <span className="text-muted-foreground">A+ Grade</span>
-                  <span className="font-bold text-accent">+50 XP</span>
-                </div>
-                <div className="flex items-center justify-between p-2.5 rounded-lg bg-gradient-to-r from-accent/10 to-accent/5 border border-accent/20 hover:border-accent/40 transition-colors">
-                  <span className="text-accent">3-Day Streak</span>
-                  <span className="font-bold text-accent">+25 XP</span>
-                </div>
-                <div className="flex items-center justify-between p-2.5 rounded-lg bg-gradient-to-r from-accent/10 to-accent/5 border border-accent/20 hover:border-accent/40 transition-colors">
-                  <span className="text-accent">7-Day Streak</span>
-                  <span className="font-bold text-accent">+75 XP</span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.22, duration: 0.4 }}
-          >
-            <Card className="p-6" data-testid="badge-showcase">
-              <div className="flex items-center gap-2 mb-4">
-                <Award className="w-5 h-5 text-accent" />
-                <h3 className="text-lg font-bold font-display">Badges</h3>
-              </div>
-              {badges.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No badges earned yet. Log games to start earning!
-                </p>
-              )}
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-                {Object.entries(BADGE_DEFINITIONS).map(([badgeKey, def]) => {
-                  const earned = badges.find((b: Badge) => b.badgeType === badgeKey);
-                  const IconComponent = BADGE_ICONS[badgeKey] || Award;
-                  return (
-                    <div
-                      key={badgeKey}
-                      className={cn(
-                        "flex flex-col items-center gap-1.5 p-2",
-                        !earned && "opacity-30"
-                      )}
-                      data-testid={`badge-item-${badgeKey}`}
-                    >
-                      <div
-                        className={cn(
-                          "w-10 h-10 rounded-lg flex items-center justify-center",
-                          earned ? "bg-accent/10" : "bg-muted"
-                        )}
-                      >
-                        <IconComponent
-                          className={cn(
-                            "w-5 h-5",
-                            earned ? "text-accent" : "text-muted-foreground"
-                          )}
-                        />
-                      </div>
-                      <span className="text-xs text-center font-medium leading-tight">
-                        {def.name}
-                      </span>
-                      {earned && earned.earnedAt && (
-                        <span className="text-[10px] text-muted-foreground">
-                          {format(new Date(earned.earnedAt), "MMM d")}
-                        </span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </Card>
-          </motion.div>
-
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25, duration: 0.4 }}
-            className="mb-6"
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-accent/10 border border-accent/20">
-                <Medal className="w-5 h-5 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(var(--accent) / 0.6))" }} />
-              </div>
-              <h3 className="text-lg font-bold font-display bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent">
-                Skill Badges
-              </h3>
-            </div>
-            <SkillBadges playerId={player.id} position={player.position} />
-          </motion.div>
 
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -3372,6 +3250,16 @@ export default function PlayerDetail() {
             </div>
           </motion.div>
 
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.4 }}
+          >
+            <GoalsPanel playerId={player.id} games={games} />
+          </motion.div>
+        </TabsContent>
+
+        <TabsContent value="games" className="space-y-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -3692,14 +3580,6 @@ export default function PlayerDetail() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.4 }}
-          >
-            <GoalsPanel playerId={player.id} games={games} />
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.45, duration: 0.4 }}
           >
             <Tabs defaultValue="history" className="w-full">
@@ -3879,25 +3759,146 @@ export default function PlayerDetail() {
         </TabsContent>
             </Tabs>
           </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.4 }}
-          >
-            <CoachToolsSection playerId={player.id} games={games} />
-          </motion.div>
         </TabsContent>
 
         <TabsContent value="highlights">
           <HighlightsGallery playerId={player.id} isOwner={isOwnProfile} />
         </TabsContent>
 
-        <TabsContent value="accolades">
+        <TabsContent value="accolades" className="space-y-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.22, duration: 0.4 }}
+          >
+            <Card className="p-6" data-testid="badge-showcase">
+              <div className="flex items-center gap-2 mb-4">
+                <Award className="w-5 h-5 text-accent" />
+                <h3 className="text-lg font-bold font-display">Badges</h3>
+              </div>
+              {badges.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No badges earned yet. Log games to start earning!
+                </p>
+              )}
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                {Object.entries(BADGE_DEFINITIONS).map(([badgeKey, def]) => {
+                  const earned = badges.find((b: Badge) => b.badgeType === badgeKey);
+                  const IconComponent = BADGE_ICONS[badgeKey] || Award;
+                  return (
+                    <div
+                      key={badgeKey}
+                      className={cn(
+                        "flex flex-col items-center gap-1.5 p-2",
+                        !earned && "opacity-30"
+                      )}
+                      data-testid={`badge-item-${badgeKey}`}
+                    >
+                      <div
+                        className={cn(
+                          "w-10 h-10 rounded-lg flex items-center justify-center",
+                          earned ? "bg-accent/10" : "bg-muted"
+                        )}
+                      >
+                        <IconComponent
+                          className={cn(
+                            "w-5 h-5",
+                            earned ? "text-accent" : "text-muted-foreground"
+                          )}
+                        />
+                      </div>
+                      <span className="text-xs text-center font-medium leading-tight">
+                        {def.name}
+                      </span>
+                      {earned && earned.earnedAt && (
+                        <span className="text-[10px] text-muted-foreground">
+                          {format(new Date(earned.earnedAt), "MMM d")}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25, duration: 0.4 }}
+            className="mb-6"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-accent/10 border border-accent/20">
+                <Medal className="w-5 h-5 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(var(--accent) / 0.6))" }} />
+              </div>
+              <h3 className="text-lg font-bold font-display bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent">
+                Skill Badges
+              </h3>
+            </div>
+            <SkillBadges playerId={player.id} position={player.position} />
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.4 }}
+            className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          >
+            <PlayerProgression playerId={player.id} />
+            
+            <div 
+              className="relative overflow-hidden rounded-xl border border-accent/20 p-5"
+              style={{ 
+                background: `linear-gradient(135deg, hsl(var(--accent) / 0.05) 0%, rgba(0, 0, 0, 0.4) 100%)`,
+              }}
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 blur-[60px] rounded-full pointer-events-none" />
+              <h4 className="text-sm font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-accent/20 border border-accent/30">
+                  <Zap className="w-4 h-4 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(var(--accent) / 0.6))" }} />
+                </div>
+                <span className="bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent">XP Rewards</span>
+              </h4>
+              <div className="grid grid-cols-2 gap-2 text-sm relative z-10">
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50 border border-border/50 hover:border-accent/20 transition-colors">
+                  <span className="text-muted-foreground">Log a Game</span>
+                  <span className="font-bold text-accent">+50 XP</span>
+                </div>
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50 border border-border/50 hover:border-accent/20 transition-colors">
+                  <span className="text-muted-foreground">Earn Badge</span>
+                  <span className="font-bold text-accent">+25 XP</span>
+                </div>
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50 border border-border/50 hover:border-accent/20 transition-colors">
+                  <span className="text-muted-foreground">A Grade</span>
+                  <span className="font-bold text-accent">+30 XP</span>
+                </div>
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50 border border-border/50 hover:border-accent/20 transition-colors">
+                  <span className="text-muted-foreground">A+ Grade</span>
+                  <span className="font-bold text-accent">+50 XP</span>
+                </div>
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-gradient-to-r from-accent/10 to-accent/5 border border-accent/20 hover:border-accent/40 transition-colors">
+                  <span className="text-accent">3-Day Streak</span>
+                  <span className="font-bold text-accent">+25 XP</span>
+                </div>
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-gradient-to-r from-accent/10 to-accent/5 border border-accent/20 hover:border-accent/40 transition-colors">
+                  <span className="text-accent">7-Day Streak</span>
+                  <span className="font-bold text-accent">+75 XP</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          <MilestonesSection playerId={player.id} playerName={player.name} />
+
           <AccoladesSection playerId={player.id} isOwnProfile={isOwnProfile} />
         </TabsContent>
 
-        <TabsContent value="activity">
+        <TabsContent value="activity" className="space-y-8">
+          <MemorySection playerId={player.id} />
+
+          <EndorsementSection playerId={player.id} playerName={player.name} />
+
           <PlayerActivityTab playerId={id} playerName={player.name} isOwnProfile={isOwnProfile} />
         </TabsContent>
 

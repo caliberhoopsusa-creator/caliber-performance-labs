@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
-import { ArrowLeft, Save, Loader2, Trophy, Share2, Target, ClipboardList, TrendingUp, Zap, Activity } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Trophy, Share2, Target, ClipboardList, TrendingUp, Zap, Activity, Plus, Minus, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GradeBadge } from "@/components/GradeBadge";
 import { Link } from "wouter";
@@ -193,6 +193,7 @@ export default function AnalyzeGame() {
 function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }: any) {
   const [autoCalcPoints, setAutoCalcPoints] = useState(true);
   const [selectedFootballPositions, setSelectedFootballPositions] = useState<FootballPosition[]>([]);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const sport = useSport();
   
   const form = useForm<z.infer<typeof insertGameSchema>>({
@@ -515,15 +516,31 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
               </h3>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <NumberInput label="Minutes" name="minutes" register={form.register} />
-                <NumberInput label="Points" name="points" register={form.register} />
-                <NumberInput label="Rebounds" name="rebounds" register={form.register} />
-                <NumberInput label="Assists" name="assists" register={form.register} />
-                <NumberInput label="Steals" name="steals" register={form.register} />
-                <NumberInput label="Blocks" name="blocks" register={form.register} />
-                <NumberInput label="Turnovers" name="turnovers" register={form.register} />
-                <NumberInput label="Fouls" name="fouls" register={form.register} />
+                <StepperInput label="Minutes" name="minutes" register={form.register} setValue={form.setValue} watch={form.watch} />
+                <StepperInput label="Points" name="points" register={form.register} setValue={form.setValue} watch={form.watch} />
+                <StepperInput label="Rebounds" name="rebounds" register={form.register} setValue={form.setValue} watch={form.watch} />
+                <StepperInput label="Assists" name="assists" register={form.register} setValue={form.setValue} watch={form.watch} />
+                <StepperInput label="Steals" name="steals" register={form.register} setValue={form.setValue} watch={form.watch} />
+                <StepperInput label="Blocks" name="blocks" register={form.register} setValue={form.setValue} watch={form.watch} />
+                <StepperInput label="Turnovers" name="turnovers" register={form.register} setValue={form.setValue} watch={form.watch} />
+                <StepperInput label="Fouls" name="fouls" register={form.register} setValue={form.setValue} watch={form.watch} />
               </div>
+
+              <button
+                type="button"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className="flex items-center gap-2 text-sm text-muted-foreground mt-4 w-full justify-center"
+                data-testid="button-toggle-advanced"
+              >
+                <ChevronDown className={cn("w-4 h-4 transition-transform", showAdvanced && "rotate-180")} />
+                Advanced Stats
+              </button>
+              {showAdvanced && (
+                <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-border">
+                  <StepperInput label="Off. Rebounds" name="offensiveRebounds" register={form.register} setValue={form.setValue} watch={form.watch} />
+                  <StepperInput label="Def. Rebounds" name="defensiveRebounds" register={form.register} setValue={form.setValue} watch={form.watch} />
+                </div>
+              )}
             </div>
           </motion.section>
 
@@ -1051,6 +1068,38 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
         </Button>
       </motion.div>
     </motion.form>
+  );
+}
+
+function StepperInput({ label, name, register, setValue, watch }: { label: string; name: string; register: any; setValue: any; watch: any }) {
+  const value = watch(name) || 0;
+  return (
+    <div className="space-y-1 w-full" data-testid={`stepper-${name}`}>
+      <label className="text-[10px] md:text-xs uppercase font-bold text-muted-foreground tracking-wider block text-center">{label}</label>
+      <div className="flex items-center justify-center gap-2">
+        <button
+          type="button"
+          onClick={() => setValue(name, Math.max(0, value - 1))}
+          disabled={value <= 0}
+          className="w-10 h-10 md:w-9 md:h-9 rounded-full bg-muted/80 border border-border flex items-center justify-center text-muted-foreground disabled:opacity-30 transition-colors"
+          data-testid={`button-decrement-${name}`}
+        >
+          <Minus className="w-4 h-4" />
+        </button>
+        <div className="w-14 h-12 md:h-10 flex items-center justify-center">
+          <span className="text-xl font-display font-bold text-foreground" data-testid={`value-${name}`}>{value}</span>
+        </div>
+        <button
+          type="button"
+          onClick={() => setValue(name, value + 1)}
+          className="w-10 h-10 md:w-9 md:h-9 rounded-full bg-muted/80 border border-border flex items-center justify-center text-muted-foreground transition-colors"
+          data-testid={`button-increment-${name}`}
+        >
+          <Plus className="w-4 h-4" />
+        </button>
+      </div>
+      <input type="hidden" {...register(name, { valueAsNumber: true })} />
+    </div>
   );
 }
 

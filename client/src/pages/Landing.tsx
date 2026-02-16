@@ -1,9 +1,10 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   ArrowRight, BarChart3, Video, Award, Trophy, Users, Target,
-  Shield, Zap, Quote, ChevronRight, Star
+  Shield, Zap, Quote, ChevronRight, Star, ClipboardList, TrendingUp
 } from "lucide-react";
 import { Link } from "wouter";
 import { CaliberLogo } from "@/components/CaliberLogo";
@@ -18,28 +19,21 @@ const features = [
   { icon: Target, title: "Get Scouted", description: "Toggle 'Open to Opportunities' and get discovered by coaches." },
 ];
 
-const stats = [
-  { value: "10K+", label: "Active Players" },
-  { value: "1.2M", label: "Games Logged" },
-  { value: "50+", label: "Skill Badges" },
-  { value: "500+", label: "Coaches" },
-];
-
 const testimonials = [
   {
-    quote: "Caliber changed the way I train. Seeing my grades after every game keeps me locked in.",
+    quote: "After logging 47 games this season, my shooting grade went from C+ to A-. The improvement tips after each game actually work.",
     name: "Marcus J.",
     title: "High School Point Guard",
     initials: "MJ",
   },
   {
-    quote: "The coach dashboard saves me hours. Game verification and lineup analysis in one place.",
+    quote: "I manage 3 AAU teams on Caliber. The game verification system and lineup analytics save me 5+ hours every week.",
     name: "Coach Rivera",
     title: "AAU Program Director",
     initials: "CR",
   },
   {
-    quote: "My recruiting profile on Caliber helped me get noticed by 3 D1 programs.",
+    quote: "Two D1 coaches found my Caliber profile and reached out directly. The AI scouting report is what got their attention.",
     name: "Destiny W.",
     title: "College Prospect",
     initials: "DW",
@@ -73,8 +67,62 @@ const marqueeItems = [
   "Video Analysis", "Player Grades",
 ];
 
+const howItWorks = [
+  {
+    step: 1,
+    icon: ClipboardList,
+    title: "Log Your Game",
+    description: "Enter your stats after each game. Takes less than 2 minutes.",
+  },
+  {
+    step: 2,
+    icon: BarChart3,
+    title: "Get Your Grade",
+    description: "AI analyzes your performance and gives you an A-F grade with detailed feedback.",
+  },
+  {
+    step: 3,
+    icon: TrendingUp,
+    title: "Level Up",
+    description: "Track improvement over time, earn badges, climb leaderboards, and get scouted.",
+  },
+];
+
+function formatStatNumber(value: number): string {
+  if (value >= 1000000) {
+    return (value / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  }
+  if (value >= 1000) {
+    return value.toLocaleString();
+  }
+  return String(value);
+}
+
 export default function Landing() {
   const [activeTab, setActiveTab] = useState("analytics");
+
+  const { data: platformStats, isLoading: statsLoading } = useQuery<{
+    playerCount: number;
+    gameCount: number;
+    badgeCount: number;
+    coachCount: number;
+  }>({
+    queryKey: ['/api/public/platform-stats'],
+  });
+
+  const stats = platformStats
+    ? [
+        { value: formatStatNumber(platformStats.playerCount), label: "Active Players" },
+        { value: formatStatNumber(platformStats.gameCount), label: "Games Logged" },
+        { value: formatStatNumber(platformStats.badgeCount) + "+", label: "Skill Badges" },
+        { value: formatStatNumber(platformStats.coachCount), label: "Coaches" },
+      ]
+    : [
+        { value: "---", label: "Active Players" },
+        { value: "---", label: "Games Logged" },
+        { value: "50+", label: "Skill Badges" },
+        { value: "---", label: "Coaches" },
+      ];
 
   return (
     <div className="min-h-screen bg-background relative">
@@ -89,6 +137,10 @@ export default function Landing() {
         @keyframes marquee {
           0% { transform: translateX(0); }
           100% { transform: translateX(-50%); }
+        }
+        @keyframes pulse-placeholder {
+          0%, 100% { opacity: 0.4; }
+          50% { opacity: 1; }
         }
       `}</style>
 
@@ -267,6 +319,40 @@ export default function Landing() {
         </div>
       </section>
 
+      <section className="py-28 px-4" data-testid="section-how-it-works">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16">
+            <span className="text-accent text-xs uppercase tracking-widest font-semibold">HOW IT WORKS</span>
+            <h2 className="text-4xl md:text-5xl font-display font-bold text-foreground mt-4">
+              Three Steps to Your Best Season
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6 relative">
+            <div className="hidden md:block absolute top-16 left-[calc(16.67%+24px)] right-[calc(16.67%+24px)] h-px bg-border" />
+
+            {howItWorks.map((item) => (
+              <Card key={item.step} className="relative">
+                <CardContent className="p-6 text-center space-y-4">
+                  <div className="relative z-10 mx-auto w-12 h-12 rounded-full bg-accent text-white flex items-center justify-center text-lg font-display font-bold" data-testid={`step-number-${item.step}`}>
+                    {item.step}
+                  </div>
+                  <div className="w-10 h-10 rounded-md bg-accent/10 flex items-center justify-center mx-auto">
+                    <item.icon className="w-5 h-5 text-accent" />
+                  </div>
+                  <h3 className="font-display text-xl text-foreground" data-testid={`step-title-${item.step}`}>
+                    {item.title}
+                  </h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    {item.description}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="py-28 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
@@ -380,7 +466,11 @@ export default function Landing() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {stats.map((stat) => (
               <div key={stat.label} className="text-center space-y-2">
-                <div className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-accent" data-testid={`stat-${stat.label.toLowerCase().replace(/\s+/g, '-')}`}>
+                <div
+                  className={`text-4xl md:text-5xl lg:text-6xl font-display font-bold text-accent ${statsLoading ? '' : ''}`}
+                  style={statsLoading ? { animation: 'pulse-placeholder 1.5s ease-in-out infinite' } : undefined}
+                  data-testid={`stat-${stat.label.toLowerCase().replace(/\s+/g, '-')}`}
+                >
                   {stat.value}
                 </div>
                 <div className="text-sm text-muted-foreground uppercase tracking-wider">{stat.label}</div>
@@ -498,34 +588,21 @@ export default function Landing() {
             <div className="space-y-4">
               <h4 className="font-display text-sm text-foreground uppercase tracking-wider">Platform</h4>
               <div className="space-y-2">
-                <Link href="/pricing" className="block text-sm text-muted-foreground transition-colors" data-testid="footer-link-pricing">
-                  Pricing
-                </Link>
-                <Link href="/scout" className="block text-sm text-muted-foreground transition-colors" data-testid="footer-link-scout-hub">
-                  Scout Hub
-                </Link>
-                <a href="/api/login" className="block text-sm text-muted-foreground transition-colors" data-testid="footer-link-sign-in">
-                  Sign In
-                </a>
+                <Link href="/pricing" className="block text-sm text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-pricing">Pricing</Link>
+                <Link href="/scout" className="block text-sm text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-scout-hub">Scout Hub</Link>
               </div>
             </div>
 
             <div className="space-y-4">
-              <h4 className="font-display text-sm text-foreground uppercase tracking-wider">Features</h4>
+              <h4 className="font-display text-sm text-foreground uppercase tracking-wider">Get Started</h4>
               <div className="space-y-2">
-                <span className="block text-sm text-muted-foreground">Performance Grades</span>
-                <span className="block text-sm text-muted-foreground">Skill Badges</span>
-                <span className="block text-sm text-muted-foreground">Leaderboards</span>
+                <a href="/api/login" className="block text-sm text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-sign-in">Sign In</a>
+                <a href="/api/login" className="block text-sm text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-create-account">Create Account</a>
               </div>
             </div>
           </div>
-
-          <div className="border-t border-border pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-            <span>&copy; 2026 Caliber Performance Labs. All rights reserved.</span>
-            <div className="flex items-center gap-6 flex-wrap">
-              <span>Privacy Policy</span>
-              <span>Terms of Service</span>
-            </div>
+          <div className="border-t border-border pt-8 text-center text-xs text-muted-foreground">
+            &copy; {new Date().getFullYear()} Caliber. All rights reserved.
           </div>
         </div>
       </footer>

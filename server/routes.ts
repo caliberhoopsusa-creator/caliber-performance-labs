@@ -15984,6 +15984,27 @@ Only respond with the JSON array, no other text.`;
     }
   });
 
+  // === PUBLIC PLATFORM STATS (No auth required) ===
+  app.get('/api/public/platform-stats', async (req, res) => {
+    try {
+      const [playerResult, gameResult, coachResult] = await Promise.all([
+        db.select({ count: count() }).from(players),
+        db.select({ count: count() }).from(games),
+        db.select({ count: count() }).from(users).where(eq(users.role, 'coach')),
+      ]);
+
+      res.json({
+        playerCount: playerResult[0]?.count ?? 0,
+        gameCount: gameResult[0]?.count ?? 0,
+        badgeCount: 50,
+        coachCount: coachResult[0]?.count ?? 0,
+      });
+    } catch (error) {
+      console.error('Error fetching platform stats:', error);
+      res.status(500).json({ message: "Failed to fetch platform stats" });
+    }
+  });
+
   // === PUBLIC PLAYER DIRECTORY (No auth required) ===
   app.get('/api/public/players/directory', async (req, res) => {
     try {
