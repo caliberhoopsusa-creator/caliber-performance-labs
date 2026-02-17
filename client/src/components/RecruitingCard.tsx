@@ -43,6 +43,9 @@ interface RecruitingCardProps {
     threePct: string;
     ftPct: string;
     badgeCount: number;
+    tsPct?: string;
+    consistencyScore?: number;
+    astToRatio?: string;
   };
 }
 
@@ -129,7 +132,7 @@ export function RecruitingCard({ open, onOpenChange, player, stats }: Recruiting
             ref={cardRef}
             style={{
               width: 400,
-              height: 580,
+              height: 620,
               background: 'linear-gradient(145deg, #0f1419 0%, #1a1f2e 50%, #0f1419 100%)',
               padding: 0,
               fontFamily: "'Inter', sans-serif",
@@ -217,26 +220,51 @@ export function RecruitingCard({ open, onOpenChange, player, stats }: Recruiting
                 ))}
               </div>
 
-              <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
-                <div style={{ ...statBoxStyle, flex: 1 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: player.gpa != null ? '1fr 1fr 1fr 1fr 1fr' : '1fr 1fr 1fr 1fr', gap: 6, marginBottom: 10 }}>
+                <div style={statBoxStyle} data-testid="stat-ts-pct">
+                  <p style={statLabelStyle}>TS%</p>
+                  <p style={{ ...statValueStyle, fontSize: 18, color: stats.tsPct && stats.tsPct !== '—' ? '#10b981' : 'rgba(255,255,255,0.3)' }}>
+                    {stats.tsPct || '—'}
+                  </p>
+                </div>
+                <div style={statBoxStyle} data-testid="stat-ast-to">
+                  <p style={statLabelStyle}>AST/TO</p>
+                  <p style={{ ...statValueStyle, fontSize: 18 }}>{stats.astToRatio || '—'}</p>
+                </div>
+                <div style={statBoxStyle}>
                   <p style={statLabelStyle}>Games</p>
                   <p style={{ ...statValueStyle, fontSize: 18 }}>{stats.gamesPlayed}</p>
                 </div>
-                <div style={{ ...statBoxStyle, flex: 1 }}>
-                  <p style={statLabelStyle}>Tier</p>
-                  <p style={{ ...statValueStyle, fontSize: 18 }}>{player.currentTier}</p>
-                </div>
-                <div style={{ ...statBoxStyle, flex: 1 }}>
-                  <p style={statLabelStyle}>Badges</p>
-                  <p style={{ ...statValueStyle, fontSize: 18 }}>{stats.badgeCount}</p>
-                </div>
                 {player.gpa != null && (
-                  <div style={{ ...statBoxStyle, flex: 1 }}>
+                  <div style={statBoxStyle}>
                     <p style={statLabelStyle}>GPA</p>
                     <p style={{ ...statValueStyle, fontSize: 18 }}>{Number(player.gpa).toFixed(1)}</p>
                   </div>
                 )}
+                <div style={statBoxStyle}>
+                  <p style={statLabelStyle}>Badges</p>
+                  <p style={{ ...statValueStyle, fontSize: 18 }}>{stats.badgeCount}</p>
+                </div>
               </div>
+
+              {stats.consistencyScore != null && (
+                <div style={{ marginBottom: 10 }} data-testid="section-consistency-bar">
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <p style={{ ...statLabelStyle, marginBottom: 0 }}>Consistency</p>
+                    <p style={{ fontSize: 12, fontWeight: 700, color: stats.consistencyScore >= 70 ? '#10b981' : stats.consistencyScore >= 40 ? '#f59e0b' : '#ef4444', fontFamily: "'Teko', sans-serif" }} data-testid="text-consistency-score">
+                      {stats.consistencyScore}/100
+                    </p>
+                  </div>
+                  <div style={{ height: 4, background: 'rgba(255,255,255,0.08)', borderRadius: 2 }}>
+                    <div style={{
+                      height: 4,
+                      borderRadius: 2,
+                      width: `${stats.consistencyScore}%`,
+                      background: stats.consistencyScore >= 70 ? '#10b981' : stats.consistencyScore >= 40 ? '#f59e0b' : '#ef4444',
+                    }} />
+                  </div>
+                </div>
+              )}
               
               <div style={{ textAlign: 'center', padding: '8px 0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
                 <p style={{ fontSize: 11, color: '#E8192C', fontWeight: 600 }}>

@@ -21,6 +21,7 @@ import { ShareablePlayerCard } from "@/components/ShareablePlayerCard";
 import { ShareableGameCard } from "@/components/ShareableGameCard";
 import { ShareCardCreator } from "@/components/ShareCardCreator";
 import { RecruitingCard } from "@/components/RecruitingCard";
+import { ScoutView } from "@/components/ScoutView";
 import { ShareableBadgeCard } from "@/components/ShareableBadgeCard";
 import { HighlightsGallery } from "@/components/HighlightsGallery";
 import { PlayerRatingsSection } from "@/components/PlayerRatingsSection";
@@ -2189,6 +2190,19 @@ export default function PlayerDetail() {
   const totalFtAttempted = games.reduce((acc, g) => acc + (g.ftAttempted || 0), 0);
   const ftPercent = totalFtAttempted > 0 ? ((totalFtMade / totalFtAttempted) * 100).toFixed(1) : "—";
   
+  const totalPts = games.reduce((acc, g) => acc + g.points, 0);
+  const totalTO = games.reduce((acc, g) => acc + g.turnovers, 0);
+  const totalAst = games.reduce((acc, g) => acc + g.assists, 0);
+  const tsaDenominator = 2 * (totalFgAttempted + 0.44 * totalFtAttempted);
+  const tsPct = tsaDenominator > 0 ? ((totalPts / tsaDenominator) * 100).toFixed(1) : "—";
+  const astToRatio = totalTO > 0 ? (totalAst / totalTO).toFixed(1) : totalAst > 0 ? "99.0" : "—";
+  const pointsPerGame = games.map(g => g.points);
+  const avgPts = pointsPerGame.length > 0 ? pointsPerGame.reduce((a, b) => a + b, 0) / pointsPerGame.length : 0;
+  const variance = pointsPerGame.length > 1 ? pointsPerGame.reduce((acc, p) => acc + Math.pow(p - avgPts, 2), 0) / pointsPerGame.length : 0;
+  const stdDev = Math.sqrt(variance);
+  const cv = avgPts > 0 ? stdDev / avgPts : 0;
+  const consistencyScore = Math.round(Math.max(0, Math.min(100, 100 - cv * 100)));
+
   // === FOOTBALL STATS ===
   const totalPassingYards = games.reduce((acc, g) => acc + (g.passingYards || 0), 0);
   const totalRushingYards = games.reduce((acc, g) => acc + (g.rushingYards || 0), 0);
@@ -2923,6 +2937,9 @@ export default function PlayerDetail() {
             threePct: threePercent,
             ftPct: ftPercent,
             badgeCount: badges?.length || 0,
+            tsPct: tsPct,
+            consistencyScore: games.length >= 3 ? consistencyScore : undefined,
+            astToRatio: astToRatio,
           }}
         />
       )}
@@ -3174,6 +3191,10 @@ export default function PlayerDetail() {
             </div>
           )}
         </div>
+
+            {!isFootball && games.length >= 3 && (
+              <ScoutView player={player} games={games} />
+            )}
 
             <div>
               <div className="flex items-center gap-3 mb-4">

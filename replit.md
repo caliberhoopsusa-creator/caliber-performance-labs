@@ -49,6 +49,9 @@ Preferred communication style: Simple, everyday language.
   - **Performance Hub**: Training log, workout history, fitness data dashboard.
   - **Analytics Hub**: Player leaderboards, head-to-head comparison, team comparison, skill challenges, detailed grading system.
 - **Recruiter Role System**: Dedicated role with .edu email validation, admin verification, recruiter dashboard for player search, prospect bookmarking, and interest signaling. Players have privacy controls for recruiter activity.
+- **Scout View**: `ScoutView` component on player profiles (3+ games) showing efficiency metrics (True Shooting %, Turnover Rate, AST/TO ratio, Usage Rate, Offensive Rebound %, Defensive Rating), consistency rating with coefficient of variation scoring, game-by-game performance chart with trend line and big-game indicators, physical measurables panel, and coach endorsement summary.
+- **Enhanced Recruiting Card**: Shareable recruiting cards now include TS%, AST/TO ratio, consistency score progress bar, and GPA alongside traditional counting stats.
+- **AI Scouting Reports**: Enhanced Gemini AI prompt includes efficiency metrics with D1/D2/D3 benchmark comparisons, consistency analysis, big-game performance, and next-level projection with division-level recommendation.
 - **Discover Highlights Feed**: TikTok-style public vertical-scroll video feed with snap scrolling and sport filtering.
 
 ## External Dependencies

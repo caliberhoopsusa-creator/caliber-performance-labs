@@ -5341,7 +5341,31 @@ Respond in this exact JSON format:
 
       const { name, position, height, school, graduationYear, city, state, currentTier } = player;
 
-      const prompt = `You are an elite basketball scout writing a professional scouting report for a recruiting evaluation. Write a concise, professional 3-4 paragraph scouting report based on the following player data. Use basketball terminology. Be honest but constructive - highlight strengths prominently and frame weaknesses as areas of development. Write in third person.
+      const totalFGA = playerGames.reduce((a, g) => a + (g.fgAttempted || 0), 0);
+      const totalFGM = playerGames.reduce((a, g) => a + (g.fgMade || 0), 0);
+      const totalFTA = playerGames.reduce((a, g) => a + (g.ftAttempted || 0), 0);
+      const totalFTM = playerGames.reduce((a, g) => a + (g.ftMade || 0), 0);
+      const total3M = playerGames.reduce((a, g) => a + (g.threeMade || 0), 0);
+      const total3A = playerGames.reduce((a, g) => a + (g.threeAttempted || 0), 0);
+      const totalPts = playerGames.reduce((a, g) => a + g.points, 0);
+      const totalTO = playerGames.reduce((a, g) => a + g.turnovers, 0);
+      const totalAst = playerGames.reduce((a, g) => a + g.assists, 0);
+      const tsaDenom = 2 * (totalFGA + 0.44 * totalFTA);
+      const tsPct = tsaDenom > 0 ? ((totalPts / tsaDenom) * 100).toFixed(1) : 'N/A';
+      const fgPct = totalFGA > 0 ? ((totalFGM / totalFGA) * 100).toFixed(1) : 'N/A';
+      const ftPct = totalFTA > 0 ? ((totalFTM / totalFTA) * 100).toFixed(1) : 'N/A';
+      const threePct = total3A > 0 ? ((total3M / total3A) * 100).toFixed(1) : 'N/A';
+      const astToRatio = totalTO > 0 ? (totalAst / totalTO).toFixed(1) : (totalAst > 0 ? '99+' : 'N/A');
+      const toPct = (totalFGA + 0.44 * totalFTA + totalTO) > 0
+        ? ((totalTO / (totalFGA + 0.44 * totalFTA + totalTO)) * 100).toFixed(1)
+        : 'N/A';
+      const ptsArr = playerGames.map(g => g.points);
+      const avgPtsVal = ptsArr.reduce((a, b) => a + b, 0) / ptsArr.length;
+      const stdDev = Math.sqrt(ptsArr.reduce((acc, p) => acc + Math.pow(p - avgPtsVal, 2), 0) / ptsArr.length);
+      const cvScore = avgPtsVal > 0 ? Math.round(Math.max(0, Math.min(100, 100 - (stdDev / avgPtsVal) * 100))) : 0;
+      const bigGameCount = playerGames.filter(g => g.points > avgPtsVal * 1.5).length;
+
+      const prompt = `You are an elite basketball scout writing a professional scouting report for a college recruiting evaluation. Write a detailed, professional 4-5 paragraph scouting report. Use precise basketball terminology that college coaches expect. Be honest and direct - highlight strengths prominently and frame weaknesses as specific areas for development with actionable suggestions. Write in third person.
 
 Player: ${name}
 Position: ${position}
@@ -5360,16 +5384,27 @@ Season Averages:
 - Steals: ${spg} SPG
 - Blocks: ${bpg} BPG
 
+Efficiency Metrics:
+- True Shooting %: ${tsPct} (D1 avg ~54%, D2 avg ~50%, D3 avg ~48%)
+- Field Goal %: ${fgPct}
+- 3-Point %: ${threePct}
+- Free Throw %: ${ftPct}
+- Assist-to-Turnover Ratio: ${astToRatio} (elite >2.5, good >1.5)
+- Turnover Rate: ${toPct}%
+- Consistency Score: ${cvScore}/100 (measures scoring variance game-to-game)
+- Big Games (>1.5x avg scoring): ${bigGameCount} out of ${gamesPlayed}
+
 Badges Earned: ${badgeNames.join(', ') || 'None yet'}
 Tier: ${currentTier}
 
-Write a scouting report that a college coach would find useful. Include:
-1. A summary of the player's game and role
-2. Key strengths with specific stat references
-3. Areas for development
-4. Overall evaluation and potential
+Write a scouting report that a college coach would find genuinely useful for evaluation. Include:
+1. Player overview: playing style, motor, basketball IQ indicators from the data
+2. Offensive evaluation: scoring efficiency (reference TS% vs division benchmarks), shot selection, playmaking ability (AST/TO ratio)
+3. Defensive & intangibles: rebounding, steals, blocks, consistency score interpretation
+4. Next-level projection: Based on the data, which college division level (D1, D2, D3, NAIA, JUCO) would this player likely contribute at immediately? What specific skills need development for the next level?
+5. Brief summary with a realistic college-level comparison or archetype
 
-Keep it to 3-4 short paragraphs. No headers or bullet points - write in flowing prose. Do not use the word "prospect" more than once.`;
+Keep it to 4-5 paragraphs of flowing prose. No headers, bullet points, or markdown formatting. Do not use the word "prospect" more than once. Reference specific efficiency numbers when making evaluations - college coaches want data-backed analysis, not generic praise.`;
 
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
