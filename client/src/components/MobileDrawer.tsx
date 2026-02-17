@@ -68,13 +68,15 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
   const isRecruiter = userRole === 'recruiter';
 
   const handleRoleSwitch = () => {
-    if (isRecruiter) return;
-    const newRole: 'player' | 'coach' = isPlayer ? 'coach' : 'player';
+    const roleOrder: Array<'player' | 'coach' | 'recruiter'> = ['player', 'coach', 'recruiter'];
+    const currentIndex = roleOrder.indexOf(userRole as any);
+    const newRole = roleOrder[(currentIndex + 1) % roleOrder.length];
     switchRole(newRole, {
       onSuccess: () => {
+        const labels: Record<string, string> = { player: 'Player', coach: 'Coach', recruiter: 'Recruiter' };
         toast({ 
-          title: `Switched to ${newRole === 'coach' ? 'Coach' : 'Player'} Mode`,
-          description: `You're now viewing the app as a ${newRole}.`
+          title: `Switched to ${labels[newRole]} Mode`,
+          description: `You're now viewing the app as a ${labels[newRole].toLowerCase()}.`
         });
         setOpen(false);
       },
@@ -257,12 +259,12 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
                 variant="outline"
                 size="sm"
                 onClick={handleRoleSwitch}
-                disabled={isSwitchingRole || isRecruiter}
+                disabled={isSwitchingRole}
                 className="w-full text-xs border-accent/20 bg-accent/5 min-h-11 touch-target"
                 data-testid="button-mobile-role-switch"
               >
-                {!isRecruiter && <ArrowLeftRight className="w-3.5 h-3.5 mr-2 text-accent" />}
-                Switch to {isRecruiter ? "Recruiter" : isPlayer ? 'Coach' : 'Player'} Mode
+                <ArrowLeftRight className="w-3.5 h-3.5 mr-2 text-accent" />
+                Switch to {isPlayer ? 'Coach' : isCoach ? 'Recruiter' : 'Player'} Mode
               </Button>
             </motion.div>
             

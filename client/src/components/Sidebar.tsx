@@ -67,13 +67,15 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
   const pendingCount = pendingGames?.length ?? 0;
 
   const handleRoleSwitch = () => {
-    if (isRecruiter) return;
-    const newRole: 'player' | 'coach' = isPlayer ? 'coach' : 'player';
+    const roleOrder: Array<'player' | 'coach' | 'recruiter'> = ['player', 'coach', 'recruiter'];
+    const currentIndex = roleOrder.indexOf(userRole as any);
+    const newRole = roleOrder[(currentIndex + 1) % roleOrder.length];
     switchRole(newRole, {
       onSuccess: () => {
+        const labels: Record<string, string> = { player: 'Player', coach: 'Coach', recruiter: 'Recruiter' };
         toast({ 
-          title: `Switched to ${newRole === 'coach' ? 'Coach' : 'Player'} Mode`,
-          description: `You're now viewing the app as a ${newRole}.`
+          title: `Switched to ${labels[newRole]} Mode`,
+          description: `You're now viewing the app as a ${labels[newRole].toLowerCase()}.`
         });
       },
       onError: (error) => {
@@ -221,10 +223,10 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
             disabled={isSwitchingRole}
             className="flex items-center gap-1.5 text-xs text-muted-foreground uppercase tracking-widest font-medium transition-colors cursor-pointer"
             data-testid="button-switch-role"
-            aria-label={`Switch to ${isPlayer ? 'Coach' : 'Player'} Mode`}
+            aria-label={`Switch to ${isPlayer ? 'Coach' : isCoach ? 'Recruiter' : 'Player'} Mode`}
           >
             {isRecruiter ? "Recruiter" : isPlayer ? "Player" : "Coach"} Mode
-            {!isRecruiter && <ArrowLeftRight className="w-3 h-3" />}
+            <ArrowLeftRight className="w-3 h-3" />
           </button>
         </div>
         {isCoach && (
