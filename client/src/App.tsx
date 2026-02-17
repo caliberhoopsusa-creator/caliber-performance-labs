@@ -68,6 +68,7 @@ import PlayerDirectory from "./pages/PlayerDirectory";
 import DiscoverHighlights from "./pages/DiscoverHighlights";
 import ChallengePage from "./pages/ChallengePage";
 import RecruiterDashboard from "@/pages/RecruiterDashboard";
+import RecruiterDirectory from "@/pages/RecruiterDirectory";
 import WhosWatching from "@/pages/WhosWatching";
 import CollegeDetail from "@/pages/CollegeDetail";
 import NotFound from "./pages/not-found";
@@ -399,6 +400,7 @@ function MainRouter() {
                 <Route path="/leagues" component={LeagueHub} />
                 <Route path="/leagues/:id" component={LeagueDetail} />
                 <Route path="/recruiter" component={RecruiterDashboard} />
+                <Route path="/recruiter-directory" component={RecruiterDirectory} />
                 <Route path="/whos-watching" component={WhosWatching} />
                 <Route path="/recruiting" component={RecruitingHub} />
                 <Route path="/college-recruiting">

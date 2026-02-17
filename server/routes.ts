@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, badges, headToHeadChallenges, statVerifications, playerCollegeMatches, playerCollegeInterests, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema, insertWearableConnectionSchema, recruitingEvents, insertRecruitingEventSchema, type RecruitingEvent, playerEventRegistrations, insertPlayerEventRegistrationSchema, colleges, collegeRosterPlayers, collegeCoachingStaff, ncaaEligibilityProgress, insertNcaaEligibilityProgressSchema, coachRecommendations, insertCoachRecommendationSchema, teams, teamMembers, skillBadges, activityStreaks, feedActivities, feedComments, feedCommentLikes, type InsertFeedComment, type FeedComment, highlightClips, personalRecords, recruiterBlocks, playerGoals, recruitingTargets, recruitingContacts, insertRecruitingTargetSchema, insertRecruitingContactSchema, DIVISION_BENCHMARKS, BENCHMARK_STAT_LABELS } from "@shared/schema";
+import { players, games, badges, headToHeadChallenges, statVerifications, playerCollegeMatches, playerCollegeInterests, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema, insertWearableConnectionSchema, recruitingEvents, insertRecruitingEventSchema, type RecruitingEvent, playerEventRegistrations, insertPlayerEventRegistrationSchema, colleges, collegeRosterPlayers, collegeCoachingStaff, ncaaEligibilityProgress, insertNcaaEligibilityProgressSchema, coachRecommendations, insertCoachRecommendationSchema, teams, teamMembers, skillBadges, activityStreaks, feedActivities, feedComments, feedCommentLikes, type InsertFeedComment, type FeedComment, highlightClips, personalRecords, recruiterBlocks, recruiterProfiles, playerGoals, recruitingTargets, recruitingContacts, insertRecruitingTargetSchema, insertRecruitingContactSchema, DIVISION_BENCHMARKS, BENCHMARK_STAT_LABELS } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { calculateAIRating, calculateProjection, type GameStats, type PlayerMetrics, type PeerStats, type AIRatingResult, type ProjectionResult } from "@shared/ai-rating-engine";
 import type { Sport } from "@shared/sports-config";
@@ -16,7 +16,7 @@ import { registerObjectStorageRoutes } from "./replit_integrations/object_storag
 import { setupAuth, registerAuthRoutes, isAuthenticated, authStorage } from "./replit_integrations/auth";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 import { users } from "@shared/models/auth";
-import { eq, sql, and, desc, or, inArray, gte, lte, count, max, ne, ilike } from "drizzle-orm";
+import { eq, sql, and, desc, or, inArray, gte, lte, count, max, ne, ilike, type SQL } from "drizzle-orm";
 import { db } from "./db";
 import type { RequestHandler } from "express";
 
@@ -17096,6 +17096,118 @@ The email should:
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ message: "Failed to log view" });
+    }
+  });
+
+  // === PUBLIC RECRUITER DIRECTORY ===
+
+  app.get("/api/recruiters/directory", async (req, res) => {
+    try {
+      const { sport, division, conference, state, search } = req.query;
+
+      // Build the WHERE conditions
+      const conditions = [eq(recruiterProfiles.isVerified, true)];
+
+      if (sport && typeof sport === "string") {
+        conditions.push(eq(recruiterProfiles.sport, sport));
+      }
+
+      if (division && typeof division === "string") {
+        conditions.push(eq(recruiterProfiles.division, division));
+      }
+
+      if (conference && typeof conference === "string") {
+        conditions.push(eq(recruiterProfiles.conference, conference));
+      }
+
+      if (state && typeof state === "string") {
+        conditions.push(eq(recruiterProfiles.state, state));
+      }
+
+      if (search && typeof search === "string") {
+        const searchCondition = or(
+          ilike(recruiterProfiles.schoolName, `%${search}%`),
+          ilike(recruiterProfiles.title, `%${search}%`)
+        );
+        if (searchCondition) conditions.push(searchCondition);
+      }
+
+      const recruiters = await db
+        .select({
+          id: recruiterProfiles.id,
+          schoolName: recruiterProfiles.schoolName,
+          division: recruiterProfiles.division,
+          title: recruiterProfiles.title,
+          schoolEmail: recruiterProfiles.schoolEmail,
+          phone: recruiterProfiles.phone,
+          bio: recruiterProfiles.bio,
+          state: recruiterProfiles.state,
+          conference: recruiterProfiles.conference,
+          sport: recruiterProfiles.sport,
+          isVerified: recruiterProfiles.isVerified,
+          schoolLogoUrl: recruiterProfiles.schoolLogoUrl,
+          createdAt: recruiterProfiles.createdAt,
+        })
+        .from(recruiterProfiles)
+        .where(and(...conditions))
+        .orderBy(recruiterProfiles.schoolName);
+
+      res.json(recruiters);
+    } catch (error) {
+      console.error("Error fetching recruiter directory:", error);
+      res.status(500).json({ message: "Failed to fetch recruiter directory" });
+    }
+  });
+
+  app.get("/api/colleges/:id/recruiters", async (req, res) => {
+    try {
+      const collegeId = parseInt(req.params.id);
+
+      // Get the college to find its name and shortName
+      const college = await db
+        .select()
+        .from(colleges)
+        .where(eq(colleges.id, collegeId))
+        .limit(1);
+
+      if (!college || college.length === 0) {
+        return res.status(404).json({ message: "College not found" });
+      }
+
+      const collegeData = college[0];
+      const collegeName = collegeData.name;
+      const shortName = collegeData.shortName;
+
+      const nameConditions = shortName
+        ? or(eq(recruiterProfiles.schoolName, collegeName), eq(recruiterProfiles.schoolName, shortName))
+        : eq(recruiterProfiles.schoolName, collegeName);
+      const conditions: SQL<unknown>[] = [eq(recruiterProfiles.isVerified, true)];
+      if (nameConditions) conditions.push(nameConditions);
+
+      const recruiters = await db
+        .select({
+          id: recruiterProfiles.id,
+          schoolName: recruiterProfiles.schoolName,
+          division: recruiterProfiles.division,
+          title: recruiterProfiles.title,
+          schoolEmail: recruiterProfiles.schoolEmail,
+          phone: recruiterProfiles.phone,
+          bio: recruiterProfiles.bio,
+          state: recruiterProfiles.state,
+          conference: recruiterProfiles.conference,
+          sport: recruiterProfiles.sport,
+          isVerified: recruiterProfiles.isVerified,
+          schoolLogoUrl: recruiterProfiles.schoolLogoUrl,
+          createdAt: recruiterProfiles.createdAt,
+        })
+        .from(recruiterProfiles)
+        .where(and(...conditions))
+        .orderBy(recruiterProfiles.schoolName);
+
+      res.json(recruiters);
+    } catch (error) {
+      console.error("Error fetching college recruiters:", error);
+      res.status(500).json({ message: "Failed to fetch college recruiters" });
     }
   });
 

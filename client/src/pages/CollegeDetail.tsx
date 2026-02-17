@@ -26,6 +26,9 @@ import {
   Clock,
   Award,
   UserCheck,
+  Mail,
+  Phone,
+  ExternalLink,
 } from "lucide-react";
 
 interface College {
@@ -102,6 +105,22 @@ interface StaffMember {
   title: string | null;
   experience: number | null;
   headshotUrl: string | null;
+}
+
+interface PlatformRecruiter {
+  id: number;
+  schoolName: string;
+  division: string;
+  title: string;
+  schoolEmail: string;
+  phone: string | null;
+  bio: string | null;
+  state: string | null;
+  conference: string | null;
+  sport: string;
+  isVerified: boolean;
+  schoolLogoUrl: string | null;
+  createdAt: string | null;
 }
 
 function getInitials(name: string): string {
@@ -181,6 +200,11 @@ export default function CollegeDetail() {
 
   const { data: staff = [], isLoading: staffLoading } = useQuery<StaffMember[]>({
     queryKey: ["/api/colleges", id, "staff"],
+    enabled: !!id,
+  });
+
+  const { data: platformRecruiters = [] } = useQuery<PlatformRecruiter[]>({
+    queryKey: ["/api/colleges", id, "recruiters"],
     enabled: !!id,
   });
 
@@ -454,7 +478,7 @@ export default function CollegeDetail() {
           )}
         </TabsContent>
 
-        <TabsContent value="needs" className="mt-4 space-y-4" data-testid="tab-content-needs">
+        <TabsContent value="needs" className="mt-4 space-y-6" data-testid="tab-content-needs">
           {(() => {
             let needs: string[] = [];
             try {
@@ -467,12 +491,27 @@ export default function CollegeDetail() {
             const hasNeeds = needs.length > 0;
             const hasContact = college.recruitingContactEmail || college.recruitingUrl;
 
-            if (!hasNeeds && !hasScholarships && !hasContact) {
+            const recruitingStaff = staff.filter((s) => {
+              const t = (s.title || "").toLowerCase();
+              return (
+                t.includes("recruiting") ||
+                t.includes("assistant") ||
+                t.includes("director of") ||
+                t.includes("coordinator")
+              );
+            });
+
+            const hasRecruitingStaff = recruitingStaff.length > 0;
+            const hasPlatformRecruiters = platformRecruiters.length > 0;
+
+            const showEmptyState = !hasNeeds && !hasScholarships && !hasContact && !hasRecruitingStaff && !hasPlatformRecruiters;
+
+            if (showEmptyState) {
               return (
                 <Card data-testid="needs-empty">
                   <CardContent className="py-12 text-center">
                     <Target className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                    <p className="text-muted-foreground">No recruiting needs posted yet.</p>
+                    <p className="text-muted-foreground">No recruiting information available yet.</p>
                     <p className="text-xs text-muted-foreground mt-1">Verified coaches can update what their program is looking for.</p>
                   </CardContent>
                 </Card>
@@ -481,58 +520,152 @@ export default function CollegeDetail() {
 
             return (
               <>
-                {hasScholarships && (
-                  <Card data-testid="scholarships-card">
-                    <CardContent className="p-4 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                        <GraduationCap className="w-5 h-5 text-emerald-500" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Scholarships Available</p>
-                        <p className="text-lg font-semibold" data-testid="text-scholarships">{college.scholarshipsAvailable}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
+                {(hasScholarships || hasNeeds) && (
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Recruiting Needs</h3>
+                    {hasScholarships && (
+                      <Card data-testid="scholarships-card">
+                        <CardContent className="p-4 flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                            <GraduationCap className="w-5 h-5 text-emerald-500" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Scholarships Available</p>
+                            <p className="text-lg font-semibold" data-testid="text-scholarships">{college.scholarshipsAvailable}</p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                    {hasNeeds && (
+                      <Card data-testid="position-needs-card">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-base font-heading flex items-center gap-2">
+                            <Target className="w-4 h-4 text-accent" />
+                            Positions Needed
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex flex-wrap gap-2">
+                            {needs.map((pos) => (
+                              <Badge key={pos} variant="default" data-testid={`badge-need-${pos}`}>{pos}</Badge>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
                 )}
-                {hasNeeds && (
-                  <Card data-testid="position-needs-card">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base font-heading flex items-center gap-2">
-                        <Target className="w-4 h-4 text-accent" />
-                        Positions Needed
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-wrap gap-2">
-                        {needs.map((pos) => (
-                          <Badge key={pos} variant="default" data-testid={`badge-need-${pos}`}>{pos}</Badge>
+
+                {(hasRecruitingStaff || hasPlatformRecruiters) && (
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Recruiting Contacts</h3>
+
+                    {hasRecruitingStaff && (
+                      <div className="space-y-2" data-testid="recruiting-staff-section">
+                        <p className="text-xs text-muted-foreground">Coaching Staff</p>
+                        {recruitingStaff.map((member) => (
+                          <Card
+                            key={`staff-${member.id}`}
+                            className="hover-elevate"
+                            data-testid={`recruiting-staff-${member.id}`}
+                          >
+                            <CardContent className="p-4 flex items-center gap-4">
+                              <Avatar className="h-10 w-10">
+                                <AvatarImage src={member.headshotUrl || undefined} alt={member.name} />
+                                <AvatarFallback className="text-xs">{getInitials(member.name)}</AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-sm">{member.name}</p>
+                                {member.title && (
+                                  <p className="text-xs text-muted-foreground">{member.title}</p>
+                                )}
+                              </div>
+                              <Badge variant="secondary">Staff</Badge>
+                            </CardContent>
+                          </Card>
                         ))}
                       </div>
-                    </CardContent>
-                  </Card>
+                    )}
+
+                    {hasPlatformRecruiters && (
+                      <div className="space-y-2" data-testid="platform-recruiters-section">
+                        <p className="text-xs text-muted-foreground">Caliber Recruiters</p>
+                        {platformRecruiters.map((recruiter) => (
+                          <Card
+                            key={`recruiter-${recruiter.id}`}
+                            className="hover-elevate"
+                            data-testid={`platform-recruiter-${recruiter.id}`}
+                          >
+                            <CardContent className="p-4 flex items-center gap-4">
+                              <Avatar className="h-10 w-10">
+                                <AvatarImage src={recruiter.schoolLogoUrl || undefined} alt={recruiter.schoolName} />
+                                <AvatarFallback className="text-xs">{getInitials(recruiter.schoolName)}</AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-sm">{recruiter.title}</p>
+                                <p className="text-xs text-muted-foreground">{recruiter.schoolName}</p>
+                                <div className="flex items-center gap-3 mt-1 flex-wrap">
+                                  {recruiter.schoolEmail && (
+                                    <a
+                                      href={`mailto:${recruiter.schoolEmail}`}
+                                      className="text-xs text-accent flex items-center gap-1"
+                                      data-testid={`recruiter-email-${recruiter.id}`}
+                                    >
+                                      <Mail className="w-3 h-3" />
+                                      {recruiter.schoolEmail}
+                                    </a>
+                                  )}
+                                  {recruiter.phone && (
+                                    <a
+                                      href={`tel:${recruiter.phone}`}
+                                      className="text-xs text-muted-foreground flex items-center gap-1"
+                                      data-testid={`recruiter-phone-${recruiter.id}`}
+                                    >
+                                      <Phone className="w-3 h-3" />
+                                      {recruiter.phone}
+                                    </a>
+                                  )}
+                                </div>
+                              </div>
+                              <Badge variant="default">Verified</Badge>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 )}
+
                 {hasContact && (
-                  <Card data-testid="contact-card">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base font-heading">Recruiting Contact</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      {college.recruitingContactEmail && (
-                        <p className="text-sm" data-testid="text-contact-email">{college.recruitingContactEmail}</p>
-                      )}
-                      {college.recruitingUrl && (
-                        <a
-                          href={college.recruitingUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-accent underline"
-                          data-testid="link-recruiting-url"
-                        >
-                          Visit Recruiting Page
-                        </a>
-                      )}
-                    </CardContent>
-                  </Card>
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Program Links</h3>
+                    <Card data-testid="contact-card">
+                      <CardContent className="p-4 space-y-2">
+                        {college.recruitingContactEmail && (
+                          <a
+                            href={`mailto:${college.recruitingContactEmail}`}
+                            className="text-sm flex items-center gap-2 text-accent"
+                            data-testid="text-contact-email"
+                          >
+                            <Mail className="w-4 h-4" />
+                            {college.recruitingContactEmail}
+                          </a>
+                        )}
+                        {college.recruitingUrl && (
+                          <a
+                            href={college.recruitingUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-accent flex items-center gap-2"
+                            data-testid="link-recruiting-url"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                            Visit Recruiting Page
+                          </a>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
                 )}
               </>
             );

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, ShoppingBag, ClipboardCheck, Medal, GraduationCap, Heart, Wand2, ChevronDown, ChevronRight, BookOpen, Binoculars, Search, Bookmark } from "lucide-react";
+import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, ShoppingBag, ClipboardCheck, Medal, GraduationCap, Heart, Wand2, ChevronDown, ChevronRight, BookOpen, Binoculars, Search, Bookmark, UserSearch } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -117,6 +117,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         { href: "/community?tab=feed", label: "Feed", icon: Rss },
         { href: "/discover/highlights", label: "Highlights", icon: Film },
         { href: "/recruiting", label: "Recruiting", icon: GraduationCap },
+        { href: "/recruiter-directory", label: "Find Recruiters", icon: UserSearch },
         { href: "/analyze", label: "Log Game", icon: PlusCircle },
       ],
     },
@@ -188,6 +189,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
       items: [
         { href: "/recruiter", label: "Search Players", icon: Search },
         { href: "/recruiter?tab=bookmarks", label: "Bookmarks", icon: Bookmark },
+        { href: "/recruiter-directory", label: "Recruiter Directory", icon: UserSearch },
         { href: "/discover/players", label: "Player Directory", icon: Users },
       ],
     },
