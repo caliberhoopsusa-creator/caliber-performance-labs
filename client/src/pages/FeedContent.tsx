@@ -1863,9 +1863,9 @@ export default function FeedContent() {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery<{ items: FeedActivity[]; nextCursor?: number; hasMore: boolean }>({
-    queryKey: ["/api/feed", "social"],
+    queryKey: ["/api/feed/following"],
     queryFn: async ({ pageParam }) => {
-      const url = pageParam ? `/api/feed?cursor=${pageParam}&limit=20&type=social` : `/api/feed?limit=20&type=social`;
+      const url = pageParam ? `/api/feed/following?cursor=${pageParam}&limit=20` : `/api/feed/following?limit=20`;
       const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to fetch feed");
       return res.json();

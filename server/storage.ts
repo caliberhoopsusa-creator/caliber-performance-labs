@@ -223,7 +223,7 @@ export interface IStorage {
   createFeedActivity(activity: InsertFeedActivity): Promise<FeedActivity>;
   getFeedActivities(limit?: number, cursor?: number, typeFilter?: 'social' | 'alerts' | 'all'): Promise<(FeedActivity & { playerName?: string; playerUsername?: string })[]>;
   getPlayerFeedActivities(playerId: number): Promise<FeedActivity[]>;
-  getFollowingFeedActivities(playerId: number, limit?: number): Promise<(FeedActivity & { playerName?: string; playerUsername?: string })[]>;
+  getFollowingFeedActivities(playerId: number, limit?: number, cursor?: number): Promise<(FeedActivity & { playerName?: string; playerUsername?: string })[]>;
   getTeamFeedActivities(sessionId: string, limit?: number): Promise<(FeedActivity & { playerName?: string; playerUsername?: string })[]>;
   isWorkoutShared(workoutId: number): Promise<boolean>;
 
@@ -1325,7 +1325,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(feedActivities.createdAt));
   }
 
-  async getFollowingFeedActivities(playerId: number, limit: number = 50): Promise<(FeedActivity & { playerName?: string; playerUsername?: string })[]> {
+  async getFollowingFeedActivities(playerId: number, limit: number = 50, cursor?: number): Promise<(FeedActivity & { playerName?: string; playerUsername?: string })[]> {
     const followedPlayers = await db
       .select({ followeePlayerId: follows.followeePlayerId })
       .from(follows)
@@ -1333,9 +1333,18 @@ export class DatabaseStorage implements IStorage {
     
     const followedPlayerIds = followedPlayers.map(f => f.followeePlayerId);
     
-    if (followedPlayerIds.length === 0) {
-      return [];
+    const relevantPlayerIds = [...followedPlayerIds, playerId];
+
+    const conditions: any[] = [
+      sql`${feedActivities.playerId} IN (${sql.join(relevantPlayerIds, sql`, `)})`
+    ];
+    
+    if (cursor) {
+      conditions.push(sql`${feedActivities.id} < ${cursor}`);
     }
+
+    const socialTypes = ['game', 'workout', 'repost', 'poll', 'story', 'prediction'];
+    conditions.push(inArray(feedActivities.activityType, socialTypes));
 
     const results = await db
       .select({
@@ -1354,8 +1363,8 @@ export class DatabaseStorage implements IStorage {
       })
       .from(feedActivities)
       .leftJoin(players, eq(feedActivities.playerId, players.id))
-      .where(sql`${feedActivities.playerId} IN (${sql.join(followedPlayerIds, sql`, `)})`)
-      .orderBy(desc(feedActivities.createdAt))
+      .where(and(...conditions))
+      .orderBy(desc(feedActivities.id))
       .limit(limit);
     
     return results.map(r => ({

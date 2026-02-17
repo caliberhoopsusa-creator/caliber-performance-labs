@@ -6523,12 +6523,18 @@ Respond in this exact JSON format:
       }
       
       if (!user.playerId) {
-        return res.json([]);
+        return res.json({ items: [], hasMore: false });
       }
       
-      const limit = Number(req.query.limit) || 50;
-      const activities = await storage.getFollowingFeedActivities(user.playerId, limit);
-      res.json(activities);
+      const limit = Number(req.query.limit) || 20;
+      const cursor = req.query.cursor ? Number(req.query.cursor) : undefined;
+      const activities = await storage.getFollowingFeedActivities(user.playerId, limit + 1, cursor);
+      
+      const hasMore = activities.length > limit;
+      const items = hasMore ? activities.slice(0, limit) : activities;
+      const nextCursor = hasMore ? items[items.length - 1].id : undefined;
+      
+      res.json({ items, nextCursor, hasMore });
     } catch (err) {
       console.error('Get following feed error:', err);
       res.status(500).json({ message: 'Error fetching following feed' });
