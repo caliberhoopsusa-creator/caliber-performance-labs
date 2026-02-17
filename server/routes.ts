@@ -16449,7 +16449,14 @@ Only respond with the JSON array, no other text.`;
       if (existing.length >= 15) {
         return res.status(400).json({ message: "Maximum of 15 target schools allowed" });
       }
-      const input = insertRecruitingTargetSchema.parse({ ...req.body, playerId });
+      const body = { ...req.body, playerId };
+      if (body.followUpDate && typeof body.followUpDate === 'string') {
+        body.followUpDate = new Date(body.followUpDate);
+      }
+      if (body.lastContactDate && typeof body.lastContactDate === 'string') {
+        body.lastContactDate = new Date(body.lastContactDate);
+      }
+      const input = insertRecruitingTargetSchema.parse(body);
       const target = await storage.createRecruitingTarget(input);
       res.status(201).json(target);
     } catch (err) {
@@ -16462,7 +16469,14 @@ Only respond with the JSON array, no other text.`;
 
   app.patch("/api/recruiting-targets/:id", async (req, res) => {
     const id = parseInt(req.params.id);
-    const target = await storage.updateRecruitingTarget(id, req.body);
+    const body = { ...req.body };
+    if (body.followUpDate && typeof body.followUpDate === 'string') {
+      body.followUpDate = new Date(body.followUpDate);
+    }
+    if (body.lastContactDate && typeof body.lastContactDate === 'string') {
+      body.lastContactDate = new Date(body.lastContactDate);
+    }
+    const target = await storage.updateRecruitingTarget(id, body);
     if (!target) return res.status(404).json({ message: "Target not found" });
     res.json(target);
   });
