@@ -3612,9 +3612,12 @@ export async function registerRoutes(
     res.json(goals);
   });
 
-  app.post('/api/players/:id/goals', async (req, res) => {
+  app.post('/api/players/:id/goals', isAuthenticated, async (req: any, res) => {
     try {
       const playerId = Number(req.params.id);
+      if (!await canModifyPlayer(req, playerId)) {
+        return res.status(403).json({ message: "Not authorized to modify this profile" });
+      }
       const player = await storage.getPlayer(playerId);
       if (!player) {
         return res.status(404).json({ message: 'Player not found' });
@@ -3634,7 +3637,7 @@ export async function registerRoutes(
     }
   });
 
-  app.patch('/api/goals/:id', async (req, res) => {
+  app.patch('/api/goals/:id', isAuthenticated, async (req: any, res) => {
     const goalId = Number(req.params.id);
     const updates = req.body;
     
@@ -3642,6 +3645,10 @@ export async function registerRoutes(
     const existingGoal = await storage.getGoal(goalId);
     if (!existingGoal) {
       return res.status(404).json({ message: 'Goal not found' });
+    }
+    
+    if (!await canModifyPlayer(req, existingGoal.playerId)) {
+      return res.status(403).json({ message: "Not authorized to modify this profile" });
     }
     
     const updatedGoal = await storage.updateGoal(goalId, updates);
@@ -3662,8 +3669,15 @@ export async function registerRoutes(
     res.json({ ...updatedGoal, coinsAwarded });
   });
 
-  app.delete('/api/goals/:id', async (req, res) => {
+  app.delete('/api/goals/:id', isAuthenticated, async (req: any, res) => {
     const goalId = Number(req.params.id);
+    const existingGoal = await storage.getGoal(goalId);
+    if (!existingGoal) {
+      return res.status(404).json({ message: 'Goal not found' });
+    }
+    if (!await canModifyPlayer(req, existingGoal.playerId)) {
+      return res.status(403).json({ message: "Not authorized to modify this profile" });
+    }
     await storage.deleteGoal(goalId);
     res.status(204).send();
   });

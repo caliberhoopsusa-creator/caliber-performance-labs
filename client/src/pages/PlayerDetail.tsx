@@ -3260,7 +3260,7 @@ export default function PlayerDetail() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.4 }}
           >
-            <GoalsPanel playerId={player.id} games={games} />
+            {isOwnProfile && <GoalsPanel playerId={player.id} games={games} />}
           </motion.div>
         </TabsContent>
 
@@ -3724,6 +3724,7 @@ export default function PlayerDetail() {
                         >
                           <Share2 className="w-3.5 h-3.5" />
                         </button>
+                        {isOwnProfile && (
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <button className="text-muted-foreground hover:text-red-600 dark:hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 p-1" data-testid={`button-delete-game-${game.id}`}>
@@ -3743,6 +3744,7 @@ export default function PlayerDetail() {
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
+                        )}
                       </div>
                     </div>
                   </div>
