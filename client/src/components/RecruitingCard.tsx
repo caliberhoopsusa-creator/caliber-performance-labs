@@ -22,11 +22,14 @@ interface RecruitingCardProps {
     school: string | null;
     graduationYear: number | null;
     height: string | null;
+    weight?: string | number | null;
+    wingspan?: string | number | null;
     gpa: string | number | null;
     city: string | null;
     state: string | null;
     currentTier: string;
     totalXp: number;
+    sport?: string;
   };
   stats: {
     gamesPlayed: number;
@@ -34,6 +37,11 @@ interface RecruitingCardProps {
     ppg: number;
     rpg: number;
     apg: number;
+    spg: number;
+    bpg: number;
+    fgPct: string;
+    threePct: string;
+    ftPct: string;
     badgeCount: number;
   };
 }
@@ -44,6 +52,30 @@ const GRADE_COLORS: Record<string, string> = {
   'C+': '#f59e0b', 'C': '#f59e0b', 'C-': '#f59e0b',
   'D+': '#f97316', 'D': '#f97316', 'D-': '#f97316',
   'F': '#ef4444',
+};
+
+const statBoxStyle = {
+  background: 'rgba(255,255,255,0.04)',
+  borderRadius: 8,
+  padding: '10px 8px',
+  textAlign: 'center' as const,
+  border: '1px solid rgba(255,255,255,0.06)',
+};
+
+const statLabelStyle = {
+  fontSize: 9,
+  color: 'rgba(255,255,255,0.35)',
+  textTransform: 'uppercase' as const,
+  letterSpacing: '0.1em',
+  marginBottom: 2,
+};
+
+const statValueStyle = {
+  fontSize: 20,
+  fontWeight: 800,
+  color: '#fff',
+  fontFamily: "'Teko', sans-serif",
+  lineHeight: 1.2,
 };
 
 export function RecruitingCard({ open, onOpenChange, player, stats }: RecruitingCardProps) {
@@ -80,6 +112,11 @@ export function RecruitingCard({ open, onOpenChange, player, stats }: Recruiting
 
   const gradeColor = stats.averageGrade ? GRADE_COLORS[stats.averageGrade] || '#6b7280' : '#6b7280';
 
+  const measurables: string[] = [];
+  if (player.height) measurables.push(player.height);
+  if (player.weight) measurables.push(`${player.weight} lbs`);
+  if (player.wingspan) measurables.push(`${player.wingspan}" WS`);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -92,7 +129,7 @@ export function RecruitingCard({ open, onOpenChange, player, stats }: Recruiting
             ref={cardRef}
             style={{
               width: 400,
-              height: 500,
+              height: 580,
               background: 'linear-gradient(145deg, #0f1419 0%, #1a1f2e 50%, #0f1419 100%)',
               padding: 0,
               fontFamily: "'Inter', sans-serif",
@@ -103,87 +140,105 @@ export function RecruitingCard({ open, onOpenChange, player, stats }: Recruiting
           >
             <div style={{ height: 4, background: '#E8192C', width: '100%' }} />
             
-            <div style={{ padding: '24px 28px' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, gap: 12 }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+            <div style={{ padding: '20px 24px 16px' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16, gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                   {player.photoUrl ? (
-                    <img src={player.photoUrl} alt="" style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.15)', flexShrink: 0 }} />
+                    <img src={player.photoUrl} alt="" style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.15)', flexShrink: 0 }} />
                   ) : (
-                    <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid rgba(255,255,255,0.15)', flexShrink: 0 }}>
-                      <span style={{ fontSize: 22, fontWeight: 700, color: 'rgba(255,255,255,0.4)', fontFamily: "'Teko', sans-serif" }}>
+                    <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid rgba(255,255,255,0.15)', flexShrink: 0 }}>
+                      <span style={{ fontSize: 20, fontWeight: 700, color: 'rgba(255,255,255,0.4)', fontFamily: "'Teko', sans-serif" }}>
                         {player.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                       </span>
                     </div>
                   )}
                   <div>
-                  <p style={{ fontSize: 28, fontWeight: 800, color: '#fff', lineHeight: 1.1, fontFamily: "'Teko', sans-serif", textTransform: 'uppercase', letterSpacing: '0.02em' }}>
-                    {player.name}
-                  </p>
-                  <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 4 }}>
-                    {player.position} {player.height ? `· ${player.height}` : ''}
-                  </p>
-                  <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
-                    {[player.school, player.graduationYear ? `Class of ${player.graduationYear}` : ''].filter(Boolean).join(' · ')}
-                  </p>
-                  {(player.city || player.state) && (
-                    <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', marginTop: 2 }}>
-                      {[player.city, player.state].filter(Boolean).join(', ')}
+                    <p style={{ fontSize: 26, fontWeight: 800, color: '#fff', lineHeight: 1.1, fontFamily: "'Teko', sans-serif", textTransform: 'uppercase', letterSpacing: '0.02em' }}>
+                      {player.name}
                     </p>
-                  )}
+                    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 3 }}>
+                      {player.position} {measurables.length > 0 ? `· ${measurables.join(' · ')}` : ''}
+                    </p>
+                    <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
+                      {[player.school, player.graduationYear ? `Class of ${player.graduationYear}` : ''].filter(Boolean).join(' · ')}
+                    </p>
+                    {(player.city || player.state) && (
+                      <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginTop: 1 }}>
+                        {[player.city, player.state].filter(Boolean).join(', ')}
+                      </p>
+                    )}
                   </div>
                 </div>
                 
                 {stats.averageGrade && (
                   <div style={{
-                    width: 64, height: 64, borderRadius: '50%',
+                    width: 56, height: 56, borderRadius: '50%',
                     background: gradeColor, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: `0 0 20px ${gradeColor}40`,
+                    boxShadow: `0 0 20px ${gradeColor}40`, flexShrink: 0,
                   }}>
-                    <span style={{ fontSize: 24, fontWeight: 800, color: '#fff', fontFamily: "'Teko', sans-serif" }}>
+                    <span style={{ fontSize: 22, fontWeight: 800, color: '#fff', fontFamily: "'Teko', sans-serif" }}>
                       {stats.averageGrade}
                     </span>
                   </div>
                 )}
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 20 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr', gap: 6, marginBottom: 10 }}>
                 {[
                   { label: 'PPG', value: stats.ppg.toFixed(1) },
                   { label: 'RPG', value: stats.rpg.toFixed(1) },
                   { label: 'APG', value: stats.apg.toFixed(1) },
+                  { label: 'SPG', value: stats.spg.toFixed(1) },
+                  { label: 'BPG', value: stats.bpg.toFixed(1) },
                 ].map(s => (
-                  <div key={s.label} style={{
-                    background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '12px 8px', textAlign: 'center',
-                    border: '1px solid rgba(255,255,255,0.06)',
-                  }}>
-                    <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>{s.label}</p>
-                    <p style={{ fontSize: 24, fontWeight: 800, color: '#fff', fontFamily: "'Teko', sans-serif" }}>{s.value}</p>
+                  <div key={s.label} style={statBoxStyle}>
+                    <p style={statLabelStyle}>{s.label}</p>
+                    <p style={statValueStyle}>{s.value}</p>
                   </div>
                 ))}
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20, gap: 8 }}>
-                <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '10px 14px', flex: 1, border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Games</p>
-                  <p style={{ fontSize: 18, fontWeight: 700, color: '#fff', fontFamily: "'Teko', sans-serif" }}>{stats.gamesPlayed}</p>
+              <div style={{
+                display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginBottom: 10,
+              }}>
+                {[
+                  { label: 'FG%', value: stats.fgPct !== '—' ? `${stats.fgPct}` : '—' },
+                  { label: '3PT%', value: stats.threePct !== '—' ? `${stats.threePct}` : '—' },
+                  { label: 'FT%', value: stats.ftPct !== '—' ? `${stats.ftPct}` : '—' },
+                ].map(s => (
+                  <div key={s.label} style={{
+                    ...statBoxStyle,
+                    background: s.value !== '—' ? 'rgba(232, 25, 44, 0.08)' : 'rgba(255,255,255,0.04)',
+                    border: s.value !== '—' ? '1px solid rgba(232, 25, 44, 0.15)' : '1px solid rgba(255,255,255,0.06)',
+                  }}>
+                    <p style={statLabelStyle}>{s.label}</p>
+                    <p style={{ ...statValueStyle, color: s.value !== '—' ? '#fff' : 'rgba(255,255,255,0.3)' }}>{s.value}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+                <div style={{ ...statBoxStyle, flex: 1 }}>
+                  <p style={statLabelStyle}>Games</p>
+                  <p style={{ ...statValueStyle, fontSize: 18 }}>{stats.gamesPlayed}</p>
                 </div>
-                <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '10px 14px', flex: 1, border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Tier</p>
-                  <p style={{ fontSize: 18, fontWeight: 700, color: '#fff', fontFamily: "'Teko', sans-serif" }}>{player.currentTier}</p>
+                <div style={{ ...statBoxStyle, flex: 1 }}>
+                  <p style={statLabelStyle}>Tier</p>
+                  <p style={{ ...statValueStyle, fontSize: 18 }}>{player.currentTier}</p>
                 </div>
-                <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '10px 14px', flex: 1, border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Badges</p>
-                  <p style={{ fontSize: 18, fontWeight: 700, color: '#fff', fontFamily: "'Teko', sans-serif" }}>{stats.badgeCount}</p>
+                <div style={{ ...statBoxStyle, flex: 1 }}>
+                  <p style={statLabelStyle}>Badges</p>
+                  <p style={{ ...statValueStyle, fontSize: 18 }}>{stats.badgeCount}</p>
                 </div>
                 {player.gpa != null && (
-                  <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '10px 14px', flex: 1, border: '1px solid rgba(255,255,255,0.06)' }}>
-                    <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>GPA</p>
-                    <p style={{ fontSize: 18, fontWeight: 700, color: '#fff', fontFamily: "'Teko', sans-serif" }}>{Number(player.gpa).toFixed(1)}</p>
+                  <div style={{ ...statBoxStyle, flex: 1 }}>
+                    <p style={statLabelStyle}>GPA</p>
+                    <p style={{ ...statValueStyle, fontSize: 18 }}>{Number(player.gpa).toFixed(1)}</p>
                   </div>
                 )}
               </div>
               
-              <div style={{ textAlign: 'center', padding: '10px 0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ textAlign: 'center', padding: '8px 0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
                 <p style={{ fontSize: 11, color: '#E8192C', fontWeight: 600 }}>
                   caliber.app/recruit/{player.id}
                 </p>
@@ -192,12 +247,12 @@ export function RecruitingCard({ open, onOpenChange, player, stats }: Recruiting
 
             <div style={{
               position: 'absolute', bottom: 0, left: 0, right: 0,
-              padding: '12px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '10px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               borderTop: '1px solid rgba(255,255,255,0.06)',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <img src={caliberLogo} alt="" style={{ width: 20, height: 20, opacity: 0.6 }} />
-                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', fontWeight: 500 }}>Caliber Performance Labs</span>
+                <img src={caliberLogo} alt="" style={{ width: 18, height: 18, opacity: 0.6 }} />
+                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', fontWeight: 500 }}>Caliber Performance Labs</span>
               </div>
             </div>
           </div>

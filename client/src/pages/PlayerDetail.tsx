@@ -2917,6 +2917,11 @@ export default function PlayerDetail() {
             ppg: parseFloat(avgPoints) || 0,
             rpg: parseFloat(avgReb) || 0,
             apg: parseFloat(avgAst) || 0,
+            spg: parseFloat(avgSteals) || 0,
+            bpg: parseFloat(avgBlocks) || 0,
+            fgPct: fgPercent,
+            threePct: threePercent,
+            ftPct: ftPercent,
             badgeCount: badges?.length || 0,
           }}
         />
