@@ -2182,7 +2182,11 @@ export async function registerRoutes(
   });
 
   app.get(api.players.get.path, async (req, res) => {
-    const player = await storage.getPlayer(Number(req.params.id));
+    const playerId = Number(req.params.id);
+    if (isNaN(playerId)) {
+      return res.status(400).json({ message: 'Invalid player ID' });
+    }
+    const player = await storage.getPlayer(playerId);
     if (!player) {
       return res.status(404).json({ message: 'Player not found' });
     }
