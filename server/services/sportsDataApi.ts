@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { colleges } from "@shared/schema";
+import { colleges, collegeRosterPlayers, collegeCoachingStaff } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 interface CollegeFootballTeam {
@@ -158,6 +158,35 @@ const espnTeamIds: Record<string, string> = {
 
 class NCAABasketballAPI {
   private baseUrl = "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball";
+
+  async getRoster(teamId: string): Promise<any | null> {
+    try {
+      const response = await fetch(`${this.baseUrl}/teams/${teamId}/roster`);
+      if (!response.ok) {
+        console.log(`ESPN Roster API returned ${response.status} for team ${teamId}`);
+        return null;
+      }
+      return await response.json();
+    } catch (error) {
+      console.error("ESPN Basketball Roster API error:", error);
+      return null;
+    }
+  }
+
+  async getCoach(teamId: string): Promise<any[] | null> {
+    try {
+      const response = await fetch(`${this.baseUrl}/teams/${teamId}/roster`);
+      if (!response.ok) {
+        console.log(`ESPN Coach API returned ${response.status} for team ${teamId}`);
+        return null;
+      }
+      const data = await response.json();
+      return data.coach || null;
+    } catch (error) {
+      console.error("ESPN Basketball Coach API error:", error);
+      return null;
+    }
+  }
 
   async getTeamById(teamId: string): Promise<{ wins: number; losses: number; confWins: number; confLosses: number } | null> {
     try {
@@ -351,6 +380,199 @@ export async function syncAllCollegeStats(): Promise<{
   const basketball = await syncBasketballStats();
   
   return { football, basketball };
+}
+
+const espnFootballTeamIds: Record<string, string> = {
+  "Clemson University": "228",
+  "University of Alabama": "333",
+  "Ohio State University": "194",
+  "University of Georgia": "61",
+  "University of Texas": "251",
+  "University of Michigan": "130",
+  "University of Southern California": "30",
+  "University of Oregon": "2483",
+  "Penn State University": "213",
+  "University of Notre Dame": "87",
+  "LSU": "99",
+  "Boise State University": "68",
+};
+
+async function getFootballRoster(teamId: string): Promise<any | null> {
+  try {
+    const response = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/college-football/teams/${teamId}/roster`);
+    if (!response.ok) {
+      console.log(`ESPN Football Roster API returned ${response.status} for team ${teamId}`);
+      return null;
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("ESPN Football Roster API error:", error);
+    return null;
+  }
+}
+
+function parseBasketballRoster(data: any): { players: any[]; coaches: any[] } {
+  const players: any[] = [];
+  const coaches: any[] = [];
+
+  if (data.athletes && Array.isArray(data.athletes)) {
+    for (const athlete of data.athletes) {
+      players.push({
+        espnId: athlete.id?.toString() || null,
+        name: athlete.displayName || `${athlete.firstName || ''} ${athlete.lastName || ''}`.trim(),
+        firstName: athlete.firstName || null,
+        lastName: athlete.lastName || null,
+        jersey: athlete.jersey?.toString() || null,
+        position: athlete.position?.abbreviation || null,
+        height: athlete.displayHeight || null,
+        weight: athlete.displayWeight?.toString() || null,
+        classYear: athlete.experience?.displayValue || null,
+        hometown: athlete.birthPlace?.displayText || null,
+        headshotUrl: athlete.headshot?.href || null,
+      });
+    }
+  }
+
+  if (data.coach && Array.isArray(data.coach)) {
+    for (const coach of data.coach) {
+      coaches.push({
+        espnId: coach.id?.toString() || null,
+        name: `${coach.firstName || ''} ${coach.lastName || ''}`.trim(),
+        firstName: coach.firstName || null,
+        lastName: coach.lastName || null,
+        title: coach.title || "Head Coach",
+        experience: typeof coach.experience === 'number' ? coach.experience : null,
+        headshotUrl: coach.headshot?.href || null,
+      });
+    }
+  }
+
+  return { players, coaches };
+}
+
+function parseFootballRoster(data: any): { players: any[]; coaches: any[] } {
+  const players: any[] = [];
+  const coaches: any[] = [];
+
+  if (data.athletes && Array.isArray(data.athletes)) {
+    for (const group of data.athletes) {
+      const items = group.items || [];
+      for (const athlete of items) {
+        players.push({
+          espnId: athlete.id?.toString() || null,
+          name: athlete.displayName || `${athlete.firstName || ''} ${athlete.lastName || ''}`.trim(),
+          firstName: athlete.firstName || null,
+          lastName: athlete.lastName || null,
+          jersey: athlete.jersey?.toString() || null,
+          position: athlete.position?.abbreviation || null,
+          height: athlete.displayHeight || null,
+          weight: athlete.displayWeight?.toString() || null,
+          classYear: athlete.experience?.displayValue || null,
+          hometown: athlete.birthPlace?.displayText || null,
+          headshotUrl: athlete.headshot?.href || null,
+        });
+      }
+    }
+  }
+
+  if (data.coach && Array.isArray(data.coach)) {
+    for (const coach of data.coach) {
+      coaches.push({
+        espnId: coach.id?.toString() || null,
+        name: `${coach.firstName || ''} ${coach.lastName || ''}`.trim(),
+        firstName: coach.firstName || null,
+        lastName: coach.lastName || null,
+        title: coach.title || "Head Coach",
+        experience: typeof coach.experience === 'number' ? coach.experience : null,
+        headshotUrl: coach.headshot?.href || null,
+      });
+    }
+  }
+
+  return { players, coaches };
+}
+
+export async function syncRosterData(): Promise<{ updated: number; errors: number }> {
+  console.log("Starting roster data sync from ESPN API...");
+
+  let updated = 0;
+  let errors = 0;
+
+  const allColleges = await db.select().from(colleges);
+  const d1Colleges = allColleges.filter(c => c.division === "D1");
+  console.log(`Processing ${d1Colleges.length} D1 colleges for roster sync`);
+
+  for (const college of d1Colleges) {
+    try {
+      let espnId: string | undefined;
+      let rosterData: any = null;
+      let isFootball = college.sport === "football";
+
+      if (isFootball) {
+        espnId = espnFootballTeamIds[college.name];
+      } else {
+        espnId = espnTeamIds[college.name];
+      }
+
+      if (!espnId) {
+        continue;
+      }
+
+      console.log(`Fetching roster for ${college.name} (ESPN ID: ${espnId}, sport: ${college.sport})...`);
+
+      if (isFootball) {
+        rosterData = await getFootballRoster(espnId);
+      } else {
+        rosterData = await ncaaBasketballApi.getRoster(espnId);
+      }
+
+      if (!rosterData) {
+        console.log(`No roster data returned for ${college.name}`);
+        continue;
+      }
+
+      const { players, coaches } = isFootball
+        ? parseFootballRoster(rosterData)
+        : parseBasketballRoster(rosterData);
+
+      console.log(`Parsed ${players.length} players and ${coaches.length} coaches for ${college.name}`);
+
+      await db.delete(collegeRosterPlayers).where(eq(collegeRosterPlayers.collegeId, college.id));
+      await db.delete(collegeCoachingStaff).where(eq(collegeCoachingStaff.collegeId, college.id));
+
+      if (players.length > 0) {
+        const playerRows = players.map(p => ({
+          collegeId: college.id,
+          ...p,
+        }));
+        await db.insert(collegeRosterPlayers).values(playerRows);
+      }
+
+      if (coaches.length > 0) {
+        const coachRows = coaches.map(c => ({
+          collegeId: college.id,
+          ...c,
+        }));
+        await db.insert(collegeCoachingStaff).values(coachRows);
+      }
+
+      await db.update(colleges)
+        .set({ currentRosterSize: players.length })
+        .where(eq(colleges.id, college.id));
+
+      console.log(`Updated roster for ${college.name}: ${players.length} players, ${coaches.length} coaches`);
+      updated++;
+
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+    } catch (error) {
+      console.error(`Error syncing roster for ${college.name}:`, error);
+      errors++;
+    }
+  }
+
+  console.log(`Roster sync complete: ${updated} updated, ${errors} errors`);
+  return { updated, errors };
 }
 
 export { cfbApi, ncaaBasketballApi };

@@ -69,6 +69,7 @@ import DiscoverHighlights from "./pages/DiscoverHighlights";
 import ChallengePage from "./pages/ChallengePage";
 import RecruiterDashboard from "@/pages/RecruiterDashboard";
 import WhosWatching from "@/pages/WhosWatching";
+import CollegeDetail from "@/pages/CollegeDetail";
 import NotFound from "./pages/not-found";
 
 interface ExtendedUser {
@@ -406,6 +407,7 @@ function MainRouter() {
                 <Route path="/camps-showcases">
                   <Redirect to="/recruiting?tab=events" />
                 </Route>
+                <Route path="/colleges/:id" component={CollegeDetail} />
                 <Route component={NotFound} />
               </Switch>
             </PageTransition>

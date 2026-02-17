@@ -1,6 +1,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useState } from "react";
+import { Link } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -393,6 +394,17 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
         )}
         
         <div className="flex items-center gap-2 mt-4">
+          <Link href={`/colleges/${college.id}`}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-accent/20"
+              data-testid={`button-view-program-${college.id}`}
+            >
+              <Users className="w-4 h-4 mr-2" />
+              Roster
+            </Button>
+          </Link>
           <Collapsible open={isOpen} onOpenChange={setIsOpen} className="flex-1">
             <CollapsibleTrigger asChild>
               <Button 

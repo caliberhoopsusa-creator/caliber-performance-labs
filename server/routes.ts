@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, badges, headToHeadChallenges, statVerifications, playerCollegeMatches, playerCollegeInterests, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema, insertWearableConnectionSchema, recruitingEvents, insertRecruitingEventSchema, type RecruitingEvent, playerEventRegistrations, insertPlayerEventRegistrationSchema, colleges, ncaaEligibilityProgress, insertNcaaEligibilityProgressSchema, coachRecommendations, insertCoachRecommendationSchema, teams, teamMembers, skillBadges, activityStreaks, feedActivities, feedComments, feedCommentLikes, type InsertFeedComment, type FeedComment, highlightClips, personalRecords, recruiterBlocks, playerGoals, recruitingTargets, recruitingContacts, insertRecruitingTargetSchema, insertRecruitingContactSchema, DIVISION_BENCHMARKS, BENCHMARK_STAT_LABELS } from "@shared/schema";
+import { players, games, badges, headToHeadChallenges, statVerifications, playerCollegeMatches, playerCollegeInterests, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema, insertWearableConnectionSchema, recruitingEvents, insertRecruitingEventSchema, type RecruitingEvent, playerEventRegistrations, insertPlayerEventRegistrationSchema, colleges, collegeRosterPlayers, collegeCoachingStaff, ncaaEligibilityProgress, insertNcaaEligibilityProgressSchema, coachRecommendations, insertCoachRecommendationSchema, teams, teamMembers, skillBadges, activityStreaks, feedActivities, feedComments, feedCommentLikes, type InsertFeedComment, type FeedComment, highlightClips, personalRecords, recruiterBlocks, playerGoals, recruitingTargets, recruitingContacts, insertRecruitingTargetSchema, insertRecruitingContactSchema, DIVISION_BENCHMARKS, BENCHMARK_STAT_LABELS } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { calculateAIRating, calculateProjection, type GameStats, type PlayerMetrics, type PeerStats, type AIRatingResult, type ProjectionResult } from "@shared/ai-rating-engine";
 import type { Sport } from "@shared/sports-config";
@@ -14578,6 +14578,91 @@ Only respond with the JSON array, no other text.`;
     } catch (error) {
       console.error('Error getting college:', error);
       res.status(500).json({ message: "Failed to get college" });
+    }
+  });
+
+  // GET /api/colleges/:id/roster - Get college roster
+  app.get("/api/colleges/:id/roster", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid college ID" });
+
+      const roster = await db.select().from(collegeRosterPlayers)
+        .where(eq(collegeRosterPlayers.collegeId, id))
+        .orderBy(collegeRosterPlayers.position, collegeRosterPlayers.name);
+      res.json(roster);
+    } catch (error) {
+      console.error('Error getting college roster:', error);
+      res.status(500).json({ message: "Failed to get roster" });
+    }
+  });
+
+  // GET /api/colleges/:id/staff - Get college coaching staff
+  app.get("/api/colleges/:id/staff", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid college ID" });
+
+      const staff = await db.select().from(collegeCoachingStaff)
+        .where(eq(collegeCoachingStaff.collegeId, id));
+      res.json(staff);
+    } catch (error) {
+      console.error('Error getting coaching staff:', error);
+      res.status(500).json({ message: "Failed to get coaching staff" });
+    }
+  });
+
+  // POST /api/colleges/sync-rosters - Sync rosters from ESPN (admin only)
+  app.post("/api/colleges/sync-rosters", isAdmin, async (req, res) => {
+    try {
+      const { syncRosterData } = await import('./services/sportsDataApi');
+      const result = await syncRosterData();
+      res.json({
+        message: "Roster sync completed",
+        ...result,
+        syncedAt: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Error syncing rosters:', error);
+      res.status(500).json({ message: "Failed to sync rosters" });
+    }
+  });
+
+  // PATCH /api/colleges/:id/recruiting-needs - Update recruiting needs for a college (Coach/Admin only)
+  app.patch("/api/colleges/:id/recruiting-needs", isAuthenticated as any, async (req: any, res) => {
+    try {
+      const userRole = req.user?.role;
+      if (userRole !== "coach" && userRole !== "admin") {
+        return res.status(403).json({ message: "Only coaches and admins can update recruiting needs" });
+      }
+
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid college ID" });
+
+      const { positionNeeds, scholarshipsAvailable } = req.body;
+
+      if (positionNeeds !== undefined && positionNeeds !== null) {
+        if (!Array.isArray(positionNeeds) || !positionNeeds.every((p: unknown) => typeof p === "string")) {
+          return res.status(400).json({ message: "positionNeeds must be an array of strings" });
+        }
+      }
+      if (scholarshipsAvailable !== undefined && scholarshipsAvailable !== null) {
+        if (typeof scholarshipsAvailable !== "number" || scholarshipsAvailable < 0) {
+          return res.status(400).json({ message: "scholarshipsAvailable must be a non-negative number" });
+        }
+      }
+
+      await db.update(colleges).set({
+        positionNeeds: positionNeeds ? JSON.stringify(positionNeeds) : null,
+        scholarshipsAvailable: scholarshipsAvailable ?? null,
+        updatedAt: new Date(),
+      }).where(eq(colleges.id, id));
+
+      const updated = await db.select().from(colleges).where(eq(colleges.id, id));
+      res.json(updated[0]);
+    } catch (error) {
+      console.error('Error updating recruiting needs:', error);
+      res.status(500).json({ message: "Failed to update recruiting needs" });
     }
   });
 

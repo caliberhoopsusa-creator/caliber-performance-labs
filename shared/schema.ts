@@ -2265,6 +2265,42 @@ export const colleges = pgTable("colleges", {
   stateIdx: index("colleges_state_idx").on(table.state),
 }));
 
+export const collegeRosterPlayers = pgTable("college_roster_players", {
+  id: serial("id").primaryKey(),
+  collegeId: integer("college_id").notNull().references(() => colleges.id, { onDelete: "cascade" }),
+  espnId: text("espn_id"),
+  name: text("name").notNull(),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  jersey: text("jersey"),
+  position: text("position"),
+  height: text("height"),
+  weight: text("weight"),
+  classYear: text("class_year"),
+  hometown: text("hometown"),
+  headshotUrl: text("headshot_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  collegeIdx: index("college_roster_college_idx").on(table.collegeId),
+}));
+
+export const collegeCoachingStaff = pgTable("college_coaching_staff", {
+  id: serial("id").primaryKey(),
+  collegeId: integer("college_id").notNull().references(() => colleges.id, { onDelete: "cascade" }),
+  espnId: text("espn_id"),
+  name: text("name").notNull(),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  title: text("title"),
+  experience: integer("experience"),
+  headshotUrl: text("headshot_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  collegeIdx: index("college_staff_college_idx").on(table.collegeId),
+}));
+
 export const playerCollegeMatches = pgTable("player_college_matches", {
   id: serial("id").primaryKey(),
   playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
@@ -2418,6 +2454,14 @@ export type LeagueRivalry = typeof leagueRivalries.$inferSelect;
 export const insertCollegeSchema = createInsertSchema(colleges).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertCollege = z.infer<typeof insertCollegeSchema>;
 export type College = typeof colleges.$inferSelect;
+
+export const insertCollegeRosterPlayerSchema = createInsertSchema(collegeRosterPlayers).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertCollegeRosterPlayer = z.infer<typeof insertCollegeRosterPlayerSchema>;
+export type CollegeRosterPlayer = typeof collegeRosterPlayers.$inferSelect;
+
+export const insertCollegeCoachingStaffSchema = createInsertSchema(collegeCoachingStaff).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertCollegeCoachingStaff = z.infer<typeof insertCollegeCoachingStaffSchema>;
+export type CollegeCoachingStaff = typeof collegeCoachingStaff.$inferSelect;
 
 export const insertPlayerCollegeMatchSchema = createInsertSchema(playerCollegeMatches).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertPlayerCollegeMatch = z.infer<typeof insertPlayerCollegeMatchSchema>;
