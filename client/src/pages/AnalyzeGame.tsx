@@ -1071,34 +1071,18 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
   );
 }
 
-function StepperInput({ label, name, register, setValue, watch }: { label: string; name: string; register: any; setValue: any; watch: any }) {
-  const value = watch(name) || 0;
+function StepperInput({ label, name, register }: { label: string; name: string; register: any; setValue?: any; watch?: any }) {
   return (
     <div className="space-y-1 w-full" data-testid={`stepper-${name}`}>
       <label className="text-[10px] md:text-xs uppercase font-bold text-muted-foreground tracking-wider block text-center">{label}</label>
-      <div className="flex items-center justify-center gap-2">
-        <button
-          type="button"
-          onClick={() => setValue(name, Math.max(0, value - 1))}
-          disabled={value <= 0}
-          className="w-10 h-10 md:w-9 md:h-9 rounded-full bg-muted/80 border border-border flex items-center justify-center text-muted-foreground disabled:opacity-30 transition-colors"
-          data-testid={`button-decrement-${name}`}
-        >
-          <Minus className="w-4 h-4" />
-        </button>
-        <div className="w-14 h-12 md:h-10 flex items-center justify-center">
-          <span className="text-xl font-display font-bold text-foreground" data-testid={`value-${name}`}>{value}</span>
-        </div>
-        <button
-          type="button"
-          onClick={() => setValue(name, value + 1)}
-          className="w-10 h-10 md:w-9 md:h-9 rounded-full bg-muted/80 border border-border flex items-center justify-center text-muted-foreground transition-colors"
-          data-testid={`button-increment-${name}`}
-        >
-          <Plus className="w-4 h-4" />
-        </button>
-      </div>
-      <input type="hidden" {...register(name, { valueAsNumber: true })} />
+      <Input
+        type="number"
+        inputMode="numeric"
+        min={0}
+        {...register(name, { valueAsNumber: true })}
+        className="bg-muted/50 border-border text-foreground text-center font-display font-bold focus:border-accent/50 h-12 md:h-10 text-xl transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        data-testid={`input-${name}`}
+      />
     </div>
   );
 }
