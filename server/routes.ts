@@ -16750,6 +16750,37 @@ The email should:
 
   // === DEVELOPMENT ROADMAP ===
 
+  const DRILL_SUGGESTIONS: Record<string, Array<{name: string, description: string, duration: string}>> = {
+    ppg: [
+      { name: "Spot Shooting Circuit", description: "5 spots, 10 shots each. Track makes.", duration: "15 min" },
+      { name: "Mikan Drill", description: "Alternating layups for finishing around the rim.", duration: "10 min" },
+    ],
+    rpg: [
+      { name: "Box Out & Rebound", description: "Practice boxing out and grabbing boards with a partner.", duration: "10 min" },
+      { name: "Tip Drill", description: "Tip the ball off the backboard 10 times each hand.", duration: "5 min" },
+    ],
+    apg: [
+      { name: "2-on-1 Passing", description: "Fast break passing drill with decision making.", duration: "10 min" },
+      { name: "Vision Training", description: "Full court passing with head-up dribbling.", duration: "15 min" },
+    ],
+    spg: [
+      { name: "Closeout Drill", description: "Practice defensive closeouts and active hands.", duration: "10 min" },
+      { name: "Lane Denial", description: "Deny passing lanes with quick feet and anticipation.", duration: "10 min" },
+    ],
+    fgPct: [
+      { name: "Form Shooting", description: "Close-range shots focusing on perfect form and release.", duration: "10 min" },
+      { name: "Game-Speed Shooting", description: "Catch and shoot off screens at game tempo.", duration: "15 min" },
+    ],
+    threePct: [
+      { name: "Ray Allen Drill", description: "Catch-and-shoot 3s from 5 spots, moving around the arc.", duration: "15 min" },
+      { name: "Off-Dribble 3s", description: "Pull-up 3-pointers off 1-2 dribbles.", duration: "10 min" },
+    ],
+    ftPct: [
+      { name: "Free Throw 10x10", description: "10 sets of 10 free throws. Track percentage each set.", duration: "20 min" },
+      { name: "Pressure Free Throws", description: "Shoot FTs after sprints to simulate game fatigue.", duration: "15 min" },
+    ],
+  };
+
   app.get("/api/players/:playerId/development-roadmap", async (req, res) => {
     const playerId = parseInt(req.params.playerId);
     const player = await storage.getPlayer(playerId);
@@ -16768,28 +16799,36 @@ The email should:
     const benchmarks = DIVISION_BENCHMARKS[position] || DIVISION_BENCHMARKS.Guard;
     
     const gamesCount = playerGames.length;
-    const totals = playerGames.reduce((acc, g) => ({
-      pts: acc.pts + (g.points || 0),
-      reb: acc.reb + (g.rebounds || 0),
-      ast: acc.ast + (g.assists || 0),
-      stl: acc.stl + (g.steals || 0),
-      fgm: acc.fgm + (g.fgMade || 0),
-      fga: acc.fga + (g.fgAttempted || 0),
-      thrm: acc.thrm + (g.threeMade || 0),
-      thra: acc.thra + (g.threeAttempted || 0),
-      ftm: acc.ftm + (g.ftMade || 0),
-      fta: acc.fta + (g.ftAttempted || 0),
-    }), { pts: 0, reb: 0, ast: 0, stl: 0, fgm: 0, fga: 0, thrm: 0, thra: 0, ftm: 0, fta: 0 });
-    
-    const playerStats = {
-      ppg: Math.round((totals.pts / gamesCount) * 10) / 10,
-      rpg: Math.round((totals.reb / gamesCount) * 10) / 10,
-      apg: Math.round((totals.ast / gamesCount) * 10) / 10,
-      spg: Math.round((totals.stl / gamesCount) * 10) / 10,
-      fgPct: totals.fga > 0 ? Math.round((totals.fgm / totals.fga) * 1000) / 10 : 0,
-      threePct: totals.thra > 0 ? Math.round((totals.thrm / totals.thra) * 1000) / 10 : 0,
-      ftPct: totals.fta > 0 ? Math.round((totals.ftm / totals.fta) * 1000) / 10 : 0,
+    const computeStats = (gamesList: typeof playerGames) => {
+      const cnt = gamesList.length;
+      if (cnt === 0) return { ppg: 0, rpg: 0, apg: 0, spg: 0, fgPct: 0, threePct: 0, ftPct: 0 };
+      const t = gamesList.reduce((acc, g) => ({
+        pts: acc.pts + (g.points || 0),
+        reb: acc.reb + (g.rebounds || 0),
+        ast: acc.ast + (g.assists || 0),
+        stl: acc.stl + (g.steals || 0),
+        fgm: acc.fgm + (g.fgMade || 0),
+        fga: acc.fga + (g.fgAttempted || 0),
+        thrm: acc.thrm + (g.threeMade || 0),
+        thra: acc.thra + (g.threeAttempted || 0),
+        ftm: acc.ftm + (g.ftMade || 0),
+        fta: acc.fta + (g.ftAttempted || 0),
+      }), { pts: 0, reb: 0, ast: 0, stl: 0, fgm: 0, fga: 0, thrm: 0, thra: 0, ftm: 0, fta: 0 });
+      return {
+        ppg: Math.round((t.pts / cnt) * 10) / 10,
+        rpg: Math.round((t.reb / cnt) * 10) / 10,
+        apg: Math.round((t.ast / cnt) * 10) / 10,
+        spg: Math.round((t.stl / cnt) * 10) / 10,
+        fgPct: t.fga > 0 ? Math.round((t.fgm / t.fga) * 1000) / 10 : 0,
+        threePct: t.thra > 0 ? Math.round((t.thrm / t.thra) * 1000) / 10 : 0,
+        ftPct: t.fta > 0 ? Math.round((t.ftm / t.fta) * 1000) / 10 : 0,
+      };
     };
+
+    const playerStats = computeStats(playerGames);
+
+    const recentGames = playerGames.slice(-5);
+    const recentStats = computeStats(recentGames);
     
     const divisions = ['D1', 'D2', 'D3', 'NAIA'] as const;
     let currentLevel = 'Below NAIA';
@@ -16797,19 +16836,34 @@ The email should:
     
     for (const div of divisions) {
       const bench = benchmarks[div];
-      const statKeys = Object.keys(bench) as (keyof typeof bench)[];
-      const metCount = statKeys.filter(key => playerStats[key] >= bench[key]).length;
-      const pct = metCount / statKeys.length;
+      const sKeys = Object.keys(bench) as (keyof typeof bench)[];
+      const metCount = sKeys.filter(key => playerStats[key] >= bench[key]).length;
+      const pct = metCount / sKeys.length;
       if (pct >= 0.6) {
         currentLevel = div;
         const nextIdx = divisions.indexOf(div) - 1;
         nextLevel = nextIdx >= 0 ? divisions[nextIdx] : 'Above D1';
       }
     }
+
+    const targetLevelParam = req.query.targetLevel as string | undefined;
+    const validTargetLevels = ['D1', 'D2', 'D3', 'NAIA'];
+    if (targetLevelParam && validTargetLevels.includes(targetLevelParam)) {
+      nextLevel = targetLevelParam;
+    }
     
-    const nextBenchmark = currentLevel === 'Above D1' ? benchmarks.D1 : benchmarks[nextLevel as keyof typeof benchmarks] || benchmarks.NAIA;
-    
-    const gaps: Array<{stat: string, label: string, current: number, target: number, gap: number, percentOfTarget: number}> = [];
+    const nextBenchmark = currentLevel === 'Above D1' && nextLevel === 'Above D1'
+      ? benchmarks.D1
+      : benchmarks[nextLevel as keyof typeof benchmarks] || benchmarks.NAIA;
+
+    const pctStats = new Set(['fgPct', 'threePct', 'ftPct']);
+
+    const gaps: Array<{
+      stat: string, label: string, current: number, target: number, gap: number, percentOfTarget: number,
+      trends: { recent: number, overall: number, direction: 'up' | 'down' | 'stable' },
+      drills: Array<{name: string, description: string, duration: string}>,
+      contextLabel: string,
+    }> = [];
     const statKeys = Object.keys(nextBenchmark) as (keyof typeof nextBenchmark)[];
     
     for (const key of statKeys) {
@@ -16817,6 +16871,23 @@ The email should:
       const target = nextBenchmark[key];
       const gap = target - current;
       const percentOfTarget = Math.min(Math.round((current / target) * 100), 100);
+
+      const recentVal = recentStats[key];
+      const overallVal = playerStats[key];
+      const threshold = pctStats.has(key) ? 1.0 : 0.5;
+      let direction: 'up' | 'down' | 'stable' = 'stable';
+      if (recentVal > overallVal + threshold) direction = 'up';
+      else if (recentVal < overallVal - threshold) direction = 'down';
+
+      let contextLabel = '';
+      if (current >= target) {
+        const d1Val = benchmarks.D1[key as keyof typeof benchmarks.D1];
+        const d2Val = benchmarks.D2[key as keyof typeof benchmarks.D2];
+        const d3Val = benchmarks.D3[key as keyof typeof benchmarks.D3];
+        if (current >= d1Val) contextLabel = 'Elite (D1+)';
+        else if (current >= d2Val) contextLabel = 'Strong (D2)';
+        else if (current >= d3Val) contextLabel = 'Solid (D3)';
+      }
       
       gaps.push({
         stat: key,
@@ -16825,6 +16896,9 @@ The email should:
         target,
         gap: Math.round(gap * 10) / 10,
         percentOfTarget,
+        trends: { recent: recentVal, overall: overallVal, direction },
+        drills: gap > 0 ? (DRILL_SUGGESTIONS[key] || []) : [],
+        contextLabel,
       });
     }
     
@@ -16840,18 +16914,118 @@ The email should:
     
     const totalPct = gaps.reduce((sum, g) => sum + g.percentOfTarget, 0);
     const overallPercentile = Math.round(totalPct / gaps.length);
+
+    let bestGame: {
+      date: string, opponent: string, points: number, rebounds: number,
+      assists: number, steals: number, fgPct: number,
+    } | null = null;
+    if (playerGames.length > 0) {
+      let bestScore = -Infinity;
+      let bestG: typeof playerGames[0] | null = null;
+      for (const g of playerGames) {
+        const score = (g.points || 0) + (g.rebounds || 0) * 1.2 + (g.assists || 0) * 1.5 + (g.steals || 0) * 2;
+        if (score > bestScore) {
+          bestScore = score;
+          bestG = g;
+        }
+      }
+      if (bestG) {
+        bestGame = {
+          date: bestG.date,
+          opponent: bestG.opponent,
+          points: bestG.points || 0,
+          rebounds: bestG.rebounds || 0,
+          assists: bestG.assists || 0,
+          steals: bestG.steals || 0,
+          fgPct: (bestG.fgAttempted || 0) > 0 ? Math.round(((bestG.fgMade || 0) / (bestG.fgAttempted || 0)) * 1000) / 10 : 0,
+        };
+      }
+    }
+
+    const whatIf: Array<{stat: string, label: string, current: number, needed: number, unlocksLevel: string}> = [];
+    for (const key of statKeys) {
+      const current = playerStats[key];
+      const target = nextBenchmark[key];
+      if (current < target) {
+        const percentOfT = target > 0 ? (current / target) * 100 : 0;
+        whatIf.push({
+          stat: key,
+          label: BENCHMARK_STAT_LABELS[key] || key,
+          current,
+          needed: target,
+          unlocksLevel: nextLevel,
+        });
+      }
+    }
+    whatIf.sort((a, b) => {
+      const pctA = a.needed > 0 ? (a.current / a.needed) * 100 : 0;
+      const pctB = b.needed > 0 ? (b.current / b.needed) * 100 : 0;
+      return pctB - pctA;
+    });
+    const topWhatIf = whatIf.slice(0, 3);
+
+    let peerRanking: {
+      totalPeers: number,
+      rankings: Array<{ stat: string, label: string, rank: number, totalAtPosition: number }>
+    } = { totalPeers: 0, rankings: [] };
+
+    try {
+      const allPlayers = await storage.getPlayersWithStats();
+      const basketballPlayers = allPlayers.filter(p => {
+        const bbGames = p.games.filter(g => g.sport === 'basketball');
+        return bbGames.length >= 3;
+      });
+
+      if (basketballPlayers.length >= 2) {
+        const samePositionPlayers = basketballPlayers.filter(p => p.position === position);
+
+        if (samePositionPlayers.length >= 1) {
+          const peerStatsMap: Array<{ playerId: number, stats: Record<string, number> }> = [];
+          for (const p of samePositionPlayers) {
+            const bbGames = p.games.filter(g => g.sport === 'basketball');
+            const pStats = computeStats(bbGames);
+            peerStatsMap.push({ playerId: p.id, stats: pStats as unknown as Record<string, number> });
+          }
+
+          const rankings: Array<{ stat: string, label: string, rank: number, totalAtPosition: number }> = [];
+          for (const key of statKeys) {
+            const sorted = [...peerStatsMap].sort((a, b) => (b.stats[key] || 0) - (a.stats[key] || 0));
+            const rank = sorted.findIndex(p => p.playerId === playerId) + 1;
+            if (rank > 0) {
+              rankings.push({
+                stat: key,
+                label: BENCHMARK_STAT_LABELS[key] || key,
+                rank,
+                totalAtPosition: samePositionPlayers.length,
+              });
+            }
+          }
+
+          peerRanking = {
+            totalPeers: basketballPlayers.length,
+            rankings,
+          };
+        }
+      }
+    } catch (err) {
+      console.error('Error computing peer rankings:', err);
+    }
     
     res.json({
       ready: true,
       position,
       gamesAnalyzed: gamesCount,
       playerStats,
+      recentStats,
       currentLevel,
       nextLevel,
       overallPercentile,
       gaps,
       weeklyFocus,
       benchmarks: nextBenchmark,
+      bestGame,
+      peerRanking,
+      whatIf: topWhatIf,
     });
   });
 
