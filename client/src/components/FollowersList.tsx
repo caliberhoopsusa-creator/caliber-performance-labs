@@ -30,6 +30,8 @@ function getInitials(name: string): string {
 export function FollowersList({ playerId }: FollowersListProps) {
   const { data: followers = [], isLoading } = useQuery<Follower[]>({
     queryKey: ["/api/players", playerId, "followers"],
+    retry: false,
+    throwOnError: false,
   });
 
   if (isLoading) {

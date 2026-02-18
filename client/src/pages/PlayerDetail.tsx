@@ -1580,15 +1580,21 @@ function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: n
 
   const { data: feedActivities = [], isLoading: feedLoading } = useQuery<any[]>({
     queryKey: ['/api/players', playerId, 'feed'],
+    retry: false,
+    throwOnError: false,
   });
 
   const { data: followStats } = useQuery<{ followerCount: number; followingCount: number; isFollowing: boolean }>({
     queryKey: ['/api/players', playerId, 'follow-stats'],
+    retry: false,
+    throwOnError: false,
   });
 
   const { data: workouts = [], isLoading: workoutsLoading } = useQuery<any[]>({
     queryKey: ['/api/players', playerId, 'workouts'],
     enabled: isOwnProfile,
+    retry: false,
+    throwOnError: false,
   });
 
   const recentActivities = feedActivities.slice(0, 10);

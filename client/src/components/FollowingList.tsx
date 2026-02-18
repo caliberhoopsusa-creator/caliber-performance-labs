@@ -35,6 +35,8 @@ export function FollowingList({ playerId, showUnfollowButton = true }: Following
 
   const { data: following = [], isLoading } = useQuery<FollowingPlayer[]>({
     queryKey: ["/api/players", playerId, "following"],
+    retry: false,
+    throwOnError: false,
   });
 
   const unfollowMutation = useMutation({
