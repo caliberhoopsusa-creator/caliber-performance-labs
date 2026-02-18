@@ -15763,7 +15763,7 @@ Only respond with the JSON array, no other text.`;
       }
 
       // Verify user owns this player data
-      const userPlayerId = (req.user as any)?.playerId;
+      const userPlayerId = Number((req.user as any)?.playerId);
       if (!userPlayerId || userPlayerId !== playerId) {
         return res.status(403).json({ error: 'Forbidden: Not authorized to access this player data' });
       }
@@ -15808,7 +15808,7 @@ Only respond with the JSON array, no other text.`;
       }
 
       // Verify user owns this player data
-      const userPlayerId = (req.user as any)?.playerId;
+      const userPlayerId = Number((req.user as any)?.playerId);
       if (!userPlayerId || userPlayerId !== playerId) {
         return res.status(403).json({ error: 'Forbidden: Not authorized to access this player data' });
       }
@@ -15882,7 +15882,7 @@ Only respond with the JSON array, no other text.`;
       }
 
       // Verify user owns this player data
-      const userPlayerId = (req.user as any)?.playerId;
+      const userPlayerId = Number((req.user as any)?.playerId);
       if (!userPlayerId || userPlayerId !== playerId) {
         return res.status(403).json({ error: 'Forbidden: Not authorized to access this player data' });
       }
@@ -15926,7 +15926,7 @@ Only respond with the JSON array, no other text.`;
       }
 
       // Verify user owns this player data
-      const userPlayerId = (req.user as any)?.playerId;
+      const userPlayerId = Number((req.user as any)?.playerId);
       if (!userPlayerId || userPlayerId !== playerId) {
         return res.status(403).json({ error: 'Forbidden: Not authorized to access this player data' });
       }
@@ -15957,7 +15957,7 @@ Only respond with the JSON array, no other text.`;
       }
 
       // Verify user owns this player data
-      const userPlayerId = (req.user as any)?.playerId;
+      const userPlayerId = Number((req.user as any)?.playerId);
       if (!userPlayerId || userPlayerId !== playerId) {
         return res.status(403).json({ error: 'Forbidden: Not authorized to access this player data' });
       }
