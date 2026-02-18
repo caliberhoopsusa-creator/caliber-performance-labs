@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BENCHMARK_STAT_LABELS } from "@shared/schema";
+import { BENCHMARK_STAT_LABELS, DIVISION_BENCHMARKS } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -91,6 +91,30 @@ interface RoadmapData {
 }
 
 const DIVISION_LEVELS = ["D1", "D2", "D3", "NAIA"] as const;
+
+const STAT_SKILL_NAMES: Record<string, string> = {
+  ppg: "Scoring",
+  rpg: "Rebounding",
+  apg: "Playmaking",
+  spg: "Defensive",
+  fgPct: "Shooting",
+  threePct: "3-Point Shooting",
+  ftPct: "Free Throw",
+};
+
+function getStatDivisionLevel(stat: string, value: number, position: string): string | null {
+  const posKey = position.split(",")[0]?.trim();
+  const benchmarks = DIVISION_BENCHMARKS[posKey as keyof typeof DIVISION_BENCHMARKS];
+  if (!benchmarks) return null;
+
+  for (const level of DIVISION_LEVELS) {
+    const bench = benchmarks[level];
+    if (bench && value >= (bench as any)[stat]) {
+      return level;
+    }
+  }
+  return null;
+}
 
 function getBarColor(percent: number): string {
   if (percent >= 100) return "#10B981";
@@ -339,6 +363,57 @@ export default function DevelopmentRoadmap({ playerId }: DevelopmentRoadmapProps
                 {gamesAnalyzed} games analyzed
               </div>
             </div>
+
+            <div className="w-full pt-4 mt-2 border-t border-border/30" data-testid="level-progression-bar">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Level Progression</span>
+              </div>
+              <div className="relative flex items-center gap-0 w-full">
+                {[...DIVISION_LEVELS].reverse().map((level, index) => {
+                  const currentIdx = [...DIVISION_LEVELS].reverse().indexOf(currentLevel as typeof DIVISION_LEVELS[number]);
+                  const isCurrent = level === currentLevel;
+                  const isPassed = index < currentIdx;
+                  const isNext = index === currentIdx + 1;
+                  const isLast = index === DIVISION_LEVELS.length - 1;
+
+                  return (
+                    <div key={level} className="flex items-center flex-1" data-testid={`progression-${level}`}>
+                      <div className="flex flex-col items-center relative z-10">
+                        <div
+                          className={`w-9 h-9 rounded-full border-2 flex items-center justify-center transition-all ${
+                            isCurrent
+                              ? "bg-accent border-accent text-accent-foreground shadow-[0_0_12px_hsl(var(--accent)/0.4)]"
+                              : isPassed
+                                ? "bg-accent/20 border-accent/50 text-accent"
+                                : "bg-muted/30 border-border text-muted-foreground"
+                          }`}
+                        >
+                          <span className={`text-xs font-display font-bold ${isCurrent ? "text-accent-foreground" : ""}`}>{level}</span>
+                        </div>
+                        {isCurrent && (
+                          <span className="text-[9px] mt-1 text-accent font-bold uppercase tracking-wider">You</span>
+                        )}
+                        {isNext && (
+                          <span className="text-[9px] mt-1 text-muted-foreground">Next</span>
+                        )}
+                        {!isCurrent && !isNext && (
+                          <span className="text-[9px] mt-1 text-transparent">.</span>
+                        )}
+                      </div>
+                      {!isLast && (
+                        <div className="flex-1 h-1 mx-1">
+                          <div
+                            className={`h-full rounded-full transition-all ${
+                              isPassed ? "bg-accent/50" : index === currentIdx ? "bg-gradient-to-r from-accent/50 to-border/50" : "bg-border/50"
+                            }`}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -402,6 +477,19 @@ export default function DevelopmentRoadmap({ playerId }: DevelopmentRoadmapProps
                           {gap.contextLabel}
                         </Badge>
                       )}
+                      {position && (() => {
+                        const abilityLevel = getStatDivisionLevel(gap.stat, gap.current, position) || "Pre-NAIA";
+                        const skillName = STAT_SKILL_NAMES[gap.stat] || gap.label;
+                        const levelColor = abilityLevel === "D1" ? "text-[#10B981] border-[#10B981]/30 bg-[#10B981]/10"
+                          : abilityLevel === "D2" ? "text-[#3B82F6] border-[#3B82F6]/30 bg-[#3B82F6]/10"
+                          : abilityLevel === "D3" ? "text-[#F59E0B] border-[#F59E0B]/30 bg-[#F59E0B]/10"
+                          : "text-muted-foreground border-border bg-muted/20";
+                        return (
+                          <Badge variant="outline" className={`text-[10px] py-0 px-1.5 ${levelColor}`} data-testid={`badge-ability-${gap.stat}`}>
+                            {abilityLevel} {skillName}
+                          </Badge>
+                        );
+                      })()}
                     </div>
                     <div className="flex items-center gap-2">
                       <span className={colorClass}>{gap.current}</span>
@@ -568,79 +656,41 @@ export default function DevelopmentRoadmap({ playerId }: DevelopmentRoadmapProps
         </Card>
       )}
 
-      <Card data-testid="card-division-ladder">
-        <CardHeader className="flex flex-row items-center gap-2">
-          <Trophy className="w-5 h-5 text-accent" />
-          <CardTitle className="font-display text-lg">Division Levels</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="relative space-y-0">
-            {DIVISION_LEVELS.map((level, index) => {
-              const isCurrent = level === currentLevel;
-              const currentIdx = DIVISION_LEVELS.indexOf(currentLevel as typeof DIVISION_LEVELS[number]);
-              const isMet = index >= currentIdx && currentIdx !== -1;
-              const isAhead = index < currentIdx;
+      {gaps && position && (
+        <Card data-testid="card-skill-abilities">
+          <CardHeader className="flex flex-row items-center gap-2">
+            <Trophy className="w-5 h-5 text-accent" />
+            <CardTitle className="font-display text-lg">Your Skill Abilities</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-2">
+              {gaps.map((gap) => {
+                const abilityLevel = getStatDivisionLevel(gap.stat, gap.current, position) || "Pre-NAIA";
+                const skillName = STAT_SKILL_NAMES[gap.stat] || gap.label;
+                const levelColor = abilityLevel === "D1" ? "border-[#10B981]/40 bg-[#10B981]/5"
+                  : abilityLevel === "D2" ? "border-[#3B82F6]/40 bg-[#3B82F6]/5"
+                  : abilityLevel === "D3" ? "border-[#F59E0B]/40 bg-[#F59E0B]/5"
+                  : "border-border bg-muted/10";
+                const textColor = abilityLevel === "D1" ? "text-[#10B981]"
+                  : abilityLevel === "D2" ? "text-[#3B82F6]"
+                  : abilityLevel === "D3" ? "text-[#F59E0B]"
+                  : "text-muted-foreground";
 
-              return (
-                <div key={level} className="relative flex items-stretch gap-4" data-testid={`level-${level}`}>
-                  <div className="flex flex-col items-center">
-                    <div
-                      className={`w-10 h-10 rounded-full border-2 flex items-center justify-center z-10 ${
-                        isCurrent
-                          ? "bg-accent border-accent text-accent-foreground"
-                          : isMet
-                            ? "bg-accent/20 border-accent/40 text-accent"
-                            : "bg-muted/30 border-border text-muted-foreground"
-                      }`}
-                    >
-                      {isCurrent ? (
-                        <Trophy className="w-4 h-4" />
-                      ) : isMet ? (
-                        <Target className="w-4 h-4" />
-                      ) : (
-                        <ChevronRight className="w-4 h-4" />
-                      )}
-                    </div>
-                    {index < DIVISION_LEVELS.length - 1 && (
-                      <div
-                        className={`w-0.5 flex-1 min-h-[2rem] ${
-                          isMet && !isAhead ? "bg-accent/40" : "bg-border/50"
-                        }`}
-                      />
-                    )}
+                return (
+                  <div
+                    key={gap.stat}
+                    className={`p-3 rounded-lg border ${levelColor}`}
+                    data-testid={`skill-ability-${gap.stat}`}
+                  >
+                    <span className={`text-sm font-display font-bold ${textColor}`}>{abilityLevel}</span>
+                    <p className="text-xs text-muted-foreground mt-0.5">{skillName} Ability</p>
                   </div>
-                  <div className={`pb-6 pt-1.5 ${index === DIVISION_LEVELS.length - 1 ? "pb-0" : ""}`}>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`font-display font-bold text-lg ${
-                          isCurrent ? "text-accent" : isMet ? "text-foreground" : "text-muted-foreground"
-                        }`}
-                      >
-                        {level}
-                      </span>
-                      {isCurrent && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-accent/20 text-accent border border-accent/30">
-                          Current
-                        </span>
-                      )}
-                      {isAhead && (
-                        <span className="text-xs text-muted-foreground">Target</span>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {isCurrent
-                        ? "Your current competitive level"
-                        : isAhead
-                          ? "Keep improving to reach this level"
-                          : "You've met this level's benchmarks"}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
