@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { CaliberLogo } from "@/components/CaliberLogo";
-import { Search, MapPin, GraduationCap, Trophy, Award, Video, ChevronLeft, ChevronRight, Users, X } from "lucide-react";
+import { Search, MapPin, GraduationCap, Trophy, Award, Video, ChevronLeft, ChevronRight, Users, X, ArrowLeft } from "lucide-react";
 
 const US_STATES = ["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"];
 
@@ -92,14 +92,10 @@ export default function PlayerDirectory() {
   params.set('limit', '20');
 
   const queryString = params.toString();
+  const queryUrl = `/api/public/players/directory?${queryString}`;
 
   const { data, isLoading } = useQuery<DirectoryResponse>({
-    queryKey: ['/api/public/players/directory', queryString],
-    queryFn: async () => {
-      const res = await fetch(`/api/public/players/directory?${queryString}`);
-      if (!res.ok) throw new Error('Failed to fetch');
-      return res.json();
-    },
+    queryKey: [queryUrl],
   });
 
   const hasActiveFilters = position || state || graduationYear || debouncedSearch;
@@ -121,6 +117,11 @@ export default function PlayerDirectory() {
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-[hsl(220,15%,8%)]/90 border-b border-white/[0.06]">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
+            <Link href="/">
+              <Button size="icon" variant="ghost" data-testid="button-back-to-app">
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+            </Link>
             <Link href="/">
               <CaliberLogo size={28} color="#E8192C" />
             </Link>
