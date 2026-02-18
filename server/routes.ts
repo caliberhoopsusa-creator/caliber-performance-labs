@@ -16843,6 +16843,7 @@ The email should:
         currentLevel = div;
         const nextIdx = divisions.indexOf(div) - 1;
         nextLevel = nextIdx >= 0 ? divisions[nextIdx] : 'Above D1';
+        break;
       }
     }
 
