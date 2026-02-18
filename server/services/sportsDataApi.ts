@@ -1,6 +1,6 @@
 import { db } from "../db";
 import { colleges, collegeRosterPlayers, collegeCoachingStaff } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, isNotNull } from "drizzle-orm";
 
 interface CollegeFootballTeam {
   id: number;
@@ -154,6 +154,92 @@ const espnTeamIds: Record<string, string> = {
   "Arizona State University": "9",
   "University of Houston": "248",
   "San Diego State University": "21",
+  "University of Alabama": "333",
+  "Ohio State University": "194",
+  "University of Georgia": "61",
+  "University of Texas": "251",
+  "University of Michigan": "130",
+  "Clemson University": "228",
+  "University of Southern California": "30",
+  "University of Oregon": "2483",
+  "Boise State University": "68",
+  "Penn State University": "213",
+  "University of Notre Dame": "87",
+  "LSU": "99",
+  "University of Florida": "57",
+  "University of Tennessee": "2633",
+  "University of Arkansas": "8",
+  "Auburn University": "2",
+  "University of Wisconsin": "275",
+  "University of Iowa": "2294",
+  "Indiana University": "84",
+  "University of Louisville": "97",
+  "University of Maryland": "120",
+  "University of Arizona": "12",
+  "University of Colorado": "38",
+  "University of Virginia": "258",
+  "Virginia Tech": "259",
+  "Wake Forest University": "154",
+  "North Carolina State University": "152",
+  "University of Miami": "2390",
+  "Florida State University": "52",
+  "Georgia Tech": "59",
+  "University of Oklahoma": "201",
+  "Oklahoma State University": "197",
+  "Texas A&M University": "245",
+  "Texas Tech University": "2641",
+  "TCU": "2628",
+  "Baylor University": "239",
+  "West Virginia University": "277",
+  "Iowa State University": "66",
+  "University of Cincinnati": "2132",
+  "University of Memphis": "235",
+  "Creighton University": "156",
+  "Marquette University": "269",
+  "Xavier University": "2752",
+  "Seton Hall University": "2550",
+  "Providence College": "2507",
+  "Butler University": "2169",
+  "St. John's University": "2599",
+  "DePaul University": "305",
+  "Georgetown University": "46",
+  "Purdue University": "2509",
+  "University of Illinois": "356",
+  "Northwestern University": "77",
+  "University of Minnesota": "135",
+  "University of Nebraska": "158",
+  "Rutgers University": "164",
+  "University of Washington": "264",
+  "Oregon State University": "204",
+  "Washington State University": "265",
+  "Stanford University": "24",
+  "California (Berkeley)": "25",
+  "Colorado State University": "36",
+  "Nevada (Las Vegas)": "2439",
+  "Fresno State University": "278",
+  "Utah State University": "328",
+  "New Mexico University": "167",
+  "Air Force": "2005",
+  "Wyoming": "2704",
+  "Saint Mary's College": "2608",
+  "BYU": "252",
+  "Dayton University": "2248",
+  "Wichita State University": "2724",
+  "Davidson College": "2166",
+  "VCU": "2670",
+  "George Mason University": "2244",
+  "Murray State University": "93",
+  "Loyola Chicago": "2341",
+  "UNC Greensboro": "2430",
+  "Belmont University": "2057",
+  "Liberty University": "2335",
+  "UAB": "5",
+  "Southern Methodist University": "2567",
+  "Tulane University": "2655",
+  "East Carolina University": "151",
+  "Temple University": "218",
+  "USF": "58",
+  "Tulsa University": "2653",
 };
 
 class NCAABasketballAPI {
@@ -349,6 +435,7 @@ export async function syncBasketballStats(): Promise<{ updated: number; errors: 
             conferenceRecord: record.confWins > 0 || record.confLosses > 0 
               ? `${record.confWins}-${record.confLosses}` 
               : null,
+            espnTeamId: espnId,
             statsLastUpdated: new Date(),
             statsSource: "espn_api",
           })
@@ -573,6 +660,229 @@ export async function syncRosterData(): Promise<{ updated: number; errors: numbe
 
   console.log(`Roster sync complete: ${updated} updated, ${errors} errors`);
   return { updated, errors };
+}
+
+export async function autoMapEspnTeamIds(): Promise<{ matched: number; unmatched: number }> {
+  console.log("Starting auto-mapping of ESPN team IDs...");
+
+  let matched = 0;
+  let unmatched = 0;
+
+  const allColleges = await db.select().from(colleges);
+  console.log(`Found ${allColleges.length} colleges in database`);
+
+  const espnTeams: Array<{ id: string; displayName: string; shortDisplayName: string; abbreviation: string; sport: string }> = [];
+
+  try {
+    console.log("Fetching basketball teams from ESPN...");
+    const bbResponse = await fetch("https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/teams?limit=400");
+    if (bbResponse.ok) {
+      const bbData = await bbResponse.json();
+      const teams = bbData.sports?.[0]?.leagues?.[0]?.teams || [];
+      for (const t of teams) {
+        const team = t.team || t;
+        espnTeams.push({
+          id: team.id?.toString() || "",
+          displayName: team.displayName || "",
+          shortDisplayName: team.shortDisplayName || "",
+          abbreviation: team.abbreviation || "",
+          sport: "basketball",
+        });
+      }
+      console.log(`Fetched ${teams.length} basketball teams from ESPN`);
+    }
+  } catch (error) {
+    console.error("Error fetching ESPN basketball teams:", error);
+  }
+
+  await new Promise(resolve => setTimeout(resolve, 200));
+
+  try {
+    console.log("Fetching football teams from ESPN...");
+    const fbResponse = await fetch("https://site.api.espn.com/apis/site/v2/sports/football/college-football/teams?limit=400");
+    if (fbResponse.ok) {
+      const fbData = await fbResponse.json();
+      const teams = fbData.sports?.[0]?.leagues?.[0]?.teams || [];
+      for (const t of teams) {
+        const team = t.team || t;
+        espnTeams.push({
+          id: team.id?.toString() || "",
+          displayName: team.displayName || "",
+          shortDisplayName: team.shortDisplayName || "",
+          abbreviation: team.abbreviation || "",
+          sport: "football",
+        });
+      }
+      console.log(`Fetched ${teams.length} football teams from ESPN`);
+    }
+  } catch (error) {
+    console.error("Error fetching ESPN football teams:", error);
+  }
+
+  console.log(`Total ESPN teams fetched: ${espnTeams.length}`);
+
+  for (const college of allColleges) {
+    if (college.espnTeamId) {
+      continue;
+    }
+
+    const knownId = espnTeamIds[college.name] || espnFootballTeamIds[college.name];
+    if (knownId) {
+      await db.update(colleges)
+        .set({ espnTeamId: knownId })
+        .where(eq(colleges.id, college.id));
+      matched++;
+      continue;
+    }
+
+    const div = (college.division || "").toUpperCase();
+    if (div === "NAIA" || div === "JUCO" || div === "NJCAA" || div.includes("JUCO") || div.includes("NAIA")) {
+      unmatched++;
+      continue;
+    }
+
+    const collegeName = college.name.toLowerCase();
+    const collegeShortName = (college.shortName || "").toLowerCase();
+
+    const match = espnTeams.find(t => {
+      const dn = t.displayName.toLowerCase();
+      const sdn = t.shortDisplayName.toLowerCase();
+      const abbr = t.abbreviation.toLowerCase();
+
+      if (college.sport && t.sport !== college.sport) return false;
+
+      return dn === collegeName ||
+        sdn === collegeName ||
+        dn === collegeShortName ||
+        sdn === collegeShortName ||
+        (collegeShortName && abbr === collegeShortName);
+    });
+
+    if (match) {
+      await db.update(colleges)
+        .set({ espnTeamId: match.id })
+        .where(eq(colleges.id, college.id));
+      console.log(`Matched ${college.name} → ESPN ID ${match.id} (${match.displayName})`);
+      matched++;
+    } else {
+      unmatched++;
+    }
+  }
+
+  console.log(`Auto-mapping complete: ${matched} matched, ${unmatched} unmatched`);
+  return { matched, unmatched };
+}
+
+export async function syncAllCollegeStatsFromESPN(): Promise<{ updated: number; errors: number; skipped: number }> {
+  console.log("Starting live stats sync from ESPN for all colleges with ESPN IDs...");
+
+  let updated = 0;
+  let errors = 0;
+  let skipped = 0;
+
+  const collegesWithEspnId = await db.select().from(colleges).where(isNotNull(colleges.espnTeamId));
+  console.log(`Found ${collegesWithEspnId.length} colleges with ESPN team IDs`);
+
+  for (const college of collegesWithEspnId) {
+    if (!college.espnTeamId) {
+      skipped++;
+      continue;
+    }
+
+    try {
+      const isFootball = college.sport === "football";
+      const baseUrl = isFootball
+        ? "https://site.api.espn.com/apis/site/v2/sports/football/college-football"
+        : "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball";
+
+      const response = await fetch(`${baseUrl}/teams/${college.espnTeamId}`);
+      if (!response.ok) {
+        console.log(`ESPN API returned ${response.status} for ${college.name} (ID: ${college.espnTeamId})`);
+        skipped++;
+        await new Promise(resolve => setTimeout(resolve, 200));
+        continue;
+      }
+
+      const data = await response.json();
+      const team = data.team;
+
+      if (!team) {
+        console.log(`No team data in response for ${college.name}`);
+        skipped++;
+        await new Promise(resolve => setTimeout(resolve, 200));
+        continue;
+      }
+
+      let wins = 0, losses = 0;
+      let conferenceRecord: string | null = null;
+      let standingSummary: string | null = null;
+      let nationalRanking: number | null = null;
+
+      if (team.record?.items) {
+        const overallRecord = team.record.items.find((r: any) => r.type === "total");
+        const confRecord = team.record.items.find((r: any) => r.type === "vsconf");
+
+        if (overallRecord?.summary) {
+          const parts = overallRecord.summary.split("-");
+          if (parts.length >= 2) {
+            wins = parseInt(parts[0]) || 0;
+            losses = parseInt(parts[1]) || 0;
+          }
+        }
+
+        if (confRecord?.summary) {
+          conferenceRecord = confRecord.summary;
+        }
+      }
+
+      if (team.standingSummary) {
+        standingSummary = team.standingSummary;
+      }
+
+      if (team.rank) {
+        nationalRanking = typeof team.rank === "number" ? team.rank : parseInt(team.rank) || null;
+      }
+
+      if (wins === 0 && losses === 0) {
+        console.log(`No record data for ${college.name}, skipping update`);
+        skipped++;
+        await new Promise(resolve => setTimeout(resolve, 200));
+        continue;
+      }
+
+      const updateData: Record<string, any> = {
+        winsLastSeason: wins,
+        lossesLastSeason: losses,
+        statsLastUpdated: new Date(),
+        statsSource: "espn_live",
+      };
+
+      if (conferenceRecord) {
+        updateData.conferenceRecord = conferenceRecord;
+      }
+
+      if (standingSummary && !conferenceRecord) {
+        updateData.conferenceRecord = standingSummary;
+      }
+
+      await db.update(colleges)
+        .set(updateData)
+        .where(eq(colleges.id, college.id));
+
+      console.log(`Updated ${college.name}: ${wins}-${losses}${conferenceRecord ? ` (conf: ${conferenceRecord})` : ""}${nationalRanking ? ` #${nationalRanking}` : ""}`);
+      updated++;
+
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+    } catch (error) {
+      console.error(`Error syncing ESPN stats for ${college.name}:`, error);
+      errors++;
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
+  }
+
+  console.log(`ESPN live sync complete: ${updated} updated, ${errors} errors, ${skipped} skipped`);
+  return { updated, errors, skipped };
 }
 
 export { cfbApi, ncaaBasketballApi };

@@ -14685,6 +14685,26 @@ Only respond with the JSON array, no other text.`;
     }
   });
 
+  // POST /api/colleges/sync-espn - Sync live stats from ESPN public API (admin only)
+  app.post("/api/colleges/sync-espn", isAdmin, async (req, res) => {
+    try {
+      const { autoMapEspnTeamIds, syncAllCollegeStatsFromESPN } = await import('./services/sportsDataApi');
+      
+      const mapResult = await autoMapEspnTeamIds();
+      const syncResult = await syncAllCollegeStatsFromESPN();
+      
+      res.json({
+        message: "ESPN live sync completed",
+        mapping: mapResult,
+        sync: syncResult,
+        syncedAt: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Error syncing ESPN stats:', error);
+      res.status(500).json({ message: "Failed to sync ESPN stats" });
+    }
+  });
+
   // GET /api/players/:id/college-matches - Get player's college matches with college details
   app.get("/api/players/:id/college-matches", async (req, res) => {
     try {

@@ -2185,6 +2185,7 @@ export const colleges = pgTable("colleges", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   shortName: text("short_name"), // "UCLA", "Duke"
+  espnTeamId: text("espn_team_id"),
   logoUrl: text("logo_url"),
   
   // Location

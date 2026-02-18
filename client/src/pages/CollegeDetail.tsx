@@ -29,6 +29,8 @@ import {
   Mail,
   Phone,
   ExternalLink,
+  Radio,
+  Info,
 } from "lucide-react";
 
 interface College {
@@ -76,6 +78,9 @@ interface College {
   scholarshipsAvailable: number | null;
   recruitingContactEmail: string | null;
   recruitingUrl: string | null;
+  statsSource: string | null;
+  statsLastUpdated: string | null;
+  espnTeamId: string | null;
   isActive: boolean;
 }
 
@@ -310,7 +315,13 @@ export default function CollegeDetail() {
           {college.winsLastSeason !== null && college.lossesLastSeason !== null && (
             <Badge variant="outline" data-testid="badge-record">
               {college.winsLastSeason}-{college.lossesLastSeason}
-              {college.conferenceRecord ? ` (${college.conferenceRecord} conf)` : ""}
+              {college.conferenceRecord ? ` (${college.conferenceRecord})` : ""}
+            </Badge>
+          )}
+          {(college.statsSource === "espn_live" || college.statsSource === "espn_api") && (
+            <Badge variant="outline" className="text-emerald-500 border-emerald-500/30" data-testid="badge-espn-live">
+              <Radio className="w-3 h-3 mr-1" />
+              ESPN Live
             </Badge>
           )}
         </div>
@@ -673,6 +684,49 @@ export default function CollegeDetail() {
         </TabsContent>
 
         <TabsContent value="info" className="mt-4 space-y-4" data-testid="tab-content-info">
+          {(college.statsSource === "espn_live" || college.statsSource === "espn_api") && (
+            <Card data-testid="live-stats-banner">
+              <CardContent className="p-4 flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <Radio className="w-4 h-4 text-emerald-500 animate-pulse" />
+                  <span className="text-sm font-semibold text-emerald-500">Live from ESPN</span>
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  Current season record and standings updated from ESPN.
+                  {college.statsLastUpdated && (
+                    <> Last synced {new Date(college.statsLastUpdated).toLocaleDateString()}</>
+                  )}
+                </span>
+              </CardContent>
+            </Card>
+          )}
+
+          {(college.winsLastSeason !== null && college.lossesLastSeason !== null) && (
+            <Card data-testid="current-season-card">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-heading">Current Season</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-6 flex-wrap">
+                  <div>
+                    <p className="text-3xl font-heading font-bold" data-testid="text-record">
+                      {college.winsLastSeason}-{college.lossesLastSeason}
+                    </p>
+                    <p className="text-sm text-muted-foreground">Overall Record</p>
+                  </div>
+                  {college.conferenceRecord && (
+                    <div>
+                      <p className="text-xl font-heading font-bold" data-testid="text-conf-record">
+                        {college.conferenceRecord}
+                      </p>
+                      <p className="text-sm text-muted-foreground">Conference</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {college.headCoachName && (
             <Card data-testid="head-coach-card">
               <CardHeader className="pb-2">
@@ -692,13 +746,23 @@ export default function CollegeDetail() {
             </Card>
           )}
 
-          {programStats.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {programStats.map((stat) => (
-                <ProgramStatCard key={stat.label} {...stat} />
-              ))}
-            </div>
-          ) : (
+          {programStats.length > 0 && (
+            <>
+              <div className="flex items-center gap-2 pt-2">
+                <Info className="w-4 h-4 text-muted-foreground" />
+                <p className="text-xs text-muted-foreground" data-testid="text-estimated-label">
+                  Program history below is estimated and may not be fully accurate.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {programStats.map((stat) => (
+                  <ProgramStatCard key={stat.label} {...stat} />
+                ))}
+              </div>
+            </>
+          )}
+
+          {!college.headCoachName && programStats.length === 0 && college.winsLastSeason === null && (
             <Card data-testid="info-empty">
               <CardContent className="py-12 text-center">
                 <BarChart3 className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
