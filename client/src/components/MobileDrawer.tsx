@@ -142,7 +142,6 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
   const playerAccountSection: NavSection = {
     title: "Account",
     items: [
-      { href: "/shop", label: "Shop", icon: ShoppingBag },
       { href: "/pricing", label: "Pricing", icon: CreditCard },
     ],
   };
@@ -179,7 +178,6 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
   const coachAccountSection: NavSection = {
     title: "Account",
     items: [
-      { href: "/shop", label: "Shop", icon: ShoppingBag },
       { href: "/pricing", label: "Pricing", icon: CreditCard },
     ],
   };

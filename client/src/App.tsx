@@ -58,7 +58,6 @@ import ReelGenerator from "./pages/ReelGenerator";
 import TeamComparison from "./pages/TeamComparison";
 import ReportCardPage from "./pages/ReportCardPage";
 import AnalyticsHub from "./pages/AnalyticsHub";
-import Shop from "./pages/Shop";
 import LeagueHub from "./pages/LeagueHub";
 import LeagueDetail from "./pages/LeagueDetail";
 import RecruitingHub from "./pages/RecruitingHub";
@@ -158,17 +157,10 @@ function HeaderCoinDisplay() {
 
   return (
     <div className="flex items-center gap-2">
-      <Link href="/shop">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="flex items-center gap-2 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10"
-          data-testid="header-coin-display"
-        >
-          <Coins className="w-4 h-4" />
-          <span className="font-medium">{coinBalance.toLocaleString()}</span>
-        </Button>
-      </Link>
+      <div className="flex items-center gap-2 text-yellow-400 px-2 py-1" data-testid="header-coin-display">
+        <Coins className="w-4 h-4" />
+        <span className="font-medium">{coinBalance.toLocaleString()}</span>
+      </div>
       {playerId && (
         <Link href={`/players/${playerId}?tab=inventory`}>
           <Button 
@@ -396,7 +388,6 @@ function MainRouter() {
                 <Route path="/social-hub">
                   <Redirect to="/community?tab=connect" />
                 </Route>
-                <Route path="/shop" component={Shop} />
                 <Route path="/leagues" component={LeagueHub} />
                 <Route path="/leagues/:id" component={LeagueDetail} />
                 <Route path="/recruiter" component={RecruiterDashboard} />

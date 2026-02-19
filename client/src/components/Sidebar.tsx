@@ -141,7 +141,6 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
   const playerAccountSection: NavSection = {
     title: "Account",
     items: [
-      { href: "/shop", label: "Shop", icon: ShoppingBag },
       { href: "/pricing", label: "Pricing", icon: CreditCard },
     ],
   };
@@ -178,7 +177,6 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
   const coachAccountSection: NavSection = {
     title: "Account",
     items: [
-      { href: "/shop", label: "Shop", icon: ShoppingBag },
       { href: "/pricing", label: "Pricing", icon: CreditCard },
     ],
   };
