@@ -2,6 +2,14 @@ import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BENCHMARK_STAT_LABELS, DIVISION_BENCHMARKS } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  ResponsiveContainer,
+} from "recharts";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -265,6 +273,8 @@ export default function DevelopmentRoadmap({ playerId }: DevelopmentRoadmapProps
     bestGame,
     peerRanking,
     whatIf,
+    playerStats,
+    recentStats,
   } = data;
 
   const circumference = 2 * Math.PI * 52;
@@ -417,6 +427,108 @@ export default function DevelopmentRoadmap({ playerId }: DevelopmentRoadmapProps
           </div>
         </CardContent>
       </Card>
+
+      {gaps && gaps.length > 0 && (
+        <Card data-testid="card-radar-chart">
+          <CardHeader className="flex flex-row items-center gap-2">
+            <Target className="w-5 h-5 text-accent" />
+            <CardTitle className="font-display text-lg">Stat Profile</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={280}>
+              <RadarChart
+                data={gaps.map((gap) => ({
+                  stat: gap.label,
+                  value: Math.min(gap.percentOfTarget, 100),
+                  benchmark: 100,
+                  fullMark: 100,
+                }))}
+              >
+                <PolarGrid stroke="hsl(var(--border))" />
+                <PolarAngleAxis
+                  dataKey="stat"
+                  tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                />
+                <PolarRadiusAxis
+                  angle={90}
+                  domain={[0, 100]}
+                  tick={false}
+                  axisLine={false}
+                />
+                <Radar
+                  name="Benchmark"
+                  dataKey="benchmark"
+                  stroke="hsl(var(--muted-foreground) / 0.4)"
+                  fill="none"
+                  strokeDasharray="4 4"
+                />
+                <Radar
+                  name="Player"
+                  dataKey="value"
+                  stroke="hsl(355, 85%, 50%)"
+                  fill="hsl(355, 85%, 50%)"
+                  fillOpacity={0.3}
+                />
+              </RadarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+
+      {playerStats && recentStats && (
+        <Card data-testid="card-progress-summary">
+          <CardHeader className="flex flex-row items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-accent" />
+            <CardTitle className="font-display text-lg">Recent Trend</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {Object.keys(playerStats).map((key) => {
+                const overall = playerStats[key];
+                const recent = recentStats[key];
+                if (overall === undefined || recent === undefined) return null;
+                const delta = recent - overall;
+                const isPercentage = ["fgPct", "threePct", "ftPct"].includes(key);
+                const threshold = isPercentage ? 1.0 : 0.5;
+                const direction = delta > threshold ? "up" : delta < -threshold ? "down" : "stable";
+                const label = BENCHMARK_STAT_LABELS[key] || key;
+
+                return (
+                  <div
+                    key={key}
+                    className="p-3 rounded-lg bg-muted/20 border border-border/50 space-y-1"
+                    data-testid={`progress-${key}`}
+                  >
+                    <p className="text-xs text-muted-foreground">{label}</p>
+                    <div className="flex items-center gap-2">
+                      <span className="font-display font-bold text-sm">
+                        {isPercentage ? `${recent.toFixed(1)}%` : recent.toFixed(1)}
+                      </span>
+                      <div className="flex items-center gap-0.5">
+                        {direction === "up" && (
+                          <>
+                            <TrendingUp className="w-3.5 h-3.5 text-[#10B981]" />
+                            <span className="text-xs text-[#10B981]">+{Math.abs(delta).toFixed(1)}</span>
+                          </>
+                        )}
+                        {direction === "down" && (
+                          <>
+                            <TrendingDown className="w-3.5 h-3.5 text-[#EF4444]" />
+                            <span className="text-xs text-[#EF4444]">-{Math.abs(delta).toFixed(1)}</span>
+                          </>
+                        )}
+                        {direction === "stable" && (
+                          <span className="text-xs text-muted-foreground">--</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {bestGame && (
         <Card data-testid="card-best-game">
