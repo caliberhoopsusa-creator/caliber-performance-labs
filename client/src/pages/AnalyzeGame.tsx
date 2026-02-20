@@ -99,6 +99,7 @@ export default function AnalyzeGame() {
   
   const effectivePlayerId = isCoach ? preselectedPlayerId : (userPlayerId ? String(userPlayerId) : preselectedPlayerId);
   
+  const [quickLogMode, setQuickLogMode] = useState(false);
   const { data: players } = usePlayers();
   const { mutate, isPending, data: resultGame } = useCreateGame();
   const { toast } = useToast();
@@ -153,27 +154,53 @@ export default function AnalyzeGame() {
                 Input your game stats to generate an AI-powered performance report card with personalized feedback.
               </p>
             </div>
-            
-            <div className="hidden md:flex items-center gap-2">
-              {STEPS.map((step, index) => (
-                <div key={step.id} className="flex items-center">
-                  <div className={cn(
-                    "flex items-center gap-2 px-3 py-2 rounded-lg transition-all",
-                    "bg-muted/80 border border-border"
-                  )}>
-                    <div className={cn(
-                      "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
-                      "bg-accent/20 text-accent border border-accent/30"
-                    )}>
-                      {step.id}
-                    </div>
-                    <span className="text-xs text-muted-foreground hidden lg:inline">{step.label}</span>
-                  </div>
-                  {index < STEPS.length - 1 && (
-                    <div className="w-4 h-px bg-border mx-1" />
+
+            <div className="flex flex-col items-end gap-3">
+              <div className="flex items-center gap-2 bg-muted/50 rounded-lg p-1 border border-border">
+                <button
+                  type="button"
+                  onClick={() => setQuickLogMode(false)}
+                  className={cn(
+                    "px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+                    !quickLogMode ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"
                   )}
-                </div>
-              ))}
+                  data-testid="button-full-mode"
+                >
+                  Full Stats
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setQuickLogMode(true)}
+                  className={cn(
+                    "px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+                    quickLogMode ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground"
+                  )}
+                  data-testid="button-quick-mode"
+                >
+                  Quick Log
+                </button>
+              </div>
+              <div className="hidden md:flex items-center gap-2">
+                {STEPS.map((step, index) => (
+                  <div key={step.id} className="flex items-center">
+                    <div className={cn(
+                      "flex items-center gap-2 px-3 py-2 rounded-lg transition-all",
+                      "bg-muted/80 border border-border"
+                    )}>
+                      <div className={cn(
+                        "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
+                        "bg-accent/20 text-accent border border-accent/30"
+                      )}>
+                        {step.id}
+                      </div>
+                      <span className="text-xs text-muted-foreground hidden lg:inline">{step.label}</span>
+                    </div>
+                    {index < STEPS.length - 1 && (
+                      <div className="w-4 h-px bg-border mx-1" />
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -185,12 +212,13 @@ export default function AnalyzeGame() {
         onSubmit={mutate} 
         isPending={isPending}
         isCoach={isCoach}
+        quickLogMode={quickLogMode}
       />
     </div>
   );
 }
 
-function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }: any) {
+function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach, quickLogMode }: any) {
   const [autoCalcPoints, setAutoCalcPoints] = useState(true);
   const [selectedFootballPositions, setSelectedFootballPositions] = useState<FootballPosition[]>([]);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -502,6 +530,42 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
 
       {sport === 'basketball' ? (
         <>
+          {quickLogMode ? (
+            <motion.section variants={sectionVariants} className="relative overflow-hidden rounded-2xl bg-card/80 border border-accent/20">
+              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
+              <div className="p-6">
+                <h3 className="text-lg font-bold font-display mb-6 uppercase tracking-wider flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-accent/20 border border-accent/30 flex items-center justify-center">
+                    <span className="text-sm text-accent font-bold">2</span>
+                  </div>
+                  <span className="bg-gradient-to-r from-white to-accent bg-clip-text text-transparent">Quick Stats</span>
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <StepperInput label="Points" name="points" register={form.register} setValue={form.setValue} watch={form.watch} />
+                  <StepperInput label="Rebounds" name="rebounds" register={form.register} setValue={form.setValue} watch={form.watch} />
+                  <StepperInput label="Assists" name="assists" register={form.register} setValue={form.setValue} watch={form.watch} />
+                  <StepperInput label="Steals" name="steals" register={form.register} setValue={form.setValue} watch={form.watch} />
+                </div>
+                <div className="mt-4 grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <p className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Field Goals</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <StepperInput label="Made" name="fgMade" register={form.register} setValue={form.setValue} watch={form.watch} />
+                      <StepperInput label="Att" name="fgAttempted" register={form.register} setValue={form.setValue} watch={form.watch} />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-xs uppercase font-bold text-muted-foreground tracking-wider">3-Pointers</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <StepperInput label="Made" name="threeMade" register={form.register} setValue={form.setValue} watch={form.watch} />
+                      <StepperInput label="Att" name="threeAttempted" register={form.register} setValue={form.setValue} watch={form.watch} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.section>
+          ) : (
+          <>
           <motion.section 
             variants={sectionVariants}
             className="relative overflow-hidden rounded-2xl bg-card/80 border border-accent/20"
@@ -640,6 +704,8 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
               </div>
             </div>
           </motion.section>
+          </>
+          )}
         </>
       ) : (
         <>
@@ -932,6 +998,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
         </>
       )}
 
+      {!(quickLogMode && sport === 'basketball') && (
       <motion.section 
         variants={sectionVariants}
         className="relative overflow-hidden rounded-2xl bg-card/80 border border-accent/20"
@@ -1047,6 +1114,7 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach }
           </div>
         </div>
       </motion.section>
+      )}
 
       <motion.div variants={sectionVariants}>
         <Button 

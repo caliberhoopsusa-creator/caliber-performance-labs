@@ -31,7 +31,9 @@ import {
   ChevronRight,
   Sparkles,
   ExternalLink,
-  Dribbble
+  Dribbble,
+  Circle,
+  CheckCircle2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -199,6 +201,11 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
 
   const { data: profileViews } = useQuery<{ totalViews: number; viewsLast30Days: number }>({
     queryKey: ['/api/players', playerId, 'profile-views'],
+    enabled: !!playerId,
+  });
+
+  const { data: games } = useQuery<any[]>({
+    queryKey: ['/api/players', playerId, 'games'],
     enabled: !!playerId,
   });
 
@@ -404,6 +411,63 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
           </Card>
         </div>
       )}
+
+      {!playerLoading && (() => {
+        const checklistItems = [
+          { slug: 'profile-photo', label: 'Profile Photo', complete: !!player?.photoUrl, fixLink: `/players/${playerId}` },
+          { slug: 'bio-written', label: 'Bio Written', complete: !!player?.bio, fixLink: `/players/${playerId}` },
+          { slug: 'height-listed', label: 'Height Listed', complete: !!player?.height, fixLink: `/players/${playerId}` },
+          { slug: 'gpa-added', label: 'GPA Added', complete: !!player?.gpa, fixLink: `/players/${playerId}` },
+          { slug: 'school-name', label: 'School Name', complete: !!player?.school, fixLink: `/players/${playerId}` },
+          { slug: 'graduation-year', label: 'Graduation Year', complete: !!player?.graduationYear, fixLink: `/players/${playerId}` },
+          { slug: 'city-state', label: 'City & State', complete: !!(player?.city && player?.state), fixLink: `/players/${playerId}` },
+          { slug: 'games-logged', label: '3+ Games Logged', complete: (games?.length ?? 0) >= 3, fixLink: `/players/${playerId}` },
+          { slug: 'interested-schools', label: 'Interested Schools', complete: schoolsCount >= 1, fixLink: `/players/${playerId}` },
+        ];
+        const completedCount = checklistItems.filter(i => i.complete).length;
+
+        return (
+          <Card data-testid="card-recruiting-readiness" className="bg-card border-border">
+            <CardHeader className="bg-gradient-to-r from-[#10B981]/15 to-accent/10 rounded-t-md">
+              <CardTitle className="text-lg font-display text-foreground flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-[#10B981]" />
+                Recruiting Readiness
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">{completedCount} of 9 complete</p>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div>
+                {checklistItems.map((item, index) => (
+                  <div
+                    key={item.slug}
+                    data-testid={`checklist-item-${item.slug}`}
+                    className={cn(
+                      "flex items-center gap-3 py-2",
+                      index < checklistItems.length - 1 && "border-b border-border/30"
+                    )}
+                  >
+                    {item.complete ? (
+                      <CheckCircle2 className="w-5 h-5 text-[#10B981] flex-shrink-0" />
+                    ) : (
+                      <Circle className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                    )}
+                    <span className={cn("flex-1 text-sm", item.complete ? "text-foreground" : "text-muted-foreground")}>
+                      {item.label}
+                    </span>
+                    {!item.complete && (
+                      <Link href={item.fixLink}>
+                        <Button variant="ghost" size="sm" className="text-xs text-accent" data-testid={`fix-${item.slug}`}>
+                          Fix
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       <div className="grid lg:grid-cols-5 gap-6">
         <div className="lg:col-span-2 space-y-6">
