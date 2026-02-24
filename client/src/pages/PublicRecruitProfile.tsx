@@ -1,9 +1,15 @@
 import { useRoute, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, MapPin, GraduationCap, Trophy, Award, Share2, ExternalLink, Star, Target, Activity, TrendingUp, TrendingDown, Minus, Flame, Mail, Copy, Shield, Zap, Clock, CheckCircle, Eye, BookOpen, Video, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -248,6 +254,10 @@ export default function PublicRecruitProfile() {
     }
   };
 
+  const [contactOpen, setContactOpen] = useState(false);
+  const [contactForm, setContactForm] = useState({ senderName: '', senderEmail: '', senderRole: 'coach', senderSchool: '', message: '' });
+  const [contactSubmitting, setContactSubmitting] = useState(false);
+
   const handleCopyLink = async () => {
     const url = `${window.location.origin}/recruit/${id}`;
     try {
@@ -288,6 +298,32 @@ export default function PublicRecruitProfile() {
   const tierConfig = TIER_CONFIG[player.currentTier] || TIER_CONFIG.Rookie;
   const isBasketball = player.sport === 'basketball';
   const nextTierXp = XP_THRESHOLDS[player.currentTier] || 500;
+
+  const handleContactSubmit = async () => {
+    if (!contactForm.senderName || !contactForm.senderEmail || !contactForm.message) {
+      toast({ title: "Missing Fields", description: "Please fill in all required fields.", variant: "destructive" });
+      return;
+    }
+    setContactSubmitting(true);
+    try {
+      const res = await fetch(`/api/public/players/${player.id}/inquiries`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(contactForm),
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.message || 'Failed to send');
+      }
+      toast({ title: "Inquiry Sent!", description: "Your message has been sent to the player." });
+      setContactOpen(false);
+      setContactForm({ senderName: '', senderEmail: '', senderRole: 'coach', senderSchool: '', message: '' });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to send inquiry.", variant: "destructive" });
+    } finally {
+      setContactSubmitting(false);
+    }
+  };
   const xpProgress = Math.min((player.totalXp / nextTierXp) * 100, 100);
 
   return (
@@ -684,13 +720,53 @@ export default function PublicRecruitProfile() {
                 Get in touch or share this profile with your coaching staff.
               </p>
               <div className="flex flex-wrap flex-col sm:flex-row items-center justify-center gap-2">
-                <Button
-                  onClick={handleShare}
-                  className="gap-2 w-full sm:w-auto"
-                  data-testid="button-contact-recruiting"
-                >
-                  <Mail className="w-4 h-4" /> Contact for Recruiting
-                </Button>
+                <Dialog open={contactOpen} onOpenChange={setContactOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="gap-2 w-full sm:w-auto" data-testid="button-contact-recruiting">
+                      <Mail className="w-4 h-4" /> Contact for Recruiting
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Contact {player.name}</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="recruitSenderName">Your Name *</Label>
+                        <Input id="recruitSenderName" placeholder="Full name" value={contactForm.senderName} onChange={e => setContactForm(f => ({ ...f, senderName: e.target.value }))} data-testid="input-sender-name" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="recruitSenderEmail">Email *</Label>
+                        <Input id="recruitSenderEmail" type="email" placeholder="your@email.com" value={contactForm.senderEmail} onChange={e => setContactForm(f => ({ ...f, senderEmail: e.target.value }))} data-testid="input-sender-email" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="recruitSenderRole">Your Role</Label>
+                        <Select value={contactForm.senderRole} onValueChange={v => setContactForm(f => ({ ...f, senderRole: v }))}>
+                          <SelectTrigger data-testid="select-sender-role">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="coach">Coach</SelectItem>
+                            <SelectItem value="recruiter">Recruiter</SelectItem>
+                            <SelectItem value="parent">Parent</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="recruitSenderSchool">School/Organization</Label>
+                        <Input id="recruitSenderSchool" placeholder="Optional" value={contactForm.senderSchool} onChange={e => setContactForm(f => ({ ...f, senderSchool: e.target.value }))} data-testid="input-sender-school" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="recruitMessage">Message *</Label>
+                        <Textarea id="recruitMessage" placeholder="Introduce yourself and your interest..." rows={4} value={contactForm.message} onChange={e => setContactForm(f => ({ ...f, message: e.target.value }))} data-testid="input-message" />
+                      </div>
+                      <Button onClick={handleContactSubmit} disabled={contactSubmitting} className="w-full gap-2" data-testid="button-submit-inquiry">
+                        {contactSubmitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Sending...</> : "Send Inquiry"}
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
                 <Button
                   variant="outline"
                   onClick={handleCopyLink}

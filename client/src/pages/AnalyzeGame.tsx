@@ -296,6 +296,13 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach, 
   const ftMade = form.watch('ftMade') || 0;
   const ftAttempted = form.watch('ftAttempted') || 0;
 
+  const completions = form.watch('completions') || 0;
+  const passAttempts = form.watch('passAttempts') || 0;
+  const fieldGoalsMade = form.watch('fieldGoalsMade') || 0;
+  const fieldGoalsAttempted = form.watch('fieldGoalsAttempted') || 0;
+  const extraPointsMade = form.watch('extraPointsMade') || 0;
+  const extraPointsAttempted = form.watch('extraPointsAttempted') || 0;
+
   const steals = form.watch('steals') || 0;
   const blocks = form.watch('blocks') || 0;
   const defensiveRebounds = form.watch('defensiveRebounds') || 0;
@@ -334,6 +341,30 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach, 
   const hasPosition = (positions: FootballPosition[]) => {
     return effectiveFootballPositions.some(pos => positions.includes(pos));
   };
+
+  useEffect(() => {
+    if (fgMade > fgAttempted) {
+      form.setValue('fgMade', fgAttempted);
+    }
+    if (threeMade > threeAttempted) {
+      form.setValue('threeMade', threeAttempted);
+    }
+    if (ftMade > ftAttempted) {
+      form.setValue('ftMade', ftAttempted);
+    }
+  }, [fgMade, fgAttempted, threeMade, threeAttempted, ftMade, ftAttempted]);
+
+  useEffect(() => {
+    if (completions > passAttempts) {
+      form.setValue('completions', passAttempts);
+    }
+    if (fieldGoalsMade > fieldGoalsAttempted) {
+      form.setValue('fieldGoalsMade', fieldGoalsAttempted);
+    }
+    if (extraPointsMade > extraPointsAttempted) {
+      form.setValue('extraPointsMade', extraPointsAttempted);
+    }
+  }, [completions, passAttempts, fieldGoalsMade, fieldGoalsAttempted, extraPointsMade, extraPointsAttempted]);
 
   const fgPercent = fgAttempted > 0 ? ((fgMade / fgAttempted) * 100).toFixed(1) : '—';
   const threePercent = threeAttempted > 0 ? ((threeMade / threeAttempted) * 100).toFixed(1) : '—';

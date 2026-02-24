@@ -2962,7 +2962,30 @@ export async function registerRoutes(
   app.post(api.games.create.path, isAuthenticated, async (req: any, res) => {
     try {
       const input = api.games.create.input.parse(req.body);
-      
+
+      const shootingValidationErrors: string[] = [];
+      if ((input.fgMade || 0) > (input.fgAttempted || 0)) {
+        shootingValidationErrors.push('Field goals made cannot exceed attempted');
+      }
+      if ((input.threeMade || 0) > (input.threeAttempted || 0)) {
+        shootingValidationErrors.push('Three-pointers made cannot exceed attempted');
+      }
+      if ((input.ftMade || 0) > (input.ftAttempted || 0)) {
+        shootingValidationErrors.push('Free throws made cannot exceed attempted');
+      }
+      if ((input.completions || 0) > (input.passAttempts || 0)) {
+        shootingValidationErrors.push('Completions cannot exceed pass attempts');
+      }
+      if ((input.fieldGoalsMade || 0) > (input.fieldGoalsAttempted || 0)) {
+        shootingValidationErrors.push('Field goals made cannot exceed attempted');
+      }
+      if ((input.extraPointsMade || 0) > (input.extraPointsAttempted || 0)) {
+        shootingValidationErrors.push('Extra points made cannot exceed attempted');
+      }
+      if (shootingValidationErrors.length > 0) {
+        return res.status(400).json({ message: shootingValidationErrors.join('. ') });
+      }
+
       // Check authorization - players can only log games for their own profile
       if (!await canModifyPlayer(req, input.playerId)) {
         return res.status(403).json({ message: 'You can only log games for your own profile' });
@@ -16509,6 +16532,85 @@ Only respond with the JSON array, no other text.`;
     } catch (error) {
       console.error('Error fetching public player profile:', error);
       res.status(500).json({ message: "Failed to fetch public profile" });
+    }
+  });
+
+  // POST /api/public/players/:id/inquiries - Submit recruiting inquiry (public, no auth required)
+  app.post("/api/public/players/:id/inquiries", async (req: any, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      const schema = z.object({
+        senderName: z.string().min(1, "Name is required").max(200),
+        senderEmail: z.string().email("Valid email required"),
+        senderRole: z.enum(["coach", "recruiter", "parent", "other"]),
+        senderSchool: z.string().max(200).optional().nullable(),
+        message: z.string().min(1, "Message is required").max(2000),
+      });
+      const input = schema.parse(req.body);
+      
+      const player = await storage.getPlayer(playerId);
+      if (!player) return res.status(404).json({ message: "Player not found" });
+      
+      const inquiry = await storage.createRecruitingInquiry({
+        playerId,
+        senderName: input.senderName,
+        senderEmail: input.senderEmail,
+        senderRole: input.senderRole,
+        senderSchool: input.senderSchool || null,
+        message: input.message,
+        isRead: false,
+      });
+      
+      if (player.userId) {
+        await storage.createNotification({
+          playerId: player.id,
+          userId: player.userId,
+          notificationType: "recruiting_inquiry",
+          title: "New Recruiting Inquiry",
+          message: `${input.senderName}${input.senderSchool ? ` from ${input.senderSchool}` : ''} is interested in recruiting you!`,
+          relatedId: inquiry.id,
+          relatedType: "recruiting_inquiry",
+          isRead: false,
+        });
+      }
+      
+      res.json({ success: true, message: "Inquiry sent successfully" });
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: error.errors[0]?.message || "Invalid input" });
+      }
+      console.error("Error creating recruiting inquiry:", error);
+      res.status(500).json({ message: "Failed to send inquiry" });
+    }
+  });
+
+  // GET /api/players/:id/inquiries - Get recruiting inquiries for a player (auth required)
+  app.get("/api/players/:id/inquiries", isAuthenticated, async (req: any, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      if (!await canModifyPlayer(req, playerId)) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      const inquiries = await storage.getRecruitingInquiries(playerId);
+      res.json(inquiries);
+    } catch (error) {
+      console.error("Error fetching recruiting inquiries:", error);
+      res.status(500).json({ message: "Failed to fetch inquiries" });
+    }
+  });
+
+  // PATCH /api/players/:id/inquiries/:inquiryId/read - Mark inquiry as read
+  app.patch("/api/players/:id/inquiries/:inquiryId/read", isAuthenticated, async (req: any, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      if (!await canModifyPlayer(req, playerId)) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      await storage.markInquiryRead(parseInt(req.params.inquiryId));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking inquiry read:", error);
+      res.status(500).json({ message: "Failed to mark inquiry read" });
     }
   });
 

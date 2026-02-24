@@ -14,6 +14,7 @@ import { SkeletonQuickStatsGrid, SkeletonRecruitingTimeline, SkeletonInterestCar
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
+import { format } from "date-fns";
 import { 
   GraduationCap,
   Share2,
@@ -33,7 +34,8 @@ import {
   ExternalLink,
   Dribbble,
   Circle,
-  CheckCircle2
+  CheckCircle2,
+  Inbox
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -207,6 +209,20 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
   const { data: games } = useQuery<any[]>({
     queryKey: ['/api/players', playerId, 'games'],
     enabled: !!playerId,
+  });
+
+  const { data: inquiries } = useQuery<any[]>({
+    queryKey: ['/api/players', playerId, 'inquiries'],
+    enabled: !!playerId,
+  });
+
+  const markReadMutation = useMutation({
+    mutationFn: async (inquiryId: number) => {
+      return apiRequest('PATCH', `/api/players/${playerId}/inquiries/${inquiryId}/read`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/players', playerId, 'inquiries'] });
+    },
   });
 
   const removeMutation = useMutation({
@@ -468,6 +484,62 @@ export default function MyRecruitingContent({ onTabChange }: MyRecruitingContent
           </Card>
         );
       })()}
+
+      {inquiries && inquiries.length > 0 && (
+        <Card className="bg-card border-border" data-testid="inquiries-section">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Inbox className="w-5 h-5 text-accent" />
+              Recruiting Inquiries
+              {inquiries.filter((i: any) => !i.isRead).length > 0 && (
+                <Badge variant="destructive" className="ml-auto" data-testid="badge-unread-count">
+                  {inquiries.filter((i: any) => !i.isRead).length} new
+                </Badge>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {inquiries.map((inquiry: any) => (
+              <div
+                key={inquiry.id}
+                className={cn(
+                  "p-3 rounded-lg border transition-colors",
+                  inquiry.isRead ? "bg-muted/30 border-border" : "bg-accent/5 border-accent/20"
+                )}
+                data-testid={`inquiry-card-${inquiry.id}`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold text-sm" data-testid={`text-sender-name-${inquiry.id}`}>{inquiry.senderName}</span>
+                      <Badge variant="outline" className="text-[10px]">{inquiry.senderRole}</Badge>
+                      {inquiry.senderSchool && (
+                        <span className="text-xs text-muted-foreground">{inquiry.senderSchool}</span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">{inquiry.senderEmail}</p>
+                    <p className="text-sm mt-2 text-foreground/80">{inquiry.message}</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      {inquiry.createdAt ? format(new Date(inquiry.createdAt), 'MMM d, yyyy h:mm a') : ''}
+                    </p>
+                  </div>
+                  {!inquiry.isRead && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs shrink-0"
+                      onClick={() => markReadMutation.mutate(inquiry.id)}
+                      data-testid={`button-mark-read-${inquiry.id}`}
+                    >
+                      Mark Read
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid lg:grid-cols-5 gap-6">
         <div className="lg:col-span-2 space-y-6">

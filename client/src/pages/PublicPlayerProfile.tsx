@@ -1,11 +1,16 @@
 import { useRoute, Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Star, 
@@ -27,10 +32,12 @@ import {
   Activity,
   MessageSquareQuote,
   Film,
-  Play
+  Play,
+  Loader2
 } from "lucide-react";
 import { FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS, type FootballPosition } from "@shared/sports-config";
 import { cn } from "@/lib/utils";
+import { CaliberLogo } from "@/components/CaliberLogo";
 import { CoachRecommendations } from "@/components/CoachRecommendations";
 
 interface PublicPlayerData {
@@ -239,6 +246,10 @@ export default function PublicPlayerProfile() {
     }
   }, [data]);
 
+  const [contactOpen, setContactOpen] = useState(false);
+  const [contactForm, setContactForm] = useState({ senderName: '', senderEmail: '', senderRole: 'coach', senderSchool: '', message: '' });
+  const [contactSubmitting, setContactSubmitting] = useState(false);
+
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(data?.shareUrl || window.location.href);
@@ -279,6 +290,32 @@ export default function PublicPlayerProfile() {
   const TierIcon = TIER_ICONS[player.currentTier] || Star;
   const tierColorClass = TIER_COLORS[player.currentTier] || TIER_COLORS.Rookie;
 
+  const handleContactSubmit = async () => {
+    if (!contactForm.senderName || !contactForm.senderEmail || !contactForm.message) {
+      toast({ title: "Missing Fields", description: "Please fill in all required fields.", variant: "destructive" });
+      return;
+    }
+    setContactSubmitting(true);
+    try {
+      const res = await fetch(`/api/public/players/${player.id}/inquiries`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(contactForm),
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.message || 'Failed to send');
+      }
+      toast({ title: "Inquiry Sent!", description: "Your message has been sent to the player." });
+      setContactOpen(false);
+      setContactForm({ senderName: '', senderEmail: '', senderRole: 'coach', senderSchool: '', message: '' });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to send inquiry.", variant: "destructive" });
+    } finally {
+      setContactSubmitting(false);
+    }
+  };
+
   const TrendIcon = stats.performanceTrend === 'improving' ? TrendingUp : 
                     stats.performanceTrend === 'declining' ? TrendingDown : Minus;
   const trendColor = stats.performanceTrend === 'improving' ? 'text-green-600 dark:text-green-400' :
@@ -291,9 +328,7 @@ export default function PublicPlayerProfile() {
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-blue-600 flex items-center justify-center">
-              <span className="text-white font-bold text-sm">C</span>
-            </div>
+            <CaliberLogo size={28} />
             <span className="font-display text-lg font-bold tracking-tight text-accent">CALIBER</span>
           </div>
           <Button 
@@ -439,18 +474,54 @@ export default function PublicPlayerProfile() {
               </p>
             </div>
             <div className="flex gap-2 flex-wrap">
-              <Button
-                onClick={() => {
-                  const subject = encodeURIComponent(`Recruiting Interest - ${player.name}`);
-                  const body = encodeURIComponent(`Hi,\n\nI'm interested in learning more about ${player.name} as a potential recruit.\n\nPlayer Profile: ${window.location.href}\n\nBest regards`);
-                  window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
-                }}
-                className="gap-2"
-                data-testid="button-contact-recruit"
-              >
-                <Mail className="w-4 h-4" />
-                Contact for Recruiting
-              </Button>
+              <Dialog open={contactOpen} onOpenChange={setContactOpen}>
+                <DialogTrigger asChild>
+                  <Button className="gap-2" data-testid="button-contact-recruit">
+                    <Mail className="w-4 h-4" />
+                    Contact for Recruiting
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Contact {player.name}</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="senderName">Your Name *</Label>
+                      <Input id="senderName" placeholder="Full name" value={contactForm.senderName} onChange={e => setContactForm(f => ({ ...f, senderName: e.target.value }))} data-testid="input-sender-name" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="senderEmail">Email *</Label>
+                      <Input id="senderEmail" type="email" placeholder="your@email.com" value={contactForm.senderEmail} onChange={e => setContactForm(f => ({ ...f, senderEmail: e.target.value }))} data-testid="input-sender-email" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="senderRole">Your Role</Label>
+                      <Select value={contactForm.senderRole} onValueChange={v => setContactForm(f => ({ ...f, senderRole: v }))}>
+                        <SelectTrigger data-testid="select-sender-role">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="coach">Coach</SelectItem>
+                          <SelectItem value="recruiter">Recruiter</SelectItem>
+                          <SelectItem value="parent">Parent</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="senderSchool">School/Organization</Label>
+                      <Input id="senderSchool" placeholder="Optional" value={contactForm.senderSchool} onChange={e => setContactForm(f => ({ ...f, senderSchool: e.target.value }))} data-testid="input-sender-school" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="message">Message *</Label>
+                      <Textarea id="message" placeholder="Introduce yourself and your interest..." rows={4} value={contactForm.message} onChange={e => setContactForm(f => ({ ...f, message: e.target.value }))} data-testid="input-message" />
+                    </div>
+                    <Button onClick={handleContactSubmit} disabled={contactSubmitting} className="w-full gap-2" data-testid="button-submit-inquiry">
+                      {contactSubmitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Sending...</> : "Send Inquiry"}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
               <Button
                 variant="outline"
                 onClick={() => {

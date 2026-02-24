@@ -1286,6 +1286,21 @@ export const notifications = pgTable("notifications", {
   playerIdIdx: index("notifications_player_id_idx").on(table.playerId),
 }));
 
+// === RECRUITING INQUIRIES ===
+export const recruitingInquiries = pgTable("recruiting_inquiries", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  senderName: text("sender_name").notNull(),
+  senderEmail: text("sender_email").notNull(),
+  senderRole: text("sender_role").notNull(),
+  senderSchool: text("sender_school"),
+  message: text("message").notNull(),
+  isRead: boolean("is_read").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  playerIdIdx: index("recruiting_inquiries_player_id_idx").on(table.playerId),
+}));
+
 // === HIGHLIGHT CLIPS ===
 export const highlightClips = pgTable("highlight_clips", {
   id: serial("id").primaryKey(),
@@ -1633,6 +1648,7 @@ export const insertScheduleEventSchema = createInsertSchema(scheduleEvents).omit
 export const insertLiveGameSessionSchema = createInsertSchema(liveGameSessions).omit({ id: true, startedAt: true });
 export const insertLiveGameEventSchema = createInsertSchema(liveGameEvents).omit({ id: true, createdAt: true });
 export const insertShareAssetSchema = createInsertSchema(shareAssets).omit({ id: true, createdAt: true, sharedCount: true });
+export const insertRecruitingInquirySchema = createInsertSchema(recruitingInquiries).omit({ id: true, createdAt: true });
 
 // === TYPES FOR NEW TABLES ===
 export type Follow = typeof follows.$inferSelect;
@@ -1655,6 +1671,9 @@ export type InsertGoalShare = z.infer<typeof insertGoalShareSchema>;
 
 export type ScheduleEvent = typeof scheduleEvents.$inferSelect;
 export type InsertScheduleEvent = z.infer<typeof insertScheduleEventSchema>;
+
+export type RecruitingInquiry = typeof recruitingInquiries.$inferSelect;
+export type InsertRecruitingInquiry = z.infer<typeof insertRecruitingInquirySchema>;
 
 export type LiveGameSession = typeof liveGameSessions.$inferSelect;
 export type InsertLiveGameSession = z.infer<typeof insertLiveGameSessionSchema>;

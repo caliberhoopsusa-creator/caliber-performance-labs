@@ -110,7 +110,9 @@ import {
   type RecruiterProfile, type InsertRecruiterProfile,
   type RecruiterBookmark, type InsertRecruiterBookmark,
   type RecruiterInterestSignal, type InsertRecruiterInterestSignal,
-  type RecruiterBlock, type InsertRecruiterBlock
+  type RecruiterBlock, type InsertRecruiterBlock,
+  recruitingInquiries,
+  type RecruitingInquiry, type InsertRecruitingInquiry
 } from "@shared/schema";
 import { eq, desc, and, count, gte, lte, lt, sql, or, isNull, inArray } from "drizzle-orm";
 
@@ -427,6 +429,12 @@ export interface IStorage {
   getUnreadNotificationCount(playerId: number): Promise<number>;
   markNotificationRead(id: number): Promise<void>;
   markAllNotificationsRead(playerId: number): Promise<void>;
+
+  // Recruiting Inquiries
+  createRecruitingInquiry(inquiry: InsertRecruitingInquiry): Promise<RecruitingInquiry>;
+  getRecruitingInquiries(playerId: number): Promise<RecruitingInquiry[]>;
+  markInquiryRead(id: number): Promise<void>;
+  getUnreadInquiryCount(playerId: number): Promise<number>;
 
   // Highlight Clips
   createHighlightClip(clip: InsertHighlightClip): Promise<HighlightClip>;
@@ -2297,6 +2305,28 @@ export class DatabaseStorage implements IStorage {
     await db.update(notifications).set({ isRead: true }).where(
       and(eq(notifications.userId, userId), eq(notifications.isRead, false))
     );
+  }
+
+  // Recruiting Inquiries
+  async createRecruitingInquiry(inquiry: InsertRecruitingInquiry): Promise<RecruitingInquiry> {
+    const [newInquiry] = await db.insert(recruitingInquiries).values(inquiry).returning();
+    return newInquiry;
+  }
+
+  async getRecruitingInquiries(playerId: number): Promise<RecruitingInquiry[]> {
+    return await db.select().from(recruitingInquiries)
+      .where(eq(recruitingInquiries.playerId, playerId))
+      .orderBy(desc(recruitingInquiries.createdAt));
+  }
+
+  async markInquiryRead(id: number): Promise<void> {
+    await db.update(recruitingInquiries).set({ isRead: true }).where(eq(recruitingInquiries.id, id));
+  }
+
+  async getUnreadInquiryCount(playerId: number): Promise<number> {
+    const [result] = await db.select({ count: count() }).from(recruitingInquiries)
+      .where(and(eq(recruitingInquiries.playerId, playerId), eq(recruitingInquiries.isRead, false)));
+    return result?.count || 0;
   }
 
   // Highlight Clips
