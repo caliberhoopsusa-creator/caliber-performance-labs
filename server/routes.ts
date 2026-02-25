@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, badges, headToHeadChallenges, statVerifications, playerCollegeMatches, playerCollegeInterests, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema, insertWearableConnectionSchema, recruitingEvents, insertRecruitingEventSchema, type RecruitingEvent, playerEventRegistrations, insertPlayerEventRegistrationSchema, colleges, collegeRosterPlayers, collegeCoachingStaff, ncaaEligibilityProgress, insertNcaaEligibilityProgressSchema, coachRecommendations, insertCoachRecommendationSchema, teams, teamMembers, skillBadges, activityStreaks, feedActivities, feedComments, feedCommentLikes, type InsertFeedComment, type FeedComment, highlightClips, personalRecords, recruiterBlocks, recruiterProfiles, playerGoals, recruitingTargets, recruitingContacts, insertRecruitingTargetSchema, insertRecruitingContactSchema, DIVISION_BENCHMARKS, BENCHMARK_STAT_LABELS } from "@shared/schema";
+import { players, games, badges, headToHeadChallenges, statVerifications, playerCollegeMatches, playerCollegeInterests, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema, insertWearableConnectionSchema, recruitingEvents, insertRecruitingEventSchema, type RecruitingEvent, playerEventRegistrations, insertPlayerEventRegistrationSchema, colleges, collegeRosterPlayers, collegeCoachingStaff, ncaaEligibilityProgress, insertNcaaEligibilityProgressSchema, coachRecommendations, insertCoachRecommendationSchema, teams, teamMembers, skillBadges, activityStreaks, feedActivities, feedReactions, feedComments, feedCommentLikes, type InsertFeedComment, type FeedComment, highlightClips, personalRecords, recruiterBlocks, recruiterProfiles, playerGoals, recruitingTargets, recruitingContacts, insertRecruitingTargetSchema, insertRecruitingContactSchema, DIVISION_BENCHMARKS, BENCHMARK_STAT_LABELS } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { calculateAIRating, calculateProjection, type GameStats, type PlayerMetrics, type PeerStats, type AIRatingResult, type ProjectionResult } from "@shared/ai-rating-engine";
 import type { Sport } from "@shared/sports-config";
@@ -9447,6 +9447,271 @@ Only respond with the JSON array, no other text.`;
       res.json({ success: true });
     } else {
       res.status(401).json({ error: 'Invalid password' });
+    }
+  });
+
+  // Admin analytics dashboard
+  app.get('/api/admin/analytics', isAdmin, async (req, res) => {
+    try {
+      const [userStats] = await db.select({
+        totalUsers: count(),
+      }).from(users);
+
+      const roleResult = await db.execute(sql`
+        SELECT 
+          COUNT(*) FILTER (WHERE role = 'player') as player_count,
+          COUNT(*) FILTER (WHERE role = 'coach') as coach_count,
+          COUNT(*) FILTER (WHERE role = 'recruiter') as recruiter_count,
+          COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days') as new_7d,
+          COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '30 days') as new_30d
+        FROM users
+      `);
+      const roleBreakdown = roleResult.rows[0] as any;
+
+      const playerResult = await db.execute(sql`
+        SELECT 
+          COUNT(*) as total_players,
+          COUNT(*) FILTER (WHERE sport = 'basketball') as basketball_players,
+          COUNT(*) FILTER (WHERE sport = 'football') as football_players
+        FROM players
+      `);
+      const playerStats = playerResult.rows[0] as any;
+
+      const gameResult = await db.execute(sql`
+        SELECT 
+          COUNT(*) as total_games,
+          COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days') as games_7d,
+          COUNT(*) FILTER (WHERE sport = 'basketball') as basketball_games,
+          COUNT(*) FILTER (WHERE sport = 'football') as football_games,
+          ROUND(AVG(points)::numeric, 1) as avg_points
+        FROM games
+      `);
+      const gameStats = gameResult.rows[0] as any;
+
+      const engagementResult = await db.execute(sql`
+        SELECT 
+          COUNT(DISTINCT player_id) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days') as active_7d
+        FROM games
+      `);
+      const engagementStats = engagementResult.rows[0] as any;
+
+      const fiveGamesResult = await db.execute(sql`
+        SELECT COUNT(*) as count FROM (
+          SELECT player_id FROM games GROUP BY player_id HAVING COUNT(*) >= 5
+        ) sub
+      `);
+      const fiveGamesPlayers = fiveGamesResult.rows[0] as any;
+
+      const recruitingResult = await db.execute(sql`
+        SELECT 
+          COUNT(*) as total_inquiries,
+          COUNT(*) FILTER (WHERE is_read = false) as unread_inquiries
+        FROM recruiting_inquiries
+      `);
+      const recruitingStats = recruitingResult.rows[0] as any;
+
+      const feedResult = await db.execute(sql`
+        SELECT COUNT(*) as total_posts FROM feed_activities
+      `);
+      const feedStats = feedResult.rows[0] as any;
+
+      const recruiterResult = await db.execute(sql`
+        SELECT 
+          COUNT(*) as total_recruiters,
+          COUNT(*) FILTER (WHERE is_verified = true) as verified_recruiters,
+          COUNT(*) FILTER (WHERE is_verified = false) as pending_recruiters
+        FROM recruiter_profiles
+      `);
+      const recruiterStats = recruiterResult.rows[0] as any;
+
+      res.json({
+        users: {
+          total: Number(userStats.totalUsers),
+          players: Number(playerStats?.total_players || 0),
+          byRole: {
+            player: Number(roleBreakdown?.player_count || 0),
+            coach: Number(roleBreakdown?.coach_count || 0),
+            recruiter: Number(roleBreakdown?.recruiter_count || 0),
+          },
+          new7d: Number(roleBreakdown?.new_7d || 0),
+          new30d: Number(roleBreakdown?.new_30d || 0),
+        },
+        games: {
+          total: Number(gameStats?.total_games || 0),
+          thisWeek: Number(gameStats?.games_7d || 0),
+          basketball: Number(gameStats?.basketball_games || 0),
+          football: Number(gameStats?.football_games || 0),
+          avgPoints: Number(gameStats?.avg_points || 0),
+        },
+        engagement: {
+          active7d: Number(engagementStats?.active_7d || 0),
+          fivePlusGames: Number(fiveGamesPlayers?.count || 0),
+        },
+        recruiting: {
+          totalInquiries: Number(recruitingStats?.total_inquiries || 0),
+          unreadInquiries: Number(recruitingStats?.unread_inquiries || 0),
+          totalRecruiters: Number(recruiterStats?.total_recruiters || 0),
+          verifiedRecruiters: Number(recruiterStats?.verified_recruiters || 0),
+          pendingRecruiters: Number(recruiterStats?.pending_recruiters || 0),
+        },
+        feed: {
+          totalPosts: Number(feedStats?.total_posts || 0),
+        },
+      });
+    } catch (err) {
+      console.error('Admin analytics error:', err);
+      res.status(500).json({ error: 'Could not fetch analytics' });
+    }
+  });
+
+  // Admin feed moderation - get recent posts
+  app.get('/api/admin/feed', isAdmin, async (req, res) => {
+    try {
+      const limit = Math.min(parseInt(req.query.limit as string) || 50, 100);
+      const offset = parseInt(req.query.offset as string) || 0;
+      const posts = await db.select({
+        id: feedActivities.id,
+        activityType: feedActivities.activityType,
+        playerId: feedActivities.playerId,
+        headline: feedActivities.headline,
+        subtext: feedActivities.subtext,
+        createdAt: feedActivities.createdAt,
+      }).from(feedActivities)
+        .orderBy(desc(feedActivities.createdAt))
+        .limit(limit)
+        .offset(offset);
+
+      const postsWithPlayer = await Promise.all(posts.map(async (post) => {
+        let playerName = 'Unknown';
+        if (post.playerId) {
+          const p = await db.select({ name: players.name }).from(players).where(eq(players.id, post.playerId)).limit(1);
+          if (p.length > 0) playerName = p[0].name;
+        }
+        const [reactionCount] = await db.select({ count: count() }).from(feedReactions).where(eq(feedReactions.activityId, post.id));
+        const [commentCount] = await db.select({ count: count() }).from(feedComments).where(eq(feedComments.activityId, post.id));
+        return { ...post, playerName, reactionCount: Number(reactionCount.count), commentCount: Number(commentCount.count) };
+      }));
+
+      res.json({ posts: postsWithPlayer });
+    } catch (err) {
+      console.error('Admin feed error:', err);
+      res.status(500).json({ error: 'Could not fetch feed' });
+    }
+  });
+
+  // Admin delete feed post
+  app.delete('/api/admin/feed/:id', isAdmin, async (req, res) => {
+    try {
+      const postId = parseInt(req.params.id);
+      await db.delete(feedActivities).where(eq(feedActivities.id, postId));
+      res.json({ success: true });
+    } catch (err) {
+      console.error('Admin delete feed error:', err);
+      res.status(500).json({ error: 'Could not delete post' });
+    }
+  });
+
+  // Admin get recent comments
+  app.get('/api/admin/comments', isAdmin, async (req, res) => {
+    try {
+      const limit = Math.min(parseInt(req.query.limit as string) || 50, 100);
+      const offset = parseInt(req.query.offset as string) || 0;
+      const comments = await db.select().from(feedComments)
+        .orderBy(desc(feedComments.createdAt))
+        .limit(limit)
+        .offset(offset);
+      res.json({ comments });
+    } catch (err) {
+      console.error('Admin comments error:', err);
+      res.status(500).json({ error: 'Could not fetch comments' });
+    }
+  });
+
+  // Admin delete comment
+  app.delete('/api/admin/comments/:id', isAdmin, async (req, res) => {
+    try {
+      const commentId = parseInt(req.params.id);
+      await db.delete(feedComments).where(eq(feedComments.id, commentId));
+      res.json({ success: true });
+    } catch (err) {
+      console.error('Admin delete comment error:', err);
+      res.status(500).json({ error: 'Could not delete comment' });
+    }
+  });
+
+  // Admin get all recruiters
+  app.get('/api/admin/recruiters', isAdmin, async (req, res) => {
+    try {
+      const allRecruiters = await db.select().from(recruiterProfiles)
+        .orderBy(desc(recruiterProfiles.createdAt));
+      res.json({ recruiters: allRecruiters });
+    } catch (err) {
+      console.error('Admin recruiters error:', err);
+      res.status(500).json({ error: 'Could not fetch recruiters' });
+    }
+  });
+
+  // Admin verify/reject recruiter
+  app.patch('/api/admin/recruiters/:id/verify', isAdmin, async (req, res) => {
+    try {
+      const recruiterId = parseInt(req.params.id);
+      const { verified } = req.body;
+      const updated = await storage.updateRecruiterProfile(recruiterId, {
+        isVerified: verified !== false,
+        updatedAt: new Date(),
+      });
+      if (!updated) return res.status(404).json({ error: 'Recruiter not found' });
+      res.json({ recruiter: updated });
+    } catch (err) {
+      console.error('Admin verify recruiter error:', err);
+      res.status(500).json({ error: 'Could not update recruiter' });
+    }
+  });
+
+  // Admin colleges status
+  app.get('/api/admin/colleges/status', isAdmin, async (req, res) => {
+    try {
+      const collegeList = await db.select({
+        id: colleges.id,
+        name: colleges.name,
+        division: colleges.division,
+        conference: colleges.conference,
+        espnTeamId: colleges.espnTeamId,
+      }).from(colleges)
+        .orderBy(colleges.name)
+        .limit(200);
+
+      const collegesWithCounts = await Promise.all(collegeList.map(async (col) => {
+        const [rosterCount] = await db.select({ count: count() })
+          .from(collegeRosterPlayers)
+          .where(eq(collegeRosterPlayers.collegeId, col.id));
+        return {
+          ...col,
+          rosterCount: Number(rosterCount.count),
+          hasEspnSync: !!col.espnTeamId,
+        };
+      }));
+
+      res.json({ colleges: collegesWithCounts });
+    } catch (err) {
+      console.error('Admin colleges status error:', err);
+      res.status(500).json({ error: 'Could not fetch colleges' });
+    }
+  });
+
+  // Admin update user role
+  app.patch('/api/admin/users/:id/role', isAdmin, async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const { role } = req.body;
+      if (!['player', 'coach', 'recruiter'].includes(role)) {
+        return res.status(400).json({ error: 'Invalid role' });
+      }
+      await db.update(users).set({ role }).where(eq(users.id, userId));
+      res.json({ success: true });
+    } catch (err) {
+      console.error('Admin update role error:', err);
+      res.status(500).json({ error: 'Could not update role' });
     }
   });
 

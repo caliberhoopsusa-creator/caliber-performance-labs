@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Lock, Users, Package, Tag, UserCog, Pencil, Trash2, Plus, Loader2, Award, Crown, Star, Shield, Sparkles, MapPin, Trophy, Globe } from "lucide-react";
+import { Lock, Users, Package, Tag, UserCog, Pencil, Trash2, Plus, Loader2, Award, Crown, Star, Shield, Sparkles, MapPin, Trophy, Globe, BarChart3, MessageSquare, GraduationCap, Download, Search, CheckCircle, XCircle, RefreshCw, Activity, TrendingUp, Gamepad2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 
 const ADMIN_PASSWORD_KEY = "admin_password";
@@ -270,8 +270,27 @@ function RosterTab() {
 
   const players = data?.players || [];
 
+  const handleExportPlayers = () => {
+    const exportData = players.map(p => ({
+      id: p.id,
+      name: p.name,
+      sport: p.sport,
+      position: p.position,
+      team: p.team || '',
+      height: p.height || '',
+      jerseyNumber: p.jerseyNumber ?? '',
+    }));
+    downloadCSV(exportData, 'caliber-players.csv');
+  };
+
   return (
     <div className="space-y-4">
+      <div className="flex justify-end">
+        <Button variant="outline" size="sm" onClick={handleExportPlayers} data-testid="button-export-players">
+          <Download className="w-4 h-4 mr-1" />
+          Export CSV
+        </Button>
+      </div>
       <Table>
         <TableHeader>
           <TableRow>
@@ -838,12 +857,38 @@ function CouponsTab() {
   );
 }
 
+function downloadCSV(data: any[], filename: string) {
+  if (data.length === 0) return;
+  const headers = Object.keys(data[0]);
+  const csv = [
+    headers.join(','),
+    ...data.map(row => headers.map(h => {
+      const val = row[h];
+      if (val === null || val === undefined) return '';
+      const str = String(val);
+      return str.includes(',') || str.includes('"') || str.includes('\n') ? `"${str.replace(/"/g, '""')}"` : str;
+    }).join(','))
+  ].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 function UsersTab() {
   const { toast } = useToast();
   const [giveCoinsOpen, setGiveCoinsOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [coinAmount, setCoinAmount] = useState("");
   const [coinReason, setCoinReason] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [subFilter, setSubFilter] = useState<string>("all");
+  const [roleChangeUser, setRoleChangeUser] = useState<User | null>(null);
+  const [newRole, setNewRole] = useState("");
 
   const { data, isLoading, refetch } = useQuery<{ users: User[] }>({
     queryKey: ["/api/admin/users"],
@@ -874,6 +919,25 @@ function UsersTab() {
     },
   });
 
+  const changeRoleMutation = useMutation({
+    mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
+      const res = await adminFetch(`/api/admin/users/${userId}/role`, {
+        method: "PATCH",
+        body: JSON.stringify({ role }),
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Role updated" });
+      setRoleChangeUser(null);
+      setNewRole("");
+      refetch();
+    },
+    onError: (err: any) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
   const handleGiveCoins = () => {
     if (!selectedUser || !coinAmount) return;
     const amount = parseInt(coinAmount, 10);
@@ -892,75 +956,151 @@ function UsersTab() {
     );
   }
 
-  const users = data?.users || [];
+  const allUsers = data?.users || [];
+
+  const filteredUsers = allUsers.filter(u => {
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      if (!(u.email?.toLowerCase().includes(q) || u.id.toLowerCase().includes(q))) return false;
+    }
+    if (roleFilter !== "all" && u.role !== roleFilter) return false;
+    if (subFilter === "active" && u.subscriptionStatus !== "active") return false;
+    if (subFilter === "none" && u.subscriptionStatus) return false;
+    return true;
+  });
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "-";
     return new Date(dateStr).toLocaleDateString();
   };
 
+  const handleExportUsers = () => {
+    const exportData = filteredUsers.map(u => ({
+      email: u.email || '',
+      role: u.role || '',
+      coins: u.coinBalance ?? 0,
+      subscription: u.subscriptionStatus || 'none',
+      created: u.createdAt || '',
+    }));
+    downloadCSV(exportData, 'caliber-users.csv');
+    toast({ title: "Exported", description: `${exportData.length} users exported to CSV` });
+  };
+
   return (
     <>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Email</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Coins</TableHead>
-            <TableHead>Subscription</TableHead>
-            <TableHead>Created</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users.map((user, idx) => (
-            <TableRow key={user.id} data-testid={`row-user-${idx}`}>
-              <TableCell className="font-medium">{user.email || "-"}</TableCell>
-              <TableCell>
-                {user.role ? (
-                  <Badge variant="outline">{user.role}</Badge>
-                ) : (
-                  <span className="text-muted-foreground">-</span>
-                )}
-              </TableCell>
-              <TableCell>
-                <span className="font-medium text-yellow-500">{user.coinBalance ?? 0}</span>
-              </TableCell>
-              <TableCell>
-                {user.subscriptionStatus ? (
-                  <Badge variant={user.subscriptionStatus === "active" ? "default" : "secondary"}>
-                    {user.subscriptionStatus}
-                  </Badge>
-                ) : (
-                  <span className="text-muted-foreground">None</span>
-                )}
-              </TableCell>
-              <TableCell>{formatDate(user.createdAt)}</TableCell>
-              <TableCell>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    setSelectedUser(user);
-                    setGiveCoinsOpen(true);
-                  }}
-                  data-testid={`btn-give-coins-${idx}`}
-                >
-                  <Plus className="w-3 h-3 mr-1" />
-                  Give Coins
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-          {users.length === 0 && (
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+              data-testid="input-search-users"
+            />
+          </div>
+          <Select value={roleFilter} onValueChange={setRoleFilter}>
+            <SelectTrigger className="w-[130px]" data-testid="select-role-filter">
+              <SelectValue placeholder="Role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Roles</SelectItem>
+              <SelectItem value="player">Player</SelectItem>
+              <SelectItem value="coach">Coach</SelectItem>
+              <SelectItem value="recruiter">Recruiter</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={subFilter} onValueChange={setSubFilter}>
+            <SelectTrigger className="w-[150px]" data-testid="select-sub-filter">
+              <SelectValue placeholder="Subscription" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Subs</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="none">No Sub</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="sm" onClick={handleExportUsers} data-testid="button-export-users">
+            <Download className="w-4 h-4 mr-1" />
+            Export CSV
+          </Button>
+          <span className="text-sm text-muted-foreground">{filteredUsers.length} of {allUsers.length} users</span>
+        </div>
+
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                No users found
-              </TableCell>
+              <TableHead>Email</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Coins</TableHead>
+              <TableHead>Subscription</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
-          )}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {filteredUsers.map((user, idx) => (
+              <TableRow key={user.id} data-testid={`row-user-${idx}`}>
+                <TableCell className="font-medium">{user.email || "-"}</TableCell>
+                <TableCell>
+                  {user.role ? (
+                    <Badge variant="outline">{user.role}</Badge>
+                  ) : (
+                    <span className="text-muted-foreground">-</span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <span className="font-medium text-yellow-500">{user.coinBalance ?? 0}</span>
+                </TableCell>
+                <TableCell>
+                  {user.subscriptionStatus ? (
+                    <Badge variant={user.subscriptionStatus === "active" ? "default" : "secondary"}>
+                      {user.subscriptionStatus}
+                    </Badge>
+                  ) : (
+                    <span className="text-muted-foreground">None</span>
+                  )}
+                </TableCell>
+                <TableCell>{formatDate(user.createdAt)}</TableCell>
+                <TableCell className="space-x-1">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setSelectedUser(user);
+                      setGiveCoinsOpen(true);
+                    }}
+                    data-testid={`btn-give-coins-${idx}`}
+                  >
+                    <Plus className="w-3 h-3 mr-1" />
+                    Coins
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setRoleChangeUser(user);
+                      setNewRole(user.role || "player");
+                    }}
+                    data-testid={`btn-change-role-${idx}`}
+                  >
+                    <UserCog className="w-3 h-3 mr-1" />
+                    Role
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+            {filteredUsers.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                  No users found
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
       <Dialog open={giveCoinsOpen} onOpenChange={setGiveCoinsOpen}>
         <DialogContent>
@@ -1005,6 +1145,43 @@ function UsersTab() {
             >
               {giveCoinsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Give Coins
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!roleChangeUser} onOpenChange={(open) => !open && setRoleChangeUser(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change User Role</DialogTitle>
+            <DialogDescription>
+              Update role for {roleChangeUser?.email || "user"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>New Role</Label>
+              <Select value={newRole} onValueChange={setNewRole}>
+                <SelectTrigger data-testid="select-new-role">
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="player">Player</SelectItem>
+                  <SelectItem value="coach">Coach</SelectItem>
+                  <SelectItem value="recruiter">Recruiter</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRoleChangeUser(null)}>Cancel</Button>
+            <Button
+              onClick={() => roleChangeUser && changeRoleMutation.mutate({ userId: roleChangeUser.id, role: newRole })}
+              disabled={changeRoleMutation.isPending}
+              data-testid="button-confirm-role-change"
+            >
+              {changeRoleMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Update Role
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1925,6 +2102,468 @@ function StateAwardsTab() {
   );
 }
 
+function AnalyticsTab() {
+  const { data, isLoading } = useQuery<any>({
+    queryKey: ["/api/admin/analytics"],
+    queryFn: async () => {
+      const res = await adminFetch("/api/admin/analytics");
+      return res.json();
+    },
+    refetchInterval: 30000,
+  });
+
+  if (isLoading || !data) {
+    return (
+      <div className="flex justify-center py-8">
+        <Loader2 className="w-6 h-6 animate-spin" />
+      </div>
+    );
+  }
+
+  const statCard = (icon: any, label: string, value: number | string, sub?: string, color?: string) => {
+    const Icon = icon;
+    return (
+      <Card>
+        <CardContent className="flex items-center gap-4 p-4">
+          <div className={`p-2.5 rounded-lg bg-background ${color || 'text-accent'}`}>
+            <Icon className="w-5 h-5" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-2xl font-bold tabular-nums">{value}</p>
+            <p className="text-sm text-muted-foreground truncate">{label}</p>
+            {sub && <p className="text-xs text-muted-foreground">{sub}</p>}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        {statCard(Users, "Total Users", data.users.total, `+${data.users.new7d} this week`)}
+        {statCard(UserCog, "Total Players", data.users.players)}
+        {statCard(Gamepad2, "Games Logged", data.games.total, `+${data.games.thisWeek} this week`)}
+        {statCard(TrendingUp, "Avg Points", data.games.avgPoints || "N/A")}
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Users by Role</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="flex justify-between"><span className="text-muted-foreground">Players</span><span className="font-medium">{data.users.byRole.player}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Coaches</span><span className="font-medium">{data.users.byRole.coach}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Recruiters</span><span className="font-medium">{data.users.byRole.recruiter}</span></div>
+            <div className="border-t pt-2 mt-2 flex justify-between"><span className="text-muted-foreground">New (30d)</span><span className="font-medium text-green-500">+{data.users.new30d}</span></div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Sport Breakdown</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="flex justify-between"><span className="text-muted-foreground">🏀 Basketball Players</span><span className="font-medium">{data.games.basketball} games</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">🏈 Football Players</span><span className="font-medium">{data.games.football} games</span></div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Engagement</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="flex justify-between"><span className="text-muted-foreground">Active (7d)</span><span className="font-medium">{data.engagement.active7d} players</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">5+ Games</span><span className="font-medium">{data.engagement.fivePlusGames} players</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Feed Posts</span><span className="font-medium">{data.feed.totalPosts}</span></div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Recruiting Overview</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div><p className="text-xl font-bold">{data.recruiting.totalRecruiters}</p><p className="text-xs text-muted-foreground">Total Recruiters</p></div>
+            <div><p className="text-xl font-bold text-green-500">{data.recruiting.verifiedRecruiters}</p><p className="text-xs text-muted-foreground">Verified</p></div>
+            <div><p className="text-xl font-bold text-yellow-500">{data.recruiting.pendingRecruiters}</p><p className="text-xs text-muted-foreground">Pending</p></div>
+            <div><p className="text-xl font-bold">{data.recruiting.totalInquiries}</p><p className="text-xs text-muted-foreground">Inquiries ({data.recruiting.unreadInquiries} unread)</p></div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function ModerationTab() {
+  const { toast } = useToast();
+  const [view, setView] = useState<"posts" | "comments">("posts");
+
+  const { data: postsData, isLoading: postsLoading, refetch: refetchPosts } = useQuery<any>({
+    queryKey: ["/api/admin/feed"],
+    queryFn: async () => {
+      const res = await adminFetch("/api/admin/feed");
+      return res.json();
+    },
+  });
+
+  const { data: commentsData, isLoading: commentsLoading, refetch: refetchComments } = useQuery<any>({
+    queryKey: ["/api/admin/comments"],
+    queryFn: async () => {
+      const res = await adminFetch("/api/admin/comments");
+      return res.json();
+    },
+  });
+
+  const deletePostMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await adminFetch(`/api/admin/feed/${id}`, { method: "DELETE" });
+    },
+    onSuccess: () => {
+      toast({ title: "Deleted", description: "Post removed" });
+      refetchPosts();
+    },
+    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+  });
+
+  const deleteCommentMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await adminFetch(`/api/admin/comments/${id}`, { method: "DELETE" });
+    },
+    onSuccess: () => {
+      toast({ title: "Deleted", description: "Comment removed" });
+      refetchComments();
+    },
+    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+  });
+
+  const formatDate = (d: string | null) => d ? new Date(d).toLocaleString() : "-";
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-2">
+        <Button variant={view === "posts" ? "default" : "outline"} size="sm" onClick={() => setView("posts")} data-testid="button-view-posts">
+          Feed Posts ({postsData?.posts?.length || 0})
+        </Button>
+        <Button variant={view === "comments" ? "default" : "outline"} size="sm" onClick={() => setView("comments")} data-testid="button-view-comments">
+          Comments ({commentsData?.comments?.length || 0})
+        </Button>
+      </div>
+
+      {view === "posts" && (
+        postsLoading ? (
+          <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin" /></div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Player</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Content</TableHead>
+                <TableHead>Reactions</TableHead>
+                <TableHead>Comments</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {(postsData?.posts || []).map((post: any) => (
+                <TableRow key={post.id} data-testid={`row-post-${post.id}`}>
+                  <TableCell className="font-medium">{post.playerName}</TableCell>
+                  <TableCell><Badge variant="outline">{post.activityType}</Badge></TableCell>
+                  <TableCell className="max-w-xs truncate">{post.headline}</TableCell>
+                  <TableCell>{post.reactionCount}</TableCell>
+                  <TableCell>{post.commentCount}</TableCell>
+                  <TableCell className="text-sm">{formatDate(post.createdAt)}</TableCell>
+                  <TableCell className="text-right">
+                    <Button size="icon" variant="ghost" onClick={() => { if (confirm("Delete this post?")) deletePostMutation.mutate(post.id); }} data-testid={`button-delete-post-${post.id}`}>
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {(!postsData?.posts || postsData.posts.length === 0) && (
+                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No feed posts</TableCell></TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )
+      )}
+
+      {view === "comments" && (
+        commentsLoading ? (
+          <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin" /></div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Author</TableHead>
+                <TableHead>Content</TableHead>
+                <TableHead>Likes</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {(commentsData?.comments || []).map((comment: any) => (
+                <TableRow key={comment.id} data-testid={`row-comment-${comment.id}`}>
+                  <TableCell className="font-medium">{comment.authorName}</TableCell>
+                  <TableCell className="max-w-sm truncate">{comment.content}</TableCell>
+                  <TableCell>{comment.likeCount}</TableCell>
+                  <TableCell className="text-sm">{formatDate(comment.createdAt)}</TableCell>
+                  <TableCell className="text-right">
+                    <Button size="icon" variant="ghost" onClick={() => { if (confirm("Delete this comment?")) deleteCommentMutation.mutate(comment.id); }} data-testid={`button-delete-comment-${comment.id}`}>
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {(!commentsData?.comments || commentsData.comments.length === 0) && (
+                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No comments</TableCell></TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )
+      )}
+    </div>
+  );
+}
+
+interface RecruiterProfile {
+  id: number;
+  userId: string;
+  schoolName: string;
+  division: string;
+  title: string;
+  schoolEmail: string;
+  phone: string | null;
+  bio: string | null;
+  state: string | null;
+  conference: string | null;
+  sport: string;
+  isVerified: boolean;
+  createdAt: string | null;
+}
+
+interface CollegeStatus {
+  id: number;
+  name: string;
+  division: string | null;
+  conference: string | null;
+  espnTeamId: string | null;
+  rosterCount: number;
+  hasEspnSync: boolean;
+}
+
+function RecruitingTab() {
+  const { toast } = useToast();
+  const [view, setView] = useState<"recruiters" | "colleges">("recruiters");
+
+  const { data: recruitersData, isLoading: recruitersLoading, refetch: refetchRecruiters } = useQuery<{ recruiters: RecruiterProfile[] }>({
+    queryKey: ["/api/admin/recruiters"],
+    queryFn: async () => {
+      const res = await adminFetch("/api/admin/recruiters");
+      return res.json();
+    },
+  });
+
+  const { data: collegesData, isLoading: collegesLoading } = useQuery<{ colleges: CollegeStatus[] }>({
+    queryKey: ["/api/admin/colleges/status"],
+    queryFn: async () => {
+      const res = await adminFetch("/api/admin/colleges/status");
+      return res.json();
+    },
+  });
+
+  const verifyMutation = useMutation({
+    mutationFn: async ({ id, verified }: { id: number; verified: boolean }) => {
+      await adminFetch(`/api/admin/recruiters/${id}/verify`, {
+        method: "PATCH",
+        body: JSON.stringify({ verified }),
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Recruiter status updated" });
+      refetchRecruiters();
+    },
+    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+  });
+
+  const syncRostersMutation = useMutation({
+    mutationFn: async () => {
+      await adminFetch("/api/colleges/sync-rosters", { method: "POST" });
+    },
+    onSuccess: () => toast({ title: "Success", description: "Roster sync initiated" }),
+    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+  });
+
+  const syncEspnMutation = useMutation({
+    mutationFn: async () => {
+      await adminFetch("/api/colleges/sync-espn", { method: "POST" });
+    },
+    onSuccess: () => toast({ title: "Success", description: "ESPN sync initiated" }),
+    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+  });
+
+  const recruiters = recruitersData?.recruiters || [];
+  const pendingRecruiters = recruiters.filter(r => !r.isVerified);
+  const verifiedRecruiters = recruiters.filter(r => r.isVerified);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex gap-2">
+          <Button variant={view === "recruiters" ? "default" : "outline"} size="sm" onClick={() => setView("recruiters")} data-testid="button-view-recruiters">
+            Recruiters ({recruiters.length})
+          </Button>
+          <Button variant={view === "colleges" ? "default" : "outline"} size="sm" onClick={() => setView("colleges")} data-testid="button-view-colleges">
+            Colleges ({collegesData?.colleges?.length || 0})
+          </Button>
+        </div>
+        {view === "colleges" && (
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => syncRostersMutation.mutate()} disabled={syncRostersMutation.isPending} data-testid="button-sync-rosters">
+              <RefreshCw className={`w-4 h-4 mr-1 ${syncRostersMutation.isPending ? 'animate-spin' : ''}`} />
+              Sync Rosters
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => syncEspnMutation.mutate()} disabled={syncEspnMutation.isPending} data-testid="button-sync-espn">
+              <RefreshCw className={`w-4 h-4 mr-1 ${syncEspnMutation.isPending ? 'animate-spin' : ''}`} />
+              Sync ESPN
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {view === "recruiters" && (
+        recruitersLoading ? (
+          <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin" /></div>
+        ) : (
+          <div className="space-y-6">
+            {pendingRecruiters.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-yellow-500 flex items-center gap-2">
+                  <Activity className="w-4 h-4" />
+                  Pending Verification ({pendingRecruiters.length})
+                </h3>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>School</TableHead>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Division</TableHead>
+                      <TableHead>Sport</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {pendingRecruiters.map((r) => (
+                      <TableRow key={r.id} data-testid={`row-pending-recruiter-${r.id}`}>
+                        <TableCell className="font-medium">{r.schoolName}</TableCell>
+                        <TableCell>{r.title}</TableCell>
+                        <TableCell>{r.schoolEmail}</TableCell>
+                        <TableCell><Badge variant="outline">{r.division}</Badge></TableCell>
+                        <TableCell>{r.sport === 'football' ? '🏈' : '🏀'}</TableCell>
+                        <TableCell className="text-right space-x-2">
+                          <Button size="sm" variant="default" onClick={() => verifyMutation.mutate({ id: r.id, verified: true })} disabled={verifyMutation.isPending} data-testid={`button-approve-recruiter-${r.id}`}>
+                            <CheckCircle className="w-4 h-4 mr-1" />
+                            Approve
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-green-500 flex items-center gap-2">
+                <CheckCircle className="w-4 h-4" />
+                Verified Recruiters ({verifiedRecruiters.length})
+              </h3>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>School</TableHead>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Division</TableHead>
+                    <TableHead>Sport</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {verifiedRecruiters.map((r) => (
+                    <TableRow key={r.id} data-testid={`row-verified-recruiter-${r.id}`}>
+                      <TableCell className="font-medium">{r.schoolName}</TableCell>
+                      <TableCell>{r.title}</TableCell>
+                      <TableCell>{r.schoolEmail}</TableCell>
+                      <TableCell><Badge variant="outline">{r.division}</Badge></TableCell>
+                      <TableCell>{r.sport === 'football' ? '🏈' : '🏀'}</TableCell>
+                      <TableCell className="text-right">
+                        <Button size="sm" variant="ghost" className="text-destructive" onClick={() => { if (confirm(`Revoke verification for ${r.schoolName}?`)) verifyMutation.mutate({ id: r.id, verified: false }); }} data-testid={`button-revoke-recruiter-${r.id}`}>
+                          <XCircle className="w-4 h-4 mr-1" />
+                          Revoke
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {verifiedRecruiters.length === 0 && (
+                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No verified recruiters</TableCell></TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        )
+      )}
+
+      {view === "colleges" && (
+        collegesLoading ? (
+          <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin" /></div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>College</TableHead>
+                <TableHead>Division</TableHead>
+                <TableHead>Conference</TableHead>
+                <TableHead>ESPN Sync</TableHead>
+                <TableHead>Roster Size</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {(collegesData?.colleges || []).map((col) => (
+                <TableRow key={col.id} data-testid={`row-college-${col.id}`}>
+                  <TableCell className="font-medium">{col.name}</TableCell>
+                  <TableCell><Badge variant="outline">{col.division || "-"}</Badge></TableCell>
+                  <TableCell>{col.conference || "-"}</TableCell>
+                  <TableCell>
+                    {col.hasEspnSync ? (
+                      <Badge variant="default" className="bg-green-600">Linked</Badge>
+                    ) : (
+                      <Badge variant="secondary">Not linked</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>{col.rosterCount}</TableCell>
+                </TableRow>
+              ))}
+              {(!collegesData?.colleges || collegesData.colleges.length === 0) && (
+                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No colleges found</TableCell></TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )
+      )}
+    </div>
+  );
+}
+
 function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   return (
     <div className="min-h-screen bg-background">
@@ -1937,11 +2576,27 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         </div>
       </div>
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <Tabs defaultValue="roster" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7 max-w-4xl bg-card border border-border">
+        <Tabs defaultValue="analytics" className="space-y-6">
+          <TabsList className="flex flex-wrap w-full bg-card border border-border gap-1 h-auto p-1">
+            <TabsTrigger value="analytics" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-analytics">
+              <BarChart3 className="w-4 h-4" />
+              Analytics
+            </TabsTrigger>
             <TabsTrigger value="roster" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-roster">
               <UserCog className="w-4 h-4" />
               Roster
+            </TabsTrigger>
+            <TabsTrigger value="users" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-users">
+              <Users className="w-4 h-4" />
+              Users
+            </TabsTrigger>
+            <TabsTrigger value="moderation" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-moderation">
+              <MessageSquare className="w-4 h-4" />
+              Moderation
+            </TabsTrigger>
+            <TabsTrigger value="recruiting" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-recruiting">
+              <GraduationCap className="w-4 h-4" />
+              Recruiting
             </TabsTrigger>
             <TabsTrigger value="badges" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-badges">
               <Award className="w-4 h-4" />
@@ -1953,7 +2608,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
             </TabsTrigger>
             <TabsTrigger value="state" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-state">
               <Trophy className="w-4 h-4" />
-              State Awards
+              Awards
             </TabsTrigger>
             <TabsTrigger value="products" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-products">
               <Package className="w-4 h-4" />
@@ -1963,11 +2618,19 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               <Tag className="w-4 h-4" />
               Coupons
             </TabsTrigger>
-            <TabsTrigger value="users" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-users">
-              <Users className="w-4 h-4" />
-              Users
-            </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="analytics">
+            <Card>
+              <CardHeader>
+                <CardTitle>Platform Analytics</CardTitle>
+                <CardDescription>Overview of platform health, activity, and growth</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <AnalyticsTab />
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           <TabsContent value="roster">
             <Card>
@@ -1977,6 +2640,42 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               </CardHeader>
               <CardContent>
                 <RosterTab />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="users">
+            <Card>
+              <CardHeader>
+                <CardTitle>User Management</CardTitle>
+                <CardDescription>View, search, and manage all registered users</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <UsersTab />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="moderation">
+            <Card>
+              <CardHeader>
+                <CardTitle>Content Moderation</CardTitle>
+                <CardDescription>Review and manage feed posts and comments</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ModerationTab />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="recruiting">
+            <Card>
+              <CardHeader>
+                <CardTitle>Recruiting Management</CardTitle>
+                <CardDescription>Verify recruiters and manage college data</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <RecruitingTab />
               </CardContent>
             </Card>
           </TabsContent>
@@ -2037,18 +2736,6 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               </CardHeader>
               <CardContent>
                 <CouponsTab />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="users">
-            <Card>
-              <CardHeader>
-                <CardTitle>User Management</CardTitle>
-                <CardDescription>View all registered users and subscriptions</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <UsersTab />
               </CardContent>
             </Card>
           </TabsContent>

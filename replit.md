@@ -55,6 +55,13 @@ Preferred communication style: Simple, everyday language.
 - **Recruiter Directory**: Public searchable directory at `/recruiter-directory` with filters for sport, division, and text search. Shows verified platform recruiters with school affiliation, title, contact info, and bio. API: `GET /api/recruiters/directory`. College detail pages show both ESPN coaching staff (filtered for recruiting-relevant titles) and verified platform recruiters in a unified "Recruiting Contacts" section via `GET /api/colleges/:id/recruiters`.
 - **AI Scouting Reports**: Enhanced Gemini AI prompt includes efficiency metrics with D1/D2/D3 benchmark comparisons, consistency analysis, big-game performance, and next-level projection with division-level recommendation.
 - **Discover Highlights Feed**: TikTok-style public vertical-scroll video feed with snap scrolling and sport filtering.
+- **Enhanced Admin Dashboard**: 10-tab admin panel at `/admin` with:
+  - **Analytics Tab**: Platform-wide metrics (total users, players, games, engagement, recruiting stats, sport breakdown, weekly growth)
+  - **Content Moderation**: View and delete feed posts and comments
+  - **Recruiting Management**: Recruiter verification queue (approve/revoke), college data overview with ESPN sync status, roster sync and ESPN sync trigger buttons
+  - **Enhanced User Management**: Search/filter by email, role, and subscription status; role change capability; CSV export
+  - **Data Export**: CSV export for players and users data
+  - Existing tabs: Roster management, Caliber badges, State rankings, State awards, Stripe products, Coupons
 
 ## External Dependencies
 
