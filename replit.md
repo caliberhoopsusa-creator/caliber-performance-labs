@@ -58,7 +58,7 @@ Preferred communication style: Simple, everyday language.
 - **Enhanced Admin Dashboard**: 10-tab admin panel at `/admin` with:
   - **Analytics Tab**: Platform-wide metrics (total users, players, games, engagement, recruiting stats, sport breakdown, weekly growth)
   - **Content Moderation**: View and delete feed posts and comments
-  - **Recruiting Management**: Recruiter verification queue (approve/revoke), college data overview with ESPN sync status, roster sync and ESPN sync trigger buttons
+  - **Recruiting Management**: Recruiter verification queue (approve/revoke), college data overview with ESPN sync status, roster sync and ESPN sync trigger buttons, manual ESPN team linking with search dialog (validates against ESPN API before saving)
   - **Enhanced User Management**: Search/filter by email, role, and subscription status; role change capability; CSV export
   - **Data Export**: CSV export for players and users data
   - Existing tabs: Roster management, Caliber badges, State rankings, State awards, Stripe products, Coupons

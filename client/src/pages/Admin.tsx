@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Lock, Users, Package, Tag, UserCog, Pencil, Trash2, Plus, Loader2, Award, Crown, Star, Shield, Sparkles, MapPin, Trophy, Globe, BarChart3, MessageSquare, GraduationCap, Download, Search, CheckCircle, XCircle, RefreshCw, Activity, TrendingUp, Gamepad2 } from "lucide-react";
+import { Lock, Users, Package, Tag, UserCog, Pencil, Trash2, Plus, Loader2, Award, Crown, Star, Shield, Sparkles, MapPin, Trophy, Globe, BarChart3, MessageSquare, GraduationCap, Download, Search, CheckCircle, XCircle, RefreshCw, Activity, TrendingUp, Gamepad2, Link2, Unlink } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 
 const ADMIN_PASSWORD_KEY = "admin_password";
@@ -2359,9 +2359,128 @@ interface CollegeStatus {
   hasEspnSync: boolean;
 }
 
+interface EspnTeamResult {
+  espnId: string;
+  displayName: string;
+  shortName: string;
+  abbreviation: string;
+  conference: string;
+  logoUrl: string;
+  sport: string;
+}
+
+function EspnLinkDialog({ college, open, onOpenChange, onLinked }: {
+  college: CollegeStatus;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onLinked: () => void;
+}) {
+  const { toast } = useToast();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(searchQuery), 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const { data: searchResults, isLoading: searching } = useQuery<{ teams: EspnTeamResult[] }>({
+    queryKey: ["/api/admin/espn/search", debouncedQuery],
+    queryFn: async () => {
+      const res = await adminFetch(`/api/admin/espn/search?q=${encodeURIComponent(debouncedQuery)}`);
+      return res.json();
+    },
+    enabled: debouncedQuery.length >= 2,
+  });
+
+  const linkMutation = useMutation({
+    mutationFn: async (espnTeamId: string) => {
+      const res = await adminFetch(`/api/admin/colleges/${college.id}/espn-link`, {
+        method: "PATCH",
+        body: JSON.stringify({ espnTeamId }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to link");
+      }
+    },
+    onSuccess: () => {
+      toast({ title: "Linked", description: `${college.name} is now linked to ESPN.` });
+      onLinked();
+      onOpenChange(false);
+    },
+    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Link ESPN Team</DialogTitle>
+          <DialogDescription>Search for the ESPN team to link to <strong>{college.name}</strong></DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search ESPN teams..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+              data-testid="input-espn-search"
+              autoFocus
+            />
+          </div>
+
+          <div className="max-h-[300px] overflow-y-auto space-y-1">
+            {searching && (
+              <div className="flex justify-center py-6"><Loader2 className="w-5 h-5 animate-spin" /></div>
+            )}
+            {!searching && debouncedQuery.length >= 2 && searchResults?.teams?.length === 0 && (
+              <p className="text-center text-muted-foreground py-6 text-sm">No ESPN teams found for "{debouncedQuery}"</p>
+            )}
+            {searchResults?.teams?.map((team) => (
+              <div
+                key={`${team.sport}-${team.espnId}`}
+                className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50 cursor-pointer border border-transparent hover:border-border transition-colors"
+                data-testid={`espn-team-${team.espnId}`}
+              >
+                {team.logoUrl && (
+                  <img src={team.logoUrl} alt="" className="w-8 h-8 object-contain flex-shrink-0" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{team.displayName}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {team.conference && <span>{team.conference} · </span>}
+                    <span className="capitalize">{team.sport}</span>
+                    <span className="ml-1 opacity-60">· ID: {team.espnId}</span>
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => linkMutation.mutate(team.espnId)}
+                  disabled={linkMutation.isPending}
+                  data-testid={`button-select-espn-${team.espnId}`}
+                >
+                  {linkMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : "Select"}
+                </Button>
+              </div>
+            ))}
+            {debouncedQuery.length < 2 && !searching && (
+              <p className="text-center text-muted-foreground py-6 text-sm">Type at least 2 characters to search</p>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function RecruitingTab() {
   const { toast } = useToast();
   const [view, setView] = useState<"recruiters" | "colleges">("recruiters");
+  const [linkingCollege, setLinkingCollege] = useState<CollegeStatus | null>(null);
 
   const { data: recruitersData, isLoading: recruitersLoading, refetch: refetchRecruiters } = useQuery<{ recruiters: RecruiterProfile[] }>({
     queryKey: ["/api/admin/recruiters"],
@@ -2371,7 +2490,7 @@ function RecruitingTab() {
     },
   });
 
-  const { data: collegesData, isLoading: collegesLoading } = useQuery<{ colleges: CollegeStatus[] }>({
+  const { data: collegesData, isLoading: collegesLoading, refetch: refetchColleges } = useQuery<{ colleges: CollegeStatus[] }>({
     queryKey: ["/api/admin/colleges/status"],
     queryFn: async () => {
       const res = await adminFetch("/api/admin/colleges/status");
@@ -2405,13 +2524,33 @@ function RecruitingTab() {
     mutationFn: async () => {
       await adminFetch("/api/colleges/sync-espn", { method: "POST" });
     },
-    onSuccess: () => toast({ title: "Success", description: "ESPN sync initiated" }),
+    onSuccess: () => {
+      toast({ title: "Success", description: "ESPN sync completed" });
+      refetchColleges();
+    },
+    onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+  });
+
+  const unlinkMutation = useMutation({
+    mutationFn: async (collegeId: number) => {
+      const res = await adminFetch(`/api/admin/colleges/${collegeId}/espn-link`, {
+        method: "PATCH",
+        body: JSON.stringify({ espnTeamId: null }),
+      });
+      if (!res.ok) throw new Error("Failed to unlink");
+    },
+    onSuccess: () => {
+      toast({ title: "Unlinked", description: "ESPN link removed." });
+      refetchColleges();
+    },
     onError: (err: any) => toast({ title: "Error", description: err.message, variant: "destructive" }),
   });
 
   const recruiters = recruitersData?.recruiters || [];
   const pendingRecruiters = recruiters.filter(r => !r.isVerified);
   const verifiedRecruiters = recruiters.filter(r => r.isVerified);
+  const allColleges = collegesData?.colleges || [];
+  const linkedCount = allColleges.filter(c => c.hasEspnSync).length;
 
   return (
     <div className="space-y-4">
@@ -2421,11 +2560,12 @@ function RecruitingTab() {
             Recruiters ({recruiters.length})
           </Button>
           <Button variant={view === "colleges" ? "default" : "outline"} size="sm" onClick={() => setView("colleges")} data-testid="button-view-colleges">
-            Colleges ({collegesData?.colleges?.length || 0})
+            Colleges ({allColleges.length})
           </Button>
         </div>
         {view === "colleges" && (
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">{linkedCount}/{allColleges.length} linked</span>
             <Button size="sm" variant="outline" onClick={() => syncRostersMutation.mutate()} disabled={syncRostersMutation.isPending} data-testid="button-sync-rosters">
               <RefreshCw className={`w-4 h-4 mr-1 ${syncRostersMutation.isPending ? 'animate-spin' : ''}`} />
               Sync Rosters
@@ -2467,7 +2607,7 @@ function RecruitingTab() {
                         <TableCell>{r.title}</TableCell>
                         <TableCell>{r.schoolEmail}</TableCell>
                         <TableCell><Badge variant="outline">{r.division}</Badge></TableCell>
-                        <TableCell>{r.sport === 'football' ? '🏈' : '🏀'}</TableCell>
+                        <TableCell><Badge variant="outline" className="text-xs">{r.sport}</Badge></TableCell>
                         <TableCell className="text-right space-x-2">
                           <Button size="sm" variant="default" onClick={() => verifyMutation.mutate({ id: r.id, verified: true })} disabled={verifyMutation.isPending} data-testid={`button-approve-recruiter-${r.id}`}>
                             <CheckCircle className="w-4 h-4 mr-1" />
@@ -2504,7 +2644,7 @@ function RecruitingTab() {
                       <TableCell>{r.title}</TableCell>
                       <TableCell>{r.schoolEmail}</TableCell>
                       <TableCell><Badge variant="outline">{r.division}</Badge></TableCell>
-                      <TableCell>{r.sport === 'football' ? '🏈' : '🏀'}</TableCell>
+                      <TableCell><Badge variant="outline" className="text-xs">{r.sport}</Badge></TableCell>
                       <TableCell className="text-right">
                         <Button size="sm" variant="ghost" className="text-destructive" onClick={() => { if (confirm(`Revoke verification for ${r.schoolName}?`)) verifyMutation.mutate({ id: r.id, verified: false }); }} data-testid={`button-revoke-recruiter-${r.id}`}>
                           <XCircle className="w-4 h-4 mr-1" />
@@ -2535,30 +2675,68 @@ function RecruitingTab() {
                 <TableHead>Conference</TableHead>
                 <TableHead>ESPN Sync</TableHead>
                 <TableHead>Roster Size</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(collegesData?.colleges || []).map((col) => (
+              {allColleges.map((col) => (
                 <TableRow key={col.id} data-testid={`row-college-${col.id}`}>
                   <TableCell className="font-medium">{col.name}</TableCell>
                   <TableCell><Badge variant="outline">{col.division || "-"}</Badge></TableCell>
                   <TableCell>{col.conference || "-"}</TableCell>
                   <TableCell>
                     {col.hasEspnSync ? (
-                      <Badge variant="default" className="bg-green-600">Linked</Badge>
+                      <div className="flex items-center gap-1.5">
+                        <Badge variant="default" className="bg-green-600">Linked</Badge>
+                        <span className="text-xs text-muted-foreground">ID: {col.espnTeamId}</span>
+                      </div>
                     ) : (
                       <Badge variant="secondary">Not linked</Badge>
                     )}
                   </TableCell>
                   <TableCell>{col.rosterCount}</TableCell>
+                  <TableCell className="text-right">
+                    {col.hasEspnSync ? (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-destructive"
+                        onClick={() => { if (confirm(`Unlink ESPN from ${col.name}?`)) unlinkMutation.mutate(col.id); }}
+                        disabled={unlinkMutation.isPending}
+                        data-testid={`button-unlink-espn-${col.id}`}
+                      >
+                        <Unlink className="w-4 h-4 mr-1" />
+                        Unlink
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setLinkingCollege(col)}
+                        data-testid={`button-link-espn-${col.id}`}
+                      >
+                        <Link2 className="w-4 h-4 mr-1" />
+                        Link ESPN
+                      </Button>
+                    )}
+                  </TableCell>
                 </TableRow>
               ))}
-              {(!collegesData?.colleges || collegesData.colleges.length === 0) && (
-                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No colleges found</TableCell></TableRow>
+              {allColleges.length === 0 && (
+                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No colleges found</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
         )
+      )}
+
+      {linkingCollege && (
+        <EspnLinkDialog
+          college={linkingCollege}
+          open={!!linkingCollege}
+          onOpenChange={(open) => !open && setLinkingCollege(null)}
+          onLinked={() => refetchColleges()}
+        />
       )}
     </div>
   );

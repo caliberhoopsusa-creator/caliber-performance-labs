@@ -9699,6 +9699,104 @@ Only respond with the JSON array, no other text.`;
     }
   });
 
+  app.patch('/api/admin/colleges/:id/espn-link', isAdmin, async (req, res) => {
+    try {
+      const collegeId = parseInt(req.params.id);
+      if (isNaN(collegeId)) return res.status(400).json({ error: "Invalid college ID" });
+
+      const { espnTeamId } = req.body;
+
+      if (espnTeamId !== null && espnTeamId !== undefined) {
+        const teamIdStr = String(espnTeamId);
+        const college = await db.select({ sport: colleges.sport }).from(colleges).where(eq(colleges.id, collegeId)).limit(1);
+        if (!college.length) return res.status(404).json({ error: "College not found" });
+
+        const sport = college[0].sport || "basketball";
+        const sportPath = sport === "football"
+          ? "football/college-football"
+          : "basketball/mens-college-basketball";
+        const checkUrl = `https://site.api.espn.com/apis/site/v2/sports/${sportPath}/teams/${teamIdStr}`;
+
+        try {
+          const checkRes = await fetch(checkUrl);
+          if (!checkRes.ok) {
+            return res.status(400).json({ error: `ESPN team ID ${teamIdStr} not found for ${sport}. Make sure you have the correct ID.` });
+          }
+        } catch {
+          return res.status(400).json({ error: "Could not verify ESPN team ID. Please try again." });
+        }
+
+        await db.update(colleges).set({ espnTeamId: teamIdStr }).where(eq(colleges.id, collegeId));
+      } else {
+        await db.update(colleges).set({ espnTeamId: null }).where(eq(colleges.id, collegeId));
+      }
+
+      const [updated] = await db.select().from(colleges).where(eq(colleges.id, collegeId));
+      res.json(updated);
+    } catch (err) {
+      console.error('Admin ESPN link error:', err);
+      res.status(500).json({ error: 'Could not update ESPN link' });
+    }
+  });
+
+  app.get('/api/admin/espn/search', isAdmin, async (req, res) => {
+    try {
+      const query = (req.query.q as string || "").toLowerCase().trim();
+      const sport = (req.query.sport as string || "").toLowerCase();
+
+      if (!query || query.length < 2) {
+        return res.json({ teams: [] });
+      }
+
+      const results: Array<{ espnId: string; displayName: string; shortName: string; abbreviation: string; conference: string; logoUrl: string; sport: string }> = [];
+
+      const fetchTeams = async (sportPath: string, sportName: string) => {
+        try {
+          const url = `https://site.api.espn.com/apis/site/v2/sports/${sportPath}/teams?limit=400`;
+          const response = await fetch(url);
+          if (!response.ok) return;
+          const data = await response.json();
+          const teams = data.sports?.[0]?.leagues?.[0]?.teams || [];
+          for (const t of teams) {
+            const team = t.team || t;
+            const dn = (team.displayName || "").toLowerCase();
+            const sdn = (team.shortDisplayName || "").toLowerCase();
+            const abbr = (team.abbreviation || "").toLowerCase();
+            const nick = (team.nickname || "").toLowerCase();
+
+            if (dn.includes(query) || sdn.includes(query) || abbr.includes(query) || nick.includes(query)) {
+              const conf = team.groups?.parent?.shortName || team.groups?.shortName || "";
+              const logo = team.logos?.[0]?.href || "";
+              results.push({
+                espnId: team.id?.toString() || "",
+                displayName: team.displayName || "",
+                shortName: team.shortDisplayName || "",
+                abbreviation: team.abbreviation || "",
+                conference: conf,
+                logoUrl: logo,
+                sport: sportName,
+              });
+            }
+          }
+        } catch (err) {
+          console.error(`ESPN search error for ${sportName}:`, err);
+        }
+      };
+
+      if (!sport || sport === "basketball") {
+        await fetchTeams("basketball/mens-college-basketball", "basketball");
+      }
+      if (!sport || sport === "football") {
+        await fetchTeams("football/college-football", "football");
+      }
+
+      res.json({ teams: results.slice(0, 20) });
+    } catch (err) {
+      console.error('ESPN search error:', err);
+      res.status(500).json({ error: 'Could not search ESPN teams' });
+    }
+  });
+
   // Admin update user role
   app.patch('/api/admin/users/:id/role', isAdmin, async (req, res) => {
     try {
