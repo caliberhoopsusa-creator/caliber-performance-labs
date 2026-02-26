@@ -1,4 +1,4 @@
-import logoImage from "@assets/caliber-logo-orange.png";
+import monogramLogo from "@assets/caliber-logo-monogram.png";
 
 interface CaliberLogoProps {
   size?: number;
@@ -9,7 +9,7 @@ interface CaliberLogoProps {
 export function CaliberLogo({ size = 32, className }: CaliberLogoProps) {
   return (
     <img
-      src={logoImage}
+      src={monogramLogo}
       alt="Caliber Logo"
       data-testid="img-caliber-logo"
       className={className}
