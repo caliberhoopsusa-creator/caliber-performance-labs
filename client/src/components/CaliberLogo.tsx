@@ -61,10 +61,16 @@ function hslStringToHex(hslStr: string): string {
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
+const IMG_ASPECT = 1204 / 650;
+
 export function CaliberLogo({ size = 32, color, className }: CaliberLogoProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [imgLoaded, setImgLoaded] = useState(false);
   const imgRef = useRef<HTMLImageElement | null>(null);
+  const [aspect, setAspect] = useState(IMG_ASPECT);
+
+  const displayHeight = size;
+  const displayWidth = Math.round(displayHeight * aspect);
 
   const recolor = useCallback(() => {
     const canvas = canvasRef.current;
@@ -75,8 +81,8 @@ export function CaliberLogo({ size = 32, color, className }: CaliberLogoProps) {
     if (!ctx) return;
 
     const dpr = window.devicePixelRatio || 1;
-    canvas.width = size * dpr;
-    canvas.height = size * dpr;
+    canvas.width = displayWidth * dpr;
+    canvas.height = displayHeight * dpr;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
@@ -110,13 +116,16 @@ export function CaliberLogo({ size = 32, color, className }: CaliberLogoProps) {
     }
 
     ctx.putImageData(imageData, 0, 0);
-  }, [size, color, imgLoaded]);
+  }, [displayWidth, displayHeight, color, imgLoaded]);
 
   useEffect(() => {
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => {
       imgRef.current = img;
+      if (img.naturalWidth && img.naturalHeight) {
+        setAspect(img.naturalWidth / img.naturalHeight);
+      }
       setImgLoaded(true);
     };
     img.src = shieldLogo;
@@ -140,8 +149,8 @@ export function CaliberLogo({ size = 32, color, className }: CaliberLogoProps) {
       data-testid="img-caliber-logo"
       className={className}
       style={{
-        width: size,
-        height: size,
+        width: displayWidth,
+        height: displayHeight,
       }}
       role="img"
       aria-label="Caliber Logo"
