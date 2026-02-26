@@ -218,7 +218,7 @@ export function CollegeCompare({ open, onOpenChange }: CollegeCompareProps) {
   const [selectedCollegeIds, setSelectedCollegeIds] = useState<(number | null)[]>([null, null]);
 
   const { data: colleges } = useQuery<College[]>({
-    queryKey: ['/api/colleges', { sport: currentSport }],
+    queryKey: [`/api/colleges?sport=${currentSport}`],
     enabled: open,
   });
 
