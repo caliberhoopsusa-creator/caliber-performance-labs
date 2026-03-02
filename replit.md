@@ -58,11 +58,14 @@ Preferred communication style: Simple, everyday language.
 - **Multi-Season Career Timeline**: Games are tagged with seasons (e.g., "2024-25"). `seasons` table stores canonical season definitions. Career timeline on player profiles and Performance Hub shows per-season averages, growth deltas between seasons, career totals, and team at the time. `CareerTimeline` and `TeamHistory` components. API: `GET /api/players/:id/career-timeline`.
 - **Team/Club Portability**: `team_history` table tracks every team a player has been on with season, role, join/leave dates. Stats persist across team changes. Only one "current" team enforced on new entries. Viewable on player profiles in the Career tab.
 - **Discover Highlights Feed**: TikTok-style public vertical-scroll video feed with snap scrolling and sport filtering.
-- **Enhanced Admin Dashboard**: 10-tab admin panel at `/admin` with:
-  - **Analytics Tab**: Platform-wide metrics (total users, players, games, engagement, recruiting stats, sport breakdown, weekly growth)
+- **Enhanced Admin Dashboard**: 13-tab admin panel at `/admin` with:
+  - **Analytics Tab**: Platform-wide metrics with Recharts visualizations — weekly growth line chart, role distribution bar chart, games by season bar chart, top performers table, guardian stats, sport breakdown, engagement, and recruiting overview
   - **Content Moderation**: View and delete feed posts and comments
   - **Recruiting Management**: Recruiter verification queue (approve/revoke), college data overview with ESPN sync status, roster sync and ESPN sync trigger buttons, manual ESPN team linking with search dialog (validates against ESPN API before saving)
-  - **Enhanced User Management**: Search/filter by email, role, and subscription status; role change capability; CSV export
+  - **Enhanced User Management**: Search/filter by email/name, role (player/coach/recruiter/guardian), and subscription status; sortable columns; user detail dialog with full profile; bulk coin grants with multi-select checkboxes; role change capability; CSV export
+  - **Guardian Management**: View all guardian-player links with status filtering (all/pending/approved/revoked), stat cards, approve/revoke actions
+  - **Season Management**: CRUD for seasons with sport/date range, toggle current season per sport, game count display, create season dialog
+  - **Activity Feed**: Real-time unified timeline of recent platform actions (games logged, user signups, guardian requests, feed posts) with type filtering and relative timestamps
   - **Data Export**: CSV export for players and users data
   - Existing tabs: Roster management, Caliber badges, State rankings, State awards, Stripe products, Coupons
 

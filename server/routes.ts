@@ -9484,6 +9484,7 @@ Only respond with the JSON array, no other text.`;
           COUNT(*) FILTER (WHERE role = 'player') as player_count,
           COUNT(*) FILTER (WHERE role = 'coach') as coach_count,
           COUNT(*) FILTER (WHERE role = 'recruiter') as recruiter_count,
+          COUNT(*) FILTER (WHERE role = 'guardian') as guardian_count,
           COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days') as new_7d,
           COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '30 days') as new_30d
         FROM users
@@ -9546,6 +9547,72 @@ Only respond with the JSON array, no other text.`;
       `);
       const recruiterStats = recruiterResult.rows[0] as any;
 
+      const guardianResult = await db.execute(sql`
+        SELECT
+          COUNT(*) as total_links,
+          COUNT(*) FILTER (WHERE status = 'approved') as approved_count,
+          COUNT(*) FILTER (WHERE status = 'pending') as pending_count
+        FROM guardian_links
+      `);
+      const guardianStats = guardianResult.rows[0] as any;
+
+      const seasonResult = await db.execute(sql`
+        SELECT s.id, s.name, s.sport, s.start_date, s.end_date, s.is_current,
+          COALESCE(g.game_count, 0) as game_count
+        FROM seasons s
+        LEFT JOIN (
+          SELECT season, COUNT(*) as game_count FROM games WHERE season IS NOT NULL GROUP BY season
+        ) g ON g.season = s.name
+        ORDER BY s.start_date DESC
+      `);
+      const seasonStats = seasonResult.rows;
+
+      const topPerformersResult = await db.execute(sql`
+        SELECT g.player_id, p.name as player_name, COUNT(*) as total_games
+        FROM games g
+        JOIN players p ON p.id = g.player_id
+        GROUP BY g.player_id, p.name
+        ORDER BY total_games DESC
+        LIMIT 5
+      `);
+      const topPerformers = topPerformersResult.rows.map((r: any) => ({
+        playerId: Number(r.player_id),
+        playerName: r.player_name,
+        totalGames: Number(r.total_games),
+      }));
+
+      const weeklyGrowthResult = await db.execute(sql`
+        SELECT
+          date_trunc('week', w.week_start) as week,
+          COALESCE(u.user_count, 0) as new_users,
+          COALESCE(g.game_count, 0) as new_games
+        FROM (
+          SELECT generate_series(
+            date_trunc('week', NOW() - INTERVAL '7 weeks'),
+            date_trunc('week', NOW()),
+            '1 week'::interval
+          ) as week_start
+        ) w
+        LEFT JOIN (
+          SELECT date_trunc('week', created_at) as week, COUNT(*) as user_count
+          FROM users
+          WHERE created_at >= NOW() - INTERVAL '8 weeks'
+          GROUP BY date_trunc('week', created_at)
+        ) u ON u.week = w.week_start
+        LEFT JOIN (
+          SELECT date_trunc('week', created_at) as week, COUNT(*) as game_count
+          FROM games
+          WHERE created_at >= NOW() - INTERVAL '8 weeks'
+          GROUP BY date_trunc('week', created_at)
+        ) g ON g.week = w.week_start
+        ORDER BY w.week_start ASC
+      `);
+      const weeklyGrowth = weeklyGrowthResult.rows.map((r: any) => ({
+        week: r.week,
+        newUsers: Number(r.new_users),
+        newGames: Number(r.new_games),
+      }));
+
       res.json({
         users: {
           total: Number(userStats.totalUsers),
@@ -9554,6 +9621,7 @@ Only respond with the JSON array, no other text.`;
             player: Number(roleBreakdown?.player_count || 0),
             coach: Number(roleBreakdown?.coach_count || 0),
             recruiter: Number(roleBreakdown?.recruiter_count || 0),
+            guardian: Number(roleBreakdown?.guardian_count || 0),
           },
           new7d: Number(roleBreakdown?.new_7d || 0),
           new30d: Number(roleBreakdown?.new_30d || 0),
@@ -9579,6 +9647,14 @@ Only respond with the JSON array, no other text.`;
         feed: {
           totalPosts: Number(feedStats?.total_posts || 0),
         },
+        guardians: {
+          totalLinks: Number(guardianStats?.total_links || 0),
+          approved: Number(guardianStats?.approved_count || 0),
+          pending: Number(guardianStats?.pending_count || 0),
+        },
+        seasons: seasonStats,
+        topPerformers,
+        weeklyGrowth,
       });
     } catch (err) {
       console.error('Admin analytics error:', err);
@@ -10247,7 +10323,7 @@ Only respond with the JSON array, no other text.`;
   app.get('/api/admin/users', isAdmin, async (req, res) => {
     try {
       const result = await db.execute(sql`
-        SELECT id, email, role, "stripeCustomerId", "stripeSubscriptionId", "subscriptionStatus", "coinBalance", "createdAt"
+        SELECT id, email, first_name as "firstName", last_name as "lastName", role, sport, "stripeCustomerId", "stripeSubscriptionId", "subscriptionStatus", "coinBalance", "createdAt"
         FROM users
         ORDER BY "createdAt" DESC
       `);
@@ -18500,6 +18576,177 @@ The email should:
     } catch (error) {
       console.error("Error getting pending guardian requests:", error);
       res.status(500).json({ message: "Failed to get pending requests" });
+    }
+  });
+
+  app.get('/api/admin/guardian-links', isAdmin, async (req, res) => {
+    try {
+      const statusFilter = req.query.status as string | undefined;
+      let result;
+      if (statusFilter && ['pending', 'approved', 'revoked'].includes(statusFilter)) {
+        result = await db.execute(sql`
+          SELECT gl.id, gl.guardian_user_id, gl.player_id, gl.relationship, gl.status, gl.linked_at, gl.approved_at,
+            u.first_name as guardian_first_name, u.last_name as guardian_last_name, u.email as guardian_email,
+            p.name as player_name
+          FROM guardian_links gl
+          LEFT JOIN users u ON u.id = gl.guardian_user_id
+          LEFT JOIN players p ON p.id = gl.player_id
+          WHERE gl.status = ${statusFilter}
+          ORDER BY gl.linked_at DESC
+        `);
+      } else {
+        result = await db.execute(sql`
+          SELECT gl.id, gl.guardian_user_id, gl.player_id, gl.relationship, gl.status, gl.linked_at, gl.approved_at,
+            u.first_name as guardian_first_name, u.last_name as guardian_last_name, u.email as guardian_email,
+            p.name as player_name
+          FROM guardian_links gl
+          LEFT JOIN users u ON u.id = gl.guardian_user_id
+          LEFT JOIN players p ON p.id = gl.player_id
+          ORDER BY gl.linked_at DESC
+        `);
+      }
+      const links = result.rows.map((r: any) => ({
+        id: r.id,
+        guardianUserId: r.guardian_user_id,
+        guardianName: [r.guardian_first_name, r.guardian_last_name].filter(Boolean).join(' ') || 'Unknown',
+        guardianEmail: r.guardian_email || '',
+        playerId: r.player_id,
+        playerName: r.player_name || 'Unknown',
+        relationship: r.relationship,
+        status: r.status,
+        linkedAt: r.linked_at,
+        approvedAt: r.approved_at,
+      }));
+      res.json(links);
+    } catch (err) {
+      console.error('Admin guardian links error:', err);
+      res.status(500).json({ error: 'Could not fetch guardian links' });
+    }
+  });
+
+  app.patch('/api/admin/guardian-links/:id', isAdmin, async (req, res) => {
+    try {
+      const linkId = parseInt(req.params.id);
+      const { status } = req.body;
+      if (!status || !['approved', 'revoked'].includes(status)) {
+        return res.status(400).json({ error: 'Status must be approved or revoked' });
+      }
+      const updateData: any = { status };
+      if (status === 'approved') {
+        updateData.approvedAt = new Date();
+      }
+      const [updated] = await db.update(guardianLinks)
+        .set(updateData)
+        .where(eq(guardianLinks.id, linkId))
+        .returning();
+      if (!updated) {
+        return res.status(404).json({ error: 'Guardian link not found' });
+      }
+      res.json(updated);
+    } catch (err) {
+      console.error('Admin update guardian link error:', err);
+      res.status(500).json({ error: 'Could not update guardian link' });
+    }
+  });
+
+  app.post('/api/admin/seasons', isAdmin, async (req, res) => {
+    try {
+      const { name, sport, startDate, endDate, isCurrent } = req.body;
+      if (!name || !sport || !startDate || !endDate) {
+        return res.status(400).json({ error: 'name, sport, startDate, and endDate are required' });
+      }
+      if (isCurrent) {
+        await db.update(seasons)
+          .set({ isCurrent: false })
+          .where(and(eq(seasons.sport, sport), eq(seasons.isCurrent, true)));
+      }
+      const [created] = await db.insert(seasons).values({
+        name,
+        sport,
+        startDate,
+        endDate,
+        isCurrent: isCurrent || false,
+      }).returning();
+      res.json(created);
+    } catch (err) {
+      console.error('Admin create season error:', err);
+      res.status(500).json({ error: 'Could not create season' });
+    }
+  });
+
+  app.patch('/api/admin/seasons/:id', isAdmin, async (req, res) => {
+    try {
+      const seasonId = parseInt(req.params.id);
+      const { name, startDate, endDate, isCurrent } = req.body;
+      if (isCurrent === true) {
+        const [existing] = await db.select().from(seasons).where(eq(seasons.id, seasonId));
+        if (existing) {
+          await db.update(seasons)
+            .set({ isCurrent: false })
+            .where(and(eq(seasons.sport, existing.sport), eq(seasons.isCurrent, true), ne(seasons.id, seasonId)));
+        }
+      }
+      const updateData: any = {};
+      if (name !== undefined) updateData.name = name;
+      if (startDate !== undefined) updateData.startDate = startDate;
+      if (endDate !== undefined) updateData.endDate = endDate;
+      if (isCurrent !== undefined) updateData.isCurrent = isCurrent;
+      const [updated] = await db.update(seasons)
+        .set(updateData)
+        .where(eq(seasons.id, seasonId))
+        .returning();
+      if (!updated) {
+        return res.status(404).json({ error: 'Season not found' });
+      }
+      res.json(updated);
+    } catch (err) {
+      console.error('Admin update season error:', err);
+      res.status(500).json({ error: 'Could not update season' });
+    }
+  });
+
+  app.get('/api/admin/activity', isAdmin, async (req, res) => {
+    try {
+      const recentGamesResult = await db.execute(sql`
+        SELECT g.id, g.player_id, g.sport, g.date, g.grade, g.created_at, p.name as player_name
+        FROM games g
+        LEFT JOIN players p ON p.id = g.player_id
+        ORDER BY g.created_at DESC
+        LIMIT 15
+      `);
+
+      const recentUsersResult = await db.execute(sql`
+        SELECT id, first_name, last_name, email, role, created_at
+        FROM users
+        ORDER BY created_at DESC
+        LIMIT 15
+      `);
+
+      const recentGuardianLinksResult = await db.execute(sql`
+        SELECT gl.*, u.first_name as guardian_first_name, u.last_name as guardian_last_name, p.name as player_name
+        FROM guardian_links gl
+        LEFT JOIN users u ON u.id = gl.guardian_user_id
+        LEFT JOIN players p ON p.id = gl.player_id
+        ORDER BY gl.linked_at DESC
+        LIMIT 10
+      `);
+
+      const recentFeedPostsResult = await db.execute(sql`
+        SELECT id, player_id, activity_type, headline, created_at
+        FROM feed_activities
+        ORDER BY created_at DESC
+        LIMIT 10
+      `);
+
+      res.json({
+        recentGames: recentGamesResult.rows,
+        recentUsers: recentUsersResult.rows,
+        recentGuardianLinks: recentGuardianLinksResult.rows,
+        recentFeedPosts: recentFeedPostsResult.rows,
+      });
+    } catch (err) {
+      console.error('Admin activity feed error:', err);
+      res.status(500).json({ error: 'Could not fetch activity feed' });
     }
   });
 

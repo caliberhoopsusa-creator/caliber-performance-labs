@@ -12,7 +12,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Lock, Users, Package, Tag, UserCog, Pencil, Trash2, Plus, Loader2, Award, Crown, Star, Shield, Sparkles, MapPin, Trophy, Globe, BarChart3, MessageSquare, GraduationCap, Download, Search, CheckCircle, XCircle, RefreshCw, Activity, TrendingUp, Gamepad2, Link2, Unlink } from "lucide-react";
+import { Lock, Users, Package, Tag, UserCog, Pencil, Trash2, Plus, Loader2, Award, Crown, Star, Shield, Sparkles, MapPin, Trophy, Globe, BarChart3, MessageSquare, GraduationCap, Download, Search, CheckCircle, XCircle, RefreshCw, Activity, TrendingUp, Gamepad2, Link2, Unlink, Calendar } from "lucide-react";
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
+import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 
 const ADMIN_PASSWORD_KEY = "admin_password";
@@ -182,10 +184,14 @@ interface Coupon {
 interface User {
   id: string;
   email: string | null;
+  firstName: string | null;
+  lastName: string | null;
   role: string | null;
+  sport: string | null;
   stripeCustomerId: string | null;
   stripeSubscriptionId: string | null;
   subscriptionStatus: string | null;
+  subscriptionTier: string | null;
   coinBalance: number | null;
   createdAt: string | null;
 }
@@ -889,6 +895,13 @@ function UsersTab() {
   const [subFilter, setSubFilter] = useState<string>("all");
   const [roleChangeUser, setRoleChangeUser] = useState<User | null>(null);
   const [newRole, setNewRole] = useState("");
+  const [detailUser, setDetailUser] = useState<User | null>(null);
+  const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
+  const [bulkCoinsOpen, setBulkCoinsOpen] = useState(false);
+  const [bulkCoinAmount, setBulkCoinAmount] = useState("");
+  const [bulkCoinReason, setBulkCoinReason] = useState("");
+  const [sortBy, setSortBy] = useState<string>("created");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
   const { data, isLoading, refetch } = useQuery<{ users: User[] }>({
     queryKey: ["/api/admin/users"],
@@ -938,6 +951,31 @@ function UsersTab() {
     },
   });
 
+  const bulkCoinsMutation = useMutation({
+    mutationFn: async ({ userIds, amount, reason }: { userIds: string[]; amount: number; reason: string }) => {
+      const results = await Promise.all(
+        userIds.map(userId =>
+          adminFetch("/api/admin/give-coins", {
+            method: "POST",
+            body: JSON.stringify({ userId, amount, reason }),
+          }).then(r => r.json())
+        )
+      );
+      return results;
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: `Granted coins to ${selectedUsers.size} users` });
+      setBulkCoinsOpen(false);
+      setSelectedUsers(new Set());
+      setBulkCoinAmount("");
+      setBulkCoinReason("");
+      refetch();
+    },
+    onError: (err: any) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
   const handleGiveCoins = () => {
     if (!selectedUser || !coinAmount) return;
     const amount = parseInt(coinAmount, 10);
@@ -946,6 +984,41 @@ function UsersTab() {
       return;
     }
     giveCoinsMutation.mutate({ userId: selectedUser.id, amount, reason: coinReason });
+  };
+
+  const handleBulkGiveCoins = () => {
+    const amount = parseInt(bulkCoinAmount, 10);
+    if (isNaN(amount) || amount <= 0 || selectedUsers.size === 0) {
+      toast({ title: "Error", description: "Select users and enter a valid amount", variant: "destructive" });
+      return;
+    }
+    bulkCoinsMutation.mutate({ userIds: Array.from(selectedUsers), amount, reason: bulkCoinReason });
+  };
+
+  const toggleUserSelection = (userId: string) => {
+    setSelectedUsers(prev => {
+      const next = new Set(prev);
+      if (next.has(userId)) next.delete(userId);
+      else next.add(userId);
+      return next;
+    });
+  };
+
+  const toggleAllUsers = (users: User[]) => {
+    if (selectedUsers.size === users.length) {
+      setSelectedUsers(new Set());
+    } else {
+      setSelectedUsers(new Set(users.map(u => u.id)));
+    }
+  };
+
+  const handleSort = (col: string) => {
+    if (sortBy === col) {
+      setSortDir(d => d === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(col);
+      setSortDir("asc");
+    }
   };
 
   if (isLoading) {
@@ -961,12 +1034,24 @@ function UsersTab() {
   const filteredUsers = allUsers.filter(u => {
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      if (!(u.email?.toLowerCase().includes(q) || u.id.toLowerCase().includes(q))) return false;
+      if (!(u.email?.toLowerCase().includes(q) || u.id.toLowerCase().includes(q) || 
+            u.firstName?.toLowerCase().includes(q) || u.lastName?.toLowerCase().includes(q))) return false;
     }
     if (roleFilter !== "all" && u.role !== roleFilter) return false;
     if (subFilter === "active" && u.subscriptionStatus !== "active") return false;
     if (subFilter === "none" && u.subscriptionStatus) return false;
     return true;
+  });
+
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
+    const dir = sortDir === "asc" ? 1 : -1;
+    switch (sortBy) {
+      case "email": return dir * ((a.email || "").localeCompare(b.email || ""));
+      case "role": return dir * ((a.role || "").localeCompare(b.role || ""));
+      case "coins": return dir * ((a.coinBalance ?? 0) - (b.coinBalance ?? 0));
+      case "created": return dir * (new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
+      default: return 0;
+    }
   });
 
   const formatDate = (dateStr: string | null) => {
@@ -1009,6 +1094,7 @@ function UsersTab() {
               <SelectItem value="player">Player</SelectItem>
               <SelectItem value="coach">Coach</SelectItem>
               <SelectItem value="recruiter">Recruiter</SelectItem>
+              <SelectItem value="guardian">Guardian</SelectItem>
             </SelectContent>
           </Select>
           <Select value={subFilter} onValueChange={setSubFilter}>
@@ -1025,44 +1111,91 @@ function UsersTab() {
             <Download className="w-4 h-4 mr-1" />
             Export CSV
           </Button>
+          {selectedUsers.size > 0 && (
+            <Button size="sm" onClick={() => setBulkCoinsOpen(true)} data-testid="button-bulk-coins">
+              <Plus className="w-4 h-4 mr-1" />
+              Give Coins to {selectedUsers.size} Users
+            </Button>
+          )}
           <span className="text-sm text-muted-foreground">{filteredUsers.length} of {allUsers.length} users</span>
         </div>
 
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Coins</TableHead>
+              <TableHead className="w-10">
+                <Checkbox
+                  checked={selectedUsers.size === sortedUsers.length && sortedUsers.length > 0}
+                  onCheckedChange={() => toggleAllUsers(sortedUsers)}
+                  data-testid="checkbox-select-all-users"
+                />
+              </TableHead>
+              <TableHead className="cursor-pointer select-none" onClick={() => handleSort("email")} data-testid="sort-email">
+                Email {sortBy === "email" && (sortDir === "asc" ? "↑" : "↓")}
+              </TableHead>
+              <TableHead className="cursor-pointer select-none" onClick={() => handleSort("role")} data-testid="sort-role">
+                Role {sortBy === "role" && (sortDir === "asc" ? "↑" : "↓")}
+              </TableHead>
+              <TableHead className="cursor-pointer select-none" onClick={() => handleSort("coins")} data-testid="sort-coins">
+                Coins {sortBy === "coins" && (sortDir === "asc" ? "↑" : "↓")}
+              </TableHead>
               <TableHead>Subscription</TableHead>
-              <TableHead>Created</TableHead>
+              <TableHead className="cursor-pointer select-none" onClick={() => handleSort("created")} data-testid="sort-created">
+                Created {sortBy === "created" && (sortDir === "asc" ? "↑" : "↓")}
+              </TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredUsers.map((user, idx) => (
-              <TableRow key={user.id} data-testid={`row-user-${idx}`}>
-                <TableCell className="font-medium">{user.email || "-"}</TableCell>
-                <TableCell>
+            {sortedUsers.map((user, idx) => (
+              <TableRow key={user.id} data-testid={`row-user-${idx}`} className="cursor-pointer hover:bg-muted/50">
+                <TableCell onClick={(e) => e.stopPropagation()}>
+                  <Checkbox
+                    checked={selectedUsers.has(user.id)}
+                    onCheckedChange={() => toggleUserSelection(user.id)}
+                    data-testid={`checkbox-user-${idx}`}
+                  />
+                </TableCell>
+                <TableCell className="font-medium" onClick={() => setDetailUser(user)} data-testid={`cell-user-email-${idx}`}>
+                  <div>
+                    <p>{user.email || "-"}</p>
+                    {(user.firstName || user.lastName) && (
+                      <p className="text-xs text-muted-foreground">{[user.firstName, user.lastName].filter(Boolean).join(" ")}</p>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell onClick={() => setDetailUser(user)}>
                   {user.role ? (
                     <Badge variant="outline">{user.role}</Badge>
                   ) : (
                     <span className="text-muted-foreground">-</span>
                   )}
                 </TableCell>
-                <TableCell>
+                <TableCell onClick={() => setDetailUser(user)}>
                   <span className="font-medium text-yellow-500">{user.coinBalance ?? 0}</span>
                 </TableCell>
-                <TableCell>
+                <TableCell onClick={() => setDetailUser(user)}>
                   {user.subscriptionStatus ? (
-                    <Badge variant={user.subscriptionStatus === "active" ? "default" : "secondary"}>
+                    <Badge
+                      variant="outline"
+                      className={
+                        user.subscriptionStatus === "active"
+                          ? "border-green-500/50 text-green-500 bg-green-500/10"
+                          : user.subscriptionStatus === "canceled"
+                          ? "border-red-500/50 text-red-500 bg-red-500/10"
+                          : "border-muted-foreground/50 text-muted-foreground"
+                      }
+                      data-testid={`badge-sub-status-${user.subscriptionStatus}`}
+                    >
                       {user.subscriptionStatus}
                     </Badge>
                   ) : (
-                    <span className="text-muted-foreground">None</span>
+                    <Badge variant="outline" className="border-muted-foreground/30 text-muted-foreground" data-testid="badge-sub-status-none">
+                      None
+                    </Badge>
                   )}
                 </TableCell>
-                <TableCell>{formatDate(user.createdAt)}</TableCell>
+                <TableCell onClick={() => setDetailUser(user)}>{formatDate(user.createdAt)}</TableCell>
                 <TableCell className="space-x-1">
                   <Button
                     size="sm"
@@ -1091,9 +1224,9 @@ function UsersTab() {
                 </TableCell>
               </TableRow>
             ))}
-            {filteredUsers.length === 0 && (
+            {sortedUsers.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                   No users found
                 </TableCell>
               </TableRow>
@@ -1169,6 +1302,7 @@ function UsersTab() {
                   <SelectItem value="player">Player</SelectItem>
                   <SelectItem value="coach">Coach</SelectItem>
                   <SelectItem value="recruiter">Recruiter</SelectItem>
+                  <SelectItem value="guardian">Guardian</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1182,6 +1316,143 @@ function UsersTab() {
             >
               {changeRoleMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Update Role
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!detailUser} onOpenChange={(open) => !open && setDetailUser(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>User Details</DialogTitle>
+            <DialogDescription>{detailUser?.email || ""}</DialogDescription>
+          </DialogHeader>
+          {detailUser && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Name</p>
+                  <p className="text-sm font-medium" data-testid="detail-user-name">
+                    {[detailUser.firstName, detailUser.lastName].filter(Boolean).join(" ") || "-"}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">User ID</p>
+                  <p className="text-sm font-mono text-muted-foreground" data-testid="detail-user-id">{detailUser.id}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Role</p>
+                  <Badge variant="outline" data-testid="detail-user-role">{detailUser.role || "none"}</Badge>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Coins</p>
+                  <p className="text-sm font-medium text-yellow-500" data-testid="detail-user-coins">{detailUser.coinBalance ?? 0}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Subscription</p>
+                  <Badge
+                    variant="outline"
+                    className={
+                      detailUser.subscriptionStatus === "active"
+                        ? "border-green-500/50 text-green-500 bg-green-500/10"
+                        : detailUser.subscriptionStatus === "canceled"
+                        ? "border-red-500/50 text-red-500 bg-red-500/10"
+                        : "border-muted-foreground/30 text-muted-foreground"
+                    }
+                    data-testid="detail-user-sub"
+                  >
+                    {detailUser.subscriptionStatus || "None"}
+                  </Badge>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Joined</p>
+                  <p className="text-sm" data-testid="detail-user-joined">{formatDate(detailUser.createdAt)}</p>
+                </div>
+                {detailUser.sport && (
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Sport</p>
+                    <Badge variant="outline" data-testid="detail-user-sport">{detailUser.sport}</Badge>
+                  </div>
+                )}
+                {detailUser.subscriptionTier && (
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">Tier</p>
+                    <p className="text-sm font-medium" data-testid="detail-user-tier">{detailUser.subscriptionTier}</p>
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-2 pt-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setDetailUser(null);
+                    setSelectedUser(detailUser);
+                    setGiveCoinsOpen(true);
+                  }}
+                  data-testid="detail-give-coins"
+                >
+                  <Plus className="w-3 h-3 mr-1" />
+                  Give Coins
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setDetailUser(null);
+                    setRoleChangeUser(detailUser);
+                    setNewRole(detailUser.role || "player");
+                  }}
+                  data-testid="detail-change-role"
+                >
+                  <UserCog className="w-3 h-3 mr-1" />
+                  Change Role
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={bulkCoinsOpen} onOpenChange={setBulkCoinsOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Bulk Grant Coins</DialogTitle>
+            <DialogDescription>Grant coins to {selectedUsers.size} selected user(s)</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="bulk-coin-amount">Amount per User</Label>
+              <Input
+                id="bulk-coin-amount"
+                type="number"
+                min="1"
+                placeholder="100"
+                value={bulkCoinAmount}
+                onChange={(e) => setBulkCoinAmount(e.target.value)}
+                data-testid="input-bulk-coin-amount"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="bulk-coin-reason">Reason (optional)</Label>
+              <Input
+                id="bulk-coin-reason"
+                placeholder="Bonus for..."
+                value={bulkCoinReason}
+                onChange={(e) => setBulkCoinReason(e.target.value)}
+                data-testid="input-bulk-coin-reason"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkCoinsOpen(false)}>Cancel</Button>
+            <Button
+              onClick={handleBulkGiveCoins}
+              disabled={bulkCoinsMutation.isPending}
+              data-testid="btn-confirm-bulk-coins"
+            >
+              {bulkCoinsMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Grant to {selectedUsers.size} Users
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -2120,6 +2391,8 @@ function AnalyticsTab() {
     );
   }
 
+  const CHART_COLORS = ["hsl(var(--accent))", "#22c55e", "#eab308", "#8b5cf6", "#ef4444"];
+
   const statCard = (icon: any, label: string, value: number | string, sub?: string, color?: string) => {
     const Icon = icon;
     return (
@@ -2129,7 +2402,7 @@ function AnalyticsTab() {
             <Icon className="w-5 h-5" />
           </div>
           <div className="min-w-0">
-            <p className="text-2xl font-bold tabular-nums">{value}</p>
+            <p className="text-2xl font-bold tabular-nums" data-testid={`stat-${label.toLowerCase().replace(/\s+/g, '-')}`}>{value}</p>
             <p className="text-sm text-muted-foreground truncate">{label}</p>
             {sub && <p className="text-xs text-muted-foreground">{sub}</p>}
           </div>
@@ -2138,35 +2411,80 @@ function AnalyticsTab() {
     );
   };
 
+  const roleData = [
+    { name: "Players", count: data.users.byRole.player || 0 },
+    { name: "Coaches", count: data.users.byRole.coach || 0 },
+    { name: "Recruiters", count: data.users.byRole.recruiter || 0 },
+    { name: "Guardians", count: data.users.byRole.guardian || 0 },
+  ];
+
+  const weeklyGrowth = data.weeklyGrowth || [];
+  const seasons = data.seasons || [];
+  const topPerformers = (data.topPerformers || []).slice(0, 5);
+
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {statCard(Users, "Total Users", data.users.total, `+${data.users.new7d} this week`)}
         {statCard(UserCog, "Total Players", data.users.players)}
         {statCard(Gamepad2, "Games Logged", data.games.total, `+${data.games.thisWeek} this week`)}
         {statCard(TrendingUp, "Avg Points", data.games.avgPoints || "N/A")}
+        {statCard(Shield, "Guardians", data.users.byRole.guardian || 0, data.guardians ? `${data.guardians.pending} pending` : undefined, "text-purple-500")}
+        {statCard(Link2, "Guardian Links", data.guardians?.totalLinks || 0, data.guardians ? `${data.guardians.approved} approved` : undefined, "text-blue-500")}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Users by Role</CardTitle>
+            <CardTitle className="text-base">Weekly Growth</CardTitle>
+            <CardDescription>Users and games over the last 8 weeks</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="flex justify-between"><span className="text-muted-foreground">Players</span><span className="font-medium">{data.users.byRole.player}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Coaches</span><span className="font-medium">{data.users.byRole.coach}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Recruiters</span><span className="font-medium">{data.users.byRole.recruiter}</span></div>
-            <div className="border-t pt-2 mt-2 flex justify-between"><span className="text-muted-foreground">New (30d)</span><span className="font-medium text-green-500">+{data.users.new30d}</span></div>
+          <CardContent>
+            {weeklyGrowth.length > 0 ? (
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={weeklyGrowth}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="week" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
+                  <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
+                  <RechartsTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8 }} />
+                  <Legend />
+                  <Line type="monotone" dataKey="newUsers" stroke={CHART_COLORS[0]} name="Users" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="newGames" stroke={CHART_COLORS[1]} name="Games" strokeWidth={2} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-8">No weekly data available</p>
+            )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
+            <CardTitle className="text-base">Role Distribution</CardTitle>
+            <CardDescription>Users by account role</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={roleData} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis type="number" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis dataKey="name" type="category" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" width={80} />
+                <RechartsTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8 }} />
+                <Bar dataKey="count" fill={CHART_COLORS[0]} radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Card>
+          <CardHeader className="pb-3">
             <CardTitle className="text-base">Sport Breakdown</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <div className="flex justify-between"><span className="text-muted-foreground">🏀 Basketball Players</span><span className="font-medium">{data.games.basketball} games</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">🏈 Football Players</span><span className="font-medium">{data.games.football} games</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Basketball</span><span className="font-medium">{data.games.basketball} games</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Football</span><span className="font-medium">{data.games.football} games</span></div>
           </CardContent>
         </Card>
 
@@ -2178,9 +2496,57 @@ function AnalyticsTab() {
             <div className="flex justify-between"><span className="text-muted-foreground">Active (7d)</span><span className="font-medium">{data.engagement.active7d} players</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">5+ Games</span><span className="font-medium">{data.engagement.fivePlusGames} players</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Feed Posts</span><span className="font-medium">{data.feed.totalPosts}</span></div>
+            <div className="border-t pt-2 mt-2 flex justify-between"><span className="text-muted-foreground">New (30d)</span><span className="font-medium text-green-500">+{data.users.new30d}</span></div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Top Performers</CardTitle>
+            <CardDescription>Most games logged</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {topPerformers.length > 0 ? (
+              <Table>
+                <TableBody>
+                  {topPerformers.map((p: any, i: number) => (
+                    <TableRow key={p.playerId} data-testid={`row-top-performer-${i}`}>
+                      <TableCell className="py-1.5 pl-0">
+                        <span className="text-xs text-muted-foreground mr-2">#{i + 1}</span>
+                        <span className="font-medium text-sm">{p.playerName}</span>
+                      </TableCell>
+                      <TableCell className="py-1.5 pr-0 text-right">
+                        <Badge variant="secondary" className="text-xs">{p.totalGames} games</Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4">No data</p>
+            )}
           </CardContent>
         </Card>
       </div>
+
+      {seasons.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Games by Season</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={seasons}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
+                <RechartsTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8 }} />
+                <Bar dataKey="game_count" fill={CHART_COLORS[1]} name="Games" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader className="pb-3">
@@ -2195,6 +2561,550 @@ function AnalyticsTab() {
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function GuardianManagementTab() {
+  const { toast } = useToast();
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  const { data, isLoading, refetch } = useQuery<any>({
+    queryKey: ["/api/admin/guardian-links", statusFilter],
+    queryFn: async () => {
+      const url = statusFilter !== "all"
+        ? `/api/admin/guardian-links?status=${statusFilter}`
+        : "/api/admin/guardian-links";
+      const res = await adminFetch(url);
+      return res.json();
+    },
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: number; status: string }) => {
+      const res = await adminFetch(`/api/admin/guardian-links/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Guardian link status updated" });
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/guardian-links"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-8">
+        <Loader2 className="w-6 h-6 animate-spin" />
+      </div>
+    );
+  }
+
+  const links = Array.isArray(data) ? data : [];
+  const stats = {
+    total: links.length,
+    approved: links.filter((l: any) => l.status === "approved").length,
+    pending: links.filter((l: any) => l.status === "pending").length,
+    revoked: links.filter((l: any) => l.status === "revoked").length,
+  };
+
+  const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString() : "-";
+
+  const statusBadgeClass = (status: string) => {
+    switch (status) {
+      case "approved": return "border-green-500/50 text-green-500 bg-green-500/10";
+      case "pending": return "border-yellow-500/50 text-yellow-500 bg-yellow-500/10";
+      case "revoked": return "border-red-500/50 text-red-500 bg-red-500/10";
+      default: return "border-muted-foreground/50 text-muted-foreground";
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardContent className="flex items-center gap-4 p-4">
+            <div className="p-2.5 rounded-lg bg-background text-accent"><Link2 className="w-5 h-5" /></div>
+            <div><p className="text-2xl font-bold tabular-nums" data-testid="stat-total-links">{stats.total}</p><p className="text-sm text-muted-foreground">Total Links</p></div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-4 p-4">
+            <div className="p-2.5 rounded-lg bg-background text-green-500"><CheckCircle className="w-5 h-5" /></div>
+            <div><p className="text-2xl font-bold tabular-nums" data-testid="stat-approved-links">{stats.approved}</p><p className="text-sm text-muted-foreground">Approved</p></div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-4 p-4">
+            <div className="p-2.5 rounded-lg bg-background text-yellow-500"><Loader2 className="w-5 h-5" /></div>
+            <div><p className="text-2xl font-bold tabular-nums" data-testid="stat-pending-links">{stats.pending}</p><p className="text-sm text-muted-foreground">Pending</p></div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-4 p-4">
+            <div className="p-2.5 rounded-lg bg-background text-red-500"><XCircle className="w-5 h-5" /></div>
+            <div><p className="text-2xl font-bold tabular-nums" data-testid="stat-revoked-links">{stats.revoked}</p><p className="text-sm text-muted-foreground">Revoked</p></div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="flex items-center gap-3 flex-wrap">
+        <Label className="text-sm text-muted-foreground">Filter:</Label>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[150px]" data-testid="select-guardian-status-filter">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="approved">Approved</SelectItem>
+            <SelectItem value="revoked">Revoked</SelectItem>
+          </SelectContent>
+        </Select>
+        <span className="text-sm text-muted-foreground">{links.length} links</span>
+      </div>
+
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Guardian</TableHead>
+            <TableHead>Player</TableHead>
+            <TableHead>Relationship</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Linked Date</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {links.map((link: any) => (
+            <TableRow key={link.id} data-testid={`row-guardian-link-${link.id}`}>
+              <TableCell>
+                <div>
+                  <p className="font-medium">{link.guardianName || "Unknown"}</p>
+                  <p className="text-xs text-muted-foreground">{link.guardianEmail || ""}</p>
+                </div>
+              </TableCell>
+              <TableCell className="font-medium">{link.playerName || "Unknown"}</TableCell>
+              <TableCell>{link.relationship || "-"}</TableCell>
+              <TableCell>
+                <Badge variant="outline" className={statusBadgeClass(link.status)} data-testid={`badge-guardian-status-${link.id}`}>
+                  {link.status}
+                </Badge>
+              </TableCell>
+              <TableCell>{formatDate(link.linkedAt)}</TableCell>
+              <TableCell className="text-right space-x-1">
+                {link.status !== "approved" && (
+                  <Button
+                    size="sm"
+                    variant="default"
+                    onClick={() => updateStatusMutation.mutate({ id: link.id, status: "approved" })}
+                    disabled={updateStatusMutation.isPending}
+                    data-testid={`button-approve-guardian-${link.id}`}
+                  >
+                    <CheckCircle className="w-3 h-3 mr-1" />
+                    Approve
+                  </Button>
+                )}
+                {link.status !== "revoked" && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-destructive"
+                    onClick={() => updateStatusMutation.mutate({ id: link.id, status: "revoked" })}
+                    disabled={updateStatusMutation.isPending}
+                    data-testid={`button-revoke-guardian-${link.id}`}
+                  >
+                    <XCircle className="w-3 h-3 mr-1" />
+                    Revoke
+                  </Button>
+                )}
+              </TableCell>
+            </TableRow>
+          ))}
+          {links.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                No guardian links found
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
+function SeasonManagementTab() {
+  const { toast } = useToast();
+  const [createOpen, setCreateOpen] = useState(false);
+  const [form, setForm] = useState({ name: "", sport: "basketball", startDate: "", endDate: "", isCurrent: false });
+
+  const { data, isLoading, refetch } = useQuery<any>({
+    queryKey: ["/api/seasons"],
+    queryFn: async () => {
+      const res = await adminFetch("/api/seasons");
+      return res.json();
+    },
+  });
+
+  const { data: analyticsData } = useQuery<any>({
+    queryKey: ["/api/admin/analytics"],
+    queryFn: async () => {
+      const res = await adminFetch("/api/admin/analytics");
+      return res.json();
+    },
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (seasonData: any) => {
+      const res = await adminFetch("/api/admin/seasons", {
+        method: "POST",
+        body: JSON.stringify(seasonData),
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Season created" });
+      setCreateOpen(false);
+      setForm({ name: "", sport: "basketball", startDate: "", endDate: "", isCurrent: false });
+      refetch();
+    },
+    onError: (err: any) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const toggleCurrentMutation = useMutation({
+    mutationFn: async ({ id, isCurrent }: { id: number; isCurrent: boolean }) => {
+      const res = await adminFetch(`/api/admin/seasons/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ isCurrent }),
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Season updated" });
+      refetch();
+    },
+    onError: (err: any) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const handleCreate = () => {
+    if (!form.name || !form.sport || !form.startDate || !form.endDate) {
+      toast({ title: "Error", description: "Name, sport, start date, and end date are required", variant: "destructive" });
+      return;
+    }
+    createMutation.mutate({
+      name: form.name,
+      sport: form.sport,
+      startDate: form.startDate,
+      endDate: form.endDate,
+      isCurrent: form.isCurrent,
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-8">
+        <Loader2 className="w-6 h-6 animate-spin" />
+      </div>
+    );
+  }
+
+  const seasons = Array.isArray(data) ? data : (data?.seasons || []);
+  const seasonGameCounts = new Map(
+    (analyticsData?.seasons || []).map((s: any) => [s.name, Number(s.game_count || s.gameCount || 0)])
+  );
+
+  const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString() : "-";
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+          <DialogTrigger asChild>
+            <Button data-testid="button-create-season">
+              <Plus className="w-4 h-4 mr-2" />
+              Create Season
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Season</DialogTitle>
+              <DialogDescription>Add a new season to the platform</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="season-name">Name</Label>
+                <Input
+                  id="season-name"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="e.g., 2025-26 Season"
+                  data-testid="input-season-name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="season-sport">Sport</Label>
+                <Select value={form.sport} onValueChange={(v) => setForm({ ...form, sport: v })}>
+                  <SelectTrigger data-testid="select-season-sport">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="basketball">Basketball</SelectItem>
+                    <SelectItem value="football">Football</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="season-start">Start Date</Label>
+                <Input
+                  id="season-start"
+                  type="date"
+                  value={form.startDate}
+                  onChange={(e) => setForm({ ...form, startDate: e.target.value })}
+                  data-testid="input-season-start"
+                />
+              </div>
+              <div>
+                <Label htmlFor="season-end">End Date</Label>
+                <Input
+                  id="season-end"
+                  type="date"
+                  value={form.endDate}
+                  onChange={(e) => setForm({ ...form, endDate: e.target.value })}
+                  data-testid="input-season-end"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="season-current"
+                  checked={form.isCurrent}
+                  onCheckedChange={(checked) => setForm({ ...form, isCurrent: checked === true })}
+                  data-testid="checkbox-season-current"
+                />
+                <Label htmlFor="season-current">Set as current season</Label>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
+              <Button onClick={handleCreate} disabled={createMutation.isPending} data-testid="button-save-season">
+                {createMutation.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                Create Season
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Sport</TableHead>
+            <TableHead>Start Date</TableHead>
+            <TableHead>End Date</TableHead>
+            <TableHead>Current</TableHead>
+            <TableHead>Games</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {seasons.map((season: any) => (
+            <TableRow key={season.id} data-testid={`row-season-${season.id}`}>
+              <TableCell className="font-medium">{season.name}</TableCell>
+              <TableCell><Badge variant="outline">{season.sport}</Badge></TableCell>
+              <TableCell>{formatDate(season.startDate)}</TableCell>
+              <TableCell>{formatDate(season.endDate)}</TableCell>
+              <TableCell>
+                <Switch
+                  checked={season.isCurrent || false}
+                  onCheckedChange={(checked) => toggleCurrentMutation.mutate({ id: season.id, isCurrent: checked })}
+                  data-testid={`switch-season-current-${season.id}`}
+                />
+              </TableCell>
+              <TableCell>
+                <Badge variant="secondary">{seasonGameCounts.get(season.name) ?? season.gameCount ?? 0}</Badge>
+              </TableCell>
+            </TableRow>
+          ))}
+          {seasons.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                No seasons found. Create one to get started.
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
+function ActivityFeedTab() {
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const { data, isLoading } = useQuery<any>({
+    queryKey: ["/api/admin/activity"],
+    queryFn: async () => {
+      const res = await adminFetch("/api/admin/activity");
+      return res.json();
+    },
+    refetchInterval: 15000,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-8">
+        <Loader2 className="w-6 h-6 animate-spin" />
+      </div>
+    );
+  }
+
+  const activities: Array<{ id: string; type: string; description: string; details?: string; timestamp: string }> = [];
+
+  if (data?.recentGames) {
+    for (const g of data.recentGames) {
+      activities.push({
+        id: `game-${g.id}`,
+        type: "game_logged",
+        description: `${g.player_name || "Unknown"} logged a ${g.sport} game`,
+        details: `Grade: ${g.grade || "N/A"} • ${g.date}`,
+        timestamp: g.created_at,
+      });
+    }
+  }
+  if (data?.recentUsers) {
+    for (const u of data.recentUsers) {
+      const name = [u.first_name, u.last_name].filter(Boolean).join(" ") || u.email;
+      activities.push({
+        id: `user-${u.id}`,
+        type: "user_signup",
+        description: `New user: ${name}`,
+        details: `Role: ${u.role} • ${u.email}`,
+        timestamp: u.created_at,
+      });
+    }
+  }
+  if (data?.recentGuardianLinks) {
+    for (const gl of data.recentGuardianLinks) {
+      const gName = [gl.guardian_first_name, gl.guardian_last_name].filter(Boolean).join(" ") || "Unknown";
+      activities.push({
+        id: `guardian-${gl.id}`,
+        type: "guardian_request",
+        description: `Guardian link: ${gName} → ${gl.player_name || "Unknown"}`,
+        details: `Status: ${gl.status} • ${gl.relationship || ""}`,
+        timestamp: gl.linked_at || gl.created_at,
+      });
+    }
+  }
+  if (data?.recentFeedPosts) {
+    for (const fp of data.recentFeedPosts) {
+      activities.push({
+        id: `feed-${fp.id}`,
+        type: "feed_post",
+        description: `Feed post: ${fp.activity_type || "post"}`,
+        details: fp.headline || undefined,
+        timestamp: fp.created_at,
+      });
+    }
+  }
+
+  activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+  const filtered = typeFilter === "all" ? activities : activities.filter(a => a.type === typeFilter);
+
+  const getIcon = (type: string) => {
+    switch (type) {
+      case "game_logged": return Gamepad2;
+      case "user_signup": return Users;
+      case "guardian_request": return Shield;
+      case "feed_post": return MessageSquare;
+      default: return Activity;
+    }
+  };
+
+  const getIconColor = (type: string) => {
+    switch (type) {
+      case "game_logged": return "text-green-500";
+      case "user_signup": return "text-blue-500";
+      case "guardian_request": return "text-purple-500";
+      case "feed_post": return "text-accent";
+      default: return "text-muted-foreground";
+    }
+  };
+
+  const formatTimestamp = (ts: string) => {
+    const d = new Date(ts);
+    const now = new Date();
+    const diff = now.getTime() - d.getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "Just now";
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    if (days < 7) return `${days}d ago`;
+    return d.toLocaleDateString();
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3 flex-wrap">
+        <Label className="text-sm text-muted-foreground">Filter:</Label>
+        <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <SelectTrigger className="w-[180px]" data-testid="select-activity-filter">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Activity</SelectItem>
+            <SelectItem value="game_logged">Games Logged</SelectItem>
+            <SelectItem value="user_signup">User Sign-ups</SelectItem>
+            <SelectItem value="guardian_request">Guardian Links</SelectItem>
+            <SelectItem value="feed_post">Feed Posts</SelectItem>
+          </SelectContent>
+        </Select>
+        <span className="text-sm text-muted-foreground">{filtered.length} items</span>
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="text-center text-muted-foreground py-8">
+          No recent activity
+        </div>
+      ) : (
+        <div className="space-y-1">
+          {filtered.map((activity, idx) => {
+            const Icon = getIcon(activity.type);
+            const iconColor = getIconColor(activity.type);
+            return (
+              <div
+                key={activity.id}
+                className="flex items-start gap-3 p-3 rounded-lg border"
+                data-testid={`activity-item-${idx}`}
+              >
+                <div className={`p-2 rounded-lg bg-background flex-shrink-0 ${iconColor}`}>
+                  <Icon className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm" data-testid={`activity-description-${idx}`}>{activity.description}</p>
+                  {activity.details && (
+                    <p className="text-xs text-muted-foreground mt-0.5">{activity.details}</p>
+                  )}
+                </div>
+                <span className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0" data-testid={`activity-time-${idx}`}>
+                  {formatTimestamp(activity.timestamp)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -2776,6 +3686,18 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               <GraduationCap className="w-4 h-4" />
               Recruiting
             </TabsTrigger>
+            <TabsTrigger value="guardians" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-guardians">
+              <Shield className="w-4 h-4" />
+              Guardians
+            </TabsTrigger>
+            <TabsTrigger value="seasons" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-seasons">
+              <Calendar className="w-4 h-4" />
+              Seasons
+            </TabsTrigger>
+            <TabsTrigger value="activity" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-activity">
+              <Activity className="w-4 h-4" />
+              Activity
+            </TabsTrigger>
             <TabsTrigger value="badges" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="tab-badges">
               <Award className="w-4 h-4" />
               Badges
@@ -2854,6 +3776,42 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               </CardHeader>
               <CardContent>
                 <RecruitingTab />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="guardians">
+            <Card>
+              <CardHeader>
+                <CardTitle>Guardian Management</CardTitle>
+                <CardDescription>Manage guardian-player links, approvals, and revocations</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <GuardianManagementTab />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="seasons">
+            <Card>
+              <CardHeader>
+                <CardTitle>Season Management</CardTitle>
+                <CardDescription>Create and manage seasons for the platform</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <SeasonManagementTab />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="activity">
+            <Card>
+              <CardHeader>
+                <CardTitle>Activity Feed</CardTitle>
+                <CardDescription>Recent platform activity and events</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ActivityFeedTab />
               </CardContent>
             </Card>
           </TabsContent>
