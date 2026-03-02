@@ -34,6 +34,10 @@ export const players = pgTable("players", {
   showSchool: boolean("show_school").default(true),
   showGpa: boolean("show_gpa").default(true),
   openToRecruiting: boolean("open_to_recruiting").default(false), // Boosts in recruiter search
+  showStatsToCoaches: boolean("show_stats_to_coaches").default(true),
+  showContactToCoaches: boolean("show_contact_to_coaches").default(true),
+  showDetailedStatsToGuardians: boolean("show_detailed_stats_to_guardians").default(true),
+  showGradesToGuardians: boolean("show_grades_to_guardians").default(true),
   scoutingReport: text("scouting_report"),
   scoutingReportGeneratedAt: timestamp("scouting_report_generated_at"),
   // Coach contact info

@@ -18015,7 +18015,7 @@ The email should:
         return res.status(403).json({ message: "Access denied" });
       }
 
-      const { profileVisibility, showEmail, showPhone, showSchool, showGpa, openToRecruiting } = req.body;
+      const { profileVisibility, showEmail, showPhone, showSchool, showGpa, openToRecruiting, showStatsToCoaches, showContactToCoaches, showDetailedStatsToGuardians, showGradesToGuardians } = req.body;
 
       const updates: any = {};
       if (profileVisibility !== undefined) updates.profileVisibility = profileVisibility;
@@ -18024,6 +18024,10 @@ The email should:
       if (showSchool !== undefined) updates.showSchool = showSchool;
       if (showGpa !== undefined) updates.showGpa = showGpa;
       if (openToRecruiting !== undefined) updates.openToRecruiting = openToRecruiting;
+      if (showStatsToCoaches !== undefined) updates.showStatsToCoaches = showStatsToCoaches;
+      if (showContactToCoaches !== undefined) updates.showContactToCoaches = showContactToCoaches;
+      if (showDetailedStatsToGuardians !== undefined) updates.showDetailedStatsToGuardians = showDetailedStatsToGuardians;
+      if (showGradesToGuardians !== undefined) updates.showGradesToGuardians = showGradesToGuardians;
 
       const updated = await storage.updatePlayer(playerId, updates);
       res.json(updated);
@@ -18486,6 +18490,16 @@ The email should:
         else if (latestGrade < prevGrade) gradeTrend = "down";
       }
 
+      const showDetailed = player.showDetailedStatsToGuardians !== false;
+      const showGrades = player.showGradesToGuardians !== false;
+
+      const filteredGames = showDetailed ? recentGames : recentGames.map((g: any) => ({
+        id: g.id,
+        date: g.date,
+        sport: g.sport,
+        grade: showGrades ? g.grade : null,
+      }));
+
       res.json({
         player: {
           id: player.id,
@@ -18497,14 +18511,18 @@ The email should:
           totalXp: player.totalXp,
           currentTier: player.currentTier,
         },
-        recentGames,
+        recentGames: filteredGames,
         badges: playerBadges,
         streaks: playerStreaksList,
         milestones: milestones.slice(0, 10),
         goals: playerGoalsList,
         gamesThisSeason,
-        gradeTrend,
-        currentGrade: recentGames[0]?.grade || null,
+        gradeTrend: showGrades ? gradeTrend : "hidden",
+        currentGrade: showGrades ? (recentGames[0]?.grade || null) : null,
+        privacyRestrictions: {
+          detailedStatsHidden: !showDetailed,
+          gradesHidden: !showGrades,
+        },
       });
     } catch (error) {
       console.error("Error getting guardian dashboard:", error);

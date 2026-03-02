@@ -15,6 +15,90 @@ import { BASKETBALL_POSITIONS } from "@shared/sports-config";
 type RoleType = 'player' | 'coach' | 'recruiter' | 'guardian' | null;
 type CoachStep = 'select-team-action' | 'create-team' | 'join-team' | null;
 
+const ROLE_OPTIONS = [
+  {
+    value: 'player' as const,
+    label: 'Player',
+    description: 'Track my own stats, earn badges, and level up my game',
+    icon: UserCircle,
+  },
+  {
+    value: 'coach' as const,
+    label: 'Coach',
+    description: 'Manage my roster, analyze players, and scout talent',
+    icon: ClipboardList,
+  },
+  {
+    value: 'recruiter' as const,
+    label: 'Recruiter',
+    description: 'Discover talented players, track prospects, and connect with recruits',
+    icon: GraduationCap,
+  },
+  {
+    value: 'guardian' as const,
+    label: 'Parent / Guardian',
+    description: "Follow my child's progress, milestones, and achievements",
+    icon: Heart,
+  },
+];
+
+function RoleDropdown({ isLoading, onSelect }: { isLoading: boolean; onSelect: (role: RoleType) => void }) {
+  const [pickedRole, setPickedRole] = useState<string>("");
+
+  const selected = ROLE_OPTIONS.find(r => r.value === pickedRole);
+
+  return (
+    <div className="max-w-md mx-auto space-y-6">
+      <div className="space-y-2">
+        <Label className="text-sm text-muted-foreground">I am a...</Label>
+        <Select value={pickedRole} onValueChange={setPickedRole}>
+          <SelectTrigger className="w-full h-14 text-base" data-testid="select-role-trigger">
+            <SelectValue placeholder="Select your role" />
+          </SelectTrigger>
+          <SelectContent>
+            {ROLE_OPTIONS.map((role) => {
+              const Icon = role.icon;
+              return (
+                <SelectItem key={role.value} value={role.value} data-testid={`role-option-${role.value}`}>
+                  <div className="flex items-center gap-3">
+                    <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
+                    <span className="font-display font-bold tracking-wide uppercase">{role.label}</span>
+                  </div>
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {selected && (
+        <Card className="p-4 bg-accent/5 border-accent/20">
+          <div className="flex items-center gap-3">
+            <selected.icon className="w-6 h-6 text-accent shrink-0" />
+            <div>
+              <p className="font-display font-bold text-accent tracking-wide uppercase">{selected.label}</p>
+              <p className="text-xs text-muted-foreground">{selected.description}</p>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      <Button
+        className="w-full"
+        size="lg"
+        disabled={!pickedRole || isLoading}
+        onClick={() => pickedRole && onSelect(pickedRole as RoleType)}
+        data-testid="button-continue-role"
+      >
+        {isLoading ? (
+          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+        ) : null}
+        {selected ? `Continue as ${selected.label}` : "Select a role to continue"}
+      </Button>
+    </div>
+  );
+}
+
 function BasketballIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor">
@@ -745,91 +829,17 @@ export default function RoleSelection() {
             </form>
           </Card>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card 
-              className="p-6 bg-card border-border hover-elevate cursor-pointer group"
-              onClick={handlePlayerSelect}
-              data-testid="card-select-player"
-            >
-              <div className="text-center space-y-4">
-                <div className="mx-auto w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
-                  <UserCircle className="w-8 h-8 text-accent" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold font-display text-foreground tracking-wide uppercase">I'm a Player</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Track my own stats, earn badges, and level up my game
-                  </p>
-                </div>
-                <Button variant="outline" className="w-full" disabled={isLoading} data-testid="button-select-player">
-                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Select Player"}
-                </Button>
-              </div>
-            </Card>
-
-            <Card 
-              className="p-6 bg-card border-border hover-elevate cursor-pointer group"
-              onClick={handleCoachSelect}
-              data-testid="card-select-coach"
-            >
-              <div className="text-center space-y-4">
-                <div className="mx-auto w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
-                  <ClipboardList className="w-8 h-8 text-accent" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold font-display text-foreground tracking-wide uppercase">I'm a Coach</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Manage my roster, analyze players, and scout talent
-                  </p>
-                </div>
-                <Button variant="outline" className="w-full" disabled={isLoading} data-testid="button-select-coach">
-                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Select Coach"}
-                </Button>
-              </div>
-            </Card>
-
-            <Card 
-              className="p-6 bg-card border-border hover-elevate cursor-pointer group"
-              onClick={handleRecruiterSelect}
-              data-testid="card-select-recruiter"
-            >
-              <div className="text-center space-y-4">
-                <div className="mx-auto w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
-                  <GraduationCap className="w-8 h-8 text-accent" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold font-display text-foreground tracking-wide uppercase">I'm a Recruiter</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Discover talented players, track prospects, and connect with recruits
-                  </p>
-                </div>
-                <Button variant="outline" className="w-full" disabled={isLoading} data-testid="button-select-recruiter">
-                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Select Recruiter"}
-                </Button>
-              </div>
-            </Card>
-
-            <Card 
-              className="p-6 bg-card border-border hover-elevate cursor-pointer group"
-              onClick={handleGuardianSelect}
-              data-testid="card-select-guardian"
-            >
-              <div className="text-center space-y-4">
-                <div className="mx-auto w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
-                  <Heart className="w-8 h-8 text-accent" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold font-display text-foreground tracking-wide uppercase">I'm a Parent</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Follow my child's progress, milestones, and achievements
-                  </p>
-                </div>
-                <Button variant="outline" className="w-full" disabled={isLoading} data-testid="button-select-guardian">
-                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Select Guardian"}
-                </Button>
-              </div>
-            </Card>
-          </div>
+          <RoleDropdown
+            isLoading={isLoading}
+            onSelect={(role) => {
+              switch (role) {
+                case 'player': handlePlayerSelect(); break;
+                case 'coach': handleCoachSelect(); break;
+                case 'recruiter': handleRecruiterSelect(); break;
+                case 'guardian': handleGuardianSelect(); break;
+              }
+            }}
+          />
         )}
       </div>
     </div>

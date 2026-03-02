@@ -34,7 +34,8 @@ Preferred communication style: Simple, everyday language.
 - **Player Management**: Profiles, stat entry, performance tracking.
 - **Gamification**: XP system, tier progression, streak bonuses, skill-based badges.
 - **AI Integration**: Gemini AI for video analysis and performance projections.
-- **Authentication**: Replit Auth with session management and role-based access control (Player/Coach/Recruiter/Guardian).
+- **Authentication**: Replit Auth with session management and role-based access control (Player/Coach/Recruiter/Guardian). Role selection uses a dropdown Select menu with description cards.
+- **Player Privacy Controls**: Role-specific privacy settings on the "Who's Watching" page with separate sections for Recruiter Access (profile visibility, showEmail, showPhone, showSchool, showGpa, openToRecruiting), Coach Access (showStatsToCoaches, showContactToCoaches), and Guardian/Parent Access (showDetailedStatsToGuardians, showGradesToGuardians). Backend enforces privacy on guardian dashboard endpoint by filtering game data and grades based on player preferences.
 - **Social & Engagement**: Player following, in-app notifications, goal sharing, highlight clips, shareable achievements, direct messages, saved posts, and activity indicators. Includes "This Day Last Year" memories and auto-generated milestone cards.
 - **Smart Feed**: Instagram-style community feed with cursor-based pagination, infinite scroll, and "New posts available" banner. Supports comments, replies, likes, and reposts with captions.
 - **Enhanced Social Profiles**: Bio display, profile completion bar, activity summary, follower/following counts, and career personal bests with celebratory toasts.

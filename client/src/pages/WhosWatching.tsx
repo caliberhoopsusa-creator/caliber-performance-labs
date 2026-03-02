@@ -29,6 +29,9 @@ import {
   Phone,
   Loader2,
   X,
+  ClipboardList,
+  BarChart3,
+  GraduationCap,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -79,6 +82,10 @@ interface PlayerVisibility {
   showSchool?: boolean;
   showGpa?: boolean;
   openToRecruiting?: boolean;
+  showStatsToCoaches?: boolean;
+  showContactToCoaches?: boolean;
+  showDetailedStatsToGuardians?: boolean;
+  showGradesToGuardians?: boolean;
 }
 
 type TimeGroup = "Today" | "This Week" | "Earlier";
@@ -488,11 +495,15 @@ function PrivacySettingsTab({
   }
 
   const currentVisibility = player?.profileVisibility || "public";
-  const showEmail = player?.showEmail ?? true;
-  const showPhone = player?.showPhone ?? true;
+  const showEmail = player?.showEmail ?? false;
+  const showPhone = player?.showPhone ?? false;
   const showSchool = player?.showSchool ?? true;
   const showGpa = player?.showGpa ?? true;
   const openToRecruiting = player?.openToRecruiting ?? false;
+  const showStatsToCoaches = player?.showStatsToCoaches ?? true;
+  const showContactToCoaches = player?.showContactToCoaches ?? true;
+  const showDetailedStatsToGuardians = player?.showDetailedStatsToGuardians ?? true;
+  const showGradesToGuardians = player?.showGradesToGuardians ?? true;
 
   const visibilityOptions = [
     {
@@ -515,12 +526,32 @@ function PrivacySettingsTab({
     },
   ];
 
-  const contactToggles = [
-    { key: "showSchool", label: "Show School", value: showSchool, icon: School },
-    { key: "showGpa", label: "Show GPA", value: showGpa, icon: BookOpen },
-    { key: "showEmail", label: "Show Email", value: showEmail, icon: Mail },
-    { key: "showPhone", label: "Show Phone", value: showPhone, icon: Phone },
-  ];
+  const renderToggleRow = (key: string, label: string, description: string, value: boolean, icon: any) => {
+    const Icon = icon;
+    return (
+      <div
+        key={key}
+        className="flex items-center justify-between gap-4 py-2"
+        data-testid={`toggle-row-${key}`}
+      >
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
+          <div>
+            <Label className="text-sm cursor-pointer">{label}</Label>
+            <p className="text-xs text-muted-foreground">{description}</p>
+          </div>
+        </div>
+        <Switch
+          checked={value}
+          onCheckedChange={(val) =>
+            visibilityMutation.mutate({ [key]: val })
+          }
+          disabled={visibilityMutation.isPending}
+          data-testid={`switch-${key}`}
+        />
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -558,54 +589,42 @@ function PrivacySettingsTab({
         </div>
       </Card>
 
-      <Card className="p-6" data-testid="card-open-to-recruiting">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex-1 min-w-0">
-            <h3 className="font-display text-lg font-bold uppercase tracking-wider mb-1">
-              Open to Recruiting
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Flag yourself as actively looking for recruitment opportunities. This boosts your visibility in recruiter searches.
-            </p>
-          </div>
-          <Switch
-            checked={openToRecruiting}
-            onCheckedChange={(val) => visibilityMutation.mutate({ openToRecruiting: val })}
-            disabled={visibilityMutation.isPending}
-            data-testid="switch-open-to-recruiting"
-          />
+      <Card className="p-6" data-testid="card-recruiter-privacy">
+        <h3 className="font-display text-lg font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+          <GraduationCap className="w-5 h-5 text-amber-500" />
+          Recruiter Access
+        </h3>
+        <p className="text-sm text-muted-foreground mb-4">Control what college recruiters can see about you.</p>
+        <div className="space-y-1">
+          {renderToggleRow("openToRecruiting", "Open to Recruiting", "Boost your profile in recruiter searches", openToRecruiting, Activity)}
+          {renderToggleRow("showSchool", "Show School", "Recruiters can see your school name", showSchool, School)}
+          {renderToggleRow("showGpa", "Show GPA", "Recruiters can see your academic GPA", showGpa, BookOpen)}
+          {renderToggleRow("showEmail", "Show Email", "Recruiters can see your email address", showEmail, Mail)}
+          {renderToggleRow("showPhone", "Show Phone", "Recruiters can see your phone number", showPhone, Phone)}
         </div>
       </Card>
 
-      <Card className="p-6" data-testid="card-contact-visibility">
+      <Card className="p-6" data-testid="card-coach-privacy">
         <h3 className="font-display text-lg font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
-          <Eye className="w-5 h-5 text-accent" />
-          Contact Info Visibility
+          <ClipboardList className="w-5 h-5 text-blue-500" />
+          Coach Access
         </h3>
-        <div className="space-y-4">
-          {contactToggles.map((toggle) => {
-            const Icon = toggle.icon;
-            return (
-              <div
-                key={toggle.key}
-                className="flex items-center justify-between gap-4"
-                data-testid={`toggle-row-${toggle.key}`}
-              >
-                <div className="flex items-center gap-3">
-                  <Icon className="w-4 h-4 text-muted-foreground" />
-                  <Label className="text-sm cursor-pointer">{toggle.label}</Label>
-                </div>
-                <Switch
-                  checked={toggle.value}
-                  onCheckedChange={(val) =>
-                    visibilityMutation.mutate({ [toggle.key]: val })
-                  }
-                  disabled={visibilityMutation.isPending}
-                  data-testid={`switch-${toggle.key}`}
-                />
-              </div>
-            );
-          })}
+        <p className="text-sm text-muted-foreground mb-4">Control what coaches can see about you.</p>
+        <div className="space-y-1">
+          {renderToggleRow("showStatsToCoaches", "Show Full Stats", "Coaches can see your detailed game statistics", showStatsToCoaches, BarChart3)}
+          {renderToggleRow("showContactToCoaches", "Show Contact Info", "Coaches can see your email and phone number", showContactToCoaches, Mail)}
+        </div>
+      </Card>
+
+      <Card className="p-6" data-testid="card-guardian-privacy">
+        <h3 className="font-display text-lg font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
+          <Heart className="w-5 h-5 text-purple-500" />
+          Guardian / Parent Access
+        </h3>
+        <p className="text-sm text-muted-foreground mb-4">Control what linked guardians and parents can see. They must be approved before seeing anything.</p>
+        <div className="space-y-1">
+          {renderToggleRow("showDetailedStatsToGuardians", "Show Detailed Stats", "Guardians can see full per-game stats and breakdowns", showDetailedStatsToGuardians, BarChart3)}
+          {renderToggleRow("showGradesToGuardians", "Show Grades", "Guardians can see your performance grades", showGradesToGuardians, BookOpen)}
         </div>
       </Card>
 
