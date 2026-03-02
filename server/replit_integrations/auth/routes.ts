@@ -57,9 +57,9 @@ export function registerAuthRoutes(app: Express): void {
 
       const { role } = req.body;
       
-      if (!role || !['player', 'coach', 'recruiter'].includes(role)) {
+      if (!role || !['player', 'coach', 'recruiter', 'guardian'].includes(role)) {
         return res.status(400).json({ 
-          message: "Invalid role selection. Please choose 'player', 'coach', or 'recruiter'.",
+          message: "Invalid role selection. Please choose 'player', 'coach', 'recruiter', or 'guardian'.",
           type: "invalid_role"
         });
       }
