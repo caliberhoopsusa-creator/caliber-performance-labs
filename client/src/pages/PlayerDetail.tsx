@@ -98,7 +98,11 @@ import { FootballMetrics } from "@/components/FootballMetrics";
 import { MilestonesSection } from "@/components/MilestoneCard";
 import { MemorySection } from "@/components/MemoryCard";
 import EndorsementSection from "@/components/EndorsementSection";
+import { CareerTimeline } from "@/components/CareerTimeline";
+import { TeamHistorySection } from "@/components/TeamHistory";
 import { Skeleton } from "@/components/ui/skeleton";
+import { GuardianLinkManager } from "@/components/GuardianLinkManager";
+import { Heart } from "lucide-react";
 
 const BADGE_ICONS: Record<string, any> = {
   twenty_piece: Target,
@@ -1909,7 +1913,7 @@ export default function PlayerDetail() {
       window.history.replaceState({}, '', `/players/${id}`);
     }
     const tabParam = params.get('tab');
-    if (tabParam && ['overview', 'highlights', 'accolades', 'coach', 'scouting', 'inventory'].includes(tabParam)) {
+    if (tabParam && ['overview', 'highlights', 'accolades', 'coach', 'scouting', 'inventory', 'career'].includes(tabParam)) {
       setActiveTab(tabParam);
       window.history.replaceState({}, '', `/players/${id}`);
     }
@@ -3009,6 +3013,13 @@ export default function PlayerDetail() {
                 <Crosshair className="w-4 h-4" /> Scouting
               </TabsTrigger>
             )}
+            <TabsTrigger 
+              value="career" 
+              className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-foreground" 
+              data-testid="tab-career"
+            >
+              <Calendar className="w-4 h-4" /> Career
+            </TabsTrigger>
             {isOwnProfile && (
               <TabsTrigger 
                 value="inventory" 
@@ -3016,6 +3027,15 @@ export default function PlayerDetail() {
                 data-testid="tab-inventory"
               >
                 <Package className="w-4 h-4" /> Inventory
+              </TabsTrigger>
+            )}
+            {isOwnProfile && (
+              <TabsTrigger 
+                value="family" 
+                className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-foreground" 
+                data-testid="tab-family"
+              >
+                <Heart className="w-4 h-4" /> Family
               </TabsTrigger>
             )}
           </TabsList>
@@ -3952,9 +3972,28 @@ export default function PlayerDetail() {
           </TabsContent>
         )}
 
+        <TabsContent value="career" className="space-y-8 animate-fade-in">
+          <CareerTimeline playerId={player.id} />
+          <TeamHistorySection playerId={player.id} />
+        </TabsContent>
+
         {isOwnProfile && (
           <TabsContent value="inventory" className="space-y-6 animate-fade-in">
             <InventorySection />
+          </TabsContent>
+        )}
+
+        {isOwnProfile && (
+          <TabsContent value="family" className="space-y-6 animate-fade-in">
+            <div className="max-w-2xl mx-auto space-y-6">
+              <div>
+                <h2 className="text-xl font-bold font-display tracking-wide uppercase mb-1" data-testid="text-family-section-title">Family & Guardians</h2>
+                <p className="text-sm text-muted-foreground">
+                  Invite family members to follow your progress, or manage existing guardian links.
+                </p>
+              </div>
+              <GuardianLinkManager mode="player" playerId={player.id} />
+            </div>
           </TabsContent>
         )}
       </Tabs>

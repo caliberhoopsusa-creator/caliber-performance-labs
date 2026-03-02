@@ -16,6 +16,9 @@ import {
   Heart,
   Eye,
   UserPlus,
+  Shield,
+  Star,
+  TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SportSpinner } from "@/components/SportSpinner";
@@ -33,6 +36,11 @@ const notificationIcons: Record<string, typeof Trophy> = {
   challenge_update: Target,
   story_reaction: Heart,
   story_view: Eye,
+  guardian_request: Shield,
+  guardian_approved: Heart,
+  guardian_milestone: Star,
+  guardian_grade_change: TrendingUp,
+  guardian_badge_earned: Trophy,
 };
 
 export function NotificationsPanel({ onClose }: NotificationsPanelProps) {

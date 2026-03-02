@@ -21,7 +21,7 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
-  role: varchar("role"), // 'player', 'coach', or 'recruiter' - null means role not yet selected
+  role: varchar("role"), // 'player', 'coach', 'recruiter', or 'guardian' - null means role not yet selected
   playerId: integer("player_id"), // For players, links to their player profile
   preferredSport: varchar("preferred_sport").default("basketball"), // 'basketball' or 'football' - user's selected sport context
   stripeCustomerId: varchar("stripe_customer_id"), // Stripe customer ID

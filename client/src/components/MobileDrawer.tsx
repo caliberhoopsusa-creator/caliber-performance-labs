@@ -9,7 +9,7 @@ import {
   Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, 
   UsersRound, CalendarCheck, Eye, UserCircle, LogOut, CreditCard, Lock, Dumbbell, 
   CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, Bell, ShoppingBag, GraduationCap,
-  ChevronDown, ChevronRight, BookOpen, Wand2, Medal, Binoculars, Search, Bookmark
+  ChevronDown, ChevronRight, BookOpen, Wand2, Medal, Binoculars, Search, Bookmark, Heart
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CaliberLogo } from "@/components/CaliberLogo";
@@ -66,14 +66,15 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
   const isPlayer = userRole === 'player';
   const isCoach = userRole === 'coach';
   const isRecruiter = userRole === 'recruiter';
+  const isGuardian = userRole === 'guardian';
 
   const handleRoleSwitch = () => {
-    const roleOrder: Array<'player' | 'coach' | 'recruiter'> = ['player', 'coach', 'recruiter'];
+    const roleOrder: Array<'player' | 'coach' | 'recruiter' | 'guardian'> = ['player', 'coach', 'recruiter', 'guardian'];
     const currentIndex = roleOrder.indexOf(userRole as any);
     const newRole = roleOrder[(currentIndex + 1) % roleOrder.length];
-    switchRole(newRole, {
+    switchRole(newRole as any, {
       onSuccess: () => {
-        const labels: Record<string, string> = { player: 'Player', coach: 'Coach', recruiter: 'Recruiter' };
+        const labels: Record<string, string> = { player: 'Player', coach: 'Coach', recruiter: 'Recruiter', guardian: 'Guardian' };
         toast({ 
           title: `Switched to ${labels[newRole]} Mode`,
           description: `You're now viewing the app as a ${labels[newRole].toLowerCase()}.`
@@ -204,9 +205,28 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
     ],
   };
 
-  const rawSections = isRecruiter ? recruiterSections : isPlayer ? playerSections : coachSections;
-  const moreItems = (isRecruiter ? recruiterMoreItems : isPlayer ? playerMoreItems : coachMoreItems).filter(item => !item.sport || item.sport === currentSport);
-  const accountSection = isRecruiter ? recruiterAccountSection : isPlayer ? playerAccountSection : coachAccountSection;
+  const guardianSections: NavSection[] = [
+    {
+      title: "Family",
+      items: [
+        { href: "/family", label: "Family Dashboard", icon: Heart },
+        { href: "/discover/highlights", label: "Highlights", icon: Film },
+      ],
+    },
+  ];
+
+  const guardianMoreItems: NavItem[] = [];
+
+  const guardianAccountSection: NavSection = {
+    title: "Account",
+    items: [
+      { href: "/pricing", label: "Pricing", icon: CreditCard },
+    ],
+  };
+
+  const rawSections = isGuardian ? guardianSections : isRecruiter ? recruiterSections : isPlayer ? playerSections : coachSections;
+  const moreItems = (isGuardian ? guardianMoreItems : isRecruiter ? recruiterMoreItems : isPlayer ? playerMoreItems : coachMoreItems).filter(item => !item.sport || item.sport === currentSport);
+  const accountSection = isGuardian ? guardianAccountSection : isRecruiter ? recruiterAccountSection : isPlayer ? playerAccountSection : coachAccountSection;
   const sections = rawSections.map(section => ({
     ...section,
     items: section.items.filter(item => !item.sport || item.sport === currentSport),
@@ -245,7 +265,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
               </div>
               <div>
                 <h2 className="font-display font-bold text-foreground text-xl uppercase tracking-wider">Caliber</h2>
-                <p className="text-[10px] text-accent/80 uppercase tracking-[0.2em] font-medium">{isRecruiter ? "Recruiter" : isPlayer ? "Player" : "Coach"} Mode</p>
+                <p className="text-[10px] text-accent/80 uppercase tracking-[0.2em] font-medium">{isGuardian ? "Guardian" : isRecruiter ? "Recruiter" : isPlayer ? "Player" : "Coach"} Mode</p>
               </div>
             </div>
           </div>
@@ -262,7 +282,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
                 data-testid="button-mobile-role-switch"
               >
                 <ArrowLeftRight className="w-3.5 h-3.5 mr-2 text-accent" />
-                Switch to {isPlayer ? 'Coach' : isCoach ? 'Recruiter' : 'Player'} Mode
+                Switch to {isPlayer ? 'Coach' : isCoach ? 'Recruiter' : isRecruiter ? 'Guardian' : isGuardian ? 'Player' : 'Player'} Mode
               </Button>
             </motion.div>
             

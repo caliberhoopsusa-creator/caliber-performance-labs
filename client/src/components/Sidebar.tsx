@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, ShoppingBag, ClipboardCheck, Medal, GraduationCap, Heart, Wand2, ChevronDown, ChevronRight, BookOpen, Binoculars, Search, Bookmark, UserSearch } from "lucide-react";
+import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, ShoppingBag, ClipboardCheck, Medal, GraduationCap, Heart, Wand2, ChevronDown, ChevronRight, BookOpen, Binoculars, Search, Bookmark, UserSearch, Shield } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -59,6 +59,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
   const isPlayer = userRole === 'player';
   const isCoach = userRole === 'coach';
   const isRecruiter = userRole === 'recruiter';
+  const isGuardian = userRole === 'guardian';
 
   const { data: pendingGames } = useQuery<{ id: number }[]>({
     queryKey: ['/api/coach/unverified-games'],
@@ -67,12 +68,12 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
   const pendingCount = pendingGames?.length ?? 0;
 
   const handleRoleSwitch = () => {
-    const roleOrder: Array<'player' | 'coach' | 'recruiter'> = ['player', 'coach', 'recruiter'];
+    const roleOrder: Array<'player' | 'coach' | 'recruiter' | 'guardian'> = ['player', 'coach', 'recruiter', 'guardian'];
     const currentIndex = roleOrder.indexOf(userRole as any);
     const newRole = roleOrder[(currentIndex + 1) % roleOrder.length];
-    switchRole(newRole, {
+    switchRole(newRole as any, {
       onSuccess: () => {
-        const labels: Record<string, string> = { player: 'Player', coach: 'Coach', recruiter: 'Recruiter' };
+        const labels: Record<string, string> = { player: 'Player', coach: 'Coach', recruiter: 'Recruiter', guardian: 'Guardian' };
         toast({ 
           title: `Switched to ${labels[newRole]} Mode`,
           description: `You're now viewing the app as a ${labels[newRole].toLowerCase()}.`
@@ -204,9 +205,28 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
     ],
   };
 
-  const rawSections = isRecruiter ? recruiterSections : isPlayer ? playerSections : coachSections;
-  const moreItems = (isRecruiter ? recruiterMoreItems : isPlayer ? playerMoreItems : coachMoreItems).filter(item => !item.sport || item.sport === currentSport);
-  const accountSection = isRecruiter ? recruiterAccountSection : isPlayer ? playerAccountSection : coachAccountSection;
+  const guardianSections: NavSection[] = [
+    {
+      title: "Family",
+      items: [
+        { href: "/family", label: "Family Dashboard", icon: Heart },
+        { href: "/discover/highlights", label: "Highlights", icon: Film },
+      ],
+    },
+  ];
+
+  const guardianMoreItems: NavItem[] = [];
+
+  const guardianAccountSection: NavSection = {
+    title: "Account",
+    items: [
+      { href: "/pricing", label: "Pricing", icon: CreditCard },
+    ],
+  };
+
+  const rawSections = isGuardian ? guardianSections : isRecruiter ? recruiterSections : isPlayer ? playerSections : coachSections;
+  const moreItems = (isGuardian ? guardianMoreItems : isRecruiter ? recruiterMoreItems : isPlayer ? playerMoreItems : coachMoreItems).filter(item => !item.sport || item.sport === currentSport);
+  const accountSection = isGuardian ? guardianAccountSection : isRecruiter ? recruiterAccountSection : isPlayer ? playerAccountSection : coachAccountSection;
   const navSections = rawSections.map(section => ({
     ...section,
     items: section.items.filter(item => !item.sport || item.sport === currentSport),
@@ -223,9 +243,9 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
             disabled={isSwitchingRole}
             className="flex items-center gap-1.5 text-xs text-muted-foreground uppercase tracking-widest font-medium transition-colors cursor-pointer"
             data-testid="button-switch-role"
-            aria-label={`Switch to ${isPlayer ? 'Coach' : isCoach ? 'Recruiter' : 'Player'} Mode`}
+            aria-label={`Switch to ${isPlayer ? 'Coach' : isCoach ? 'Recruiter' : isRecruiter ? 'Guardian' : isGuardian ? 'Player' : 'Player'} Mode`}
           >
-            {isRecruiter ? "Recruiter" : isPlayer ? "Player" : "Coach"} Mode
+            {isGuardian ? "Guardian" : isRecruiter ? "Recruiter" : isPlayer ? "Player" : "Coach"} Mode
             <ArrowLeftRight className="w-3 h-3" />
           </button>
         </div>
@@ -382,7 +402,12 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
   const isPlayer = userRole === 'player';
   const isRecruiter = userRole === 'recruiter';
   
-  const navItems = isRecruiter ? [
+  const isGuardian = userRole === 'guardian';
+  
+  const navItems = isGuardian ? [
+    { href: "/family", icon: Heart, label: "Family" },
+    { href: "/discover/highlights", icon: Film, label: "Highlights" },
+  ] : isRecruiter ? [
     { href: "/recruiter", icon: Search, label: "Search" },
     { href: "/recruiter?tab=bookmarks", icon: Bookmark, label: "Saved" },
     { href: "/discover/players", icon: Users, label: "Directory" },

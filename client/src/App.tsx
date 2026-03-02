@@ -70,6 +70,7 @@ import RecruiterDashboard from "@/pages/RecruiterDashboard";
 import RecruiterDirectory from "@/pages/RecruiterDirectory";
 import WhosWatching from "@/pages/WhosWatching";
 import CollegeDetail from "@/pages/CollegeDetail";
+import GuardianDashboard from "./pages/GuardianDashboard";
 import NotFound from "./pages/not-found";
 
 interface ExtendedUser {
@@ -312,6 +313,8 @@ function MainRouter() {
                     <Redirect to="/community?tab=feed" />
                   ) : extendedUser.role === 'recruiter' ? (
                     <Redirect to="/recruiter" />
+                  ) : extendedUser.role === 'guardian' ? (
+                    <Redirect to="/family" />
                   ) : (
                     <Dashboard />
                   )}
@@ -401,6 +404,7 @@ function MainRouter() {
                   <Redirect to="/recruiting?tab=events" />
                 </Route>
                 <Route path="/colleges/:id" component={CollegeDetail} />
+                <Route path="/family" component={GuardianDashboard} />
                 <Route component={NotFound} />
               </Switch>
             </PageTransition>

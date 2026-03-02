@@ -112,7 +112,11 @@ import {
   type RecruiterInterestSignal, type InsertRecruiterInterestSignal,
   type RecruiterBlock, type InsertRecruiterBlock,
   recruitingInquiries,
-  type RecruitingInquiry, type InsertRecruitingInquiry
+  type RecruitingInquiry, type InsertRecruitingInquiry,
+  seasons, teamHistory, guardianLinks,
+  type Season, type InsertSeason,
+  type TeamHistory, type InsertTeamHistory,
+  type GuardianLink, type InsertGuardianLink
 } from "@shared/schema";
 import { eq, desc, and, count, gte, lte, lt, sql, or, isNull, inArray } from "drizzle-orm";
 
@@ -710,6 +714,26 @@ export interface IStorage {
   unblockRecruiter(playerId: number, recruiterId: number): Promise<void>;
   getBlockedRecruiters(playerId: number): Promise<RecruiterBlock[]>;
   isRecruiterBlocked(playerId: number, recruiterId: number): Promise<boolean>;
+
+  // Seasons
+  getSeasons(): Promise<Season[]>;
+  getCurrentSeason(): Promise<Season | undefined>;
+  createSeason(season: InsertSeason): Promise<Season>;
+
+  // Team History
+  getTeamHistory(playerId: number): Promise<TeamHistory[]>;
+  addTeamHistoryEntry(entry: InsertTeamHistory): Promise<TeamHistory>;
+  updateTeamHistoryEntry(id: number, updates: Partial<TeamHistory>): Promise<TeamHistory | undefined>;
+
+  // Guardian Links
+  createGuardianLink(link: InsertGuardianLink): Promise<GuardianLink>;
+  approveGuardianLink(id: number): Promise<GuardianLink | undefined>;
+  revokeGuardianLink(id: number): Promise<GuardianLink | undefined>;
+  getGuardiansByPlayer(playerId: number): Promise<GuardianLink[]>;
+  getLinkedPlayersByGuardian(guardianUserId: string): Promise<GuardianLink[]>;
+  getPendingGuardianRequests(playerId: number): Promise<GuardianLink[]>;
+  getGuardianLink(id: number): Promise<GuardianLink | undefined>;
+  getGuardianLinkByCode(inviteCode: string): Promise<GuardianLink | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -4076,6 +4100,83 @@ export class DatabaseStorage implements IStorage {
   async isRecruiterBlocked(playerId: number, recruiterId: number): Promise<boolean> {
     const [block] = await db.select().from(recruiterBlocks).where(and(eq(recruiterBlocks.playerId, playerId), eq(recruiterBlocks.recruiterId, recruiterId)));
     return !!block;
+  }
+
+  async getSeasons(): Promise<Season[]> {
+    return await db.select().from(seasons).orderBy(desc(seasons.startDate));
+  }
+
+  async getCurrentSeason(): Promise<Season | undefined> {
+    const [season] = await db.select().from(seasons).where(eq(seasons.isCurrent, true));
+    return season;
+  }
+
+  async createSeason(season: InsertSeason): Promise<Season> {
+    const [newSeason] = await db.insert(seasons).values(season).returning();
+    return newSeason;
+  }
+
+  async getTeamHistory(playerId: number): Promise<TeamHistory[]> {
+    return await db.select().from(teamHistory).where(eq(teamHistory.playerId, playerId)).orderBy(desc(teamHistory.joinedAt));
+  }
+
+  async addTeamHistoryEntry(entry: InsertTeamHistory): Promise<TeamHistory> {
+    const [newEntry] = await db.insert(teamHistory).values(entry).returning();
+    return newEntry;
+  }
+
+  async updateTeamHistoryEntry(id: number, updates: Partial<TeamHistory>): Promise<TeamHistory | undefined> {
+    const [updated] = await db.update(teamHistory).set(updates).where(eq(teamHistory.id, id)).returning();
+    return updated;
+  }
+
+  async createGuardianLink(link: InsertGuardianLink): Promise<GuardianLink> {
+    const [newLink] = await db.insert(guardianLinks).values(link).returning();
+    return newLink;
+  }
+
+  async approveGuardianLink(id: number): Promise<GuardianLink | undefined> {
+    const [updated] = await db.update(guardianLinks)
+      .set({ status: "approved", approvedAt: new Date() })
+      .where(eq(guardianLinks.id, id))
+      .returning();
+    return updated;
+  }
+
+  async revokeGuardianLink(id: number): Promise<GuardianLink | undefined> {
+    const [updated] = await db.update(guardianLinks)
+      .set({ status: "revoked" })
+      .where(eq(guardianLinks.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getGuardiansByPlayer(playerId: number): Promise<GuardianLink[]> {
+    return await db.select().from(guardianLinks)
+      .where(eq(guardianLinks.playerId, playerId))
+      .orderBy(desc(guardianLinks.linkedAt));
+  }
+
+  async getLinkedPlayersByGuardian(guardianUserId: string): Promise<GuardianLink[]> {
+    return await db.select().from(guardianLinks)
+      .where(and(eq(guardianLinks.guardianUserId, guardianUserId), eq(guardianLinks.status, "approved")))
+      .orderBy(desc(guardianLinks.linkedAt));
+  }
+
+  async getPendingGuardianRequests(playerId: number): Promise<GuardianLink[]> {
+    return await db.select().from(guardianLinks)
+      .where(and(eq(guardianLinks.playerId, playerId), eq(guardianLinks.status, "pending")))
+      .orderBy(desc(guardianLinks.linkedAt));
+  }
+
+  async getGuardianLink(id: number): Promise<GuardianLink | undefined> {
+    const [link] = await db.select().from(guardianLinks).where(eq(guardianLinks.id, id));
+    return link;
+  }
+
+  async getGuardianLinkByCode(inviteCode: string): Promise<GuardianLink | undefined> {
+    const [link] = await db.select().from(guardianLinks).where(eq(guardianLinks.inviteCode, inviteCode));
+    return link;
   }
 }
 

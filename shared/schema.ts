@@ -288,6 +288,7 @@ export const games = pgTable("games", {
   reboundingGrade: text("rebounding_grade"), // A+, B, C-, etc.
   passingGrade: text("passing_grade"), // A+, B, C-, etc. (assist-to-turnover ratio)
   
+  season: text("season"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
   playerIdIdx: index("games_player_id_idx").on(table.playerId),
@@ -2966,6 +2967,63 @@ export const BENCHMARK_STAT_LABELS: Record<string, string> = {
   threePct: "3PT%",
   ftPct: "FT%",
 };
+
+// === GUARDIAN / FAMILY SYSTEM ===
+
+export const guardianLinks = pgTable("guardian_links", {
+  id: serial("id").primaryKey(),
+  guardianUserId: text("guardian_user_id").notNull(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  relationship: text("relationship").notNull().default("parent"),
+  status: text("status").notNull().default("pending"),
+  inviteCode: text("invite_code"),
+  linkedAt: timestamp("linked_at").defaultNow(),
+  approvedAt: timestamp("approved_at"),
+}, (table) => ({
+  guardianIdx: index("guardian_links_guardian_idx").on(table.guardianUserId),
+  playerIdx: index("guardian_links_player_idx").on(table.playerId),
+  statusIdx: index("guardian_links_status_idx").on(table.status),
+}));
+
+export const insertGuardianLinkSchema = createInsertSchema(guardianLinks).omit({ id: true, linkedAt: true, approvedAt: true });
+export type InsertGuardianLink = z.infer<typeof insertGuardianLinkSchema>;
+export type GuardianLink = typeof guardianLinks.$inferSelect;
+
+// === SEASONS ===
+
+export const seasons = pgTable("seasons", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  sport: text("sport").notNull().default("basketball"),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  isCurrent: boolean("is_current").default(false),
+});
+
+export const insertSeasonSchema = createInsertSchema(seasons).omit({ id: true });
+export type InsertSeason = z.infer<typeof insertSeasonSchema>;
+export type Season = typeof seasons.$inferSelect;
+
+// === TEAM HISTORY ===
+
+export const teamHistory = pgTable("team_history", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  teamName: text("team_name").notNull(),
+  teamId: integer("team_id"),
+  sport: text("sport").notNull().default("basketball"),
+  season: text("season"),
+  role: text("role").default("rotation"),
+  joinedAt: timestamp("joined_at").defaultNow(),
+  leftAt: timestamp("left_at"),
+  isCurrent: boolean("is_current").default(true),
+}, (table) => ({
+  playerIdx: index("team_history_player_idx").on(table.playerId),
+}));
+
+export const insertTeamHistorySchema = createInsertSchema(teamHistory).omit({ id: true, joinedAt: true });
+export type InsertTeamHistory = z.infer<typeof insertTeamHistorySchema>;
+export type TeamHistory = typeof teamHistory.$inferSelect;
 
 // === SHOP CONSTANTS ===
 export const SHOP_CATEGORIES = {

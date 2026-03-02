@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, badges, headToHeadChallenges, statVerifications, playerCollegeMatches, playerCollegeInterests, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema, insertWearableConnectionSchema, recruitingEvents, insertRecruitingEventSchema, type RecruitingEvent, playerEventRegistrations, insertPlayerEventRegistrationSchema, colleges, collegeRosterPlayers, collegeCoachingStaff, ncaaEligibilityProgress, insertNcaaEligibilityProgressSchema, coachRecommendations, insertCoachRecommendationSchema, teams, teamMembers, skillBadges, activityStreaks, feedActivities, feedReactions, feedComments, feedCommentLikes, type InsertFeedComment, type FeedComment, highlightClips, personalRecords, recruiterBlocks, recruiterProfiles, playerGoals, recruitingTargets, recruitingContacts, insertRecruitingTargetSchema, insertRecruitingContactSchema, DIVISION_BENCHMARKS, BENCHMARK_STAT_LABELS } from "@shared/schema";
+import { players, games, badges, headToHeadChallenges, statVerifications, playerCollegeMatches, playerCollegeInterests, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema, insertWearableConnectionSchema, recruitingEvents, insertRecruitingEventSchema, type RecruitingEvent, playerEventRegistrations, insertPlayerEventRegistrationSchema, colleges, collegeRosterPlayers, collegeCoachingStaff, ncaaEligibilityProgress, insertNcaaEligibilityProgressSchema, coachRecommendations, insertCoachRecommendationSchema, teams, teamMembers, skillBadges, activityStreaks, feedActivities, feedReactions, feedComments, feedCommentLikes, type InsertFeedComment, type FeedComment, highlightClips, personalRecords, recruiterBlocks, recruiterProfiles, playerGoals, recruitingTargets, recruitingContacts, insertRecruitingTargetSchema, insertRecruitingContactSchema, DIVISION_BENCHMARKS, BENCHMARK_STAT_LABELS, seasons, teamHistory, insertSeasonSchema, insertTeamHistorySchema, guardianLinks, insertGuardianLinkSchema } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { calculateAIRating, calculateProjection, type GameStats, type PlayerMetrics, type PeerStats, type AIRatingResult, type ProjectionResult } from "@shared/ai-rating-engine";
 import type { Sport } from "@shared/sports-config";
@@ -2045,12 +2045,12 @@ export async function registerRoutes(
     }
   });
 
-  // Set user role (player, coach, or recruiter)
+  // Set user role (player, coach, recruiter, or guardian)
   app.post('/api/users/role', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { role } = z.object({
-        role: z.enum(['player', 'coach', 'recruiter'])
+        role: z.enum(['player', 'coach', 'recruiter', 'guardian'])
       }).parse(req.body);
       
       const updatedUser = await authStorage.updateUserRole(userId, role);
@@ -3095,6 +3095,28 @@ export async function registerRoutes(
         ballSecurityGrade: sport === 'football' ? categoryGrades.ballSecurityGrade : null,
         impactGrade: sport === 'football' ? categoryGrades.impactGrade : null,
       };
+
+      if (!gameData.season) {
+        const currentSeason = await storage.getCurrentSeason();
+        if (currentSeason) {
+          const gameDate = new Date(gameData.date);
+          const start = new Date(currentSeason.startDate);
+          const end = new Date(currentSeason.endDate);
+          if (gameDate >= start && gameDate <= end) {
+            gameData.season = currentSeason.name;
+          } else {
+            const allSeasons = await storage.getSeasons();
+            for (const s of allSeasons) {
+              const sStart = new Date(s.startDate);
+              const sEnd = new Date(s.endDate);
+              if (gameDate >= sStart && gameDate <= sEnd) {
+                gameData.season = s.name;
+                break;
+              }
+            }
+          }
+        }
+      }
 
       const game = await storage.createGame(gameData);
       
@@ -17992,7 +18014,497 @@ The email should:
     }
   });
 
+  // === SEASONS API ===
+
+  app.get('/api/seasons', async (req, res) => {
+    try {
+      const allSeasons = await storage.getSeasons();
+      res.json(allSeasons);
+    } catch (error) {
+      console.error('Error fetching seasons:', error);
+      res.status(500).json({ message: "Failed to fetch seasons" });
+    }
+  });
+
+  // === CAREER TIMELINE API ===
+
+  app.get('/api/players/:id/career-timeline', async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+
+      const allGames = player.games || [];
+      const allSeasons = await storage.getSeasons();
+      const history = await storage.getTeamHistory(playerId);
+      const sportSeasons = allSeasons.filter(s => s.sport === player.sport);
+
+      const seasonMap: Record<string, { season: any; games: Game[]; teamName: string | null }> = {};
+
+      for (const s of sportSeasons) {
+        seasonMap[s.name] = { season: s, games: [], teamName: null };
+      }
+      seasonMap["Unassigned"] = { season: null, games: [], teamName: null };
+
+      for (const game of allGames) {
+        const key = game.season || "Unassigned";
+        if (!seasonMap[key]) {
+          seasonMap[key] = { season: null, games: [], teamName: null };
+        }
+        seasonMap[key].games.push(game);
+      }
+
+      for (const entry of history) {
+        if (entry.season && seasonMap[entry.season]) {
+          seasonMap[entry.season].teamName = entry.teamName;
+        }
+      }
+
+      const gradeToNum = (g: string | null): number => {
+        if (!g) return 0;
+        const map: Record<string, number> = { 'A+': 97, 'A': 93, 'A-': 90, 'B+': 87, 'B': 83, 'B-': 80, 'C+': 77, 'C': 73, 'C-': 70, 'D': 65, 'F': 50 };
+        return map[g] || 0;
+      };
+
+      const timelineEntries = Object.entries(seasonMap)
+        .filter(([, data]) => data.games.length > 0)
+        .map(([seasonName, data]) => {
+          const g = data.games;
+          const gamesPlayed = g.length;
+          const totalPts = g.reduce((s, gm) => s + (gm.points || 0), 0);
+          const totalReb = g.reduce((s, gm) => s + (gm.rebounds || 0), 0);
+          const totalAst = g.reduce((s, gm) => s + (gm.assists || 0), 0);
+          const totalStl = g.reduce((s, gm) => s + (gm.steals || 0), 0);
+          const totalBlk = g.reduce((s, gm) => s + (gm.blocks || 0), 0);
+          const gradeNums = g.map(gm => gradeToNum(gm.grade)).filter(n => n > 0);
+          const avgGradeNum = gradeNums.length > 0 ? gradeNums.reduce((a, b) => a + b, 0) / gradeNums.length : 0;
+
+          return {
+            season: seasonName,
+            seasonData: data.season,
+            teamName: data.teamName || player.team,
+            gamesPlayed,
+            averages: {
+              points: gamesPlayed > 0 ? +(totalPts / gamesPlayed).toFixed(1) : 0,
+              rebounds: gamesPlayed > 0 ? +(totalReb / gamesPlayed).toFixed(1) : 0,
+              assists: gamesPlayed > 0 ? +(totalAst / gamesPlayed).toFixed(1) : 0,
+              steals: gamesPlayed > 0 ? +(totalStl / gamesPlayed).toFixed(1) : 0,
+              blocks: gamesPlayed > 0 ? +(totalBlk / gamesPlayed).toFixed(1) : 0,
+            },
+            avgGradeNum: +avgGradeNum.toFixed(1),
+            overallGrade: avgGradeNum >= 90 ? 'A' : avgGradeNum >= 80 ? 'B' : avgGradeNum >= 70 ? 'C' : avgGradeNum >= 65 ? 'D' : 'F',
+          };
+        })
+        .sort((a, b) => {
+          if (a.seasonData && b.seasonData) {
+            return new Date(a.seasonData.startDate).getTime() - new Date(b.seasonData.startDate).getTime();
+          }
+          if (!a.seasonData) return 1;
+          if (!b.seasonData) return -1;
+          return 0;
+        });
+
+      const withGrowth = timelineEntries.map((entry, idx) => {
+        const prev = idx > 0 ? timelineEntries[idx - 1] : null;
+        return {
+          ...entry,
+          growth: prev ? {
+            points: +(entry.averages.points - prev.averages.points).toFixed(1),
+            rebounds: +(entry.averages.rebounds - prev.averages.rebounds).toFixed(1),
+            assists: +(entry.averages.assists - prev.averages.assists).toFixed(1),
+            gradeChange: +(entry.avgGradeNum - prev.avgGradeNum).toFixed(1),
+          } : null,
+        };
+      });
+
+      const careerTotals = {
+        gamesPlayed: allGames.length,
+        totalPoints: allGames.reduce((s, g) => s + (g.points || 0), 0),
+        totalRebounds: allGames.reduce((s, g) => s + (g.rebounds || 0), 0),
+        totalAssists: allGames.reduce((s, g) => s + (g.assists || 0), 0),
+        totalSteals: allGames.reduce((s, g) => s + (g.steals || 0), 0),
+        totalBlocks: allGames.reduce((s, g) => s + (g.blocks || 0), 0),
+        seasonsPlayed: timelineEntries.length,
+      };
+
+      res.json({ careerTotals, timeline: withGrowth });
+    } catch (error) {
+      console.error('Error fetching career timeline:', error);
+      res.status(500).json({ message: "Failed to fetch career timeline" });
+    }
+  });
+
+  // === TEAM HISTORY API ===
+
+  app.get('/api/players/:id/team-history', async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      const history = await storage.getTeamHistory(playerId);
+      res.json(history);
+    } catch (error) {
+      console.error('Error fetching team history:', error);
+      res.status(500).json({ message: "Failed to fetch team history" });
+    }
+  });
+
+  app.post('/api/players/:id/team-history', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const playerId = parseInt(req.params.id);
+      const player = await storage.getPlayer(playerId);
+      if (!player) return res.status(404).json({ message: "Player not found" });
+      const user = await authStorage.getUser(userId);
+      if (player.userId !== userId && (!user || (user.role !== 'coach' && user.role !== 'admin'))) {
+        return res.status(403).json({ message: "Not authorized to modify this player's team history" });
+      }
+      await db.update(teamHistory).set({ isCurrent: false }).where(and(eq(teamHistory.playerId, playerId), eq(teamHistory.isCurrent, true)));
+      const parsed = insertTeamHistorySchema.parse({ ...req.body, playerId });
+      const entry = await storage.addTeamHistoryEntry(parsed);
+      res.json(entry);
+    } catch (error: any) {
+      console.error('Error adding team history entry:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to add team history entry" });
+    }
+  });
+
+  app.patch('/api/players/:id/team-history/:entryId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const playerId = parseInt(req.params.id);
+      const player = await storage.getPlayer(playerId);
+      if (!player) return res.status(404).json({ message: "Player not found" });
+      const user = await authStorage.getUser(userId);
+      if (player.userId !== userId && (!user || (user.role !== 'coach' && user.role !== 'admin'))) {
+        return res.status(403).json({ message: "Not authorized to modify this player's team history" });
+      }
+      const entryId = parseInt(req.params.entryId);
+      const updated = await storage.updateTeamHistoryEntry(entryId, req.body);
+      if (!updated) {
+        return res.status(404).json({ message: "Team history entry not found" });
+      }
+      res.json(updated);
+    } catch (error) {
+      console.error('Error updating team history entry:', error);
+      res.status(500).json({ message: "Failed to update team history entry" });
+    }
+  });
+
+  // === GUARDIAN / FAMILY SYSTEM ROUTES ===
+
+  app.post("/api/guardian/request", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await authStorage.getUser(userId);
+      if (!user || user.role !== 'guardian') {
+        return res.status(403).json({ message: "Guardian role required" });
+      }
+
+      const { playerId, relationship, inviteCode } = req.body;
+
+      let targetPlayerId = playerId;
+
+      if (inviteCode && !playerId) {
+        const code = inviteCode.toUpperCase();
+        if (code.startsWith("FAM-")) {
+          const allPlayers = await storage.getPlayers();
+          let matchedPlayer = null;
+          for (const p of allPlayers) {
+            const hash = crypto.createHash('sha256').update(`caliber-family-${p.id}-invite-salt`).digest('hex').slice(0, 6).toUpperCase();
+            if (`FAM-${hash}` === code) {
+              matchedPlayer = p;
+              break;
+            }
+          }
+          if (!matchedPlayer) {
+            return res.status(404).json({ message: "Invalid invite code" });
+          }
+          targetPlayerId = matchedPlayer.id;
+        } else {
+          const existingLink = await storage.getGuardianLinkByCode(inviteCode);
+          if (!existingLink) {
+            return res.status(404).json({ message: "Invalid invite code" });
+          }
+          targetPlayerId = existingLink.playerId;
+        }
+      }
+
+      if (!targetPlayerId) {
+        return res.status(400).json({ message: "Player ID or invite code required" });
+      }
+
+      const player = await storage.getPlayer(targetPlayerId);
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+
+      const link = await storage.createGuardianLink({
+        guardianUserId: userId,
+        playerId: targetPlayerId,
+        relationship: relationship || "parent",
+        status: "pending",
+        inviteCode: inviteCode || null,
+      });
+
+      if (player.userId) {
+        await storage.createNotification({
+          userId: player.userId,
+          playerId: targetPlayerId,
+          notificationType: "guardian_request",
+          title: "Family Link Request",
+          message: `${user.firstName || "A guardian"} wants to link as your ${relationship || "parent"}`,
+          relatedId: link.id,
+          relatedType: "guardian_link",
+          isRead: false,
+        });
+      }
+
+      res.status(201).json(link);
+    } catch (error) {
+      console.error("Error creating guardian link request:", error);
+      res.status(500).json({ message: "Failed to create guardian link request" });
+    }
+  });
+
+  app.patch("/api/guardian/links/:id/approve", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const linkId = parseInt(req.params.id);
+
+      const link = await storage.getGuardianLink(linkId);
+      if (!link) {
+        return res.status(404).json({ message: "Guardian link not found" });
+      }
+
+      const player = await storage.getPlayer(link.playerId);
+      if (!player || player.userId !== userId) {
+        return res.status(403).json({ message: "Only the player can approve guardian links" });
+      }
+
+      if (link.status !== "pending") {
+        return res.status(400).json({ message: "Link is not in pending status" });
+      }
+
+      const updated = await storage.approveGuardianLink(linkId);
+
+      await storage.createNotification({
+        userId: link.guardianUserId,
+        notificationType: "guardian_approved",
+        title: "Family Link Approved",
+        message: `${player.name} approved your family link request`,
+        relatedId: link.id,
+        relatedType: "guardian_link",
+        isRead: false,
+      });
+
+      res.json(updated);
+    } catch (error) {
+      console.error("Error approving guardian link:", error);
+      res.status(500).json({ message: "Failed to approve guardian link" });
+    }
+  });
+
+  app.patch("/api/guardian/links/:id/revoke", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const linkId = parseInt(req.params.id);
+
+      const link = await storage.getGuardianLink(linkId);
+      if (!link) {
+        return res.status(404).json({ message: "Guardian link not found" });
+      }
+
+      const player = await storage.getPlayer(link.playerId);
+      const isGuardian = link.guardianUserId === userId;
+      const isPlayerOwner = player && player.userId === userId;
+
+      if (!isGuardian && !isPlayerOwner) {
+        return res.status(403).json({ message: "Only the guardian or player can revoke this link" });
+      }
+
+      const updated = await storage.revokeGuardianLink(linkId);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error revoking guardian link:", error);
+      res.status(500).json({ message: "Failed to revoke guardian link" });
+    }
+  });
+
+  app.get("/api/guardian/players", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const links = await storage.getLinkedPlayersByGuardian(userId);
+
+      const playersData = await Promise.all(
+        links.map(async (link) => {
+          const player = await storage.getPlayer(link.playerId);
+          return { link, player };
+        })
+      );
+
+      res.json(playersData.filter((p) => p.player));
+    } catch (error) {
+      console.error("Error getting guardian players:", error);
+      res.status(500).json({ message: "Failed to get linked players" });
+    }
+  });
+
+  app.get("/api/players/:id/guardians", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const playerId = parseInt(req.params.id);
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+      if (player.userId !== userId) {
+        const user = await authStorage.getUser(userId);
+        if (!user || user.role !== 'admin') {
+          return res.status(403).json({ message: "Only the player or admin can view guardians" });
+        }
+      }
+      const guardiansList = await storage.getGuardiansByPlayer(playerId);
+      res.json(guardiansList);
+    } catch (error) {
+      console.error("Error getting player guardians:", error);
+      res.status(500).json({ message: "Failed to get guardians" });
+    }
+  });
+
+  app.get("/api/guardian/players/:playerId/dashboard", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const playerId = parseInt(req.params.playerId);
+
+      const links = await storage.getLinkedPlayersByGuardian(userId);
+      const hasAccess = links.some((l) => l.playerId === playerId);
+      if (!hasAccess) {
+        return res.status(403).json({ message: "Not linked to this player" });
+      }
+
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+
+      const recentGames = player.games.slice(0, 5);
+      const playerBadges = await storage.getPlayerBadges(playerId);
+      const playerStreaksList = await storage.getPlayerStreaks(playerId);
+      const milestones = await storage.getPlayerMilestones(playerId);
+      const playerGoalsList = await storage.getPlayerGoals(playerId);
+
+      const gamesThisSeason = player.games.length;
+      let gradeTrend = "stable";
+      if (recentGames.length >= 2) {
+        const gradeToNum = (g: string | null) => {
+          const map: Record<string, number> = { "A+": 95, "A": 87, "A-": 83, "B+": 78, "B": 73, "B-": 68, "C+": 63, "C": 58, "C-": 53, "D": 45, "F": 30 };
+          return map[g || "C"] || 58;
+        };
+        const latestGrade = gradeToNum(recentGames[0]?.grade);
+        const prevGrade = gradeToNum(recentGames[1]?.grade);
+        if (latestGrade > prevGrade) gradeTrend = "up";
+        else if (latestGrade < prevGrade) gradeTrend = "down";
+      }
+
+      res.json({
+        player: {
+          id: player.id,
+          name: player.name,
+          sport: player.sport,
+          position: player.position,
+          team: player.team,
+          photoUrl: player.photoUrl,
+          totalXp: player.totalXp,
+          currentTier: player.currentTier,
+        },
+        recentGames,
+        badges: playerBadges,
+        streaks: playerStreaksList,
+        milestones: milestones.slice(0, 10),
+        goals: playerGoalsList,
+        gamesThisSeason,
+        gradeTrend,
+        currentGrade: recentGames[0]?.grade || null,
+      });
+    } catch (error) {
+      console.error("Error getting guardian dashboard:", error);
+      res.status(500).json({ message: "Failed to get dashboard data" });
+    }
+  });
+
+  app.get("/api/players/:id/family-invite-code", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const playerId = parseInt(req.params.id);
+
+      const player = await storage.getPlayer(playerId);
+      if (!player) {
+        return res.status(404).json({ message: "Player not found" });
+      }
+
+      if (player.userId !== userId) {
+        return res.status(403).json({ message: "Only the player can generate their invite code" });
+      }
+
+      const hash = crypto.createHash('sha256').update(`caliber-family-${playerId}-invite-salt`).digest('hex').slice(0, 6).toUpperCase();
+      const code = `FAM-${hash}`;
+
+      res.json({ code, playerId });
+    } catch (error) {
+      console.error("Error generating family invite code:", error);
+      res.status(500).json({ message: "Failed to generate invite code" });
+    }
+  });
+
+  app.get("/api/players/by-family-code/:code", isAuthenticated, async (req: any, res) => {
+    try {
+      const code = req.params.code.toUpperCase();
+
+      const allPlayers = await storage.getPlayers();
+      let matchedPlayer = null;
+
+      for (const player of allPlayers) {
+        const hash = crypto.createHash('sha256').update(`caliber-family-${player.id}-invite-salt`).digest('hex').slice(0, 6).toUpperCase();
+        const expectedCode = `FAM-${hash}`;
+        if (expectedCode === code) {
+          matchedPlayer = player;
+          break;
+        }
+      }
+
+      if (!matchedPlayer) {
+        return res.status(404).json({ message: "Invalid invite code" });
+      }
+
+      res.json({ playerId: matchedPlayer.id, playerName: matchedPlayer.name });
+    } catch (error) {
+      console.error("Error resolving family invite code:", error);
+      res.status(500).json({ message: "Failed to resolve invite code" });
+    }
+  });
+
+  app.get("/api/guardian/pending", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await authStorage.getUser(userId);
+      if (!user || !user.playerId) {
+        return res.status(400).json({ message: "Player profile required" });
+      }
+
+      const pending = await storage.getPendingGuardianRequests(user.playerId);
+      res.json(pending);
+    } catch (error) {
+      console.error("Error getting pending guardian requests:", error);
+      res.status(500).json({ message: "Failed to get pending requests" });
+    }
+  });
+
   await seedDatabase();
+  await seedSeasons();
 
   return httpServer;
 }
@@ -18249,4 +18761,40 @@ export async function seedDatabase() {
       isActive: true,
     });
   }
+}
+
+async function seedSeasons() {
+  const existingSeasons = await storage.getSeasons();
+  if (existingSeasons.length > 0) return;
+
+  const seedData = [
+    { name: "2023-24", sport: "basketball", startDate: "2023-09-01", endDate: "2024-06-30", isCurrent: false },
+    { name: "2024-25", sport: "basketball", startDate: "2024-09-01", endDate: "2025-06-30", isCurrent: false },
+    { name: "2025-26", sport: "basketball", startDate: "2025-09-01", endDate: "2026-06-30", isCurrent: true },
+  ];
+
+  for (const s of seedData) {
+    await storage.createSeason(s);
+  }
+
+  const allSeasons = await storage.getSeasons();
+
+  const allGames = await db.select().from(games).where(isNull(games.season));
+  for (const game of allGames) {
+    const gameDate = new Date(game.date);
+    let matchedSeason: string | null = null;
+    for (const s of allSeasons) {
+      const start = new Date(s.startDate);
+      const end = new Date(s.endDate);
+      if (gameDate >= start && gameDate <= end) {
+        matchedSeason = s.name;
+        break;
+      }
+    }
+    if (matchedSeason) {
+      await db.update(games).set({ season: matchedSeason }).where(eq(games.id, game.id));
+    }
+  }
+
+  console.log(`Seeded ${seedData.length} seasons and backfilled ${allGames.length} games`);
 }

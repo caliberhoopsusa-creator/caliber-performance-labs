@@ -1,16 +1,20 @@
 import { useState, useEffect } from "react";
 import { useLocation, useSearch } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HelpTooltip } from "@/components/HelpTooltip";
 import { 
   Zap, 
-  Dumbbell
+  Dumbbell,
+  Calendar
 } from "lucide-react";
+import { CareerTimeline } from "@/components/CareerTimeline";
+import { TeamHistorySection } from "@/components/TeamHistory";
 
 import WorkoutsContent from "./WorkoutsContent";
 
-type TabValue = "workouts";
-const VALID_TABS: TabValue[] = ["workouts"];
+type TabValue = "workouts" | "career";
+const VALID_TABS: TabValue[] = ["workouts", "career"];
 
 function isValidTab(tab: string | null): tab is TabValue {
   return tab !== null && VALID_TABS.includes(tab as TabValue);
@@ -24,6 +28,13 @@ export default function PerformanceHub() {
   const tabFromUrl = searchParams.get("tab");
   const validatedTab = isValidTab(tabFromUrl) ? tabFromUrl : "workouts";
   const [activeTab, setActiveTab] = useState<TabValue>(validatedTab);
+
+  const { data: userMe } = useQuery<{ playerId: number | null }>({
+    queryKey: ["/api/users/me"],
+    staleTime: 30000,
+  });
+
+  const playerId = userMe?.playerId;
 
   useEffect(() => {
     if (isValidTab(tabFromUrl)) {
@@ -52,14 +63,14 @@ export default function PerformanceHub() {
                 Performance Hub
               </h1>
               <HelpTooltip
-                content="Log your workouts and track your training progress and intensity."
+                content="Log your workouts, track training progress, and view your career arc across seasons."
                 side="right"
                 iconSize="md"
                 testId="button-help-performance-hub"
               />
             </div>
             <p className="text-sm text-muted-foreground">
-              Track your training and workouts
+              Track your training, workouts, and career progression
             </p>
           </div>
         </div>
@@ -78,10 +89,32 @@ export default function PerformanceHub() {
             <Dumbbell className="w-4 h-4" />
             <span>Workouts</span>
           </TabsTrigger>
+          <TabsTrigger 
+            value="career" 
+            className="flex items-center gap-2 whitespace-nowrap data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
+            data-testid="tab-career-timeline"
+          >
+            <Calendar className="w-4 h-4" />
+            <span>Career Timeline</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="workouts" className="mt-6">
           <WorkoutsContent />
+        </TabsContent>
+
+        <TabsContent value="career" className="mt-6">
+          {playerId ? (
+            <div className="space-y-8">
+              <CareerTimeline playerId={playerId} />
+              <TeamHistorySection playerId={playerId} />
+            </div>
+          ) : (
+            <div className="text-center py-12 text-muted-foreground" data-testid="career-no-player">
+              <Calendar className="w-10 h-10 mx-auto mb-3 opacity-50" />
+              <p className="text-sm">Create a player profile to view your career timeline.</p>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>

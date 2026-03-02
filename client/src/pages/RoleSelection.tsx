@@ -5,13 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Activity, UserCircle, ClipboardList, ChevronRight, Loader2, Users, Plus, ArrowLeft, GraduationCap } from "lucide-react";
+import { Activity, UserCircle, ClipboardList, ChevronRight, Loader2, Users, Plus, ArrowLeft, GraduationCap, Heart } from "lucide-react";
+import { GuardianOnboarding } from "@/components/GuardianOnboarding";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { BASKETBALL_POSITIONS } from "@shared/sports-config";
 
-type RoleType = 'player' | 'coach' | 'recruiter' | null;
+type RoleType = 'player' | 'coach' | 'recruiter' | 'guardian' | null;
 type CoachStep = 'select-team-action' | 'create-team' | 'join-team' | null;
 
 function BasketballIcon({ className }: { className?: string }) {
@@ -71,6 +72,11 @@ export default function RoleSelection() {
 
   const getPositionLabel = (position: string) => {
     return position;
+  };
+
+  const handleGuardianSelect = async () => {
+    await setRoleMutation.mutateAsync('guardian' as any);
+    setSelectedRole('guardian');
   };
 
   const setRoleMutation = useMutation({
@@ -326,6 +332,7 @@ export default function RoleSelection() {
   const getSubtitle = () => {
     if (selectedRole === 'player') return "Let's set up your player profile";
     if (selectedRole === 'recruiter') return "Let's set up your recruiter profile";
+    if (selectedRole === 'guardian') return "Welcome to the family experience";
     if (coachStep === 'select-team-action') return "Do you have an existing team or want to create one?";
     if (coachStep === 'create-team') return "Create your team and start building your roster";
     if (coachStep === 'join-team') return "Enter the team code to join an existing team";
@@ -343,7 +350,17 @@ export default function RoleSelection() {
           <p className="text-muted-foreground mt-2">{getSubtitle()}</p>
         </div>
 
-        {selectedRole === 'recruiter' ? (
+        {selectedRole === 'guardian' ? (
+          <GuardianOnboarding
+            onComplete={() => {
+              queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+              queryClient.invalidateQueries({ queryKey: ['/api/users/me'] });
+            }}
+            onBack={() => {
+              setSelectedRole(null);
+            }}
+          />
+        ) : selectedRole === 'recruiter' ? (
           <Card className="p-6 bg-card border-border">
             <form onSubmit={handleRecruiterProfileSubmit} className="space-y-4">
               <div>
@@ -728,7 +745,7 @@ export default function RoleSelection() {
             </form>
           </Card>
         ) : (
-          <div className="grid sm:grid-cols-3 gap-4">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card 
               className="p-6 bg-card border-border hover-elevate cursor-pointer group"
               onClick={handlePlayerSelect}
@@ -788,6 +805,27 @@ export default function RoleSelection() {
                 </div>
                 <Button variant="outline" className="w-full" disabled={isLoading} data-testid="button-select-recruiter">
                   {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Select Recruiter"}
+                </Button>
+              </div>
+            </Card>
+
+            <Card 
+              className="p-6 bg-card border-border hover-elevate cursor-pointer group"
+              onClick={handleGuardianSelect}
+              data-testid="card-select-guardian"
+            >
+              <div className="text-center space-y-4">
+                <div className="mx-auto w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
+                  <Heart className="w-8 h-8 text-accent" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold font-display text-foreground tracking-wide uppercase">I'm a Parent</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Follow my child's progress, milestones, and achievements
+                  </p>
+                </div>
+                <Button variant="outline" className="w-full" disabled={isLoading} data-testid="button-select-guardian">
+                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Select Guardian"}
                 </Button>
               </div>
             </Card>
