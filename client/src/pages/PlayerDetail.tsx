@@ -3041,7 +3041,7 @@ export default function PlayerDetail() {
           </TabsList>
         </motion.div>
 
-        <TabsContent value="overview" className="space-y-8">
+        <TabsContent value="overview" className="space-y-5">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -3096,7 +3096,6 @@ export default function PlayerDetail() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.27, duration: 0.4 }}
-            className="mb-6"
           >
             <PersonalBests games={games} />
           </motion.div>
@@ -3105,9 +3104,8 @@ export default function PlayerDetail() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.4 }}
-            className="grid grid-cols-1 lg:grid-cols-3 gap-6"
           >
-            <div className="lg:col-span-2">
+            <div>
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 rounded-lg bg-accent/10 border border-accent/20">
                   <BarChart3 className="w-5 h-5 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(var(--accent) / 0.6))" }} />
@@ -3222,92 +3220,91 @@ export default function PlayerDetail() {
               <ScoutView player={player} games={games} />
             )}
 
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-lg bg-purple-500/10 border border-purple-500/20">
-                  <TrendingUp className="w-5 h-5 text-purple-600 dark:text-purple-400" style={{ filter: "drop-shadow(0 0 6px rgba(168, 85, 247, 0.6))" }} />
+            <div className={`grid grid-cols-1 ${isOwnProfile ? 'lg:grid-cols-2' : ''} gap-5`}>
+              <div>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                    <TrendingUp className="w-4 h-4 text-purple-600 dark:text-purple-400" style={{ filter: "drop-shadow(0 0 6px rgba(168, 85, 247, 0.6))" }} />
+                  </div>
+                  <h3 className="text-base font-bold font-display bg-gradient-to-r from-foreground to-purple-300 bg-clip-text text-transparent">
+                    Player Profile
+                  </h3>
                 </div>
-                <h3 className="text-lg font-bold font-display bg-gradient-to-r from-foreground to-purple-300 bg-clip-text text-transparent">
-                  Player Profile
-                </h3>
+                <div 
+                  className="relative overflow-hidden rounded-xl border border-purple-500/20 p-4"
+                  style={{ 
+                    background: "linear-gradient(135deg, rgba(168, 85, 247, 0.05) 0%, rgba(0, 0, 0, 0.4) 100%)",
+                  }}
+                >
+                  <div className="absolute top-0 left-0 w-32 h-32 bg-purple-500/5 blur-[60px] rounded-full pointer-events-none" />
+                  <div className="h-[200px] w-full">
+                    {games.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
+                          <defs>
+                            <linearGradient id="playerRadarGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                              <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity={0.4} />
+                              <stop offset="100%" stopColor="#3B82F6" stopOpacity={0.1} />
+                            </linearGradient>
+                          </defs>
+                          <PolarGrid stroke="rgba(255,255,255,0.08)" />
+                          <PolarAngleAxis 
+                            dataKey="category" 
+                            tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 11 }}
+                          />
+                          <PolarRadiusAxis 
+                            angle={30} 
+                            domain={[0, 100]} 
+                            tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }}
+                            tickCount={4}
+                          />
+                          <Radar
+                            name="Rating"
+                            dataKey="value"
+                            stroke="hsl(var(--accent))"
+                            fill="url(#playerRadarGradient)"
+                            strokeWidth={2.5}
+                            isAnimationActive
+                            filter="drop-shadow(0 0 8px hsl(var(--accent) / 0.3))"
+                          />
+                        </RadarChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
+                        No data yet
+                      </div>
+                    )}
+                  </div>
+                  {games.length > 0 && (
+                    <div className="grid grid-cols-2 gap-3 mt-2 pt-3 border-t border-border/50">
+                      <div>
+                        <span className="text-xs text-muted-foreground block mb-1">Strengths</span>
+                        {strengths.map((s, i) => (
+                          <div key={i} className="text-xs font-medium text-green-600 dark:text-green-400 flex items-center gap-1">
+                            <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                            {s.category} ({s.value})
+                          </div>
+                        ))}
+                      </div>
+                      <div>
+                        <span className="text-xs text-muted-foreground block mb-1">Areas to Improve</span>
+                        {weaknesses.map((w, i) => (
+                          <div key={i} className="text-xs font-medium text-accent flex items-center gap-1">
+                            <div className="w-1.5 h-1.5 rounded-full bg-accent" />
+                            {w.category} ({w.value})
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div 
-                className="relative overflow-hidden rounded-xl border border-purple-500/20 p-4"
-                style={{ 
-                  background: "linear-gradient(135deg, rgba(168, 85, 247, 0.05) 0%, rgba(0, 0, 0, 0.4) 100%)",
-                }}
-              >
-                <div className="absolute top-0 left-0 w-32 h-32 bg-purple-500/5 blur-[60px] rounded-full pointer-events-none" />
-            <div className="h-[220px] w-full">
-              {games.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
-                    <defs>
-                      <linearGradient id="playerRadarGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity={0.4} />
-                        <stop offset="100%" stopColor="#3B82F6" stopOpacity={0.1} />
-                      </linearGradient>
-                    </defs>
-                    <PolarGrid stroke="rgba(255,255,255,0.08)" />
-                    <PolarAngleAxis 
-                      dataKey="category" 
-                      tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 11 }}
-                    />
-                    <PolarRadiusAxis 
-                      angle={30} 
-                      domain={[0, 100]} 
-                      tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }}
-                      tickCount={4}
-                    />
-                    <Radar
-                      name="Rating"
-                      dataKey="value"
-                      stroke="hsl(var(--accent))"
-                      fill="url(#playerRadarGradient)"
-                      strokeWidth={2.5}
-                      isAnimationActive
-                      filter="drop-shadow(0 0 8px hsl(var(--accent) / 0.3))"
-                    />
-                  </RadarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
-                  No data yet
+              {isOwnProfile && (
+                <div>
+                  <GoalsPanel playerId={player.id} games={games} />
                 </div>
               )}
             </div>
-            {games.length > 0 && (
-              <div className="grid grid-cols-2 gap-3 mt-2 pt-3 border-t border-border/50">
-                <div>
-                  <span className="text-xs text-muted-foreground block mb-1">Strengths</span>
-                  {strengths.map((s, i) => (
-                    <div key={i} className="text-xs font-medium text-green-600 dark:text-green-400 flex items-center gap-1">
-                      <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
-                      {s.category} ({s.value})
-                    </div>
-                  ))}
-                </div>
-                <div>
-                  <span className="text-xs text-muted-foreground block mb-1">Areas to Improve</span>
-                  {weaknesses.map((w, i) => (
-                    <div key={i} className="text-xs font-medium text-accent flex items-center gap-1">
-                      <div className="w-1.5 h-1.5 rounded-full bg-accent" />
-                      {w.category} ({w.value})
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.4 }}
-          >
-            {isOwnProfile && <GoalsPanel playerId={player.id} games={games} />}
           </motion.div>
         </TabsContent>
 
