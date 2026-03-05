@@ -93,9 +93,9 @@ async function logout(): Promise<void> {
   }
 }
 
-async function switchRole(role: 'player' | 'coach' | 'recruiter'): Promise<User> {
+async function switchRole(role: 'player' | 'coach' | 'recruiter' | 'guardian'): Promise<User> {
   try {
-    if (!role || !['player', 'coach', 'recruiter'].includes(role)) {
+    if (!role || !['player', 'coach', 'recruiter', 'guardian'].includes(role)) {
       throw {
         status: 400,
         message: AUTH_ERROR_MESSAGES.INVALID_ROLE,
@@ -183,7 +183,7 @@ export function useAuth() {
     },
   });
 
-  const switchRoleMutation = useMutation<User, AuthError, 'player' | 'coach' | 'recruiter'>({
+  const switchRoleMutation = useMutation<User, AuthError, 'player' | 'coach' | 'recruiter' | 'guardian'>({
     mutationFn: switchRole,
     onSuccess: (updatedUser) => {
       queryClient.setQueryData(["/api/auth/user"], updatedUser);
