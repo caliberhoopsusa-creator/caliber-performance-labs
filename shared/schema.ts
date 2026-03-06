@@ -3059,6 +3059,26 @@ export const COIN_REWARDS = {
   daily_login: 5,           // Daily login bonus
 } as const;
 
+// === VIDEO ANALYSES ===
+
+export const videoAnalyses = pgTable("video_analyses", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id"),
+  userId: text("user_id").notNull(),
+  source: text("source").notNull().default("video"),
+  playerName: text("player_name").notNull(),
+  stats: text("stats").notNull(),
+  observations: text("observations"),
+  confidence: text("confidence"),
+  videoQuality: text("video_quality"),
+  limitations: text("limitations"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertVideoAnalysisSchema = createInsertSchema(videoAnalyses).omit({ id: true, createdAt: true });
+export type InsertVideoAnalysis = z.infer<typeof insertVideoAnalysisSchema>;
+export type VideoAnalysis = typeof videoAnalyses.$inferSelect;
+
 // Coin packages available for purchase
 export const COIN_PACKAGES = [
   { id: "coins_100", name: "Starter Pack", coins: 100, priceInCents: 199, popular: false },

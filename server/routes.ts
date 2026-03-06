@@ -5190,24 +5190,60 @@ export async function registerRoutes(
   app.post('/api/analyze-video', requiresSubscription, upload.single('video'), async (req: any, res) => {
     try {
       if (!req.file) {
-        return res.status(400).json({ error: 'No video file uploaded' });
+        return res.status(400).json({ error: 'No video file uploaded', errorType: 'no_file' });
+      }
+
+      const maxSize = 50 * 1024 * 1024;
+      if (req.file.size > maxSize) {
+        fs.unlinkSync(req.file.path);
+        return res.status(400).json({ error: 'Video file exceeds 50MB limit', errorType: 'file_too_large' });
+      }
+
+      const allowedTypes = ['video/mp4', 'video/webm', 'video/quicktime'];
+      if (!allowedTypes.includes(req.file.mimetype)) {
+        fs.unlinkSync(req.file.path);
+        return res.status(400).json({ error: 'Invalid video format. Use MP4, WebM, or MOV.', errorType: 'invalid_format' });
       }
 
       const playerName = req.body.playerName || 'Unknown Player';
       const filePath = req.file.path;
 
-      // Read video file and convert to base64
       const videoBuffer = fs.readFileSync(filePath);
       const base64Video = videoBuffer.toString('base64');
       const mimeType = req.file.mimetype;
 
-      // Clean up uploaded file
       fs.unlinkSync(filePath);
 
-      // Analyze video with Gemini
       const prompt = `You are a professional basketball scout and advanced analytics expert analyzing game footage. 
       
 Watch this basketball video clip carefully and track stats for the player: "${playerName}"
+
+CRITICAL EDGE CASE HANDLING — Follow these rules strictly:
+
+1. LOW-QUALITY / SHAKY VIDEO:
+   - If the footage is blurry, low resolution, shaky, poorly lit, or has compression artifacts, lower your confidence to "medium" or "low" depending on severity.
+   - Set videoQuality to "fair" or "poor" accordingly.
+   - In the limitations array, describe exactly which quality issues affected your analysis (e.g., "Video is heavily shaky making it difficult to track ball movement", "Low resolution prevents reading jersey numbers").
+   - Do NOT fabricate stats you cannot see — report 0 for any stat category you cannot observe due to quality issues and explain why in limitations.
+
+2. MULTIPLE PLAYERS VISIBLE:
+   - Focus exclusively on the player named "${playerName}". Try to identify them by jersey name, number, physical description, or position on court.
+   - If you CANNOT positively identify which player is "${playerName}", set confidence to "low" and add "Could not positively identify ${playerName} — stats are attributed to the most likely candidate based on [reason]" to limitations.
+   - If "${playerName}" is clearly visible and identifiable, do NOT report stats for other players.
+
+3. PARTIAL / INCOMPLETE CLIPS:
+   - If the video shows only a portion of a game (e.g., a few possessions, one quarter, highlight reel), note the approximate duration/portion visible in limitations.
+   - Do NOT extrapolate partial stats to full-game numbers. Report only what you actually observed.
+   - Add to limitations: "Clip appears to show approximately [X] minutes / [X] possessions of game action — stats reflect only this portion."
+
+4. CAMERA MOTION / OCCLUSION:
+   - If the player goes off-screen, is blocked by other players, or camera angles prevent clear viewing of certain plays, mark affected stats as estimated.
+   - In limitations, be specific: e.g., "Player was off-screen for ~30 seconds during a fast break", "2 potential rebounds could not be confirmed due to camera angle", "Basket area obscured — some shot attempts may be missed."
+
+5. YOUTH vs. PRO SKILL LEVEL CALIBRATION:
+   - Assess the apparent skill level of play: youth/recreational, middle school, high school JV, high school varsity, AAU/travel ball, college, or professional.
+   - Calibrate ALL advanced metrics (hustleScore, defenseRating, PER) relative to the observed level of play. A hustleScore of 80 at a youth level means elite effort FOR THAT AGE GROUP — do not compare to NBA/college standards.
+   - Note the assessed skill level in your observations.
 
 Count and report ONLY what you can clearly see in the video:
 - Points scored (count each basket: 2 for regular shots, 3 for three-pointers, 1 for free throws)
@@ -5222,29 +5258,15 @@ Count and report ONLY what you can clearly see in the video:
 
 Calculate these ADVANCED METRICS (AI-calculated based on what you observe):
 
-1. HUSTLE SCORE (0-100): Based on:
-   - Sprint-backs on defense
-   - Diving for loose balls
-   - Boxing out effort
-   - Contesting every shot
-   - Running the floor hard
-   - Communicating on defense
+1. HUSTLE SCORE (0-100): Based on sprint-backs on defense, diving for loose balls, boxing out effort, contesting every shot, running the floor hard, communicating on defense.
 
-2. DEFENSIVE EFFICIENCY (0-100): Based on:
-   - Staying in defensive stance
-   - Help defense rotation
-   - Closeout technique
-   - Contesting shots without fouling
-   - Forcing difficult shots
-   - Defensive rebounds secured
+2. DEFENSIVE EFFICIENCY (0-100): Based on staying in defensive stance, help defense rotation, closeout technique, contesting shots without fouling, forcing difficult shots, defensive rebounds secured.
 
-3. PLUS/MINUS: Estimate the point differential while this player was on court. If you can see score changes, calculate net points. Otherwise estimate based on impact observed (-20 to +20 range).
+3. PLUS/MINUS: Estimate the point differential while this player was on court (-20 to +20 range).
 
-4. PLAYER EFFICIENCY RATING (PER): Calculate using the formula:
-   PER = (Points + Rebounds + Assists + Steals + Blocks - Turnovers - Missed FG - Missed FT) / Minutes * 15
-   If minutes unknown, assume 20 minutes. Return a value typically between 5-35.
+4. PLAYER EFFICIENCY RATING (PER): Calculate using: PER = (Points + Rebounds + Assists + Steals + Blocks - Turnovers - Missed FG - Missed FT) / Minutes * 15. If minutes unknown, assume 20 minutes. Return a value typically between 5-35.
 
-Respond in this exact JSON format:
+Respond in this exact JSON format (no extra text outside the JSON):
 {
   "playerName": "${playerName}",
   "stats": {
@@ -5266,45 +5288,92 @@ Respond in this exact JSON format:
     "per": 15.0
   },
   "observations": "Brief scouting notes about what you observed",
-  "confidence": "high/medium/low - how confident you are in the stats"
+  "confidence": "high/medium/low — 'high' means you could clearly see and count all stats. 'medium' means some stats required estimation. 'low' means significant uncertainty due to video quality, player identification issues, or very short clip.",
+  "videoQuality": "good/fair/poor — 'good' = clear stable footage, players identifiable, full court visible. 'fair' = some shakiness or quality issues but mostly analyzable. 'poor' = significant quality problems that materially affect stat accuracy.",
+  "limitations": ["Be specific and actionable. Examples: 'Video is only ~90 seconds showing 4 possessions — stats reflect partial game only', 'Player #23 assumed to be the named player but jersey name not visible', 'Shaky camera caused 2 potential assists to be unverifiable', 'Player off-screen for ~20 seconds during transition play'. Return an empty array [] ONLY if there are genuinely no limitations."]
 }`;
 
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: [
-          {
-            role: "user",
-            parts: [
-              { text: prompt },
+      const callGemini = async () => {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 60000);
+        try {
+          const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: [
               {
-                inlineData: {
-                  mimeType: mimeType,
-                  data: base64Video
-                }
+                role: "user",
+                parts: [
+                  { text: prompt },
+                  {
+                    inlineData: {
+                      mimeType: mimeType,
+                      data: base64Video
+                    }
+                  }
+                ]
               }
             ]
-          }
-        ]
-      });
+          });
+          clearTimeout(timeout);
+          return response;
+        } catch (err) {
+          clearTimeout(timeout);
+          throw err;
+        }
+      };
 
-      const responseText = response.text || '';
-      
-      // Extract JSON from response
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        return res.status(500).json({ 
-          error: 'Could not parse AI response',
-          rawResponse: responseText 
+      let response;
+      let lastError;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          response = await callGemini();
+          break;
+        } catch (err: any) {
+          lastError = err;
+          console.error(`Video analysis attempt ${attempt + 1} failed:`, err.message);
+          if (attempt < 2) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
+          }
+        }
+      }
+
+      if (!response) {
+        const isTimeout = lastError?.name === 'AbortError' || lastError?.message?.includes('timeout');
+        return res.status(500).json({
+          error: isTimeout ? 'AI analysis timed out. Try a shorter video clip.' : 'AI analysis failed after multiple attempts. Please try again.',
+          errorType: isTimeout ? 'ai_timeout' : 'ai_error',
+          message: lastError?.message
         });
       }
 
-      const analysisResult = JSON.parse(jsonMatch[0]);
-      res.json(analysisResult);
+      const responseText = response.text || '';
+      
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        return res.status(500).json({ 
+          error: 'Could not parse AI response. The AI returned an unexpected format.',
+          errorType: 'parse_error',
+          rawResponse: responseText.substring(0, 500)
+        });
+      }
+
+      try {
+        const analysisResult = JSON.parse(jsonMatch[0]);
+        if (!analysisResult.limitations) analysisResult.limitations = [];
+        if (!analysisResult.videoQuality) analysisResult.videoQuality = 'fair';
+        res.json(analysisResult);
+      } catch (parseErr) {
+        return res.status(500).json({
+          error: 'AI response contained invalid JSON. Please try again.',
+          errorType: 'parse_error'
+        });
+      }
 
     } catch (error: any) {
       console.error('Video analysis error:', error);
       res.status(500).json({ 
         error: 'Failed to analyze video',
+        errorType: 'server_error',
         message: error.message 
       });
     }
@@ -5479,7 +5548,7 @@ Keep it to 4-5 paragraphs of flowing prose. No headers, bullet points, or markdo
       const { playerName, playByPlay } = req.body;
 
       if (!playByPlay) {
-        return res.status(400).json({ error: 'Play-by-play text is required' });
+        return res.status(400).json({ error: 'Play-by-play text is required', errorType: 'no_input' });
       }
 
       const prompt = `You are a basketball statistician and advanced analytics expert. Analyze these play-by-play notes and extract stats for player "${playerName || 'the player'}".
@@ -5487,31 +5556,28 @@ Keep it to 4-5 paragraphs of flowing prose. No headers, bullet points, or markdo
 Play-by-play notes:
 ${playByPlay}
 
+EDGE CASE HANDLING:
+1. INCOMPLETE / PARTIAL NOTES: If the notes only cover part of a game (a few plays, one quarter, etc.), report only the stats described — do NOT extrapolate to a full game. Note in limitations that the notes appear to cover a partial game.
+2. AMBIGUOUS DESCRIPTIONS: If a play description is ambiguous (e.g., "made a shot" without specifying 2pt vs 3pt), use the most likely interpretation and note it in limitations.
+3. MULTIPLE PLAYERS MENTIONED: Focus exclusively on "${playerName || 'the player'}". If the notes describe plays by other players, only count stats directly attributed to the named player.
+4. SKILL LEVEL: If the notes mention a league, age group, or skill level (youth, JV, varsity, AAU, college, pro), calibrate advanced metrics (hustleScore, defenseRating, PER) to that level. If not mentioned, assume high school varsity level.
+5. VAGUE OR MINIMAL NOTES: If very few plays are described or notes are vague, set confidence to "low" and note what could not be determined in limitations.
+
 Count stats mentioned or implied:
 - Points, rebounds, assists, steals, blocks, turnovers
 - Field goals made/attempted, three pointers made/attempted, free throws made/attempted
 
 Calculate these ADVANCED METRICS based on the play-by-play description:
 
-1. HUSTLE SCORE (0-100): Based on mentions of:
-   - Diving for loose balls, hustle plays
-   - Defensive effort, closeouts
-   - Running the floor, boxing out
-   - Extra effort plays
+1. HUSTLE SCORE (0-100): Based on mentions of diving for loose balls, hustle plays, defensive effort, closeouts, running the floor, boxing out, extra effort plays. Calibrate to the apparent skill level.
 
-2. DEFENSIVE EFFICIENCY (0-100): Based on:
-   - Defensive stops mentioned
-   - Forced turnovers, contested shots
-   - Help defense plays
-   - Overall defensive impact
+2. DEFENSIVE EFFICIENCY (0-100): Based on defensive stops mentioned, forced turnovers, contested shots, help defense plays, overall defensive impact. Calibrate to the apparent skill level.
 
-3. PLUS/MINUS: Estimate from game context. If the game score or period scores are mentioned, calculate net points. Otherwise estimate based on positive/negative plays described (-20 to +20 range).
+3. PLUS/MINUS: Estimate from game context (-20 to +20 range).
 
-4. PLAYER EFFICIENCY RATING (PER): Calculate using:
-   PER = (Points + Rebounds + Assists + Steals + Blocks - Turnovers - Missed FG - Missed FT) / Minutes * 15
-   If minutes not mentioned, assume 20. Return value typically 5-35.
+4. PLAYER EFFICIENCY RATING (PER): Calculate using: PER = (Points + Rebounds + Assists + Steals + Blocks - Turnovers - Missed FG - Missed FT) / Minutes * 15. If minutes not mentioned, assume 20. Return value typically 5-35. Calibrate to the apparent skill level.
 
-Respond in this exact JSON format:
+Respond in this exact JSON format (no extra text outside the JSON):
 {
   "playerName": "${playerName || 'Unknown'}",
   "stats": {
@@ -5532,25 +5598,107 @@ Respond in this exact JSON format:
     "plusMinus": 0,
     "per": 15.0
   },
-  "observations": "Summary of the player's performance"
+  "observations": "Summary of the player's performance including assessed skill level",
+  "confidence": "high/medium/low — 'high' if notes are detailed and unambiguous. 'medium' if some stats required inference. 'low' if notes are vague or very incomplete.",
+  "videoQuality": "good/fair/poor — For text analysis: 'good' = detailed play-by-play with specific stats. 'fair' = moderate detail, some inference needed. 'poor' = very vague or minimal notes.",
+  "limitations": ["Be specific. Examples: 'Notes only describe 5 plays — stats reflect partial game', 'Shot type not specified for 2 makes — assumed 2-pointers', 'No defensive plays mentioned — defensive metrics are default estimates'. Return empty array [] only if notes are comprehensive with no ambiguity."]
 }`;
 
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt
-      });
+      let response;
+      let lastError;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: prompt
+          });
+          break;
+        } catch (err: any) {
+          lastError = err;
+          console.error(`Play analysis attempt ${attempt + 1} failed:`, err.message);
+          if (attempt < 2) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
+          }
+        }
+      }
+
+      if (!response) {
+        return res.status(500).json({
+          error: 'AI analysis failed after multiple attempts. Please try again.',
+          errorType: 'ai_error',
+          message: lastError?.message
+        });
+      }
 
       const responseText = response.text || '';
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       
       if (!jsonMatch) {
-        return res.status(500).json({ error: 'Could not parse AI response' });
+        return res.status(500).json({ error: 'Could not parse AI response', errorType: 'parse_error' });
       }
 
-      res.json(JSON.parse(jsonMatch[0]));
+      try {
+        const result = JSON.parse(jsonMatch[0]);
+        if (!result.limitations) result.limitations = [];
+        if (!result.confidence) result.confidence = 'medium';
+        res.json(result);
+      } catch (parseErr) {
+        return res.status(500).json({ error: 'AI response contained invalid JSON', errorType: 'parse_error' });
+      }
     } catch (error: any) {
       console.error('Play analysis error:', error);
-      res.status(500).json({ error: 'Failed to analyze plays', message: error.message });
+      res.status(500).json({ error: 'Failed to analyze plays', errorType: 'server_error', message: error.message });
+    }
+  });
+
+  // --- Video Analysis History ---
+
+  app.post('/api/video-analyses', async (req: any, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
+      const { playerName, stats, observations, confidence, videoQuality, limitations, source, playerId } = req.body;
+      if (!playerName || !stats) return res.status(400).json({ error: 'playerName and stats are required' });
+      const analysis = await storage.createVideoAnalysis({
+        userId: req.user.id,
+        playerId: playerId || null,
+        playerName,
+        stats: typeof stats === 'string' ? stats : JSON.stringify(stats),
+        observations: observations || null,
+        confidence: confidence || null,
+        videoQuality: videoQuality || null,
+        limitations: Array.isArray(limitations) ? JSON.stringify(limitations) : limitations || null,
+        source: source || 'video',
+      });
+      res.json(analysis);
+    } catch (error: any) {
+      console.error('Save video analysis error:', error);
+      res.status(500).json({ error: 'Failed to save analysis' });
+    }
+  });
+
+  app.get('/api/video-analyses', async (req: any, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
+      const analyses = await storage.getVideoAnalysesByUser(req.user.id);
+      res.json(analyses);
+    } catch (error: any) {
+      console.error('Get video analyses error:', error);
+      res.status(500).json({ error: 'Failed to fetch analyses' });
+    }
+  });
+
+  app.delete('/api/video-analyses/:id', async (req: any, res) => {
+    try {
+      if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
+      const id = parseInt(req.params.id);
+      const analysis = await storage.getVideoAnalysis(id);
+      if (!analysis) return res.status(404).json({ error: 'Analysis not found' });
+      if (analysis.userId !== req.user.id) return res.status(403).json({ error: 'Not authorized' });
+      await storage.deleteVideoAnalysis(id);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Delete video analysis error:', error);
+      res.status(500).json({ error: 'Failed to delete analysis' });
     }
   });
 

@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { 
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
 } from "@/components/ui/select";
-import { ArrowLeft, Save, Loader2, Trophy, Share2, Target, ClipboardList, TrendingUp, Zap, Activity, Plus, Minus, ChevronDown } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Trophy, Share2, Target, ClipboardList, TrendingUp, Zap, Activity, Plus, Minus, ChevronDown, Video } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GradeBadge } from "@/components/GradeBadge";
 import { Link } from "wouter";
@@ -99,6 +99,7 @@ export default function AnalyzeGame() {
   
   const effectivePlayerId = isCoach ? preselectedPlayerId : (userPlayerId ? String(userPlayerId) : preselectedPlayerId);
   
+  const isFromVideoAnalysis = searchParams.get('source') === 'video_analysis';
   const [quickLogMode, setQuickLogMode] = useState(false);
   const { data: players } = usePlayers();
   const { mutate, isPending, data: resultGame } = useCreateGame();
@@ -206,6 +207,13 @@ export default function AnalyzeGame() {
         </div>
       </div>
 
+      {isFromVideoAnalysis && (
+        <div className="flex items-center gap-2 p-3 bg-accent/10 rounded-lg border border-accent/20 text-sm" data-testid="alert-video-prefill">
+          <Video className="w-4 h-4 text-accent shrink-0" />
+          <span className="text-foreground">Stats pre-filled from AI video analysis. Review and fill in remaining fields before saving.</span>
+        </div>
+      )}
+
       <GameForm 
         players={players || []} 
         preselectedPlayerId={effectivePlayerId} 
@@ -213,16 +221,19 @@ export default function AnalyzeGame() {
         isPending={isPending}
         isCoach={isCoach}
         quickLogMode={quickLogMode}
+        prefillStats={isFromVideoAnalysis ? Object.fromEntries(searchParams.entries()) : undefined}
       />
     </div>
   );
 }
 
-function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach, quickLogMode }: any) {
-  const [autoCalcPoints, setAutoCalcPoints] = useState(true);
+function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach, quickLogMode, prefillStats }: any) {
+  const [autoCalcPoints, setAutoCalcPoints] = useState(!prefillStats);
   const [selectedFootballPositions, setSelectedFootballPositions] = useState<FootballPosition[]>([]);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const sport = useSport();
+  
+  const pf = (key: string, fallback: number) => prefillStats && prefillStats[key] !== undefined ? Number(prefillStats[key]) : fallback;
   
   const form = useForm<z.infer<typeof insertGameSchema>>({
     resolver: zodResolver(insertGameSchema),
@@ -233,24 +244,24 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach, 
       opponent: "",
       result: "W",
       minutes: 0,
-      points: 0,
-      rebounds: 0,
-      assists: 0,
-      steals: 0,
-      blocks: 0,
-      turnovers: 0,
+      points: pf('points', 0),
+      rebounds: pf('rebounds', 0),
+      assists: pf('assists', 0),
+      steals: pf('steals', 0),
+      blocks: pf('blocks', 0),
+      turnovers: pf('turnovers', 0),
       fouls: 0,
-      fgMade: 0,
-      fgAttempted: 0,
-      threeMade: 0,
-      threeAttempted: 0,
-      ftMade: 0,
-      ftAttempted: 0,
+      fgMade: pf('fgMade', 0),
+      fgAttempted: pf('fgAttempted', 0),
+      threeMade: pf('threeMade', 0),
+      threeAttempted: pf('threeAttempted', 0),
+      ftMade: pf('ftMade', 0),
+      ftAttempted: pf('ftAttempted', 0),
       offensiveRebounds: 0,
       defensiveRebounds: 0,
-      hustleScore: 50,
-      defenseRating: 50,
-      notes: "",
+      hustleScore: pf('hustleScore', 50),
+      defenseRating: pf('defenseRating', 50),
+      notes: prefillStats ? "Stats from AI video analysis" : "",
       completions: 0,
       passAttempts: 0,
       passingYards: 0,

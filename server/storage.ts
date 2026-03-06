@@ -113,10 +113,11 @@ import {
   type RecruiterBlock, type InsertRecruiterBlock,
   recruitingInquiries,
   type RecruitingInquiry, type InsertRecruitingInquiry,
-  seasons, teamHistory, guardianLinks,
+  seasons, teamHistory, guardianLinks, videoAnalyses,
   type Season, type InsertSeason,
   type TeamHistory, type InsertTeamHistory,
-  type GuardianLink, type InsertGuardianLink
+  type GuardianLink, type InsertGuardianLink,
+  type VideoAnalysis, type InsertVideoAnalysis
 } from "@shared/schema";
 import { eq, desc, and, count, gte, lte, lt, sql, or, isNull, inArray } from "drizzle-orm";
 
@@ -734,6 +735,12 @@ export interface IStorage {
   getPendingGuardianRequests(playerId: number): Promise<GuardianLink[]>;
   getGuardianLink(id: number): Promise<GuardianLink | undefined>;
   getGuardianLinkByCode(inviteCode: string): Promise<GuardianLink | undefined>;
+
+  // Video Analyses
+  createVideoAnalysis(data: InsertVideoAnalysis): Promise<VideoAnalysis>;
+  getVideoAnalysesByUser(userId: string): Promise<VideoAnalysis[]>;
+  getVideoAnalysis(id: number): Promise<VideoAnalysis | undefined>;
+  deleteVideoAnalysis(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -4177,6 +4184,26 @@ export class DatabaseStorage implements IStorage {
   async getGuardianLinkByCode(inviteCode: string): Promise<GuardianLink | undefined> {
     const [link] = await db.select().from(guardianLinks).where(eq(guardianLinks.inviteCode, inviteCode));
     return link;
+  }
+
+  async createVideoAnalysis(data: InsertVideoAnalysis): Promise<VideoAnalysis> {
+    const [analysis] = await db.insert(videoAnalyses).values(data).returning();
+    return analysis;
+  }
+
+  async getVideoAnalysesByUser(userId: string): Promise<VideoAnalysis[]> {
+    return await db.select().from(videoAnalyses)
+      .where(eq(videoAnalyses.userId, userId))
+      .orderBy(desc(videoAnalyses.createdAt));
+  }
+
+  async getVideoAnalysis(id: number): Promise<VideoAnalysis | undefined> {
+    const [analysis] = await db.select().from(videoAnalyses).where(eq(videoAnalyses.id, id));
+    return analysis;
+  }
+
+  async deleteVideoAnalysis(id: number): Promise<void> {
+    await db.delete(videoAnalyses).where(eq(videoAnalyses.id, id));
   }
 }
 
