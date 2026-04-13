@@ -21,67 +21,67 @@ const ACHIEVEMENT_CONFIG: Record<string, { title: string; subtitle: string; grad
   triple_double: {
     title: "TRIPLE DOUBLE",
     subtitle: "Elite Performance",
-    gradient: "from-yellow-500 via-orange-500 to-red-500",
+    gradient: "from-yellow-500",
     icon: "👑",
   },
   thirty_bomb: {
     title: "30+ POINTS",
     subtitle: "Bucket Machine",
-    gradient: "from-orange-500 via-red-500 to-pink-500",
+    gradient: "from-orange-500",
     icon: "🔥",
   },
   twenty_piece: {
     title: "20+ POINTS",
     subtitle: "Scoring Threat",
-    gradient: "from-blue-500 via-purple-500 to-pink-500",
+    gradient: "from-blue-500",
     icon: "💪",
   },
   double_double: {
     title: "DOUBLE DOUBLE",
     subtitle: "All-Around Game",
-    gradient: "from-green-500 via-teal-500 to-blue-500",
+    gradient: "from-green-500",
     icon: "⭐",
   },
   efficiency_master: {
     title: "A+ GRADE",
     subtitle: "Maximum Efficiency",
-    gradient: "from-emerald-500 via-green-500 to-teal-500",
+    gradient: "from-emerald-500",
     icon: "💯",
   },
   lockdown_defender: {
     title: "LOCKDOWN",
     subtitle: "Defensive Anchor",
-    gradient: "from-slate-500 via-gray-600 to-zinc-700",
+    gradient: "from-slate-500",
     icon: "🔒",
   },
   hustle_king: {
     title: "HUSTLE KING",
     subtitle: "Maximum Effort",
-    gradient: "from-accent via-accent/80 to-red-500",
+    gradient: "from-accent via-accent/80",
     icon: "⚡",
   },
   hot_streak_3: {
     title: "HOT STREAK",
     subtitle: "3 Games B+ or Better",
-    gradient: "from-red-500 via-orange-500 to-yellow-500",
+    gradient: "from-red-500",
     icon: "🔥",
   },
   hot_streak_5: {
     title: "ON FIRE",
     subtitle: "5 Games B+ or Better",
-    gradient: "from-red-600 via-orange-600 to-yellow-600",
+    gradient: "from-red-600",
     icon: "🌟",
   },
   clean_sheet: {
     title: "CLEAN SHEET",
     subtitle: "Zero Turnovers",
-    gradient: "from-accent via-blue-500 to-indigo-500",
+    gradient: "from-accent",
     icon: "✨",
   },
   sharpshooter: {
     title: "SHARPSHOOTER",
     subtitle: "50%+ from 3PT",
-    gradient: "from-purple-500 via-pink-500 to-rose-500",
+    gradient: "from-purple-500",
     icon: "🎯",
   },
 };
@@ -199,7 +199,7 @@ export function AchievementCard({
         <div className="flex flex-col items-center gap-4">
           <div
             ref={cardRef}
-            className={`relative w-[360px] aspect-[4/5] rounded-2xl overflow-hidden bg-gradient-to-br ${config.gradient} p-1`}
+            className={`relative w-[360px] aspect-[4/5] rounded-2xl overflow-hidden ${config.gradient} p-1`}
             data-testid="achievement-card"
           >
             <div className="absolute inset-0 bg-black/20" />
@@ -209,7 +209,7 @@ export function AchievementCard({
               <div className="flex-1 flex flex-col items-center justify-center text-center">
                 <Avatar className="w-24 h-24 border-4 border-white/20 mb-4">
                   {player.photoUrl && <AvatarImage src={player.photoUrl} alt={player.name} width={96} height={96} />}
-                  <AvatarFallback className="bg-gradient-to-br from-accent/50 to-accent/20 text-2xl font-bold text-white">
+                  <AvatarFallback className="from-accent/50 to-accent/20 text-2xl font-bold text-white">
                     {getInitials(player.name)}
                   </AvatarFallback>
                 </Avatar>
@@ -221,7 +221,7 @@ export function AchievementCard({
                   {player.position} {player.team && `• ${player.team}`}
                 </p>
 
-                <div className={`text-4xl font-display font-black bg-gradient-to-r ${config.gradient} bg-clip-text text-transparent uppercase tracking-wider mb-2`}>
+                <div className={`text-4xl font-display font-black ${config.gradient} uppercase tracking-wider mb-2`}>
                   {config.title}
                 </div>
                 <p className="text-lg text-white/80 font-medium">{config.subtitle}</p>
@@ -251,7 +251,7 @@ export function AchievementCard({
 
               <div className="mt-auto pt-4 border-t border-white/10 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full from-accent to-accent/80 flex items-center justify-center">
                     <span className="text-white font-bold text-xs">C</span>
                   </div>
                   <span className="text-sm font-display font-bold text-white/80 uppercase tracking-wider">

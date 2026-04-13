@@ -55,12 +55,12 @@ export default function CoachHub() {
     <div className="space-y-6 pb-8" data-testid="page-coach-hub">
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center">
             <Briefcase className="w-6 h-6 text-accent" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl md:text-3xl font-bold font-display bg-gradient-to-r from-white via-accent/20 to-accent bg-clip-text text-transparent">
+              <h1 className="text-2xl md:text-3xl font-display font-bold uppercase tracking-tight text-foreground">
                 Coach Hub
               </h1>
               <HelpTooltip

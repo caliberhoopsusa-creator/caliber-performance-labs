@@ -54,7 +54,6 @@ import {
   User,
   Medal,
 } from "lucide-react";
-import { GiAmericanFootballBall } from "react-icons/gi";
 import { format } from "date-fns";
 
 interface LeagueTeamRoster {
@@ -141,7 +140,7 @@ interface CurrentUser {
 
 const COLOR_PRESETS = [
   "hsl(24, 95%, 53%)", "#FF6B35", "#10B981", "#8B5CF6", "#EF4444", 
-  "#F59E0B", "#EC4899", "#06B6D4", "#84CC16", "#6366F1"
+  "#C6D0D8", "#EC4899", "#4f6878", "#84CC16", "#6366F1"
 ];
 
 function LeagueDetailSkeleton() {
@@ -193,7 +192,7 @@ function StandingsTable({ teams }: { teams: LeagueTeam[] }) {
   });
 
   return (
-    <div className="rounded-xl border border-accent/[0.08] bg-gradient-to-br from-muted/80 to-muted/40 dark:from-black/60 dark:to-black/30 overflow-hidden">
+    <div className="rounded-xl border border-accent/[0.08] from-muted/80 to-muted/40 dark:from-black/60 dark:to-black/30 overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow className="border-border hover:bg-transparent">
@@ -279,7 +278,7 @@ function GameCard({ game, teams, onClick }: { game: LeagueGame; teams: LeagueTea
     >
       <Card
         className={cn(
-          "border-accent/[0.08] bg-gradient-to-br from-muted/80 to-muted/40 dark:from-black/60 dark:to-black/30 overflow-hidden transition-all",
+          "border-accent/[0.08] from-muted/80 to-muted/40 dark:from-black/60 dark:to-black/30 overflow-hidden transition-all",
           game.status === "live" && "border-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.15)]",
           onClick && "cursor-pointer hover:border-accent/20 hover:shadow-[0_0_15px_rgba(234,88,12,0.1)]"
         )}
@@ -380,7 +379,7 @@ function TeamCard({ team, isCreator }: { team: LeagueTeam; isCreator: boolean })
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <Card
         className={cn(
-          "border-accent/[0.08] bg-gradient-to-br from-muted/80 to-muted/40 dark:from-black/60 dark:to-black/30 overflow-hidden transition-all",
+          "border-accent/[0.08] from-muted/80 to-muted/40 dark:from-black/60 dark:to-black/30 overflow-hidden transition-all",
           isOpen && "border-accent/20"
         )}
         data-testid={`card-team-${team.id}`}
@@ -876,7 +875,7 @@ function PlayoffBracket({
 
   if (teams.length < 4) {
     return (
-      <Card className="border-border bg-gradient-to-br from-muted/80 to-muted/40 dark:from-black/60 dark:to-black/30">
+      <Card className="border-border from-muted/80 to-muted/40 dark:from-black/60 dark:to-black/30">
         <CardContent className="flex flex-col items-center justify-center py-12">
           <Users className="w-12 h-12 text-muted-foreground/50 mb-3" />
           <p className="text-muted-foreground text-center">Need at least 4 teams for playoffs</p>
@@ -888,7 +887,7 @@ function PlayoffBracket({
 
   if (!hasPlayoffs) {
     return (
-      <Card className="border-border bg-gradient-to-br from-muted/80 to-muted/40 dark:from-black/60 dark:to-black/30">
+      <Card className="border-border from-muted/80 to-muted/40 dark:from-black/60 dark:to-black/30">
         <CardContent className="flex flex-col items-center justify-center py-12">
           <Trophy className="w-12 h-12 text-muted-foreground/50 mb-3" />
           <p className="text-muted-foreground">Playoffs not started yet</p>
@@ -934,7 +933,7 @@ function PlayoffBracket({
         data-testid={`bracket-game-${game.id}`}
       >
         <Card className={cn(
-          "border-accent/[0.08] bg-gradient-to-br from-muted/80 to-muted/40 dark:from-black/60 dark:to-black/30 overflow-hidden w-48",
+          "border-accent/[0.08] from-muted/80 to-muted/40 dark:from-black/60 dark:to-black/30 overflow-hidden w-48",
           isFinal && "border-accent/20"
         )}>
           <CardContent className="p-0">
@@ -1075,7 +1074,7 @@ function PlayoffBracket({
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="mt-6 p-6 rounded-xl bg-gradient-to-br from-accent/10 to-yellow-500/10 border border-accent/20 text-center"
+          className="mt-6 p-6 rounded-xl from-accent/10 border border-accent/20 text-center"
         >
           <Trophy className="w-12 h-12 text-yellow-600 dark:text-yellow-400 mx-auto mb-3" />
           <h3 className="font-display text-xl uppercase tracking-wide text-white mb-2">Champion</h3>
@@ -1315,19 +1314,13 @@ export default function LeagueDetail() {
             <div
               className={cn(
                 "w-16 h-16 rounded-2xl flex items-center justify-center border-2",
-                isBasketball
-                  ? "bg-accent/20 border-accent/30"
-                  : "bg-green-500/20 border-green-500/30"
+                "bg-accent/20 border-accent/30"
               )}
             >
-              {isBasketball ? (
-                <Dribbble className="w-8 h-8 text-accent" />
-              ) : (
-                <GiAmericanFootballBall className="w-8 h-8 text-green-600 dark:text-green-400" />
-              )}
+              <Dribbble className="w-8 h-8 text-accent" />
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-display uppercase tracking-wide bg-gradient-to-b from-white to-accent/20 bg-clip-text text-transparent">
+              <h1 className="text-2xl md:text-3xl font-display uppercase tracking-wide from-white to-accent/20">
                 {league.name}
               </h1>
               <div className="flex items-center gap-2 mt-1">
@@ -1340,8 +1333,8 @@ export default function LeagueDetail() {
                       : "border-green-500/30 text-green-600 dark:text-green-400 bg-green-500/10"
                   )}
                 >
-                  {isBasketball ? <Dribbble className="w-3 h-3" /> : <GiAmericanFootballBall className="w-3 h-3" />}
-                  {isBasketball ? "Basketball" : "Football"}
+                  <Dribbble className="w-3 h-3" />
+                  Basketball
                 </Badge>
                 {league.seasonName && (
                   <Badge variant="outline" className="text-xs gap-1 border-accent/20 text-accent/80 bg-accent/10">
@@ -1418,7 +1411,7 @@ export default function LeagueDetail() {
               ))}
             </div>
           ) : sortedGames.length === 0 ? (
-            <Card className="border-border bg-gradient-to-br from-muted/80 to-muted/40 dark:from-black/60 dark:to-black/30">
+            <Card className="border-border from-muted/80 to-muted/40 dark:from-black/60 dark:to-black/30">
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <Calendar className="w-12 h-12 text-muted-foreground/50 mb-3" />
                 <p className="text-muted-foreground">No games scheduled yet</p>
@@ -1449,7 +1442,7 @@ export default function LeagueDetail() {
 
         <TabsContent value="teams" className="mt-4">
           {league.teams.length === 0 ? (
-            <Card className="border-border bg-gradient-to-br from-muted/80 to-muted/40 dark:from-black/60 dark:to-black/30">
+            <Card className="border-border from-muted/80 to-muted/40 dark:from-black/60 dark:to-black/30">
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <Users className="w-12 h-12 text-muted-foreground/50 mb-3" />
                 <p className="text-muted-foreground">No teams in this league yet</p>

@@ -9,12 +9,11 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "shadcn-card relative rounded-xl border border-accent/[0.08] text-card-foreground backdrop-blur-xl transition-all duration-400",
-      "bg-gradient-to-br from-[hsl(220,25%,8%)] via-[hsl(220,20%,6%)] to-[hsl(220,25%,5%)]",
+      "shadcn-card card-precision relative rounded-xl border border-accent/[0.10] text-card-foreground backdrop-blur-xl transition-all duration-300",
       "shadow-md",
-      "hover:border-accent/[0.15] hover:shadow-lg",
-      "before:absolute before:inset-x-[10%] before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-accent/40 before:to-transparent",
-      "after:absolute after:inset-0 after:rounded-xl after:pointer-events-none after:bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] after:bg-[size:30px_30px] after:opacity-30",
+      "hover:border-accent/[0.20] hover:shadow-lg",
+      "before:absolute before:inset-x-[15%] before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-[hsl(var(--cta))]/50 before:to-transparent before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-100",
+      "after:absolute after:inset-0 after:rounded-xl after:pointer-events-none after:bg-[linear-gradient(rgba(255,255,255,0.012)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.012)_1px,transparent_1px)] after:bg-[size:30px_30px] after:opacity-20",
       className
     )}
     {...props}
@@ -30,7 +29,7 @@ const CardHeader = React.forwardRef<
     ref={ref}
     className={cn(
       "flex flex-col space-y-1.5 p-6 relative",
-      "border-b border-accent/[0.08] bg-gradient-to-r from-accent/[0.03] to-transparent",
+      "border-b border-accent/[0.08] from-accent/[0.03] to-transparent",
       className
     )}
     {...props}
@@ -46,7 +45,7 @@ const CardTitle = React.forwardRef<
     ref={ref}
     className={cn(
       "text-2xl font-semibold leading-none tracking-tight font-display",
-      "bg-gradient-to-b from-white to-accent/20 bg-clip-text text-transparent",
+      "from-white to-accent/20",
       className
     )}
     {...props}

@@ -1,11 +1,11 @@
-import { usePlayers } from "@/hooks/use-basketball";
+import { usePlayers, useTeamDashboard } from "@/hooks/use-basketball";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { 
-  Plus, ChevronRight, Users, TrendingUp, UserPlus, 
+import {
+  Plus, ChevronRight, Users, TrendingUp, UserPlus,
   Target, Calendar, Trophy, Zap, BarChart3, Star,
-  Activity, Flame, Award
+  Activity, Flame, Award, Shield, Crosshair, Clock, Copy, Share2
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,8 +13,31 @@ import { Badge } from "@/components/ui/badge";
 import { SkeletonStatCard, SkeletonPlayerCard } from "@/components/ui/skeleton-premium";
 import { EmptyState } from "@/components/ui/empty-state";
 import { GradeBadge } from "@/components/GradeBadge";
+import { CelebrationOverlay } from "@/components/CelebrationOverlay";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { BADGE_DEFINITIONS } from "@shared/schema";
+import { useState, useEffect } from "react";
+import { useSubscription } from "@/hooks/use-subscription";
+import { Lock, Sparkles, X } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { DailyQuestsWidget } from "@/components/DailyQuestsWidget";
+
+const BADGE_ICONS: Record<string, any> = {
+  twenty_piece: Target,
+  thirty_bomb: Target,
+  double_double: Award,
+  triple_double: Trophy,
+  ironman: Clock,
+  efficiency_master: Star,
+  lockdown: Shield,
+  hustle_king: Flame,
+  clean_sheet: Star,
+  hot_streak_3: Flame,
+  hot_streak_5: Flame,
+  sharpshooter: Crosshair,
+  most_improved: TrendingUp,
+};
 
 const fadeUpVariants = {
   initial: { opacity: 0, y: 20 },
@@ -68,19 +91,76 @@ function DashboardSkeleton() {
   );
 }
 
+function computeAvgTeamGrade(avgGradeScore: number): string {
+  if (avgGradeScore >= 4.15) return "A+";
+  if (avgGradeScore >= 3.85) return "A";
+  if (avgGradeScore >= 3.5) return "A-";
+  if (avgGradeScore >= 3.15) return "B+";
+  if (avgGradeScore >= 2.85) return "B";
+  if (avgGradeScore >= 2.5) return "B-";
+  if (avgGradeScore >= 2.15) return "C+";
+  if (avgGradeScore >= 1.85) return "C";
+  if (avgGradeScore >= 1.5) return "C-";
+  if (avgGradeScore >= 1.15) return "D+";
+  if (avgGradeScore >= 0.85) return "D";
+  if (avgGradeScore >= 0.5) return "D-";
+  return "F";
+}
+
 export default function Dashboard() {
   const { user } = useAuth();
   const { data: players, isLoading } = usePlayers();
-  
+  const { data: teamDashboard } = useTeamDashboard();
+  const { isFree } = useSubscription();
+  const [showFirstGameCelebration, setShowFirstGameCelebration] = useState(false);
+  const [celebrationShown, setCelebrationShown] = useState(false);
+  const [bannerDismissed, setBannerDismissed] = useState(
+    () => sessionStorage.getItem("proBannerDismissed") === "1"
+  );
+
   const { data: userStats } = useQuery<{
     totalXp: number;
     currentTier: string;
     currentStreak: number;
     totalGamesLogged: number;
+    playerId: number | null;
   }>({
     queryKey: ["/api/users/me"],
     enabled: !!user,
   });
+
+  const playerId = userStats?.playerId;
+
+  const { data: playerBadges } = useQuery<Array<{ id: number; badgeType: string; earnedAt: string }>>({
+    queryKey: [`/api/players/${playerId}/badges`],
+    enabled: !!playerId,
+  });
+
+  const { data: referralData } = useQuery<{ code: string; url: string; conversions: number }>({
+    queryKey: ["/api/me/referral-code"],
+    enabled: !!user,
+  });
+
+  const { data: teamActivity } = useQuery<{ teammateCount: number; playerLoggedToday: boolean; teamName: string | null }>({
+    queryKey: [`/api/players/${playerId}/team-activity-today`],
+    enabled: !!playerId,
+  });
+
+  const { toast } = useToast();
+
+  const totalGames = userStats?.totalGamesLogged || 0;
+
+  // Show first-game celebration once
+  useEffect(() => {
+    if (totalGames === 1 && !celebrationShown) {
+      const shown = sessionStorage.getItem("firstGameCelebrationShown");
+      if (!shown) {
+        setShowFirstGameCelebration(true);
+        setCelebrationShown(true);
+        sessionStorage.setItem("firstGameCelebrationShown", "1");
+      }
+    }
+  }, [totalGames, celebrationShown]);
 
   if (isLoading) {
     return <DashboardSkeleton />;
@@ -88,14 +168,77 @@ export default function Dashboard() {
 
   const recentPlayers = players?.slice(0, 6) || [];
   const totalPlayers = players?.length || 0;
-  const avgTeamGrade = "B+";
+  const gradedPlayers = teamDashboard?.players.filter((p) => p.avgGradeScore > 0) ?? [];
+  const avgTeamGrade = gradedPlayers.length > 0
+    ? computeAvgTeamGrade(gradedPlayers.reduce((sum, p) => sum + p.avgGradeScore, 0) / gradedPlayers.length)
+    : "—";
   const currentStreak = userStats?.currentStreak || 0;
-  const totalGames = userStats?.totalGamesLogged || 0;
+  const totalXp = userStats?.totalXp || 0;
+  const currentTier = userStats?.currentTier || "Rookie";
+  const recentBadges = playerBadges?.slice(-3).reverse() || [];
+
+  const TIER_THRESHOLDS: Record<string, number> = {
+    Rookie: 0, Starter: 500, "All-Star": 2000, MVP: 5000, "Hall of Fame": 10000,
+  };
+  const TIER_ORDER = ["Rookie", "Starter", "All-Star", "MVP", "Hall of Fame"];
+  const nextTierIndex = TIER_ORDER.indexOf(currentTier) + 1;
+  const nextTier = TIER_ORDER[nextTierIndex];
+  const nextThreshold = nextTier ? TIER_THRESHOLDS[nextTier] : null;
+  const currentThreshold = TIER_THRESHOLDS[currentTier] || 0;
+  const tierProgress = nextThreshold
+    ? Math.min(100, ((totalXp - currentThreshold) / (nextThreshold - currentThreshold)) * 100)
+    : 100;
 
   return (
     <div className="pb-24 md:pb-6 space-y-6">
-      <Card>
-        <CardContent className="p-6 md:p-8">
+      <CelebrationOverlay
+        type="grade_a"
+        isVisible={showFirstGameCelebration}
+        onComplete={() => setShowFirstGameCelebration(false)}
+        subtitle="You logged your first game! Keep it up to earn badges and climb the tiers."
+      />
+
+      {/* Pro upsell banner for free-tier users */}
+      {isFree && !bannerDismissed && (
+        <div className="relative flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-accent/20 to-accent/5 border border-accent/30">
+          <div className="flex items-center gap-3 min-w-0">
+            <Sparkles className="w-5 h-5 text-accent shrink-0" />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-foreground">Unlock Pro Features</p>
+              <p className="text-xs text-muted-foreground truncate">Video analysis, head-to-head challenges, college recruiting tools, and more.</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Link href="/pricing">
+              <Button size="sm" className="gap-1">
+                <Lock className="w-3 h-3" />
+                Try Pro
+              </Button>
+            </Link>
+            <button
+              onClick={() => {
+                setBannerDismissed(true);
+                sessionStorage.setItem("proBannerDismissed", "1");
+              }}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Dismiss"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Hero welcome card with animated CSS gradient */}
+      <div className="relative overflow-hidden rounded-xl border border-accent/[0.15]">
+        {/* Red precision top line */}
+        <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[hsl(var(--cta))]/70 to-transparent" />
+        {/* Animated gradient background */}
+        <div className="absolute inset-0 z-0 hero-gradient-bg" />
+        {/* Dark overlay for readability */}
+        <div className="absolute inset-0 z-[1] bg-gradient-to-r from-background/85 via-background/60 to-background/30" />
+        {/* Content */}
+        <CardContent className="relative z-[2] p-6 md:p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-2">
               <div className="flex items-center gap-2 flex-wrap">
@@ -109,20 +252,24 @@ export default function Dashboard() {
                 Track performance, analyze games, and unlock your potential
               </p>
             </div>
-            
+
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-wrap">
               {currentStreak > 0 && (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-accent/15 to-accent/5 border border-accent/30">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent/20 border border-accent/30">
                   <Flame className="w-5 h-5 text-accent" />
                   <div>
                     <p className="text-xs text-accent/80">Active Streak</p>
                     <p className="font-bold text-accent">{currentStreak} days</p>
                   </div>
+                  {currentStreak >= 3 && (
+                    <span className="text-xs font-bold text-yellow-400 bg-yellow-400/10 px-1.5 py-0.5 rounded ml-1">
+                      {currentStreak >= 30 ? '2×' : currentStreak >= 14 ? '1.75×' : currentStreak >= 7 ? '1.5×' : '1.25×'} XP
+                    </span>
+                  )}
                 </div>
               )}
               <Link href="/analyze">
-                <Button 
-                  className="bg-accent text-white"
+                <Button
                   data-testid="button-new-analysis"
                 >
                   <Plus className="w-4 h-4 mr-2" />
@@ -132,7 +279,7 @@ export default function Dashboard() {
             </div>
           </div>
         </CardContent>
-      </Card>
+      </div>
 
       <motion.div 
         className="grid grid-cols-2 lg:grid-cols-4 gap-4"
@@ -179,6 +326,21 @@ export default function Dashboard() {
           />
         </motion.div>
       </motion.div>
+
+      {/* Team Activity Nudge */}
+      {teamActivity && teamActivity.teammateCount > 0 && !teamActivity.playerLoggedToday && (
+        <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-orange-500/10 border border-orange-500/20 text-sm">
+          <Flame className="w-4 h-4 text-orange-500 shrink-0" />
+          <span className="text-foreground">
+            <span className="font-semibold text-orange-500">{teamActivity.teammateCount}</span>{" "}
+            teammate{teamActivity.teammateCount !== 1 ? 's' : ''} logged{" "}
+            {teamActivity.teammateCount !== 1 ? 'games' : 'a game'} today — don't fall behind!
+          </span>
+        </div>
+      )}
+
+      {/* Daily Quests */}
+      {playerId && <DailyQuestsWidget playerId={playerId} />}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <motion.div
@@ -291,6 +453,40 @@ export default function Dashboard() {
             </div>
           </Card>
 
+          {/* XP & Tier Progress */}
+          <Card>
+            <div className="p-4 border-b border-border">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-md bg-accent/10">
+                    <Zap className="w-4 h-4 text-accent" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-foreground text-sm">{currentTier}</h3>
+                    <p className="text-xs text-muted-foreground">{totalXp.toLocaleString()} XP</p>
+                  </div>
+                </div>
+                {nextTier && (
+                  <span className="text-xs text-muted-foreground">→ {nextTier}</span>
+                )}
+              </div>
+            </div>
+            <div className="p-4">
+              <div className="w-full bg-muted rounded-full h-2">
+                <div
+                  className="bg-accent h-2 rounded-full transition-all duration-500"
+                  style={{ width: `${tierProgress}%` }}
+                />
+              </div>
+              {nextTier && nextThreshold && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  {(nextThreshold - totalXp).toLocaleString()} XP to {nextTier}
+                </p>
+              )}
+            </div>
+          </Card>
+
+          {/* Recent Achievements */}
           <Card>
             <div className="p-4 border-b border-border">
               <div className="flex items-center gap-3 flex-wrap">
@@ -300,19 +496,97 @@ export default function Dashboard() {
                 <h3 className="font-bold text-foreground">Recent Achievements</h3>
               </div>
             </div>
-            
+
             <div className="p-4">
-              <div className="text-center py-6">
-                <Trophy className="w-10 h-10 text-accent/50 mx-auto mb-3" />
-                <p className="text-sm text-muted-foreground">
-                  Log games to earn badges and achievements
-                </p>
-                <Link href="/analyze">
-                  <Button variant="outline" size="sm" className="mt-3">
-                    Start Earning
-                  </Button>
-                </Link>
+              {recentBadges.length === 0 ? (
+                <div className="text-center py-6">
+                  <Trophy className="w-10 h-10 text-accent/50 mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground">
+                    {totalGames === 0
+                      ? "Log your first game to start earning badges"
+                      : "Keep logging games to earn badges!"}
+                  </p>
+                  <Link href="/analyze">
+                    <Button variant="outline" size="sm" className="mt-3">
+                      {totalGames === 0 ? "Log First Game" : "Log Another Game"}
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {recentBadges.map((badge) => {
+                    const BadgeIcon = BADGE_ICONS[badge.badgeType] || Award;
+                    const badgeDef = BADGE_DEFINITIONS[badge.badgeType as keyof typeof BADGE_DEFINITIONS];
+                    return (
+                      <div
+                        key={badge.id}
+                        className="flex items-center gap-3 p-2 rounded-lg bg-accent/5 border border-accent/10"
+                      >
+                        <div className="p-1.5 rounded-md bg-accent/20">
+                          <BadgeIcon className="w-3.5 h-3.5 text-accent" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-foreground truncate">
+                            {badgeDef?.name || badge.badgeType}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {badgeDef?.description || ""}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {playerId && (
+                    <Link href={`/players/${playerId}`}>
+                      <Button variant="ghost" size="sm" className="w-full mt-1 text-xs text-accent">
+                        View All Badges
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {/* Invite Your Team */}
+          <Card>
+            <div className="p-4 border-b border-border">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-md bg-accent/10">
+                  <Share2 className="w-4 h-4 text-accent" />
+                </div>
+                <h3 className="font-bold text-foreground">Invite Your Team</h3>
               </div>
+            </div>
+            <div className="p-4 space-y-3">
+              <p className="text-xs text-muted-foreground">
+                Share your link — earn <span className="text-accent font-semibold">+500 XP</span> for every teammate who joins and logs their first game.
+              </p>
+              {referralData ? (
+                <>
+                  <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 border border-border">
+                    <span className="text-xs text-muted-foreground flex-1 truncate font-mono">
+                      {referralData.url.replace(/^https?:\/\//, '')}
+                    </span>
+                    <button
+                      onClick={async () => {
+                        await navigator.clipboard.writeText(referralData.url);
+                        toast({ title: "Copied!", description: "Invite link copied to clipboard" });
+                      }}
+                      className="p-1 rounded hover:bg-accent/10 transition-colors shrink-0"
+                    >
+                      <Copy className="w-3.5 h-3.5 text-accent" />
+                    </button>
+                  </div>
+                  {referralData.conversions > 0 && (
+                    <p className="text-xs text-accent font-semibold">
+                      {referralData.conversions} teammate{referralData.conversions !== 1 ? 's' : ''} joined with your link → +{referralData.conversions * 500} XP earned
+                    </p>
+                  )}
+                </>
+              ) : (
+                <div className="h-9 bg-muted/50 animate-pulse rounded-lg" />
+              )}
             </div>
           </Card>
         </motion.div>

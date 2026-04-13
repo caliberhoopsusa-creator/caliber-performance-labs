@@ -193,7 +193,7 @@ export default function TeamHub() {
           <div className="w-20 h-20 rounded-2xl bg-accent/10 flex items-center justify-center mb-6">
             <Users className="w-10 h-10 text-accent" />
           </div>
-          <h2 className="text-2xl font-display uppercase tracking-wide text-white mb-2">
+          <h2 className="text-2xl font-display uppercase tracking-wide text-foreground mb-2">
             No Team Yet
           </h2>
           <p className="text-muted-foreground max-w-md mb-6">
@@ -217,7 +217,7 @@ export default function TeamHub() {
       <div className="space-y-6" data-testid="team-hub-page">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-display uppercase tracking-wide bg-gradient-to-b from-white to-accent/20 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-display uppercase tracking-wide from-white to-accent/20">
               Team Hub
             </h1>
             <p className="text-accent/50 mt-1">

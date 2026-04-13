@@ -34,13 +34,13 @@ const tourSteps: TourStep[] = [
     title: "Connect with Players",
     description: "Follow teammates, share workouts, and build your sports network. See what others are working on in the Community feed.",
     icon: <Users className="w-8 h-8" />,
-    gradient: "from-blue-500 to-cyan-600",
+    gradient: "from-blue-500 to-amber-600",
   },
   {
     title: "AI Video Analysis",
     description: "Upload game footage and let our AI extract stats automatically. No more manual tracking - just play and let us handle the rest.",
     icon: <Video className="w-8 h-8" />,
-    gradient: "from-emerald-500 to-teal-600",
+    gradient: "from-emerald-500 to-amber-600",
   },
   {
     title: "Get Recruited",

@@ -114,7 +114,7 @@ function BasketballCourt({
   compact?: boolean;
 }) {
   const courtColor = "#1a1a2e";
-  const lineColor = "#E8192C";
+  const lineColor = "#4f6878";
   const paintColor = "rgba(249, 115, 22, 0.1)";
   const markerSize = compact ? 2.5 : 2;
 

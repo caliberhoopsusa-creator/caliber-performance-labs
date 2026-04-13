@@ -12,7 +12,6 @@ import { Paywall } from "@/components/Paywall";
 export default function ComparePlayers() {
   const { data: players } = usePlayers();
   const currentSport = useSport();
-  const isFootball = currentSport === 'football';
   const [p1Id, setP1Id] = useState<string>("");
   const [p2Id, setP2Id] = useState<string>("");
 
@@ -97,31 +96,7 @@ export default function ComparePlayers() {
           <div className="bg-card border border-border/50 rounded-2xl p-8 shadow-xl">
             <h3 className="text-xl font-bold font-display text-foreground mb-8 text-center uppercase tracking-widest">Statistical Comparison</h3>
             <div className="space-y-8">
-              {isFootball ? (
-                <>
-                  <StatRow 
-                    label="Total Yards Per Game" 
-                    v1={getAvg(comparison.player1.games, 'totalYards', true)} 
-                    v2={getAvg(comparison.player2.games, 'totalYards', true)} 
-                  />
-                  <StatRow 
-                    label="Rushing Yards Per Game" 
-                    v1={getAvg(comparison.player1.games, 'rushingYards')} 
-                    v2={getAvg(comparison.player2.games, 'rushingYards')} 
-                  />
-                  <StatRow 
-                    label="Touchdowns Per Game" 
-                    v1={getAvg(comparison.player1.games, 'totalTDs', true)} 
-                    v2={getAvg(comparison.player2.games, 'totalTDs', true)} 
-                  />
-                  <StatRow 
-                    label="Tackles Per Game" 
-                    v1={getAvg(comparison.player1.games, 'tackles')} 
-                    v2={getAvg(comparison.player2.games, 'tackles')} 
-                  />
-                </>
-              ) : (
-                <>
+              {<>
                   <StatRow 
                     label="Points Per Game" 
                     v1={getAvg(comparison.player1.games, 'points')} 
@@ -143,8 +118,7 @@ export default function ComparePlayers() {
                     v2={((comparison.player2.games?.reduce((acc:any, g:any) => acc + g.fgMade, 0) / comparison.player2.games?.reduce((acc:any, g:any) => acc + g.fgAttempted, 1)) * 100).toFixed(1)} 
                     suffix="%"
                   />
-                </>
-              )}
+                </>}
             </div>
           </div>
         </div>

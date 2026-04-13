@@ -18,7 +18,6 @@ import {
   BookOpen,
   RefreshCw,
   Dribbble,
-  Trophy,
   Search,
   X
 } from "lucide-react";
@@ -106,18 +105,9 @@ export default function CollegeRecruiting() {
             </h1>
             <Badge 
               variant="outline" 
-              className={cn(
-                "text-xs uppercase font-semibold",
-                currentSport === 'basketball' 
-                  ? "border-accent/50 text-accent bg-accent/10" 
-                  : "border-accent/50 text-accent bg-accent/10"
-              )}
+              className="text-xs uppercase font-semibold border-accent/50 text-accent bg-accent/10"
             >
-              {currentSport === 'basketball' ? (
-                <><Dribbble className="w-3 h-3 mr-1" /> Basketball</>
-              ) : (
-                <><Trophy className="w-3 h-3 mr-1" /> Football</>
-              )}
+              <><Dribbble className="w-3 h-3 mr-1" /> Basketball</>
             </Badge>
           </div>
           <p className="text-muted-foreground mt-1">

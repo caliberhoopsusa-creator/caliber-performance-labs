@@ -231,7 +231,7 @@ export default function CollegeDetail() {
     return posA.localeCompare(posB);
   });
 
-  const proLabel = college.sport === "football" ? "NFL" : "NBA";
+  const proLabel = "NBA";
 
   const programStats: { icon: typeof Trophy; label: string; value: string | number }[] = [];
 
@@ -249,9 +249,6 @@ export default function CollegeDetail() {
   }
   if (college.sport === "basketball" && college.nbaPlayersProduced) {
     programStats.push({ icon: Users, label: "NBA Players Produced", value: college.nbaPlayersProduced });
-  }
-  if (college.sport === "football" && college.nflPlayersProduced) {
-    programStats.push({ icon: Users, label: "NFL Players Produced", value: college.nflPlayersProduced });
   }
   if (college.draftPicksLast5Years) {
     programStats.push({ icon: BarChart3, label: `${proLabel} Draft Picks (Last 5 Years)`, value: college.draftPicksLast5Years });
@@ -310,7 +307,7 @@ export default function CollegeDetail() {
             <Badge variant="secondary" data-testid="badge-conference">{college.conference}</Badge>
           )}
           <Badge variant="outline" data-testid="badge-sport">
-            {college.sport === "basketball" ? "Basketball" : "Football"}
+            {"Basketball"}
           </Badge>
           {college.winsLastSeason !== null && college.lossesLastSeason !== null && (
             <Badge variant="outline" data-testid="badge-record">

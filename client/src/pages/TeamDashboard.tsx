@@ -28,11 +28,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BASKETBALL_POSITIONS, FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS } from "@shared/sports-config";
+import { BASKETBALL_POSITIONS } from "@shared/sports-config";
 
 type SortKey = 'name' | 'position' | 'avgGradeScore' | 'ppg' | 'rpg' | 'apg' | 'spg' | 'bpg' | 'gamesPlayed' | 'passYpg' | 'rushYpg' | 'recYpg' | 'tdsPerGame' | 'compPct' | 'ypc' | 'tackles' | 'sacks';
 type SortDirection = 'asc' | 'desc';
-type SportFilter = 'all' | 'basketball' | 'football';
+type SportFilter = 'all' | 'basketball';
 
 export default function TeamDashboard() {
   const { data, isLoading } = useTeamDashboard();
@@ -62,22 +62,13 @@ export default function TeamDashboard() {
     return sports.size > 1;
   }, [data?.players]);
 
-  const hasFootballPlayers = useMemo(() => {
-    if (!data?.players) return false;
-    return data.players.some(p => p.sport === 'football');
-  }, [data?.players]);
 
   const hasBasketballPlayers = useMemo(() => {
     if (!data?.players) return false;
     return data.players.some(p => p.sport === 'basketball');
   }, [data?.players]);
 
-  const effectiveSport = useMemo(() => {
-    if (sportFilter !== 'all') return sportFilter;
-    if (hasFootballPlayers && !hasBasketballPlayers) return 'football';
-    if (hasBasketballPlayers && !hasFootballPlayers) return 'basketball';
-    return 'basketball';
-  }, [sportFilter, hasFootballPlayers, hasBasketballPlayers]);
+  const effectiveSport = 'basketball';
 
   const filteredAndSortedPlayers = useMemo(() => {
     if (!data?.players) return [];
@@ -115,55 +106,10 @@ export default function TeamDashboard() {
   }, [data?.players, positionFilter, sportFilter, sortKey, sortDirection]);
 
   const availablePositions = useMemo(() => {
-    if (effectiveSport === 'football') {
-      return FOOTBALL_POSITIONS;
-    }
     return BASKETBALL_POSITIONS;
   }, [effectiveSport]);
 
-  const footballBestPerformers = useMemo(() => {
-    if (!data?.players) return { topPasser: null, topRusher: null, topTackler: null };
-    
-    const footballPlayers = data.players.filter(p => p.sport === 'football');
-    if (footballPlayers.length === 0) return { topPasser: null, topRusher: null, topTackler: null };
-    
-    const topPasser = footballPlayers.reduce((best, p) => {
-      const currentYds = p.passYpg || 0;
-      const bestYds = best?.passYpg || 0;
-      return currentYds > bestYds ? p : best;
-    }, null as TeamDashboardPlayer | null);
-    
-    const topRusher = footballPlayers.reduce((best, p) => {
-      const currentYds = p.rushYpg || 0;
-      const bestYds = best?.rushYpg || 0;
-      return currentYds > bestYds ? p : best;
-    }, null as TeamDashboardPlayer | null);
-    
-    const topTackler = footballPlayers.reduce((best, p) => {
-      const currentTackles = p.tackles || 0;
-      const bestTackles = best?.tackles || 0;
-      return currentTackles > bestTackles ? p : best;
-    }, null as TeamDashboardPlayer | null);
-    
-    return {
-      topPasser: topPasser && (topPasser.passYpg || 0) > 0 ? { id: topPasser.id, name: topPasser.name, value: topPasser.passYpg } : null,
-      topRusher: topRusher && (topRusher.rushYpg || 0) > 0 ? { id: topRusher.id, name: topRusher.name, value: topRusher.rushYpg } : null,
-      topTackler: topTackler && (topTackler.tackles || 0) > 0 ? { id: topTackler.id, name: topTackler.name, value: topTackler.tackles } : null,
-    };
-  }, [data?.players]);
 
-  const footballPositionDistribution = useMemo(() => {
-    if (!data?.players) return {};
-    const footballPlayers = data.players.filter(p => p.sport === 'football');
-    const distribution: Record<string, number> = {};
-    FOOTBALL_POSITIONS.forEach(pos => { distribution[pos] = 0; });
-    footballPlayers.forEach(p => {
-      if (p.position && distribution[p.position] !== undefined) {
-        distribution[p.position]++;
-      }
-    });
-    return distribution;
-  }, [data?.players]);
 
   const SortableHeader = ({ label, sortKeyName }: { label: string; sortKeyName: SortKey }) => {
     const isActive = sortKey === sortKeyName;
@@ -375,61 +321,7 @@ export default function TeamDashboard() {
                   <p className="text-muted-foreground text-sm text-center py-4">No performance data yet</p>
                 )}
               </>
-            ) : (
-              <>
-                {footballBestPerformers.topPasser && (
-                  <Link href={`/players/${footballBestPerformers.topPasser.id}`} className="block">
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-accent/10 border border-accent/20 hover:bg-accent/20 transition-colors" data-testid="link-top-passer">
-                      <div className="flex items-center gap-3">
-                        <Target className="w-5 h-5 text-accent" />
-                        <div>
-                          <p className="text-xs text-accent uppercase font-bold">Top Passer</p>
-                          <p className="text-foreground font-semibold">{footballBestPerformers.topPasser.name}</p>
-                        </div>
-                      </div>
-                      <Badge variant="secondary" className="bg-accent/20 text-accent">
-                        {footballBestPerformers.topPasser.value} YDS
-                      </Badge>
-                    </div>
-                  </Link>
-                )}
-                {footballBestPerformers.topRusher && (
-                  <Link href={`/players/${footballBestPerformers.topRusher.id}`} className="block">
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-green-500/10 border border-green-500/20 hover:bg-green-500/20 transition-colors" data-testid="link-top-rusher">
-                      <div className="flex items-center gap-3">
-                        <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
-                        <div>
-                          <p className="text-xs text-green-600 dark:text-green-400 uppercase font-bold">Top Rusher</p>
-                          <p className="text-foreground font-semibold">{footballBestPerformers.topRusher.name}</p>
-                        </div>
-                      </div>
-                      <Badge variant="secondary" className="bg-green-500/20 text-green-600 dark:text-green-300">
-                        {footballBestPerformers.topRusher.value} YDS
-                      </Badge>
-                    </div>
-                  </Link>
-                )}
-                {footballBestPerformers.topTackler && (
-                  <Link href={`/players/${footballBestPerformers.topTackler.id}`} className="block">
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition-colors" data-testid="link-top-tackler">
-                      <div className="flex items-center gap-3">
-                        <Shield className="w-5 h-5 text-red-600 dark:text-red-400" />
-                        <div>
-                          <p className="text-xs text-red-600 dark:text-red-400 uppercase font-bold">Top Tackler</p>
-                          <p className="text-foreground font-semibold">{footballBestPerformers.topTackler.name}</p>
-                        </div>
-                      </div>
-                      <Badge variant="secondary" className="bg-red-500/20 text-red-600 dark:text-red-300">
-                        {footballBestPerformers.topTackler.value} TCK
-                      </Badge>
-                    </div>
-                  </Link>
-                )}
-                {!footballBestPerformers.topPasser && !footballBestPerformers.topRusher && !footballBestPerformers.topTackler && (
-                  <p className="text-muted-foreground text-sm text-center py-4">No performance data yet</p>
-                )}
-              </>
-            )}
+            ) : null}
           </CardContent>
         </Card>
 
@@ -480,37 +372,7 @@ export default function TeamDashboard() {
                   </div>
                 </div>
               </div>
-            ) : (
-              <div className="space-y-3 max-h-[280px] overflow-y-auto pr-1">
-                {[
-                  { key: 'QB', label: 'Quarterbacks', color: 'from-accent to-accent/90' },
-                  { key: 'RB', label: 'Running Backs', color: 'from-green-500 to-green-400' },
-                  { key: 'WR', label: 'Wide Receivers', color: 'from-blue-500 to-blue-400' },
-                  { key: 'TE', label: 'Tight Ends', color: 'from-accent to-accent' },
-                  { key: 'OL', label: 'Offensive Line', color: 'from-slate-500 to-slate-400' },
-                  { key: 'DL', label: 'Defensive Line', color: 'from-red-500 to-red-400' },
-                  { key: 'LB', label: 'Linebackers', color: 'from-orange-500 to-orange-400' },
-                  { key: 'DB', label: 'Defensive Backs', color: 'from-purple-500 to-purple-400' },
-                ].map(({ key, label, color }) => {
-                  const count = footballPositionDistribution[key] || 0;
-                  const footballTotal = Object.values(footballPositionDistribution).reduce((a, b) => a + b, 0);
-                  return (
-                    <div key={key}>
-                      <div className="flex justify-between mb-1">
-                        <span className="text-xs text-muted-foreground">{label}</span>
-                        <span className="text-xs font-bold text-foreground">{count}</span>
-                      </div>
-                      <div className="h-2 bg-secondary/30 rounded-full overflow-hidden">
-                        <div 
-                          className={`h-full bg-gradient-to-r ${color} rounded-full transition-all duration-500`}
-                          style={{ width: `${footballTotal > 0 ? (count / footballTotal) * 100 : 0}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            ) : null}
           </CardContent>
         </Card>
 
@@ -540,15 +402,9 @@ export default function TeamDashboard() {
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="text-right text-xs text-muted-foreground">
-                          {game.sport === 'football' ? (
-                            <>
-                              <span>{game.passingYards + game.rushingYards + game.receivingYards} yds</span> • <span>{game.touchdowns} TDs</span>
-                            </>
-                          ) : (
-                            <>
-                              <span>{game.points}pts</span> • <span>{game.rebounds}reb</span> • <span>{game.assists}ast</span>
-                            </>
-                          )}
+                          <>
+                            <span>{game.points}pts</span> • <span>{game.rebounds}reb</span> • <span>{game.assists}ast</span>
+                          </>
                         </div>
                         {game.grade && <GradeBadge grade={game.grade} size="sm" />}
                       </div>
@@ -575,7 +431,6 @@ export default function TeamDashboard() {
                 <TabsList className="bg-card border border-border">
                   <TabsTrigger value="all" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="sport-filter-all">All</TabsTrigger>
                   <TabsTrigger value="basketball" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="sport-filter-basketball">Basketball</TabsTrigger>
-                  <TabsTrigger value="football" className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground" data-testid="sport-filter-football">Football</TabsTrigger>
                 </TabsList>
               </Tabs>
             )}
@@ -587,7 +442,7 @@ export default function TeamDashboard() {
                 <SelectItem value="All" data-testid="filter-all">All Positions</SelectItem>
                 {availablePositions.map((pos) => (
                   <SelectItem key={pos} value={pos} data-testid={`filter-${pos.toLowerCase()}`}>
-                    {effectiveSport === 'football' ? FOOTBALL_POSITION_LABELS[pos as keyof typeof FOOTBALL_POSITION_LABELS] || pos : pos}
+                    {pos}
                   </SelectItem>
                 ))}
               </SelectContent>

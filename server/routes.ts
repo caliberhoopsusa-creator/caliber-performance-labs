@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, badges, headToHeadChallenges, statVerifications, playerCollegeMatches, playerCollegeInterests, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, FOOTBALL_SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema, insertWearableConnectionSchema, recruitingEvents, insertRecruitingEventSchema, type RecruitingEvent, playerEventRegistrations, insertPlayerEventRegistrationSchema, colleges, collegeRosterPlayers, collegeCoachingStaff, ncaaEligibilityProgress, insertNcaaEligibilityProgressSchema, coachRecommendations, insertCoachRecommendationSchema, teams, teamMembers, skillBadges, activityStreaks, feedActivities, feedReactions, feedComments, feedCommentLikes, type InsertFeedComment, type FeedComment, highlightClips, personalRecords, recruiterBlocks, recruiterProfiles, playerGoals, recruitingTargets, recruitingContacts, insertRecruitingTargetSchema, insertRecruitingContactSchema, DIVISION_BENCHMARKS, BENCHMARK_STAT_LABELS, seasons, teamHistory, insertSeasonSchema, insertTeamHistorySchema, guardianLinks, insertGuardianLinkSchema } from "@shared/schema";
+import { players, games, badges, headToHeadChallenges, statVerifications, playerCollegeMatches, playerCollegeInterests, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema, insertWearableConnectionSchema, recruitingEvents, insertRecruitingEventSchema, type RecruitingEvent, playerEventRegistrations, insertPlayerEventRegistrationSchema, colleges, collegeRosterPlayers, collegeCoachingStaff, ncaaEligibilityProgress, insertNcaaEligibilityProgressSchema, coachRecommendations, insertCoachRecommendationSchema, teams, teamMembers, skillBadges, activityStreaks, feedActivities, feedReactions, feedComments, feedCommentLikes, type InsertFeedComment, type FeedComment, highlightClips, personalRecords, recruiterBlocks, recruiterProfiles, recruiterProfileViews, playerGoals, recruitingTargets, recruitingContacts, insertRecruitingTargetSchema, insertRecruitingContactSchema, DIVISION_BENCHMARKS, BENCHMARK_STAT_LABELS, seasons, teamHistory, insertSeasonSchema, insertTeamHistorySchema, guardianLinks, insertGuardianLinkSchema, dailyQuests, notifications, equipment, insertEquipmentSchema } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { calculateAIRating, calculateProjection, type GameStats, type PlayerMetrics, type PeerStats, type AIRatingResult, type ProjectionResult } from "@shared/ai-rating-engine";
 import type { Sport } from "@shared/sports-config";
@@ -16,23 +16,38 @@ import { registerObjectStorageRoutes } from "./replit_integrations/object_storag
 import { setupAuth, registerAuthRoutes, isAuthenticated, authStorage } from "./replit_integrations/auth";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 import { users } from "@shared/models/auth";
-import { eq, sql, and, desc, or, inArray, gte, lte, count, max, ne, ilike, type SQL } from "drizzle-orm";
+import { eq, sql, and, desc, or, inArray, gte, lte, count, max, ne, ilike, isNull, type SQL } from "drizzle-orm";
 import { db } from "./db";
+import { apiKeyAuth } from "./middleware/apiKeyAuth";
 import type { RequestHandler } from "express";
 
 // Admin password middleware
 const isAdmin: RequestHandler = (req: any, res, next) => {
   const adminPassword = process.env.ADMIN_PASSWORD;
   const providedPassword = req.headers['x-admin-password'] || req.body?.adminPassword;
-  
+
   if (!adminPassword) {
     return res.status(500).json({ message: "Admin password not configured" });
   }
-  
-  if (providedPassword !== adminPassword) {
+
+  if (typeof providedPassword !== 'string') {
     return res.status(401).json({ message: "Invalid admin password" });
   }
-  
+
+  // Timing-safe comparison to prevent timing attacks
+  let valid = false;
+  try {
+    const a = Buffer.from(providedPassword);
+    const b = Buffer.from(adminPassword);
+    valid = a.length === b.length && crypto.timingSafeEqual(a, b);
+  } catch {
+    valid = false;
+  }
+
+  if (!valid) {
+    return res.status(401).json({ message: "Invalid admin password" });
+  }
+
   next();
 };
 
@@ -101,29 +116,32 @@ const isAppOwner = (userId: string | null | undefined): boolean => {
 
 // Subscription verification middleware
 const requiresSubscription: RequestHandler = async (req: any, res, next) => {
+  // Dev override — only active in non-production environments
+  if (process.env.DISABLE_SUBSCRIPTION_GATE === 'true' && process.env.NODE_ENV !== 'production') return next();
+
   try {
     if (!req.isAuthenticated() || !req.user?.claims?.sub) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    
+
     // App owner bypasses all subscription requirements (check claims.sub)
     if (isAppOwner(req.user.claims.sub)) {
       return next();
     }
-    
+
     const user = await authStorage.getUser(req.user.claims.sub);
     if (!user) {
       return res.status(401).json({ message: "User not found" });
     }
-    
+
     // Check if user has an active subscription (includes trialing)
     if (!user.stripeSubscriptionId || !isSubscriptionActive(user.subscriptionStatus)) {
-      return res.status(403).json({ 
+      return res.status(403).json({
         message: "Premium subscription required",
         code: "SUBSCRIPTION_REQUIRED"
       });
     }
-    
+
     (req as any).caliberUser = user;
     next();
   } catch (error) {
@@ -164,11 +182,14 @@ const requiresCoach: RequestHandler = async (req: any, res, next) => {
 
 // Combined middleware for coach + subscription
 const requiresCoachPro: RequestHandler = async (req: any, res, next) => {
+  // Dev override — only active in non-production environments
+  if (process.env.DISABLE_SUBSCRIPTION_GATE === 'true' && process.env.NODE_ENV !== 'production') return next();
+
   try {
     if (!req.isAuthenticated() || !req.user?.claims?.sub) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    
+
     // App owner bypasses all subscription/role requirements (check claims.sub)
     if (isAppOwner(req.user.claims.sub)) {
       return next();
@@ -519,220 +540,7 @@ function calculateGrade(stats: any, position: string): { grade: string; feedback
   return { grade, feedback };
 }
 
-// Football grading function - position-weighted scoring
-function calculateFootballGrade(stats: any, position: string): { grade: string; feedback: string } {
-  let score = 50; // Base score
-  
-  // Handle multi-position players by using primary position
-  const primaryPos = getPrimaryPosition(position);
-  
-  // Helper to cap adjustments and apply minimum attempts for efficiency stats
-  const clampBonus = (bonus: number, min: number, max: number) => Math.max(min, Math.min(max, bonus));
-  
-  // Position-specific grading with normalization for small samples
-  if (primaryPos === 'QB') {
-    // QB grading: Passing efficiency, TDs, turnovers
-    const passAttempts = stats.passAttempts || 0;
-    const compPct = passAttempts > 0 
-      ? ((stats.completions || 0) / passAttempts) * 100 
-      : 0;
-    // Only apply comp% bonus/penalty if enough attempts (min 10)
-    if (passAttempts >= 10) {
-      score += clampBonus((compPct - 55) * 0.5, -15, 15);
-    }
-    score += clampBonus((stats.passingYards || 0) * 0.02, 0, 12); // Max 600 yards contribution
-    score += (stats.passingTouchdowns || 0) * 8;
-    score += clampBonus((stats.rushingYards || 0) * 0.03, 0, 5);
-    score += (stats.rushingTouchdowns || 0) * 6;
-    score -= (stats.interceptions || 0) * 10;
-    score -= (stats.sacksTaken || 0) * 2;
-    score -= (stats.fumbles || 0) * 8;
-  } else if (primaryPos === 'RB') {
-    // RB grading: Rushing efficiency, TDs, ball security
-    const carries = stats.carries || 0;
-    const ypc = carries > 0 
-      ? (stats.rushingYards || 0) / carries 
-      : 0;
-    // Only apply YPC bonus/penalty if enough carries (min 5)
-    if (carries >= 5) {
-      score += clampBonus((ypc - 4) * 5, -15, 15);
-    }
-    score += clampBonus((stats.rushingYards || 0) * 0.05, 0, 10); // Max 200 yards contribution
-    score += (stats.rushingTouchdowns || 0) * 8;
-    score += clampBonus((stats.receivingYards || 0) * 0.03, 0, 5);
-    score += (stats.receivingTouchdowns || 0) * 6;
-    score -= (stats.fumbles || 0) * 12;
-  } else if (primaryPos === 'WR' || primaryPos === 'TE') {
-    // WR/TE grading: Catch rate, yards, TDs
-    const targets = stats.targets || 0;
-    const catchRate = targets > 0 
-      ? ((stats.receptions || 0) / targets) * 100 
-      : 0;
-    // Only apply catch rate bonus/penalty if enough targets (min 3)
-    if (targets >= 3) {
-      score += clampBonus((catchRate - 60) * 0.4, -12, 12);
-    }
-    score += clampBonus((stats.receivingYards || 0) * 0.05, 0, 10); // Max 200 yards contribution
-    score += (stats.receivingTouchdowns || 0) * 8;
-    score -= (stats.drops || 0) * 6;
-  } else if (primaryPos === 'OL') {
-    // OL grading: Based on hustle and subjective rating
-    score += clampBonus((stats.hustleScore || 50) * 0.5, 0, 50);
-  } else if (primaryPos === 'DL') {
-    // DL grading: Tackles, sacks, disruption
-    score += clampBonus((stats.tackles || 0) * 2, 0, 16); // Max 8 tackles contribution
-    score += (stats.soloTackles || 0) * 1;
-    score += (stats.sacks || 0) * 10;
-    score += (stats.forcedFumbles || 0) * 8;
-    score += (stats.fumbleRecoveries || 0) * 6;
-  } else if (primaryPos === 'LB') {
-    // LB grading: All-around defense
-    score += clampBonus((stats.tackles || 0) * 1.5, 0, 18); // Max 12 tackles contribution
-    score += (stats.soloTackles || 0) * 1;
-    score += (stats.sacks || 0) * 8;
-    score += (stats.defensiveInterceptions || 0) * 12;
-    score += (stats.passDeflections || 0) * 4;
-    score += (stats.forcedFumbles || 0) * 6;
-  } else if (primaryPos === 'DB') {
-    // DB grading: Coverage and turnovers
-    score += (stats.tackles || 0) * 1;
-    score += (stats.defensiveInterceptions || 0) * 15;
-    score += clampBonus((stats.passDeflections || 0) * 5, 0, 20); // Max 4 PDs contribution
-    score += (stats.forcedFumbles || 0) * 6;
-  } else if (primaryPos === 'K') {
-    // Kicker grading: Accuracy (only apply if attempts exist)
-    const fgAttempted = stats.fieldGoalsAttempted || 0;
-    const xpAttempted = stats.extraPointsAttempted || 0;
-    if (fgAttempted > 0) {
-      const fgPct = (stats.fieldGoalsMade || 0) / fgAttempted * 100;
-      score += clampBonus((fgPct - 75) * 1, -20, 25);
-    }
-    if (xpAttempted > 0) {
-      const xpPct = (stats.extraPointsMade || 0) / xpAttempted * 100;
-      score += clampBonus((xpPct - 90) * 0.5, -10, 5);
-    }
-  } else if (primaryPos === 'P') {
-    // Punter grading: Average distance
-    const puntAvg = (stats.punts || 0) > 0 
-      ? (stats.puntYards || 0) / (stats.punts || 1) 
-      : 0;
-    score += (puntAvg - 40) * 2;
-  }
-  
-  // Hustle bonus
-  if (stats.hustleScore) score += (stats.hustleScore - 50) * 0.2;
 
-  // Grade Mapping
-  let grade = 'C';
-  if (score >= 90) grade = 'A+';
-  else if (score >= 80) grade = 'A';
-  else if (score >= 70) grade = 'A-';
-  else if (score >= 65) grade = 'B+';
-  else if (score >= 60) grade = 'B';
-  else if (score >= 55) grade = 'B-';
-  else if (score >= 50) grade = 'C+';
-  else if (score >= 45) grade = 'C';
-  else if (score >= 40) grade = 'C-';
-  else if (score >= 35) grade = 'D';
-  else grade = 'F';
-
-  // Feedback Generation
-  const positives = [];
-  const improvements = [];
-
-  if (primaryPos === 'QB') {
-    if ((stats.passingTouchdowns || 0) >= 3) positives.push("Outstanding passing day with multiple TDs.");
-    if ((stats.passingYards || 0) >= 300) positives.push("Big yardage game through the air.");
-    if ((stats.interceptions || 0) === 0 && (stats.passAttempts || 0) > 15) positives.push("Took care of the football - no INTs.");
-    if ((stats.interceptions || 0) >= 2) improvements.push("Turnover issues hurt the team.");
-    if ((stats.sacksTaken || 0) >= 4) improvements.push("Pocket presence needs work.");
-  } else if (primaryPos === 'RB') {
-    if ((stats.rushingYards || 0) >= 100) positives.push("Explosive rushing performance.");
-    if ((stats.rushingTouchdowns || 0) >= 2) positives.push("Found the end zone multiple times.");
-    if ((stats.fumbles || 0) >= 1) improvements.push("Ball security is a concern.");
-  } else if (primaryPos === 'WR' || primaryPos === 'TE') {
-    if ((stats.receivingYards || 0) >= 100) positives.push("Big receiving day.");
-    if ((stats.receivingTouchdowns || 0) >= 1) positives.push("Clutch TD reception.");
-    if ((stats.drops || 0) >= 2) improvements.push("Too many drops - work on concentration.");
-  } else if (primaryPos === 'DL' || primaryPos === 'LB' || primaryPos === 'DB') {
-    if ((stats.tackles || 0) >= 10) positives.push("Dominant tackle production.");
-    if ((stats.sacks || 0) >= 2) positives.push("Great pass rush pressure.");
-    if ((stats.defensiveInterceptions || 0) >= 1) positives.push("Ball hawk - created a turnover.");
-    if ((stats.passDeflections || 0) >= 2) positives.push("Excellent coverage disruption.");
-  }
-  
-  let feedback = "";
-  if (positives.length > 0) feedback += "Strengths: " + positives.join(" ") + "\n";
-  if (improvements.length > 0) feedback += "Areas to Improve: " + improvements.join(" ") + "\n";
-  if (!feedback) feedback = "Solid effort. Focus on consistency in the next game.";
-
-  return { grade, feedback };
-}
-
-// Football category grades
-function calculateFootballCategoryGrades(stats: any, position: string): {
-  efficiencyGrade: string;
-  playmakingGrade: string;
-  ballSecurityGrade: string;
-  impactGrade: string;
-} {
-  // Handle multi-position players by using primary position
-  const primaryPos = getPrimaryPosition(position);
-  
-  const gradeFromScore = (score: number): string => {
-    if (score >= 90) return 'A+';
-    if (score >= 80) return 'A';
-    if (score >= 70) return 'A-';
-    if (score >= 65) return 'B+';
-    if (score >= 60) return 'B';
-    if (score >= 55) return 'B-';
-    if (score >= 50) return 'C+';
-    if (score >= 45) return 'C';
-    if (score >= 40) return 'C-';
-    if (score >= 35) return 'D';
-    return 'F';
-  };
-
-  let efficiencyScore = 50;
-  let playmakingScore = 50;
-  let ballSecurityScore = 80; // Start high, deduct for mistakes
-  let impactScore = 50;
-
-  if (primaryPos === 'QB') {
-    const compPct = (stats.passAttempts || 0) > 0 ? ((stats.completions || 0) / stats.passAttempts) * 100 : 0;
-    efficiencyScore = 30 + compPct * 0.7;
-    playmakingScore = 50 + (stats.passingTouchdowns || 0) * 10 + (stats.rushingTouchdowns || 0) * 8;
-    ballSecurityScore = 95 - (stats.interceptions || 0) * 15 - (stats.fumbles || 0) * 10;
-    impactScore = 50 + (stats.passingYards || 0) * 0.1;
-  } else if (primaryPos === 'RB') {
-    const ypc = (stats.carries || 0) > 0 ? (stats.rushingYards || 0) / stats.carries : 0;
-    efficiencyScore = 40 + ypc * 8;
-    playmakingScore = 50 + (stats.rushingTouchdowns || 0) * 12 + (stats.receivingTouchdowns || 0) * 10;
-    ballSecurityScore = 100 - (stats.fumbles || 0) * 25;
-    impactScore = 50 + (stats.rushingYards || 0) * 0.2 + (stats.receivingYards || 0) * 0.1;
-  } else if (primaryPos === 'WR' || primaryPos === 'TE') {
-    const catchRate = (stats.targets || 0) > 0 ? ((stats.receptions || 0) / stats.targets) * 100 : 0;
-    efficiencyScore = 30 + catchRate * 0.6;
-    playmakingScore = 50 + (stats.receivingTouchdowns || 0) * 15;
-    ballSecurityScore = 100 - (stats.drops || 0) * 15 - (stats.fumbles || 0) * 25;
-    impactScore = 50 + (stats.receivingYards || 0) * 0.2;
-  } else if (primaryPos === 'DL' || primaryPos === 'LB' || primaryPos === 'DB') {
-    efficiencyScore = 50 + (stats.soloTackles || 0) * 3;
-    playmakingScore = 50 + (stats.sacks || 0) * 10 + (stats.defensiveInterceptions || 0) * 15 + (stats.forcedFumbles || 0) * 12;
-    ballSecurityScore = 75; // N/A for defense
-    impactScore = 50 + (stats.tackles || 0) * 2 + (stats.passDeflections || 0) * 4;
-  } else {
-    // K, P, OL - simplified
-    efficiencyScore = 50 + (stats.hustleScore || 50) * 0.5;
-  }
-
-  return {
-    efficiencyGrade: gradeFromScore(Math.min(100, Math.max(0, efficiencyScore))),
-    playmakingGrade: gradeFromScore(Math.min(100, Math.max(0, playmakingScore))),
-    ballSecurityGrade: gradeFromScore(Math.min(100, Math.max(0, ballSecurityScore))),
-    impactGrade: gradeFromScore(Math.min(100, Math.max(0, impactScore))),
-  };
-}
 
 // --- Defense & Hustle Calculations ---
 
@@ -1202,7 +1010,6 @@ async function updateSkillBadges(playerId: number, stats: any): Promise<{ upgrad
   
   // Get player to determine sport
   const player = await storage.getPlayer(playerId);
-  const isFootball = player?.sport === 'football';
   
   // Map stat names from game to skill badge types based on sport
   const basketballStatMapping: Record<string, string> = {
@@ -1214,17 +1021,9 @@ async function updateSkillBadges(playerId: number, stats: any): Promise<{ upgrad
     pickpocket: 'steals',
   };
   
-  const footballStatMapping: Record<string, string> = {
-    gunslinger: 'passingTouchdowns',
-    workhorse: 'rushingYards',
-    deep_threat: 'receivingTouchdowns',
-    ball_hawk: 'defensiveInterceptions',
-    sack_artist: 'sacks',
-    iron_wall: 'pancakeBlocks',
-  };
   
-  const statMapping = isFootball ? footballStatMapping : basketballStatMapping;
-  const badgeTypes = isFootball ? FOOTBALL_SKILL_BADGE_TYPES : SKILL_BADGE_TYPES;
+  const statMapping = basketballStatMapping;
+  const badgeTypes = SKILL_BADGE_TYPES;
   
   for (const [skillType, config] of Object.entries(badgeTypes)) {
     const statKey = statMapping[skillType];
@@ -1399,237 +1198,6 @@ async function checkPerformanceAlerts(playerId: number, gameId: number, currentG
   
   const dropThreshold = 0.4;
   
-  if (sport === 'football') {
-    // Football-specific alerts
-    const primaryPosition = player.position?.split(',')[0]?.trim() || '';
-    
-    // QB alerts
-    if (primaryPosition === 'QB') {
-      const avgPassYds = recentGames.reduce((acc, g) => acc + (g.passingYards || 0), 0) / recentGames.length;
-      const avgPassTDs = recentGames.reduce((acc, g) => acc + (g.passingTouchdowns || 0), 0) / recentGames.length;
-      
-      if (avgPassYds > 100 && (currentGame.passingYards || 0) < avgPassYds * (1 - dropThreshold)) {
-        await storage.createAlert({
-          playerId,
-          alertType: 'performance_drop',
-          title: 'Passing Yard Drop Detected',
-          message: `${player.name} threw for only ${currentGame.passingYards || 0} yards, well below their ${avgPassYds.toFixed(0)} YPG average.`,
-          severity: 'warning',
-          relatedGameId: gameId,
-          isRead: false,
-        });
-      }
-      
-      if ((currentGame.interceptions || 0) >= 3) {
-        await storage.createAlert({
-          playerId,
-          alertType: 'performance_drop',
-          title: 'High Interception Game',
-          message: `${player.name} threw ${currentGame.interceptions} interceptions vs ${currentGame.opponent}. Ball security needs attention.`,
-          severity: 'warning',
-          relatedGameId: gameId,
-          isRead: false,
-        });
-      }
-      
-      if (avgPassTDs > 0 && (currentGame.passingTouchdowns || 0) > avgPassTDs * 1.5) {
-        await storage.createAlert({
-          playerId,
-          alertType: 'improvement',
-          title: 'Passing Breakout!',
-          message: `${player.name} threw for ${currentGame.passingTouchdowns} TDs, significantly above their ${avgPassTDs.toFixed(1)} TD/G average!`,
-          severity: 'info',
-          relatedGameId: gameId,
-          isRead: false,
-        });
-      }
-    }
-    
-    // RB alerts
-    if (primaryPosition === 'RB') {
-      const avgRushYds = recentGames.reduce((acc, g) => acc + (g.rushingYards || 0), 0) / recentGames.length;
-      
-      if (avgRushYds > 40 && (currentGame.rushingYards || 0) < avgRushYds * (1 - dropThreshold)) {
-        await storage.createAlert({
-          playerId,
-          alertType: 'performance_drop',
-          title: 'Rushing Yard Drop Detected',
-          message: `${player.name} rushed for only ${currentGame.rushingYards || 0} yards, well below their ${avgRushYds.toFixed(0)} YPG average.`,
-          severity: 'warning',
-          relatedGameId: gameId,
-          isRead: false,
-        });
-      }
-      
-      if (avgRushYds > 0 && (currentGame.rushingYards || 0) > avgRushYds * 1.5) {
-        await storage.createAlert({
-          playerId,
-          alertType: 'improvement',
-          title: 'Rushing Breakout!',
-          message: `${player.name} exploded for ${currentGame.rushingYards} rushing yards!`,
-          severity: 'info',
-          relatedGameId: gameId,
-          isRead: false,
-        });
-      }
-    }
-    
-    // WR/TE alerts
-    if (['WR', 'TE'].includes(primaryPosition)) {
-      const avgRecYds = recentGames.reduce((acc, g) => acc + (g.receivingYards || 0), 0) / recentGames.length;
-      
-      if (avgRecYds > 30 && (currentGame.receivingYards || 0) < avgRecYds * (1 - dropThreshold)) {
-        await storage.createAlert({
-          playerId,
-          alertType: 'performance_drop',
-          title: 'Receiving Yard Drop Detected',
-          message: `${player.name} had only ${currentGame.receivingYards || 0} receiving yards, well below their ${avgRecYds.toFixed(0)} YPG average.`,
-          severity: 'warning',
-          relatedGameId: gameId,
-          isRead: false,
-        });
-      }
-      
-      if (avgRecYds > 0 && (currentGame.receivingYards || 0) > avgRecYds * 1.5) {
-        await storage.createAlert({
-          playerId,
-          alertType: 'improvement',
-          title: 'Receiving Breakout!',
-          message: `${player.name} exploded for ${currentGame.receivingYards} receiving yards!`,
-          severity: 'info',
-          relatedGameId: gameId,
-          isRead: false,
-        });
-      }
-    }
-    
-    // Defensive alerts (DL, LB, DB)
-    if (['DL', 'LB', 'DB'].includes(primaryPosition)) {
-      const avgTackles = recentGames.reduce((acc, g) => acc + (g.tackles || 0), 0) / recentGames.length;
-      
-      if (avgTackles > 3 && (currentGame.tackles || 0) < avgTackles * (1 - dropThreshold)) {
-        await storage.createAlert({
-          playerId,
-          alertType: 'performance_drop',
-          title: 'Tackle Production Drop',
-          message: `${player.name} had only ${currentGame.tackles || 0} tackles, well below their ${avgTackles.toFixed(1)} average.`,
-          severity: 'warning',
-          relatedGameId: gameId,
-          isRead: false,
-        });
-      }
-      
-      if ((currentGame.sacks || 0) >= 2) {
-        await storage.createAlert({
-          playerId,
-          alertType: 'improvement',
-          title: 'Dominant Pass Rush!',
-          message: `${player.name} recorded ${currentGame.sacks} sacks vs ${currentGame.opponent}!`,
-          severity: 'info',
-          relatedGameId: gameId,
-          isRead: false,
-        });
-      }
-      
-      if ((currentGame.defensiveInterceptions || 0) >= 2) {
-        await storage.createAlert({
-          playerId,
-          alertType: 'improvement',
-          title: 'Ballhawk Performance!',
-          message: `${player.name} grabbed ${currentGame.defensiveInterceptions} interceptions vs ${currentGame.opponent}!`,
-          severity: 'info',
-          relatedGameId: gameId,
-          isRead: false,
-        });
-      }
-    }
-    
-    // Fumble alert for skill players
-    if (['QB', 'RB', 'WR', 'TE'].includes(primaryPosition) && (currentGame.fumbles || 0) >= 2) {
-      await storage.createAlert({
-        playerId,
-        alertType: 'performance_drop',
-        title: 'Ball Security Issue',
-        message: `${player.name} had ${currentGame.fumbles} fumbles vs ${currentGame.opponent}. Ball security needs attention.`,
-        severity: 'warning',
-        relatedGameId: gameId,
-        isRead: false,
-      });
-    }
-    
-  } else {
-    // Basketball-specific alerts
-    const avgPoints = recentGames.reduce((acc, g) => acc + g.points, 0) / recentGames.length;
-    const avgRebounds = recentGames.reduce((acc, g) => acc + g.rebounds, 0) / recentGames.length;
-    const avgHustle = recentGames.reduce((acc, g) => acc + (g.hustleScore || 50), 0) / recentGames.length;
-    
-    // Points drop
-    if (avgPoints > 5 && currentGame.points < avgPoints * (1 - dropThreshold)) {
-      await storage.createAlert({
-        playerId,
-        alertType: 'performance_drop',
-        title: 'Scoring Drop Detected',
-        message: `${player.name} scored only ${currentGame.points} points, well below their ${avgPoints.toFixed(1)} PPG average.`,
-        severity: 'warning',
-        relatedGameId: gameId,
-        isRead: false,
-      });
-    }
-    
-    // Rebounds drop for Bigs
-    // Support multi-position players - check if 'Big' is any of their positions
-    const playerPositions = (player.position || '').split(',').map(p => p.trim());
-    if (playerPositions.includes('Big') && avgRebounds > 4 && currentGame.rebounds < avgRebounds * (1 - dropThreshold)) {
-      await storage.createAlert({
-        playerId,
-        alertType: 'performance_drop',
-        title: 'Rebounding Drop Detected',
-        message: `${player.name} grabbed only ${currentGame.rebounds} rebounds, below their ${avgRebounds.toFixed(1)} RPG average.`,
-        severity: 'warning',
-        relatedGameId: gameId,
-        isRead: false,
-      });
-    }
-    
-    // Hustle drop
-    if (avgHustle > 60 && (currentGame.hustleScore || 50) < avgHustle * (1 - dropThreshold)) {
-      await storage.createAlert({
-        playerId,
-        alertType: 'performance_drop',
-        title: 'Hustle Drop Detected',
-        message: `${player.name}'s hustle score dropped to ${currentGame.hustleScore || 50}, below their ${avgHustle.toFixed(0)} average.`,
-        severity: 'warning',
-        relatedGameId: gameId,
-        isRead: false,
-      });
-    }
-    
-    // Turnovers spike
-    if (currentGame.turnovers >= 5) {
-      await storage.createAlert({
-        playerId,
-        alertType: 'performance_drop',
-        title: 'High Turnover Game',
-        message: `${player.name} had ${currentGame.turnovers} turnovers vs ${currentGame.opponent}. Ball security needs attention.`,
-        severity: 'warning',
-        relatedGameId: gameId,
-        isRead: false,
-      });
-    }
-    
-    // Positive alert for improvement
-    if (avgPoints > 0 && currentGame.points > avgPoints * 1.5) {
-      await storage.createAlert({
-        playerId,
-        alertType: 'improvement',
-        title: 'Scoring Breakout!',
-        message: `${player.name} exploded for ${currentGame.points} points, significantly above their ${avgPoints.toFixed(1)} PPG average!`,
-        severity: 'info',
-        relatedGameId: gameId,
-        isRead: false,
-      });
-    }
-  }
   
   // Poor grade alert (both sports)
   const poorGrades = ['D', 'F'];
@@ -1680,6 +1248,15 @@ function getCoinsForAction(actionType: keyof typeof COIN_REWARDS): number {
   return COIN_REWARDS[actionType] || 0;
 }
 
+// Returns XP multiplier based on current streak count
+function getStreakMultiplier(streakCount: number): number {
+  if (streakCount >= 30) return 2.0;
+  if (streakCount >= 14) return 1.75;
+  if (streakCount >= 7) return 1.5;
+  if (streakCount >= 3) return 1.25;
+  return 1.0;
+}
+
 // Update activity streak (for consecutive days of activity)
 async function updateActivityStreak(playerId: number, streakType: string): Promise<{ streakCount: number; isNewMilestone: boolean; milestoneReached?: number }> {
   const streak = await storage.getOrCreateActivityStreak(playerId, streakType);
@@ -1702,11 +1279,49 @@ async function updateActivityStreak(playerId: number, streakType: string): Promi
       // Consecutive day
       newCount = streak.currentStreak + 1;
     } else {
-      // Streak broken
-      newCount = 1;
+      // Streak broken — check for shield in inventory
+      let shieldUsed = false;
+      try {
+        const player = await storage.getPlayer(playerId);
+        if (player?.userId) {
+          // Query properly with join
+          const shieldItems = await db
+            .select({ invId: userInventory.id })
+            .from(userInventory)
+            .innerJoin(shopItems, eq(userInventory.itemId, shopItems.id))
+            .where(and(
+              eq(userInventory.userId, player.userId),
+              eq(shopItems.type, 'streak_shield'),
+              eq(userInventory.isEquipped, true),
+            ))
+            .limit(1);
+          if (shieldItems.length > 0) {
+            // Consume the shield — unequip it
+            await db.update(userInventory)
+              .set({ isEquipped: false })
+              .where(eq(userInventory.id, shieldItems[0].invId));
+            newCount = streak.currentStreak; // Preserve streak
+            shieldUsed = true;
+            // Notify the player
+            try {
+              await storage.createNotification({
+                playerId,
+                notificationType: 'streak_shield_used',
+                title: 'Streak Shield Activated!',
+                message: `Your streak of ${streak.currentStreak} days was protected by your Streak Shield.`,
+                isRead: false,
+              });
+            } catch (e) { /* non-fatal */ }
+          }
+        }
+      } catch (e) { console.error('Shield check error:', e); }
+
+      if (!shieldUsed) {
+        newCount = 1;
+      }
     }
   }
-  
+
   const newLongest = Math.max(streak.longestStreak, newCount);
   
   // Check for milestone badges
@@ -1775,6 +1390,7 @@ async function seedShopItems() {
       { name: "Diamond Sparkle", description: "Sparkling diamond effect on badges", category: "badge_style", type: "frame", value: "diamond-sparkle", coinPrice: 750, rarity: "legendary", sortOrder: 2 },
       { name: "Glow Trail", description: "Subtle glow effect on interactions", category: "effect", type: "interaction", value: "glow-trail", coinPrice: 150, rarity: "rare", sortOrder: 1 },
       { name: "Particle Burst", description: "Particle explosion on achievements", category: "effect", type: "achievement", value: "particle-burst", coinPrice: 350, rarity: "epic", sortOrder: 2 },
+      { name: "Streak Shield", description: "Protects your streak for one missed day", category: "powerup", type: "streak_shield", value: "streak_shield", coinPrice: 150, rarity: "rare", sortOrder: 20 },
     ];
 
     for (const item of items) {
@@ -1792,7 +1408,11 @@ export async function registerRoutes(
 ): Promise<Server> {
   
   // Seed shop items on startup
-  await seedShopItems();
+  try {
+    await seedShopItems();
+  } catch (err) {
+    console.error('Seed shop items error (non-fatal):', (err as Error).message);
+  }
   
   // Setup authentication FIRST before other routes
   await setupAuth(app);
@@ -1800,6 +1420,197 @@ export async function registerRoutes(
   
   // Register object storage routes for file uploads
   registerObjectStorageRoutes(app);
+
+  // Debug diagnostic endpoint
+  app.get('/api/debug', async (req, res) => {
+    try {
+      const [result] = await db.select({ count: count() }).from(colleges);
+      res.json({
+        collegeCount: Number(result.count),
+        dbConnected: true,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      res.status(500).json({
+        collegeCount: 0,
+        dbConnected: false,
+        timestamp: new Date().toISOString(),
+        error: (error as Error).message,
+      });
+    }
+  });
+
+  // Server-side OG meta tag injection for public player profiles.
+  // Social media crawlers (Twitter, iMessage, Slack, Discord) don't execute JS,
+  // so we inject player-specific meta tags into the HTML server-side for rich link previews.
+  app.get('/profile/:id/public', async (req, res, next) => {
+    try {
+      const playerId = Number(req.params.id);
+      if (isNaN(playerId)) return next();
+
+      const player = await storage.getPlayer(playerId);
+      if (!player) return next();
+
+      const playerGames = await storage.getGamesByPlayerId(playerId);
+      const gamesPlayed = playerGames.length;
+
+      const GRADE_VALUES: Record<string, number> = {
+        'A+': 100, 'A': 95, 'A-': 90,
+        'B+': 88, 'B': 85, 'B-': 80,
+        'C+': 78, 'C': 75, 'C-': 70,
+        'D+': 68, 'D': 65, 'D-': 60,
+        'F': 50,
+      };
+      let averageGrade = '—';
+      if (gamesPlayed > 0) {
+        const total = playerGames.reduce((acc, g) => acc + (GRADE_VALUES[g.grade?.trim().toUpperCase() || ''] || 0), 0);
+        const avg = total / gamesPlayed;
+        if (avg >= 97) averageGrade = 'A+';
+        else if (avg >= 92) averageGrade = 'A';
+        else if (avg >= 87) averageGrade = 'A-';
+        else if (avg >= 83) averageGrade = 'B+';
+        else if (avg >= 79) averageGrade = 'B';
+        else if (avg >= 75) averageGrade = 'B-';
+        else if (avg >= 71) averageGrade = 'C+';
+        else if (avg >= 67) averageGrade = 'C';
+        else if (avg >= 63) averageGrade = 'C-';
+        else if (avg >= 59) averageGrade = 'D+';
+        else if (avg >= 55) averageGrade = 'D';
+        else averageGrade = 'F';
+      }
+
+      const avgPoints = gamesPlayed ? (playerGames.reduce((a, g) => a + g.points, 0) / gamesPlayed).toFixed(1) : '0';
+      const avgRebounds = gamesPlayed ? (playerGames.reduce((a, g) => a + g.rebounds, 0) / gamesPlayed).toFixed(1) : '0';
+      const avgAssists = gamesPlayed ? (playerGames.reduce((a, g) => a + g.assists, 0) / gamesPlayed).toFixed(1) : '0';
+
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const position = player.position || '';
+      const ogTitle = `${player.name}${position ? ` (${position})` : ''} — Caliber`;
+      const statLine = player.sport === 'basketball'
+        ? `${avgPoints} PPG • ${avgRebounds} RPG • ${avgAssists} APG`
+        : `${gamesPlayed} game${gamesPlayed !== 1 ? 's' : ''} tracked`;
+      const ogDescription = gamesPlayed > 0
+        ? `Grade: ${averageGrade} • ${statLine}${player.school ? ` — ${player.school}` : ''}`
+        : `${player.sport || 'Multi-sport'} athlete on Caliber${player.school ? ` — ${player.school}` : ''}`;
+      const ogImage = player.photoUrl || `${baseUrl}/og-image.png`;
+      const ogUrl = `${baseUrl}/profile/${playerId}/public`;
+
+      const esc = (s: string) =>
+        s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+      const htmlPath = process.env.NODE_ENV === 'production'
+        ? path.resolve(__dirname, 'public', 'index.html')
+        : path.resolve(process.cwd(), 'client', 'index.html');
+
+      if (!fs.existsSync(htmlPath)) return next();
+
+      let html = fs.readFileSync(htmlPath, 'utf-8');
+      html = html
+        .replace(/<title>[^<]*<\/title>/, `<title>${esc(ogTitle)}</title>`)
+        .replace(/<meta property="og:title"[^>]*>/, `<meta property="og:title" content="${esc(ogTitle)}" />`)
+        .replace(/<meta property="og:description"[^>]*>/, `<meta property="og:description" content="${esc(ogDescription)}" />`)
+        .replace(/<meta property="og:image"[^>]*>/, `<meta property="og:image" content="${esc(ogImage)}" />`)
+        .replace(/<meta property="og:url"[^>]*>/, `<meta property="og:url" content="${esc(ogUrl)}" />`)
+        .replace(/<meta property="og:type"[^>]*>/, `<meta property="og:type" content="profile" />`)
+        .replace(/<meta name="twitter:title"[^>]*>/, `<meta name="twitter:title" content="${esc(ogTitle)}" />`)
+        .replace(/<meta name="twitter:description"[^>]*>/, `<meta name="twitter:description" content="${esc(ogDescription)}" />`)
+        .replace(/<meta name="twitter:image"[^>]*>/, `<meta name="twitter:image" content="${esc(ogImage)}" />`);
+
+      res.setHeader('Content-Type', 'text/html');
+      res.send(html);
+    } catch (err) {
+      console.error('OG meta route error:', err);
+      next();
+    }
+  });
+
+  // --- Referral System ---
+
+  // GET /api/me/referral-code — lazily creates and returns the user's unique referral code
+  app.get('/api/me/referral-code', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      let user = await authStorage.getUser(userId);
+      if (!user) return res.status(404).json({ message: 'User not found' });
+
+      if (!user.referralCode) {
+        // Generate a stable, short alphanumeric code from the user's ID
+        const code = crypto
+          .createHash('sha256')
+          .update(`caliber-ref-${userId}`)
+          .digest('base64')
+          .replace(/[^A-Z0-9]/gi, '')
+          .slice(0, 8)
+          .toUpperCase();
+        await db.update(users).set({ referralCode: code }).where(eq(users.id, userId));
+        user = { ...user, referralCode: code };
+      }
+
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      res.json({
+        code: user.referralCode,
+        url: `${baseUrl}/join/${user.referralCode}`,
+        conversions: user.referralConversions ?? 0,
+      });
+    } catch (err) {
+      console.error('Error fetching referral code:', err);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // GET /api/referral/lookup/:code — validates a referral code (used by /join page)
+  app.get('/api/referral/lookup/:code', async (req, res) => {
+    try {
+      const code = req.params.code.toUpperCase();
+      const [referrer] = await db
+        .select({ id: users.id, firstName: users.firstName, lastName: users.lastName, profileImageUrl: users.profileImageUrl })
+        .from(users)
+        .where(eq(users.referralCode, code))
+        .limit(1);
+      if (!referrer) return res.status(404).json({ message: 'Invalid referral code' });
+      res.json({ valid: true, referrer });
+    } catch (err) {
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // POST /api/referral/track — called after a referred user logs their first game
+  // Awards 500 XP to the referrer and increments their conversion count
+  app.post('/api/referral/track', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await authStorage.getUser(userId);
+      if (!user?.referredBy) return res.json({ tracked: false });
+
+      // Only award once — check if conversions already counted
+      // Simple guard: we track by checking if current user has a player with XP from referral
+      // For simplicity, increment conversions and award XP to referrer
+      const [referrer] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, user.referredBy))
+        .limit(1);
+      if (!referrer) return res.json({ tracked: false });
+
+      await db
+        .update(users)
+        .set({ referralConversions: sql`${users.referralConversions} + 1` })
+        .where(eq(users.id, referrer.id));
+
+      // Award XP to referrer's player profile if they have one
+      if (referrer.playerId) {
+        const referrerPlayer = await storage.getPlayer(referrer.playerId);
+        if (referrerPlayer) {
+          await storage.updatePlayer(referrer.playerId, { totalXp: (referrerPlayer.totalXp || 0) + 500 });
+        }
+      }
+
+      res.json({ tracked: true });
+    } catch (err) {
+      console.error('Error tracking referral:', err);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
 
   // --- User Role Management ---
 
@@ -1820,10 +1631,12 @@ export async function registerRoutes(
       
       // Check if user is app owner (has full access)
       const isOwner = isAppOwner(userId);
-      
-      res.json({ ...user, playerProfile, userId, isOwner });
-    } catch (error) {
-      console.error('Error fetching user:', error);
+
+      // Strip sensitive fields
+      const { passwordHash, ...safeUser } = user as any;
+      res.json({ ...safeUser, playerProfile, userId, isOwner });
+    } catch (error: any) {
+      console.error('Error fetching user /api/users/me:', error?.message);
       res.status(500).json({ message: 'Failed to fetch user' });
     }
   });
@@ -2049,15 +1862,27 @@ export async function registerRoutes(
   app.post('/api/users/role', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const { role } = z.object({
-        role: z.enum(['player', 'coach', 'recruiter', 'guardian'])
+      const { role, organizationName } = z.object({
+        role: z.enum(['player', 'coach', 'recruiter', 'guardian']),
+        organizationName: z.string().optional(),
       }).parse(req.body);
-      
+
+      // Coach role requires an organization/team to prevent uncredentialed claims
+      if (role === 'coach') {
+        const org = organizationName?.trim();
+        if (!org || org.length < 2) {
+          return res.status(400).json({
+            message: 'Please provide your team or school name to register as a coach.',
+            type: 'organization_required',
+          });
+        }
+      }
+
       const updatedUser = await authStorage.updateUserRole(userId, role);
       if (!updatedUser) {
         return res.status(404).json({ message: 'User not found' });
       }
-      
+
       res.json(updatedUser);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -2072,7 +1897,7 @@ export async function registerRoutes(
     try {
       const userId = req.user.claims.sub;
       const { sport } = z.object({
-        sport: z.enum(['basketball', 'football'])
+        sport: z.enum(['basketball'])
       }).parse(req.body);
       
       const updatedUser = await authStorage.updateUserSport(userId, sport);
@@ -2134,7 +1959,7 @@ export async function registerRoutes(
       
       const input = z.object({
         name: z.string().min(1),
-        sport: z.enum(['basketball', 'football']).default('basketball'),
+        sport: z.enum(['basketball']).default('basketball'),
         position: z.string().min(1),
         height: z.string().optional(),
         team: z.string().optional(),
@@ -2143,8 +1968,7 @@ export async function registerRoutes(
       
       // Validate position based on sport (supports multi-position with comma-separated values)
       const validBasketballPositions = ['Guard', 'Wing', 'Big'];
-      const validFootballPositions = ['QB', 'RB', 'WR', 'TE', 'OL', 'DL', 'LB', 'DB', 'K', 'P'];
-      const validPositions = input.sport === 'football' ? validFootballPositions : validBasketballPositions;
+      const validPositions = validBasketballPositions;
       
       // Split comma-separated positions and validate each one
       const positionsList = input.position.split(',').map((p: string) => p.trim()).filter((p: string) => p);
@@ -2255,7 +2079,7 @@ export async function registerRoutes(
       
       const updateSchema = z.object({
         name: z.string().min(1).optional(),
-        sport: z.enum(['basketball', 'football']).optional(),
+        sport: z.enum(['basketball']).optional(),
         position: z.string().optional(),
         height: z.string().optional(),
         team: z.string().optional(),
@@ -2280,8 +2104,7 @@ export async function registerRoutes(
       if (input.position) {
         const playerSport = input.sport || player.sport || 'basketball';
         const validBasketballPositions = ['Guard', 'Wing', 'Big'];
-        const validFootballPositions = ['QB', 'RB', 'WR', 'TE', 'OL', 'DL', 'LB', 'DB', 'K', 'P'];
-        const validPositions = playerSport === 'football' ? validFootballPositions : validBasketballPositions;
+          const validPositions = validBasketballPositions;
         
         // Split comma-separated positions and validate each one
         const positionsList = input.position.split(',').map((p: string) => p.trim()).filter((p: string) => p);
@@ -2408,7 +2231,7 @@ export async function registerRoutes(
 
       // Record the profile view (async, don't wait for it)
       const viewerIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress;
-      const viewerUserId = (req as any).user?.id;
+      const viewerUserId = (req as any).user?.claims?.sub;
       const referrer = req.headers.referer || req.headers.referrer;
       const userAgent = req.headers['user-agent'];
       
@@ -2428,14 +2251,7 @@ export async function registerRoutes(
       const avgPoints = gamesPlayed ? games.reduce((acc, g) => acc + g.points, 0) / gamesPlayed : 0;
       const avgRebounds = gamesPlayed ? games.reduce((acc, g) => acc + g.rebounds, 0) / gamesPlayed : 0;
       const avgAssists = gamesPlayed ? games.reduce((acc, g) => acc + g.assists, 0) / gamesPlayed : 0;
-      
-      // Football stats
-      const avgPassingYards = gamesPlayed ? games.reduce((acc, g) => acc + (g.passingYards || 0), 0) / gamesPlayed : 0;
-      const avgRushingYards = gamesPlayed ? games.reduce((acc, g) => acc + (g.rushingYards || 0), 0) / gamesPlayed : 0;
-      const avgReceivingYards = gamesPlayed ? games.reduce((acc, g) => acc + (g.receivingYards || 0), 0) / gamesPlayed : 0;
-      const totalTDs = games.reduce((acc, g) => acc + (g.passingTouchdowns || 0) + (g.rushingTouchdowns || 0) + (g.receivingTouchdowns || 0), 0);
-      const avgTackles = gamesPlayed ? games.reduce((acc, g) => acc + (g.tackles || 0), 0) / gamesPlayed : 0;
-      
+
       // Calculate average grade
       const GRADE_VALUES: Record<string, number> = {
         'A+': 100, 'A': 95, 'A-': 90,
@@ -2527,10 +2343,11 @@ export async function registerRoutes(
           school: player.school,
           graduationYear: player.graduationYear,
           state: player.state, // Only state, not city for privacy
-          gpa: player.isPublic ? player.gpa : null, // Only show GPA if profile is public
+          gpa: (player as any).isPublic !== false ? (player as any).gpa ?? null : null,
           height: player.height,
           level: player.level,
-          bio: player.isPublic ? player.bio : null, // Only show bio if profile is public
+          bio: (player as any).isPublic !== false ? (player as any).bio ?? null : null,
+          leaderboardRank: (player as any).leaderboardRank ?? null,
         },
         stats: {
           gamesPlayed,
@@ -2540,13 +2357,6 @@ export async function registerRoutes(
             ppg: Number(avgPoints.toFixed(1)),
             rpg: Number(avgRebounds.toFixed(1)),
             apg: Number(avgAssists.toFixed(1)),
-          },
-          football: {
-            passingYpg: Number(avgPassingYards.toFixed(1)),
-            rushingYpg: Number(avgRushingYards.toFixed(1)),
-            receivingYpg: Number(avgReceivingYards.toFixed(1)),
-            totalTDs,
-            tacklesPerGame: Number(avgTackles.toFixed(1)),
           },
         },
         recentGames,
@@ -2587,13 +2397,17 @@ export async function registerRoutes(
         }
       }
       
-      const totalViews = await storage.getProfileViewCount(playerId);
-      const viewsLast30Days = await storage.getProfileViewCountLast30Days(playerId);
-      
+      const [totalViews, viewsLast30Days, recentViewers] = await Promise.all([
+        storage.getProfileViewCount(playerId),
+        storage.getProfileViewCountLast30Days(playerId),
+        storage.getRecentProfileViewsWithViewers(playerId, 20),
+      ]);
+
       res.json({
         playerId,
         totalViews,
         viewsLast30Days,
+        recentViewers,
       });
     } catch (err) {
       console.error('Error fetching profile views:', err);
@@ -2620,13 +2434,7 @@ export async function registerRoutes(
       const avgPoints = gamesPlayed ? games.reduce((acc, g) => acc + g.points, 0) / gamesPlayed : 0;
       const avgRebounds = gamesPlayed ? games.reduce((acc, g) => acc + g.rebounds, 0) / gamesPlayed : 0;
       const avgAssists = gamesPlayed ? games.reduce((acc, g) => acc + g.assists, 0) / gamesPlayed : 0;
-      
-      // Football stats
-      const avgPassingYards = gamesPlayed ? games.reduce((acc, g) => acc + (g.passingYards || 0), 0) / gamesPlayed : 0;
-      const avgRushingYards = gamesPlayed ? games.reduce((acc, g) => acc + (g.rushingYards || 0), 0) / gamesPlayed : 0;
-      const totalTDs = games.reduce((acc, g) => acc + (g.passingTouchdowns || 0) + (g.rushingTouchdowns || 0) + (g.receivingTouchdowns || 0), 0);
-      const avgTackles = gamesPlayed ? games.reduce((acc, g) => acc + (g.tackles || 0), 0) / gamesPlayed : 0;
-      
+
       // Calculate average grade
       const GRADE_VALUES: Record<string, number> = {
         'A+': 100, 'A': 95, 'A-': 90,
@@ -2707,12 +2515,6 @@ export async function registerRoutes(
             rpg: Number(avgRebounds.toFixed(1)),
             apg: Number(avgAssists.toFixed(1)),
           },
-          football: {
-            passingYpg: Number(avgPassingYards.toFixed(1)),
-            rushingYpg: Number(avgRushingYards.toFixed(1)),
-            totalTDs,
-            tacklesPerGame: Number(avgTackles.toFixed(1)),
-          },
         },
         recentGames,
         badges: earnedBadges,
@@ -2743,7 +2545,7 @@ export async function registerRoutes(
           const badges = await storage.getPlayerBadges(playerId);
           const badge = badges.find(b => b.id === Number(achievementId) || b.badgeType === achievementId);
           if (badge) {
-            const badgeDef = BADGE_DEFINITIONS[badge.badgeType];
+            const badgeDef = (BADGE_DEFINITIONS as Record<string, any>)[badge.badgeType];
             achievementData = {
               type: 'badge',
               badge: {
@@ -3005,14 +2807,7 @@ export async function registerRoutes(
       let hustleScore = 50;
       let per = "0";
 
-      if (sport === 'football') {
-        // Football grading
-        hustleScore = input.hustleScore || 50;
-        const footballResult = calculateFootballGrade(input, player.position);
-        grade = footballResult.grade;
-        feedback = footballResult.feedback;
-        categoryGrades = calculateFootballCategoryGrades(input, player.position);
-      } else {
+      {
         // Basketball grading
         defenseRating = calculateDefenseRating(input, player.position);
         hustleScore = calculateHustleScore(input, player.position);
@@ -3024,7 +2819,7 @@ export async function registerRoutes(
         per = ((input.points || 0) + (input.rebounds || 0) + (input.assists || 0)).toString();
       }
       
-      // Inject calculated fields - include both basketball and football stats
+      // Inject calculated fields
       const gameData: any = {
         playerId: input.playerId,
         sport,
@@ -3048,7 +2843,6 @@ export async function registerRoutes(
         ftAttempted: input.ftAttempted,
         offensiveRebounds: input.offensiveRebounds,
         defensiveRebounds: input.defensiveRebounds,
-        // Football stats
         completions: input.completions,
         passAttempts: input.passAttempts,
         passingYards: input.passingYards,
@@ -3089,11 +2883,9 @@ export async function registerRoutes(
         shootingGrade: sport === 'basketball' ? categoryGrades.shootingGrade : null,
         reboundingGrade: sport === 'basketball' ? categoryGrades.reboundingGrade : null,
         passingGrade: sport === 'basketball' ? categoryGrades.passingGrade : null,
-        // Football category grades
-        efficiencyGrade: sport === 'football' ? categoryGrades.efficiencyGrade : null,
-        playmakingGrade: sport === 'football' ? categoryGrades.playmakingGrade : null,
-        ballSecurityGrade: sport === 'football' ? categoryGrades.ballSecurityGrade : null,
-        impactGrade: sport === 'football' ? categoryGrades.impactGrade : null,
+        playmakingGrade: false ? categoryGrades.playmakingGrade : null,
+        ballSecurityGrade: false ? categoryGrades.ballSecurityGrade : null,
+        impactGrade: false ? categoryGrades.impactGrade : null,
       };
 
       if (!gameData.season) {
@@ -3118,10 +2910,7 @@ export async function registerRoutes(
         }
       }
 
-      const game = await storage.createGame(gameData);
-      
-      // Check for personal records (career highs)
-      const newRecords: Array<{statName: string, value: number, previousValue: number | null}> = [];
+      // --- Atomic core: game creation + personal records + goal progress ---
       const TRACKED_STATS = [
         { name: 'points', field: 'points' },
         { name: 'rebounds', field: 'rebounds' },
@@ -3130,106 +2919,131 @@ export async function registerRoutes(
         { name: 'blocks', field: 'blocks' },
         { name: 'threeMade', field: 'threeMade' },
       ];
-
-      for (const stat of TRACKED_STATS) {
-        const statValue = (input as any)[stat.field] || 0;
-        if (statValue <= 0) continue;
-        
-        const existingRecord = await db.select().from(personalRecords)
-          .where(and(
-            eq(personalRecords.playerId, input.playerId),
-            eq(personalRecords.statName, stat.name)
-          ))
-          .limit(1);
-        
-        if (existingRecord.length === 0) {
-          await db.insert(personalRecords).values({
-            playerId: input.playerId,
-            statName: stat.name,
-            value: statValue,
-            gameId: game.id,
-            previousValue: null,
-          });
-          if (statValue >= 10 || (stat.name === 'threeMade' && statValue >= 3) || (stat.name === 'steals' && statValue >= 3) || (stat.name === 'blocks' && statValue >= 3)) {
-            newRecords.push({ statName: stat.name, value: statValue, previousValue: null });
-          }
-        } else if (statValue > existingRecord[0].value) {
-          const prev = existingRecord[0].value;
-          await db.update(personalRecords).set({
-            value: statValue,
-            gameId: game.id,
-            previousValue: prev,
-            achievedAt: new Date(),
-          }).where(eq(personalRecords.id, existingRecord[0].id));
-          newRecords.push({ statName: stat.name, value: statValue, previousValue: prev });
-        }
-      }
-
       const STAT_LABELS: Record<string, string> = {
         points: 'Points', rebounds: 'Rebounds', assists: 'Assists',
         steals: 'Steals', blocks: 'Blocks', threeMade: '3-Pointers Made',
       };
-      for (const record of newRecords) {
-        await storage.createFeedActivity({
-          activityType: 'badge',
-          playerId: input.playerId,
-          gameId: game.id,
-          headline: `${player?.name || 'Player'} set a new career high: ${record.value} ${STAT_LABELS[record.statName] || record.statName}!`,
-          subtext: record.previousValue ? `Previous best: ${record.previousValue}` : `First milestone recorded`,
-        });
-      }
 
-      // Update goal progress
-      const completedGoals: Array<{statName: string, targetValue: string}> = [];
-      const activeGoals = await db.select().from(playerGoals)
-        .where(and(eq(playerGoals.playerId, input.playerId), eq(playerGoals.status, 'active')));
+      const { game, newRecords, completedGoals } = await db.transaction(async (tx) => {
+        // 1. Insert game atomically
+        const [game] = await tx.insert(games).values(gameData).returning();
 
-      const allPlayerGames = await storage.getGamesByPlayerId(input.playerId);
-      for (const goal of activeGoals) {
-        const now = new Date();
-        let filteredGames = allPlayerGames;
-        if (goal.timeframe === 'weekly') {
-          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          filteredGames = allPlayerGames.filter(g => new Date(g.date) >= weekAgo);
-        } else if (goal.timeframe === 'monthly') {
-          const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-          filteredGames = allPlayerGames.filter(g => new Date(g.date) >= monthAgo);
-        }
-        
-        let currentValue = 0;
-        if (filteredGames.length > 0) {
-          switch (goal.statName) {
-            case 'ppg': currentValue = filteredGames.reduce((a, g) => a + g.points, 0) / filteredGames.length; break;
-            case 'rpg': currentValue = filteredGames.reduce((a, g) => a + g.rebounds, 0) / filteredGames.length; break;
-            case 'apg': currentValue = filteredGames.reduce((a, g) => a + g.assists, 0) / filteredGames.length; break;
-            case 'spg': currentValue = filteredGames.reduce((a, g) => a + (g.steals || 0), 0) / filteredGames.length; break;
-            case 'fg_pct': {
-              const m = filteredGames.reduce((a, g) => a + g.fgMade, 0);
-              const att = filteredGames.reduce((a, g) => a + g.fgAttempted, 0);
-              currentValue = att > 0 ? (m / att) * 100 : 0;
-              break;
+        // 2. Check and update personal records
+        const newRecords: Array<{statName: string, value: number, previousValue: number | null}> = [];
+        for (const stat of TRACKED_STATS) {
+          const statValue = (input as any)[stat.field] || 0;
+          if (statValue <= 0) continue;
+
+          const existingRecord = await tx.select().from(personalRecords)
+            .where(and(
+              eq(personalRecords.playerId, input.playerId),
+              eq(personalRecords.statName, stat.name)
+            ))
+            .limit(1);
+
+          if (existingRecord.length === 0) {
+            await tx.insert(personalRecords).values({
+              playerId: input.playerId,
+              statName: stat.name,
+              value: statValue,
+              gameId: game.id,
+              previousValue: null,
+            });
+            if (statValue >= 10 || (stat.name === 'threeMade' && statValue >= 3) || (stat.name === 'steals' && statValue >= 3) || (stat.name === 'blocks' && statValue >= 3)) {
+              newRecords.push({ statName: stat.name, value: statValue, previousValue: null });
             }
-            case 'three_pct': {
-              const m = filteredGames.reduce((a, g) => a + g.threeMade, 0);
-              const att = filteredGames.reduce((a, g) => a + g.threeAttempted, 0);
-              currentValue = att > 0 ? (m / att) * 100 : 0;
-              break;
-            }
-            case 'games_played': currentValue = filteredGames.length; break;
+          } else if (statValue > existingRecord[0].value) {
+            const prev = existingRecord[0].value;
+            await tx.update(personalRecords).set({
+              value: statValue,
+              gameId: game.id,
+              previousValue: prev,
+              achievedAt: new Date(),
+            }).where(eq(personalRecords.id, existingRecord[0].id));
+            newRecords.push({ statName: stat.name, value: statValue, previousValue: prev });
           }
         }
-        
-        const wasActive = goal.status === 'active';
-        const isNowComplete = currentValue >= parseFloat(goal.targetValue as string);
-        
-        await db.update(playerGoals).set({
-          currentValue: currentValue.toFixed(2),
-          status: isNowComplete ? 'completed' : 'active',
-          completedAt: isNowComplete && wasActive ? new Date() : goal.completedAt,
-        }).where(eq(playerGoals.id, goal.id));
-        
-        if (isNowComplete && wasActive) {
-          completedGoals.push({ statName: goal.statName, targetValue: goal.targetValue as string });
+
+        // 3. Update goal progress
+        const completedGoals: Array<{statName: string, targetValue: string}> = [];
+        const activeGoals = await tx.select().from(playerGoals)
+          .where(and(eq(playerGoals.playerId, input.playerId), eq(playerGoals.status, 'active')));
+
+        if (activeGoals.length > 0) {
+          const allPlayerGames = await tx.select().from(games)
+            .where(eq(games.playerId, input.playerId))
+            .orderBy(desc(games.date));
+
+          for (const goal of activeGoals) {
+            const now = new Date();
+            let filteredGames = allPlayerGames;
+            if (goal.timeframe === 'weekly') {
+              const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+              filteredGames = allPlayerGames.filter(g => new Date(g.date) >= weekAgo);
+            } else if (goal.timeframe === 'monthly') {
+              const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+              filteredGames = allPlayerGames.filter(g => new Date(g.date) >= monthAgo);
+            }
+
+            let currentValue = 0;
+            if (filteredGames.length > 0) {
+              switch (goal.statName) {
+                case 'ppg': currentValue = filteredGames.reduce((a, g) => a + g.points, 0) / filteredGames.length; break;
+                case 'rpg': currentValue = filteredGames.reduce((a, g) => a + g.rebounds, 0) / filteredGames.length; break;
+                case 'apg': currentValue = filteredGames.reduce((a, g) => a + g.assists, 0) / filteredGames.length; break;
+                case 'spg': currentValue = filteredGames.reduce((a, g) => a + (g.steals || 0), 0) / filteredGames.length; break;
+                case 'fg_pct': {
+                  const m = filteredGames.reduce((a, g) => a + g.fgMade, 0);
+                  const att = filteredGames.reduce((a, g) => a + g.fgAttempted, 0);
+                  currentValue = att > 0 ? (m / att) * 100 : 0;
+                  break;
+                }
+                case 'three_pct': {
+                  const m = filteredGames.reduce((a, g) => a + g.threeMade, 0);
+                  const att = filteredGames.reduce((a, g) => a + g.threeAttempted, 0);
+                  currentValue = att > 0 ? (m / att) * 100 : 0;
+                  break;
+                }
+                case 'games_played': currentValue = filteredGames.length; break;
+              }
+            }
+
+            const wasActive = goal.status === 'active';
+            const isNowComplete = currentValue >= parseFloat(goal.targetValue as string);
+
+            await tx.update(playerGoals).set({
+              currentValue: currentValue.toFixed(2),
+              status: isNowComplete ? 'completed' : 'active',
+              completedAt: isNowComplete && wasActive ? new Date() : goal.completedAt,
+            }).where(eq(playerGoals.id, goal.id));
+
+            if (isNowComplete && wasActive) {
+              completedGoals.push({ statName: goal.statName, targetValue: goal.targetValue as string });
+            }
+          }
+        }
+
+        return { game, newRecords, completedGoals };
+      });
+
+      // --- Post-game enrichment (non-transactional, best-effort) ---
+
+      // Feed activities for personal records
+      for (const record of newRecords) {
+        try {
+          await storage.createFeedActivity({
+            activityType: 'badge',
+            playerId: input.playerId,
+            gameId: game.id,
+            headline: `${player?.name || 'Player'} set a new career high: ${record.value} ${STAT_LABELS[record.statName] || record.statName}!`,
+            subtext: record.previousValue ? `Previous best: ${record.previousValue}` : `First milestone recorded`,
+          });
+        } catch (e) { console.error('Feed activity error (personal record):', e); }
+      }
+
+      // Feed activities for completed goals
+      for (const goal of completedGoals) {
+        try {
           await storage.createFeedActivity({
             activityType: 'goal',
             playerId: input.playerId,
@@ -3237,102 +3051,106 @@ export async function registerRoutes(
             headline: `${player?.name || 'Player'} completed a goal!`,
             subtext: `Target: ${goal.targetValue} ${goal.statName.toUpperCase().replace('_', ' ')}`,
           });
-        }
+        } catch (e) { console.error('Feed activity error (goal):', e); }
       }
 
-      // Check and award badges after game creation
-      const awardedBadges = await checkAndAwardBadges(input.playerId, game.id, input, grade);
-      
+      // Check and award badges
+      let awardedBadges: string[] = [];
+      try {
+        awardedBadges = await checkAndAwardBadges(input.playerId, game.id, input, grade);
+      } catch (e) { console.error('Badge award error:', e); }
+
       // Update player streaks
-      await updatePlayerStreaks(input.playerId, game.id, input, grade);
-      
+      try { await updatePlayerStreaks(input.playerId, game.id, input, grade); }
+      catch (e) { console.error('Streak update error:', e); }
+
       // Update challenge progress
-      await updateChallengeProgressForPlayer(input.playerId, input, grade, input.date);
-      
+      try { await updateChallengeProgressForPlayer(input.playerId, input, grade, input.date); }
+      catch (e) { console.error('Challenge progress error:', e); }
+
       // Update progressive skill badges
-      const skillBadgeUpdates = await updateSkillBadges(input.playerId, input);
-      
-      // Create feed activity for skill badge upgrades
+      let skillBadgeUpdates: { newLevels: Array<{ skill: string; level: string }> } = { newLevels: [] };
+      try {
+        skillBadgeUpdates = await updateSkillBadges(input.playerId, input);
+      } catch (e) { console.error('Skill badge update error:', e); }
+
+      // Feed activities for skill badge upgrades
       for (const upgrade of skillBadgeUpdates.newLevels) {
-        const skillDef = sport === 'football'
-          ? FOOTBALL_SKILL_BADGE_TYPES[upgrade.skill as keyof typeof FOOTBALL_SKILL_BADGE_TYPES]
-          : SKILL_BADGE_TYPES[upgrade.skill as keyof typeof SKILL_BADGE_TYPES];
-        const levelNames: Record<string, string> = {
-          brick: 'Brick',
-          bronze: 'Bronze',
-          silver: 'Silver',
-          gold: 'Gold',
-          platinum: 'Platinum',
-          hall_of_fame: 'Hall of Fame',
-          legend: 'Legend',
-          goat: 'GOAT'
-        };
-        await storage.createFeedActivity({
-          activityType: 'badge',
-          playerId: input.playerId,
-          gameId: game.id,
-          headline: `${player?.name || 'Player'} unlocked ${levelNames[upgrade.level]} ${skillDef?.name || upgrade.skill}!`,
-          subtext: `Career milestone reached`,
-        });
+        try {
+          const skillDef = SKILL_BADGE_TYPES[upgrade.skill as keyof typeof SKILL_BADGE_TYPES];
+          const levelNames: Record<string, string> = {
+            brick: 'Brick', bronze: 'Bronze', silver: 'Silver', gold: 'Gold',
+            platinum: 'Platinum', hall_of_fame: 'Hall of Fame', legend: 'Legend', goat: 'GOAT'
+          };
+          await storage.createFeedActivity({
+            activityType: 'badge',
+            playerId: input.playerId,
+            gameId: game.id,
+            headline: `${player?.name || 'Player'} unlocked ${levelNames[upgrade.level]} ${skillDef?.name || upgrade.skill}!`,
+            subtext: `Career milestone reached`,
+          });
+        } catch (e) { console.error('Feed activity error (skill badge):', e); }
       }
-      
-      // Create feed activities for badges earned
+
+      // Feed activities for earned badges
       const badgeNames: Record<string, string> = {
-        twenty_piece: "20-Piece",
-        thirty_bomb: "30-Bomb",
-        double_double: "Double-Double",
-        triple_double: "Triple-Double",
-        ironman: "Ironman",
-        efficiency_master: "Efficiency Master",
-        lockdown: "Lockdown Defender",
-        hustle_king: "Hustle King",
-        clean_sheet: "Clean Sheet",
-        sharpshooter: "Sharpshooter",
-        hot_streak_3: "Hot Streak (3 Games)",
-        hot_streak_5: "Hot Streak (5 Games)",
-        most_improved: "Most Improved",
+        twenty_piece: "20-Piece", thirty_bomb: "30-Bomb", double_double: "Double-Double",
+        triple_double: "Triple-Double", ironman: "Ironman", efficiency_master: "Efficiency Master",
+        lockdown: "Lockdown Defender", hustle_king: "Hustle King", clean_sheet: "Clean Sheet",
+        sharpshooter: "Sharpshooter", hot_streak_3: "Hot Streak (3 Games)",
+        hot_streak_5: "Hot Streak (5 Games)", most_improved: "Most Improved",
       };
       for (const badge of awardedBadges) {
-        await storage.createFeedActivity({
-          activityType: 'badge',
-          playerId: input.playerId,
-          gameId: game.id,
-          headline: `${player?.name || 'Player'} earned the ${badgeNames[badge] || badge} badge!`,
-          subtext: `Achievement unlocked vs ${input.opponent}`,
-        });
+        try {
+          await storage.createFeedActivity({
+            activityType: 'badge',
+            playerId: input.playerId,
+            gameId: game.id,
+            headline: `${player?.name || 'Player'} earned the ${badgeNames[badge] || badge} badge!`,
+            subtext: `Achievement unlocked vs ${input.opponent}`,
+          });
+        } catch (e) { console.error('Feed activity error (badge):', e); }
       }
-      
+
       // --- XP Rewards ---
-      let xpEarned = XP_REWARDS.game_logged;
-      
-      // Grade bonuses
+      let xpEarned: number = XP_REWARDS.game_logged;
       if (grade === 'A+') xpEarned += XP_REWARDS.a_plus_grade;
       else if (grade.startsWith('A')) xpEarned += XP_REWARDS.a_grade;
-      
-      // Badge bonuses
       xpEarned += awardedBadges.length * XP_REWARDS.badge_earned;
-      
-      // Award XP and check for tier promotion
-      const { player: updatedPlayer, newTier } = await storage.addPlayerXp(input.playerId, xpEarned);
-      
+
+      // Apply streak multiplier
+      const playerStreaks = await storage.getPlayerActivityStreaks(input.playerId);
+      const dailyGameStreak = playerStreaks.find(s => s.streakType === 'daily_game');
+      const streakMultiplier = getStreakMultiplier(dailyGameStreak?.currentStreak || 0);
+      if (streakMultiplier > 1.0) {
+        xpEarned = Math.round(xpEarned * streakMultiplier);
+      }
+      const activeStreakMultiplier = streakMultiplier;
+
+      let updatedPlayerXp: number = (player as any).totalXp || 0;
+      let updatedPlayerTier: string = (player as any).currentTier || 'Rookie';
+      let newTier: string | null = null;
+      try {
+        const xpResult = await storage.addPlayerXp(input.playerId, xpEarned);
+        updatedPlayerXp = xpResult.player.totalXp || 0;
+        updatedPlayerTier = xpResult.player.currentTier || 'Rookie';
+        newTier = xpResult.newTier;
+      } catch (e) { console.error('XP award error:', e); }
+
       // --- Coin Rewards ---
       let coinsEarned = 0;
       if (player.userId) {
-        // Base coins for logging a game
         coinsEarned += getCoinsForAction('game_logged');
-        
-        // Grade bonuses
         if (grade === 'A+') coinsEarned += getCoinsForAction('a_plus_grade');
         else if (grade.startsWith('A')) coinsEarned += getCoinsForAction('a_grade');
-        
-        // Badge bonuses
         coinsEarned += awardedBadges.length * getCoinsForAction('badge_earned');
-        
         if (coinsEarned > 0) {
-          await awardCoins(player.userId, coinsEarned, 'earned_game', `Earned ${coinsEarned} coins from game vs ${input.opponent}`);
+          try {
+            await awardCoins(player.userId, coinsEarned, 'earned_game', `Earned ${coinsEarned} coins from game vs ${input.opponent}`);
+          } catch (e) { console.error('Coin award error:', e); }
         }
       }
-      
+
       // Award tier promotion badge if promoted
       if (newTier) {
         let tierBadge: string | null = null;
@@ -3340,48 +3158,74 @@ export async function registerRoutes(
         else if (newTier === "All-Star") tierBadge = "tier_allstar";
         else if (newTier === "MVP") tierBadge = "tier_mvp";
         else if (newTier === "Hall of Fame") tierBadge = "tier_hof";
-        
+
         if (tierBadge) {
-          await storage.createBadge({ playerId: input.playerId, badgeType: tierBadge, gameId: game.id });
-          await storage.createFeedActivity({
-            activityType: 'badge',
-            playerId: input.playerId,
-            gameId: game.id,
-            headline: `${player?.name || 'Player'} reached ${newTier} tier!`,
-            subtext: `Tier promotion earned with ${updatedPlayer.totalXp} XP`,
-          });
-          
-          // Award tier promotion coins
+          try {
+            await storage.createBadge({ playerId: input.playerId, badgeType: tierBadge, gameId: game.id });
+            await storage.createFeedActivity({
+              activityType: 'badge',
+              playerId: input.playerId,
+              gameId: game.id,
+              headline: `${player?.name || 'Player'} reached ${newTier} tier!`,
+              subtext: `Tier promotion earned with ${updatedPlayerXp} XP`,
+            });
+          } catch (e) { console.error('Tier badge error:', e); }
+
           if (player.userId) {
-            const tierCoins = getCoinsForAction('tier_up');
-            await awardCoins(player.userId, tierCoins, 'earned_tier_up', `Earned ${tierCoins} coins for reaching ${newTier} tier!`);
-            coinsEarned += tierCoins;
+            try {
+              const tierCoins = getCoinsForAction('tier_up');
+              await awardCoins(player.userId, tierCoins, 'earned_tier_up', `Earned ${tierCoins} coins for reaching ${newTier} tier!`);
+              coinsEarned += tierCoins;
+            } catch (e) { console.error('Tier coin award error:', e); }
           }
         }
       }
-      
+
       // Update activity streak
-      await updateActivityStreak(input.playerId, 'daily_game');
-      
+      try { await updateActivityStreak(input.playerId, 'daily_game'); }
+      catch (e) { console.error('Activity streak error:', e); }
+
+      // Referral conversion: if this is the player's first game, award XP to their referrer
+      try {
+        const allPlayerGames = await storage.getGamesByPlayerId(input.playerId);
+        if (allPlayerGames.length === 1 && player.userId) {
+          const [gameOwner] = await db.select().from(users).where(eq(users.id, player.userId)).limit(1);
+          if (gameOwner?.referredBy) {
+            await db.update(users)
+              .set({ referralConversions: sql`${users.referralConversions} + 1` })
+              .where(eq(users.id, gameOwner.referredBy));
+            const [referrer] = await db.select().from(users).where(eq(users.id, gameOwner.referredBy)).limit(1);
+            if (referrer?.playerId) {
+              const referrerPlayer = await storage.getPlayer(referrer.playerId);
+              if (referrerPlayer) {
+                await storage.addPlayerXp(referrer.playerId, 500);
+              }
+            }
+          }
+        }
+      } catch (e) { console.error('Referral conversion error:', e); }
+
       // Check for performance alerts (drop detection)
-      await checkPerformanceAlerts(input.playerId, game.id, input, grade, sport);
+      try { await checkPerformanceAlerts(input.playerId, game.id, input, grade, sport); }
+      catch (e) { console.error('Performance alert error:', e); }
       
       // Calculate advanced metrics for the game
       const advancedMetrics = calculateAdvancedMetrics(input);
       
       const improvementTips = sport === 'basketball' ? generateImprovementTips(game, player?.position || '') : [];
 
-      res.status(201).json({ 
-        ...game, 
-        xpEarned, 
+      res.status(201).json({
+        ...game,
+        xpEarned,
         coinsEarned,
-        newTier, 
-        totalXp: updatedPlayer.totalXp, 
-        currentTier: updatedPlayer.currentTier,
+        newTier,
+        totalXp: updatedPlayerXp,
+        currentTier: updatedPlayerTier,
         advancedMetrics,
         newRecords,
         completedGoals,
-        improvementTips
+        improvementTips,
+        streakMultiplier: activeStreakMultiplier
       });
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -3417,14 +3261,11 @@ export async function registerRoutes(
     const skillBadges = await storage.getPlayerSkillBadges(playerId);
     
     // Choose badge types based on player's sport
-    const isFootball = player.sport === 'football';
-    const badgeTypes = isFootball ? FOOTBALL_SKILL_BADGE_TYPES : SKILL_BADGE_TYPES;
+      const badgeTypes = SKILL_BADGE_TYPES;
     
     // Enrich with badge definitions
     const enrichedBadges = skillBadges.map(badge => {
-      const def = isFootball 
-        ? FOOTBALL_SKILL_BADGE_TYPES[badge.skillType as keyof typeof FOOTBALL_SKILL_BADGE_TYPES]
-        : SKILL_BADGE_TYPES[badge.skillType as keyof typeof SKILL_BADGE_TYPES];
+      const def = SKILL_BADGE_TYPES[badge.skillType as keyof typeof SKILL_BADGE_TYPES];
       return {
         ...badge,
         name: def?.name || badge.skillType,
@@ -3780,6 +3621,42 @@ export async function registerRoutes(
         }
       }
 
+      // On Mondays, send weekly recap notification if not already sent this week
+      const today = new Date();
+      if (today.getDay() === 1) { // Monday
+        try {
+          const oneWeekAgo = new Date();
+          oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+          const recentNotifs = await db.select().from(notifications)
+            .where(and(
+              eq(notifications.playerId, playerId),
+              eq(notifications.notificationType, 'weekly_recap'),
+              gte(notifications.createdAt, oneWeekAgo),
+            ))
+            .limit(1);
+
+          if (recentNotifs.length === 0) {
+            // Generate recap inline
+            const allGames = await storage.getGamesByPlayerId(playerId);
+            const weekGames = allGames.filter(g => g.createdAt && new Date(g.createdAt) >= oneWeekAgo);
+            const allBadges = await storage.getPlayerBadges(playerId);
+            const weekBadges = allBadges.filter(b => b.earnedAt && new Date(b.earnedAt) >= oneWeekAgo);
+            const player = await storage.getPlayer(playerId);
+            const xpThisWeek = weekGames.length * 50; // approximate
+
+            if (weekGames.length > 0 && player) {
+              await storage.createNotification({
+                playerId,
+                notificationType: 'weekly_recap',
+                title: 'Your Week in Review',
+                message: `Last week: ${weekGames.length} game${weekGames.length !== 1 ? 's' : ''}, ~${xpThisWeek} XP earned, ${weekBadges.length} badge${weekBadges.length !== 1 ? 's' : ''}. Keep grinding!`,
+                isRead: false,
+              });
+            }
+          }
+        } catch (e) { console.error('Weekly recap notification error:', e); }
+      }
+
       const streaks = await storage.getPlayerActivityStreaks(playerId);
       res.json({
         checkedIn: true,
@@ -3902,6 +3779,166 @@ export async function registerRoutes(
     } catch (error) {
       console.error('Error generating weekly recap:', error);
       res.status(500).json({ message: "Failed to generate weekly recap" });
+    }
+  });
+
+  // --- Daily Quests ---
+
+  const QUEST_TYPES = ['log_game', 'earn_badge', 'react_to_feed', 'log_practice', 'update_goal'] as const;
+  const QUEST_XP: Record<string, number> = {
+    log_game: 50, earn_badge: 30, react_to_feed: 15, log_practice: 35, update_goal: 20,
+  };
+  const QUEST_COINS: Record<string, number> = {
+    log_game: 20, earn_badge: 15, react_to_feed: 5, log_practice: 15, update_goal: 10,
+  };
+  const QUEST_LABELS: Record<string, string> = {
+    log_game: 'Log a Game',
+    earn_badge: 'Earn a Badge',
+    react_to_feed: 'React to 3 Feed Posts',
+    log_practice: 'Log a Practice',
+    update_goal: 'Update a Goal',
+  };
+  const QUEST_TARGETS: Record<string, number> = {
+    log_game: 1, earn_badge: 1, react_to_feed: 3, log_practice: 1, update_goal: 1,
+  };
+
+  app.get('/api/players/:id/daily-quests', isAuthenticated, async (req: any, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      if (isNaN(playerId)) return res.status(400).json({ message: "Invalid player ID" });
+
+      const today = new Date().toISOString().split('T')[0];
+
+      // Check if quests already exist for today
+      const existing = await db.select().from(dailyQuests)
+        .where(and(eq(dailyQuests.playerId, playerId), eq(dailyQuests.questDate, today)));
+
+      if (existing.length > 0) {
+        return res.json(existing.map(q => ({ ...q, label: QUEST_LABELS[q.questType] || q.questType })));
+      }
+
+      // Generate 3 quests seeded by playerId + day of year
+      const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+      const seed = (playerId % 5) + dayOfYear;
+      const shuffled = [...QUEST_TYPES].sort((a, b) => {
+        const ha = (seed * QUEST_TYPES.indexOf(a) * 2654435761) % 100;
+        const hb = (seed * QUEST_TYPES.indexOf(b) * 2654435761) % 100;
+        return ha - hb;
+      });
+      const selectedTypes = shuffled.slice(0, 3);
+
+      const newQuests = [];
+      for (const questType of selectedTypes) {
+        const [q] = await db.insert(dailyQuests).values({
+          playerId,
+          questDate: today,
+          questType,
+          targetValue: QUEST_TARGETS[questType] || 1,
+          currentValue: 0,
+          completed: false,
+          xpReward: QUEST_XP[questType] || 25,
+          coinReward: QUEST_COINS[questType] || 10,
+        }).returning();
+        newQuests.push(q);
+      }
+
+      res.json(newQuests.map(q => ({ ...q, label: QUEST_LABELS[q.questType] || q.questType })));
+    } catch (error) {
+      console.error('Error fetching daily quests:', error);
+      res.status(500).json({ message: "Failed to fetch daily quests" });
+    }
+  });
+
+  app.post('/api/players/:id/daily-quests/progress', isAuthenticated, async (req: any, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      if (isNaN(playerId)) return res.status(400).json({ message: "Invalid player ID" });
+      const { questType } = req.body;
+      if (!questType) return res.status(400).json({ message: "questType required" });
+
+      const today = new Date().toISOString().split('T')[0];
+
+      const quests = await db.select().from(dailyQuests)
+        .where(and(
+          eq(dailyQuests.playerId, playerId),
+          eq(dailyQuests.questDate, today),
+          eq(dailyQuests.questType, questType),
+          eq(dailyQuests.completed, false),
+        ));
+
+      if (quests.length === 0) return res.json({ updated: false });
+
+      const quest = quests[0];
+      const newValue = quest.currentValue + 1;
+      const nowComplete = newValue >= quest.targetValue;
+
+      await db.update(dailyQuests)
+        .set({ currentValue: newValue, completed: nowComplete })
+        .where(eq(dailyQuests.id, quest.id));
+
+      if (nowComplete) {
+        // Award XP and coins
+        try { await storage.addPlayerXp(playerId, quest.xpReward); } catch (e) {}
+        const player = await storage.getPlayer(playerId);
+        if (player?.userId && quest.coinReward > 0) {
+          try {
+            await awardCoins(player.userId, quest.coinReward, 'daily_quest', `Daily quest completed: ${questType}`);
+          } catch (e) {}
+        }
+        // Fire notification
+        try {
+          await storage.createNotification({
+            playerId,
+            notificationType: 'daily_quest_complete',
+            title: 'Daily Quest Complete!',
+            message: `You completed today's "${QUEST_LABELS[questType] || questType}" quest and earned ${quest.xpReward} XP!`,
+            isRead: false,
+          });
+        } catch (e) {}
+      }
+
+      res.json({ updated: true, completed: nowComplete, newValue, targetValue: quest.targetValue });
+    } catch (error) {
+      console.error('Error updating quest progress:', error);
+      res.status(500).json({ message: "Failed to update quest progress" });
+    }
+  });
+
+  app.get('/api/players/:id/team-activity-today', isAuthenticated, async (req: any, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      if (isNaN(playerId)) return res.status(400).json({ message: "Invalid player ID" });
+
+      const player = await storage.getPlayer(playerId);
+      if (!player) return res.status(404).json({ message: "Player not found" });
+
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+
+      // Count teammates who logged games today (same team name)
+      let teammateCount = 0;
+      let playerLoggedToday = false;
+
+      if (player.team) {
+        const teamPlayers = await db.select({ id: players.id })
+          .from(players)
+          .where(and(eq(players.team, player.team), ne(players.id, playerId)));
+
+        for (const tp of teamPlayers) {
+          const games = await storage.getGamesByPlayerId(tp.id);
+          if (games.some(g => g.createdAt && new Date(g.createdAt) >= todayStart)) {
+            teammateCount++;
+          }
+        }
+
+        const myGames = await storage.getGamesByPlayerId(playerId);
+        playerLoggedToday = myGames.some(g => g.createdAt && new Date(g.createdAt) >= todayStart);
+      }
+
+      res.json({ teammateCount, playerLoggedToday, teamName: player.team });
+    } catch (error) {
+      console.error('Error fetching team activity:', error);
+      res.status(500).json({ message: "Failed to fetch team activity" });
     }
   });
 
@@ -4484,11 +4521,11 @@ export async function registerRoutes(
         const games = player.games || [];
         const gamesPlayed = games.length;
         
-        // Fetch highlight, badge counts, and football metrics in parallel
+        // Fetch highlight and badge counts in parallel
         const [highlightCount, badgeCount, fbMetrics] = await Promise.all([
           storage.getPlayerHighlightCount(player.id),
           storage.getPlayerBadgeCount(player.id),
-          player.sport === 'football' ? storage.getFootballMetrics(player.id) : Promise.resolve(null),
+          Promise.resolve(null as Record<string, any> | null),
         ]);
         
         // Check if player has caliber badge
@@ -4532,12 +4569,6 @@ export async function registerRoutes(
             threePtPct: null,
             completionPct: null,
             hasCaliberBadge,
-            // Football metrics
-            fortyYardDash: fbMetrics?.fortyYardDash ?? null,
-            verticalJump: fbMetrics?.verticalJump ?? null,
-            totalPointsSIS: fbMetrics?.totalPointsSIS ?? null,
-            physicality: fbMetrics?.physicality ?? null,
-            footballIQ: fbMetrics?.footballIQ ?? null,
             leadership: fbMetrics?.leadership ?? null,
           };
         }
@@ -4554,7 +4585,6 @@ export async function registerRoutes(
         const totalThreeAttempted = games.reduce((acc, g) => acc + (g.threeAttempted || 0), 0);
         const threePtPct = totalThreeAttempted > 0 ? (totalThreeMade / totalThreeAttempted) * 100 : null;
         
-        // Football stats (totals for the season)
         const passingYards = games.reduce((acc, g) => acc + (g.passingYards || 0), 0);
         const passingTouchdowns = games.reduce((acc, g) => acc + (g.passingTouchdowns || 0), 0);
         const rushingYards = games.reduce((acc, g) => acc + (g.rushingYards || 0), 0);
@@ -4617,12 +4647,10 @@ export async function registerRoutes(
           threePtPct: threePtPct !== null ? Number(threePtPct.toFixed(1)) : null,
           completionPct: completionPct !== null ? Number(completionPct.toFixed(1)) : null,
           hasCaliberBadge,
-          // Football metrics
           fortyYardDash: fbMetrics?.fortyYardDash ?? null,
           verticalJump: fbMetrics?.verticalJump ?? null,
           totalPointsSIS: fbMetrics?.totalPointsSIS ?? null,
           physicality: fbMetrics?.physicality ?? null,
-          footballIQ: fbMetrics?.footballIQ ?? null,
           leadership: fbMetrics?.leadership ?? null,
         };
       }));
@@ -4724,7 +4752,6 @@ export async function registerRoutes(
         }
       }
 
-      // Football-specific filters
       if (minPassYds && typeof minPassYds === 'string') {
         const passYdsThreshold = parseFloat(minPassYds);
         if (!isNaN(passYdsThreshold)) {
@@ -4869,44 +4896,7 @@ export async function registerRoutes(
 
       // Calculate sport-specific stats
       const playerSport = p.sport || 'basketball';
-      
-      if (playerSport === 'football') {
-        // Football stats based on position
-        const position = p.position || '';
-        // Support multi-position players by checking if any of their positions match
-        const playerPositions = position.split(',').map(pos => pos.trim());
-        const isQB = playerPositions.includes('QB');
-        const isRB = playerPositions.includes('RB');
-        const isWR = playerPositions.some(pos => ['WR', 'TE'].includes(pos));
-        const isDefense = playerPositions.some(pos => ['DL', 'LB', 'DB', 'CB', 'S', 'DE', 'DT'].includes(pos));
-        
-        const avgPassYds = sportGames.length > 0 ? sportGames.reduce((acc, g) => acc + (g.passingYards || 0), 0) / sportGames.length : 0;
-        const avgRushYds = sportGames.length > 0 ? sportGames.reduce((acc, g) => acc + (g.rushingYards || 0), 0) / sportGames.length : 0;
-        const avgRecYds = sportGames.length > 0 ? sportGames.reduce((acc, g) => acc + (g.receivingYards || 0), 0) / sportGames.length : 0;
-        const avgTackles = sportGames.length > 0 ? sportGames.reduce((acc, g) => acc + (g.tackles || 0), 0) / sportGames.length : 0;
-        const totalTDs = sportGames.reduce((acc, g) => acc + (g.passingTouchdowns || 0) + (g.rushingTouchdowns || 0) + (g.receivingTouchdowns || 0), 0);
-        
-        return {
-          playerId: p.id,
-          name: p.name,
-          team: p.team,
-          jerseyNumber: p.jerseyNumber,
-          position: p.position,
-          sport: playerSport,
-          state: p.state,
-          city: p.city,
-          level: p.level,
-          photoUrl: p.photoUrl,
-          avgGrade,
-          avgGradeScore,
-          gamesPlayed: sportGames.length,
-          avgPassYds: Number(avgPassYds.toFixed(1)),
-          avgRushYds: Number(avgRushYds.toFixed(1)),
-          avgRecYds: Number(avgRecYds.toFixed(1)),
-          avgTackles: Number(avgTackles.toFixed(1)),
-          totalTDs,
-        };
-      } else {
+
         // Basketball stats
         const avgPoints = sportGames.length > 0 ? sportGames.reduce((acc, g) => acc + g.points, 0) / sportGames.length : 0;
         const avgRebounds = sportGames.length > 0 ? sportGames.reduce((acc, g) => acc + g.rebounds, 0) / sportGames.length : 0;
@@ -4938,7 +4928,6 @@ export async function registerRoutes(
           fgPct: Number(fgPct.toFixed(1)),
           threePct: Number(threePct.toFixed(1)),
         };
-      }
     }));
 
     // Sort by avg grade score descending
@@ -8999,23 +8988,12 @@ Only respond with the JSON array, no other text.`;
       const recentGames = sportGames.slice(0, 5);
       
       // Sport-specific stats
-      const isFootball = sport === 'football';
       let recentStats: any = {
         gamesPlayed: recentGames.length,
         recentGrades: recentGames.map(g => g.grade).filter(Boolean),
       };
 
-      if (isFootball) {
-        // Football stats
-        recentStats = {
-          ...recentStats,
-          avgPassingYards: recentGames.length > 0 ? (recentGames.reduce((acc, g) => acc + (g.passingYards || 0), 0) / recentGames.length).toFixed(1) : '0.0',
-          avgRushingYards: recentGames.length > 0 ? (recentGames.reduce((acc, g) => acc + (g.rushingYards || 0), 0) / recentGames.length).toFixed(1) : '0.0',
-          avgReceivingYards: recentGames.length > 0 ? (recentGames.reduce((acc, g) => acc + (g.receivingYards || 0), 0) / recentGames.length).toFixed(1) : '0.0',
-          avgTouchdowns: recentGames.length > 0 ? (recentGames.reduce((acc, g) => acc + (g.passingTouchdowns || 0) + (g.rushingTouchdowns || 0) + (g.receivingTouchdowns || 0), 0) / recentGames.length).toFixed(1) : '0.0',
-          avgTackles: recentGames.length > 0 ? (recentGames.reduce((acc, g) => acc + (g.tackles || 0), 0) / recentGames.length).toFixed(1) : '0.0',
-        };
-      } else {
+      {
         // Basketball stats
         recentStats = {
           ...recentStats,
@@ -9062,8 +9040,7 @@ Only respond with the JSON array, no other text.`;
             points: g.points,
             rebounds: g.rebounds,
             assists: g.assists,
-            // Football stats
-            passingYards: g.passingYards || 0,
+                passingYards: g.passingYards || 0,
             rushingYards: g.rushingYards || 0,
             receivingYards: g.receivingYards || 0,
             touchdowns: (g.passingTouchdowns || 0) + (g.rushingTouchdowns || 0) + (g.receivingTouchdowns || 0),
@@ -9216,8 +9193,7 @@ Only respond with the JSON array, no other text.`;
       const playerStats = playersWithStats.map(player => {
         const games = player.games || [];
         const gamesPlayed = games.length;
-        const isFootball = player.sport === 'football';
-
+      
         if (gamesPlayed === 0) {
           return {
             id: player.id,
@@ -9254,7 +9230,6 @@ Only respond with the JSON array, no other text.`;
         const spg = games.reduce((acc, g) => acc + g.steals, 0) / gamesPlayed;
         const bpg = games.reduce((acc, g) => acc + g.blocks, 0) / gamesPlayed;
 
-        // Football stats
         const totalPassYards = games.reduce((acc, g) => acc + (g.passingYards || 0), 0);
         const totalRushYards = games.reduce((acc, g) => acc + (g.rushingYards || 0), 0);
         const totalRecYards = games.reduce((acc, g) => acc + (g.receivingYards || 0), 0);
@@ -9643,7 +9618,6 @@ Only respond with the JSON array, no other text.`;
         SELECT 
           COUNT(*) as total_players,
           COUNT(*) FILTER (WHERE sport = 'basketball') as basketball_players,
-          COUNT(*) FILTER (WHERE sport = 'football') as football_players
         FROM players
       `);
       const playerStats = playerResult.rows[0] as any;
@@ -9653,7 +9627,6 @@ Only respond with the JSON array, no other text.`;
           COUNT(*) as total_games,
           COUNT(*) FILTER (WHERE created_at >= NOW() - INTERVAL '7 days') as games_7d,
           COUNT(*) FILTER (WHERE sport = 'basketball') as basketball_games,
-          COUNT(*) FILTER (WHERE sport = 'football') as football_games,
           ROUND(AVG(points)::numeric, 1) as avg_points
         FROM games
       `);
@@ -9778,7 +9751,6 @@ Only respond with the JSON array, no other text.`;
           total: Number(gameStats?.total_games || 0),
           thisWeek: Number(gameStats?.games_7d || 0),
           basketball: Number(gameStats?.basketball_games || 0),
-          football: Number(gameStats?.football_games || 0),
           avgPoints: Number(gameStats?.avg_points || 0),
         },
         engagement: {
@@ -9885,6 +9857,41 @@ Only respond with the JSON array, no other text.`;
     }
   });
 
+  // Admin get all coaches (users with role='coach')
+  app.get('/api/admin/coaches', isAdmin, async (req, res) => {
+    try {
+      const result = await db.execute(sql`
+        SELECT id, email, first_name as "firstName", last_name as "lastName", role,
+               "createdAt", "coachVerified"
+        FROM users
+        WHERE role = 'coach'
+        ORDER BY "createdAt" DESC
+      `);
+      res.json({ coaches: result.rows });
+    } catch (err) {
+      console.error('Admin get coaches error:', err);
+      res.status(500).json({ error: 'Could not fetch coaches' });
+    }
+  });
+
+  // Admin verify/reject coach
+  app.patch('/api/admin/coaches/:id/verify', isAdmin, async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const { verified } = req.body;
+      await db.update(users)
+        .set({ coachVerified: verified !== false })
+        .where(eq(users.id, userId));
+      const [updated] = await db.select({
+        id: users.id, email: users.email, coachVerified: users.coachVerified,
+      }).from(users).where(eq(users.id, userId));
+      res.json({ coach: updated });
+    } catch (err) {
+      console.error('Admin verify coach error:', err);
+      res.status(500).json({ error: 'Could not update coach' });
+    }
+  });
+
   // Admin get all recruiters
   app.get('/api/admin/recruiters', isAdmin, async (req, res) => {
     try {
@@ -9958,9 +9965,7 @@ Only respond with the JSON array, no other text.`;
         if (!college.length) return res.status(404).json({ error: "College not found" });
 
         const sport = college[0].sport || "basketball";
-        const sportPath = sport === "football"
-          ? "football/college-football"
-          : "basketball/mens-college-basketball";
+        const sportPath = sport === 'football' ? "football/college-football" : "basketball/mens-college-basketball";
         const checkUrl = `https://site.api.espn.com/apis/site/v2/sports/${sportPath}/teams/${teamIdStr}`;
 
         try {
@@ -10032,8 +10037,7 @@ Only respond with the JSON array, no other text.`;
       if (!sport || sport === "basketball") {
         await fetchTeams("basketball/mens-college-basketball", "basketball");
       }
-      if (!sport || sport === "football") {
-        await fetchTeams("football/college-football", "football");
+      if (!sport || false) {
       }
 
       res.json({ teams: results.slice(0, 20) });
@@ -10256,21 +10260,21 @@ Only respond with the JSON array, no other text.`;
     }
   });
 
-  // === FOOTBALL METRICS ROUTES ===
+  // === ATHLETIC METRICS ROUTES ===
   
-  // Get football metrics for a player
+  // Get athletic metrics for a player
   app.get('/api/players/:id/football-metrics', async (req, res) => {
     try {
       const playerId = parseInt(req.params.id);
       const metrics = await storage.getFootballMetrics(playerId);
       res.json(metrics || null);
     } catch (err) {
-      console.error('Get football metrics error:', err);
-      res.status(500).json({ error: 'Could not fetch football metrics' });
+      console.error('Get athletic metrics error:', err);
+      res.status(500).json({ error: 'Could not fetch metrics' });
     }
   });
   
-  // Create or update football metrics for a player
+  // Create or update athletic metrics for a player
   app.put('/api/players/:id/football-metrics', isAuthenticated, async (req: any, res) => {
     try {
       const playerId = parseInt(req.params.id);
@@ -10287,7 +10291,7 @@ Only respond with the JSON array, no other text.`;
         return res.status(403).json({ error: 'Not authorized to update this player' });
       }
       
-      // Upsert the football metrics
+      // Upsert the athletic metrics
       const existing = await storage.getFootballMetrics(playerId);
       if (existing) {
         const updated = await storage.updateFootballMetrics(playerId, req.body);
@@ -10297,8 +10301,8 @@ Only respond with the JSON array, no other text.`;
         res.json(created);
       }
     } catch (err) {
-      console.error('Update football metrics error:', err);
-      res.status(500).json({ error: 'Could not update football metrics' });
+      console.error('Update metrics error:', err);
+      res.status(500).json({ error: 'Could not update metrics' });
     }
   });
 
@@ -11695,7 +11699,7 @@ Only respond with the JSON array, no other text.`;
       const startSessionSchema = z.object({
         selectedPlayerIds: z.array(z.number()).min(1, "Select at least one player"),
         opponent: z.string().optional(),
-        sport: z.enum(["basketball", "football"]).default("basketball"),
+        sport: z.enum(["basketball"]).default("basketball"),
       });
       const validated = startSessionSchema.parse(req.body);
       
@@ -12627,14 +12631,18 @@ Only respond with the JSON array, no other text.`;
   app.post('/api/recruit-posts', requiresCoach, async (req: any, res) => {
     try {
       const coachUserId = req.user.claims.sub;
-      const body = insertRecruitPostSchema.parse(req.body);
-      
+      const rawBody = { ...req.body };
+      if (Array.isArray(rawBody.positionNeeds)) {
+        rawBody.positionNeeds = JSON.stringify(rawBody.positionNeeds);
+      }
+      const body = insertRecruitPostSchema.omit({ coachUserId: true }).parse(rawBody);
+
       const post = await storage.createRecruitPost({
         ...body,
         coachUserId
       });
-      
-      res.json(post);
+
+      res.status(201).json(post);
     } catch (error: any) {
       console.error('Error creating recruit post:', error);
       if (error instanceof z.ZodError) {
@@ -13141,18 +13149,57 @@ Only respond with the JSON array, no other text.`;
     }
   });
 
-  // POST /api/shop/coins/convert-xp - Convert XP to coins (stub for future use)
+  // POST /api/shop/coins/convert-xp - Convert XP to coins (100 XP = 1 coin)
   app.post('/api/shop/coins/convert-xp', isAuthenticated, async (req: any, res) => {
     try {
+      const XP_PER_COIN = 100;
+
+      const { xpAmount } = z.object({ xpAmount: z.number().int().positive() }).parse(req.body);
+
       const user = await authStorage.getUser(req.user.claims.sub);
       if (!user) {
         return res.status(401).json({ message: "User not found" });
       }
 
-      // Stub: This feature is not yet implemented
-      res.status(501).json({ 
-        message: "XP to coins conversion is not yet available",
-        hint: "This feature is coming soon!"
+      // Find the player record for this user
+      const [player] = await db.select().from(players).where(eq(players.userId, user.id));
+      if (!player) {
+        return res.status(404).json({ message: "Player profile not found" });
+      }
+
+      const currentXp = player.totalXp || 0;
+      if (xpAmount > currentXp) {
+        return res.status(400).json({ message: "Not enough XP", currentXp });
+      }
+
+      // XP must be a multiple of 100
+      if (xpAmount % XP_PER_COIN !== 0) {
+        return res.status(400).json({ message: `XP amount must be a multiple of ${XP_PER_COIN}` });
+      }
+
+      const coinsToGrant = Math.floor(xpAmount / XP_PER_COIN);
+
+      await db.transaction(async (tx) => {
+        // Deduct XP from player
+        await tx.update(players)
+          .set({ totalXp: currentXp - xpAmount })
+          .where(eq(players.id, player.id));
+
+        // Add coins to user
+        await tx.update(users)
+          .set({ coinBalance: sql`COALESCE(${users.coinBalance}, 0) + ${coinsToGrant}` })
+          .where(eq(users.id, user.id));
+      });
+
+      const [updatedUser] = await db.select({ coinBalance: users.coinBalance }).from(users).where(eq(users.id, user.id));
+      const [updatedPlayer] = await db.select({ totalXp: players.totalXp }).from(players).where(eq(players.id, player.id));
+
+      res.json({
+        success: true,
+        xpConverted: xpAmount,
+        coinsGranted: coinsToGrant,
+        newXpBalance: updatedPlayer?.totalXp ?? 0,
+        newCoinBalance: updatedUser?.coinBalance ?? 0,
       });
     } catch (error) {
       console.error('Error converting XP to coins:', error);
@@ -13362,33 +13409,9 @@ Only respond with the JSON array, no other text.`;
         grade: g.grade || undefined,
       }));
 
-      let metrics: PlayerMetrics | undefined;
-      if (player.sport === 'football') {
-        const footballMetrics = await storage.getFootballMetrics(playerId);
-        if (footballMetrics) {
-          metrics = {
-            height: player.height || undefined,
-            fortyYardDash: footballMetrics.fortyYardDash ? parseFloat(footballMetrics.fortyYardDash) : undefined,
-            verticalJump: footballMetrics.verticalJump ? parseFloat(footballMetrics.verticalJump) : undefined,
-            broadJump: footballMetrics.broadJump || undefined,
-            threeConeDrill: footballMetrics.threeConeDrill ? parseFloat(footballMetrics.threeConeDrill) : undefined,
-            benchPressReps: footballMetrics.benchPressReps || undefined,
-            wingspan: footballMetrics.wingspan ? parseFloat(footballMetrics.wingspan) : undefined,
-            physicality: footballMetrics.physicality || undefined,
-            footballIQ: footballMetrics.footballIQ || undefined,
-            mentalToughness: footballMetrics.mentalToughness || undefined,
-            coachability: footballMetrics.coachability || undefined,
-            leadership: footballMetrics.leadership || undefined,
-            workEthic: footballMetrics.workEthic || undefined,
-            competitiveness: footballMetrics.competitiveness || undefined,
-            clutchPerformance: footballMetrics.clutchPerformance || undefined,
-          };
-        }
-      } else {
-        metrics = {
-          height: player.height || undefined,
-        };
-      }
+      const metrics: PlayerMetrics = {
+        height: player.height || undefined,
+      };
 
       const peerStats = await storage.getPeerStats(player.sport as Sport, player.position.split(',')[0].trim());
 
@@ -13448,16 +13471,6 @@ Only respond with the JSON array, no other text.`;
       }));
 
       let metrics: PlayerMetrics | undefined;
-      if (player.sport === 'football') {
-        const footballMetrics = await storage.getFootballMetrics(playerId);
-        if (footballMetrics) {
-          metrics = {
-            coachability: footballMetrics.coachability || undefined,
-            workEthic: footballMetrics.workEthic || undefined,
-            clutchPerformance: footballMetrics.clutchPerformance || undefined,
-          };
-        }
-      }
 
       const peerStats = await storage.getPeerStats(player.sport as Sport, player.position.split(',')[0].trim());
       const primaryPosition = player.position.split(',')[0].trim();
@@ -13770,7 +13783,7 @@ Only respond with the JSON array, no other text.`;
         // a) Season Highs - check if most recent game has any stat that's the highest
         const bbStats = ['points', 'rebounds', 'assists', 'steals', 'blocks'] as const;
         const fbStats = ['passingYards', 'rushingYards', 'receivingYards', 'passingTouchdowns', 'rushingTouchdowns', 'receivingTouchdowns', 'tackles', 'sacks'] as const;
-        const statsToCheck = sport === 'football' ? fbStats : bbStats;
+        const statsToCheck = false ? fbStats : bbStats;
 
         const statLabels: Record<string, string> = {
           points: 'Points', rebounds: 'Rebounds', assists: 'Assists', steals: 'Steals', blocks: 'Blocks',
@@ -13984,7 +13997,7 @@ Only respond with the JSON array, no other text.`;
         { key: 'sacks', label: 'Sacks' },
       ];
 
-      const statsToCompare = sport === 'football' ? fbStats : bbStats;
+      const statsToCompare = false ? fbStats : bbStats;
 
       const comparisons = statsToCompare.map(({ key, label }) => {
         const current = Math.round(avgStat(currentGames, key) * 10) / 10;
@@ -14876,30 +14889,30 @@ Only respond with the JSON array, no other text.`;
           createdGames.push(game);
         }
 
-        // Create placeholder semifinal games
+        // Create placeholder semifinal games (QF winners TBD, use top seeds as placeholders)
         const sf1 = await storage.createLeagueGame({
           leagueId,
-          homeTeamId: playoffTeams[0].id, // Placeholder - will be updated
-          awayTeamId: playoffTeams[0].id, // Placeholder - will be updated
+          homeTeamId: playoffTeams[0].id,
+          awayTeamId: playoffTeams[1].id,
           isPlayoff: true,
           playoffRound: "semifinals",
           status: "scheduled",
         });
         const sf2 = await storage.createLeagueGame({
           leagueId,
-          homeTeamId: playoffTeams[0].id, // Placeholder
-          awayTeamId: playoffTeams[0].id, // Placeholder
+          homeTeamId: playoffTeams[2].id,
+          awayTeamId: playoffTeams[3].id,
           isPlayoff: true,
           playoffRound: "semifinals",
           status: "scheduled",
         });
         createdGames.push(sf1, sf2);
 
-        // Create placeholder championship game
+        // Create placeholder championship game (SF winners TBD)
         const championship = await storage.createLeagueGame({
           leagueId,
-          homeTeamId: playoffTeams[0].id, // Placeholder
-          awayTeamId: playoffTeams[0].id, // Placeholder
+          homeTeamId: playoffTeams[0].id,
+          awayTeamId: playoffTeams[1].id,
           isPlayoff: true,
           playoffRound: "championship",
           status: "scheduled",
@@ -14927,11 +14940,11 @@ Only respond with the JSON array, no other text.`;
         });
         createdGames.push(sf1, sf2);
 
-        // Championship placeholder
+        // Championship placeholder (SF winners TBD, use top 2 seeds)
         const championship = await storage.createLeagueGame({
           leagueId,
-          homeTeamId: playoffTeams[0].id, // Placeholder
-          awayTeamId: playoffTeams[0].id, // Placeholder
+          homeTeamId: playoffTeams[0].id,
+          awayTeamId: playoffTeams[1].id,
           isPlayoff: true,
           playoffRound: "championship",
           status: "scheduled",
@@ -15307,7 +15320,6 @@ Only respond with the JSON array, no other text.`;
       
       res.json({
         message: "Stats sync completed",
-        football: result.football,
         basketball: result.basketball,
         syncedAt: new Date().toISOString(),
       });
@@ -16943,6 +16955,44 @@ Only respond with the JSON array, no other text.`;
       const player = await storage.getPlayer(playerId);
       if (!player) {
         return res.status(404).json({ message: "Player not found" });
+      }
+
+      // Fire-and-forget: record recruiter profile view (1 per recruiter per day)
+      if ((req as any).isAuthenticated?.()) {
+        const viewerUserId = (req as any).user?.claims?.sub;
+        if (viewerUserId) {
+          (async () => {
+            try {
+              const recruiter = await storage.getRecruiterProfileByUserId(viewerUserId);
+              if (recruiter) {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const [existing] = await db
+                  .select({ id: recruiterProfileViews.id })
+                  .from(recruiterProfileViews)
+                  .where(and(
+                    eq(recruiterProfileViews.recruiterId, recruiter.id),
+                    eq(recruiterProfileViews.playerId, playerId),
+                    gte(recruiterProfileViews.viewedAt, today),
+                  ))
+                  .limit(1);
+                if (!existing) {
+                  await storage.logProfileView(recruiter.id, playerId);
+                  await storage.createNotification({
+                    playerId,
+                    notificationType: 'profile_viewed',
+                    title: 'Your profile was viewed',
+                    message: `${recruiter.schoolName || 'A recruiter'}${recruiter.division ? ` (${recruiter.division})` : ''} viewed your recruiting profile.`,
+                    relatedType: 'recruiter',
+                    relatedId: recruiter.id,
+                  });
+                }
+              }
+            } catch (err) {
+              console.error('Failed to record recruiter profile view:', err);
+            }
+          })();
+        }
       }
 
       const allGames = await storage.getGamesByPlayerId(playerId);
@@ -18916,8 +18966,295 @@ The email should:
     }
   });
 
-  await seedDatabase();
-  await seedSeasons();
+  // GET /api/coach/recommendations — coach's own list of recommendations they've written
+  // This endpoint was missing but CoachEndorsements.tsx depends on it
+  app.get('/api/coach/recommendations', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await authStorage.getUser(userId);
+      if (!user || user.role !== 'coach') {
+        return res.status(403).json({ message: 'Coach role required' });
+      }
+      const recs = await db
+        .select()
+        .from(coachRecommendations)
+        .where(eq(coachRecommendations.coachUserId, user.id))
+        .orderBy(desc(coachRecommendations.createdAt));
+      res.json(recs);
+    } catch (err) {
+      console.error('Error fetching coach recommendations:', err);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  try {
+    await seedDatabase();
+  } catch (err) {
+    console.error('Seed database error (non-fatal):', (err as Error).message);
+  }
+  try {
+    await seedSeasons();
+  } catch (err) {
+    console.error('Seed seasons error (non-fatal):', (err as Error).message);
+  }
+
+  // =============================================
+  // HEALTH CHECK
+  // =============================================
+  app.get('/api/health', async (_req, res) => {
+    try {
+      await db.execute(sql`SELECT 1`);
+      res.json({ status: 'ok', db: 'ok', timestamp: new Date().toISOString() });
+    } catch {
+      res.status(503).json({ status: 'error', db: 'unreachable', timestamp: new Date().toISOString() });
+    }
+  });
+
+  // =============================================
+  // GDPR / PRIVACY COMPLIANCE
+  // =============================================
+
+  // GET /api/gdpr/data-export — Export all personal data for authenticated user
+  app.get('/api/gdpr/data-export', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await authStorage.getUser(userId);
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      let playerData: any = null;
+      let gameData: any[] = [];
+      if (user.playerId) {
+        playerData = await storage.getPlayer(user.playerId);
+        gameData = await storage.getGamesByPlayerId(user.playerId);
+      }
+
+      const exportData = {
+        exportedAt: new Date().toISOString(),
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          createdAt: user.createdAt,
+        },
+        player: playerData ? {
+          id: playerData.id,
+          name: playerData.name,
+          sport: playerData.sport,
+          position: playerData.position,
+          school: playerData.school,
+          city: playerData.city,
+          state: playerData.state,
+          gpa: playerData.gpa,
+          graduationYear: playerData.graduationYear,
+          createdAt: playerData.createdAt,
+        } : null,
+        games: gameData.map((g: any) => ({
+          id: g.id,
+          date: g.date,
+          opponent: g.opponent,
+          sport: g.sport,
+          points: g.points,
+          grade: g.grade,
+        })),
+        dataRetentionPolicy: "Personal data is retained for the duration of your account. Delete your account to remove all PII.",
+      };
+
+      res.setHeader('Content-Disposition', 'attachment; filename="caliber-data-export.json"');
+      res.setHeader('Content-Type', 'application/json');
+      res.json(exportData);
+    } catch (error) {
+      console.error('Error exporting user data:', error);
+      res.status(500).json({ message: "Failed to export data" });
+    }
+  });
+
+  // DELETE /api/gdpr/delete-account — Anonymize PII, destroy session
+  app.delete('/api/gdpr/delete-account', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await authStorage.getUser(userId);
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      if (user.playerId) {
+        await db.update(players)
+          .set({
+            userId: null,
+            name: `[Deleted Player]`,
+            bio: null,
+            photoUrl: null,
+            bannerUrl: null,
+            coachName: null,
+            coachPhone: null,
+            school: null,
+            city: null,
+            state: null,
+            highlightVideoUrl: null,
+            username: null,
+          } as any)
+          .where(eq(players.id, user.playerId));
+      }
+
+      if (req.session) {
+        req.session.destroy(() => {});
+      }
+
+      res.json({ message: "Account and personal data deleted. Aggregate statistics have been anonymized." });
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      res.status(500).json({ message: "Failed to delete account" });
+    }
+  });
+
+  // =============================================
+  // EQUIPMENT TRACKING
+  // =============================================
+
+  // GET /api/players/:id/equipment
+  app.get('/api/players/:id/equipment', async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      if (isNaN(playerId)) return res.status(400).json({ message: "Invalid player ID" });
+      const gear = await db.select().from(equipment).where(eq(equipment.playerId, playerId));
+      res.json(gear);
+    } catch (error) {
+      console.error('Error fetching equipment:', error);
+      res.status(500).json({ message: "Failed to fetch equipment" });
+    }
+  });
+
+  // POST /api/players/:id/equipment
+  app.post('/api/players/:id/equipment', isAuthenticated, async (req: any, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      if (isNaN(playerId)) return res.status(400).json({ message: "Invalid player ID" });
+      const canModify = await canModifyPlayer(req, playerId);
+      if (!canModify) return res.status(403).json({ message: "Not authorized" });
+      const data = insertEquipmentSchema.parse({ ...req.body, playerId });
+      const [item] = await db.insert(equipment).values(data).returning();
+      res.status(201).json(item);
+    } catch (error: any) {
+      if (error?.errors) return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      console.error('Error adding equipment:', error);
+      res.status(500).json({ message: "Failed to add equipment" });
+    }
+  });
+
+  // DELETE /api/equipment/:id
+  app.delete('/api/equipment/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const itemId = parseInt(req.params.id);
+      if (isNaN(itemId)) return res.status(400).json({ message: "Invalid equipment ID" });
+      await db.delete(equipment).where(eq(equipment.id, itemId));
+      res.json({ message: "Equipment removed" });
+    } catch (error) {
+      console.error('Error removing equipment:', error);
+      res.status(500).json({ message: "Failed to remove equipment" });
+    }
+  });
+
+  // =============================================
+  // VERIFIED ATHLETE (ADMIN)
+  // =============================================
+
+  // PATCH /api/admin/players/:id/verify
+  app.patch('/api/admin/players/:id/verify', isAdmin, async (req, res) => {
+    try {
+      const playerId = parseInt(req.params.id);
+      if (isNaN(playerId)) return res.status(400).json({ message: "Invalid player ID" });
+      const { verified, method } = req.body;
+      const isVerified = verified !== false;
+      const verificationMethod = method || 'admin';
+      const [updated] = await db.update(players)
+        .set({ verifiedAthlete: isVerified, verificationMethod } as any)
+        .where(eq(players.id, playerId))
+        .returning();
+      if (!updated) return res.status(404).json({ message: "Player not found" });
+      res.json({ message: `Player ${isVerified ? 'verified' : 'unverified'}`, player: updated });
+    } catch (error) {
+      console.error('Error verifying player:', error);
+      res.status(500).json({ message: "Failed to verify player" });
+    }
+  });
+
+  // =============================================
+  // ANONYMIZED AGGREGATE DATA API (partner key required)
+  // =============================================
+
+  // GET /api/data/aggregate/stats
+  app.get('/api/data/aggregate/stats', apiKeyAuth, async (req, res) => {
+    try {
+      const { sport = 'basketball' } = req.query as Record<string, string>;
+
+      const avgStatsByPosition = await db.execute(sql`
+        SELECT
+          p.position,
+          p.state,
+          p.level,
+          COUNT(DISTINCT p.id)::int AS player_count,
+          ROUND(AVG(g.points)::numeric, 1)::float AS avg_ppg,
+          ROUND(AVG(g.rebounds)::numeric, 1)::float AS avg_rpg,
+          ROUND(AVG(g.assists)::numeric, 1)::float AS avg_apg
+        FROM players p
+        JOIN games g ON g.player_id = p.id
+        WHERE p.sport = ${sport}
+          AND g.sport = ${sport}
+        GROUP BY p.position, p.state, p.level
+        HAVING COUNT(DISTINCT p.id) >= 5
+        ORDER BY p.position, avg_ppg DESC
+      `);
+
+      const gradeDistribution = await db.execute(sql`
+        SELECT
+          grade,
+          COUNT(*)::int AS game_count
+        FROM games
+        WHERE sport = ${sport}
+          AND grade IS NOT NULL
+        GROUP BY grade
+        ORDER BY grade
+      `);
+
+      res.json({
+        meta: { sport, generatedAt: new Date().toISOString(), dataVersion: '1.0' },
+        avgStatsByPosition: avgStatsByPosition.rows,
+        gradeDistribution: gradeDistribution.rows,
+      });
+    } catch (error) {
+      console.error('Error generating aggregate stats:', error);
+      res.status(500).json({ message: "Failed to generate aggregate stats" });
+    }
+  });
+
+  // GET /api/data/aggregate/trends
+  app.get('/api/data/aggregate/trends', apiKeyAuth, async (req, res) => {
+    try {
+      const { sport = 'basketball', period = 'monthly' } = req.query as Record<string, string>;
+      const truncUnit = period === 'weekly' ? 'week' : 'month';
+
+      const trends = await db.execute(sql`
+        SELECT
+          DATE_TRUNC(${truncUnit}, g.created_at) AS period_start,
+          COUNT(DISTINCT g.player_id)::int AS active_players,
+          COUNT(g.id)::int AS games_logged,
+          ROUND(AVG(g.points)::numeric, 1)::float AS avg_ppg
+        FROM games g
+        WHERE g.sport = ${sport}
+          AND g.created_at >= NOW() - INTERVAL '12 months'
+        GROUP BY DATE_TRUNC(${truncUnit}, g.created_at)
+        ORDER BY period_start ASC
+      `);
+
+      res.json({
+        meta: { sport, period, generatedAt: new Date().toISOString() },
+        trends: trends.rows,
+      });
+    } catch (error) {
+      console.error('Error generating trends:', error);
+      res.status(500).json({ message: "Failed to generate trends" });
+    }
+  });
 
   return httpServer;
 }

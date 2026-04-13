@@ -4,9 +4,10 @@ import { Link } from "wouter";
 import { api } from "@shared/routes";
 import { GradeBadge } from "@/components/GradeBadge";
 import { useSport } from "@/components/SportToggle";
-import { 
-  Trophy, Medal, Filter, X, Users, Search, Crown, 
-  TrendingUp, Star, ChevronRight, Flame, Target
+import { useToast } from "@/hooks/use-toast";
+import {
+  Trophy, Medal, Filter, X, Users, Search, Crown,
+  TrendingUp, Star, ChevronRight, Target, Share2
 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
@@ -24,6 +25,10 @@ import {
 } from "@/components/ui/select";
 import { SkeletonLeaderboardRow } from "@/components/ui/skeleton-premium";
 
+function formatPositions(position: string): string {
+  return position?.split(',').map(p => p.trim()).join(' / ') || position;
+}
+
 const US_STATES = [
   "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut",
   "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa",
@@ -35,16 +40,7 @@ const US_STATES = [
   "Wisconsin", "Wyoming"
 ];
 
-import { FOOTBALL_POSITION_LABELS, type FootballPosition } from "@shared/sports-config";
-
 const BASKETBALL_POSITIONS = ["Guard", "Wing", "Big"];
-const FOOTBALL_POSITIONS = ["QB", "RB", "WR", "TE", "OL", "DL", "LB", "DB", "K", "P"];
-
-function formatPositions(position: string): string {
-  return position?.split(',').map(p => p.trim()).map(pos => 
-    FOOTBALL_POSITION_LABELS[pos as FootballPosition] || pos
-  ).join(' / ') || position;
-}
 
 const LEVELS = [
   { value: "middle_school", label: "Middle School" },
@@ -54,7 +50,7 @@ const LEVELS = [
 
 const RANK_STYLES = {
   1: {
-    bg: "from-yellow-500/20 to-yellow-600/10",
+    bg: "from-yellow-500/20",
     border: "border-yellow-500/40",
     glow: "shadow-[0_0_30px_rgba(234,179,8,0.3)]",
     icon: Trophy,
@@ -62,7 +58,7 @@ const RANK_STYLES = {
     ringColor: "ring-yellow-500/30",
   },
   2: {
-    bg: "from-slate-300/20 to-slate-400/10",
+    bg: "from-slate-300/20",
     border: "border-slate-400/40",
     glow: "shadow-[0_0_20px_rgba(148,163,184,0.2)]",
     icon: Medal,
@@ -70,7 +66,7 @@ const RANK_STYLES = {
     ringColor: "ring-slate-400/30",
   },
   3: {
-    bg: "from-orange-600/20 to-orange-700/10",
+    bg: "from-orange-600/20",
     border: "border-orange-600/40",
     glow: "shadow-[0_0_20px_rgba(234,88,12,0.2)]",
     icon: Medal,
@@ -85,8 +81,21 @@ export default function Leaderboard() {
   const [positionFilter, setPositionFilter] = useState<string>("");
   const [levelFilter, setLevelFilter] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
+  const { toast } = useToast();
 
-  const positions = currentSport === 'football' ? FOOTBALL_POSITIONS : BASKETBALL_POSITIONS;
+  const sharePlayer = async (playerId: number, name: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const url = `${window.location.origin}/profile/${playerId}/public`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast({ title: "Link copied!", description: `${name}'s profile link copied to clipboard` });
+    } catch {
+      toast({ title: "Copy failed", description: "Could not copy link", variant: "destructive" });
+    }
+  };
+
+  const positions = BASKETBALL_POSITIONS;
 
   const { data: leaderboard, isLoading } = useQuery({
     queryKey: [api.analytics.leaderboard.path, currentSport, stateFilter, positionFilter, levelFilter],
@@ -120,8 +129,6 @@ export default function Leaderboard() {
            entry.team?.toLowerCase().includes(searchQuery.toLowerCase());
   }) || [];
 
-  const isBasketball = currentSport === 'basketball';
-
   if (isLoading) {
     return (
       <div className="space-y-6 pb-24 md:pb-8">
@@ -149,11 +156,11 @@ export default function Leaderboard() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-yellow-600 dark:text-yellow-400" style={{ filter: "drop-shadow(0 0 8px #fbbf24)" }} />
+                <Trophy className="w-5 h-5 text-yellow-600 dark:text-yellow-400" style={{ filter: "drop-shadow(0 0 8px #c8d4de)" }} />
                 <span className="text-xs uppercase tracking-wider text-yellow-600 dark:text-yellow-400 font-semibold">Rankings</span>
               </div>
               <h1 className="text-3xl md:text-4xl font-bold" data-testid="text-leaderboard-title">
-                <span className="bg-gradient-to-r from-white via-yellow-200 to-yellow-400 bg-clip-text text-transparent">
+                <span className="from-white">
                   Player Leaderboard
                 </span>
               </h1>
@@ -163,26 +170,12 @@ export default function Leaderboard() {
             </div>
             
             <div className="flex items-center gap-3">
-              <Badge 
-                className={cn(
-                  "px-4 py-2 text-sm font-bold flex items-center gap-2",
-                  isBasketball 
-                    ? "bg-gradient-to-r from-accent to-accent/90 text-accent-foreground" 
-                    : "bg-gradient-to-r from-accent/80 to-accent/70 text-accent-foreground"
-                )}
+              <Badge
+                className="px-4 py-2 text-sm font-bold flex items-center gap-2 from-accent to-accent/90 text-accent-foreground"
                 data-testid="badge-current-sport"
               >
-                {isBasketball ? (
-                  <>
-                    <Target className="w-4 h-4" />
-                    Basketball
-                  </>
-                ) : (
-                  <>
-                    <Flame className="w-4 h-4" />
-                    Football
-                  </>
-                )}
+                <Target className="w-4 h-4" />
+                Basketball
               </Badge>
             </div>
           </div>
@@ -190,7 +183,7 @@ export default function Leaderboard() {
       </div>
 
       <Card className="relative overflow-hidden bg-card/80 border-border">
-        <div className="absolute inset-x-[20%] top-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
+        <div className="absolute inset-x-[20%] top-0 h-px from-transparent via-accent/30 to-transparent" />
         
         <CardContent className="p-4 space-y-4">
           <div className="flex items-center justify-between">
@@ -276,27 +269,34 @@ export default function Leaderboard() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
               >
-                <Link href={`/players/${entry.playerId}`} data-testid={`link-top-player-${index}`}>
+                <Link href={`/profile/${entry.playerId}/public`} data-testid={`link-top-player-${index}`}>
                   <Card className={cn(
-                    "relative overflow-hidden transition-all duration-300 hover:scale-[1.02] cursor-pointer",
-                    "bg-gradient-to-br border",
+                    "relative overflow-hidden transition-all duration-300 hover:scale-[1.02] cursor-pointer group",
+                    "border",
                     rankStyle?.bg,
                     rankStyle?.border,
                     rankStyle?.glow,
                     index === 0 && "ring-2",
                     rankStyle?.ringColor
                   )}>
-                    <div className="absolute top-3 right-3">
+                    <div className="absolute top-3 right-3 flex items-center gap-1">
+                      <button
+                        onClick={(e) => sharePlayer(entry.playerId, entry.name, e)}
+                        className="p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-opacity"
+                        title="Copy profile link"
+                      >
+                        <Share2 className="w-4 h-4 text-muted-foreground" />
+                      </button>
                       <Icon className={cn("w-8 h-8", rankStyle?.iconColor)} style={{ filter: `drop-shadow(0 0 10px currentColor)` }} />
                     </div>
-                    
+
                     <CardContent className="p-5">
                       <div className="flex items-center gap-4">
                         <div className="relative">
                           <div className={cn(
                             "w-16 h-16 rounded-xl flex items-center justify-center text-xl font-bold border-2",
                             rankStyle?.border,
-                            "bg-gradient-to-br from-muted to-muted/50"
+                            "from-muted to-muted/50"
                           )}>
                             {entry.jerseyNumber || "#"}
                           </div>
@@ -309,14 +309,14 @@ export default function Leaderboard() {
                             #{index + 1}
                           </div>
                         </div>
-                        
+
                         <div className="flex-1 min-w-0">
                           <h3 className="font-bold text-lg text-foreground truncate">{entry.name}</h3>
                           <p className="text-sm text-muted-foreground">{entry.team || "No Team"}</p>
                           <p className="text-xs text-muted-foreground">{formatPositions(entry.position)}</p>
                         </div>
                       </div>
-                      
+
                       <div className="mt-4 flex items-center justify-between">
                         <GradeBadge grade={entry.avgGrade} size="lg" />
                         <div className="text-right">
@@ -334,37 +334,29 @@ export default function Leaderboard() {
       )}
 
       <Card className="relative overflow-hidden bg-card/80 border-border">
-        <div className="absolute inset-x-[15%] top-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
+        <div className="absolute inset-x-[15%] top-0 h-px from-transparent via-accent/30 to-transparent" />
         
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[700px]">
             <thead>
-              <tr className="bg-gradient-to-r from-accent/5 to-transparent border-b border-border/50">
+              <tr className="from-accent/5 to-transparent border-b border-border/50">
                 <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">Rank</th>
                 <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">Player</th>
                 <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">Grade</th>
-                {isBasketball ? (
-                  <>
+                <>
                     <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">PPG</th>
                     <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">RPG</th>
                     <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">APG</th>
                     <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">FG%</th>
                   </>
-                ) : (
-                  <>
-                    <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">Pass YDS</th>
-                    <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">Rush YDS</th>
-                    <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">Rec YDS</th>
-                    <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">TDs</th>
-                  </>
-                )}
                 <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">Games</th>
+                <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50">
               {filteredLeaderboard.length === 0 ? (
                 <tr>
-                  <td colSpan={isBasketball ? 8 : 8} className="px-6 py-4">
+                  <td colSpan={8} className="px-6 py-4">
                     <EmptyState
                       icon={hasFilters ? Trophy : Users}
                       title={hasFilters ? "No Matches Found" : "No Players Yet"}
@@ -390,7 +382,7 @@ export default function Leaderboard() {
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.03 }}
-                        className="transition-all duration-300 hover:bg-gradient-to-r hover:from-accent/5 hover:to-transparent group"
+                        className="transition-all duration-300 hover:hover:from-accent/5 hover:to-transparent group"
                         data-testid={`row-leaderboard-${rank}`}
                       >
                         <td className="px-4 md:px-6 py-4">
@@ -399,9 +391,9 @@ export default function Leaderboard() {
                           </div>
                         </td>
                         <td className="px-4 md:px-6 py-4">
-                          <Link href={`/players/${entry.playerId}`} data-testid={`link-player-profile-${entry.playerId}`}>
+                          <Link href={`/profile/${entry.playerId}/public`} data-testid={`link-player-profile-${entry.playerId}`}>
                             <div className="flex items-center gap-3 cursor-pointer">
-                              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-accent/20 to-transparent border border-accent/20 flex items-center justify-center font-bold text-sm text-accent shrink-0">
+                              <div className="w-10 h-10 rounded-lg from-accent/20 to-transparent border border-accent/20 flex items-center justify-center font-bold text-sm text-accent shrink-0">
                                 {entry.jerseyNumber || "#"}
                               </div>
                               <div className="min-w-0">
@@ -409,7 +401,7 @@ export default function Leaderboard() {
                                   {entry.name}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                  {entry.team || "No Team"} • {formatPositions(entry.position)}
+                                  {entry.team || "No Team"} • {entry.position}
                                 </p>
                               </div>
                             </div>
@@ -418,22 +410,22 @@ export default function Leaderboard() {
                         <td className="px-4 md:px-6 py-4">
                           <GradeBadge grade={entry.avgGrade} size="sm" />
                         </td>
-                        {isBasketball ? (
-                          <>
+                        <>
                             <td className="px-4 md:px-6 py-4 font-mono font-bold text-foreground">{entry.avgPoints ?? 0}</td>
                             <td className="px-4 md:px-6 py-4 font-mono text-accent/70">{entry.avgRebounds ?? 0}</td>
                             <td className="px-4 md:px-6 py-4 font-mono text-accent/70">{entry.avgAssists ?? 0}</td>
                             <td className="px-4 md:px-6 py-4 font-mono text-accent/70">{entry.fgPct ?? 0}%</td>
                           </>
-                        ) : (
-                          <>
-                            <td className="px-4 md:px-6 py-4 font-mono font-bold text-foreground">{entry.avgPassYds ?? 0}</td>
-                            <td className="px-4 md:px-6 py-4 font-mono text-accent/70">{entry.avgRushYds ?? 0}</td>
-                            <td className="px-4 md:px-6 py-4 font-mono text-accent/70">{entry.avgRecYds ?? 0}</td>
-                            <td className="px-4 md:px-6 py-4 font-mono text-accent/70">{entry.totalTDs ?? 0}</td>
-                          </>
-                        )}
                         <td className="px-4 md:px-6 py-4 text-accent/50">{entry.gamesPlayed}</td>
+                        <td className="px-4 md:px-6 py-4">
+                          <button
+                            onClick={(e) => sharePlayer(entry.playerId, entry.name, e)}
+                            className="p-1.5 rounded-md opacity-0 group-hover:opacity-100 hover:bg-accent/10 transition-opacity"
+                            title="Copy profile link"
+                          >
+                            <Share2 className="w-4 h-4 text-muted-foreground" />
+                          </button>
+                        </td>
                       </motion.tr>
                     );
                   })}

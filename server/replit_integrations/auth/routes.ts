@@ -16,8 +16,9 @@ export function registerAuthRoutes(app: Express): void {
         });
       }
 
-      const user = await authStorage.getUser(userId);
-      
+      const userRaw = await authStorage.getUser(userId);
+      const user = userRaw ? (({ passwordHash, ...rest }) => rest)(userRaw as any) : null;
+
       if (!user) {
         return res.status(404).json({ 
           message: "User account not found. Please sign up.",
@@ -92,6 +93,20 @@ export function registerAuthRoutes(app: Express): void {
         message: "Failed to switch roles. Please try again.",
         type: "server_error"
       });
+    }
+  });
+
+  // POST /api/auth/verify-email - Mark email as verified (self-verification; extend with token flow when email service is available)
+  app.post("/api/auth/verify-email", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ message: "Not authenticated" });
+
+      await authStorage.updateUser(userId, { emailVerified: true });
+      res.json({ success: true, message: "Email verified" });
+    } catch (error) {
+      console.error("Error verifying email:", error);
+      res.status(500).json({ message: "Failed to verify email" });
     }
   });
 

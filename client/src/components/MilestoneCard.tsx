@@ -42,7 +42,7 @@ const MILESTONE_CONFIG: Record<string, {
   badge_unlock: {
     icon: Award,
     color: "text-accent",
-    glowColor: "rgba(234, 88, 12, 0.4)",
+    glowColor: "rgba(224,36,36,0.4)",
     gradientFrom: "from-accent",
     gradientTo: "to-blue-500",
   },
@@ -154,7 +154,7 @@ export function MilestoneCard({ milestone, playerName, playerId }: MilestoneCard
 
           <h3
             className={cn(
-              "font-display text-2xl font-bold uppercase tracking-wider bg-clip-text text-transparent bg-gradient-to-r",
+              "font-display text-2xl font-bold uppercase tracking-wider",
               config.gradientFrom,
               config.gradientTo
             )}
@@ -243,7 +243,7 @@ export function MilestonesSection({ playerId, playerName }: MilestonesSectionPro
         <div className="p-2 rounded-lg bg-accent/10 border border-accent/20">
           <Sparkles className="w-5 h-5 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(var(--accent) / 0.6))" }} />
         </div>
-        <h3 className="text-lg font-bold font-display bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent">
+        <h3 className="text-lg font-bold font-display from-foreground to-accent">
           Recent Milestones
         </h3>
       </div>

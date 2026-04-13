@@ -1,5 +1,16 @@
-import type { Express } from "express";
+import express, { type Express } from "express";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
+import { randomUUID } from "crypto";
+import * as fs from "fs";
+import * as path from "path";
+
+const UPLOADS_DIR = path.join(process.cwd(), "uploads");
+
+function ensureUploadsDir() {
+  if (!fs.existsSync(UPLOADS_DIR)) {
+    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+  }
+}
 
 /**
  * Register object storage routes for file uploads.
@@ -15,6 +26,7 @@ import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
  */
 export function registerObjectStorageRoutes(app: Express): void {
   const objectStorageService = new ObjectStorageService();
+  ensureUploadsDir();
 
   /**
    * Request a presigned URL for file upload.
@@ -36,29 +48,24 @@ export function registerObjectStorageRoutes(app: Express): void {
    * Send JSON metadata only, then upload the file directly to uploadURL.
    */
   app.post("/api/uploads/request-url", async (req, res) => {
+    const { name, size, contentType } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ error: "Missing required field: name" });
+    }
+
+    // Try Replit GCS first; fall back to local disk when sidecar is unavailable
     try {
-      const { name, size, contentType } = req.body;
-
-      if (!name) {
-        return res.status(400).json({
-          error: "Missing required field: name",
-        });
-      }
-
       const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-
-      // Extract object path from the presigned URL for later reference
       const objectPath = objectStorageService.normalizeObjectEntityPath(uploadURL);
-
-      res.json({
-        uploadURL,
-        objectPath,
-        // Echo back the metadata for client convenience
-        metadata: { name, size, contentType },
-      });
-    } catch (error) {
-      console.error("Error generating upload URL:", error);
-      res.status(500).json({ error: "Failed to generate upload URL" });
+      return res.json({ uploadURL, objectPath, metadata: { name, size, contentType } });
+    } catch {
+      ensureUploadsDir();
+      const id = randomUUID();
+      const host = `${req.protocol}://${req.get("host")}`;
+      const uploadURL = `${host}/api/object-storage/local-upload/${id}`;
+      const objectPath = `/objects/local/${id}`;
+      return res.json({ uploadURL, objectPath, metadata: { name, size, contentType } });
     }
   });
 
@@ -80,26 +87,72 @@ export function registerObjectStorageRoutes(app: Express): void {
    * }
    */
   app.post("/api/object-storage/put-presigned-url", async (req, res) => {
+    const { fileName, contentType, objectDir } = req.body;
+
+    if (!fileName) {
+      return res.status(400).json({ error: "Missing required field: fileName" });
+    }
+
+    // Try Replit GCS first; fall back to local disk when sidecar is unavailable
     try {
-      const { fileName, contentType, objectDir } = req.body;
-
-      if (!fileName) {
-        return res.status(400).json({
-          error: "Missing required field: fileName",
-        });
-      }
-
       const uploadURL = await objectStorageService.getObjectEntityUploadURL();
       const objectPath = objectStorageService.normalizeObjectEntityPath(uploadURL);
+      return res.json({ url: uploadURL, objectPath, fileName });
+    } catch {
+      // Replit sidecar unavailable — use local disk storage
+      ensureUploadsDir();
+      const id = randomUUID();
+      const host = `${req.protocol}://${req.get("host")}`;
+      const url = `${host}/api/object-storage/local-upload/${id}`;
+      const objectPath = `/objects/local/${id}`;
+      return res.json({ url, objectPath, fileName });
+    }
+  });
 
-      res.json({
-        url: uploadURL,
-        objectPath,
-        fileName,
-      });
+  // Receive binary PUT uploads from Uppy when falling back to local disk
+  app.put(
+    "/api/object-storage/local-upload/:id",
+    express.raw({ type: "*/*", limit: "50mb" }),
+    (req, res) => {
+      try {
+        ensureUploadsDir();
+        const { id } = req.params;
+        if (!/^[0-9a-f-]+$/i.test(id)) {
+          return res.status(400).json({ error: "Invalid upload ID" });
+        }
+        const filePath = path.join(UPLOADS_DIR, id);
+        const contentType = req.headers["content-type"] || "application/octet-stream";
+        fs.writeFileSync(filePath, req.body as Buffer);
+        fs.writeFileSync(`${filePath}.meta`, contentType);
+        res.status(200).json({ success: true });
+      } catch (error) {
+        console.error("Local upload error:", error);
+        res.status(500).json({ error: "Upload failed" });
+      }
+    }
+  );
+
+  // Serve locally uploaded files
+  app.get("/objects/local/:id", (req, res) => {
+    try {
+      const { id } = req.params;
+      if (!/^[0-9a-f-]+$/i.test(id)) {
+        return res.status(404).json({ error: "Not found" });
+      }
+      const filePath = path.join(UPLOADS_DIR, id);
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: "File not found" });
+      }
+      const metaPath = `${filePath}.meta`;
+      const contentType = fs.existsSync(metaPath)
+        ? fs.readFileSync(metaPath, "utf8")
+        : "application/octet-stream";
+      res.setHeader("Content-Type", contentType);
+      res.setHeader("Cache-Control", "public, max-age=3600");
+      fs.createReadStream(filePath).pipe(res);
     } catch (error) {
-      console.error("Error generating presigned URL:", error);
-      res.status(500).json({ error: "Failed to generate upload URL" });
+      console.error("Error serving local file:", error);
+      res.status(500).json({ error: "Failed to serve file" });
     }
   });
 

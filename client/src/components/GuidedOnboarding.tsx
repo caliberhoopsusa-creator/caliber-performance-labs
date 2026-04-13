@@ -1,8 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { X, UserPlus, Activity, Award, ChevronRight, CheckCircle2, FileText, Users, BarChart3 } from "lucide-react";
+import { X, UserPlus, Activity, Award, ChevronRight, Check, FileText, Users, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
@@ -150,14 +149,13 @@ export function useGuidedOnboarding() {
   };
 }
 
-export function GettingStartedCard() {
+export function ProgressChecklist() {
   const [, navigate] = useLocation();
   const [location] = useLocation();
   const {
     state, markPlayerAdded, markGameLogged, markGradeViewed,
-    markBioSet, markAnalyticsViewed, dismiss, isComplete
+    markBioSet, markAnalyticsViewed, dismiss, isComplete,
   } = useGuidedOnboarding();
-  const [isExpanded, setIsExpanded] = useState(true);
 
   const { data: players } = useQuery<{ id: number }[]>({
     queryKey: ["/api/players"],
@@ -180,33 +178,31 @@ export function GettingStartedCard() {
   const hasBio = !!(userMe?.bio && userMe.bio.trim().length > 0);
 
   useEffect(() => {
-    if (hasPlayer && !state.hasPlayer) {
-      markPlayerAdded();
-    }
+    if (hasPlayer && !state.hasPlayer) markPlayerAdded();
   }, [hasPlayer, state.hasPlayer, markPlayerAdded]);
 
   useEffect(() => {
-    if (hasGame && !state.hasGame) {
-      markGameLogged();
-    }
+    if (hasGame && !state.hasGame) markGameLogged();
   }, [hasGame, state.hasGame, markGameLogged]);
 
   useEffect(() => {
-    if ((location === "/leaderboard" || location.startsWith("/players/") || location.startsWith("/analytics?tab=leaderboard")) && !state.viewedGrade && hasGame) {
+    if (
+      (location === "/leaderboard" ||
+        location.startsWith("/players/") ||
+        location.startsWith("/analytics?tab=leaderboard")) &&
+      !state.viewedGrade &&
+      hasGame
+    ) {
       markGradeViewed();
     }
   }, [location, state.viewedGrade, hasGame, markGradeViewed]);
 
   useEffect(() => {
-    if (hasBio && !state.setBio) {
-      markBioSet();
-    }
+    if (hasBio && !state.setBio) markBioSet();
   }, [hasBio, state.setBio, markBioSet]);
 
   useEffect(() => {
-    if (location.startsWith("/analytics") && !state.viewedAnalytics) {
-      markAnalyticsViewed();
-    }
+    if (location.startsWith("/analytics") && !state.viewedAnalytics) markAnalyticsViewed();
   }, [location, state.viewedAnalytics, markAnalyticsViewed]);
 
   if (state.dismissed || isComplete) return null;
@@ -215,17 +211,17 @@ export function GettingStartedCard() {
     {
       id: "create-profile",
       title: "Create Your Profile",
-      description: "Set up your player profile to start tracking stats",
-      icon: <UserPlus className="w-5 h-5" />,
-      action: "Go to Players",
+      description: "",
+      icon: <UserPlus className="w-3.5 h-3.5" />,
+      action: "Set Up Profile",
       targetPath: "/players",
       completed: state.hasPlayer || hasPlayer,
     },
     {
       id: "log-game",
       title: "Log Your First Game",
-      description: "Enter stats from a game to get your performance grade",
-      icon: <Activity className="w-5 h-5" />,
+      description: "",
+      icon: <Activity className="w-3.5 h-3.5" />,
       action: "Log Game",
       targetPath: "/analyze",
       completed: state.hasGame || hasGame,
@@ -233,17 +229,17 @@ export function GettingStartedCard() {
     {
       id: "view-grade",
       title: "View Your Grade",
-      description: "See your letter grade and detailed performance breakdown",
-      icon: <Award className="w-5 h-5" />,
+      description: "",
+      icon: <Award className="w-3.5 h-3.5" />,
       action: "View Grades",
       targetPath: "/analytics?tab=leaderboard",
       completed: state.viewedGrade,
     },
     {
       id: "set-bio",
-      title: "Set Your Bio",
-      description: "Tell others about yourself on your player profile",
-      icon: <FileText className="w-5 h-5" />,
+      title: "Complete Your Bio",
+      description: "",
+      icon: <FileText className="w-3.5 h-3.5" />,
       action: "Edit Profile",
       targetPath: userMe?.playerId ? `/players/${userMe.playerId}` : "/players",
       completed: state.setBio || hasBio,
@@ -251,8 +247,8 @@ export function GettingStartedCard() {
     {
       id: "follow-teammate",
       title: "Follow a Teammate",
-      description: "Connect with other players to see their updates",
-      icon: <Users className="w-5 h-5" />,
+      description: "",
+      icon: <Users className="w-3.5 h-3.5" />,
       action: "Find Players",
       targetPath: "/community?tab=connect",
       completed: state.followedPlayer,
@@ -260,155 +256,129 @@ export function GettingStartedCard() {
     {
       id: "check-leaderboard",
       title: "Check the Leaderboard",
-      description: "See how you stack up against other players",
-      icon: <BarChart3 className="w-5 h-5" />,
-      action: "View Analytics",
+      description: "",
+      icon: <BarChart3 className="w-3.5 h-3.5" />,
+      action: "View Rankings",
       targetPath: "/analytics?tab=leaderboard",
       completed: state.viewedAnalytics,
     },
   ];
 
-  const currentStepIndex = steps.findIndex(s => !s.completed);
-  const currentStep = steps[currentStepIndex] || steps[steps.length - 1];
-  const completedCount = steps.filter(s => s.completed).length;
-
-  const handleAction = (targetPath?: string) => {
-    if (targetPath) {
-      navigate(targetPath);
-    }
-  };
+  const currentStepIndex = steps.findIndex((s) => !s.completed);
+  const completedCount = steps.filter((s) => s.completed).length;
+  const pct = Math.round((completedCount / steps.length) * 100);
 
   return (
-    <Card className="border-accent/20 overflow-visible" data-testid="card-getting-started">
-      <div className="p-4">
-        <div className="flex items-center justify-between gap-2 mb-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="p-1.5 rounded-md bg-accent/10 border border-accent/20">
-              <Activity className="w-4 h-4 text-accent" />
-            </div>
-            <div>
-              <span className="text-sm font-semibold text-foreground">Getting Started</span>
-              <span className="text-xs text-muted-foreground ml-2" data-testid="text-onboarding-progress">
-                {completedCount}/{steps.length} completed
-              </span>
-            </div>
-          </div>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsExpanded(!isExpanded)}
-              data-testid="button-toggle-onboarding"
+    <Card
+      className="border-amber-500/20 overflow-hidden"
+      data-testid="card-getting-started"
+    >
+      {/* Amber top accent line */}
+      <div className="h-[3px] w-full bg-gradient-to-r from-amber-500/80 via-amber-400 to-amber-600/30" />
+
+      <div className="p-4 pb-3">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 mb-3">
+          <div>
+            <h3 className="font-display font-bold text-base text-foreground leading-tight">
+              Getting Started
+            </h3>
+            <p
+              className="text-xs text-muted-foreground mt-0.5"
+              data-testid="text-onboarding-progress"
             >
-              <motion.div
-                animate={{ rotate: isExpanded ? 90 : -90 }}
-                transition={{ duration: 0.2 }}
+              {completedCount} of {steps.length} steps complete
+            </p>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="shrink-0 -mt-1 -mr-1 h-7 w-7 text-muted-foreground/50 hover:text-muted-foreground"
+            onClick={dismiss}
+            data-testid="button-dismiss-getting-started"
+          >
+            <X className="w-3.5 h-3.5" />
+          </Button>
+        </div>
+
+        {/* Progress bar */}
+        <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden mb-4">
+          <div
+            className="h-full rounded-full bg-amber-500 transition-all duration-500"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+
+        {/* Step rows */}
+        <div className="space-y-1">
+          {steps.map((step, i) => {
+            const isDone = step.completed;
+            const isNext = i === currentStepIndex;
+            const isFuture = !isDone && !isNext;
+
+            return (
+              <div
+                key={step.id}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-lg transition-colors",
+                  isNext && "bg-amber-500/10 border border-amber-500/20",
+                  isDone && "opacity-55",
+                  isFuture && "opacity-35"
+                )}
+                data-testid={`onboarding-step-${step.id}`}
               >
-                <ChevronRight className="w-4 h-4" />
-              </motion.div>
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={dismiss}
-              data-testid="button-dismiss-getting-started"
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
+                {/* Icon bubble */}
+                <div
+                  className={cn(
+                    "w-6 h-6 rounded-full flex items-center justify-center shrink-0",
+                    isDone && "bg-amber-500/15 text-amber-400",
+                    isNext && "bg-amber-500 text-black",
+                    isFuture && "bg-muted/80 text-muted-foreground"
+                  )}
+                >
+                  {isDone ? (
+                    <Check className="w-3.5 h-3.5" />
+                  ) : (
+                    step.icon
+                  )}
+                </div>
 
-        <div className="flex gap-1 mb-3">
-          {steps.map((step, i) => (
-            <div
-              key={step.id}
-              className={cn(
-                "flex-1 h-1.5 rounded-full transition-all",
-                step.completed
-                  ? "bg-accent"
-                  : i === currentStepIndex
-                  ? "bg-accent/40"
-                  : "bg-muted"
-              )}
-            />
-          ))}
-        </div>
+                {/* Title */}
+                <span
+                  className={cn(
+                    "flex-1 text-sm leading-none truncate",
+                    isDone && "line-through text-muted-foreground",
+                    isNext && "font-semibold text-foreground",
+                    isFuture && "font-medium text-muted-foreground"
+                  )}
+                >
+                  {step.title}
+                </span>
 
-        <AnimatePresence mode="wait">
-          {isExpanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <div className="space-y-2">
-                {steps.map((step, i) => (
-                  <div
-                    key={step.id}
-                    className={cn(
-                      "flex items-start gap-3 p-3 rounded-md transition-all",
-                      step.completed
-                        ? "bg-accent/10 border border-accent/20"
-                        : i === currentStepIndex
-                        ? "bg-muted/50 border border-border"
-                        : "opacity-50"
-                    )}
-                    data-testid={`onboarding-step-${step.id}`}
+                {/* CTA — next step only */}
+                {isNext && (
+                  <Button
+                    size="sm"
+                    className="shrink-0 h-7 px-3 text-xs bg-amber-500 hover:bg-amber-400 text-black font-bold gap-1 leading-none"
+                    onClick={() => step.targetPath && navigate(step.targetPath)}
+                    data-testid={`button-action-${step.id}`}
                   >
-                    <div
-                      className={cn(
-                        "p-2 rounded-md shrink-0",
-                        step.completed
-                          ? "bg-accent/20 text-accent"
-                          : "bg-muted text-muted-foreground"
-                      )}
-                    >
-                      {step.completed ? (
-                        <CheckCircle2 className="w-5 h-5" />
-                      ) : (
-                        step.icon
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4
-                        className={cn(
-                          "text-sm font-medium",
-                          step.completed ? "text-accent" : "text-foreground"
-                        )}
-                      >
-                        {step.title}
-                      </h4>
-                      <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                        {step.description}
-                      </p>
-                      {!step.completed && i === currentStepIndex && (
-                        <Button
-                          size="sm"
-                          onClick={() => handleAction(step.targetPath)}
-                          className="mt-2 text-xs gap-1"
-                          data-testid={`button-action-${step.id}`}
-                        >
-                          {step.action}
-                          <ChevronRight className="w-3 h-3" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                    {step.action}
+                    <ChevronRight className="w-3 h-3" />
+                  </Button>
+                )}
               </div>
-
-              <div className="mt-3 pt-3 border-t border-border">
-                <p className="text-xs text-muted-foreground text-center">
-                  {completedCount}/{steps.length} steps completed
-                </p>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            );
+          })}
+        </div>
       </div>
     </Card>
   );
+}
+
+/** Alias — FeedContent.tsx imports this name; no change needed there. */
+export function GettingStartedCard() {
+  return <ProgressChecklist />;
 }
 
 export function GuidedOnboarding() {

@@ -1,6 +1,6 @@
+import { useState } from "react";
 import { useRoute, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,10 +10,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, MapPin, GraduationCap, Trophy, Award, Share2, ExternalLink, Star, Target, Activity, TrendingUp, TrendingDown, Minus, Flame, Mail, Copy, Shield, Zap, Clock, CheckCircle, Eye, BookOpen, Video, FileText } from "lucide-react";
+import { Loader2, MapPin, GraduationCap, Trophy, Award, Share2, ExternalLink, Star, Target, Activity, TrendingUp, TrendingDown, Minus, Flame, Mail, Copy, Shield, Zap, Clock, CheckCircle, Eye, BookOpen, Video, FileText, X as XIcon } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { CaliberLogo } from "@/components/CaliberLogo";
+import { AthleticMeasurements } from "@/components/AthleticMeasurements";
 
 interface PublicBadge {
   type: string;
@@ -214,6 +215,9 @@ export default function PublicRecruitProfile() {
   const routeParams2 = useRoute("/profile/:id/public");
   const id = params?.id || routeParams2[1]?.id;
   const { toast } = useToast();
+  const [ctaDismissed, setCtaDismissed] = useState(() =>
+    typeof sessionStorage !== 'undefined' && !!sessionStorage.getItem('joinCtaDismissed')
+  );
 
   const { data, isLoading, error } = useQuery<PublicProfileData>({
     queryKey: ['/api/public/players', id, 'profile'],
@@ -296,7 +300,6 @@ export default function PublicRecruitProfile() {
 
   const { player, overallGrade, gamesPlayed, averages, recentGames, badges, badgeCount, streak, bestGame, trend } = data;
   const tierConfig = TIER_CONFIG[player.currentTier] || TIER_CONFIG.Rookie;
-  const isBasketball = player.sport === 'basketball';
   const nextTierXp = XP_THRESHOLDS[player.currentTier] || 500;
 
   const handleContactSubmit = async () => {
@@ -331,7 +334,7 @@ export default function PublicRecruitProfile() {
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-[hsl(220,15%,8%)]/90 border-b border-white/[0.06]">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <CaliberLogo size={28} color="#E8192C" />
+            <CaliberLogo size={28} color="#4f6878" />
           </div>
           <Button
             variant="outline"
@@ -381,7 +384,7 @@ export default function PublicRecruitProfile() {
                   )}
                   <Badge variant="secondary" className="text-xs" data-testid="badge-position">{player.position}</Badge>
                   <Badge variant="outline" className="text-xs" data-testid="badge-sport">
-                    {isBasketball ? 'Basketball' : 'Football'}
+                    Basketball
                   </Badge>
                 </div>
               </div>
@@ -561,23 +564,13 @@ export default function PublicRecruitProfile() {
             <h2 className="text-sm font-bold font-display uppercase tracking-wider mb-3 flex items-center gap-2 text-white/70">
               <Activity className="w-4 h-4 text-accent" /> Season Averages
             </h2>
-            {isBasketball ? (
-              <div className="space-y-3">
+            <div className="space-y-3">
                 <StatBar label="Points" value={averages.ppg ?? 0} max={35} suffix="/g" />
                 <StatBar label="Rebounds" value={averages.rpg ?? 0} max={15} suffix="/g" />
                 <StatBar label="Assists" value={averages.apg ?? 0} max={12} suffix="/g" />
                 <StatBar label="Steals" value={averages.spg ?? 0} max={5} suffix="/g" />
                 <StatBar label="Blocks" value={averages.bpg ?? 0} max={5} suffix="/g" />
               </div>
-            ) : (
-              <div className="space-y-3">
-                <StatBar label="Pass YPG" value={averages.passingYPG ?? 0} max={400} />
-                <StatBar label="Rush YPG" value={averages.rushingYPG ?? 0} max={200} />
-                <StatBar label="Rec YPG" value={averages.receivingYPG ?? 0} max={200} />
-                <StatBar label="Total TDs" value={averages.totalTDs ?? 0} max={30} />
-                <StatBar label="Tackles" value={averages.tackles ?? 0} max={100} />
-              </div>
-            )}
           </Card>
 
           {reportData?.report && (
@@ -596,6 +589,8 @@ export default function PublicRecruitProfile() {
             </Card>
           )}
 
+          <AthleticMeasurements playerId={player.id} isOwnProfile={false} />
+
           {bestGame && (
             <Card className="p-4">
               <h2 className="text-sm font-bold font-display uppercase tracking-wider mb-3 flex items-center gap-2 text-white/70">
@@ -608,8 +603,7 @@ export default function PublicRecruitProfile() {
                 </div>
                 <GradeCircle grade={bestGame.grade} size="sm" />
               </div>
-              {isBasketball ? (
-                <div className="grid grid-cols-5 gap-2">
+              <div className="grid grid-cols-5 gap-2">
                   {[
                     { label: 'PTS', value: bestGame.points },
                     { label: 'REB', value: bestGame.rebounds },
@@ -623,20 +617,6 @@ export default function PublicRecruitProfile() {
                     </div>
                   ))}
                 </div>
-              ) : (
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { label: 'Pass', value: bestGame.passingYards || 0, suffix: 'yds' },
-                    { label: 'Rush', value: bestGame.rushingYards || 0, suffix: 'yds' },
-                    { label: 'Rec', value: bestGame.receivingYards || 0, suffix: 'yds' },
-                  ].filter(s => s.value > 0).map(s => (
-                    <div key={s.label} className="text-center p-2 rounded-md bg-white/[0.03]">
-                      <p className="text-[10px] text-white/40 uppercase">{s.label}</p>
-                      <p className="text-base font-bold text-white font-display" data-testid={`text-best-${s.label.toLowerCase()}`}>{s.value} <span className="text-xs text-white/40">{s.suffix}</span></p>
-                    </div>
-                  ))}
-                </div>
-              )}
             </Card>
           )}
 
@@ -689,21 +669,13 @@ export default function PublicRecruitProfile() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-white/50 shrink-0" data-testid={`text-game-stats-${game.id}`}>
-                      {isBasketball ? (
-                        <>
+                      <>
                           <span className="font-medium text-white">{game.points}</span>
                           <span className="text-white/30">/</span>
                           <span>{game.rebounds}</span>
                           <span className="text-white/30">/</span>
                           <span>{game.assists}</span>
                         </>
-                      ) : (
-                        <>
-                          {(game.passingYards || 0) > 0 && <span>{game.passingYards}p</span>}
-                          {(game.rushingYards || 0) > 0 && <span>{game.rushingYards}r</span>}
-                          {(game.receivingYards || 0) > 0 && <span>{game.receivingYards}rc</span>}
-                        </>
-                      )}
                     </div>
                   </div>
                 ))}
@@ -788,11 +760,38 @@ export default function PublicRecruitProfile() {
           </div>
 
           <div className="text-center pb-8">
-            <CaliberLogo size={20} color="#E8192C" className="mx-auto opacity-30" />
+            <CaliberLogo size={20} color="#4f6878" className="mx-auto opacity-30" />
             <p className="text-[10px] text-white/15 mt-1.5">Powered by Caliber Performance Labs</p>
           </div>
         </div>
       </main>
+
+      {/* Sticky "Join Caliber" CTA for visitors */}
+      {!ctaDismissed && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 p-3 pb-safe">
+          <div className="max-w-lg mx-auto flex items-center gap-3 px-4 py-3 rounded-xl bg-card border border-accent/30 shadow-2xl shadow-accent/10">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-blue-600 flex items-center justify-center shrink-0">
+              <span className="text-white font-bold text-xs">C</span>
+            </div>
+            <p className="flex-1 text-sm text-foreground">
+              {data?.player?.name ? <span className="font-semibold">{data.player.name}</span> : 'This athlete'} built their profile on Caliber.{" "}
+              <span className="text-muted-foreground">Get yours free.</span>
+            </p>
+            <a href="/api/login">
+              <Button size="sm" className="shrink-0 shadow-lg shadow-accent/25">Sign Up</Button>
+            </a>
+            <button
+              onClick={() => {
+                sessionStorage.setItem('joinCtaDismissed', '1');
+                setCtaDismissed(true);
+              }}
+              className="p-1 rounded-md hover:bg-muted transition-colors shrink-0"
+            >
+              <XIcon className="w-4 h-4 text-muted-foreground" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

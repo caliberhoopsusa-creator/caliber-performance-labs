@@ -3,7 +3,21 @@ import { useAuth } from "@/hooks/use-auth";
 import { useSubscription, type SubscriptionTier } from "@/hooks/use-subscription";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Lock, Sparkles, Crown, Zap } from "lucide-react";
+import { Lock, Sparkles, Crown, Zap, CheckCircle } from "lucide-react";
+
+const PRO_FEATURE_BULLETS = [
+  "AI video analysis & game film breakdown",
+  "Head-to-head player challenges",
+  "College recruiting profile & coach outreach",
+  "Advanced analytics & performance trends",
+];
+
+const COACH_PRO_FEATURE_BULLETS = [
+  "Full team roster management",
+  "Opponent scouting reports",
+  "Lineup analysis & strategy tools",
+  "League & bracket management",
+];
 
 interface PaywallProps {
   requiredTier?: SubscriptionTier;
@@ -89,6 +103,17 @@ function PaywallCard({ icon: Icon, title, description, buttonText, buttonHref, i
             <h3 className="text-2xl font-bold font-display text-foreground">{title}</h3>
             <p className="text-muted-foreground">{description}</p>
           </div>
+
+          {tier && (
+            <ul className="text-left space-y-1.5">
+              {(tier === "coach_pro" ? COACH_PRO_FEATURE_BULLETS : PRO_FEATURE_BULLETS).map((item) => (
+                <li key={item} className="flex items-start gap-2 text-sm text-muted-foreground">
+                  <CheckCircle className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          )}
 
           <div className="pt-2 space-y-3">
             {isExternal ? (

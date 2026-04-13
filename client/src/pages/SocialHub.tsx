@@ -127,13 +127,13 @@ function FeedActivityCard({ activity }: { activity: FeedActivity }) {
       className="p-4 relative overflow-hidden transition-all duration-300 hover-elevate group"
       data-testid={`feed-activity-${activity.id}`}
     >
-      <div className={cn("absolute inset-0 bg-gradient-to-br opacity-50", gradientColor)} />
+      <div className={cn("absolute inset-0 opacity-50", gradientColor)} />
       
       <div className="relative z-10 flex gap-3">
         {activity.playerId && (
           <Link href={`/players/${activity.playerId}`}>
             <Avatar className="w-10 h-10 border-2 border-border cursor-pointer hover:border-accent/50 transition-colors shrink-0">
-              <AvatarFallback className="bg-gradient-to-br from-accent/20 to-secondary text-foreground font-display font-bold text-sm">
+              <AvatarFallback className="from-accent/20 to-secondary text-foreground font-display font-bold text-sm">
                 {initials}
               </AvatarFallback>
             </Avatar>
@@ -198,12 +198,12 @@ function PlayerCard({ player }: { player: PlayerWithStats }) {
       className="p-4 relative overflow-hidden transition-all duration-300 hover-elevate group"
       data-testid={`card-player-${player.id}`}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div className="absolute inset-0 from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
       <div className="relative z-10 flex items-center gap-4">
         <Link href={`/players/${player.id}`}>
           <Avatar className="w-14 h-14 border-2 border-border cursor-pointer hover:border-accent/50 transition-colors">
-            <AvatarFallback className="bg-gradient-to-br from-accent/20 to-secondary text-foreground font-display font-bold text-lg">
+            <AvatarFallback className="from-accent/20 to-secondary text-foreground font-display font-bold text-lg">
               {initials}
             </AvatarFallback>
           </Avatar>
@@ -383,7 +383,7 @@ export default function SocialHub() {
       data-testid="page-social-hub"
     >
       <div>
-        <h2 className="text-3xl md:text-4xl font-display font-bold uppercase tracking-wide bg-gradient-to-b from-foreground to-accent/20 bg-clip-text text-transparent">
+        <h2 className="text-3xl md:text-4xl font-display font-bold uppercase tracking-wide from-foreground to-accent/20">
           Social Hub
         </h2>
         <p className="text-accent/50 font-medium mt-1">

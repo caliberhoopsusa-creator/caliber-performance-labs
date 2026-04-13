@@ -176,7 +176,7 @@ export default function Teams() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-display bg-gradient-to-b from-foreground to-accent/20 bg-clip-text text-transparent tracking-wide">Teams</h1>
+          <h1 className="text-3xl font-bold font-display from-foreground to-accent/20 tracking-wide">Teams</h1>
           <p className="text-accent/50 mt-1">Join or create teams to discuss with teammates</p>
         </div>
         <div className="flex gap-2">
@@ -312,9 +312,9 @@ export default function Teams() {
           </div>
         </div>
       ) : myTeams.length === 0 ? (
-        <Card className="border-dashed border-2 bg-gradient-to-br from-card to-card/50">
+        <Card className="border-dashed border-2 from-card to-card/50">
           <CardContent className="flex flex-col items-center justify-center py-16">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center mb-6">
+            <div className="w-20 h-20 rounded-full from-accent/20 to-accent/5 flex items-center justify-center mb-6">
               <Users className="w-10 h-10 text-accent" />
             </div>
             <h3 className="text-xl font-bold mb-2">No Teams Yet</h3>
@@ -344,7 +344,7 @@ export default function Teams() {
                 onClick={() => setSelectedTeam(team)}
                 data-testid={`card-team-${team.id}`}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute inset-0 from-accent/5 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity" />
                 <CardHeader className="pb-2 relative">
                   <CardTitle className="flex items-center gap-3">
                     <div className="relative">
@@ -361,7 +361,7 @@ export default function Teams() {
                             height={40}
                           />
                         ) : null}
-                        <AvatarFallback className="rounded-lg bg-gradient-to-br from-accent/20 to-accent/5">
+                        <AvatarFallback className="rounded-lg from-accent/20 to-accent/5">
                           <Users className="w-5 h-5 text-accent" />
                         </AvatarFallback>
                       </Avatar>

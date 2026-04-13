@@ -229,7 +229,7 @@ export function PlayerProgression({ playerId, compact = false }: PlayerProgressi
           <span className="text-muted-foreground uppercase tracking-wider font-medium text-xs">XP Progress</span>
           <motion.span 
             className="font-bold text-accent text-base"
-            animate={xpIncreased ? { scale: [1, 1.1, 1], color: ["hsl(24, 95%, 53%)", "#ffeb3b", "hsl(24, 95%, 53%)"] } : {}}
+            animate={xpIncreased ? { scale: [1, 1.1, 1], color: ["hsl(var(--accent))", "#ffeb3b", "hsl(var(--accent))"] } : {}}
             transition={{ duration: 0.6 }}
             data-testid="xp-display"
           >

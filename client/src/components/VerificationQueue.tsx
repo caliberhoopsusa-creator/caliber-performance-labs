@@ -42,7 +42,7 @@ interface Props {
 }
 
 export function VerificationQueue({ compact = false, maxItems }: Props) {
-  const [sportFilter, setSportFilter] = useState<'all' | 'basketball' | 'football'>('all');
+  const [sportFilter, setSportFilter] = useState<'all' | 'basketball'>('all');
   
   const { data: unverifiedGames, isLoading, error } = useQuery<UnverifiedGame[]>({
     queryKey: ['/api/coach/unverified-games'],
@@ -63,15 +63,12 @@ export function VerificationQueue({ compact = false, maxItems }: Props) {
     return games;
   }, [unverifiedGames, sportFilter, maxItems]);
 
-  const basketballCount = useMemo(() => 
-    unverifiedGames?.filter(g => g.sport === 'basketball').length ?? 0, 
+  const basketballCount = useMemo(() =>
+    unverifiedGames?.filter(g => g.sport === 'basketball').length ?? 0,
     [unverifiedGames]
   );
-  
-  const footballCount = useMemo(() => 
-    unverifiedGames?.filter(g => g.sport === 'football').length ?? 0, 
-    [unverifiedGames]
-  );
+
+
 
   if (isLoading) {
     return (
@@ -122,7 +119,7 @@ export function VerificationQueue({ compact = false, maxItems }: Props) {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <div className="p-1.5 rounded-lg bg-accent/20 border border-accent/30">
-            <Shield className="w-4 h-4 text-accent" style={{ filter: "drop-shadow(0 0 6px rgba(234, 88, 12, 0.6))" }} />
+            <Shield className="w-4 h-4 text-accent" style={{ filter: "drop-shadow(0 0 6px rgba(224,36,36,0.6))" }} />
           </div>
           <h3 className="text-lg font-bold text-foreground">Verification Queue</h3>
           {totalUnverified > 0 && (
@@ -144,9 +141,6 @@ export function VerificationQueue({ compact = false, maxItems }: Props) {
             </TabsTrigger>
             <TabsTrigger value="basketball" className="data-[state=active]:bg-accent">
               Basketball ({basketballCount})
-            </TabsTrigger>
-            <TabsTrigger value="football" className="data-[state=active]:bg-green-600">
-              Football ({footballCount})
             </TabsTrigger>
           </TabsList>
         </Tabs>

@@ -123,7 +123,7 @@ export default function PlayerDirectory() {
               </Button>
             </Link>
             <Link href="/">
-              <CaliberLogo size={28} color="#E8192C" />
+              <CaliberLogo size={28} color="#4f6878" />
             </Link>
             <div>
               <h1 className="text-lg font-bold font-display tracking-tight" data-testid="text-directory-title">Player Directory</h1>
@@ -368,7 +368,7 @@ export default function PlayerDirectory() {
             </Button>
           </Link>
           <div className="mt-4">
-            <CaliberLogo size={20} color="#E8192C" className="mx-auto opacity-30" />
+            <CaliberLogo size={20} color="#4f6878" className="mx-auto opacity-30" />
             <p className="text-[10px] text-white/15 mt-1.5">Powered by Caliber Performance Labs</p>
           </div>
         </div>

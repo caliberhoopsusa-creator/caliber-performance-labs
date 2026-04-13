@@ -267,6 +267,7 @@ function SearchPlayersTab({
   const [stateFilter, setStateFilter] = useState("");
   const [gradYearFilter, setGradYearFilter] = useState("");
   const [openOnlyFilter, setOpenOnlyFilter] = useState(false);
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
 
   const queryParams = new URLSearchParams();
   if (positionFilter) queryParams.set("position", positionFilter);
@@ -288,13 +289,18 @@ function SearchPlayersTab({
     },
   });
 
-  const hasFilters = positionFilter || stateFilter || gradYearFilter || openOnlyFilter;
+  const hasFilters = positionFilter || stateFilter || gradYearFilter || openOnlyFilter || verifiedOnly;
+
+  const displayedPlayers = verifiedOnly
+    ? (players || []).filter((p: any) => p.verifiedAthlete)
+    : players;
 
   const clearFilters = () => {
     setPositionFilter("");
     setStateFilter("");
     setGradYearFilter("");
     setOpenOnlyFilter(false);
+    setVerifiedOnly(false);
   };
 
   return (
@@ -350,6 +356,21 @@ function SearchPlayersTab({
             <Label className="text-sm cursor-pointer">Open to Recruiting</Label>
           </div>
 
+          <button
+            onClick={() => setVerifiedOnly(!verifiedOnly)}
+            data-testid="button-filter-verified"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+              verifiedOnly
+                ? 'bg-blue-500/20 border-blue-500/50 text-blue-400'
+                : 'bg-gray-700/50 border-gray-600 text-gray-400 hover:text-gray-200'
+            }`}
+          >
+            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            Verified Only
+          </button>
+
           {hasFilters && (
             <Button
               variant="ghost"
@@ -370,9 +391,9 @@ function SearchPlayersTab({
             <PlayerCardSkeleton key={i} />
           ))}
         </div>
-      ) : players && players.length > 0 ? (
+      ) : displayedPlayers && displayedPlayers.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" data-testid="grid-players">
-          {players.map((player) => (
+          {displayedPlayers.map((player) => (
             <PlayerCard
               key={player.id}
               player={player}
@@ -715,11 +736,11 @@ export default function RecruiterDashboard() {
     <div className="space-y-6 pb-20" data-testid="page-recruiter-dashboard">
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center">
             <Users className="w-6 h-6 text-accent" />
           </div>
           <div>
-            <h1 className="text-2xl md:text-3xl font-display font-bold bg-gradient-to-r from-white via-accent/20 to-accent bg-clip-text text-transparent">
+            <h1 className="text-2xl md:text-3xl font-display font-bold uppercase tracking-tight text-foreground">
               Recruiter Dashboard
             </h1>
             <p className="text-sm text-muted-foreground">
@@ -731,7 +752,7 @@ export default function RecruiterDashboard() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList
-          className="w-full justify-start bg-card border border-white/10 p-1 rounded-xl overflow-x-auto flex-nowrap"
+          className="w-full justify-start bg-card border border-border p-1 rounded-xl overflow-x-auto flex-nowrap"
           data-testid="recruiter-tabs"
         >
           <TabsTrigger

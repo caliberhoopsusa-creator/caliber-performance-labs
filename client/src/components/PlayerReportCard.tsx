@@ -36,7 +36,6 @@ import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { BADGE_DEFINITIONS } from "@shared/schema";
 import { format } from "date-fns";
-import { FOOTBALL_POSITION_LABELS, type FootballPosition } from "@shared/sports-config";
 import { SportSpinner } from "@/components/SportSpinner";
 
 interface PlayerReportCardProps {
@@ -368,7 +367,6 @@ export function PlayerReportCard({ playerId, dateRange, showActions = true }: Pl
   });
   const [copied, setCopied] = useState(false);
   
-  const isFootball = player?.sport === 'football';
 
   const handlePrint = () => {
     window.print();
@@ -590,7 +588,7 @@ export function PlayerReportCard({ playerId, dateRange, showActions = true }: Pl
                 <span> plays for <span className="text-foreground font-semibold">{player.team}</span></span>
               )}
               {player.position && (
-                <span> as a <span className="text-foreground font-semibold">{isFootball ? FOOTBALL_POSITION_LABELS[player.position as FootballPosition] || player.position : player.position}</span></span>
+                <span> as a <span className="text-foreground font-semibold">{player.position}</span></span>
               )}
               {player.gpa && (
                 <span> with a <span className="text-foreground font-semibold">{parseFloat(player.gpa).toFixed(2)} GPA</span></span>
@@ -600,16 +598,7 @@ export function PlayerReportCard({ playerId, dateRange, showActions = true }: Pl
             
             {playerSummary && playerSummary.gamesPlayed > 0 ? (
               <>
-                {isFootball ? (
-                  <p className="text-muted-foreground">
-                    Over <span className="text-foreground font-semibold">{playerSummary.gamesPlayed} game{playerSummary.gamesPlayed !== 1 ? "s" : ""}</span> this season, 
-                    they've recorded{" "}
-                    <span className="text-foreground font-semibold">{seasonStats.totalPoints || 0} total yards</span> and{" "}
-                    <span className="text-foreground font-semibold">{seasonStats.totalRebounds || 0} touchdowns</span>{" "}
-                    with an average grade of <span className="text-foreground font-semibold">{playerSummary.avgGrade}</span>.
-                  </p>
-                ) : (
-                  <p className="text-muted-foreground">
+                <p className="text-muted-foreground">
                     Over <span className="text-foreground font-semibold">{playerSummary.gamesPlayed} game{playerSummary.gamesPlayed !== 1 ? "s" : ""}</span> this season, 
                     they've averaged{" "}
                     <span className="text-foreground font-semibold">{seasonStats.avgPoints} PPG</span>,{" "}
@@ -617,7 +606,6 @@ export function PlayerReportCard({ playerId, dateRange, showActions = true }: Pl
                     <span className="text-foreground font-semibold">{seasonStats.avgAssists} APG</span>{" "}
                     with an average grade of <span className="text-foreground font-semibold">{playerSummary.avgGrade}</span>.
                   </p>
-                )}
                 
                 {playerSummary.bestAttribute && playerSummary.bestAttribute.value > 0 && (
                   <p>
@@ -652,41 +640,22 @@ export function PlayerReportCard({ playerId, dateRange, showActions = true }: Pl
         </ReportSummarySection>
 
         <ReportSummarySection title="Season Overview" icon={Activity}>
-          {isFootball ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <StatBox label="Games Played" value={seasonStats.gamesPlayed} highlight />
-              <StatBox label="YDS/G" value={seasonStats.avgPoints || "—"} />
-              <StatBox label="TD/G" value={seasonStats.avgRebounds || "—"} />
-              <StatBox label="Avg Grade" value={seasonStats.avgAssists || "—"} />
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <StatBox label="Games Played" value={seasonStats.gamesPlayed} highlight />
               <StatBox label="PPG" value={seasonStats.avgPoints} />
               <StatBox label="RPG" value={seasonStats.avgRebounds} />
               <StatBox label="APG" value={seasonStats.avgAssists} />
             </div>
-          )}
         </ReportSummarySection>
 
         <ReportSummarySection title="Season Totals" icon={BarChart3}>
-          {isFootball ? (
-            <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
-              <StatBox label="Total Yards" value={seasonStats.totalPoints || 0} />
-              <StatBox label="Total TDs" value={seasonStats.totalRebounds || 0} />
-              <StatBox label="Tackles" value={seasonStats.totalAssists || 0} />
-              <StatBox label="Turnovers" value={seasonStats.avgHustle || 0} />
-              <StatBox label="Big Plays" value={seasonStats.avgDefense || 0} />
-            </div>
-          ) : (
-            <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
               <StatBox label="Total Points" value={seasonStats.totalPoints} />
               <StatBox label="Total Rebounds" value={seasonStats.totalRebounds} />
               <StatBox label="Total Assists" value={seasonStats.totalAssists} />
               <StatBox label="Avg Hustle" value={seasonStats.avgHustle} />
               <StatBox label="Avg Defense" value={seasonStats.avgDefense} />
             </div>
-          )}
         </ReportSummarySection>
 
         <div className="grid md:grid-cols-2 gap-6 print:gap-4">

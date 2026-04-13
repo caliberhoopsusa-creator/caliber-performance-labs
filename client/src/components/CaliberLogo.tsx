@@ -20,12 +20,12 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
 function getAccentColorFromCSS(): string {
   const style = getComputedStyle(document.documentElement);
   const accent = style.getPropertyValue("--accent").trim();
-  if (!accent) return "#E8192C";
+  if (!accent) return "#4f6878";
   const parts = accent.split(/\s+/);
   if (parts.length >= 3) {
     return `hsl(${parts[0]}, ${parts[1]}, ${parts[2]})`;
   }
-  return "#E8192C";
+  return "#4f6878";
 }
 
 function hslStringToHex(hslStr: string): string {

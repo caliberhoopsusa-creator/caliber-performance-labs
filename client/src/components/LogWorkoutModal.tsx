@@ -45,7 +45,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useSport } from "@/components/SportToggle";
 
 const BASKETBALL_WORKOUT_TYPES = ["shooting", "conditioning", "weights", "skills", "recovery"] as const;
-const FOOTBALL_WORKOUT_TYPES = ["passing", "route_running", "blocking", "tackling", "conditioning", "weights", "recovery"] as const;
 
 const WORKOUT_LABELS: Record<string, string> = {
   shooting: "Shooting",
@@ -60,7 +59,7 @@ const WORKOUT_LABELS: Record<string, string> = {
 };
 
 const workoutSchema = z.object({
-  workoutType: z.enum([...BASKETBALL_WORKOUT_TYPES, ...FOOTBALL_WORKOUT_TYPES], {
+  workoutType: z.enum([...BASKETBALL_WORKOUT_TYPES], {
     required_error: "Please select a workout type",
   }),
   title: z.string().min(1, "Title is required").max(100, "Title is too long"),
@@ -83,7 +82,7 @@ export function LogWorkoutModal({ playerId }: LogWorkoutModalProps) {
   const createWorkout = useCreateWorkout();
   const sport = useSport();
 
-  const workoutTypes = sport === 'football' ? FOOTBALL_WORKOUT_TYPES : BASKETBALL_WORKOUT_TYPES;
+  const workoutTypes = BASKETBALL_WORKOUT_TYPES;
 
   const form = useForm<WorkoutFormValues>({
     resolver: zodResolver(workoutSchema),
@@ -148,7 +147,7 @@ export function LogWorkoutModal({ playerId }: LogWorkoutModalProps) {
         <DialogHeader>
           <DialogTitle>Log Workout</DialogTitle>
           <DialogDescription>
-            Record your {sport === 'football' ? 'off-field' : 'off-court'} training session.
+            Record your {false ? 'off-field' : 'off-court'} training session.
           </DialogDescription>
         </DialogHeader>
         
@@ -187,7 +186,7 @@ export function LogWorkoutModal({ playerId }: LogWorkoutModalProps) {
                   <FormLabel>Title</FormLabel>
                   <FormControl>
                     <Input 
-                      placeholder={sport === 'football' ? "e.g., Morning passing drills" : "e.g., Morning shooting drills"}
+                      placeholder={false ? "e.g., Morning passing drills" : "e.g., Morning shooting drills"}
                       {...field} 
                       data-testid="input-workout-title"
                     />

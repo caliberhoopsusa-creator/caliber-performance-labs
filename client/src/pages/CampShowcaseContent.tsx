@@ -45,7 +45,6 @@ import {
   Users,
   Heart,
   Clock,
-  Trophy,
   Dribbble,
   Building,
   GraduationCap,
@@ -570,15 +569,9 @@ export default function CampShowcaseContent() {
                 : "border-accent/50 text-accent bg-accent/10"
             )}
           >
-            {currentSport === "basketball" ? (
-              <>
-                <Dribbble className="w-3 h-3 mr-1" /> Basketball
-              </>
-            ) : (
-              <>
-                <Trophy className="w-3 h-3 mr-1" /> Football
-              </>
-            )}
+            <>
+              <Dribbble className="w-3 h-3 mr-1" /> Basketball
+            </>
           </Badge>
           <p className="text-muted-foreground text-sm">
             Find {currentSport} camps, showcases, and combines to get recruited
@@ -799,7 +792,6 @@ export default function CampShowcaseContent() {
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="basketball">Basketball</SelectItem>
-                          <SelectItem value="football">Football</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />

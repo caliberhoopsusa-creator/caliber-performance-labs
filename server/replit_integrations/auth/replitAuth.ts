@@ -1,22 +1,25 @@
-import * as client from "openid-client";
-import { Strategy, type VerifyFunction } from "openid-client/passport";
-
 import passport from "passport";
+import { Strategy as LocalStrategy } from "passport-local";
 import session from "express-session";
 import type { Express, RequestHandler } from "express";
-import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { authStorage } from "./storage";
+import { scrypt, randomBytes, timingSafeEqual } from "crypto";
+import { promisify } from "util";
 
-const getOidcConfig = memoize(
-  async () => {
-    return await client.discovery(
-      new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
-      process.env.REPL_ID!
-    );
-  },
-  { maxAge: 3600 * 1000 }
-);
+const scryptAsync = promisify(scrypt);
+
+async function hashPassword(password: string): Promise<string> {
+  const salt = randomBytes(16).toString("hex");
+  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+  return `${buf.toString("hex")}.${salt}`;
+}
+
+async function comparePassword(supplied: string, stored: string): Promise<boolean> {
+  const [hashed, salt] = stored.split(".");
+  const buf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+  return timingSafeEqual(Buffer.from(hashed, "hex"), buf);
+}
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
@@ -34,29 +37,10 @@ export function getSession() {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax' as const,
       maxAge: sessionTtl,
     },
-  });
-}
-
-function updateUserSession(
-  user: any,
-  tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers
-) {
-  user.claims = tokens.claims();
-  user.access_token = tokens.access_token;
-  user.refresh_token = tokens.refresh_token;
-  user.expires_at = user.claims?.exp;
-}
-
-async function upsertUser(claims: any) {
-  await authStorage.upsertUser({
-    id: claims["sub"],
-    email: claims["email"],
-    firstName: claims["first_name"],
-    lastName: claims["last_name"],
-    profileImageUrl: claims["profile_image_url"],
   });
 }
 
@@ -66,103 +50,107 @@ export async function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  const config = await getOidcConfig();
+  passport.use(
+    new LocalStrategy({ usernameField: "email" }, async (email, password, done) => {
+      try {
+        const user = await authStorage.getUserByEmail(email);
+        if (!user || !user.passwordHash) {
+          return done(null, false, { message: "Invalid email or password" });
+        }
+        const valid = await comparePassword(password, user.passwordHash);
+        if (!valid) {
+          return done(null, false, { message: "Invalid email or password" });
+        }
+        return done(null, { claims: { sub: user.id }, userId: user.id });
+      } catch (err) {
+        return done(err);
+      }
+    })
+  );
 
-  const verify: VerifyFunction = async (
-    tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
-    verified: passport.AuthenticateCallback
-  ) => {
-    const user = {};
-    updateUserSession(user, tokens);
-    await upsertUser(tokens.claims());
-    verified(null, user);
-  };
+  passport.serializeUser((user: any, cb) => cb(null, user));
+  passport.deserializeUser((user: any, cb) => cb(null, user));
 
-  // Keep track of registered strategies
-  const registeredStrategies = new Set<string>();
+  // Register endpoint
+  app.post("/api/register", async (req, res) => {
+    try {
+      const { email, password, firstName, lastName, referralCode } = req.body;
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+      }
+      if (typeof password !== 'string' || password.length < 8) {
+        return res.status(400).json({ message: "Password must be at least 8 characters" });
+      }
+      const existing = await authStorage.getUserByEmail(email);
+      if (existing) {
+        return res.status(400).json({ message: "An account with this email already exists" });
+      }
+      const hash = await hashPassword(password);
 
-  // Helper function to ensure strategy exists for a domain
-  const ensureStrategy = (domain: string) => {
-    const strategyName = `replitauth:${domain}`;
-    if (!registeredStrategies.has(strategyName)) {
-      const strategy = new Strategy(
-        {
-          name: strategyName,
-          config,
-          scope: "openid email profile offline_access",
-          callbackURL: `https://${domain}/api/callback`,
-        },
-        verify
-      );
-      passport.use(strategy);
-      registeredStrategies.add(strategyName);
+      // Resolve referral code to a referrer user ID
+      let referredBy: string | undefined;
+      if (referralCode && typeof referralCode === 'string') {
+        const { db } = await import("../../db");
+        const { users } = await import("../../../shared/models/auth");
+        const { eq } = await import("drizzle-orm");
+        const [referrer] = await db
+          .select({ id: users.id })
+          .from(users)
+          .where(eq(users.referralCode, referralCode.toUpperCase()))
+          .limit(1);
+        if (referrer) referredBy = referrer.id;
+      }
+
+      const user = await authStorage.upsertUser({
+        email,
+        firstName: firstName || null,
+        lastName: lastName || null,
+        passwordHash: hash,
+        emailVerified: false,
+        ...(referredBy ? { referredBy } : {}),
+      } as any);
+      const sessionUser = { claims: { sub: user.id }, userId: user.id };
+      req.login(sessionUser, (err) => {
+        if (err) return res.status(500).json({ message: "Login after register failed" });
+        const { passwordHash: _pw, ...safeUser } = user as any;
+        res.status(201).json(safeUser);
+      });
+    } catch (err) {
+      console.error("Register error:", err);
+      res.status(500).json({ message: "Registration failed" });
     }
-  };
+  });
 
-  passport.serializeUser((user: Express.User, cb) => cb(null, user));
-  passport.deserializeUser((user: Express.User, cb) => cb(null, user));
-
-  app.get("/api/login", (req, res, next) => {
-    ensureStrategy(req.hostname);
-    passport.authenticate(`replitauth:${req.hostname}`, {
-      prompt: "login consent",
-      scope: ["openid", "email", "profile", "offline_access"],
+  // Login endpoint
+  app.post("/api/login", (req, res, next) => {
+    passport.authenticate("local", (err: any, user: any, info: any) => {
+      if (err) return next(err);
+      if (!user) return res.status(401).json({ message: info?.message || "Invalid credentials" });
+      req.login(user, (err) => {
+        if (err) return next(err);
+        res.json({ message: "Logged in successfully" });
+      });
     })(req, res, next);
   });
 
-  app.get("/api/callback", (req, res, next) => {
-    ensureStrategy(req.hostname);
-    passport.authenticate(`replitauth:${req.hostname}`, {
-      successReturnToOrRedirect: "/",
-      failureRedirect: "/api/login",
-    })(req, res, next);
+  // Keep /api/login GET for any redirects (send to frontend login page)
+  app.get("/api/login", (req, res) => {
+    res.redirect("/#/login");
   });
 
   app.get("/api/logout", (req, res) => {
     req.logout(() => {
-      res.redirect(
-        client.buildEndSessionUrl(config, {
-          client_id: process.env.REPL_ID!,
-          post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
-        }).href
-      );
+      res.redirect("/");
     });
   });
 }
 
-export const isAuthenticated: RequestHandler = async (req, res, next) => {
-  const user = req.user as any;
-
-  if (!req.isAuthenticated() || !user?.expires_at) {
-    return res.status(401).json({ 
-      message: "Your session has expired. Please log in again.",
-      type: "session_expired"
-    });
-  }
-
-  const now = Math.floor(Date.now() / 1000);
-  if (now <= user.expires_at) {
+export const isAuthenticated: RequestHandler = (req, res, next) => {
+  if (req.isAuthenticated()) {
     return next();
   }
-
-  const refreshToken = user.refresh_token;
-  if (!refreshToken) {
-    return res.status(401).json({ 
-      message: "Your session has expired. Please log in again.",
-      type: "session_expired"
-    });
-  }
-
-  try {
-    const config = await getOidcConfig();
-    const tokenResponse = await client.refreshTokenGrant(config, refreshToken);
-    updateUserSession(user, tokenResponse);
-    return next();
-  } catch (error) {
-    console.error("Token refresh failed:", error);
-    return res.status(401).json({ 
-      message: "Your session has expired. Please log in again.",
-      type: "session_expired"
-    });
-  }
+  return res.status(401).json({
+    message: "Your session has expired. Please log in again.",
+    type: "session_expired",
+  });
 };

@@ -37,7 +37,6 @@ import { EliteAchievements } from "@/components/EliteAchievements";
 import { CaliberBadge } from "@/components/CaliberBadge";
 import { ArrowLeft, ArrowUp, Plus, Trash2, Award, ClipboardList, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, CheckCircle2, Flame, Trophy, Share2, BarChart3, Medal, User, Users, ChevronRight, ChevronDown, TrendingUp, TrendingDown, Pencil, Camera, Upload, X, FileText, Dumbbell, Film, MapPin, GraduationCap, Eye, BookOpen, Phone, Save, Crosshair, ShieldCheck, PlayCircle, AlertTriangle, Package, Sparkles, Palette, Crown, Gem, CircleDot, Rss, MessageCircle, Sun, Cloud, Moon, Send, Ruler, Calendar, Video, Circle, RefreshCw, Loader2 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
-import { FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS, FOOTBALL_POSITION_STATS, type FootballPosition } from "@shared/sports-config";
 import { useSport } from "@/components/SportToggle";
 import { AnimatedRankBadge } from "@/components/AnimatedRankBadge";
 import { Switch } from "@/components/ui/switch";
@@ -94,7 +93,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { FootballMetrics } from "@/components/FootballMetrics";
 import { MilestonesSection } from "@/components/MilestoneCard";
 import { MemorySection } from "@/components/MemoryCard";
 import EndorsementSection from "@/components/EndorsementSection";
@@ -157,7 +155,7 @@ function getGradeColor(grade: string) {
   const normalizedGrade = grade?.trim().toUpperCase() || "";
   if (["A+", "A", "A-"].includes(normalizedGrade)) {
     return {
-      bg: "from-amber-500/20 to-yellow-600/20",
+      bg: "from-amber-500/20",
       border: "border-amber-500/50",
       text: "text-amber-600 dark:text-amber-400",
       glow: "shadow-amber-500/30",
@@ -165,7 +163,7 @@ function getGradeColor(grade: string) {
   }
   if (["B+", "B", "B-"].includes(normalizedGrade)) {
     return {
-      bg: "from-slate-400/20 to-gray-500/20",
+      bg: "from-slate-400/20",
       border: "border-slate-400/50",
       text: "text-slate-600 dark:text-slate-300",
       glow: "shadow-slate-400/30",
@@ -173,14 +171,14 @@ function getGradeColor(grade: string) {
   }
   if (["C+", "C", "C-"].includes(normalizedGrade)) {
     return {
-      bg: "from-orange-500/20 to-amber-600/20",
+      bg: "from-orange-500/20",
       border: "border-orange-500/50",
       text: "text-orange-400",
       glow: "shadow-orange-500/30",
     };
   }
   return {
-    bg: "from-red-500/20 to-rose-600/20",
+    bg: "from-red-500/20",
     border: "border-red-500/50",
     text: "text-red-600 dark:text-red-400",
     glow: "shadow-red-500/30",
@@ -1650,7 +1648,7 @@ function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: n
           <div className="p-1.5 rounded-lg bg-purple-500/20 border border-purple-500/30">
             <Users className="w-4 h-4 text-purple-600 dark:text-purple-400" />
           </div>
-          <h3 className="text-sm font-bold uppercase tracking-wider bg-gradient-to-r from-foreground to-purple-300 bg-clip-text text-transparent">
+          <h3 className="text-sm font-bold uppercase tracking-wider from-foreground">
             Social Overview
           </h3>
         </div>
@@ -1675,7 +1673,7 @@ function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: n
           <div className="p-1.5 rounded-lg bg-accent/20 border border-accent/30">
             <Rss className="w-4 h-4 text-accent" />
           </div>
-          <h3 className="text-sm font-bold uppercase tracking-wider bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent">
+          <h3 className="text-sm font-bold uppercase tracking-wider from-foreground to-accent">
             Recent Activity
           </h3>
         </div>
@@ -1740,7 +1738,7 @@ function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: n
             <div className="p-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/30">
               <Dumbbell className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <h3 className="text-sm font-bold uppercase tracking-wider bg-gradient-to-r from-foreground to-emerald-300 bg-clip-text text-transparent">
+            <h3 className="text-sm font-bold uppercase tracking-wider from-foreground">
               Recent Workouts
             </h3>
           </div>
@@ -1877,6 +1875,24 @@ export default function PlayerDetail() {
   const isOwnProfile = useMemo(() => {
     return user?.playerId === id;
   }, [user?.playerId, id]);
+
+  const { data: equipment = [] } = useQuery({
+    queryKey: ['/api/players', id, 'equipment'],
+    queryFn: () => fetch(`/api/players/${id}/equipment`).then(r => r.json()),
+  });
+
+  const addEquipmentMutation = useMutation({
+    mutationFn: (data: { brand: string; category: string; model?: string; size?: string }) =>
+      fetch(`/api/players/${id}/equipment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      }).then(r => r.json()),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['/api/players', id, 'equipment'] }),
+  });
+
+  const [showAddGear, setShowAddGear] = useState(false);
+  const [gearForm, setGearForm] = useState({ brand: '', category: 'shoe', model: '', size: '' });
 
   const { data: athleticMeasurementsData = [] } = useQuery<AthleticMeasurement[]>({
     queryKey: ['/api/players', id, 'athletic-measurements'],
@@ -2175,8 +2191,7 @@ export default function PlayerDetail() {
   }
 
   const allGames = player.games || [];
-  const isFootball = currentSport === 'football';
-  
+
   // Filter games by current sport to ensure stats are accurate per sport
   const games = allGames.filter(g => g.sport === currentSport);
   
@@ -2206,6 +2221,10 @@ export default function PlayerDetail() {
   const tsaDenominator = 2 * (totalFgAttempted + 0.44 * totalFtAttempted);
   const tsPct = tsaDenominator > 0 ? ((totalPts / tsaDenominator) * 100).toFixed(1) : "—";
   const astToRatio = totalTO > 0 ? (totalAst / totalTO).toFixed(1) : totalAst > 0 ? "99.0" : "—";
+  const totalYards = games.reduce((acc, g) => acc + ((g as any).passingYards || 0) + ((g as any).rushingYards || 0) + ((g as any).receivingYards || 0), 0);
+  const totalTDs = games.reduce((acc, g) => acc + ((g as any).touchdowns || 0), 0);
+  const avgTackles = games.length ? (games.reduce((acc, g) => acc + ((g as any).tackles || 0), 0) / games.length).toFixed(1) : "0";
+
   const pointsPerGame = games.map(g => g.points);
   const avgPts = pointsPerGame.length > 0 ? pointsPerGame.reduce((a, b) => a + b, 0) / pointsPerGame.length : 0;
   const variance = pointsPerGame.length > 1 ? pointsPerGame.reduce((acc, p) => acc + Math.pow(p - avgPts, 2), 0) / pointsPerGame.length : 0;
@@ -2213,65 +2232,6 @@ export default function PlayerDetail() {
   const cv = avgPts > 0 ? stdDev / avgPts : 0;
   const consistencyScore = Math.round(Math.max(0, Math.min(100, 100 - cv * 100)));
 
-  // === FOOTBALL STATS ===
-  const totalPassingYards = games.reduce((acc, g) => acc + (g.passingYards || 0), 0);
-  const totalRushingYards = games.reduce((acc, g) => acc + (g.rushingYards || 0), 0);
-  const totalReceivingYards = games.reduce((acc, g) => acc + (g.receivingYards || 0), 0);
-  const totalPassingTDs = games.reduce((acc, g) => acc + (g.passingTouchdowns || 0), 0);
-  const totalRushingTDs = games.reduce((acc, g) => acc + (g.rushingTouchdowns || 0), 0);
-  const totalReceivingTDs = games.reduce((acc, g) => acc + (g.receivingTouchdowns || 0), 0);
-  const totalTDs = totalPassingTDs + totalRushingTDs + totalReceivingTDs;
-  const totalYards = totalPassingYards + totalRushingYards + totalReceivingYards;
-  
-  const avgPassingYards = games.length ? (totalPassingYards / games.length).toFixed(1) : "—";
-  const avgRushingYards = games.length ? (totalRushingYards / games.length).toFixed(1) : "—";
-  const avgReceivingYards = games.length ? (totalReceivingYards / games.length).toFixed(1) : "—";
-  const avgTDs = games.length ? (totalTDs / games.length).toFixed(1) : "—";
-  
-  const totalCompletions = games.reduce((acc, g) => acc + (g.completions || 0), 0);
-  const totalPassAttempts = games.reduce((acc, g) => acc + (g.passAttempts || 0), 0);
-  const compPercent = totalPassAttempts > 0 ? ((totalCompletions / totalPassAttempts) * 100).toFixed(1) : "—";
-  
-  const totalReceptions = games.reduce((acc, g) => acc + (g.receptions || 0), 0);
-  const totalTargets = games.reduce((acc, g) => acc + (g.targets || 0), 0);
-  const catchRate = totalTargets > 0 ? ((totalReceptions / totalTargets) * 100).toFixed(1) : "—";
-  
-  const totalCarries = games.reduce((acc, g) => acc + (g.carries || 0), 0);
-  const yardsPerCarry = totalCarries > 0 ? (totalRushingYards / totalCarries).toFixed(1) : "—";
-  
-  const totalInterceptions = games.reduce((acc, g) => acc + (g.interceptions || 0), 0);
-  const totalFumbles = games.reduce((acc, g) => acc + (g.fumbles || 0), 0);
-  const totalTurnovers = totalInterceptions + totalFumbles;
-  
-  // Defense stats
-  const totalTackles = games.reduce((acc, g) => acc + (g.tackles || 0), 0);
-  const totalSoloTackles = games.reduce((acc, g) => acc + (g.soloTackles || 0), 0);
-  const totalSacks = games.reduce((acc, g) => acc + (g.sacks || 0), 0);
-  const totalDefensiveINTs = games.reduce((acc, g) => acc + (g.defensiveInterceptions || 0), 0);
-  const totalPassDeflections = games.reduce((acc, g) => acc + (g.passDeflections || 0), 0);
-  const totalForcedFumbles = games.reduce((acc, g) => acc + (g.forcedFumbles || 0), 0);
-  const avgTackles = games.length ? (totalTackles / games.length).toFixed(1) : "—";
-  
-  // Receiving efficiency
-  const yardsPerReception = totalReceptions > 0 ? (totalReceivingYards / totalReceptions).toFixed(1) : "—";
-  
-  // Kicking stats
-  const totalFGMade = games.reduce((acc, g) => acc + (g.fieldGoalsMade || 0), 0);
-  const totalFGAttempted = games.reduce((acc, g) => acc + (g.fieldGoalsAttempted || 0), 0);
-  const fgKickPercent = totalFGAttempted > 0 ? ((totalFGMade / totalFGAttempted) * 100).toFixed(1) : "—";
-  const totalXPMade = games.reduce((acc, g) => acc + (g.extraPointsMade || 0), 0);
-  const totalXPAttempted = games.reduce((acc, g) => acc + (g.extraPointsAttempted || 0), 0);
-  
-  // Punting stats
-  const totalPunts = games.reduce((acc, g) => acc + (g.punts || 0), 0);
-  const totalPuntYards = games.reduce((acc, g) => acc + (g.puntYards || 0), 0);
-  const avgPuntYards = totalPunts > 0 ? (totalPuntYards / totalPunts).toFixed(1) : "—";
-  
-  // OL stats
-  const totalPancakeBlocks = games.reduce((acc, g) => acc + (g.pancakeBlocks || 0), 0);
-  const totalSacksAllowed = games.reduce((acc, g) => acc + (g.sacksAllowed || 0), 0);
-  const totalPenalties = games.reduce((acc, g) => acc + (g.penalties || 0), 0);
-  
   const averageGrade = getAverageGrade(games);
 
   const recentGames = [...games]
@@ -2291,31 +2251,6 @@ export default function PlayerDetail() {
     fgPct: getSparkline(g => (g.fgAttempted || 0) > 0 ? ((g.fgMade || 0) / (g.fgAttempted || 1)) * 100 : 0),
     threePct: getSparkline(g => (g.threeAttempted || 0) > 0 ? ((g.threeMade || 0) / (g.threeAttempted || 1)) * 100 : 0),
     ftPct: getSparkline(g => (g.ftAttempted || 0) > 0 ? ((g.ftMade || 0) / (g.ftAttempted || 1)) * 100 : 0),
-    passingYards: getSparkline(g => g.passingYards || 0),
-    passingTDs: getSparkline(g => g.passingTouchdowns || 0),
-    rushingYards: getSparkline(g => g.rushingYards || 0),
-    rushingTDs: getSparkline(g => g.rushingTouchdowns || 0),
-    receivingYards: getSparkline(g => g.receivingYards || 0),
-    receivingTDs: getSparkline(g => g.receivingTouchdowns || 0),
-    receptions: getSparkline(g => g.receptions || 0),
-    targets: getSparkline(g => g.targets || 0),
-    carries: getSparkline(g => g.carries || 0),
-    tackles: getSparkline(g => g.tackles || 0),
-    soloTackles: getSparkline(g => g.soloTackles || 0),
-    sacks: getSparkline(g => g.sacks || 0),
-    defensiveINTs: getSparkline(g => g.defensiveInterceptions || 0),
-    passDeflections: getSparkline(g => g.passDeflections || 0),
-    forcedFumbles: getSparkline(g => g.forcedFumbles || 0),
-    fgMade: getSparkline(g => g.fieldGoalsMade || 0),
-    fgAttempted: getSparkline(g => g.fieldGoalsAttempted || 0),
-    xpMade: getSparkline(g => g.extraPointsMade || 0),
-    xpAttempted: getSparkline(g => g.extraPointsAttempted || 0),
-    punts: getSparkline(g => g.punts || 0),
-    puntYards: getSparkline(g => g.puntYards || 0),
-    pancakeBlocks: getSparkline(g => g.pancakeBlocks || 0),
-    sacksAllowed: getSparkline(g => g.sacksAllowed || 0),
-    penalties: getSparkline(g => g.penalties || 0),
-    completions: getSparkline(g => g.completions || 0),
   };
 
   const topGames = [...games]
@@ -2363,34 +2298,7 @@ export default function PlayerDetail() {
     { category: 'Efficiency', value: Math.round(efficiencyRating), fullMark: 100 },
   ];
 
-  // Football radar data - based on average grades from games
-  const avgEfficiencyGrade = games.length ? games.reduce((acc, g) => {
-    const grade = g.efficiencyGrade || 'C';
-    return acc + getGradeValue(grade);
-  }, 0) / games.length : 0;
-  const avgPlaymakingGrade = games.length ? games.reduce((acc, g) => {
-    const grade = g.playmakingGrade || 'C';
-    return acc + getGradeValue(grade);
-  }, 0) / games.length : 0;
-  const avgBallSecurityGrade = games.length ? games.reduce((acc, g) => {
-    const grade = g.ballSecurityGrade || 'C';
-    return acc + getGradeValue(grade);
-  }, 0) / games.length : 0;
-  const avgImpactGrade = games.length ? games.reduce((acc, g) => {
-    const grade = g.impactGrade || 'C';
-    return acc + getGradeValue(grade);
-  }, 0) / games.length : 0;
-
-  const footballRadarData = [
-    { category: 'Efficiency', value: Math.round(avgEfficiencyGrade), fullMark: 100 },
-    { category: 'Playmaking', value: Math.round(avgPlaymakingGrade), fullMark: 100 },
-    { category: 'Ball Security', value: Math.round(avgBallSecurityGrade), fullMark: 100 },
-    { category: 'Impact', value: Math.round(avgImpactGrade), fullMark: 100 },
-    { category: 'Consistency', value: Math.round(hustleRating), fullMark: 100 },
-    { category: 'Big Plays', value: Math.round(Math.min(100, (totalTDs / Math.max(games.length, 1)) * 20)), fullMark: 100 },
-  ];
-
-  const radarData = isFootball ? footballRadarData : basketballRadarData;
+  const radarData = basketballRadarData;
 
   const strengths = [...radarData].sort((a, b) => b.value - a.value).slice(0, 2);
   const weaknesses = [...radarData].sort((a, b) => a.value - b.value).slice(0, 2);
@@ -2436,9 +2344,9 @@ export default function PlayerDetail() {
             {player.bannerUrl ? (
               <img src={player.bannerUrl} alt="" className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-accent/30 via-accent/10 to-accent/5" />
+              <div className="w-full h-full from-accent/30 via-accent/10 to-accent/5" />
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+            <div className="absolute inset-0 from-black/50 to-transparent" />
           </div>
 
           <div className="relative z-10 px-6 md:px-8 pb-6 md:pb-8">
@@ -2471,17 +2379,13 @@ export default function PlayerDetail() {
                   )}
                   {player.position && (
                     <span className="px-3 py-1 rounded-full text-xs md:text-sm font-bold uppercase tracking-wider bg-accent/10 border border-accent/20 text-accent">
-                      {player.position.split(',').map(p => p.trim()).map(pos => 
-                        isFootball && FOOTBALL_POSITIONS.includes(pos as FootballPosition)
-                          ? FOOTBALL_POSITION_LABELS[pos as FootballPosition]
-                          : pos
-                      ).join(' / ')}
+                      {player.position.split(',').map(p => p.trim()).join(' / ')}
                     </span>
                   )}
                 </div>
                 
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 md:gap-3 mb-3">
-                  <h1 className="text-2xl md:text-4xl lg:text-5xl font-display font-bold text-foreground">
+                  <h1 className="text-4xl md:text-5xl font-display font-bold uppercase tracking-tight text-foreground">
                     {player.name}
                   </h1>
                   {player.username && (
@@ -2493,17 +2397,17 @@ export default function PlayerDetail() {
                     showControls={isAuthenticated}
                     size="md" 
                   />
-                  {!isFootball && player.stateRank && player.state && (
-                    <AnimatedRankBadge 
-                      type="state" 
-                      rank={player.stateRank} 
-                      state={player.state} 
+                  {player.stateRank && player.state && (
+                    <AnimatedRankBadge
+                      type="state"
+                      rank={player.stateRank}
+                      state={player.state}
                     />
                   )}
-                  {!isFootball && player.countryRank && (
-                    <AnimatedRankBadge 
-                      type="country" 
-                      rank={player.countryRank} 
+                  {player.countryRank && (
+                    <AnimatedRankBadge
+                      type="country"
+                      rank={player.countryRank}
                     />
                   )}
                   {isOwnProfile && themeName && (
@@ -2627,48 +2531,6 @@ export default function PlayerDetail() {
                     className="flex flex-wrap items-center justify-center md:justify-start gap-2 md:gap-3 mb-4" 
                     data-testid="player-averages-header"
                   >
-                    {isFootball ? (
-                      <>
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border">
-                          <Zap className="w-4 h-4 text-accent" />
-                          <span className="text-xs text-muted-foreground uppercase font-medium">YDS/G</span>
-                          <span className="text-sm font-bold text-foreground">{games.length ? (totalYards / games.length).toFixed(0) : "—"}</span>
-                        </div>
-                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border">
-                          <Target className="w-4 h-4 text-green-500" />
-                          <span className="text-xs text-muted-foreground uppercase font-medium">TD/G</span>
-                          <span className="text-sm font-bold text-foreground">{avgTDs}</span>
-                        </div>
-                        {hasPosition(player.position, ['QB']) && (
-                          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border">
-                            <Crosshair className="w-4 h-4 text-accent" />
-                            <span className="text-xs text-muted-foreground uppercase font-medium">COMP%</span>
-                            <span className="text-sm font-bold text-foreground">{compPercent}%</span>
-                          </div>
-                        )}
-                        {hasPosition(player.position, ['RB']) && (
-                          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border">
-                            <Zap className="w-4 h-4 text-accent" />
-                            <span className="text-xs text-muted-foreground uppercase font-medium">YPC</span>
-                            <span className="text-sm font-bold text-foreground">{yardsPerCarry}</span>
-                          </div>
-                        )}
-                        {hasPosition(player.position, ['WR', 'TE']) && (
-                          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border">
-                            <Target className="w-4 h-4 text-accent" />
-                            <span className="text-xs text-muted-foreground uppercase font-medium">REC</span>
-                            <span className="text-sm font-bold text-foreground">{totalReceptions}</span>
-                          </div>
-                        )}
-                        {hasPosition(player.position, ['DL', 'LB', 'DB']) && (
-                          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border">
-                            <Shield className="w-4 h-4 text-accent" />
-                            <span className="text-xs text-muted-foreground uppercase font-medium">TCK/G</span>
-                            <span className="text-sm font-bold text-foreground">{avgTackles}</span>
-                          </div>
-                        )}
-                      </>
-                    ) : (
                       <>
                         <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border">
                           <Target className="w-4 h-4 text-accent" />
@@ -2686,7 +2548,6 @@ export default function PlayerDetail() {
                           <span className="text-sm font-bold text-foreground">{avgAst}</span>
                         </div>
                       </>
-                    )}
                   </motion.div>
                 )}
                 
@@ -2910,7 +2771,7 @@ export default function PlayerDetail() {
                 <>
                   <GreetingIcon className="w-5 h-5 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(24 95% 53% / 0.5))" }} />
                   <span className="text-lg font-display text-foreground/90">
-                    {greeting.text}, <span className="bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent font-bold">{player.name.split(' ')[0]}</span>
+                    {greeting.text}, <span className="from-foreground to-accent font-bold">{player.name.split(' ')[0]}</span>
                   </span>
                 </>
               );
@@ -3004,15 +2865,6 @@ export default function PlayerDetail() {
             >
               <Phone className="w-4 h-4" /> Coach
             </TabsTrigger>
-            {isFootball && (
-              <TabsTrigger 
-                value="scouting" 
-                className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-foreground" 
-                data-testid="tab-scouting"
-              >
-                <Crosshair className="w-4 h-4" /> Scouting
-              </TabsTrigger>
-            )}
             <TabsTrigger 
               value="career" 
               className="gap-2 rounded-lg transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/25 text-muted-foreground hover:text-foreground" 
@@ -3066,14 +2918,14 @@ export default function PlayerDetail() {
                 <div className="p-1.5 rounded-lg bg-accent/20 border border-accent/30">
                   <Star className="w-4 h-4 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(24 95% 53% / 0.6))" }} />
                 </div>
-                <span className="bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent">
+                <span className="from-foreground to-accent">
                   Ratings & Trust Score
                 </span>
               </h3>
               <PlayerRatingsSection 
                 playerId={player.id} 
                 isOwnProfile={isOwnProfile}
-                sport={player.sport as 'basketball' | 'football'}
+                sport={player.sport as 'basketball'}
                 position={player.position}
               />
             </Card>
@@ -3110,92 +2962,11 @@ export default function PlayerDetail() {
                 <div className="p-2 rounded-lg bg-accent/10 border border-accent/20">
                   <BarChart3 className="w-5 h-5 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(var(--accent) / 0.6))" }} />
                 </div>
-                <h3 className="text-lg font-bold font-display bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent">
+                <h3 className="text-lg font-bold font-display from-foreground to-accent">
                   Season Statistics
                 </h3>
               </div>
-          {isFootball ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-              <StatCard label="Games" value={games.length} />
-              {/* QB Stats */}
-              {hasPosition(player.position, ['QB']) && (
-                <>
-                  <StatCard label="Pass YDS" value={totalPassingYards} highlight={true} sparklineData={sparklines.passingYards} />
-                  <StatCard label="Pass TDs" value={totalPassingTDs} highlight={true} sparklineData={sparklines.passingTDs} />
-                  <StatCard label="COMP%" value={compPercent !== "—" ? `${compPercent}%` : "—"} sparklineData={sparklines.completions} />
-                  <StatCard label="INTs" value={totalDefensiveINTs} sparklineData={sparklines.defensiveINTs} />
-                  <StatCard label="Rush YDS" value={totalRushingYards} sparklineData={sparklines.rushingYards} />
-                  <StatCard label="Rush TDs" value={totalRushingTDs} sparklineData={sparklines.rushingTDs} />
-                </>
-              )}
-              {/* RB Stats */}
-              {hasPosition(player.position, ['RB']) && (
-                <>
-                  <StatCard label="Rush YDS" value={totalRushingYards} highlight={true} sparklineData={sparklines.rushingYards} />
-                  <StatCard label="Rush TDs" value={totalRushingTDs} highlight={true} sparklineData={sparklines.rushingTDs} />
-                  <StatCard label="YPC" value={yardsPerCarry} sparklineData={sparklines.carries} />
-                  <StatCard label="Carries" value={totalCarries} sparklineData={sparklines.carries} />
-                  <StatCard label="Rec YDS" value={totalReceivingYards} sparklineData={sparklines.receivingYards} />
-                  <StatCard label="Rec TDs" value={totalReceivingTDs} sparklineData={sparklines.receivingTDs} />
-                  <StatCard label="Receptions" value={totalReceptions} sparklineData={sparklines.receptions} />
-                </>
-              )}
-              {/* WR/TE Stats */}
-              {hasPosition(player.position, ['WR', 'TE']) && (
-                <>
-                  <StatCard label="Rec YDS" value={totalReceivingYards} highlight={true} sparklineData={sparklines.receivingYards} />
-                  <StatCard label="Rec TDs" value={totalReceivingTDs} highlight={true} sparklineData={sparklines.receivingTDs} />
-                  <StatCard label="Receptions" value={totalReceptions} sparklineData={sparklines.receptions} />
-                  <StatCard label="Targets" value={totalTargets} sparklineData={sparklines.targets} />
-                  <StatCard label="YPR" value={yardsPerReception} sparklineData={sparklines.receptions} />
-                </>
-              )}
-              {/* Defensive Stats (DL, LB, DB) */}
-              {hasPosition(player.position, ['DL', 'LB', 'DB']) && (
-                <>
-                  <StatCard label="Tackles" value={totalTackles} highlight={true} sparklineData={sparklines.tackles} />
-                  <StatCard label="Solo Tackles" value={totalSoloTackles} sparklineData={sparklines.soloTackles} />
-                  <StatCard label="Sacks" value={totalSacks} highlight={hasPosition(player.position, ['DL'])} sparklineData={sparklines.sacks} />
-                  <StatCard label="INTs" value={totalDefensiveINTs} highlight={hasPosition(player.position, ['DB'])} sparklineData={sparklines.defensiveINTs} />
-                  <StatCard label="Pass Def" value={totalPassDeflections} sparklineData={sparklines.passDeflections} />
-                  <StatCard label="FF" value={totalForcedFumbles} sparklineData={sparklines.forcedFumbles} />
-                </>
-              )}
-              {/* Kicker Stats */}
-              {hasPosition(player.position, ['K']) && (
-                <>
-                  <StatCard label="FG Made" value={totalFGMade} highlight={true} sparklineData={sparklines.fgMade} />
-                  <StatCard label="FG Att" value={totalFGAttempted} sparklineData={sparklines.fgAttempted} />
-                  <StatCard label="FG%" value={fgKickPercent !== "—" ? `${fgKickPercent}%` : "—"} sparklineData={sparklines.fgMade} />
-                  <StatCard label="XP Made" value={totalXPMade} sparklineData={sparklines.xpMade} />
-                  <StatCard label="XP Att" value={totalXPAttempted} sparklineData={sparklines.xpAttempted} />
-                </>
-              )}
-              {/* Punter Stats */}
-              {hasPosition(player.position, ['P']) && (
-                <>
-                  <StatCard label="Punts" value={totalPunts} highlight={true} sparklineData={sparklines.punts} />
-                  <StatCard label="Punt YDS" value={totalPuntYards} sparklineData={sparklines.puntYards} />
-                  <StatCard label="Avg Punt" value={avgPuntYards} sparklineData={sparklines.puntYards} />
-                </>
-              )}
-              {/* OL - blocking stats */}
-              {hasPosition(player.position, ['OL']) && (
-                <>
-                  <StatCard label="Pancakes" value={totalPancakeBlocks} highlight={true} sparklineData={sparklines.pancakeBlocks} />
-                  <StatCard label="Sacks Allowed" value={totalSacksAllowed} sparklineData={sparklines.sacksAllowed} />
-                  <StatCard label="Penalties" value={totalPenalties} sparklineData={sparklines.penalties} />
-                </>
-              )}
-              <div className="rounded-xl p-5 flex flex-col justify-between relative overflow-hidden group hover:border-accent/30 transition-colors duration-300">
-                <span className="stat-label text-muted-foreground/80">Avg Grade</span>
-                <div className="flex items-center justify-center mt-2">
-                  <GradeBadge grade={averageGrade} size="md" />
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
               <StatCard label="Games" value={games.length} />
               <StatCard label="PPG" value={avgPoints} highlight={true} sparklineData={sparklines.points} />
               <StatCard label="RPG" value={avgReb} sparklineData={sparklines.rebounds} />
@@ -3213,10 +2984,9 @@ export default function PlayerDetail() {
                 </div>
               </div>
             </div>
-          )}
         </div>
 
-            {!isFootball && games.length >= 3 && (
+            {games.length >= 3 && (
               <ScoutView player={player} games={games} />
             )}
 
@@ -3226,7 +2996,7 @@ export default function PlayerDetail() {
                   <div className="p-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20">
                     <TrendingUp className="w-4 h-4 text-purple-600 dark:text-purple-400" style={{ filter: "drop-shadow(0 0 6px rgba(168, 85, 247, 0.6))" }} />
                   </div>
-                  <h3 className="text-base font-bold font-display bg-gradient-to-r from-foreground to-purple-300 bg-clip-text text-transparent">
+                  <h3 className="text-base font-bold font-display from-foreground">
                     Player Profile
                   </h3>
                 </div>
@@ -3318,14 +3088,14 @@ export default function PlayerDetail() {
               <div className="p-2 rounded-lg bg-accent/10 border border-accent/20">
                 <Medal className="w-5 h-5 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(24 95% 53% / 0.6))" }} />
               </div>
-              <h3 className="text-lg font-bold font-display bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent">
+              <h3 className="text-lg font-bold font-display from-foreground to-accent">
                 Top 5 Games
               </h3>
             </div>
         
         {topGames.length === 0 ? (
           <Card className="relative overflow-hidden border-accent/[0.08]" data-testid="empty-state-top-games">
-            <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
+            <div className="absolute inset-x-[10%] top-0 h-px from-transparent via-accent/20 to-transparent" />
             <EmptyState
               icon={PlayCircle}
               title="No Games Logged Yet"
@@ -3368,20 +3138,12 @@ export default function PlayerDetail() {
                       </div>
                       
                       <div className="flex items-center gap-4 sm:gap-6">
-                        {isFootball ? (
-                          <div className="hidden sm:flex gap-4 text-sm font-medium text-foreground/80">
-                            <span><span className="text-muted-foreground text-xs">YDS</span> {(game.passingYards || 0) + (game.rushingYards || 0) + (game.receivingYards || 0)}</span>
-                            <span><span className="text-muted-foreground text-xs">TDs</span> {(game.passingTouchdowns || 0) + (game.rushingTouchdowns || 0) + (game.receivingTouchdowns || 0)}</span>
-                            <span className="text-accent"><span className="text-accent/60 text-xs">RTG</span> {game.grade || "—"}</span>
-                          </div>
-                        ) : (
-                          <div className="hidden sm:flex gap-4 text-sm font-medium text-foreground/80">
+                        <div className="hidden sm:flex gap-4 text-sm font-medium text-foreground/80">
                             <span><span className="text-muted-foreground text-xs">PTS</span> {game.points}</span>
                             <span><span className="text-muted-foreground text-xs">REB</span> {game.rebounds}</span>
                             <span><span className="text-muted-foreground text-xs">AST</span> {game.assists}</span>
                             <span className="text-accent"><span className="text-accent/60 text-xs">PER</span> {game.points + game.rebounds + game.assists}</span>
                           </div>
-                        )}
                         <GradeBadge grade={game.grade || "-"} size="sm" />
                         <ChevronDown className={cn(
                           "w-4 h-4 text-muted-foreground transition-transform",
@@ -3393,61 +3155,7 @@ export default function PlayerDetail() {
                   
                   <CollapsibleContent>
                     <div className="px-4 pb-4 pt-2 border-t border-border/50">
-                      {isFootball ? (
-                        <>
-                          <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
-                            <div className="text-center">
-                              <div className="text-xs text-muted-foreground mb-1">Pass YDS</div>
-                              <div className="text-lg font-bold text-foreground">{game.passingYards || 0}</div>
-                            </div>
-                            <div className="text-center">
-                              <div className="text-xs text-muted-foreground mb-1">Rush YDS</div>
-                              <div className="text-lg font-bold text-foreground">{game.rushingYards || 0}</div>
-                            </div>
-                            <div className="text-center">
-                              <div className="text-xs text-muted-foreground mb-1">Rec YDS</div>
-                              <div className="text-lg font-bold text-foreground">{game.receivingYards || 0}</div>
-                            </div>
-                            <div className="text-center">
-                              <div className="text-xs text-accent/60 mb-1">Total TDs</div>
-                              <div className="text-lg font-bold text-accent">{(game.passingTouchdowns || 0) + (game.rushingTouchdowns || 0) + (game.receivingTouchdowns || 0)}</div>
-                            </div>
-                            <div className="text-center">
-                              <div className="text-xs text-muted-foreground mb-1">Tackles</div>
-                              <div className="text-lg font-bold text-foreground">{game.tackles || 0}</div>
-                            </div>
-                            <div className="text-center">
-                              <div className="text-xs text-muted-foreground mb-1">Sacks</div>
-                              <div className="text-lg font-bold text-foreground">{game.sacks || 0}</div>
-                            </div>
-                          </div>
-                          
-                          <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 mt-4 pt-4 border-t border-border/50">
-                            <div className="text-center">
-                              <div className="text-xs text-muted-foreground mb-1">COMP</div>
-                              <div className="text-sm font-medium text-foreground">
-                                {game.completions || 0}/{game.passAttempts || 0}
-                                <span className="text-muted-foreground ml-1">
-                                  ({game.passAttempts ? ((game.completions || 0) / game.passAttempts * 100).toFixed(0) : 0}%)
-                                </span>
-                              </div>
-                            </div>
-                            <div className="text-center">
-                              <div className="text-xs text-muted-foreground mb-1">Carries</div>
-                              <div className="text-sm font-medium text-foreground">{game.carries || 0}</div>
-                            </div>
-                            <div className="text-center">
-                              <div className="text-xs text-muted-foreground mb-1">Receptions</div>
-                              <div className="text-sm font-medium text-foreground">{game.receptions || 0}/{game.targets || 0}</div>
-                            </div>
-                            <div className="text-center">
-                              <div className="text-xs text-muted-foreground mb-1">Turnovers</div>
-                              <div className="text-sm font-medium text-red-600 dark:text-red-400">{(game.interceptions || 0) + (game.fumbles || 0)}</div>
-                            </div>
-                          </div>
-                        </>
-                      ) : (
-                        <>
+                      <>
                           <div className="grid grid-cols-3 sm:grid-cols-7 gap-4">
                             <div className="text-center">
                               <div className="text-xs text-muted-foreground mb-1">Points</div>
@@ -3478,7 +3186,7 @@ export default function PlayerDetail() {
                               <div className="text-lg font-bold text-foreground">{game.minutes}</div>
                             </div>
                           </div>
-                          
+
                           <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-border/50">
                             <div className="text-center">
                               <div className="text-xs text-muted-foreground mb-1">FG</div>
@@ -3508,68 +3216,36 @@ export default function PlayerDetail() {
                               </div>
                             </div>
                           </div>
+
+                          {(game.defensiveGrade || game.shootingGrade || game.reboundingGrade || game.passingGrade) && (
+                            <div className="mt-4 pt-4 border-t border-border/50">
+                              <div className="text-xs text-muted-foreground mb-3 uppercase tracking-wider font-medium">Category Grades</div>
+                              <div className="grid grid-cols-4 gap-2">
+                                {[
+                                  { label: "DEF", value: game.defensiveGrade, icon: Shield, color: "from-green-500/10 border-green-500/20", testId: "grade-defense" },
+                                  { label: "SHOT", value: game.shootingGrade, icon: Target, color: "from-red-500/10 border-red-500/20", testId: "grade-shooting" },
+                                  { label: "REB", value: game.reboundingGrade, icon: Zap, color: "from-blue-500/10 border-blue-500/20", testId: "grade-rebounding" },
+                                  { label: "PASS", value: game.passingGrade, icon: Activity, color: "from-purple-500/10 border-purple-500/20", testId: "grade-passing" },
+                                ].map((cat) => (
+                                  <div
+                                    key={cat.label}
+                                    data-testid={`${cat.testId}-${game.id}`}
+                                    className={cn(
+                                      "text-center p-2 rounded-lg border transition-colors duration-300",
+                                      cat.color
+                                    )}
+                                  >
+                                    <cat.icon className="w-3 h-3 mx-auto mb-1 text-muted-foreground" />
+                                    <div className={cn("text-lg font-bold", getGradeColor(cat.value || "").text)}>
+                                      {cat.value || "—"}
+                                    </div>
+                                    <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">{cat.label}</div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </>
-                      )}
-                      
-                      {isFootball ? (
-                        (game.efficiencyGrade || game.playmakingGrade || game.ballSecurityGrade || game.impactGrade) && (
-                          <div className="mt-4 pt-4 border-t border-border/50">
-                            <div className="text-xs text-muted-foreground mb-3 uppercase tracking-wider font-medium">Category Grades</div>
-                            <div className="grid grid-cols-4 gap-2">
-                              {[
-                                { label: "EFF", value: game.efficiencyGrade, icon: Target, color: "from-blue-500/10 to-sky-600/5 border-blue-500/20", testId: "grade-efficiency" },
-                                { label: "PLAY", value: game.playmakingGrade, icon: Zap, color: "from-purple-500/10 to-violet-600/5 border-purple-500/20", testId: "grade-playmaking" },
-                                { label: "SEC", value: game.ballSecurityGrade, icon: ShieldCheck, color: "from-green-500/10 to-emerald-600/5 border-green-500/20", testId: "grade-security" },
-                                { label: "IMP", value: game.impactGrade, icon: Flame, color: "from-accent/10 to-red-600/5 border-accent/20", testId: "grade-impact" },
-                              ].map((cat) => (
-                                <div 
-                                  key={cat.label} 
-                                  data-testid={`${cat.testId}-${game.id}`}
-                                  className={cn(
-                                    "text-center p-2 rounded-lg bg-gradient-to-br border transition-colors duration-300",
-                                    cat.color
-                                  )}
-                                >
-                                  <cat.icon className="w-3 h-3 mx-auto mb-1 text-muted-foreground" />
-                                  <div className={cn("text-lg font-bold", getGradeColor(cat.value || "").text)}>
-                                    {cat.value || "—"}
-                                  </div>
-                                  <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">{cat.label}</div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )
-                      ) : (
-                        (game.defensiveGrade || game.shootingGrade || game.reboundingGrade || game.passingGrade) && (
-                          <div className="mt-4 pt-4 border-t border-border/50">
-                            <div className="text-xs text-muted-foreground mb-3 uppercase tracking-wider font-medium">Category Grades</div>
-                            <div className="grid grid-cols-4 gap-2">
-                              {[
-                                { label: "DEF", value: game.defensiveGrade, icon: Shield, color: "from-green-500/10 to-emerald-600/5 border-green-500/20", testId: "grade-defense" },
-                                { label: "SHOT", value: game.shootingGrade, icon: Target, color: "from-red-500/10 to-rose-600/5 border-red-500/20", testId: "grade-shooting" },
-                                { label: "REB", value: game.reboundingGrade, icon: Zap, color: "from-blue-500/10 to-sky-600/5 border-blue-500/20", testId: "grade-rebounding" },
-                                { label: "PASS", value: game.passingGrade, icon: Activity, color: "from-purple-500/10 to-violet-600/5 border-purple-500/20", testId: "grade-passing" },
-                              ].map((cat) => (
-                                <div 
-                                  key={cat.label} 
-                                  data-testid={`${cat.testId}-${game.id}`}
-                                  className={cn(
-                                    "text-center p-2 rounded-lg bg-gradient-to-br border transition-colors duration-300",
-                                    cat.color
-                                  )}
-                                >
-                                  <cat.icon className="w-3 h-3 mx-auto mb-1 text-muted-foreground" />
-                                  <div className={cn("text-lg font-bold", getGradeColor(cat.value || "").text)}>
-                                    {cat.value || "—"}
-                                  </div>
-                                  <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium">{cat.label}</div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )
-                      )}
                       
                       {game.feedback && (
                         <div className="mt-4 pt-4 border-t border-border/50">
@@ -3695,68 +3371,36 @@ export default function PlayerDetail() {
                       <GradeBadge grade={game.grade || "-"} size="sm" />
                     </div>
                     
-                    {isFootball ? (
-                      (game.efficiencyGrade || game.playmakingGrade || game.ballSecurityGrade || game.impactGrade) && (
-                        <div className="flex gap-1.5 mb-2">
-                          {[
-                            { label: "EFF", value: game.efficiencyGrade, icon: Target, testId: "grade-efficiency" },
-                            { label: "PLAY", value: game.playmakingGrade, icon: Zap, testId: "grade-playmaking" },
-                            { label: "SEC", value: game.ballSecurityGrade, icon: ShieldCheck, testId: "grade-security" },
-                            { label: "IMP", value: game.impactGrade, icon: Flame, testId: "grade-impact" },
-                          ].map((cat) => (
-                            <div 
-                              key={cat.label}
-                              data-testid={`${cat.testId}-history-${game.id}`}
-                              className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted/50 border border-border"
-                            >
-                              <cat.icon className="w-2.5 h-2.5 text-muted-foreground" />
-                              <span className={cn("text-[10px] font-bold", getGradeColor(cat.value || "").text)}>
-                                {cat.value || "—"}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      )
-                    ) : (
-                      (game.defensiveGrade || game.shootingGrade || game.reboundingGrade || game.passingGrade) && (
-                        <div className="flex gap-1.5 mb-2">
-                          {[
-                            { label: "DEF", value: game.defensiveGrade, icon: Shield, testId: "grade-defense" },
-                            { label: "SHOT", value: game.shootingGrade, icon: Target, testId: "grade-shooting" },
-                            { label: "REB", value: game.reboundingGrade, icon: Zap, testId: "grade-rebounding" },
-                            { label: "PASS", value: game.passingGrade, icon: Activity, testId: "grade-passing" },
-                          ].map((cat) => (
-                            <div 
-                              key={cat.label}
-                              data-testid={`${cat.testId}-history-${game.id}`}
-                              className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted/50 border border-border"
-                            >
-                              <cat.icon className="w-2.5 h-2.5 text-muted-foreground" />
-                              <span className={cn("text-[10px] font-bold", getGradeColor(cat.value || "").text)}>
-                                {cat.value || "—"}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      )
+                    {(game.defensiveGrade || game.shootingGrade || game.reboundingGrade || game.passingGrade) && (
+                      <div className="flex gap-1.5 mb-2">
+                        {[
+                          { label: "DEF", value: game.defensiveGrade, icon: Shield, testId: "grade-defense" },
+                          { label: "SHOT", value: game.shootingGrade, icon: Target, testId: "grade-shooting" },
+                          { label: "REB", value: game.reboundingGrade, icon: Zap, testId: "grade-rebounding" },
+                          { label: "PASS", value: game.passingGrade, icon: Activity, testId: "grade-passing" },
+                        ].map((cat) => (
+                          <div
+                            key={cat.label}
+                            data-testid={`${cat.testId}-history-${game.id}`}
+                            className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted/50 border border-border"
+                          >
+                            <cat.icon className="w-2.5 h-2.5 text-muted-foreground" />
+                            <span className={cn("text-[10px] font-bold", getGradeColor(cat.value || "").text)}>
+                              {cat.value || "—"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     )}
                     
                     <div className="flex justify-between items-end border-t border-border/50 pt-3 mt-1">
                       <div className="flex items-center gap-4">
-                        {isFootball ? (
-                          <div className="flex gap-3 text-xs font-medium text-foreground/80">
-                            <span><span className="text-muted-foreground">YDS</span> {(game.passingYards || 0) + (game.rushingYards || 0) + (game.receivingYards || 0)}</span>
-                            <span><span className="text-muted-foreground">TDs</span> {(game.passingTouchdowns || 0) + (game.rushingTouchdowns || 0) + (game.receivingTouchdowns || 0)}</span>
-                            <span className="text-accent"><span className="text-accent/60">RTG</span> {game.grade || "—"}</span>
-                          </div>
-                        ) : (
-                          <div className="flex gap-3 text-xs font-medium text-foreground/80">
-                            <span><span className="text-muted-foreground">PTS</span> {game.points}</span>
-                            <span><span className="text-muted-foreground">REB</span> {game.rebounds}</span>
-                            <span><span className="text-muted-foreground">AST</span> {game.assists}</span>
-                            <span className="text-accent"><span className="text-accent/60">PER</span> {game.points + game.rebounds + game.assists}</span>
-                          </div>
-                        )}
+                        <div className="flex gap-3 text-xs font-medium text-foreground/80">
+                          <span><span className="text-muted-foreground">PTS</span> {game.points}</span>
+                          <span><span className="text-muted-foreground">REB</span> {game.rebounds}</span>
+                          <span><span className="text-muted-foreground">AST</span> {game.assists}</span>
+                          <span className="text-accent"><span className="text-accent/60">PER</span> {game.points + game.rebounds + game.assists}</span>
+                        </div>
                         <SocialEngagement gameId={game.id} compact />
                       </div>
                       
@@ -3796,6 +3440,77 @@ export default function PlayerDetail() {
               )}
             </div>
           </Card>
+
+          {/* Equipment Section */}
+          <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-gray-200">Gear & Equipment</h3>
+              {isOwnProfile && (
+                <button
+                  onClick={() => setShowAddGear(!showAddGear)}
+                  className="text-xs text-blue-400 hover:text-blue-300"
+                >
+                  + Add Gear
+                </button>
+              )}
+            </div>
+
+            {showAddGear && (
+              <div className="mb-3 grid grid-cols-2 gap-2">
+                <input
+                  className="col-span-2 bg-gray-700 rounded px-2 py-1 text-sm text-white placeholder-gray-400"
+                  placeholder="Brand (e.g. Nike)"
+                  value={gearForm.brand}
+                  onChange={e => setGearForm(f => ({ ...f, brand: e.target.value }))}
+                />
+                <select
+                  className="bg-gray-700 rounded px-2 py-1 text-sm text-white"
+                  value={gearForm.category}
+                  onChange={e => setGearForm(f => ({ ...f, category: e.target.value }))}
+                >
+                  <option value="shoe">Shoe</option>
+                  <option value="ball">Ball</option>
+                  <option value="apparel">Apparel</option>
+                  <option value="gear">Gear</option>
+                  <option value="accessory">Accessory</option>
+                </select>
+                <input
+                  className="bg-gray-700 rounded px-2 py-1 text-sm text-white placeholder-gray-400"
+                  placeholder="Model"
+                  value={gearForm.model}
+                  onChange={e => setGearForm(f => ({ ...f, model: e.target.value }))}
+                />
+                <button
+                  className="col-span-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded py-1"
+                  onClick={() => {
+                    if (gearForm.brand && gearForm.category) {
+                      addEquipmentMutation.mutate(gearForm);
+                      setGearForm({ brand: '', category: 'shoe', model: '', size: '' });
+                      setShowAddGear(false);
+                    }
+                  }}
+                >
+                  Save Gear
+                </button>
+              </div>
+            )}
+
+            {equipment.length === 0 ? (
+              <p className="text-gray-500 text-xs">No gear logged yet.</p>
+            ) : (
+              <div className="space-y-2">
+                {(equipment as any[]).map((item: any) => (
+                  <div key={item.id} className="flex items-center justify-between text-sm">
+                    <div>
+                      <span className="text-white font-medium">{item.brand}</span>
+                      {item.model && <span className="text-gray-400 ml-1">— {item.model}</span>}
+                    </div>
+                    <span className="text-xs text-gray-500 capitalize">{item.category}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </TabsContent>
 
         <TabsContent value="highlights">
@@ -3883,7 +3598,7 @@ export default function PlayerDetail() {
               <div className="p-2 rounded-lg bg-accent/10 border border-accent/20">
                 <Medal className="w-5 h-5 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(var(--accent) / 0.6))" }} />
               </div>
-              <h3 className="text-lg font-bold font-display bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent">
+              <h3 className="text-lg font-bold font-display from-foreground to-accent">
                 Skill Badges
               </h3>
             </div>
@@ -3909,7 +3624,7 @@ export default function PlayerDetail() {
                 <div className="p-1.5 rounded-lg bg-accent/20 border border-accent/30">
                   <Zap className="w-4 h-4 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(var(--accent) / 0.6))" }} />
                 </div>
-                <span className="bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent">XP Rewards</span>
+                <span className="from-foreground to-accent">XP Rewards</span>
               </h4>
               <div className="grid grid-cols-2 gap-2 text-sm relative z-10">
                 <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50 border border-border/50 hover:border-accent/20 transition-colors">
@@ -3928,11 +3643,11 @@ export default function PlayerDetail() {
                   <span className="text-muted-foreground">A+ Grade</span>
                   <span className="font-bold text-accent">+50 XP</span>
                 </div>
-                <div className="flex items-center justify-between p-2.5 rounded-lg bg-gradient-to-r from-accent/10 to-accent/5 border border-accent/20 hover:border-accent/40 transition-colors">
+                <div className="flex items-center justify-between p-2.5 rounded-lg from-accent/10 to-accent/5 border border-accent/20 hover:border-accent/40 transition-colors">
                   <span className="text-accent">3-Day Streak</span>
                   <span className="font-bold text-accent">+25 XP</span>
                 </div>
-                <div className="flex items-center justify-between p-2.5 rounded-lg bg-gradient-to-r from-accent/10 to-accent/5 border border-accent/20 hover:border-accent/40 transition-colors">
+                <div className="flex items-center justify-between p-2.5 rounded-lg from-accent/10 to-accent/5 border border-accent/20 hover:border-accent/40 transition-colors">
                   <span className="text-accent">7-Day Streak</span>
                   <span className="font-bold text-accent">+75 XP</span>
                 </div>
@@ -3959,15 +3674,6 @@ export default function PlayerDetail() {
             isOwnProfile={isOwnProfile} 
           />
         </TabsContent>
-
-        {isFootball && (
-          <TabsContent value="scouting" className="space-y-6 animate-fade-in">
-            <FootballMetrics 
-              playerId={player.id} 
-              canEdit={isOwnProfile} 
-            />
-          </TabsContent>
-        )}
 
         <TabsContent value="career" className="space-y-8 animate-fade-in">
           <CareerTimeline playerId={player.id} />
@@ -4009,7 +3715,7 @@ export default function PlayerDetail() {
               <div className="relative">
                 <Avatar className="w-24 h-24 border-4 border-accent/20">
                   {editForm.photoUrl && <AvatarImage src={editForm.photoUrl} alt="Profile" width={96} height={96} />}
-                  <AvatarFallback className="bg-gradient-to-br from-accent/30 to-accent/10 text-2xl font-display font-bold text-foreground">
+                  <AvatarFallback className="from-accent/30 to-accent/10 text-2xl font-display font-bold text-foreground">
                     {editForm.name ? getInitials(editForm.name) : "?"}
                   </AvatarFallback>
                 </Avatar>
@@ -4072,8 +3778,8 @@ export default function PlayerDetail() {
                 <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">
                   Position(s) <span className="font-normal text-muted-foreground/60">(Select all that apply)</span>
                 </label>
-                <div className={`grid gap-2 ${isFootball ? 'grid-cols-5' : 'grid-cols-3'}`}>
-                  {(isFootball ? FOOTBALL_POSITIONS : ['Guard', 'Wing', 'Big']).map((pos) => (
+                <div className="grid gap-2 grid-cols-3">
+                  {['Guard', 'Wing', 'Big'].map((pos) => (
                     <div
                       key={pos}
                       onClick={() => toggleEditPosition(pos)}
@@ -4086,19 +3792,13 @@ export default function PlayerDetail() {
                       `}
                       data-testid={`position-edit-${pos.toLowerCase()}`}
                     >
-                      {isFootball && FOOTBALL_POSITIONS.includes(pos as FootballPosition) 
-                        ? FOOTBALL_POSITION_LABELS[pos as FootballPosition] 
-                        : pos}
+                      {pos}
                     </div>
                   ))}
                 </div>
                 {editPositions.length > 0 && (
                   <p className="text-xs text-accent">
-                    Selected: {editPositions.map(p => 
-                      isFootball && FOOTBALL_POSITIONS.includes(p as FootballPosition) 
-                        ? FOOTBALL_POSITION_LABELS[p as FootballPosition] 
-                        : p
-                    ).join(', ')}
+                    Selected: {editPositions.join(', ')}
                   </p>
                 )}
               </div>
@@ -4437,6 +4137,7 @@ export default function PlayerDetail() {
           }}
           game={selectedShareGame}
           playerName={player.name}
+          sport={player.sport}
         />
       )}
 

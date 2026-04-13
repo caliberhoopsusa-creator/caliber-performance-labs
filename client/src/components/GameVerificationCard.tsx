@@ -40,10 +40,6 @@ interface GameData {
   points?: number;
   rebounds?: number;
   assists?: number;
-  passingYards?: number;
-  rushingYards?: number;
-  receivingYards?: number;
-  tackles?: number;
   verificationStatus: string | null;
 }
 
@@ -87,8 +83,6 @@ export function GameVerificationCard({ game, onVerified }: Props) {
     },
   });
 
-  const isBasketball = game.sport === 'basketball';
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -106,14 +100,11 @@ export function GameVerificationCard({ game, onVerified }: Props) {
               <Badge variant="outline" className="text-xs border-border capitalize">
                 {game.playerPosition}
               </Badge>
-              <Badge 
-                variant="outline" 
-                className={cn(
-                  "text-xs",
-                  isBasketball ? "border-accent/30 text-accent" : "border-green-500/30 text-green-600 dark:text-green-400"
-                )}
+              <Badge
+                variant="outline"
+                className="text-xs border-accent/30 text-accent"
               >
-                {isBasketball ? "Basketball" : "Football"}
+                {"Basketball"}
               </Badge>
             </div>
             
@@ -147,37 +138,18 @@ export function GameVerificationCard({ game, onVerified }: Props) {
                 className="mb-3"
               >
                 <div className="grid grid-cols-3 gap-2 py-2 border-t border-border">
-                  {isBasketball ? (
-                    <>
-                      <div className="text-center p-2 rounded bg-muted/50">
-                        <p className="text-xs text-muted-foreground">Points</p>
-                        <p className="text-lg font-bold text-foreground">{game.points ?? 0}</p>
-                      </div>
-                      <div className="text-center p-2 rounded bg-muted/50">
-                        <p className="text-xs text-muted-foreground">Rebounds</p>
-                        <p className="text-lg font-bold text-foreground">{game.rebounds ?? 0}</p>
-                      </div>
-                      <div className="text-center p-2 rounded bg-muted/50">
-                        <p className="text-xs text-muted-foreground">Assists</p>
-                        <p className="text-lg font-bold text-foreground">{game.assists ?? 0}</p>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="text-center p-2 rounded bg-muted/50">
-                        <p className="text-xs text-muted-foreground">Pass Yds</p>
-                        <p className="text-lg font-bold text-foreground">{game.passingYards ?? 0}</p>
-                      </div>
-                      <div className="text-center p-2 rounded bg-muted/50">
-                        <p className="text-xs text-muted-foreground">Rush Yds</p>
-                        <p className="text-lg font-bold text-foreground">{game.rushingYards ?? 0}</p>
-                      </div>
-                      <div className="text-center p-2 rounded bg-muted/50">
-                        <p className="text-xs text-muted-foreground">Tackles</p>
-                        <p className="text-lg font-bold text-foreground">{game.tackles ?? 0}</p>
-                      </div>
-                    </>
-                  )}
+                  <div className="text-center p-2 rounded bg-muted/50">
+                    <p className="text-xs text-muted-foreground">Points</p>
+                    <p className="text-lg font-bold text-foreground">{game.points ?? 0}</p>
+                  </div>
+                  <div className="text-center p-2 rounded bg-muted/50">
+                    <p className="text-xs text-muted-foreground">Rebounds</p>
+                    <p className="text-lg font-bold text-foreground">{game.rebounds ?? 0}</p>
+                  </div>
+                  <div className="text-center p-2 rounded bg-muted/50">
+                    <p className="text-xs text-muted-foreground">Assists</p>
+                    <p className="text-lg font-bold text-foreground">{game.assists ?? 0}</p>
+                  </div>
                 </div>
 
                 <div className="mt-3">

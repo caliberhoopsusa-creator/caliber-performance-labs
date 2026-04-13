@@ -9,8 +9,8 @@ export const players = pgTable("players", {
   id: serial("id").primaryKey(),
   userId: text("user_id"), // Links to auth user - null for coach-created players
   name: text("name").notNull(),
-  sport: text("sport").notNull().default("basketball"), // 'basketball' or 'football'
-  position: text("position").notNull(), // Basketball: 'Guard', 'Wing', 'Big' | Football: 'QB', 'RB', 'WR', etc.
+  sport: text("sport").notNull().default("basketball"), // 'basketball'
+  position: text("position").notNull(), // 'Guard', 'Wing', 'Big'
   height: text("height"), // e.g., "6'5"
   team: text("team"),
   jerseyNumber: integer("jersey_number"),
@@ -53,6 +53,11 @@ export const players = pgTable("players", {
   username: text("username").unique(),
   lastActiveAt: timestamp("last_active_at"),
   createdAt: timestamp("created_at").defaultNow(),
+  // Compliance & verification fields
+  dateOfBirth: date("date_of_birth"), // For COPPA age verification
+  minorDataPublic: boolean("minor_data_public").default(true), // Controls public visibility for minor players
+  verifiedAthlete: boolean("verified_athlete").notNull().default(false), // Verified by coach, school email, or admin
+  verificationMethod: text("verification_method"), // 'coach_verified', 'school_email', 'admin'
 }, (table) => ({
   userIdIdx: index("players_user_id_idx").on(table.userId),
   sportIdx: index("players_sport_idx").on(table.sport),
@@ -71,6 +76,26 @@ export const activityStreaks = pgTable("activity_streaks", {
 }, (table) => ({
   playerIdIdx: index("activity_streaks_player_id_idx").on(table.playerId),
 }));
+
+// === DAILY QUESTS (for daily retention loop) ===
+export const dailyQuests = pgTable("daily_quests", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  questDate: date("quest_date").notNull(),
+  questType: text("quest_type").notNull(), // 'log_game', 'earn_badge', 'react_to_feed', 'log_practice', 'update_goal'
+  targetValue: integer("target_value").notNull().default(1),
+  currentValue: integer("current_value").notNull().default(0),
+  completed: boolean("completed").notNull().default(false),
+  xpReward: integer("xp_reward").notNull().default(25),
+  coinReward: integer("coin_reward").notNull().default(10),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  playerIdIdx: index("daily_quests_player_id_idx").on(table.playerId),
+  playerDateIdx: index("daily_quests_player_date_idx").on(table.playerId, table.questDate),
+}));
+
+export type DailyQuest = typeof dailyQuests.$inferSelect;
+export type InsertDailyQuest = typeof dailyQuests.$inferInsert;
 
 export const badges = pgTable("badges", {
   id: serial("id").primaryKey(),
@@ -111,7 +136,13 @@ export const insertCaliberBadgeSchema = createInsertSchema(caliberBadges).omit({
 export type InsertCaliberBadge = z.infer<typeof insertCaliberBadgeSchema>;
 export type CaliberBadge = typeof caliberBadges.$inferSelect;
 
-// === FOOTBALL ADVANCED METRICS & SCOUTING DATA ===
+// === ATHLETIC ADVANCED METRICS & SCOUTING DATA ===
+// INTENTIONAL: footballMetrics table is retained in the schema even though the frontend
+// has been narrowed to basketball-only. It is kept to:
+//   (a) avoid a destructive migration on existing data,
+//   (b) preserve the option for future multi-sport expansion.
+// The football_metrics table is still served by storage.ts methods but no UI renders it.
+// If multi-sport support is confirmed as out-of-scope, run a migration to DROP this table.
 export const footballMetrics = pgTable("football_metrics", {
   id: serial("id").primaryKey(),
   playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
@@ -151,7 +182,7 @@ export const footballMetrics = pgTable("football_metrics", {
   
   // === QUALITATIVE TRAIT RATINGS (1-10 scale) ===
   physicality: integer("physicality"), // Physical play, pad level, finishing
-  footballIQ: integer("football_iq"), // Understanding of schemes, reads, adjustments
+  footballIQ: integer("football_iq"), // Understanding of game schemes and adjustments
   mentalToughness: integer("mental_toughness"), // Composure under pressure, resilience
   coachability: integer("coachability"), // Receptiveness to coaching, improvement rate
   leadership: integer("leadership"), // Vocal leader, team chemistry impact
@@ -198,7 +229,7 @@ export const streaks = pgTable("streaks", {
 export const games = pgTable("games", {
   id: serial("id").primaryKey(),
   playerId: integer("player_id").notNull(),
-  sport: text("sport").notNull().default("basketball"), // 'basketball' or 'football'
+  sport: text("sport").notNull().default("basketball"), // 'basketball'
   date: date("date").notNull(),
   opponent: text("opponent").notNull(),
   result: text("result"), // "W 105-98" or "W 24-17"
@@ -231,7 +262,7 @@ export const games = pgTable("games", {
   per: decimal("per", { precision: 5, scale: 2 }).default("0"), // Player Efficiency Rating
   notes: text("notes"), // Video notes or observations
   
-  // === FOOTBALL STATS ===
+  // === SPORT STATS ===
   // Passing (QB)
   completions: integer("completions").default(0),
   passAttempts: integer("pass_attempts").default(0),
@@ -275,7 +306,7 @@ export const games = pgTable("games", {
   sacksAllowed: integer("sacks_allowed").default(0),
   penalties: integer("penalties").default(0),
   
-  // Football Category Grades
+  // Category Grades
   efficiencyGrade: text("efficiency_grade"), // QB: Comp%, RB: YPC, WR: Catch rate
   playmakingGrade: text("playmaking_grade"), // TDs, big plays
   ballSecurityGrade: text("ball_security_grade"), // INTs thrown, fumbles
@@ -426,16 +457,6 @@ export const GOAL_PRESETS = [
   { title: "Dish 4+ assists per game", targetType: "stat_min", targetCategory: "assists", targetValue: 4 },
 ] as const;
 
-// Football-specific goal presets
-export const FOOTBALL_GOAL_PRESETS = [
-  { title: "Average B+ Defense", targetType: "grade_avg", targetCategory: "defense", targetValue: 85 },
-  { title: "Throw 200+ passing yards", targetType: "stat_min", targetCategory: "passingYards", targetValue: 200 },
-  { title: "Rush for 100+ yards", targetType: "stat_min", targetCategory: "rushingYards", targetValue: 100 },
-  { title: "Catch 80+ receiving yards", targetType: "stat_min", targetCategory: "receivingYards", targetValue: 80 },
-  { title: "Get 5+ tackles per game", targetType: "stat_min", targetCategory: "tackles", targetValue: 5 },
-  { title: "Zero interceptions thrown", targetType: "stat_max", targetCategory: "interceptions", targetValue: 0 },
-] as const;
-
 // Goal categories by sport
 export const BASKETBALL_GOAL_CATEGORIES = [
   { value: "points", label: "Points" },
@@ -448,22 +469,6 @@ export const BASKETBALL_GOAL_CATEGORIES = [
   { value: "overall", label: "Overall Grade" },
 ] as const;
 
-export const FOOTBALL_GOAL_CATEGORIES = [
-  { value: "passingYards", label: "Passing Yards" },
-  { value: "passingTouchdowns", label: "Passing TDs" },
-  { value: "rushingYards", label: "Rushing Yards" },
-  { value: "rushingTouchdowns", label: "Rushing TDs" },
-  { value: "receivingYards", label: "Receiving Yards" },
-  { value: "receivingTouchdowns", label: "Receiving TDs" },
-  { value: "receptions", label: "Receptions" },
-  { value: "tackles", label: "Tackles" },
-  { value: "sacks", label: "Sacks" },
-  { value: "defensiveInterceptions", label: "Interceptions (DEF)" },
-  { value: "interceptions", label: "INTs Thrown" },
-  { value: "fumbles", label: "Fumbles" },
-  { value: "defense", label: "Defense Rating" },
-  { value: "overall", label: "Overall Grade" },
-] as const;
 
 export const BADGE_DEFINITIONS = {
   twenty_piece: { name: "20-Piece", description: "Scored 20+ points in a game" },
@@ -544,46 +549,7 @@ export const SKILL_BADGE_TYPES = {
 
 export type SkillBadgeType = keyof typeof SKILL_BADGE_TYPES;
 
-export const FOOTBALL_SKILL_BADGE_TYPES = {
-  gunslinger: {
-    name: "Gunslinger",
-    description: "Career passing touchdowns",
-    stat: "passingTouchdowns",
-    thresholds: { brick: 2, bronze: 5, silver: 10, gold: 20, platinum: 35, hall_of_fame: 55, legend: 80, goat: 120 },
-  },
-  workhorse: {
-    name: "Workhorse",
-    description: "Career rushing yards",
-    stat: "rushingYards",
-    thresholds: { brick: 50, bronze: 150, silver: 400, gold: 800, platinum: 1500, hall_of_fame: 2500, legend: 4000, goat: 6000 },
-  },
-  deep_threat: {
-    name: "Deep Threat",
-    description: "Career receiving touchdowns",
-    stat: "receivingTouchdowns",
-    thresholds: { brick: 1, bronze: 3, silver: 7, gold: 15, platinum: 25, hall_of_fame: 40, legend: 60, goat: 90 },
-  },
-  ball_hawk: {
-    name: "Ball Hawk",
-    description: "Career interceptions",
-    stat: "defensiveInterceptions",
-    thresholds: { brick: 1, bronze: 2, silver: 4, gold: 8, platinum: 15, hall_of_fame: 25, legend: 40, goat: 60 },
-  },
-  sack_artist: {
-    name: "Sack Artist",
-    description: "Career sacks",
-    stat: "sacks",
-    thresholds: { brick: 1, bronze: 3, silver: 6, gold: 12, platinum: 22, hall_of_fame: 35, legend: 55, goat: 80 },
-  },
-  iron_wall: {
-    name: "Iron Wall",
-    description: "Career pancake blocks",
-    stat: "pancakeBlocks",
-    thresholds: { brick: 3, bronze: 8, silver: 18, gold: 35, platinum: 65, hall_of_fame: 100, legend: 150, goat: 220 },
-  },
-} as const;
 
-export type FootballSkillBadgeType = keyof typeof FOOTBALL_SKILL_BADGE_TYPES;
 
 // Position-specific badge mappings for basketball
 export const BASKETBALL_POSITION_BADGES: Record<string, SkillBadgeType[]> = {
@@ -592,34 +558,19 @@ export const BASKETBALL_POSITION_BADGES: Record<string, SkillBadgeType[]> = {
   Big: ['glass_cleaner', 'rim_protector', 'bucket_getter'],
 };
 
-// Position-specific badge mappings for football
-export const FOOTBALL_POSITION_BADGES: Record<string, FootballSkillBadgeType[]> = {
-  QB: ['gunslinger'],
-  RB: ['workhorse'],
-  WR: ['deep_threat'],
-  TE: ['deep_threat'],
-  OL: ['iron_wall'],
-  DL: ['sack_artist'],
-  LB: ['sack_artist', 'ball_hawk'],
-  DB: ['ball_hawk'],
-  K: [],  // Kickers don't have skill badges currently
-  P: [],  // Punters don't have skill badges currently
-};
-
 // Get relevant badges for a position (for multi-position support, returns union of badges)
-export function getBadgesForPosition(sport: 'basketball' | 'football', positions: string | string[]): string[] {
-  const positionList = Array.isArray(positions) 
-    ? positions 
+export function getBadgesForPosition(sport: 'basketball', positions: string | string[]): string[] {
+  const positionList = Array.isArray(positions)
+    ? positions
     : positions.split(',').map(p => p.trim());
-  
-  const badgeMapping = sport === 'football' ? FOOTBALL_POSITION_BADGES : BASKETBALL_POSITION_BADGES;
+
   const relevantBadges = new Set<string>();
-  
+
   for (const pos of positionList) {
-    const badges = badgeMapping[pos] || [];
+    const badges = BASKETBALL_POSITION_BADGES[pos] || [];
     badges.forEach(b => relevantBadges.add(b));
   }
-  
+
   return Array.from(relevantBadges);
 }
 
@@ -1388,7 +1339,7 @@ export const scheduleEvents = pgTable("schedule_events", {
   endTime: timestamp("end_time"),
   isRecurring: boolean("is_recurring").default(false).notNull(),
   recurrenceRule: text("recurrence_rule"), // iCal RRULE format
-  sport: text("sport").default("basketball").notNull(), // 'basketball' or 'football'
+  sport: text("sport").default("basketball").notNull(), // 'basketball'
   createdBy: text("created_by"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => ({
@@ -1400,7 +1351,7 @@ export const scheduleEvents = pgTable("schedule_events", {
 export const liveGameSessions = pgTable("live_game_sessions", {
   id: serial("id").primaryKey(),
   coachUserId: text("coach_user_id").notNull(), // Coach running the session
-  sport: text("sport").notNull().default("basketball"), // 'basketball' or 'football'
+  sport: text("sport").notNull().default("basketball"), // 'basketball'
   opponent: text("opponent"), // Optional opponent name
   selectedPlayerIds: text("selected_player_ids").notNull(), // JSON array of player IDs
   status: text("status").notNull().default("active"), // 'active', 'paused', 'completed'
@@ -1836,7 +1787,7 @@ export const playerRatings = pgTable("player_ratings", {
   rebounding: integer("rebounding"),
   leadership: integer("leadership"),
   
-  // Football-specific ratings
+  // Athletic ratings
   armStrength: integer("arm_strength"),
   accuracy: integer("accuracy"),
   speed: integer("speed"),
@@ -1886,7 +1837,7 @@ export const skillChallenges = pgTable("skill_challenges", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(), // "3-Point Challenge", "Free Throw Streak", etc.
   description: text("description").notNull(),
-  sport: text("sport").notNull().default("basketball"), // 'basketball' or 'football'
+  sport: text("sport").notNull().default("basketball"), // 'basketball'
   category: text("category").notNull(), // 'shooting', 'passing', 'speed', 'agility'
   
   // Challenge parameters
@@ -2080,7 +2031,7 @@ export const eventGameLinks = pgTable("event_game_links", {
 export const leagues = pgTable("leagues", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  sport: text("sport").notNull().default("basketball"), // 'basketball' or 'football'
+  sport: text("sport").notNull().default("basketball"), // 'basketball'
   description: text("description"),
   logoUrl: text("logo_url"),
   
@@ -2240,11 +2191,10 @@ export const colleges = pgTable("colleges", {
   nationalChampionships: integer("national_championships").default(0), // Total program championships
   conferenceChampionships: integer("conference_championships").default(0), // Total conference titles
   tournamentAppearances: integer("tournament_appearances").default(0), // March Madness or Bowl games
-  finalFourAppearances: integer("final_four_appearances").default(0), // Basketball: Final Four / Football: CFP
+  finalFourAppearances: integer("final_four_appearances").default(0), // Basketball: Final Four
   
   // Player development metrics
   nbaPlayersProduced: integer("nba_players_produced").default(0), // Basketball: NBA draft picks all-time
-  nflPlayersProduced: integer("nfl_players_produced").default(0), // Football: NFL draft picks all-time
   draftPicksLast5Years: integer("draft_picks_last_5_years").default(0), // Recent pro success
   averageMinutesForFreshmen: integer("avg_minutes_freshmen"), // Playing time opportunity
   
@@ -2534,7 +2484,7 @@ export type ProfileView = typeof profileViews.$inferSelect;
 export const recruitingEvents = pgTable("recruiting_events", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  sport: text("sport").notNull(), // 'basketball' or 'football'
+  sport: text("sport").notNull(), // 'basketball'
   eventType: text("event_type").notNull(), // 'camp', 'showcase', 'combine', 'tournament', 'prospect_day'
   description: text("description"),
   hostOrganization: text("host_organization"), // College name or organization
@@ -2720,6 +2670,28 @@ export const insertWearableConnectionSchema = createInsertSchema(wearableConnect
 export type InsertWearableConnection = z.infer<typeof insertWearableConnectionSchema>;
 export type WearableConnection = typeof wearableConnections.$inferSelect;
 
+// === EQUIPMENT TRACKING (Gear used by athletes) ===
+export const equipment = pgTable("equipment", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  brand: text("brand").notNull(),
+  category: text("category").notNull(), // 'shoe', 'ball', 'gear', 'apparel', 'accessory'
+  model: text("model"),
+  size: text("size"),
+  colorway: text("colorway"),
+  inUse: boolean("in_use").notNull().default(true),
+  purchasedAt: date("purchased_at"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  playerIdIdx: index("equipment_player_id_idx").on(table.playerId),
+  categoryIdx: index("equipment_category_idx").on(table.category),
+}));
+
+export const insertEquipmentSchema = createInsertSchema(equipment).omit({ id: true, createdAt: true });
+export type InsertEquipment = z.infer<typeof insertEquipmentSchema>;
+export type Equipment = typeof equipment.$inferSelect;
+
 // === ATHLETIC MEASUREMENTS (Basketball Combine-style Testing) ===
 export const athleticMeasurements = pgTable("athletic_measurements", {
   id: serial("id").primaryKey(),
@@ -2749,18 +2721,6 @@ export const MILESTONE_DEFINITIONS = {
     blocks: [25, 50, 100, 250],
     games: [10, 25, 50, 100, 200],
     a_grades: [5, 10, 25, 50, 100],
-  },
-  football: {
-    passing_yards: [500, 1000, 2500, 5000, 10000],
-    passing_tds: [5, 10, 25, 50, 100],
-    rushing_yards: [250, 500, 1000, 2000, 5000],
-    rushing_tds: [5, 10, 25, 50],
-    receiving_yards: [250, 500, 1000, 2000, 5000],
-    receptions: [25, 50, 100, 200],
-    tackles: [25, 50, 100, 250, 500],
-    sacks: [5, 10, 25, 50],
-    interceptions: [2, 5, 10, 25],
-    games: [10, 25, 50, 100],
   },
 } as const;
 
@@ -2983,6 +2943,7 @@ export const guardianLinks = pgTable("guardian_links", {
   inviteCode: text("invite_code"),
   linkedAt: timestamp("linked_at").defaultNow(),
   approvedAt: timestamp("approved_at"),
+  minorConsented: boolean("minor_consented").notNull().default(false), // Guardian has provided COPPA consent for minor
 }, (table) => ({
   guardianIdx: index("guardian_links_guardian_idx").on(table.guardianUserId),
   playerIdx: index("guardian_links_player_idx").on(table.playerId),

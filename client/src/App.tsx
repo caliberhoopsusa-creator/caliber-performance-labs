@@ -13,25 +13,31 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { SportProvider } from "@/components/SportToggle";
 import { PageTransition } from "@/components/PageTransition";
-import { ThemeProvider } from "@/contexts/ThemeContext";
+import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 import { EquippedItemsProvider } from "@/contexts/EquippedItemsContext";
 import { CelebrationProvider } from "@/components/CelebrationOverlay";
 import { XPNotificationProvider } from "@/components/XPToast";
 import { useAuth } from "@/hooks/use-auth";
 import { useOffline } from "@/hooks/use-offline";
 import { useToast } from "@/hooks/use-toast";
-import { useEquippedItems } from "@/contexts/EquippedItemsContext";
 import { CaliberLogo } from "@/components/CaliberLogo";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { StatsTicker } from "@/components/StatsTicker";
-import { Loader2, ChevronLeft, Coins, Package } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { Loader2, ChevronLeft, Coins, Package, Mail } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 // Pages
-import Landing from "./pages/Landing";
+import ModernLandingPage from "./pages/ModernLandingPage";
+import PricingPage from "./pages/PricingPage";
+import BlogPage from "./pages/BlogPage";
+import PrivacyPage from "./pages/PrivacyPage";
+import TermsPage from "./pages/TermsPage";
+import Login from "./pages/Login";
 import RoleSelection from "./pages/RoleSelection";
 import Dashboard from "./pages/Dashboard";
 import PlayersList from "./pages/PlayersList";
@@ -66,11 +72,13 @@ import PublicRecruitProfile from "./pages/PublicRecruitProfile";
 import PlayerDirectory from "./pages/PlayerDirectory";
 import DiscoverHighlights from "./pages/DiscoverHighlights";
 import ChallengePage from "./pages/ChallengePage";
+import JoinPage from "./pages/JoinPage";
 import RecruiterDashboard from "@/pages/RecruiterDashboard";
 import RecruiterDirectory from "@/pages/RecruiterDirectory";
 import WhosWatching from "@/pages/WhosWatching";
 import CollegeDetail from "@/pages/CollegeDetail";
 import GuardianDashboard from "./pages/GuardianDashboard";
+import DebugPage from "./pages/DebugPage";
 import NotFound from "./pages/not-found";
 
 interface ExtendedUser {
@@ -179,42 +187,51 @@ function HeaderCoinDisplay() {
   );
 }
 
-function PublicPricing() {
+function EmailVerificationBanner({ user }: { user: any }) {
+  const [dismissed, setDismissed] = useState(false);
+  const { toast } = useToast();
+
+  const verifyMutation = useMutation({
+    mutationFn: () => apiRequest('POST', '/api/auth/verify-email', {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      toast({ title: "Email verified", description: "Your account is now verified." });
+      setDismissed(true);
+    },
+  });
+
+  if (dismissed || user?.emailVerified !== false) return null;
+
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-50 backdrop-blur-lg bg-background/80 border-b border-border">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
-          <Link href="/">
-            <Button variant="ghost" size="sm" className="text-muted-foreground" data-testid="button-back-home">
-              <ChevronLeft className="w-4 h-4 mr-1" />
-              Back
-            </Button>
-          </Link>
-          <Link href="/">
-            <div className="flex items-center gap-2">
-              <CaliberLogo size={28} color="#E8192C" />
-              <span className="font-display text-xl font-bold tracking-tight text-accent">CALIBER</span>
-            </div>
-          </Link>
-          <div className="w-20" />
-        </div>
-      </header>
-      <main className="relative z-10 max-w-7xl mx-auto px-6 py-12">
-        <Pricing />
-      </main>
+    <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 flex items-center justify-between gap-3 text-sm">
+      <div className="flex items-center gap-2 text-amber-400">
+        <Mail className="w-4 h-4 shrink-0" />
+        <span>Please verify your email address to unlock all features.</span>
+      </div>
+      <div className="flex items-center gap-2 shrink-0">
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-7 text-xs border-amber-500/40 text-amber-400 hover:bg-amber-500/10"
+          onClick={() => verifyMutation.mutate()}
+          disabled={verifyMutation.isPending}
+        >
+          Verify now
+        </Button>
+        <button onClick={() => setDismissed(true)} className="text-muted-foreground hover:text-white text-xs">✕</button>
+      </div>
     </div>
   );
 }
 
 function AuthenticatedLogo() {
-  const { equippedTheme } = useEquippedItems();
-  const themeColor = equippedTheme?.item?.value || '#E8192C';
+  const { accentColor } = useTheme();
 
   return (
     <Link href="/">
       <div className="flex items-center gap-2">
-        <CaliberLogo size={38} color={themeColor} />
-        <span className="hidden md:block text-xl font-bold font-display tracking-wider uppercase" style={{ color: themeColor }}>CALIBER</span>
+        <CaliberLogo size={38} color={accentColor} />
+        <span className="hidden md:block text-xl font-bold font-display tracking-wider uppercase" style={{ color: accentColor }}>CALIBER</span>
       </div>
     </Link>
   );
@@ -237,12 +254,24 @@ function MainRouter() {
     );
   }
   
-  // Not authenticated - allow access to pricing, otherwise show landing page
+  // Not authenticated - public routes
   if (!authUser) {
     if (location === "/pricing") {
-      return <PublicPricing />;
+      return <PricingPage />;
     }
-    return <Landing />;
+    if (location === "/blog" || location.startsWith("/blog/")) {
+      return <BlogPage />;
+    }
+    if (location === "/privacy") {
+      return <PrivacyPage />;
+    }
+    if (location === "/terms") {
+      return <TermsPage />;
+    }
+    if (location === "/login" || location === "/register") {
+      return <Login />;
+    }
+    return <ModernLandingPage />;
   }
   
   // New user with no role - show role selection immediately (don't wait for extended user)
@@ -262,23 +291,24 @@ function MainRouter() {
     );
   }
   
-  // Handle extended user fetch error with retry option
-  if (userError || !extendedUser) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <AlertCircle className="w-10 h-10 text-destructive mx-auto" />
-          <p className="text-muted-foreground">Failed to load your profile</p>
-          <Button onClick={() => refetchUser()} data-testid="button-retry-profile">
-            Try Again
-          </Button>
-        </div>
-      </div>
-    );
+  // If extended user failed to load but we have auth data, fall back to auth user
+  const resolvedUser: ExtendedUser = extendedUser ?? {
+    id: authUser.id,
+    email: authUser.email ?? null,
+    firstName: authUser.firstName ?? null,
+    lastName: authUser.lastName ?? null,
+    profileImageUrl: authUser.profileImageUrl ?? null,
+    role: authUser.role ?? null,
+    playerId: (authUser as any).playerId ?? null,
+    playerProfile: null,
+  };
+
+  if (!resolvedUser.role) {
+    return <RoleSelection />;
   }
   
   // Player without player profile - show role selection to create profile
-  if (extendedUser.role === 'player' && !extendedUser.playerId) {
+  if (resolvedUser.role === 'player' && !resolvedUser.playerId) {
     return <RoleSelection />;
   }
   
@@ -290,11 +320,12 @@ function MainRouter() {
       <SessionExpiryHandler />
       <OfflineBanner />
       <div className="flex min-h-screen w-full max-w-full overflow-x-hidden bg-background text-foreground font-body selection:bg-primary/30">
-        <Sidebar userRole={extendedUser.role!} playerId={extendedUser.playerId} />
+        <Sidebar userRole={resolvedUser.role!} playerId={resolvedUser.playerId} />
         <div className="flex-1 flex flex-col min-w-0 relative bg-background">
-          <header className="mobile-header-blur md:static md:backdrop-blur-none md:bg-transparent relative z-10 flex items-center justify-between gap-2 px-3 py-2 md:p-4 md:px-8 border-b border-border overflow-visible">
-            <div className="flex items-center gap-2 overflow-visible">
-              <MobileDrawer userRole={extendedUser.role!} playerId={extendedUser.playerId} />
+          <header className="mobile-header-blur md:static md:backdrop-blur-none md:bg-transparent relative z-10 flex items-center justify-between gap-2 px-3 py-2 md:p-4 md:px-8 border-b border-border overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-accent/8 via-transparent to-transparent pointer-events-none" />
+            <div className="relative z-[1] flex items-center gap-2 overflow-visible">
+              <MobileDrawer userRole={resolvedUser.role!} playerId={resolvedUser.playerId} />
               <AuthenticatedLogo />
               <HeaderCoinDisplay />
             </div>
@@ -305,15 +336,16 @@ function MainRouter() {
             </div>
           </header>
           <StatsTicker />
+          <EmailVerificationBanner user={authUser} />
           <main className="relative z-10 flex-1 p-4 pb-24 md:px-8 md:pb-8 w-full max-w-[1600px] mx-auto overflow-x-hidden overflow-y-auto">
             <PageTransition>
               <Switch>
                 <Route path="/">
-                  {extendedUser.role === 'player' && extendedUser.playerId ? (
+                  {resolvedUser.role === 'player' && resolvedUser.playerId ? (
                     <Redirect to="/community?tab=feed" />
-                  ) : extendedUser.role === 'recruiter' ? (
+                  ) : resolvedUser.role === 'recruiter' ? (
                     <Redirect to="/recruiter" />
-                  ) : extendedUser.role === 'guardian' ? (
+                  ) : resolvedUser.role === 'guardian' ? (
                     <Redirect to="/family" />
                   ) : (
                     <Dashboard />
@@ -375,6 +407,8 @@ function MainRouter() {
                   <Redirect to="/coach?tab=alerts" />
                 </Route>
                 <Route path="/pricing" component={Pricing} />
+                <Route path="/privacy" component={PrivacyPage} />
+                <Route path="/terms" component={TermsPage} />
                 <Route path="/performance" component={PerformanceHub} />
                 <Route path="/workouts">
                   <Redirect to="/performance?tab=workouts" />
@@ -405,13 +439,14 @@ function MainRouter() {
                 </Route>
                 <Route path="/colleges/:id" component={CollegeDetail} />
                 <Route path="/family" component={GuardianDashboard} />
+                <Route path="/debug" component={DebugPage} />
                 <Route component={NotFound} />
               </Switch>
             </PageTransition>
           </main>
         </div>
-        <MobileNav userRole={extendedUser.role!} playerId={extendedUser.playerId} />
-        <FloatingActionButton userRole={extendedUser.role!} playerId={extendedUser.playerId} />
+        <MobileNav userRole={resolvedUser.role!} playerId={resolvedUser.playerId} />
+        <FloatingActionButton userRole={resolvedUser.role!} playerId={resolvedUser.playerId} />
       </div>
     </>
   );
@@ -444,6 +479,7 @@ function App() {
                     <Route path="/recruit/:id" component={PublicRecruitProfile} />
                     <Route path="/discover/players" component={PlayerDirectory} />
                     <Route path="/challenge/:code" component={ChallengePage} />
+                    <Route path="/join/:code" component={JoinPage} />
                     <Route>
                       <MainRouter />
                     </Route>

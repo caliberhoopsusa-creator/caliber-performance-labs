@@ -17,6 +17,7 @@ import {
   Target,
   Gamepad2,
   Users,
+  Heart,
   ChevronRight,
   Share2,
   Zap,
@@ -344,20 +345,19 @@ export default function GuardianDashboard() {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto" data-testid="guardian-dashboard">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-bold font-display tracking-wide uppercase" data-testid="text-family-title">
-            Family Dashboard
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Track your player's progress, milestones, and achievements
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Users className="w-5 h-5 text-accent" />
-          <span className="text-sm font-medium">
-            {linkedPlayers?.length || 0} linked {(linkedPlayers?.length || 0) === 1 ? "player" : "players"}
-          </span>
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center">
+            <Heart className="w-6 h-6 text-accent" />
+          </div>
+          <div>
+            <h1 className="text-2xl md:text-3xl font-display font-bold uppercase tracking-tight text-foreground" data-testid="text-family-title">
+              Family Dashboard
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {linkedPlayers?.length || 0} linked {(linkedPlayers?.length || 0) === 1 ? "player" : "players"}
+            </p>
+          </div>
         </div>
       </div>
 

@@ -21,8 +21,24 @@ interface SubscriptionData {
 
 export type SubscriptionTier = "free" | "pro" | "coach_pro";
 
+const DEV_UNLOCK = import.meta.env.VITE_DISABLE_SUBSCRIPTION_GATE === 'true';
+
 export function useSubscription() {
   const { user, isAuthenticated } = useAuth();
+
+  // Dev override — all features unlocked when VITE_DISABLE_SUBSCRIPTION_GATE=true in .env
+  if (DEV_UNLOCK) {
+    return {
+      subscription: null,
+      isLoading: false,
+      isActive: true,
+      tier: "coach_pro" as SubscriptionTier,
+      isPro: true,
+      isCoachPro: true,
+      isFree: false,
+      hasAccess: (_requiredTier: SubscriptionTier) => true,
+    };
+  }
 
   const { data, isLoading } = useQuery<SubscriptionData>({
     queryKey: ["/api/stripe/subscription"],

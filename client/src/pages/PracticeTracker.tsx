@@ -376,11 +376,11 @@ export default function PracticeTracker() {
       
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl md:text-4xl font-display font-bold uppercase tracking-wide bg-gradient-to-b from-foreground to-accent/20 bg-clip-text text-transparent">
-            {sport === 'basketball' ? 'Basketball' : 'Football'} Practice Tracker
+          <h2 className="text-3xl md:text-4xl font-display font-bold uppercase tracking-wide from-foreground to-accent/20">
+            Basketball Practice Tracker
           </h2>
           <p className="text-accent/50 font-medium">
-            Log {sport === 'basketball' ? 'basketball drills, shooting sessions' : 'football drills, plays, and conditioning'} and track player attendance
+            Log basketball drills, shooting sessions and track player attendance
           </p>
         </div>
         

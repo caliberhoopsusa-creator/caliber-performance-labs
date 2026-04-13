@@ -106,10 +106,10 @@ export default function EndorseContent() {
           Back to Players
         </Button>
 
-        <Card className="bg-gradient-to-br from-[hsl(220,25%,10%)] via-[hsl(220,20%,8%)] to-[hsl(220,25%,6%)] border-border">
+        <Card className="bg-card border-border">
           <CardHeader className="border-b border-border">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-accent/20 to-purple-500/20 flex items-center justify-center border border-accent/30">
+              <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center border border-accent/20">
                 {selectedPlayer?.avatarUrl ? (
                   <img
                     src={selectedPlayer.avatarUrl}
@@ -121,7 +121,7 @@ export default function EndorseContent() {
                 )}
               </div>
               <div>
-                <CardTitle className="text-2xl text-white font-display">
+                <CardTitle className="text-2xl text-foreground font-display">
                   {selectedPlayer?.name}
                 </CardTitle>
                 <div className="flex items-center gap-2 mt-1">
@@ -151,12 +151,12 @@ export default function EndorseContent() {
 
   return (
     <div className="space-y-6">
-      <Card className="bg-gradient-to-br from-accent/5 to-accent/3 border-accent/20">
+      <Card className="bg-accent/5 border-accent/20">
         <CardContent className="py-4">
           <div className="flex items-start gap-3">
             <PenLine className="w-5 h-5 text-accent mt-0.5 flex-shrink-0" />
             <div className="text-sm">
-              <p className="text-white font-medium mb-1">Help players stand out to recruiters</p>
+              <p className="text-foreground font-medium mb-1">Help players stand out to recruiters</p>
               <p className="text-muted-foreground">
                 Your endorsements appear on players' public profiles. Rate their athletic ability, 
                 work ethic, coachability, leadership, and character to give recruiters a complete picture.
@@ -173,19 +173,18 @@ export default function EndorseContent() {
             placeholder="Search players by name..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-[hsl(220,20%,8%)] border-accent/20 focus:border-accent/50"
+            className="pl-10 bg-card border-accent/20 focus:border-accent/50"
             data-testid="input-search-players"
           />
         </div>
         <Select value={sportFilter} onValueChange={setSportFilter}>
-          <SelectTrigger className="w-full sm:w-40 bg-[hsl(220,20%,8%)] border-accent/20" data-testid="select-sport-filter">
+          <SelectTrigger className="w-full sm:w-40 bg-card border-accent/20" data-testid="select-sport-filter">
             <Filter className="w-4 h-4 mr-2" />
             <SelectValue placeholder="Sport" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Sports</SelectItem>
             <SelectItem value="basketball">Basketball</SelectItem>
-            <SelectItem value="football">Football</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -193,7 +192,7 @@ export default function EndorseContent() {
       {playersLoading || recsLoading ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Card key={i} className="bg-[hsl(220,20%,8%)] border-border">
+            <Card key={i} className="bg-card border-border">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   <Skeleton className="w-12 h-12 rounded-full" />
@@ -210,7 +209,7 @@ export default function EndorseContent() {
         <>
           {playersWithMyRecs.length > 0 && (
             <div className="space-y-3">
-              <h2 className="text-lg font-semibold font-display text-white flex items-center gap-2">
+              <h2 className="text-lg font-semibold font-display text-foreground flex items-center gap-2">
                 <Star className="w-5 h-5 text-accent fill-accent" />
                 Players You've Endorsed ({playersWithMyRecs.length})
               </h2>
@@ -229,12 +228,12 @@ export default function EndorseContent() {
           )}
 
           <div className="space-y-3">
-            <h2 className="text-lg font-semibold font-display text-white flex items-center gap-2">
+            <h2 className="text-lg font-semibold font-display text-foreground flex items-center gap-2">
               <User className="w-5 h-5 text-accent" />
               Available Players ({playersWithoutMyRecs.length})
             </h2>
             {playersWithoutMyRecs.length === 0 ? (
-              <Card className="bg-[hsl(220,20%,8%)] border-border">
+              <Card className="bg-card border-border">
                 <CardContent className="py-12 text-center">
                   <GraduationCap className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
                   <p className="text-muted-foreground">
@@ -276,7 +275,7 @@ function PlayerCard({ player, summary, onSelect, hasEndorsement }: PlayerCardPro
     <Card
       className={cn(
         "transition-all duration-300 cursor-pointer hover-elevate group",
-        "bg-gradient-to-br from-[hsl(220,25%,10%)] via-[hsl(220,20%,8%)] to-[hsl(220,25%,6%)]",
+        "bg-card",
         hasEndorsement ? "border-accent/30" : "border-border"
       )}
       onClick={onSelect}
@@ -288,8 +287,8 @@ function PlayerCard({ player, summary, onSelect, hasEndorsement }: PlayerCardPro
             className={cn(
               "w-12 h-12 rounded-full flex items-center justify-center border",
               hasEndorsement
-                ? "bg-gradient-to-br from-accent/20 to-accent/15 border-accent/30"
-                : "bg-gradient-to-br from-accent/20 to-purple-500/20 border-accent/30"
+                ? "bg-accent/15 border-accent/30"
+                : "bg-accent/10 border-accent/20"
             )}
           >
             {player.avatarUrl ? (
@@ -303,7 +302,7 @@ function PlayerCard({ player, summary, onSelect, hasEndorsement }: PlayerCardPro
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-white truncate">{player.name}</h3>
+            <h3 className="font-semibold text-foreground truncate">{player.name}</h3>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span className="capitalize">{player.sport}</span>
               {player.position && (

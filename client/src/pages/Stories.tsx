@@ -10,8 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { Camera, Plus, User, X, ChevronLeft, ChevronRight, Eye, Heart, Flame, Trophy, Star, Zap, ThumbsUp, Upload, Image, Video, Clock } from "lucide-react";
+import { Camera, Plus, User, X, ChevronLeft, ChevronRight, Eye, Heart, Star, Zap, Upload, Image, Video, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -28,14 +29,10 @@ function generateSessionId(): string {
 
 type StoryWithPlayer = PlayerStory & { playerName: string; playerUsername: string | null; playerPhoto: string | null };
 
-const REACTIONS = [
-  { key: 'fire', icon: Flame, label: 'Fire', color: 'text-accent' },
-  { key: 'heart', icon: Heart, label: 'Love', color: 'text-red-400' },
-  { key: 'clap', icon: ThumbsUp, label: 'Nice', color: 'text-blue-400' },
-  { key: 'trophy', icon: Trophy, label: 'Winner', color: 'text-yellow-400' },
-  { key: 'star', icon: Star, label: 'Star', color: 'text-purple-400' },
-  { key: 'goat', icon: Zap, label: 'GOAT', color: 'text-emerald-400' },
-];
+
+function getInitials(name: string): string {
+  return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+}
 
 function StorySkeleton() {
   return (
@@ -68,28 +65,29 @@ function StoryRing({
         className={cn(
           "relative p-[3px] rounded-full transition-all duration-300",
           isViewed 
-            ? "bg-gradient-to-tr from-gray-500 to-gray-600" 
-            : "bg-gradient-to-tr from-accent via-accent to-accent"
+            ? "from-gray-500" 
+            : "from-accent via-accent to-accent"
         )}
         animate={!isViewed ? { boxShadow: [
-          "0 0 0 0 rgba(234, 88, 12, 0.4)",
-          "0 0 0 8px rgba(234, 88, 12, 0.2)",
-          "0 0 0 12px rgba(234, 88, 12, 0)"
+          "0 0 0 0 rgba(224,36,36,0.4)",
+          "0 0 0 8px rgba(224,36,36,0.2)",
+          "0 0 0 12px rgba(224,36,36,0)"
         ]} : {}}
         transition={!isViewed ? { duration: 2, repeat: Infinity } : {}}
       >
         <div className="bg-background p-[2px] rounded-full">
-          <motion.div 
-            className="w-14 h-14 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center overflow-hidden"
+          <motion.div
+            className="w-14 h-14 rounded-full overflow-hidden"
             initial={{ scale: 0.95 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.1 }}
           >
-            {(story as any).playerPhoto ? (
-              <img src={(story as any).playerPhoto} alt="" className="w-full h-full object-cover" loading="lazy" width={56} height={56} />
-            ) : (
-              <User className="w-6 h-6 text-accent" />
-            )}
+            <Avatar className="w-14 h-14 bg-accent/20 border border-accent/30">
+              <AvatarImage src={(story as any).playerPhoto ?? undefined} alt={story.playerName} className="object-cover" loading="lazy" />
+              <AvatarFallback className="text-sm font-bold bg-accent/20 text-accent">
+                {getInitials(story.playerName)}
+              </AvatarFallback>
+            </Avatar>
           </motion.div>
         </div>
         {story.mediaType === 'video' && (
@@ -131,7 +129,7 @@ function StoryViewer({
 }) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [progress, setProgress] = useState(0);
-  const [showReactions, setShowReactions] = useState(false);
+  const [liked, setLiked] = useState(false);
   const [mediaLoading, setMediaLoading] = useState(true);
   const [mediaError, setMediaError] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -156,11 +154,11 @@ function StoryViewer({
       return res.json();
     },
     onSuccess: () => {
-      toast({ title: "Reaction sent!" });
-      setShowReactions(false);
+      toast({ title: "Liked!" });
+      setLiked(true);
     },
     onError: () => {
-      toast({ title: "Couldn't send reaction", description: "Please try again", variant: "destructive" });
+      toast({ title: "Couldn't send like", description: "Please try again", variant: "destructive" });
     },
   });
 
@@ -307,7 +305,7 @@ function StoryViewer({
       <AnimatePresence mode="wait">
         <motion.div 
           key={currentStory.id}
-          className="absolute inset-x-0 bottom-0 top-24 flex flex-col items-center justify-center p-4"
+          className="absolute inset-x-0 bottom-0 top-24 flex flex-col items-center justify-start pt-2 pb-20 px-4 overflow-y-auto"
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
@@ -336,7 +334,7 @@ function StoryViewer({
                     src={currentStory.imageUrl} 
                     alt={currentStory.headline}
                     className={cn(
-                      "max-h-[60vh] max-w-full object-contain rounded-lg",
+                      "max-h-[40vh] max-w-full object-contain rounded-lg",
                       mediaLoading && "opacity-0"
                     )}
                     data-testid="story-image"
@@ -364,7 +362,7 @@ function StoryViewer({
                     loop
                     playsInline
                     className={cn(
-                      "max-h-[60vh] max-w-full object-contain rounded-lg",
+                      "max-h-[40vh] max-w-full object-contain rounded-lg",
                       mediaLoading && "opacity-0"
                     )}
                     data-testid="story-video"
@@ -456,62 +454,33 @@ function StoryViewer({
         </motion.div>
       </AnimatePresence>
 
-      <motion.div 
-        className="absolute bottom-8 left-0 right-0 px-4"
+      <motion.div
+        className="absolute bottom-6 left-0 right-0 flex justify-center"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
       >
-        <AnimatePresence mode="wait">
-          {showReactions ? (
-            <motion.div 
-              key="reactions"
-              className="flex justify-center gap-3 p-3 bg-white/10 backdrop-blur-sm rounded-full mx-auto max-w-md" 
-              onClick={e => e.stopPropagation()}
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              {REACTIONS.map(({ key, icon: Icon, label, color }, idx) => (
-                <motion.button
-                  key={key}
-                  onClick={() => handleReaction(key)}
-                  className="p-2 hover:bg-white/20 rounded-full transition-colors"
-                  title={label}
-                  aria-label={label}
-                  data-testid={`reaction-${key}`}
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: idx * 0.05, type: "spring", stiffness: 400 }}
-                  whileHover={{ scale: 1.15 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <Icon className={cn("w-6 h-6", color)} />
-                </motion.button>
-              ))}
-            </motion.div>
-          ) : (
-            <motion.div 
-              key="react-button"
-              className="flex justify-center"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Button
-                variant="ghost"
-                className="text-white hover:bg-white/20"
-                onClick={(e) => { e.stopPropagation(); setShowReactions(true); }}
-                data-testid="button-show-reactions"
-              >
-                <Heart className="w-5 h-5 mr-2" />
-                React
-              </Button>
-            </motion.div>
+        <motion.button
+          onClick={(e) => { e.stopPropagation(); if (!liked) handleReaction('heart'); }}
+          className={cn(
+            "flex items-center gap-2 px-5 py-2.5 rounded-full backdrop-blur-sm transition-all",
+            liked
+              ? "bg-[hsl(var(--cta))]/30 text-[hsl(var(--cta))]"
+              : "bg-white/10 text-white hover:bg-white/20"
           )}
-        </AnimatePresence>
+          data-testid="button-like-story"
+          aria-label="Like story"
+          whileHover={{ scale: liked ? 1 : 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <motion.div
+            animate={liked ? { scale: [1, 1.4, 1] } : {}}
+            transition={{ duration: 0.3, type: "spring", stiffness: 400 }}
+          >
+            <Heart className={cn("w-5 h-5", liked && "fill-[hsl(var(--cta))]")} />
+          </motion.div>
+          <span className="text-sm font-medium">{liked ? "Liked" : "Like"}</span>
+        </motion.button>
       </motion.div>
 
       <motion.button
@@ -949,7 +918,7 @@ export default function Stories() {
     <div className="space-y-6 animate-in fade-in duration-500" data-testid="page-stories">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl md:text-4xl font-display font-bold bg-gradient-to-b from-foreground to-accent/20 bg-clip-text text-transparent tracking-wide flex items-center gap-3">
+          <h1 className="text-3xl md:text-4xl font-display font-bold from-foreground to-accent/20 tracking-wide flex items-center gap-3">
             <Camera className="w-8 h-8 text-accent" />
             Stories
           </h1>
@@ -1046,15 +1015,15 @@ export default function Stories() {
                   {story.mediaType === 'image' && story.imageUrl ? (
                     <img src={story.imageUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
                   ) : story.mediaType === 'video' && story.videoUrl ? (
-                    <div className="w-full h-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
+                    <div className="w-full h-full flex items-center justify-center">
                       <Video className="w-12 h-12 text-blue-400" />
                     </div>
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center">
+                    <div className="w-full h-full from-accent/20 to-accent/5 flex items-center justify-center">
                       <Star className="w-12 h-12 text-accent/40" />
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  <div className="absolute inset-0 from-black/80 via-black/20 to-transparent" />
                   <motion.div 
                     className="absolute bottom-0 left-0 right-0 p-3"
                     initial={{ y: 10, opacity: 0 }}

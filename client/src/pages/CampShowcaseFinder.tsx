@@ -45,7 +45,6 @@ import {
   Users,
   Heart,
   Clock,
-  Trophy,
   Dribbble,
   Building,
   GraduationCap,
@@ -575,15 +574,9 @@ export default function CampShowcaseFinder() {
                   : "border-accent/50 text-accent bg-accent/10"
               )}
             >
-              {currentSport === "basketball" ? (
-                <>
-                  <Dribbble className="w-3 h-3 mr-1" /> Basketball
-                </>
-              ) : (
-                <>
-                  <Trophy className="w-3 h-3 mr-1" /> Football
-                </>
-              )}
+              <>
+                <Dribbble className="w-3 h-3 mr-1" /> Basketball
+              </>
             </Badge>
           </div>
           <p className="text-muted-foreground mt-1">
@@ -805,7 +798,6 @@ export default function CampShowcaseFinder() {
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="basketball">Basketball</SelectItem>
-                          <SelectItem value="football">Football</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />

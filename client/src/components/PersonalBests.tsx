@@ -59,7 +59,7 @@ export function PersonalBests({ games }: PersonalBestsProps) {
         <div className="p-2 rounded-lg bg-accent/10 border border-accent/20">
           <Trophy className="w-5 h-5 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(var(--accent) / 0.6))" }} />
         </div>
-        <h3 className="text-lg font-bold font-display bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent">
+        <h3 className="text-lg font-bold font-display from-foreground to-accent">
           Personal Bests
         </h3>
       </div>

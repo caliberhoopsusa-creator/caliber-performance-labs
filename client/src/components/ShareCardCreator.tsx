@@ -18,11 +18,12 @@ interface ShareCardCreatorProps {
   onOpenChange: (open: boolean) => void;
   game: Game;
   playerName: string;
+  sport?: string;
 }
 
 const COLOR_OPTIONS = [
   { name: "white", value: "#FFFFFF" },
-  { name: "orange", value: "#E8192C" },
+  { name: "amber", value: "#4f6878" },
   { name: "red", value: "#EF4444" },
   { name: "blue", value: "#3B82F6" },
   { name: "green", value: "#22C55E" },
@@ -40,7 +41,7 @@ export function ShareCardCreator({
   const cardRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
-  const [statColor, setStatColor] = useState("#E8192C");
+  const [statColor, setStatColor] = useState("#4f6878");
   const [cardFormat, setCardFormat] = useState<'story' | 'post'>('post');
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
@@ -234,117 +235,31 @@ export function ShareCardCreator({
                     </div>
                   </div>
 
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: cardFormat === 'story' ? 24 : 20,
-                      width: '100%',
-                    }}
-                  >
-                    <div style={{ textAlign: 'center' as const }}>
-                      <div
-                        style={{
-                          color: statColor,
-                          fontSize: cardFormat === 'story' ? 44 : 36,
-                          fontWeight: 800,
-                          lineHeight: 1,
-                        }}
-                      >
-                        {game.points}
+                  {/* Basketball stats display */}
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: cardFormat === 'story' ? 24 : 20, width: '100%' }}>
+                      <div style={{ textAlign: 'center' as const }}>
+                        <div style={{ color: statColor, fontSize: cardFormat === 'story' ? 44 : 36, fontWeight: 800, lineHeight: 1 }}>{game.points}</div>
+                        <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 10, textTransform: 'uppercase' as const, letterSpacing: '0.1em', marginTop: 4 }}>PTS</div>
                       </div>
-                      <div
-                        style={{
-                          color: 'rgba(255,255,255,0.6)',
-                          fontSize: 10,
-                          textTransform: 'uppercase' as const,
-                          letterSpacing: '0.1em',
-                          marginTop: 4,
-                        }}
-                      >
-                        PTS
+                      <div style={{ width: 1, height: 32, background: 'rgba(255,255,255,0.2)' }} />
+                      <div style={{ textAlign: 'center' as const }}>
+                        <div style={{ color: statColor, fontSize: cardFormat === 'story' ? 44 : 36, fontWeight: 800, lineHeight: 1 }}>{game.rebounds}</div>
+                        <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 10, textTransform: 'uppercase' as const, letterSpacing: '0.1em', marginTop: 4 }}>REB</div>
+                      </div>
+                      <div style={{ width: 1, height: 32, background: 'rgba(255,255,255,0.2)' }} />
+                      <div style={{ textAlign: 'center' as const }}>
+                        <div style={{ color: statColor, fontSize: cardFormat === 'story' ? 44 : 36, fontWeight: 800, lineHeight: 1 }}>{game.assists}</div>
+                        <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 10, textTransform: 'uppercase' as const, letterSpacing: '0.1em', marginTop: 4 }}>AST</div>
                       </div>
                     </div>
-
-                    <div
-                      style={{
-                        width: 1,
-                        height: 32,
-                        background: 'rgba(255,255,255,0.2)',
-                      }}
-                    />
-
-                    <div style={{ textAlign: 'center' as const }}>
-                      <div
-                        style={{
-                          color: statColor,
-                          fontSize: cardFormat === 'story' ? 44 : 36,
-                          fontWeight: 800,
-                          lineHeight: 1,
-                        }}
-                      >
-                        {game.rebounds}
+                    {(game.steals > 0 || game.blocks > 0) && (
+                      <div style={{ display: 'flex', gap: 16, color: 'rgba(255,255,255,0.6)', fontSize: 13 }}>
+                        {game.steals > 0 && <span>STL: {game.steals}</span>}
+                        {game.blocks > 0 && <span>BLK: {game.blocks}</span>}
                       </div>
-                      <div
-                        style={{
-                          color: 'rgba(255,255,255,0.6)',
-                          fontSize: 10,
-                          textTransform: 'uppercase' as const,
-                          letterSpacing: '0.1em',
-                          marginTop: 4,
-                        }}
-                      >
-                        REB
-                      </div>
-                    </div>
-
-                    <div
-                      style={{
-                        width: 1,
-                        height: 32,
-                        background: 'rgba(255,255,255,0.2)',
-                      }}
-                    />
-
-                    <div style={{ textAlign: 'center' as const }}>
-                      <div
-                        style={{
-                          color: statColor,
-                          fontSize: cardFormat === 'story' ? 44 : 36,
-                          fontWeight: 800,
-                          lineHeight: 1,
-                        }}
-                      >
-                        {game.assists}
-                      </div>
-                      <div
-                        style={{
-                          color: 'rgba(255,255,255,0.6)',
-                          fontSize: 10,
-                          textTransform: 'uppercase' as const,
-                          letterSpacing: '0.1em',
-                          marginTop: 4,
-                        }}
-                      >
-                        AST
-                      </div>
-                    </div>
-                  </div>
-
-                  {(game.steals > 0 || game.blocks > 0) && (
-                    <div
-                      style={{
-                        display: 'flex',
-                        gap: 16,
-                        color: 'rgba(255,255,255,0.6)',
-                        fontSize: 13,
-                      }}
-                    >
-                      {game.steals > 0 && <span>STL: {game.steals}</span>}
-                      {game.blocks > 0 && <span>BLK: {game.blocks}</span>}
-                    </div>
-                  )}
+                    )}
+                  </>
                 </div>
               </div>
             </div>

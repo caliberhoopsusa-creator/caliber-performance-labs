@@ -445,7 +445,7 @@ export default function PracticesContent() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <p className="text-accent/50 font-medium">
-            Log {sport === 'basketball' ? 'basketball drills, shooting sessions' : 'football drills, plays, and conditioning'} and track player attendance
+            Log basketball drills, shooting sessions and track player attendance
           </p>
         </div>
         

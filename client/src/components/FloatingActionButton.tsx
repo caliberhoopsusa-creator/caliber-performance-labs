@@ -8,7 +8,7 @@ interface QuickAction {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   label: string;
-  color: string;
+  bg: string;
 }
 
 interface FloatingActionButtonProps {
@@ -30,17 +30,17 @@ export function FloatingActionButton({ userRole, playerId }: FloatingActionButto
   if (shouldHide) return null;
 
   const playerActions: QuickAction[] = [
-    { href: "/analyze", icon: Plus, label: "Log Game", color: "from-accent to-blue-500" },
-    { href: "/highlights", icon: Camera, label: "Highlights", color: "from-purple-500 to-pink-500" },
-    { href: "/recruiting", icon: GraduationCap, label: "Recruiting", color: "from-accent to-accent/80" },
-    { href: "/leaderboard", icon: Trophy, label: "Leaderboard", color: "from-green-500 to-emerald-500" },
+    { href: "/analyze", icon: Plus, label: "Log Game", bg: "bg-accent" },
+    { href: "/highlights", icon: Camera, label: "Highlights", bg: "bg-purple-600" },
+    { href: "/recruiting", icon: GraduationCap, label: "Recruiting", bg: "bg-accent" },
+    { href: "/leaderboard", icon: Trophy, label: "Leaderboard", bg: "bg-emerald-600" },
   ];
 
   const coachActions: QuickAction[] = [
-    { href: "/analyze", icon: Plus, label: "Log Game", color: "from-accent to-blue-500" },
-    { href: "/video", icon: Video, label: "Video Analysis", color: "from-purple-500 to-pink-500" },
-    { href: "/scout", icon: Trophy, label: "Scout Hub", color: "from-accent to-accent/80" },
-    { href: "/coach/endorsements", icon: GraduationCap, label: "Endorsements", color: "from-green-500 to-emerald-500" },
+    { href: "/analyze", icon: Plus, label: "Log Game", bg: "bg-accent" },
+    { href: "/video", icon: Video, label: "Video Analysis", bg: "bg-purple-600" },
+    { href: "/scout", icon: Trophy, label: "Scout Hub", bg: "bg-accent" },
+    { href: "/coach/endorsements", icon: GraduationCap, label: "Endorsements", bg: "bg-emerald-600" },
   ];
 
   const actions = isPlayer ? playerActions : coachActions;
@@ -77,7 +77,7 @@ export function FloatingActionButton({ userRole, playerId }: FloatingActionButto
                     </span>
                     <div className={cn(
                       "w-12 h-12 rounded-full flex items-center justify-center shadow-lg",
-                      `bg-gradient-to-br ${action.color}`
+                      action.bg
                     )}>
                       <action.icon className="w-5 h-5 text-white" />
                     </div>
@@ -93,9 +93,10 @@ export function FloatingActionButton({ userRole, playerId }: FloatingActionButto
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
           "w-14 h-14 rounded-full flex items-center justify-center shadow-xl relative z-40",
-          "bg-gradient-to-br from-accent to-blue-600",
+          "bg-[hsl(var(--cta))]",
           "active:scale-95 transition-transform"
         )}
+        style={{ boxShadow: "0 0 20px rgba(224,36,36,0.35), 0 0 50px rgba(224,36,36,0.12)" }}
         animate={{ rotate: isOpen ? 45 : 0 }}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
         data-testid="fab-main-button"

@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import { tokens } from "@/config/tokens";
 
 interface ThemeData {
   active: boolean;
@@ -22,7 +23,7 @@ interface ThemeContextValue {
   refreshTheme: () => void;
 }
 
-const DEFAULT_ACCENT_COLOR = "#E8192C";
+const DEFAULT_ACCENT_COLOR = tokens.colors.primaryLight; // platinum #C6D0D8
 
 const ThemeContext = createContext<ThemeContextValue>({
   themeData: null,
@@ -75,21 +76,24 @@ function hexToHSL(hex: string): { h: number; s: number; l: number } {
 function applyAccentColor(hexColor: string, isCustomTheme: boolean) {
   const hsl = hexToHSL(hexColor);
   const root = document.documentElement;
-  
-  // Core accent colors
+
+  // Determine foreground: dark text on light accent colors (lightness > 60)
+  const accentForeground = hsl.l > 60 ? "0 0% 5%" : "0 0% 100%";
+
+  // Core accent colors — always applied regardless of custom theme
   root.style.setProperty("--accent", `${hsl.h} ${hsl.s}% ${hsl.l}%`);
-  root.style.setProperty("--accent-foreground", "0 0% 100%");
-  
+  root.style.setProperty("--accent-foreground", accentForeground);
+
   const darkerL = Math.max(hsl.l - 10, 10);
   root.style.setProperty("--accent-border", `${hsl.h} ${hsl.s}% ${darkerL}%`);
-  
+
   const lighterL = Math.min(hsl.l + 20, 95);
   const lighterS = Math.max(hsl.s - 10, 20);
   root.style.setProperty("--accent-hover", `${hsl.h} ${lighterS}% ${lighterL}%`);
-  
-  // Sidebar accent
+
+  // Sidebar accent — always applied regardless of custom theme
   root.style.setProperty("--sidebar-accent", `${hsl.h} ${hsl.s}% ${hsl.l}%`);
-  root.style.setProperty("--sidebar-accent-foreground", "0 0% 100%");
+  root.style.setProperty("--sidebar-accent-foreground", accentForeground);
   root.style.setProperty("--sidebar-accent-border", `${hsl.h} ${hsl.s}% ${darkerL}%`);
   
   // Premium theme effects - only apply when user has a custom theme
@@ -131,7 +135,7 @@ function applyAccentColor(hexColor: string, isCustomTheme: boolean) {
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const { user, isLoading: authLoading } = useAuth();
   const queryClient = useQueryClient();
-  const [currentAccentColor, setCurrentAccentColor] = useState(DEFAULT_ACCENT_COLOR);
+  const [currentAccentColor, setCurrentAccentColor] = useState<string>(DEFAULT_ACCENT_COLOR);
   const [themeName, setThemeName] = useState<string | null>(null);
 
   const { data: themeData, isLoading, isError } = useQuery<ThemeData>({
@@ -142,18 +146,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
-    if (isError) {
+    if (themeData?.active && themeData?.accentColor) {
+      applyAccentColor(themeData.accentColor, true);
+      setCurrentAccentColor(themeData.accentColor);
+      setThemeName(themeData.theme?.name || null);
+    } else {
       applyAccentColor(DEFAULT_ACCENT_COLOR, false);
       setCurrentAccentColor(DEFAULT_ACCENT_COLOR);
       setThemeName(null);
-      return;
     }
-    
-    const accentColor = themeData?.accentColor || DEFAULT_ACCENT_COLOR;
-    const isCustomTheme = themeData?.active === true && themeData?.theme !== null;
-    setCurrentAccentColor(accentColor);
-    setThemeName(themeData?.theme?.name || null);
-    applyAccentColor(accentColor, isCustomTheme);
   }, [themeData, isError]);
 
   useEffect(() => {

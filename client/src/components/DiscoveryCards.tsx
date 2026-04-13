@@ -25,7 +25,7 @@ interface DiscoveryCardData {
   icon: LucideIcon;
   href: string;
   gradient: string;
-  sport?: "basketball" | "football";
+  sport?: "basketball";
 }
 
 const DISCOVERY_CARDS: DiscoveryCardData[] = [
@@ -100,7 +100,7 @@ const DISCOVERY_CARDS: DiscoveryCardData[] = [
     description: "Find and follow other players to see their updates",
     icon: UserPlus,
     href: "/community?tab=connect",
-    gradient: "bg-gradient-to-br from-cyan-500 to-cyan-700",
+    gradient: "bg-gradient-to-br from-amber-500 to-amber-700",
   },
   {
     id: "badges",

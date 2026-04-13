@@ -37,7 +37,7 @@ export function MemoryCard({ data }: MemoryCardProps) {
       <Card
         className="relative overflow-visible border-accent/20"
         style={{
-          background: "linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(249, 115, 22, 0.04) 50%, rgba(0,0,0,0.3) 100%)",
+          background: "linear-gradient(135deg, rgba(198, 208, 216, 0.08) 0%, rgba(249, 115, 22, 0.04) 50%, rgba(0,0,0,0.3) 100%)",
         }}
       >
         <div className="p-5">
@@ -127,7 +127,7 @@ export function MemoryCard({ data }: MemoryCardProps) {
             transition={{ delay: 0.5, duration: 0.6 }}
             className="mt-4 flex items-start gap-2 py-3 px-3 rounded-lg"
             style={{
-              background: "linear-gradient(135deg, rgba(245, 158, 11, 0.06) 0%, transparent 100%)",
+              background: "linear-gradient(135deg, rgba(198, 208, 216, 0.06) 0%, transparent 100%)",
             }}
           >
             <Sparkles className="w-4 h-4 text-accent/60 mt-0.5 flex-shrink-0" />

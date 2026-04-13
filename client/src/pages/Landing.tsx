@@ -62,7 +62,7 @@ const showcaseTabs = [
 ];
 
 const marqueeItems = [
-  "Basketball", "Football", "Analytics", "AI-Powered", "Badges",
+  "Basketball", "Analytics", "AI-Powered", "Badges",
   "Leaderboards", "Recruiting", "Performance", "Scouting", "Training",
   "Video Analysis", "Player Grades",
 ];
@@ -147,8 +147,8 @@ export default function Landing() {
       <nav className="sticky top-0 z-[100] bg-background/80 backdrop-blur-lg border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 flex-wrap">
-            <CaliberLogo size={40} color="#E8192C" />
-            <span className="text-xl font-bold font-display text-foreground tracking-wider uppercase">CALIBER</span>
+            <CaliberLogo size={40} color="#4f6878" />
+            <span className="text-xl font-bold font-display text-foreground tracking-wide">Caliber</span>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <Link href="/pricing">
@@ -163,25 +163,27 @@ export default function Landing() {
             </Link>
             <DarkModeToggle />
             <Button asChild className="bg-accent text-white border-accent-border" data-testid="button-login">
-              <a href="/api/login">Sign In</a>
+              <Link href="/login">Sign In</Link>
             </Button>
           </div>
         </div>
       </nav>
 
-      <section className="relative pt-24 pb-16 px-4">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-accent/5 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute top-20 right-1/4 w-72 h-72 bg-accent/3 rounded-full blur-[100px] pointer-events-none" />
+      <section className="relative pt-24 pb-16 px-4 overflow-hidden">
+        {/* Animated amber gradient background */}
+        <div className="absolute inset-0 hero-gradient-bg opacity-60 pointer-events-none" />
+        {/* Fade to background at bottom */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background pointer-events-none" />
         <div className="text-center max-w-4xl mx-auto space-y-6">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card/50 text-sm text-muted-foreground mb-4">
             <Star className="w-4 h-4 text-accent" />
             <span>Trusted by 10,000+ athletes nationwide</span>
           </div>
 
-          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-display font-bold tracking-tight leading-[0.95]">
-            <span className="text-foreground">YOUR GAME.</span>
+          <h1 className="text-5xl sm:text-6xl md:text-7xl font-display font-bold tracking-tight leading-tight">
+            <span className="text-foreground">Your Game.</span>
             <br />
-            <span className="text-accent">MEASURED.</span>
+            <span className="text-accent">Measured.</span>
           </h1>
 
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
@@ -195,10 +197,10 @@ export default function Landing() {
               className="min-w-[200px] bg-accent text-white border-accent-border"
               data-testid="button-get-started"
             >
-              <a href="/api/login" className="flex items-center gap-2">
+              <Link href="/login" className="flex items-center gap-2">
                 Get Started Free
                 <ArrowRight className="w-5 h-5" />
-              </a>
+              </Link>
             </Button>
           </div>
         </div>
@@ -207,20 +209,20 @@ export default function Landing() {
           <div
             className="absolute inset-0 -inset-x-12 -inset-y-12 pointer-events-none"
             style={{
-              background: "radial-gradient(ellipse at 50% 50%, hsl(355 85% 50% / 0.12) 0%, transparent 70%)",
+              background: "radial-gradient(ellipse at 50% 50%, hsl(38 94% 44% / 0.12) 0%, transparent 70%)",
               filter: "blur(40px)",
             }}
           />
           <div className="relative grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4" data-testid="hero-stat-preview">
             {[
-              { grade: "A+", label: "Scoring", color: "text-green-400" },
-              { grade: "B+", label: "Defense", color: "text-blue-400" },
-              { grade: "A-", label: "Playmaking", color: "text-green-400" },
+              { grade: "A+", label: "Scoring", color: "text-emerald-400" },
+              { grade: "B+", label: "Defense", color: "text-slate-400" },
+              { grade: "A-", label: "Playmaking", color: "text-emerald-400" },
               { grade: "B", label: "Rebounding", color: "text-accent" },
             ].map((stat) => (
               <div key={stat.label} className="bg-card border border-border rounded-md p-4 md:p-6 text-center space-y-1">
                 <span className={`text-3xl md:text-5xl font-display font-bold ${stat.color}`}>{stat.grade}</span>
-                <p className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">{stat.label}</p>
+                <p className="text-xs md:text-sm text-muted-foreground tracking-wide">{stat.label}</p>
               </div>
             ))}
           </div>
@@ -257,21 +259,21 @@ export default function Landing() {
       </section>
 
       <section className="py-12 border-y border-border overflow-hidden">
-        <p className="text-center text-sm text-muted-foreground uppercase tracking-widest mb-8">
+        <p className="text-center text-sm text-muted-foreground tracking-wide mb-8">
           Built for every level of competition
         </p>
         <div className="relative overflow-hidden">
           <div
             className="flex gap-12 whitespace-nowrap"
             style={{
-              animation: "marquee 30s linear infinite",
+              animation: "marquee 20s linear infinite",
               width: "max-content",
             }}
           >
             {[...marqueeItems, ...marqueeItems].map((item, i) => (
               <span
                 key={`${item}-${i}`}
-                className="text-lg font-display uppercase tracking-wider text-muted-foreground/50 flex items-center gap-3"
+                className="text-lg font-display tracking-wide text-muted-foreground/50 flex items-center gap-3"
               >
                 <Shield className="w-4 h-4 text-accent/40" />
                 {item}
@@ -284,7 +286,7 @@ export default function Landing() {
       <section id="features" className="py-28 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <span className="text-accent text-xs uppercase tracking-widest font-semibold">FEATURES</span>
+            <span className="text-accent text-xs tracking-widest font-semibold">Features</span>
             <h2 className="text-4xl md:text-5xl font-display font-bold text-foreground mt-4">
               Everything You Need to Dominate
             </h2>
@@ -322,7 +324,7 @@ export default function Landing() {
       <section className="py-28 px-4" data-testid="section-how-it-works">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
-            <span className="text-accent text-xs uppercase tracking-widest font-semibold">HOW IT WORKS</span>
+            <span className="text-accent text-xs tracking-widest font-semibold">How It Works</span>
             <h2 className="text-4xl md:text-5xl font-display font-bold text-foreground mt-4">
               Three Steps to Your Best Season
             </h2>
@@ -356,7 +358,7 @@ export default function Landing() {
       <section className="py-28 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <span className="text-accent text-xs uppercase tracking-widest font-semibold">PRODUCT</span>
+            <span className="text-accent text-xs tracking-widest font-semibold">Product</span>
             <h2 className="text-4xl md:text-5xl font-display font-bold text-foreground mt-4">
               One Platform. Total Control.
             </h2>
@@ -457,7 +459,7 @@ export default function Landing() {
       <section className="py-28 px-4">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
-            <span className="text-accent text-xs uppercase tracking-widest font-semibold">BY THE NUMBERS</span>
+            <span className="text-accent text-xs tracking-widest font-semibold">By the Numbers</span>
             <h2 className="text-4xl md:text-5xl font-display font-bold text-foreground mt-4">
               The Numbers Don't Lie
             </h2>
@@ -473,7 +475,7 @@ export default function Landing() {
                 >
                   {stat.value}
                 </div>
-                <div className="text-sm text-muted-foreground uppercase tracking-wider">{stat.label}</div>
+                <div className="text-sm text-muted-foreground tracking-wide">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -483,7 +485,7 @@ export default function Landing() {
       <section className="py-28 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <span className="text-accent text-xs uppercase tracking-widest font-semibold">TESTIMONIALS</span>
+            <span className="text-accent text-xs tracking-widest font-semibold">Testimonials</span>
             <h2 className="text-4xl md:text-5xl font-display font-bold text-foreground mt-4">
               Hear From Our Athletes
             </h2>
@@ -541,7 +543,7 @@ export default function Landing() {
         <div
           className="absolute inset-0"
           style={{
-            background: "radial-gradient(ellipse at 50% 50%, hsl(355 85% 50% / 0.06) 0%, transparent 60%)",
+            background: "radial-gradient(ellipse at 50% 50%, hsl(38 94% 44% / 0.06) 0%, transparent 60%)",
           }}
         />
         <div className="relative max-w-3xl mx-auto text-center space-y-8">
@@ -558,10 +560,10 @@ export default function Landing() {
               className="min-w-[200px] bg-accent text-white border-accent-border"
               data-testid="button-cta-start"
             >
-              <a href="/api/login" className="flex items-center gap-2">
+              <Link href="/login" className="flex items-center gap-2">
                 Start Free Today
                 <ArrowRight className="w-5 h-5" />
-              </a>
+              </Link>
             </Button>
             <Link href="/pricing">
               <Button size="lg" variant="outline" className="min-w-[200px]" data-testid="button-cta-pricing">
@@ -577,8 +579,8 @@ export default function Landing() {
           <div className="grid md:grid-cols-4 gap-12 mb-12">
             <div className="md:col-span-2 space-y-4">
               <div className="flex items-center gap-3 flex-wrap">
-                <CaliberLogo size={40} color="#E8192C" />
-                <span className="text-xl font-bold font-display text-foreground tracking-wider uppercase">CALIBER</span>
+                <CaliberLogo size={40} color="#4f6878" />
+                <span className="text-xl font-bold font-display text-foreground tracking-wide">Caliber</span>
               </div>
               <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
                 The performance platform for serious athletes. Track your game, earn your rank, and get discovered.
@@ -586,7 +588,7 @@ export default function Landing() {
             </div>
 
             <div className="space-y-4">
-              <h4 className="font-display text-sm text-foreground uppercase tracking-wider">Platform</h4>
+              <h4 className="font-display text-sm text-foreground tracking-wide">Platform</h4>
               <div className="space-y-2">
                 <Link href="/pricing" className="block text-sm text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-pricing">Pricing</Link>
                 <Link href="/scout" className="block text-sm text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-scout-hub">Scout Hub</Link>
@@ -594,10 +596,10 @@ export default function Landing() {
             </div>
 
             <div className="space-y-4">
-              <h4 className="font-display text-sm text-foreground uppercase tracking-wider">Get Started</h4>
+              <h4 className="font-display text-sm text-foreground tracking-wide">Get Started</h4>
               <div className="space-y-2">
-                <a href="/api/login" className="block text-sm text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-sign-in">Sign In</a>
-                <a href="/api/login" className="block text-sm text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-create-account">Create Account</a>
+                <Link href="/login" className="block text-sm text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-sign-in">Sign In</Link>
+                <Link href="/login" className="block text-sm text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-create-account">Create Account</Link>
               </div>
             </div>
           </div>

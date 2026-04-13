@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { usePlayerGoals, usePlayerStreaks, useCreateGoal, useUpdateGoal, useDeleteGoal } from "@/hooks/use-basketball";
-import { useSport } from "@/components/SportToggle";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -18,15 +17,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Flame, Target, Plus, Check, Trash2, Trophy, TrendingUp, Share2 } from "lucide-react";
-import { 
-  STREAK_DEFINITIONS, 
-  GOAL_PRESETS, 
-  FOOTBALL_GOAL_PRESETS,
+import {
+  STREAK_DEFINITIONS,
+  GOAL_PRESETS,
   BASKETBALL_GOAL_CATEGORIES,
-  FOOTBALL_GOAL_CATEGORIES,
-  type Goal, 
-  type Streak, 
-  type Game 
+  type Goal,
+  type Streak,
+  type Game
 } from "@shared/schema";
 import { cn } from "@/lib/utils";
 import { ShareGoalModal } from "./ShareGoalModal";
@@ -85,30 +82,22 @@ function calculateGoalProgress(goal: Goal, games: Game[]): { current: number; pe
 }
 
 export function GoalsPanel({ playerId, games }: GoalsPanelProps) {
-  const sport = useSport();
   const { data: goals = [], isLoading: goalsLoading } = usePlayerGoals(playerId);
   const { data: streaks = [], isLoading: streaksLoading } = usePlayerStreaks(playerId);
   const createGoal = useCreateGoal();
   const updateGoal = useUpdateGoal();
   const deleteGoal = useDeleteGoal();
-  
-  // Sport-aware categories and presets
-  const goalCategories = sport === 'football' ? FOOTBALL_GOAL_CATEGORIES : BASKETBALL_GOAL_CATEGORIES;
-  const goalPresets = sport === 'football' ? FOOTBALL_GOAL_PRESETS : GOAL_PRESETS;
-  const defaultCategory = sport === 'football' ? 'passingYards' : 'points';
-  
+
+  const goalCategories = BASKETBALL_GOAL_CATEGORIES;
+  const goalPresets = GOAL_PRESETS;
+
   const [isOpen, setIsOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [targetType, setTargetType] = useState("stat_min");
-  const [targetCategory, setTargetCategory] = useState(defaultCategory);
+  const [targetCategory, setTargetCategory] = useState("points");
   const [targetValue, setTargetValue] = useState("");
   const [deadline, setDeadline] = useState("");
   const [shareGoalId, setShareGoalId] = useState<number | null>(null);
-
-  // Reset category when sport changes
-  useEffect(() => {
-    setTargetCategory(defaultCategory);
-  }, [sport, defaultCategory]);
 
   const handlePresetSelect = (preset: { title: string; targetType: string; targetCategory: string; targetValue: number }) => {
     setTitle(preset.title);

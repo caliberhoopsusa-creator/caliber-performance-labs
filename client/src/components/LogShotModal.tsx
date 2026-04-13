@@ -77,7 +77,7 @@ export function LogShotModal({ open, onOpenChange, gameId, onShotLogged }: LogSh
   }, []);
 
   const courtColor = "#1a1a2e";
-  const lineColor = "#E8192C";
+  const lineColor = "#4f6878";
   const paintColor = "rgba(249, 115, 22, 0.1)";
 
   return (

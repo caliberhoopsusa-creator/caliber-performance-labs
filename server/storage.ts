@@ -15,6 +15,9 @@ import {
   playerRatings, statVerifications, skillChallenges, challengeResults, performanceMilestones, aiProjections, highlightVerifications, eventIntegrations, eventGameLinks,
   leagues, leagueTeams, leagueTeamRosters, leagueGames, leagueRivalries,
   colleges, playerCollegeMatches, fitnessData, wearableConnections, profileViews, athleticMeasurements,
+} from "@shared/schema";
+import { users } from "@shared/models/auth";
+import {
   type Player, type InsertPlayer,
   type Game, type InsertGame,
   type UpdateGameRequest,
@@ -228,10 +231,10 @@ export interface IStorage {
 
   // Feed Activities
   createFeedActivity(activity: InsertFeedActivity): Promise<FeedActivity>;
-  getFeedActivities(limit?: number, cursor?: number, typeFilter?: 'social' | 'alerts' | 'all'): Promise<(FeedActivity & { playerName?: string; playerUsername?: string })[]>;
+  getFeedActivities(limit?: number, cursor?: number, typeFilter?: 'social' | 'alerts' | 'all'): Promise<(FeedActivity & { playerName?: string; playerUsername?: string; playerPhoto?: string | null })[]>;
   getPlayerFeedActivities(playerId: number): Promise<FeedActivity[]>;
-  getFollowingFeedActivities(playerId: number, limit?: number, cursor?: number): Promise<(FeedActivity & { playerName?: string; playerUsername?: string })[]>;
-  getTeamFeedActivities(sessionId: string, limit?: number): Promise<(FeedActivity & { playerName?: string; playerUsername?: string })[]>;
+  getFollowingFeedActivities(playerId: number, limit?: number, cursor?: number): Promise<(FeedActivity & { playerName?: string; playerUsername?: string; playerPhoto?: string | null })[]>;
+  getTeamFeedActivities(sessionId: string, limit?: number): Promise<(FeedActivity & { playerName?: string; playerUsername?: string; playerPhoto?: string | null })[]>;
   isWorkoutShared(workoutId: number): Promise<boolean>;
 
   // Feed Reactions
@@ -1342,6 +1345,7 @@ export class DatabaseStorage implements IStorage {
         createdAt: feedActivities.createdAt,
         playerName: players.name,
         playerUsername: players.username,
+        playerPhoto: players.photoUrl,
       })
       .from(feedActivities)
       .leftJoin(players, eq(feedActivities.playerId, players.id))
@@ -1353,6 +1357,7 @@ export class DatabaseStorage implements IStorage {
       ...r,
       playerName: r.playerName ?? undefined,
       playerUsername: r.playerUsername ?? undefined,
+      playerPhoto: r.playerPhoto ?? null,
     }));
   }
 
@@ -1399,6 +1404,7 @@ export class DatabaseStorage implements IStorage {
         createdAt: feedActivities.createdAt,
         playerName: players.name,
         playerUsername: players.username,
+        playerPhoto: players.photoUrl,
       })
       .from(feedActivities)
       .leftJoin(players, eq(feedActivities.playerId, players.id))
@@ -1410,6 +1416,7 @@ export class DatabaseStorage implements IStorage {
       ...r,
       playerName: r.playerName || undefined,
       playerUsername: r.playerUsername ?? undefined,
+      playerPhoto: r.playerPhoto ?? null,
     }));
   }
 
@@ -1452,6 +1459,7 @@ export class DatabaseStorage implements IStorage {
         createdAt: feedActivities.createdAt,
         playerName: players.name,
         playerUsername: players.username,
+        playerPhoto: players.photoUrl,
       })
       .from(feedActivities)
       .leftJoin(players, eq(feedActivities.playerId, players.id))
@@ -1463,6 +1471,7 @@ export class DatabaseStorage implements IStorage {
       ...r,
       playerName: r.playerName || undefined,
       playerUsername: r.playerUsername ?? undefined,
+      playerPhoto: r.playerPhoto ?? null,
     }));
   }
 
@@ -3723,6 +3732,42 @@ export class DatabaseStorage implements IStorage {
       .where(eq(profileViews.playerId, playerId))
       .orderBy(desc(profileViews.viewedAt))
       .limit(limit);
+  }
+
+  async getRecentProfileViewsWithViewers(playerId: number, limit: number = 20): Promise<Array<{
+    id: number;
+    viewedAt: Date;
+    viewerName: string | null;
+    viewerAvatar: string | null;
+    viewerRole: string | null;
+    referrer: string | null;
+  }>> {
+    const rows = await db
+      .select({
+        id: profileViews.id,
+        viewedAt: profileViews.viewedAt,
+        referrer: profileViews.referrer,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        viewerAvatar: users.profileImageUrl,
+        viewerRole: users.role,
+      })
+      .from(profileViews)
+      .leftJoin(users, sql`${profileViews.viewerUserId}::uuid = ${users.id}`)
+      .where(eq(profileViews.playerId, playerId))
+      .orderBy(desc(profileViews.viewedAt))
+      .limit(limit);
+
+    return rows.map((row) => ({
+      id: row.id,
+      viewedAt: row.viewedAt,
+      viewerName: row.firstName || row.lastName
+        ? [row.firstName, row.lastName].filter(Boolean).join(' ')
+        : null,
+      viewerAvatar: row.viewerAvatar,
+      viewerRole: row.viewerRole,
+      referrer: row.referrer,
+    }));
   }
 
   // === Direct Messages ===
