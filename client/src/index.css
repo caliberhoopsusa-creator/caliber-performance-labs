@@ -1387,6 +1387,75 @@ html.theme-active .nav-active {
   color: #d4e0ea;
 }
 
+/* ── Editorial landing page system ───────────────────────────────── */
+.font-editorial {
+  font-family: 'Instrument Serif', 'Times New Roman', serif;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+}
+.font-editorial-italic {
+  font-family: 'Instrument Serif', 'Times New Roman', serif;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+.font-label {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+}
+
+.editorial-rule {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.editorial-rule::before {
+  content: '';
+  height: 1px;
+  width: 2rem;
+  background: currentColor;
+  opacity: 0.6;
+}
+
+.grain-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.08;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@keyframes editorialRise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.editorial-rise {
+  opacity: 0;
+  animation: editorialRise 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.editorial-rise-1 { animation-delay: 0.05s; }
+.editorial-rise-2 { animation-delay: 0.2s; }
+.editorial-rise-3 { animation-delay: 0.4s; }
+.editorial-rise-4 { animation-delay: 0.6s; }
+.editorial-rise-5 { animation-delay: 0.8s; }
+
+.hairline-col {
+  position: relative;
+}
+.hairline-col + .hairline-col::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 15%;
+  bottom: 15%;
+  width: 1px;
+  background: hsl(var(--border));
+}
+
 /* ── Merged from globals.css ─────────────────────────────────────── */
 @layer components {
   .section-py { @apply py-20 md:py-28 lg:py-36; }

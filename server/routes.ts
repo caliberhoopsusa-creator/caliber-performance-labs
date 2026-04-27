@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { players, games, badges, headToHeadChallenges, statVerifications, playerCollegeMatches, playerCollegeInterests, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema, insertWearableConnectionSchema, recruitingEvents, insertRecruitingEventSchema, type RecruitingEvent, playerEventRegistrations, insertPlayerEventRegistrationSchema, colleges, collegeRosterPlayers, collegeCoachingStaff, ncaaEligibilityProgress, insertNcaaEligibilityProgressSchema, coachRecommendations, insertCoachRecommendationSchema, teams, teamMembers, skillBadges, activityStreaks, feedActivities, feedReactions, feedComments, feedCommentLikes, type InsertFeedComment, type FeedComment, highlightClips, personalRecords, recruiterBlocks, recruiterProfiles, recruiterProfileViews, playerGoals, recruitingTargets, recruitingContacts, insertRecruitingTargetSchema, insertRecruitingContactSchema, DIVISION_BENCHMARKS, BENCHMARK_STAT_LABELS, seasons, teamHistory, insertSeasonSchema, insertTeamHistorySchema, guardianLinks, insertGuardianLinkSchema, dailyQuests, notifications, equipment, insertEquipmentSchema } from "@shared/schema";
+import { players, games, badges, headToHeadChallenges, statVerifications, playerCollegeMatches, playerCollegeInterests, type Game, type ScheduleEvent, insertGoalSchema, insertCommentSchema, insertChallengeSchema, insertTeamSchema, insertTeamMemberSchema, insertTeamPostSchema, XP_REWARDS, TIER_THRESHOLDS, BADGE_DEFINITIONS, SKILL_BADGE_TYPES, type SkillBadgeLevel, insertShotSchema, insertGameNoteSchema, insertPracticeSchema, insertPracticeAttendanceSchema, insertDrillSchema, insertDrillScoreSchema, insertLineupSchema, insertLineupStatSchema, insertOpponentSchema, insertAlertSchema, insertCoachGoalSchema, insertDrillRecommendationSchema, insertNotificationSchema, insertHighlightClipSchema, linkHighlightToGameSchema, insertWorkoutSchema, insertAccoladeSchema, insertGoalShareSchema, insertScheduleEventSchema, insertLiveGameSessionSchema, insertLiveGameEventSchema, insertShareAssetSchema, insertMentorshipProfileSchema, insertMentorshipRequestSchema, insertRecruitPostSchema, insertRecruitInterestSchema, type InsertTrainingGroup, shopItems, userInventory, coinTransactions, COIN_REWARDS, insertPlayerRatingSchema, insertStatVerificationSchema, insertChallengeResultSchema, insertAiProjectionSchema, insertHighlightVerificationSchema, insertLeagueSchema, insertLeagueTeamSchema, insertLeagueTeamRosterSchema, insertLeagueGameSchema, insertLeagueRivalrySchema, insertCollegeSchema, insertPlayerCollegeMatchSchema, type College, type FitnessData, type InsertFitnessData, insertFitnessDataSchema, insertWearableConnectionSchema, recruitingEvents, insertRecruitingEventSchema, type RecruitingEvent, playerEventRegistrations, insertPlayerEventRegistrationSchema, colleges, collegeRosterPlayers, collegeCoachingStaff, ncaaEligibilityProgress, insertNcaaEligibilityProgressSchema, coachRecommendations, insertCoachRecommendationSchema, teams, teamMembers, skillBadges, activityStreaks, feedActivities, feedReactions, feedComments, feedCommentLikes, type InsertFeedComment, type FeedComment, highlightClips, personalRecords, recruiterBlocks, recruiterProfiles, recruiterProfileViews, recruiterNotes, playerGoals, recruitingTargets, recruitingContacts, insertRecruitingTargetSchema, insertRecruitingContactSchema, DIVISION_BENCHMARKS, BENCHMARK_STAT_LABELS, seasons, teamHistory, insertSeasonSchema, insertTeamHistorySchema, guardianLinks, insertGuardianLinkSchema, dailyQuests, notifications, equipment, insertEquipmentSchema } from "@shared/schema";
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { calculateAIRating, calculateProjection, type GameStats, type PlayerMetrics, type PeerStats, type AIRatingResult, type ProjectionResult } from "@shared/ai-rating-engine";
 import type { Sport } from "@shared/sports-config";
@@ -221,13 +221,15 @@ const requiresCoachPro: RequestHandler = async (req: any, res, next) => {
   }
 };
 
-// Gemini AI client for video analysis
+// Gemini AI client for video analysis.
+// Prefers Replit AI Integrations env vars when available; otherwise falls back
+// to a direct GEMINI_API_KEY against the public Gemini API.
+const geminiBaseUrl = process.env.AI_INTEGRATIONS_GEMINI_BASE_URL;
 const ai = new GoogleGenAI({
-  apiKey: process.env.AI_INTEGRATIONS_GEMINI_API_KEY,
-  httpOptions: {
-    apiVersion: "",
-    baseUrl: process.env.AI_INTEGRATIONS_GEMINI_BASE_URL,
-  },
+  apiKey: process.env.AI_INTEGRATIONS_GEMINI_API_KEY || process.env.GEMINI_API_KEY,
+  ...(geminiBaseUrl
+    ? { httpOptions: { apiVersion: "", baseUrl: geminiBaseUrl } }
+    : {}),
 });
 
 // Configure multer for video uploads
@@ -17923,31 +17925,96 @@ The email should:
       if (graduationYear) filteredPlayers = filteredPlayers.filter(p => p.graduationYear === parseInt(graduationYear as string));
       if (openToRecruiting === 'true') filteredPlayers = filteredPlayers.filter(p => p.openToRecruiting);
 
+      // Compute per-player avg grade from recent games
+      const GRADE_SCORES: Record<string, number> = {
+        'A+': 100, 'A': 95, 'A-': 90, 'B+': 85, 'B': 80, 'B-': 75,
+        'C+': 70, 'C': 65, 'C-': 60, 'D+': 55, 'D': 50, 'D-': 45, 'F': 30,
+      };
+      const MIN_GRADE_SCORES: Record<string, number> = {
+        'A+': 100, 'A': 95, 'A-': 90, 'B+': 85, 'B': 80, 'B-': 75,
+        'C+': 70, 'C': 65, 'C-': 60, 'D': 50,
+      };
+
+      const playerIds = filteredPlayers.map(p => p.id);
+      const recentGames = playerIds.length > 0
+        ? await db.select({ playerId: games.playerId, grade: games.grade })
+            .from(games)
+            .where(and(inArray(games.playerId, playerIds), sql`${games.createdAt} > NOW() - INTERVAL '6 months'`))
+        : [];
+
+      const gradesByPlayer = new Map<number, number[]>();
+      for (const g of recentGames) {
+        if (!g.grade) continue;
+        const score = GRADE_SCORES[g.grade.trim().toUpperCase()];
+        if (score === undefined) continue;
+        const arr = gradesByPlayer.get(g.playerId) ?? [];
+        arr.push(score);
+        gradesByPlayer.set(g.playerId, arr);
+      }
+
+      const scoreToGrade = (score: number): string => {
+        if (score >= 98) return 'A+';
+        if (score >= 93) return 'A';
+        if (score >= 90) return 'A-';
+        if (score >= 87) return 'B+';
+        if (score >= 83) return 'B';
+        if (score >= 80) return 'B-';
+        if (score >= 77) return 'C+';
+        if (score >= 73) return 'C';
+        if (score >= 70) return 'C-';
+        if (score >= 67) return 'D+';
+        if (score >= 60) return 'D';
+        if (score >= 55) return 'D-';
+        return 'F';
+      };
+
+      // Apply minGrade filter
+      if (minGrade && MIN_GRADE_SCORES[minGrade as string] !== undefined) {
+        const threshold = MIN_GRADE_SCORES[minGrade as string];
+        filteredPlayers = filteredPlayers.filter(p => {
+          const scores = gradesByPlayer.get(p.id);
+          if (!scores || scores.length === 0) return false;
+          const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+          return avg >= threshold;
+        });
+      }
+
       filteredPlayers.sort((a, b) => {
         if (a.openToRecruiting && !b.openToRecruiting) return -1;
         if (!a.openToRecruiting && b.openToRecruiting) return 1;
-        return (a.name || '').localeCompare(b.name || '');
+        // Sort by avg grade score desc
+        const aScores = gradesByPlayer.get(a.id) ?? [];
+        const bScores = gradesByPlayer.get(b.id) ?? [];
+        const aAvg = aScores.length ? aScores.reduce((x, y) => x + y, 0) / aScores.length : 0;
+        const bAvg = bScores.length ? bScores.reduce((x, y) => x + y, 0) / bScores.length : 0;
+        return bAvg - aAvg;
       });
 
-      const result = filteredPlayers.map(p => ({
-        id: p.id,
-        name: p.name,
-        position: p.position,
-        height: p.height,
-        team: p.team,
-        school: p.showSchool ? p.school : null,
-        state: p.state,
-        city: p.city,
-        graduationYear: p.graduationYear,
-        gpa: p.showGpa ? p.gpa : null,
-        level: p.level,
-        photoUrl: p.photoUrl,
-        currentTier: p.currentTier,
-        totalXp: p.totalXp,
-        openToRecruiting: p.openToRecruiting,
-        highlightVideoUrl: p.highlightVideoUrl,
-        username: p.username,
-      }));
+      const result = filteredPlayers.map(p => {
+        const scores = gradesByPlayer.get(p.id) ?? [];
+        const avgScore = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : null;
+        return {
+          id: p.id,
+          name: p.name,
+          position: p.position,
+          height: p.height,
+          team: p.team,
+          school: p.showSchool ? p.school : null,
+          state: p.state,
+          city: p.city,
+          graduationYear: p.graduationYear,
+          gpa: p.showGpa ? p.gpa : null,
+          level: p.level,
+          photoUrl: p.photoUrl,
+          currentTier: p.currentTier,
+          totalXp: p.totalXp,
+          openToRecruiting: p.openToRecruiting,
+          highlightVideoUrl: p.highlightVideoUrl,
+          username: p.username,
+          avgGrade: avgScore !== null ? scoreToGrade(avgScore) : null,
+          gamesPlayed: scores.length,
+        };
+      });
 
       res.json(result);
     } catch (error) {
@@ -19253,6 +19320,157 @@ The email should:
     } catch (error) {
       console.error('Error generating trends:', error);
       res.status(500).json({ message: "Failed to generate trends" });
+    }
+  });
+
+  // === RECRUITER CONTACT LOG (CRM) ===
+
+  app.get('/api/recruiter/notes/:playerId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id || req.user?.claims?.sub;
+      const recruiter = await storage.getRecruiterProfileByUserId(userId);
+      if (!recruiter) return res.status(403).json({ message: 'Recruiter profile required' });
+      const playerId = parseInt(req.params.playerId);
+      const notes = await db.select().from(recruiterNotes)
+        .where(and(eq(recruiterNotes.recruiterProfileId, String(recruiter.id)), eq(recruiterNotes.playerId, playerId)))
+        .orderBy(desc(recruiterNotes.createdAt));
+      res.json(notes);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to load notes' });
+    }
+  });
+
+  app.post('/api/recruiter/notes/:playerId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id || req.user?.claims?.sub;
+      const recruiter = await storage.getRecruiterProfileByUserId(userId);
+      if (!recruiter) return res.status(403).json({ message: 'Recruiter profile required' });
+      const playerId = parseInt(req.params.playerId);
+      const { note, rating, contactType } = req.body as { note: string; rating?: number; contactType?: string };
+      if (!note?.trim()) return res.status(400).json({ message: 'Note is required' });
+      const [created] = await db.insert(recruiterNotes).values({
+        recruiterProfileId: String(recruiter.id),
+        playerId,
+        note: note.trim(),
+        rating: rating ?? null,
+        contactType: contactType ?? 'note',
+      }).returning();
+      res.json(created);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to save note' });
+    }
+  });
+
+  app.delete('/api/recruiter/notes/:noteId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id || req.user?.claims?.sub;
+      const recruiter = await storage.getRecruiterProfileByUserId(userId);
+      if (!recruiter) return res.status(403).json({ message: 'Recruiter profile required' });
+      const noteId = parseInt(req.params.noteId);
+      await db.delete(recruiterNotes)
+        .where(and(eq(recruiterNotes.id, noteId), eq(recruiterNotes.recruiterProfileId, String(recruiter.id))));
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to delete note' });
+    }
+  });
+
+  // === TRANSFER PORTAL ===
+
+  app.get('/api/transfer-portal', async (req: any, res) => {
+    try {
+      const { position, level, state } = req.query as Record<string, string>;
+      let query = db.select({
+        id: players.id,
+        name: players.name,
+        sport: players.sport,
+        position: players.position,
+        height: players.height,
+        school: players.school,
+        state: players.state,
+        graduationYear: players.graduationYear,
+        level: players.level,
+        photoUrl: players.photoUrl,
+        transferPortalNote: players.transferPortalNote,
+        transferPortalEnteredAt: players.transferPortalEnteredAt,
+        gpa: players.gpa,
+        verifiedAthlete: players.verifiedAthlete,
+        currentTier: players.currentTier,
+      }).from(players).where(eq(players.inTransferPortal, true));
+
+      const results = await query.orderBy(desc(players.transferPortalEnteredAt));
+      let filtered = results as any[];
+      if (position) filtered = filtered.filter(p => p.position === position);
+      if (level) filtered = filtered.filter(p => p.level === level);
+      if (state) filtered = filtered.filter(p => p.state === state);
+      res.json(filtered);
+    } catch (error) {
+      console.error('Transfer portal error:', error);
+      res.status(500).json({ message: 'Failed to load transfer portal' });
+    }
+  });
+
+  app.get('/api/me/transfer-portal-status', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id || req.user?.claims?.sub;
+      const [player] = await db.select({
+        inTransferPortal: players.inTransferPortal,
+        transferPortalNote: players.transferPortalNote,
+      }).from(players).where(eq(players.userId, userId)).limit(1);
+      if (!player) return res.status(404).json({ message: 'Player not found' });
+      res.json(player);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to get portal status' });
+    }
+  });
+
+  app.post('/api/me/transfer-portal', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id || req.user?.claims?.sub;
+      const { note } = req.body as { note?: string };
+      await db.update(players).set({
+        inTransferPortal: true,
+        transferPortalEnteredAt: new Date(),
+        transferPortalNote: note?.trim() || null,
+      }).where(eq(players.userId, userId));
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to enter transfer portal' });
+    }
+  });
+
+  app.delete('/api/me/transfer-portal', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id || req.user?.claims?.sub;
+      await db.update(players).set({
+        inTransferPortal: false,
+        transferPortalEnteredAt: null,
+        transferPortalNote: null,
+      }).where(eq(players.userId, userId));
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to exit transfer portal' });
+    }
+  });
+
+  // === FEATURED CAMP LISTINGS ===
+
+  app.post('/api/recruiting-events/:id/feature', isAuthenticated, async (req: any, res) => {
+    // In production this would trigger a Stripe checkout
+    // For now, admin-only endpoint to mark an event as featured
+    try {
+      const { id } = req.params;
+      const { tier = 'featured', daysActive = 30 } = req.body as { tier?: string; daysActive?: number };
+      const featuredUntil = new Date();
+      featuredUntil.setDate(featuredUntil.getDate() + daysActive);
+      await db.update(recruitingEvents).set({
+        isFeatured: true,
+        featuredUntil,
+        listingTier: tier,
+      }).where(eq(recruitingEvents.id, parseInt(id)));
+      res.json({ success: true, featuredUntil });
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to feature listing' });
     }
   });
 

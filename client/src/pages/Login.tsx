@@ -34,7 +34,7 @@ async function registerRequest(email: string, password: string, firstName: strin
 }
 
 const PERKS = [
-  { icon: BarChart3, text: "AI performance grade on every game" },
+  { icon: BarChart3, text: "Performance grade on every game" },
   { icon: GraduationCap, text: "Recruiting profile seen by college programs" },
   { icon: Trophy, text: "Badge & XP system that tracks your progress" },
 ];

@@ -57,7 +57,7 @@ export function HeroLanding() {
             className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mb-10 animate-fade-up"
             style={{ animationDelay: '0.2s', animationFillMode: 'both' } as CSSProperties}
           >
-            Caliber gives athletes and coaches professional-grade analytics — AI performance grades,
+            Caliber gives athletes and coaches professional-grade analytics — performance grades,
             highlight reels, recruiting tools, and real-time stat tracking. All in one platform.
           </p>
 

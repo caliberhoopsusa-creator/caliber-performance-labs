@@ -32,7 +32,7 @@ const tiers: PricingTier[] = [
     features: [
       'Everything in Starter',
       'Unlimited game tracking',
-      'Advanced AI grade breakdowns',
+      'Advanced grade breakdowns',
       'Unlimited highlight reels',
       'Recruiting hub access',
       'Personal records tracking',
@@ -74,7 +74,7 @@ const faqs = [
     a: 'Athlete Pro includes a 14-day free trial. No credit card required to start.',
   },
   {
-    q: 'How does the AI grading system work?',
+    q: 'How does the grading system work?',
     a: 'We analyze your game stats against position-specific benchmarks, efficiency metrics, and trend data to produce a letter grade (A+ through F) for each performance area.',
   },
   {
@@ -112,7 +112,7 @@ export default function PricingPage() {
             <span className="text-gradient">Athletic Career</span>
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Start free, upgrade when you're ready. Every plan includes AI grades, badges, and your public player profile.
+            Start free, upgrade when you're ready. Every plan includes performance grades, badges, and your public player profile.
           </p>
         </div>
       </section>
@@ -149,7 +149,7 @@ export default function PricingPage() {
             {[
               ['Public Player Profile', true, true, true],
               ['Game Stat Tracking', '10 games', 'Unlimited', 'Unlimited (25 players)'],
-              ['AI Performance Grades', 'Basic', 'Full breakdown', 'Full breakdown'],
+              ['Performance Grades', 'Basic', 'Full breakdown', 'Full breakdown'],
               ['Highlight Reels', '1 reel / 5 clips', 'Unlimited', 'Unlimited'],
               ['Recruiting Hub', false, true, true],
               ['Scout View Analytics', false, true, true],

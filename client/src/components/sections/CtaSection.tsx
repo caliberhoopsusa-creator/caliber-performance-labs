@@ -6,7 +6,7 @@ import { Link } from 'wouter';
 const benefits = [
   'Free to start — no credit card',
   'Basketball stats',
-  'AI grades on every game',
+  'Performance grades on every game',
   'Recruiting-ready profile',
 ];
 

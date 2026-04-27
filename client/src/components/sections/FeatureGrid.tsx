@@ -13,7 +13,7 @@ interface Feature {
 const features: Feature[] = [
   {
     icon: <Brain className="w-6 h-6" />,
-    title: 'AI Performance Grades',
+    title: 'Performance Grades',
     description: 'Get letter grades (A–F) based on your stats, efficiency metrics, and consistency — just like a real report card.',
     accent: true,
   },

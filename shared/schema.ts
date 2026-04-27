@@ -58,6 +58,10 @@ export const players = pgTable("players", {
   minorDataPublic: boolean("minor_data_public").default(true), // Controls public visibility for minor players
   verifiedAthlete: boolean("verified_athlete").notNull().default(false), // Verified by coach, school email, or admin
   verificationMethod: text("verification_method"), // 'coach_verified', 'school_email', 'admin'
+  // Transfer Portal
+  inTransferPortal: boolean("in_transfer_portal").default(false),
+  transferPortalEnteredAt: timestamp("transfer_portal_entered_at"),
+  transferPortalNote: text("transfer_portal_note"), // Brief note to recruiters (e.g. "Grad transfer, immediate eligibility")
 }, (table) => ({
   userIdIdx: index("players_user_id_idx").on(table.userId),
   sportIdx: index("players_sport_idx").on(table.sport),
@@ -2504,6 +2508,9 @@ export const recruitingEvents = pgTable("recruiting_events", {
   maxParticipants: integer("max_participants"),
   spotsRemaining: integer("spots_remaining"),
   isVerified: boolean("is_verified").default(false), // Admin verified
+  isFeatured: boolean("is_featured").default(false), // Paid featured listing
+  featuredUntil: timestamp("featured_until"), // Expiry for featured status
+  listingTier: text("listing_tier").default("free"), // 'free', 'basic' ($49), 'featured' ($99), 'premium' ($199)
   // Visibility and ownership
   visibility: text("visibility").notNull().default("public"), // 'public' or 'team'
   teamId: integer("team_id").references(() => teams.id, { onDelete: "cascade" }), // For team-only events
@@ -2874,6 +2881,23 @@ export const recruiterProfileViews = pgTable("recruiter_profile_views", {
   playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
   viewedAt: timestamp("viewed_at").defaultNow(),
 });
+
+// === RECRUITER CONTACT LOG (CRM) ===
+export const recruiterNotes = pgTable("recruiter_notes", {
+  id: serial("id").primaryKey(),
+  recruiterProfileId: text("recruiter_profile_id").notNull(), // UUID from recruiter_profiles.id
+  playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+  note: text("note").notNull(),
+  rating: integer("rating"), // 1-5 evaluation rating
+  contactType: text("contact_type").default("note"), // 'note', 'called', 'emailed', 'visited', 'offered'
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  recruiterPlayerIdx: index("recruiter_notes_recruiter_player_idx").on(table.recruiterProfileId, table.playerId),
+}));
+
+export const insertRecruiterNoteSchema = createInsertSchema(recruiterNotes).omit({ id: true, createdAt: true });
+export type InsertRecruiterNote = z.infer<typeof insertRecruiterNoteSchema>;
+export type RecruiterNote = typeof recruiterNotes.$inferSelect;
 
 export const recruiterBlocks = pgTable("recruiter_blocks", {
   id: serial("id").primaryKey(),

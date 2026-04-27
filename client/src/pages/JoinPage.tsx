@@ -63,7 +63,7 @@ export default function JoinPage() {
 
         <div className="space-y-2 text-left">
           {[
-            { icon: TrendingUp, text: "AI-powered game grades after every performance" },
+            { icon: TrendingUp, text: "Performance grades after every game" },
             { icon: Trophy, text: "Earn badges and climb the leaderboard" },
             { icon: Zap, text: "College recruiting profile for coaches to find you" },
           ].map(({ icon: Icon, text }) => (

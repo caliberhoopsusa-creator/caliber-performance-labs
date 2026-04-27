@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import {
-  Plus, ChevronRight, Users, TrendingUp, UserPlus,
+  Plus, ChevronRight, Users, TrendingUp, UserPlus, Eye,
   Target, Calendar, Trophy, Zap, BarChart3, Star,
   Activity, Flame, Award, Shield, Crosshair, Clock, Copy, Share2
 } from "lucide-react";
@@ -105,6 +105,75 @@ function computeAvgTeamGrade(avgGradeScore: number): string {
   if (avgGradeScore >= 0.85) return "D";
   if (avgGradeScore >= 0.5) return "D-";
   return "F";
+}
+
+function RecruiterActivityBanner({ playerId }: { playerId: number }) {
+  const { data, isLoading } = useQuery<{
+    views: Array<{ id: number; viewedAt: string; recruiterName: string; recruiterDivision: string; isVerified: boolean }>;
+    totalViews: number;
+    unreadSignals: number;
+  }>({
+    queryKey: [`/api/players/${playerId}/whos-watching`],
+    staleTime: 1000 * 60 * 5,
+  });
+
+  if (isLoading || !data || data.totalViews === 0) return null;
+
+  const recentViews = data.views.slice(0, 3);
+  const newToday = data.views.filter(v => {
+    const d = new Date(v.viewedAt);
+    const now = new Date();
+    return d.getDate() === now.getDate() && d.getMonth() === now.getMonth();
+  }).length;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35 }}
+    >
+      <Link href={`/players/${playerId}/recruiting`}>
+        <div className="relative overflow-hidden rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 cursor-pointer group hover:border-amber-500/40 transition-colors">
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+            style={{ background: "radial-gradient(ellipse at 0% 50%, rgba(245,158,11,0.06) 0%, transparent 60%)" }} />
+          <div className="relative flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-full bg-amber-500/15 flex items-center justify-center flex-shrink-0">
+                <Eye className="w-4 h-4 text-amber-400" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-semibold text-sm text-foreground">
+                    {newToday > 0 ? (
+                      <><span className="text-amber-400">{newToday} new</span> recruiter view{newToday !== 1 ? 's' : ''} today</>
+                    ) : (
+                      <><span className="text-amber-400">{data.totalViews}</span> total recruiter view{data.totalViews !== 1 ? 's' : ''}</>
+                    )}
+                  </span>
+                  {data.unreadSignals > 0 && (
+                    <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs">
+                      {data.unreadSignals} signal{data.unreadSignals !== 1 ? 's' : ''}
+                    </Badge>
+                  )}
+                </div>
+                <div className="text-xs text-muted-foreground mt-0.5 truncate">
+                  {recentViews.map((v, i) => (
+                    <span key={v.id}>
+                      {i > 0 && ", "}
+                      <span className="text-foreground/70">{v.recruiterName}</span>
+                      {v.recruiterDivision && <span className="text-muted-foreground/60"> ({v.recruiterDivision})</span>}
+                    </span>
+                  ))}
+                  {data.views.length > 3 && ` +${data.views.length - 3} more`}
+                </div>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-amber-400/60 group-hover:text-amber-400 transition-colors flex-shrink-0" />
+          </div>
+        </div>
+      </Link>
+    </motion.div>
+  );
 }
 
 export default function Dashboard() {
@@ -341,6 +410,9 @@ export default function Dashboard() {
 
       {/* Daily Quests */}
       {playerId && <DailyQuestsWidget playerId={playerId} />}
+
+      {/* Recruiter Activity Banner */}
+      {playerId && <RecruiterActivityBanner playerId={playerId} />}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <motion.div

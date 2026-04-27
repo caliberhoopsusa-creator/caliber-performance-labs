@@ -9,6 +9,14 @@ import {
 import { Link } from "wouter";
 import { CaliberLogo } from "@/components/CaliberLogo";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
+import { GradeBadge } from "@/components/GradeBadge";
+import {
+  GlobalCursor,
+  MagneticButton,
+  TiltCard,
+  Reveal,
+  LiveFeed,
+} from "./landing-animations";
 
 const features = [
   { icon: BarChart3, title: "Performance Grades", description: "Instant A-F grades based on position-weighted stats after every game." },
@@ -44,7 +52,7 @@ const showcaseTabs = [
   {
     id: "analytics",
     title: "Player Analytics",
-    description: "Track every game with AI-powered performance grades, trend lines, and position-specific breakdowns.",
+    description: "Track every game with performance grades, trend lines, and position-specific breakdowns.",
     icon: BarChart3,
   },
   {
@@ -78,7 +86,7 @@ const howItWorks = [
     step: 2,
     icon: BarChart3,
     title: "Get Your Grade",
-    description: "AI analyzes your performance and gives you an A-F grade with detailed feedback.",
+    description: "Your stats are analyzed and turned into an A-F grade with detailed feedback.",
   },
   {
     step: 3,
@@ -126,7 +134,9 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-background relative">
-      <div 
+      <GlobalCursor />
+      <LiveFeed />
+      <div
         className="fixed inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.05]"
         style={{
           backgroundImage: `radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)`,
@@ -146,9 +156,9 @@ export default function Landing() {
 
       <nav className="sticky top-0 z-[100] bg-background/80 backdrop-blur-lg border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 flex-wrap">
-            <CaliberLogo size={40} color="#4f6878" />
-            <span className="text-xl font-bold font-display text-foreground tracking-wide">Caliber</span>
+          <div className="flex items-center gap-3">
+            <CaliberLogo size={32} color="#4f6878" />
+            <span className="font-label text-muted-foreground hidden sm:inline">Est. MMXXVI</span>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <Link href="/pricing">
@@ -169,164 +179,304 @@ export default function Landing() {
         </div>
       </nav>
 
-      <section className="relative pt-24 pb-16 px-4 overflow-hidden">
-        {/* Animated amber gradient background */}
-        <div className="absolute inset-0 hero-gradient-bg opacity-60 pointer-events-none" />
-        {/* Fade to background at bottom */}
+      <section className="relative pt-6 pb-16 px-4 overflow-hidden">
+        <div className="absolute inset-0 hero-gradient-bg opacity-40 pointer-events-none" />
+        <div className="grain-overlay" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background pointer-events-none" />
-        <div className="text-center max-w-4xl mx-auto space-y-6">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card/50 text-sm text-muted-foreground mb-4">
-            <Star className="w-4 h-4 text-accent" />
-            <span>Trusted by 10,000+ athletes nationwide</span>
+
+        <div
+          aria-hidden
+          className="hidden lg:block absolute left-2 top-32 font-label text-muted-foreground"
+          style={{ writingMode: "vertical-rl", transform: "rotate(180deg)", letterSpacing: "0.28em" }}
+        >
+          Caliber · Spring 2026 · Volume I
+        </div>
+        <div
+          aria-hidden
+          className="hidden lg:block absolute right-2 top-32 font-label text-muted-foreground"
+          style={{ writingMode: "vertical-rl", letterSpacing: "0.28em" }}
+        >
+          The Athletes' Quarterly · No. 01
+        </div>
+
+        <div className="relative max-w-7xl mx-auto">
+          <div className="editorial-rise editorial-rise-1 flex items-center justify-between py-3 border-b border-border flex-wrap gap-x-6 gap-y-2">
+            <span className="font-label text-muted-foreground">Vol. I · No. 01</span>
+            <span className="font-label text-muted-foreground hidden sm:inline">Spring MMXXVI</span>
+            <span className="font-label text-muted-foreground hidden md:inline">caliber.app</span>
+            <span className="font-label text-muted-foreground">$0.00 · Free Forever</span>
           </div>
 
-          <h1 className="text-5xl sm:text-6xl md:text-7xl font-display font-bold tracking-tight leading-tight">
-            <span className="text-foreground">Your Game.</span>
-            <br />
-            <span className="text-accent">Measured.</span>
-          </h1>
-
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            AI-powered performance grades, skill badges, leaderboards, and recruiting tools. The platform serious athletes use to level up.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-            <Button
-              size="lg"
-              asChild
-              className="min-w-[200px] bg-accent text-white border-accent-border"
-              data-testid="button-get-started"
+          <div className="editorial-rise editorial-rise-2 pt-4 pb-2">
+            <h1
+              className="font-display font-black text-foreground text-center md:text-left"
+              style={{
+                fontSize: "clamp(4.5rem, 17vw, 15rem)",
+                lineHeight: 0.82,
+                letterSpacing: "-0.055em",
+              }}
+              data-testid="hero-masthead"
             >
-              <Link href="/login" className="flex items-center gap-2">
-                Get Started Free
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-            </Button>
+              CALIBER
+            </h1>
           </div>
-        </div>
 
-        <div className="relative max-w-5xl mx-auto mt-16">
-          <div
-            className="absolute inset-0 -inset-x-12 -inset-y-12 pointer-events-none"
-            style={{
-              background: "radial-gradient(ellipse at 50% 50%, hsl(38 94% 44% / 0.12) 0%, transparent 70%)",
-              filter: "blur(40px)",
-            }}
-          />
-          <div className="relative grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4" data-testid="hero-stat-preview">
-            {[
-              { grade: "A+", label: "Scoring", color: "text-emerald-400" },
-              { grade: "B+", label: "Defense", color: "text-slate-400" },
-              { grade: "A-", label: "Playmaking", color: "text-emerald-400" },
-              { grade: "B", label: "Rebounding", color: "text-accent" },
-            ].map((stat) => (
-              <div key={stat.label} className="bg-card border border-border rounded-md p-4 md:p-6 text-center space-y-1">
-                <span className={`text-3xl md:text-5xl font-display font-bold ${stat.color}`}>{stat.grade}</span>
-                <p className="text-xs md:text-sm text-muted-foreground tracking-wide">{stat.label}</p>
-              </div>
-            ))}
+          <div className="editorial-rise editorial-rise-2 flex items-center justify-between py-3 border-y border-border flex-wrap gap-x-6 gap-y-2">
+            <span className="font-label text-accent">The Athletes' Quarterly</span>
+            <span className="font-label text-muted-foreground hidden sm:inline">Basketball · Analytics · Recruiting</span>
+            <span className="font-label text-muted-foreground">Issue 01 / Spring '26</span>
           </div>
-          <div className="relative grid grid-cols-3 gap-3 md:gap-4 mt-3 md:mt-4">
-            <div className="bg-card border border-border rounded-md p-4 md:p-6 flex items-center gap-3">
-              <div className="p-2 rounded-md bg-accent/10">
-                <Trophy className="w-5 h-5 text-accent" />
-              </div>
-              <div>
-                <p className="text-sm md:text-base font-semibold text-foreground">Rank #12</p>
-                <p className="text-xs text-muted-foreground">City Leaderboard</p>
-              </div>
-            </div>
-            <div className="bg-card border border-border rounded-md p-4 md:p-6 flex items-center gap-3">
-              <div className="p-2 rounded-md bg-accent/10">
-                <Award className="w-5 h-5 text-accent" />
-              </div>
-              <div>
-                <p className="text-sm md:text-base font-semibold text-foreground">8 Badges</p>
-                <p className="text-xs text-muted-foreground">Earned This Season</p>
-              </div>
-            </div>
-            <div className="bg-card border border-border rounded-md p-4 md:p-6 flex items-center gap-3">
-              <div className="p-2 rounded-md bg-accent/10">
-                <Zap className="w-5 h-5 text-accent" />
-              </div>
-              <div>
-                <p className="text-sm md:text-base font-semibold text-foreground">14 Day</p>
-                <p className="text-xs text-muted-foreground">Training Streak</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      <section className="py-12 border-y border-border overflow-hidden">
-        <p className="text-center text-sm text-muted-foreground tracking-wide mb-8">
-          Built for every level of competition
-        </p>
-        <div className="relative overflow-hidden">
-          <div
-            className="flex gap-12 whitespace-nowrap"
-            style={{
-              animation: "marquee 20s linear infinite",
-              width: "max-content",
-            }}
-          >
-            {[...marqueeItems, ...marqueeItems].map((item, i) => (
-              <span
-                key={`${item}-${i}`}
-                className="text-lg font-display tracking-wide text-muted-foreground/50 flex items-center gap-3"
-              >
-                <Shield className="w-4 h-4 text-accent/40" />
-                {item}
+          <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 pt-16 pb-10">
+            <div className="lg:col-span-7 space-y-8 relative">
+              <span className="editorial-rise editorial-rise-3 editorial-rule font-label text-accent">
+                Cover Story · P. 01
               </span>
-            ))}
+
+              <h2
+                className="editorial-rise editorial-rise-3 font-display font-bold tracking-tight leading-[0.95]"
+                style={{ fontSize: "clamp(3rem, 7.5vw, 6rem)" }}
+              >
+                <span className="block text-foreground">Your game.</span>
+                <span className="block text-foreground/90">No longer</span>
+                <span className="block font-editorial-italic font-normal text-accent italic text-[1.05em] -mt-1">
+                  a mystery.
+                </span>
+              </h2>
+
+              <p
+                className="editorial-rise editorial-rise-4 font-editorial text-xl leading-relaxed text-muted-foreground max-w-xl"
+                style={{ fontStyle: "normal" }}
+              >
+                <span
+                  className="float-left font-editorial-italic italic text-foreground mr-3"
+                  style={{
+                    fontSize: "4.5rem",
+                    lineHeight: 0.85,
+                    marginTop: "0.15rem",
+                  }}
+                  aria-hidden
+                >
+                  P
+                </span>
+                erformance grades, skill badges, leaderboards, and recruiting tools — the measured platform serious athletes use to level up.
+              </p>
+
+              <div className="editorial-rise editorial-rise-4 flex flex-col sm:flex-row items-start gap-4 pt-2">
+                <MagneticButton>
+                  <Button
+                    size="lg"
+                    asChild
+                    className="min-w-[200px] bg-accent text-white border-accent-border"
+                    data-testid="button-get-started"
+                  >
+                    <Link href="/login" className="flex items-center gap-2">
+                      Get Started Free
+                      <ArrowRight className="w-5 h-5" />
+                    </Link>
+                  </Button>
+                </MagneticButton>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground px-2">
+                  <Star className="w-4 h-4 text-accent fill-accent" />
+                  <span>Trusted by 10,000+ athletes nationwide</span>
+                </div>
+              </div>
+
+              <div className="editorial-rise editorial-rise-5 pt-6 border-t border-border">
+                <div className="flex items-baseline justify-between mb-4">
+                  <span className="font-label text-accent">Also in this issue</span>
+                  <span className="font-label text-muted-foreground">5 features</span>
+                </div>
+                <ul className="space-y-3">
+                  {[
+                    { page: "P. 12", lead: "The 50-badge system", tail: "every serious player chases" },
+                    { page: "P. 24", lead: "How the AI sees", tail: "what coaches can't" },
+                    { page: "P. 31", lead: "Tryout to D1", tail: "a scouted profile, step by step" },
+                  ].map((item) => (
+                    <li key={item.page} className="flex items-baseline gap-5 group cursor-default">
+                      <span className="font-label text-muted-foreground shrink-0">{item.page}</span>
+                      <span className="font-editorial text-lg md:text-xl text-foreground/90 leading-snug">
+                        {item.lead}{" "}
+                        <span className="font-editorial-italic italic text-muted-foreground">{item.tail}</span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            <div className="lg:col-span-5 editorial-rise editorial-rise-3 relative">
+              <span
+                className="absolute -top-4 left-6 z-10 bg-accent text-white font-label px-3 py-1.5 rounded-sm"
+                style={{ boxShadow: "0 6px 24px rgba(0,0,0,0.35)" }}
+              >
+                Exclusive · This Issue
+              </span>
+              <TiltCard className="relative">
+                <div
+                  className="absolute -inset-8 pointer-events-none"
+                  style={{
+                    background: "radial-gradient(ellipse at 50% 50%, hsl(var(--accent) / 0.15) 0%, transparent 70%)",
+                    filter: "blur(40px)",
+                  }}
+                />
+                <div className="relative bg-card/60 backdrop-blur-sm border border-border rounded-md p-6 md:p-7">
+                  <div className="flex items-baseline justify-between mb-5 pb-4 border-b border-border">
+                    <span className="font-label text-muted-foreground">Player Report</span>
+                    <span className="font-label text-accent">Live</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 mb-5" data-testid="hero-stat-preview">
+                    {[
+                      { grade: "A+", label: "Scoring" },
+                      { grade: "B+", label: "Defense" },
+                      { grade: "A-", label: "Playmaking" },
+                      { grade: "B", label: "Rebounding" },
+                    ].map((stat) => (
+                      <div key={stat.label} className="border border-border rounded-md p-4 flex items-center gap-3 bg-background/30">
+                        <GradeBadge grade={stat.grade} size="lg" />
+                        <div className="min-w-0">
+                          <p className="font-label text-muted-foreground">{stat.label}</p>
+                          <p className="text-xs text-foreground/70 mt-1">This season</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-0 border-t border-border pt-4">
+                    {[
+                      { icon: Trophy, value: "#12", label: "City Rank" },
+                      { icon: Award, value: "8", label: "Badges" },
+                      { icon: Zap, value: "14d", label: "Streak" },
+                    ].map((item, i) => (
+                      <div key={item.label} className={`hairline-col px-3 ${i === 0 ? '' : 'pl-4'}`}>
+                        <item.icon className="w-4 h-4 text-accent mb-2" />
+                        <p className="font-editorial text-2xl text-foreground leading-none">{item.value}</p>
+                        <p className="font-label text-muted-foreground mt-1.5">{item.label}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </TiltCard>
+              <div className="mt-4 flex items-baseline justify-between">
+                <span className="font-label text-muted-foreground">Fig. 01 — Player Report, live view</span>
+                <span className="font-label text-muted-foreground">Photo: Caliber Labs</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="editorial-rise editorial-rise-5 pt-5 border-t border-border flex items-end justify-between gap-6 flex-wrap">
+            <div className="flex items-end gap-[3px] h-10" aria-hidden>
+              {[3,1,2,1,4,1,2,3,1,2,1,4,2,1,3,1,2,1,3,2,1,4,1,2,1,3,1,2].map((w, i) => (
+                <span
+                  key={i}
+                  className="bg-foreground block"
+                  style={{ width: `${w}px`, height: "100%" }}
+                />
+              ))}
+              <span className="font-label text-muted-foreground ml-3 self-end pb-0.5">9 771234 567890</span>
+            </div>
+            <span className="font-label text-muted-foreground">caliber.app / join</span>
+            <span className="font-label text-accent">#CALIBER26</span>
           </div>
         </div>
       </section>
 
-      <section id="features" className="py-28 px-4">
+      <section className="relative py-12 overflow-hidden">
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "linear-gradient(90deg, hsl(0 68% 14%) 0%, hsl(0 76% 28%) 50%, hsl(0 68% 14%) 100%)",
+          }}
+        />
+        <div className="grain-overlay" />
+        <div
+          className="absolute inset-x-0 top-0 h-px"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)",
+          }}
+        />
+        <div
+          className="absolute inset-x-0 bottom-0 h-px"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)",
+          }}
+        />
+        <div className="relative">
+          <p className="text-center font-label text-white/60 mb-8">
+            Built for every level of competition
+          </p>
+          <div className="relative overflow-hidden">
+            <div
+              className="flex gap-12 whitespace-nowrap"
+              style={{
+                animation: "marquee 20s linear infinite",
+                width: "max-content",
+              }}
+            >
+              {[...marqueeItems, ...marqueeItems].map((item, i) => (
+                <span
+                  key={`${item}-${i}`}
+                  className="text-lg font-display tracking-wide text-white/70 flex items-center gap-3"
+                >
+                  <Shield className="w-4 h-4 text-white/50" />
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="features" className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <span className="text-accent text-xs tracking-widest font-semibold">Features</span>
-            <h2 className="text-4xl md:text-5xl font-display font-bold text-foreground mt-4">
-              Everything You Need to Dominate
+          <div className="mb-12 max-w-3xl">
+            <span className="editorial-rule font-label text-accent">Features</span>
+            <h2 className="text-4xl md:text-6xl font-display font-bold text-foreground mt-5 leading-[1.05]">
+              Everything you need to <span className="font-editorial-italic italic text-accent">dominate</span>.
             </h2>
-            <p className="text-muted-foreground mt-4 max-w-xl mx-auto">
+            <p className="text-muted-foreground mt-5 text-lg leading-relaxed">
               From game grading to recruiting, Caliber gives athletes the tools to track, improve, and get discovered.
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature) => (
-              <Card key={feature.title} className="hover-elevate group">
-                <CardContent className="p-6 space-y-4">
-                  <div className="w-10 h-10 rounded-md bg-accent/10 flex items-center justify-center">
-                    <feature.icon className="w-5 h-5 text-accent" />
-                  </div>
-                  <h3 className="font-display text-xl text-foreground" data-testid={`feature-${feature.title.toLowerCase().replace(/\s+/g, '-')}`}>
-                    {feature.title}
-                  </h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
-                  <button
-                    className="flex items-center gap-1 text-accent text-sm font-medium group/link"
-                    data-testid={`link-learn-more-${feature.title.toLowerCase().replace(/\s+/g, '-')}`}
-                    onClick={() => document.getElementById('cta')?.scrollIntoView({ behavior: 'smooth' })}
-                  >
-                    Learn more
-                    <ArrowRight className="w-4 h-4 transition-transform group-hover/link:translate-x-1" />
-                  </button>
-                </CardContent>
-              </Card>
+            {features.map((feature, i) => (
+              <Reveal key={feature.title} delay={i * 0.5}>
+                <Card className="hover-elevate group h-full">
+                  <CardContent className="p-6 space-y-4">
+                    <div className="w-10 h-10 rounded-md bg-accent/10 flex items-center justify-center">
+                      <feature.icon className="w-5 h-5 text-accent" />
+                    </div>
+                    <h3 className="font-display text-xl text-foreground" data-testid={`feature-${feature.title.toLowerCase().replace(/\s+/g, '-')}`}>
+                      {feature.title}
+                    </h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
+                    <button
+                      className="flex items-center gap-1 text-accent text-sm font-medium group/link"
+                      data-testid={`link-learn-more-${feature.title.toLowerCase().replace(/\s+/g, '-')}`}
+                      onClick={() => document.getElementById('cta')?.scrollIntoView({ behavior: 'smooth' })}
+                    >
+                      Learn more
+                      <ArrowRight className="w-4 h-4 transition-transform group-hover/link:translate-x-1" />
+                    </button>
+                  </CardContent>
+                </Card>
+              </Reveal>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-28 px-4" data-testid="section-how-it-works">
+      <section className="py-20 px-4" data-testid="section-how-it-works">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-16">
-            <span className="text-accent text-xs tracking-widest font-semibold">How It Works</span>
-            <h2 className="text-4xl md:text-5xl font-display font-bold text-foreground mt-4">
-              Three Steps to Your Best Season
+          <div className="mb-12 max-w-3xl">
+            <span className="editorial-rule font-label text-accent">How It Works</span>
+            <h2 className="text-4xl md:text-6xl font-display font-bold text-foreground mt-5 leading-[1.05]">
+              Three steps to your <span className="font-editorial-italic italic">best season</span>.
             </h2>
           </div>
 
@@ -355,12 +505,12 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="py-28 px-4">
+      <section className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <span className="text-accent text-xs tracking-widest font-semibold">Product</span>
-            <h2 className="text-4xl md:text-5xl font-display font-bold text-foreground mt-4">
-              One Platform. Total Control.
+          <div className="mb-12 max-w-3xl">
+            <span className="editorial-rule font-label text-accent">Product</span>
+            <h2 className="text-4xl md:text-6xl font-display font-bold text-foreground mt-5 leading-[1.05]">
+              One platform. <span className="font-editorial-italic italic">Total</span> control.
             </h2>
           </div>
 
@@ -393,123 +543,234 @@ export default function Landing() {
               ))}
             </div>
 
-            <div className="relative bg-card border border-border rounded-md p-6 md:p-8" data-testid="showcase-preview">
-              {activeTab === "analytics" && (
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="text-center space-y-2">
-                    <BarChart3 className="w-8 h-8 text-accent mx-auto" />
-                    <p className="text-2xl md:text-3xl font-display font-bold text-foreground">A+</p>
-                    <p className="text-xs text-muted-foreground">Overall Grade</p>
-                  </div>
-                  <div className="text-center space-y-2">
-                    <Trophy className="w-8 h-8 text-accent mx-auto" />
-                    <p className="text-2xl md:text-3xl font-display font-bold text-foreground">24.5</p>
-                    <p className="text-xs text-muted-foreground">PPG Average</p>
-                  </div>
-                  <div className="text-center space-y-2">
-                    <Zap className="w-8 h-8 text-accent mx-auto" />
-                    <p className="text-2xl md:text-3xl font-display font-bold text-foreground">87%</p>
-                    <p className="text-xs text-muted-foreground">Consistency</p>
-                  </div>
+            <TiltCard className="relative bg-card border border-border rounded-md overflow-hidden" style={{ minHeight: 420 }}>
+              <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-border">
+                <div className="flex items-center gap-2">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="font-label text-muted-foreground">
+                    {activeTab === "analytics" && "Player Dashboard"}
+                    {activeTab === "social" && "Community Feed"}
+                    {activeTab === "recruiting" && "Recruiting Board"}
+                  </span>
                 </div>
-              )}
-              {activeTab === "social" && (
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="text-center space-y-2">
-                    <Users className="w-8 h-8 text-accent mx-auto" />
-                    <p className="text-2xl md:text-3xl font-display font-bold text-foreground">342</p>
-                    <p className="text-xs text-muted-foreground">Connections</p>
-                  </div>
-                  <div className="text-center space-y-2">
-                    <Award className="w-8 h-8 text-accent mx-auto" />
-                    <p className="text-2xl md:text-3xl font-display font-bold text-foreground">15</p>
-                    <p className="text-xs text-muted-foreground">Badges Shared</p>
-                  </div>
-                  <div className="text-center space-y-2">
-                    <Star className="w-8 h-8 text-accent mx-auto" />
-                    <p className="text-2xl md:text-3xl font-display font-bold text-foreground">28</p>
-                    <p className="text-xs text-muted-foreground">Highlights</p>
-                  </div>
-                </div>
-              )}
-              {activeTab === "recruiting" && (
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="text-center space-y-2">
-                    <Target className="w-8 h-8 text-accent mx-auto" />
-                    <p className="text-2xl md:text-3xl font-display font-bold text-foreground">12</p>
-                    <p className="text-xs text-muted-foreground">Schools Matched</p>
-                  </div>
-                  <div className="text-center space-y-2">
-                    <Video className="w-8 h-8 text-accent mx-auto" />
-                    <p className="text-2xl md:text-3xl font-display font-bold text-foreground">5</p>
-                    <p className="text-xs text-muted-foreground">Film Reels</p>
-                  </div>
-                  <div className="text-center space-y-2">
-                    <Shield className="w-8 h-8 text-accent mx-auto" />
-                    <p className="text-2xl md:text-3xl font-display font-bold text-foreground">3</p>
-                    <p className="text-xs text-muted-foreground">Coach Endorsements</p>
-                  </div>
-                </div>
-              )}
-            </div>
+                <span className="font-label text-muted-foreground/60">Live</span>
+              </div>
+
+              <div className="p-6 md:p-8 space-y-7" data-testid="showcase-preview">
+                {activeTab === "analytics" && (
+                  <>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="text-center space-y-2">
+                        <BarChart3 className="w-7 h-7 text-accent mx-auto" />
+                        <p className="text-3xl font-display font-bold text-foreground">A+</p>
+                        <p className="font-label text-muted-foreground">Overall</p>
+                      </div>
+                      <div className="text-center space-y-2">
+                        <Trophy className="w-7 h-7 text-accent mx-auto" />
+                        <p className="text-3xl font-display font-bold text-foreground">24.5</p>
+                        <p className="font-label text-muted-foreground">PPG</p>
+                      </div>
+                      <div className="text-center space-y-2">
+                        <Zap className="w-7 h-7 text-accent mx-auto" />
+                        <p className="text-3xl font-display font-bold text-foreground">87%</p>
+                        <p className="font-label text-muted-foreground">Consistency</p>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-border pt-6 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="font-label text-muted-foreground">Last 6 games</span>
+                        <span className="text-xs text-emerald-400">+12% trend</span>
+                      </div>
+                      <div className="flex items-end gap-1.5 h-16">
+                        {[40, 62, 48, 78, 70, 92].map((h, i) => (
+                          <div key={i} className="flex-1 rounded-sm bg-accent/80" style={{ height: `${h}%`, opacity: 0.35 + (i * 0.11) }} />
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 border-t border-border pt-6">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">FG%</span>
+                        <span className="font-medium text-foreground">52.4</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">3PT%</span>
+                        <span className="font-medium text-foreground">41.8</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">AST</span>
+                        <span className="font-medium text-foreground">6.1</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">REB</span>
+                        <span className="font-medium text-foreground">4.7</span>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {activeTab === "social" && (
+                  <>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="text-center space-y-2">
+                        <Users className="w-7 h-7 text-accent mx-auto" />
+                        <p className="text-3xl font-display font-bold text-foreground">342</p>
+                        <p className="font-label text-muted-foreground">Connections</p>
+                      </div>
+                      <div className="text-center space-y-2">
+                        <Award className="w-7 h-7 text-accent mx-auto" />
+                        <p className="text-3xl font-display font-bold text-foreground">15</p>
+                        <p className="font-label text-muted-foreground">Badges</p>
+                      </div>
+                      <div className="text-center space-y-2">
+                        <Star className="w-7 h-7 text-accent mx-auto" />
+                        <p className="text-3xl font-display font-bold text-foreground">28</p>
+                        <p className="font-label text-muted-foreground">Highlights</p>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-border pt-6 space-y-3">
+                      <span className="font-label text-muted-foreground">Recent badges</span>
+                      <div className="flex flex-wrap gap-2">
+                        {["Sharpshooter", "Glass Cleaner", "Floor General", "Lockdown", "40-Point Club"].map((b) => (
+                          <span key={b} className="px-2.5 py-1 rounded-full border border-border text-xs text-foreground/80 bg-accent/5">
+                            {b}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="border-t border-border pt-6 space-y-3">
+                      <span className="font-label text-muted-foreground">Leaderboard · State</span>
+                      {[
+                        { rank: "01", name: "Jaylen M.", pts: "28.4" },
+                        { rank: "02", name: "You", pts: "24.5", me: true },
+                        { rank: "03", name: "Aria T.", pts: "22.1" },
+                      ].map((r) => (
+                        <div key={r.rank} className={`flex items-center justify-between text-sm ${r.me ? "text-accent font-medium" : "text-foreground/80"}`}>
+                          <span className="flex items-center gap-3">
+                            <span className="font-label text-muted-foreground">{r.rank}</span>
+                            {r.name}
+                          </span>
+                          <span>{r.pts} PPG</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {activeTab === "recruiting" && (
+                  <>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="text-center space-y-2">
+                        <Target className="w-7 h-7 text-accent mx-auto" />
+                        <p className="text-3xl font-display font-bold text-foreground">12</p>
+                        <p className="font-label text-muted-foreground">Matches</p>
+                      </div>
+                      <div className="text-center space-y-2">
+                        <Video className="w-7 h-7 text-accent mx-auto" />
+                        <p className="text-3xl font-display font-bold text-foreground">5</p>
+                        <p className="font-label text-muted-foreground">Film Reels</p>
+                      </div>
+                      <div className="text-center space-y-2">
+                        <Shield className="w-7 h-7 text-accent mx-auto" />
+                        <p className="text-3xl font-display font-bold text-foreground">3</p>
+                        <p className="font-label text-muted-foreground">Endorsements</p>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-border pt-6 space-y-3">
+                      <span className="font-label text-muted-foreground">Program matches</span>
+                      {[
+                        { name: "Michigan", div: "D1", fit: "94%" },
+                        { name: "Gonzaga", div: "D1", fit: "89%" },
+                        { name: "Saint Mary's", div: "D1", fit: "82%" },
+                      ].map((p) => (
+                        <div key={p.name} className="flex items-center justify-between text-sm">
+                          <span className="flex items-center gap-3 text-foreground/90">
+                            <span className="font-label text-muted-foreground">{p.div}</span>
+                            {p.name}
+                          </span>
+                          <span className="font-medium text-accent">{p.fit}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="border-t border-border pt-6 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="text-sm text-foreground/80">Open to opportunities</span>
+                      </div>
+                      <span className="font-label text-muted-foreground">On</span>
+                    </div>
+                  </>
+                )}
+              </div>
+            </TiltCard>
           </div>
         </div>
       </section>
 
-      <section className="py-28 px-4">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-16">
-            <span className="text-accent text-xs tracking-widest font-semibold">By the Numbers</span>
-            <h2 className="text-4xl md:text-5xl font-display font-bold text-foreground mt-4">
-              The Numbers Don't Lie
+      <section className="py-20 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="mb-12 max-w-3xl">
+            <span className="editorial-rule font-label text-accent">By the Numbers</span>
+            <h2 className="text-4xl md:text-6xl font-display font-bold text-foreground mt-5 leading-[1.05]">
+              The numbers <span className="font-editorial-italic italic">don't</span> lie.
             </h2>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {stats.map((stat) => (
-              <div key={stat.label} className="text-center space-y-2">
+          <div className="grid grid-cols-2 md:grid-cols-4 border-y border-border">
+            {stats.map((stat, i) => (
+              <div
+                key={stat.label}
+                className={`hairline-col py-10 px-6 ${i === 0 ? '' : 'md:pl-8'}`}
+              >
+                <div className="font-label text-muted-foreground mb-3">{`0${i + 1}`}</div>
                 <div
-                  className={`text-4xl md:text-5xl lg:text-6xl font-display font-bold text-accent ${statsLoading ? '' : ''}`}
+                  className="font-editorial text-5xl md:text-6xl lg:text-7xl text-foreground leading-none"
                   style={statsLoading ? { animation: 'pulse-placeholder 1.5s ease-in-out infinite' } : undefined}
                   data-testid={`stat-${stat.label.toLowerCase().replace(/\s+/g, '-')}`}
                 >
                   {stat.value}
                 </div>
-                <div className="text-sm text-muted-foreground tracking-wide">{stat.label}</div>
+                <div className="font-label text-muted-foreground mt-4">{stat.label}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-28 px-4">
+      <section className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <span className="text-accent text-xs tracking-widest font-semibold">Testimonials</span>
-            <h2 className="text-4xl md:text-5xl font-display font-bold text-foreground mt-4">
-              Hear From Our Athletes
+          <div className="mb-12 max-w-3xl">
+            <span className="editorial-rule font-label text-accent">Testimonials</span>
+            <h2 className="text-4xl md:text-6xl font-display font-bold text-foreground mt-5 leading-[1.05]">
+              In their <span className="font-editorial-italic italic">own</span> words.
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
-              <Card key={testimonial.name} className="hover-elevate">
-                <CardContent className="p-6 space-y-4">
-                  <Quote className="w-8 h-8 text-accent/30" />
-                  <p className="text-foreground/90 leading-relaxed italic" data-testid={`testimonial-quote-${index}`}>
-                    "{testimonial.quote}"
-                  </p>
-                  <div className="flex items-center gap-3 pt-2">
-                    <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center text-accent font-display text-sm font-bold">
-                      {testimonial.initials}
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium text-foreground" data-testid={`testimonial-name-${index}`}>{testimonial.name}</div>
-                      <div className="text-xs text-muted-foreground">{testimonial.title}</div>
-                    </div>
+              <figure key={testimonial.name} className="relative pt-8 border-t border-border">
+                <span className="absolute -top-1 left-0 font-editorial-italic italic text-6xl text-accent leading-none select-none">&ldquo;</span>
+                <blockquote
+                  className="font-editorial text-xl md:text-2xl text-foreground/90 leading-snug pt-4"
+                  data-testid={`testimonial-quote-${index}`}
+                >
+                  {testimonial.quote}
+                </blockquote>
+                <figcaption className="flex items-center gap-3 pt-6 mt-6 border-t border-border/60">
+                  <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center text-accent font-display text-sm font-bold">
+                    {testimonial.initials}
                   </div>
-                </CardContent>
-              </Card>
+                  <div>
+                    <div className="text-sm font-medium text-foreground" data-testid={`testimonial-name-${index}`}>{testimonial.name}</div>
+                    <div className="font-label text-muted-foreground mt-0.5">{testimonial.title}</div>
+                  </div>
+                </figcaption>
+              </figure>
             ))}
           </div>
         </div>
@@ -547,24 +808,27 @@ export default function Landing() {
           }}
         />
         <div className="relative max-w-3xl mx-auto text-center space-y-8">
-          <h2 className="text-4xl md:text-6xl font-display font-bold text-foreground">
-            Ready to Find Your Caliber?
+          <span className="editorial-rule font-label text-accent justify-center flex">Join The Platform</span>
+          <h2 className="text-5xl md:text-7xl font-display font-bold text-foreground leading-[1.02]">
+            Ready to find your <span className="font-editorial-italic italic text-accent">caliber</span>?
           </h2>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto">
             Join thousands of players, coaches, and scouts already on the platform. Start tracking your game today.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button
-              size="lg"
-              asChild
-              className="min-w-[200px] bg-accent text-white border-accent-border"
-              data-testid="button-cta-start"
-            >
-              <Link href="/login" className="flex items-center gap-2">
-                Start Free Today
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-            </Button>
+            <MagneticButton>
+              <Button
+                size="lg"
+                asChild
+                className="min-w-[200px] bg-accent text-white border-accent-border"
+                data-testid="button-cta-start"
+              >
+                <Link href="/login" className="flex items-center gap-2">
+                  Start Free Today
+                  <ArrowRight className="w-5 h-5" />
+                </Link>
+              </Button>
+            </MagneticButton>
             <Link href="/pricing">
               <Button size="lg" variant="outline" className="min-w-[200px]" data-testid="button-cta-pricing">
                 View Pricing

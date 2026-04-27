@@ -2635,7 +2635,7 @@ function Features() {
 // ═══════════════════════════════════════════════════════════════════════════════
 const STEPS = [
   { n: '01', icon: Zap,       title: 'Log your game',  body: 'Enter stats after each game in under 2 minutes. Upload video for AI-powered extraction.' },
-  { n: '02', icon: BarChart3, title: 'Get graded',     body: 'AI analyzes performance and gives you an A–F grade with position-specific feedback.' },
+  { n: '02', icon: BarChart3, title: 'Get graded',     body: 'Your stats are scored into an A–F grade with position-specific feedback.' },
   { n: '03', icon: TrendingUp,title: 'Get discovered',  body: 'Your profile surfaces to college coaches matching your position and skill level. They reach out to you.' },
 ];
 

@@ -33,6 +33,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 // Pages
 import ModernLandingPage from "./pages/ModernLandingPage";
+import Landing from "./pages/Landing";
 import PricingPage from "./pages/PricingPage";
 import BlogPage from "./pages/BlogPage";
 import PrivacyPage from "./pages/PrivacyPage";
@@ -79,6 +80,7 @@ import WhosWatching from "@/pages/WhosWatching";
 import CollegeDetail from "@/pages/CollegeDetail";
 import GuardianDashboard from "./pages/GuardianDashboard";
 import DebugPage from "./pages/DebugPage";
+import TransferPortal from "./pages/TransferPortal";
 import NotFound from "./pages/not-found";
 
 interface ExtendedUser {
@@ -271,7 +273,7 @@ function MainRouter() {
     if (location === "/login" || location === "/register") {
       return <Login />;
     }
-    return <ModernLandingPage />;
+    return <Landing />;
   }
   
   // New user with no role - show role selection immediately (don't wait for extended user)
@@ -439,6 +441,7 @@ function MainRouter() {
                 </Route>
                 <Route path="/colleges/:id" component={CollegeDetail} />
                 <Route path="/family" component={GuardianDashboard} />
+                <Route path="/transfer-portal" component={TransferPortal} />
                 <Route path="/debug" component={DebugPage} />
                 <Route component={NotFound} />
               </Switch>
