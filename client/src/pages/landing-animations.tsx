@@ -196,24 +196,24 @@ export function Reveal({
   );
 }
 
-const LIVE_EVENTS = [
-  { player: "Aria T.", action: "got scouted by USC", ago: "4s ago" },
-  { player: "Marcus J.", action: "earned Sharpshooter badge", ago: "12s ago" },
-  { player: "Destiny W.", action: "matched with 3 D1 programs", ago: "28s ago" },
-  { player: "Coach Rivera", action: "verified 3 games", ago: "45s ago" },
-  { player: "Jaylen M.", action: "profile viewed by Michigan", ago: "1m ago" },
+const SAMPLE_EVENTS = [
+  { player: "Aria T.", action: "got scouted by USC" },
+  { player: "Marcus J.", action: "earned Sharpshooter badge" },
+  { player: "Destiny W.", action: "matched with 3 D1 programs" },
+  { player: "Coach Rivera", action: "verified 3 games" },
+  { player: "Jaylen M.", action: "profile viewed by Michigan" },
 ];
 
 export function LiveFeed() {
   const [idx, setIdx] = useState(0);
   useEffect(() => {
     const id = setInterval(
-      () => setIdx((i) => (i + 1) % LIVE_EVENTS.length),
+      () => setIdx((i) => (i + 1) % SAMPLE_EVENTS.length),
       2800
     );
     return () => clearInterval(id);
   }, []);
-  const ev = LIVE_EVENTS[idx];
+  const ev = SAMPLE_EVENTS[idx];
 
   return (
     <div
@@ -231,15 +231,12 @@ export function LiveFeed() {
           style={{ background: "rgba(12,12,12,0.92)" }}
         >
           <div className="flex items-center gap-1.5 mb-1">
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="font-label text-muted-foreground">Live</span>
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-muted-foreground/60" />
+            <span className="font-label text-muted-foreground">Sample activity</span>
           </div>
           <div className="text-xs text-muted-foreground leading-snug">
             <span className="text-foreground font-semibold">{ev.player}</span>{" "}
             {ev.action}
-          </div>
-          <div className="text-[10px] text-muted-foreground/70 mt-0.5">
-            {ev.ago}
           </div>
         </motion.div>
       </AnimatePresence>

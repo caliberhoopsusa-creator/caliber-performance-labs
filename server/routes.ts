@@ -19377,10 +19377,10 @@ The email should:
 
   // === TRANSFER PORTAL ===
 
-  app.get('/api/transfer-portal', async (req: any, res) => {
+  app.get('/api/transfer-portal', isAuthenticated, async (req: any, res) => {
     try {
       const { position, level, state } = req.query as Record<string, string>;
-      let query = db.select({
+      const results = await db.select({
         id: players.id,
         name: players.name,
         sport: players.sport,
@@ -19396,14 +19396,41 @@ The email should:
         gpa: players.gpa,
         verifiedAthlete: players.verifiedAthlete,
         currentTier: players.currentTier,
-      }).from(players).where(eq(players.inTransferPortal, true));
+        showSchool: players.showSchool,
+        showGpa: players.showGpa,
+        minorDataPublic: players.minorDataPublic,
+      }).from(players)
+        .where(eq(players.inTransferPortal, true))
+        .orderBy(desc(players.transferPortalEnteredAt));
 
-      const results = await query.orderBy(desc(players.transferPortalEnteredAt));
       let filtered = results as any[];
       if (position) filtered = filtered.filter(p => p.position === position);
       if (level) filtered = filtered.filter(p => p.level === level);
       if (state) filtered = filtered.filter(p => p.state === state);
-      res.json(filtered);
+
+      // Honor per-user privacy flags (minors who haven't opted in are hidden;
+      // school / GPA are masked when the player has disabled them).
+      const sanitized = filtered
+        .filter(p => p.minorDataPublic !== false)
+        .map(p => ({
+          id: p.id,
+          name: p.name,
+          sport: p.sport,
+          position: p.position,
+          height: p.height,
+          school: p.showSchool ? p.school : null,
+          state: p.state,
+          graduationYear: p.graduationYear,
+          level: p.level,
+          photoUrl: p.photoUrl,
+          transferPortalNote: p.transferPortalNote,
+          transferPortalEnteredAt: p.transferPortalEnteredAt,
+          gpa: p.showGpa ? p.gpa : null,
+          verifiedAthlete: p.verifiedAthlete,
+          currentTier: p.currentTier,
+        }));
+
+      res.json(sanitized);
     } catch (error) {
       console.error('Transfer portal error:', error);
       res.status(500).json({ message: 'Failed to load transfer portal' });
@@ -19424,17 +19451,27 @@ The email should:
     }
   });
 
+  const portalNoteSchema = z.object({ note: z.string().max(200).optional() });
+
   app.post('/api/me/transfer-portal', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.id || req.user?.claims?.sub;
-      const { note } = req.body as { note?: string };
-      await db.update(players).set({
+      const parsed = portalNoteSchema.safeParse(req.body ?? {});
+      if (!parsed.success) {
+        return res.status(400).json({ message: 'Note must be 200 characters or fewer' });
+      }
+      const { note } = parsed.data;
+      const result = await db.update(players).set({
         inTransferPortal: true,
         transferPortalEnteredAt: new Date(),
         transferPortalNote: note?.trim() || null,
       }).where(eq(players.userId, userId));
+      if ((result as any).rowCount === 0) {
+        return res.status(404).json({ message: 'Create a player profile before entering the transfer portal' });
+      }
       res.json({ success: true });
     } catch (error) {
+      console.error('Transfer portal entry error:', error);
       res.status(500).json({ message: 'Failed to enter transfer portal' });
     }
   });
@@ -19442,34 +19479,52 @@ The email should:
   app.delete('/api/me/transfer-portal', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.id || req.user?.claims?.sub;
-      await db.update(players).set({
+      const result = await db.update(players).set({
         inTransferPortal: false,
         transferPortalEnteredAt: null,
         transferPortalNote: null,
       }).where(eq(players.userId, userId));
+      if ((result as any).rowCount === 0) {
+        return res.status(404).json({ message: 'No player profile found' });
+      }
       res.json({ success: true });
     } catch (error) {
+      console.error('Transfer portal exit error:', error);
       res.status(500).json({ message: 'Failed to exit transfer portal' });
     }
   });
 
   // === FEATURED CAMP LISTINGS ===
 
-  app.post('/api/recruiting-events/:id/feature', isAuthenticated, async (req: any, res) => {
-    // In production this would trigger a Stripe checkout
-    // For now, admin-only endpoint to mark an event as featured
+  const featureListingSchema = z.object({
+    tier: z.enum(['free', 'basic', 'featured', 'premium']).default('featured'),
+    daysActive: z.number().int().min(1).max(365).default(30),
+  });
+
+  app.post('/api/recruiting-events/:id/feature', isAdmin, async (req: any, res) => {
     try {
-      const { id } = req.params;
-      const { tier = 'featured', daysActive = 30 } = req.body as { tier?: string; daysActive?: number };
+      const eventId = Number.parseInt(req.params.id, 10);
+      if (!Number.isInteger(eventId)) {
+        return res.status(400).json({ message: 'Invalid event id' });
+      }
+      const parsed = featureListingSchema.safeParse(req.body ?? {});
+      if (!parsed.success) {
+        return res.status(400).json({ message: 'Invalid feature parameters', errors: parsed.error.issues });
+      }
+      const { tier, daysActive } = parsed.data;
       const featuredUntil = new Date();
       featuredUntil.setDate(featuredUntil.getDate() + daysActive);
-      await db.update(recruitingEvents).set({
+      const result = await db.update(recruitingEvents).set({
         isFeatured: true,
         featuredUntil,
         listingTier: tier,
-      }).where(eq(recruitingEvents.id, parseInt(id)));
+      }).where(eq(recruitingEvents.id, eventId));
+      if ((result as any).rowCount === 0) {
+        return res.status(404).json({ message: 'Event not found' });
+      }
       res.json({ success: true, featuredUntil });
     } catch (error) {
+      console.error('Feature listing error:', error);
       res.status(500).json({ message: 'Failed to feature listing' });
     }
   });
