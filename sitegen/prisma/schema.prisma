@@ -1,0 +1,63 @@
+// Swap provider to "postgresql" for production. SQLite is fine for dev + small scale.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Status values (string, since SQLite + Prisma don't support enums):
+//   NEW       — discovered but no mockup yet
+//   MOCKED    — AI mockup generated, preview page live
+//   CONTACTED — outreach email sent
+//   REPLIED   — manual: they replied to outreach
+//   PAID      — Stripe checkout completed
+//   DELIVERED — final site shipped
+//   REJECTED  — opted out / not a fit
+model Lead {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  placeId     String?  @unique
+  name        String
+  category    String?
+  address     String?
+  phone       String?
+  email       String?
+  website     String?
+  rating      Float?
+  reviewCount Int?
+  area        String
+
+  status        String   @default("NEW")
+  mockupSpec    String?
+  mockupHtml    String?
+  mockupModel   String?
+  generatedAt   DateTime?
+
+  stripeSessionId String? @unique
+  paidAt          DateTime?
+  amountCents     Int?
+
+  outreach     OutreachLog[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([status])
+  @@index([area])
+}
+
+model OutreachLog {
+  id        String   @id @default(cuid())
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  channel   String
+  toAddress String
+  subject   String?
+  status    String
+  error     String?
+  sentAt    DateTime @default(now())
+
+  @@index([leadId])
+}
