@@ -1,5 +1,6 @@
 import { prisma } from "../src/lib/db";
 import { searchPlaces, isUsableWebsite, slugify } from "../src/lib/places";
+import { findEmailForLead } from "../src/lib/enrich";
 
 async function main() {
   const args = process.argv.slice(2);
@@ -18,6 +19,7 @@ async function main() {
   console.log(`Got ${places.length} places from Google.`);
 
   let added = 0;
+  let enriched = 0;
   let skippedHasSite = 0;
   let skippedExists = 0;
 
@@ -31,6 +33,12 @@ async function main() {
       skippedExists++;
       continue;
     }
+    const enrich = await findEmailForLead({
+      businessName: p.name,
+      website: p.website,
+    }).catch(() => null);
+    if (enrich) enriched++;
+
     await prisma.lead.create({
       data: {
         slug: slugify(p.name, p.placeId),
@@ -40,16 +48,17 @@ async function main() {
         address: p.address,
         phone: p.phone,
         website: p.website,
+        email: enrich?.email ?? null,
         rating: p.rating,
         reviewCount: p.reviewCount,
         area,
       },
     });
     added++;
-    console.log(`  + ${p.name}`);
+    console.log(`  + ${p.name}${enrich ? ` (✉ ${enrich.email})` : ""}`);
   }
 
-  console.log(`\nDone. Added ${added} new leads.`);
+  console.log(`\nDone. Added ${added} new leads, ${enriched} with auto-found emails.`);
   console.log(`Skipped: ${skippedHasSite} already had websites, ${skippedExists} duplicates.`);
   await prisma.$disconnect();
 }

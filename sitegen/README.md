@@ -24,14 +24,23 @@ The "deliver" step is intentionally manual — you collect logo/photos/hours and
 
 ## What you need before starting
 
+**Required:**
+
 | Service | Why | Cost to start |
 |---|---|---|
 | Google Cloud — Places API (New) | Lead discovery | Free tier: ~$200/month credit |
 | Anthropic API | Mockup generation | Pay as you go (~$0.05 per mockup at Opus 4.7) |
 | Stripe account | Payments | Free; 2.9% + 30¢ per transaction |
 | Resend account | Sending email | Free up to 3k/month |
-| Domain (optional) | Hosting the marketing site | ~$12/year |
-| Vercel account (or any Node host) | Deploy | Free tier works |
+| Vercel account (or any Node host) | Marketing-site deploy | Free tier works |
+
+**Optional — fills in the manual gaps:**
+
+| Service | Why | Cost to start |
+|---|---|---|
+| Hunter.io | Auto-finds business emails at discovery time | Free 25/month, then $34/mo |
+| Twilio | SMS outreach (the realistic channel for SMBs w/o web presence) | $0.0079/SMS in the US |
+| Vercel token | Auto-deploys the AI mockup to a real URL after Stripe payment | Free tier covers ~hundreds of deploys |
 
 ## Local setup
 
@@ -59,17 +68,32 @@ You can drive it from the admin UI or the CLI. Both write to the same database.
 ### From the CLI (batched)
 ```sh
 # Find leads in an area (free-form: city, state, ZIP, neighborhood, etc.)
+# If HUNTER_API_KEY is set, each lead is auto-enriched with an email.
 npm run find-leads -- "plumber" "Cleveland, OH" 2
 
 # Generate mockups for up to 10 NEW leads
 npm run generate-mockups -- 10
 
-# Send outreach emails (only goes to leads with .email set; --dry-run first)
+# Send outreach. Default --channel=auto: email if address known, else SMS.
+# Pass --dry-run first to preview.
 npm run send-outreach -- 10 --dry-run
 npm run send-outreach -- 10
+npm run send-outreach -- 10 --channel=sms       # force SMS
+npm run send-outreach -- 10 --channel=email     # force email
 ```
 
-The outreach script only sends to leads that have an `email` set on them. Google Places doesn't return business emails — you'll need to fill those in via the admin UI per lead, or by importing from a separate enrichment source.
+**Channel notes.** Google Places returns business *phone* numbers but rarely emails. For SMBs without websites, SMS via Twilio is usually the only reliable outreach channel. Hunter.io can fill in emails when the business has any kind of web presence (even a directory listing), but expect a low hit rate on this segment.
+
+## Auto-deploy on payment (Vercel)
+
+When `VERCEL_TOKEN` is set, the Stripe webhook automatically publishes the customer's mockup to a fresh Vercel deployment as soon as payment clears. The customer gets the live URL in their intake email, so they see "your site is already up, here's what we still need to finalize it" — much better than "we'll be in touch."
+
+How to set up:
+1. Create a Vercel token at https://vercel.com/account/tokens (scope: full account or just the team you want deploys to land in).
+2. Add `VERCEL_TOKEN` to your env. Optionally `VERCEL_TEAM_ID` if deploying to a team.
+3. That's it — next paid lead gets auto-deployed. Failure is logged to the owner email but doesn't block the payment flow.
+
+The auto-deploy ships a static `index.html` rendered from the same mockup spec. It's *not* the final production site — you still build the real one when the customer sends their photos/logo via the intake email. The auto-deploy is a confidence signal, not a substitute for delivery.
 
 ## Stripe webhook setup
 

@@ -11,7 +11,7 @@ if (!key) {
 }
 
 export const stripe = new Stripe(key ?? "sk_test_placeholder", {
-  apiVersion: "2024-10-28.acacia",
+  apiVersion: "2025-02-24.acacia",
 });
 
 export const PRICE_USD_CENTS = Number(process.env.STRIPE_PRICE_USD_CENTS ?? 65000);

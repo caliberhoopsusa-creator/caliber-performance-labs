@@ -40,6 +40,9 @@ model Lead {
   paidAt          DateTime?
   amountCents     Int?
 
+  deployUrl   String?
+  deployedAt  DateTime?
+
   outreach     OutreachLog[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

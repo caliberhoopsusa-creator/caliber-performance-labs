@@ -53,6 +53,19 @@ export default async function LeadDetail({
               value={`${(lead.amountCents ?? 0) / 100} USD on ${lead.paidAt.toISOString().slice(0, 10)}`}
             />
           )}
+          {lead.deployUrl && (
+            <div className="flex justify-between gap-4 border-b border-neutral-900 pb-2 last:border-0 last:pb-0">
+              <span className="text-neutral-500">Auto-deployed</span>
+              <a
+                href={lead.deployUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-emerald-400 hover:underline text-right break-all"
+              >
+                {lead.deployUrl}
+              </a>
+            </div>
+          )}
         </div>
 
         <div className="space-y-3">
@@ -108,27 +121,56 @@ export default async function LeadDetail({
           {lead.mockupSpec &&
             lead.status !== LEAD_STATUS.PAID &&
             lead.status !== LEAD_STATUS.DELIVERED && (
-              <form
-                action={`/api/admin/send-outreach`}
-                method="POST"
-                className="border border-neutral-800 rounded p-4 grid gap-3"
-              >
-                <input type="hidden" name="leadId" value={lead.id} />
-                <div className="text-xs text-neutral-500">OUTREACH</div>
-                <input
-                  name="to"
-                  defaultValue={lead.email ?? ""}
-                  placeholder="customer@example.com"
-                  className="bg-neutral-900 border border-neutral-800 rounded px-3 py-2 text-sm"
-                  required
-                />
-                <button
-                  type="submit"
-                  className="bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 rounded text-sm"
+              <>
+                <form
+                  action={`/api/admin/send-outreach`}
+                  method="POST"
+                  className="border border-neutral-800 rounded p-4 grid gap-3"
                 >
-                  Send preview email
-                </button>
-              </form>
+                  <input type="hidden" name="leadId" value={lead.id} />
+                  <input type="hidden" name="channel" value="email" />
+                  <div className="text-xs text-neutral-500">EMAIL OUTREACH</div>
+                  <input
+                    name="to"
+                    defaultValue={lead.email ?? ""}
+                    placeholder="customer@example.com"
+                    type="email"
+                    className="bg-neutral-900 border border-neutral-800 rounded px-3 py-2 text-sm"
+                    required
+                  />
+                  <button
+                    type="submit"
+                    className="bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 rounded text-sm"
+                  >
+                    Send preview email
+                  </button>
+                </form>
+
+                {lead.phone && (
+                  <form
+                    action={`/api/admin/send-outreach`}
+                    method="POST"
+                    className="border border-neutral-800 rounded p-4 grid gap-3"
+                  >
+                    <input type="hidden" name="leadId" value={lead.id} />
+                    <input type="hidden" name="channel" value="sms" />
+                    <div className="text-xs text-neutral-500">SMS OUTREACH</div>
+                    <input
+                      name="to"
+                      defaultValue={lead.phone}
+                      placeholder="+15551234567"
+                      className="bg-neutral-900 border border-neutral-800 rounded px-3 py-2 text-sm"
+                      required
+                    />
+                    <button
+                      type="submit"
+                      className="bg-sky-600 hover:bg-sky-500 text-white px-3 py-1.5 rounded text-sm"
+                    >
+                      Send preview SMS
+                    </button>
+                  </form>
+                )}
+              </>
             )}
         </div>
       </section>
