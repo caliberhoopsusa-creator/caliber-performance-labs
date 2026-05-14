@@ -289,10 +289,10 @@ export default function Dashboard() {
                 setBannerDismissed(true);
                 sessionStorage.setItem("proBannerDismissed", "1");
               }}
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="Dismiss"
+              className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded cursor-pointer"
+              aria-label="Dismiss Pro banner"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -331,7 +331,7 @@ export default function Dashboard() {
                     <p className="font-bold text-accent">{currentStreak} days</p>
                   </div>
                   {currentStreak >= 3 && (
-                    <span className="text-xs font-bold text-yellow-400 bg-yellow-400/10 px-1.5 py-0.5 rounded ml-1">
+                    <span className="text-xs font-bold tabular-nums text-accent bg-accent/15 border border-accent/25 px-1.5 py-0.5 rounded ml-1">
                       {currentStreak >= 30 ? '2×' : currentStreak >= 14 ? '1.75×' : currentStreak >= 7 ? '1.5×' : '1.25×'} XP
                     </span>
                   )}
@@ -535,7 +535,7 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <h3 className="font-bold text-foreground text-sm">{currentTier}</h3>
-                    <p className="text-xs text-muted-foreground">{totalXp.toLocaleString()} XP</p>
+                    <p className="text-xs text-muted-foreground tabular-nums">{totalXp.toLocaleString()} XP</p>
                   </div>
                 </div>
                 {nextTier && (
@@ -544,7 +544,14 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="p-4">
-              <div className="w-full bg-muted rounded-full h-2">
+              <div
+                className="w-full bg-muted rounded-full h-2"
+                role="progressbar"
+                aria-valuenow={Math.round(tierProgress)}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={`Progress to ${nextTier ?? 'max tier'}: ${Math.round(tierProgress)}%`}
+              >
                 <div
                   className="bg-accent h-2 rounded-full transition-all duration-500"
                   style={{ width: `${tierProgress}%` }}
@@ -677,10 +684,10 @@ interface StatCardProps {
 
 function StatCard({ icon: Icon, label, value, href, testId }: StatCardProps) {
   const content = (
-    <Card 
+    <Card
       className={cn(
-        "transition-all duration-300",
-        href && "hover:scale-[1.02] cursor-pointer"
+        "spring-lift",
+        href && "cursor-pointer"
       )}
       data-testid={testId}
     >

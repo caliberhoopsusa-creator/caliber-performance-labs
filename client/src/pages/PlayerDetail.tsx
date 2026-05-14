@@ -2315,7 +2315,7 @@ export default function PlayerDetail() {
         transition={{ duration: 0.5 }}
       >
         <Card
-          className="relative overflow-hidden"
+          className="player-hero-card relative overflow-hidden"
           style={isOwnProfile && getProfileSkinStyle()?.background ? {
             background: getProfileSkinStyle()?.background,
             borderColor: getProfileSkinStyle()?.borderColor || undefined,
@@ -2324,10 +2324,10 @@ export default function PlayerDetail() {
           {isOwnProfile && getEffectConfig() && (
             <>
               {getEffectConfig()?.layers.map((layer, index) => (
-                <div 
+                <div
                   key={index}
                   className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none"
-                  style={{ 
+                  style={{
                     background: layer.gradient,
                     animation: layer.animation,
                     width: layer.size || '400px',
@@ -2340,19 +2340,22 @@ export default function PlayerDetail() {
             </>
           )}
 
+          {/* Distinctive ID-stripe — animated aurora gradient pinned to top edge */}
+          <div className="player-hero-stripe" aria-hidden="true" />
+
           <div className="relative h-32 md:h-40 overflow-hidden">
             {player.bannerUrl ? (
               <img src={player.bannerUrl} alt="" className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full from-accent/30 via-accent/10 to-accent/5" />
+              <div className="player-hero-banner w-full h-full" aria-hidden="true" />
             )}
-            <div className="absolute inset-0 from-black/50 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
           </div>
 
           <div className="relative z-10 px-6 md:px-8 pb-6 md:pb-8">
             <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-8">
-              <div className="relative group/avatar shrink-0 mx-auto md:mx-0 -mt-12 md:-mt-16">
-                <Avatar className="w-24 h-24 md:w-32 md:h-32 border-4 border-background">
+              <div className="relative group/avatar shrink-0 mx-auto md:mx-0 -mt-12 md:-mt-16 player-hero-avatar-ring">
+                <Avatar className="w-24 h-24 md:w-32 md:h-32 border-4 border-background relative z-10">
                   {player.photoUrl && <AvatarImage src={player.photoUrl} alt={player.name} width={128} height={128} loading="eager" />}
                   <AvatarFallback className="bg-muted text-3xl md:text-4xl font-display font-bold text-foreground">
                     {getInitials(player.name)}
@@ -2385,7 +2388,7 @@ export default function PlayerDetail() {
                 </div>
                 
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 md:gap-3 mb-3">
-                  <h1 className="text-4xl md:text-5xl font-display font-bold uppercase tracking-tight text-foreground">
+                  <h1 className="player-hero-name text-4xl md:text-5xl font-display font-bold uppercase tracking-tight">
                     {player.name}
                   </h1>
                   {player.username && (

@@ -54,7 +54,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
   }, [moreExpanded]);
 
   const { equippedTheme } = useEquippedItems();
-  const sidebarThemeColor = '#C6D0D8';
+  const sidebarThemeColor = 'hsl(var(--accent))';
   const currentSport = useSport();
   const isPlayer = userRole === 'player';
   const isCoach = userRole === 'coach';

@@ -136,10 +136,8 @@ export default function AnalyzeGame() {
                   <span className="text-xs uppercase tracking-wider text-accent font-semibold">Performance Analysis</span>
                 </div>
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold">
-                <span className="from-white via-accent to-accent">
-                  Game Analysis
-                </span>
+              <h1 className="text-3xl md:text-4xl font-bold text-foreground">
+                Game Analysis
               </h1>
               <p className="text-muted-foreground max-w-md">
                 Input your game stats to generate an AI-powered performance report card with personalized feedback.
@@ -346,13 +344,13 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach, 
         variants={sectionVariants}
         className="relative overflow-hidden rounded-2xl bg-card/80 border border-accent/20"
       >
-        <div className="absolute top-0 left-0 right-0 h-px from-transparent via-accent/50 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
         <div className="p-6">
           <h3 className="text-lg font-bold font-display mb-6 uppercase tracking-wider flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-accent/20 border border-accent/30 flex items-center justify-center">
               <span className="text-sm text-accent font-bold">1</span>
             </div>
-            <span className="from-white to-accent">Matchup Details</span>
+            <span className="text-foreground">Matchup Details</span>
           </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -437,13 +435,13 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach, 
         <>
           {quickLogMode ? (
             <motion.section variants={sectionVariants} className="relative overflow-hidden rounded-2xl bg-card/80 border border-accent/20">
-              <div className="absolute top-0 left-0 right-0 h-px from-transparent via-accent/50 to-transparent" />
+              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
               <div className="p-6">
                 <h3 className="text-lg font-bold font-display mb-6 uppercase tracking-wider flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-accent/20 border border-accent/30 flex items-center justify-center">
                     <span className="text-sm text-accent font-bold">2</span>
                   </div>
-                  <span className="from-white to-accent">Quick Stats</span>
+                  <span className="text-foreground">Quick Stats</span>
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <StepperInput label="Points" name="points" register={form.register} setValue={form.setValue} watch={form.watch} />
@@ -479,13 +477,13 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach, 
             variants={sectionVariants}
             className="relative overflow-hidden rounded-2xl bg-card/80 border border-accent/20"
           >
-            <div className="absolute top-0 left-0 right-0 h-px from-transparent via-accent/50 to-transparent" />
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
             <div className="p-6">
               <h3 className="text-lg font-bold font-display mb-6 uppercase tracking-wider flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-accent/20 border border-accent/30 flex items-center justify-center">
                   <span className="text-sm text-accent font-bold">2</span>
                 </div>
-                <span className="from-white to-accent">Box Score</span>
+                <span className="text-foreground">Box Score</span>
               </h3>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -521,13 +519,13 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach, 
             variants={sectionVariants}
             className="relative overflow-hidden rounded-2xl bg-card/80 border border-accent/20"
           >
-            <div className="absolute top-0 left-0 right-0 h-px from-transparent via-accent/50 to-transparent" />
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
             <div className="p-6">
               <h3 className="text-lg font-bold font-display mb-6 uppercase tracking-wider flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-accent/20 border border-accent/30 flex items-center justify-center">
                   <span className="text-sm text-accent font-bold">3</span>
                 </div>
-                <span className="from-white to-accent">Shooting Splits</span>
+                <span className="text-foreground">Shooting Splits</span>
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -623,13 +621,13 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach, 
         variants={sectionVariants}
         className="relative overflow-hidden rounded-2xl bg-card/80 border border-accent/20"
       >
-        <div className="absolute top-0 left-0 right-0 h-px from-transparent via-accent/50 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
         <div className="p-6">
           <h3 className="text-lg font-bold font-display mb-6 uppercase tracking-wider flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-accent/20 border border-accent/30 flex items-center justify-center">
               <span className="text-sm text-accent font-bold">4</span>
             </div>
-            <span className="from-white to-accent">Intangibles & Notes</span>
+            <span className="text-foreground">Intangibles & Notes</span>
           </h3>
 
           {sport === 'basketball' && (
@@ -759,48 +757,50 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach, 
   );
 }
 
-function StepperInput({ label, name, register, setValue, watch }: { label: string; name: string; register: any; setValue?: any; watch?: any }) {
-  const { onChange: _onChange, ...rest } = register(name, { valueAsNumber: true });
-  const currentValue = watch ? (watch(name) ?? 0) : undefined;
+function StepperInput({ label, name, setValue, watch }: { label: string; name: string; register?: any; setValue?: any; watch?: any }) {
+  const raw = watch?.(name);
+  const displayValue = raw === undefined || raw === null || (typeof raw === 'number' && isNaN(raw)) ? 0 : raw;
   return (
     <div className="space-y-1 w-full" data-testid={`stepper-${name}`}>
       <label className="text-[10px] md:text-xs uppercase font-bold text-muted-foreground tracking-wider block text-center">{label}</label>
       <Input
-        type="number"
+        type="text"
         inputMode="numeric"
-        min={0}
-        {...rest}
-        value={currentValue !== undefined ? currentValue : undefined}
+        pattern="[0-9]*"
+        name={name}
+        value={String(displayValue)}
         onChange={(e) => {
-          const raw = e.target.value;
-          const num = raw === '' ? 0 : parseInt(raw, 10);
-          if (setValue) setValue(name, isNaN(num) || num < 0 ? 0 : num, { shouldValidate: false });
+          const cleaned = e.target.value.replace(/[^0-9]/g, '');
+          const num = cleaned === '' ? 0 : parseInt(cleaned, 10);
+          if (setValue) setValue(name, num, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
         }}
-        className="bg-muted/50 border-border text-foreground text-center font-display font-bold focus:border-accent/50 h-12 md:h-10 text-xl transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        onFocus={(e) => e.target.select()}
+        className="bg-muted/50 border-border text-foreground text-center font-display font-bold focus:border-accent/50 h-12 md:h-10 text-xl transition-colors"
         data-testid={`input-${name}`}
       />
     </div>
   );
 }
 
-function NumberInput({ label, name, register, setValue, watch }: any) {
-  const { onChange: _onChange, ...rest } = register(name, { valueAsNumber: true });
-  const currentValue = watch ? (watch(name) ?? 0) : undefined;
+function NumberInput({ label, name, setValue, watch }: any) {
+  const raw = watch?.(name);
+  const displayValue = raw === undefined || raw === null || (typeof raw === 'number' && isNaN(raw)) ? 0 : raw;
   return (
     <div className="space-y-1 w-full">
       <label className="text-[10px] md:text-xs uppercase font-bold text-muted-foreground tracking-wider block text-center">{label}</label>
       <Input
-        type="number"
+        type="text"
         inputMode="numeric"
-        min={0}
-        {...rest}
-        value={currentValue !== undefined ? currentValue : undefined}
+        pattern="[0-9]*"
+        name={name}
+        value={String(displayValue)}
         onChange={(e) => {
-          const raw = e.target.value;
-          const num = raw === '' ? 0 : parseInt(raw, 10);
-          if (setValue) setValue(name, isNaN(num) || num < 0 ? 0 : num, { shouldValidate: false });
+          const cleaned = e.target.value.replace(/[^0-9]/g, '');
+          const num = cleaned === '' ? 0 : parseInt(cleaned, 10);
+          if (setValue) setValue(name, num, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
         }}
-        className="bg-muted/50 border-border text-foreground text-center font-mono focus:border-accent/50 h-12 md:h-10 text-base transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        onFocus={(e) => e.target.select()}
+        className="bg-muted/50 border-border text-foreground text-center font-mono focus:border-accent/50 h-12 md:h-10 text-base transition-colors"
         data-testid={`input-${name}`}
       />
     </div>
@@ -847,12 +847,12 @@ function ReportCardView({ game, onReset }: { game: any, onReset: () => void }) {
     >
       <div className="relative overflow-hidden rounded-3xl bg-card/80 border border-accent/20 shadow-2xl"
       >
-        <div className="absolute top-0 left-0 right-0 h-px from-transparent via-accent/50 to-transparent" />
-        <div className="from-accent/10 to-transparent p-8 text-center relative">
-          <div className="absolute top-0 left-0 w-full h-1 from-transparent via-accent to-transparent opacity-50" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
+        <div className="bg-gradient-to-b from-accent/10 to-transparent p-8 text-center relative">
+          <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-accent to-transparent opacity-50" />
           
           <p className="text-xs uppercase tracking-wider text-accent font-semibold mb-1">Game Report</p>
-          <h2 className="text-2xl font-bold font-display mb-1 from-white to-accent">
+          <h2 className="text-2xl font-bold font-display mb-1 text-foreground">
             {playerName}
           </h2>
           <p className="text-muted-foreground text-sm mb-4">vs. {game.opponent} · {new Date(game.date).toLocaleDateString()}</p>

@@ -61,7 +61,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
   }, [moreExpanded]);
 
   const { equippedTheme } = useEquippedItems();
-  const drawerThemeColor = '#4f6878';
+  // Logo uses --accent from CSS so it adapts to light/dark theme automatically.
   const currentSport = useSport();
   const isPlayer = userRole === 'player';
   const isCoach = userRole === 'coach';
@@ -262,7 +262,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
             <div className="relative z-[1] flex items-center gap-4 w-full">
               <div className="relative">
                 <div className="absolute inset-[-3px] rounded-xl bg-gradient-to-br from-accent/40 to-accent/20 blur-sm" />
-                <CaliberLogo size={50} color={drawerThemeColor} className="relative" />
+                <CaliberLogo size={50} className="relative" />
               </div>
               <div>
                 <h2 className="font-display font-bold text-foreground text-xl uppercase tracking-wider">Caliber</h2>

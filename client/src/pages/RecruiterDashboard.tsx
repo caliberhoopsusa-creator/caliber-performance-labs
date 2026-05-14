@@ -213,10 +213,11 @@ function NotesPanel({ playerId, playerName }: { playerId: number; playerName: st
                 <p className="text-muted-foreground leading-relaxed">{n.note}</p>
               </div>
               <button
-                className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity text-muted-foreground hover:text-destructive p-1 rounded cursor-pointer"
                 onClick={() => deleteMutation.mutate(n.id)}
+                aria-label="Delete note"
               >
-                <Trash2 className="w-3 h-3" />
+                <Trash2 className="w-3 h-3" aria-hidden="true" />
               </button>
             </div>
           ))}
@@ -370,9 +371,10 @@ function PlayerCard({
           variant={isBookmarked ? "default" : "outline"}
           onClick={() => (isBookmarked ? onRemoveBookmark(player.id) : onBookmark(player.id))}
           disabled={bookmarkPending}
+          aria-label={isBookmarked ? `Remove ${player.name} from bookmarks` : `Bookmark ${player.name}`}
           data-testid={`button-bookmark-${player.id}`}
         >
-          {isBookmarked ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
+          {isBookmarked ? <BookmarkCheck className="w-4 h-4" aria-hidden="true" /> : <Bookmark className="w-4 h-4" aria-hidden="true" />}
         </Button>
 
         <Select
@@ -393,8 +395,8 @@ function PlayerCard({
         </Select>
 
         <Link href={`/players/${player.id}`}>
-          <Button size="icon" variant="outline" data-testid={`button-view-profile-${player.id}`}>
-            <ExternalLink className="w-4 h-4" />
+          <Button size="icon" variant="outline" aria-label={`View ${player.name}'s full profile`} data-testid={`button-view-profile-${player.id}`}>
+            <ExternalLink className="w-4 h-4" aria-hidden="true" />
           </Button>
         </Link>
 
@@ -402,10 +404,11 @@ function PlayerCard({
           size="icon"
           variant={showNotes ? "default" : "outline"}
           onClick={() => setShowNotes(!showNotes)}
-          title="Recruiting notes"
+          aria-label={showNotes ? "Hide recruiting notes" : "Show recruiting notes"}
+          aria-expanded={showNotes}
           data-testid={`button-notes-${player.id}`}
         >
-          {showNotes ? <ChevronUp className="w-4 h-4" /> : <ClipboardList className="w-4 h-4" />}
+          {showNotes ? <ChevronUp className="w-4 h-4" aria-hidden="true" /> : <ClipboardList className="w-4 h-4" aria-hidden="true" />}
         </Button>
       </div>
 
@@ -436,14 +439,14 @@ function SearchPlayersTab({
   const [gradYearFilter, setGradYearFilter] = useState("");
   const [openOnlyFilter, setOpenOnlyFilter] = useState(false);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
-  const [minGradeFilter, setMinGradeFilter] = useState("");
+  const [minGradeFilter, setMinGradeFilter] = useState("any");
 
   const queryParams = new URLSearchParams();
   if (positionFilter) queryParams.set("position", positionFilter);
   if (stateFilter) queryParams.set("state", stateFilter);
   if (gradYearFilter) queryParams.set("graduationYear", gradYearFilter);
   if (openOnlyFilter) queryParams.set("openToRecruiting", "true");
-  if (minGradeFilter) queryParams.set("minGrade", minGradeFilter);
+  if (minGradeFilter && minGradeFilter !== "any") queryParams.set("minGrade", minGradeFilter);
 
   const queryString = queryParams.toString();
 
@@ -459,7 +462,7 @@ function SearchPlayersTab({
     },
   });
 
-  const hasFilters = positionFilter || stateFilter || gradYearFilter || openOnlyFilter || verifiedOnly || minGradeFilter;
+  const hasFilters = positionFilter || stateFilter || gradYearFilter || openOnlyFilter || verifiedOnly || (minGradeFilter && minGradeFilter !== "any");
 
   const displayedPlayers = verifiedOnly
     ? (players || []).filter((p: any) => p.verifiedAthlete)
@@ -471,7 +474,7 @@ function SearchPlayersTab({
     setGradYearFilter("");
     setOpenOnlyFilter(false);
     setVerifiedOnly(false);
-    setMinGradeFilter("");
+    setMinGradeFilter("any");
   };
 
   return (
@@ -525,7 +528,7 @@ function SearchPlayersTab({
                 <SelectValue placeholder="Any Grade" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any Grade</SelectItem>
+                <SelectItem value="any">Any Grade</SelectItem>
                 <SelectItem value="A+">A+ only</SelectItem>
                 <SelectItem value="A">A or better</SelectItem>
                 <SelectItem value="A-">A− or better</SelectItem>
@@ -551,8 +554,8 @@ function SearchPlayersTab({
             data-testid="button-filter-verified"
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
               verifiedOnly
-                ? 'bg-blue-500/20 border-blue-500/50 text-blue-400'
-                : 'bg-gray-700/50 border-gray-600 text-gray-400 hover:text-gray-200'
+                ? 'bg-accent/20 border-accent/40 text-accent'
+                : 'bg-muted/50 border-border text-muted-foreground hover:text-foreground hover:border-accent/30'
             }`}
           >
             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -598,8 +601,10 @@ function SearchPlayersTab({
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-16 text-center" data-testid="empty-search">
-          <Search className="w-12 h-12 text-muted-foreground/50 mb-4" />
+        <div className="flex flex-col items-center justify-center py-16 text-center rounded-xl border border-border bg-card/50" data-testid="empty-search">
+          <div className="p-4 rounded-full bg-accent/10 border border-accent/20 mb-4">
+            <Search className="w-8 h-8 text-accent/60" aria-hidden="true" />
+          </div>
           <h3 className="font-display text-lg font-bold mb-1">No Players Found</h3>
           <p className="text-sm text-muted-foreground max-w-sm">
             {hasFilters
@@ -643,8 +648,10 @@ function BookmarksTab({
 
   if (!bookmarks || bookmarks.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center" data-testid="empty-bookmarks">
-        <Bookmark className="w-12 h-12 text-muted-foreground/50 mb-4" />
+      <div className="flex flex-col items-center justify-center py-16 text-center rounded-xl border border-border bg-card/50" data-testid="empty-bookmarks">
+        <div className="p-4 rounded-full bg-accent/10 border border-accent/20 mb-4">
+          <Bookmark className="w-8 h-8 text-accent/60" aria-hidden="true" />
+        </div>
         <h3 className="font-display text-lg font-bold mb-1">No Bookmarks Yet</h3>
         <p className="text-sm text-muted-foreground max-w-sm">
           Bookmark players from the Search tab to keep track of prospects you are interested in.

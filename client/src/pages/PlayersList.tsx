@@ -82,29 +82,29 @@ function getPlayerTier(player: any): "elite" | "pro" | "rising" | "rookie" {
 const TIER_STYLES = {
   elite: {
     border: "border-yellow-500/40 hover:border-yellow-400/60",
-    glow: "0 0 30px rgba(234, 179, 8, 0.3)",
-    badge: "from-yellow-600 text-black",
+    glow: "0 0 30px hsl(45 93% 47% / 0.28)",
+    badge: "bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30",
     icon: Crown,
     label: "Elite",
   },
   pro: {
-    border: "border-purple-500/40 hover:border-purple-400/60",
-    glow: "0 0 25px rgba(168, 85, 247, 0.25)",
-    badge: "from-purple-600 text-white",
+    border: "border-accent/40 hover:border-accent/60",
+    glow: "0 0 25px hsl(var(--accent) / 0.2)",
+    badge: "bg-accent/15 text-accent border-accent/30",
     icon: Star,
     label: "Pro",
   },
   rising: {
-    border: "border-accent/40 hover:border-accent/60",
-    glow: "0 0 20px rgba(224,36,36,0.2)",
-    badge: "bg-accent text-white",
+    border: "border-accent/30 hover:border-accent/50",
+    glow: "0 0 20px hsl(var(--cta) / 0.15)",
+    badge: "bg-cta/10 text-[hsl(var(--cta))] border-[hsl(var(--cta))]/30",
     icon: Zap,
     label: "Rising",
   },
   rookie: {
     border: "border-border hover:border-accent/30",
     glow: "none",
-    badge: "bg-muted text-muted-foreground",
+    badge: "bg-muted text-muted-foreground border-border",
     icon: UserPlus,
     label: "Rookie",
   },
@@ -202,10 +202,9 @@ export default function PlayersList() {
 
   return (
     <div className="pb-24 md:pb-6 space-y-8">
-      <div className="relative overflow-hidden rounded-2xl from-muted/80 via-card to-muted/80 dark:from-black/60 dark:via-card dark:to-black/60 border border-accent/20">
-        <div className="absolute inset-0 opacity-30" />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-accent/10 blur-[100px] rounded-full" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 blur-[80px] rounded-full" />
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-muted/80 via-card to-muted/80 dark:from-black/60 dark:via-card dark:to-black/60 border border-accent/20">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-accent/10 blur-[100px] rounded-full pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent/[0.06] blur-[80px] rounded-full pointer-events-none" />
         
         <div className="relative z-10 p-6 md:p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -216,10 +215,8 @@ export default function PlayersList() {
                   {hasTeam ? primaryTeam?.name : "Team Management"}
                 </span>
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold">
-                <span className="from-white via-accent to-accent">
-                  Player Roster
-                </span>
+              <h1 className="text-3xl md:text-4xl font-bold text-foreground">
+                Player Roster
               </h1>
               <p className="text-muted-foreground max-w-md">
                 {hasTeam ? "Manage your team roster and track player performance" : "Search and manage players across all teams"}
@@ -230,9 +227,9 @@ export default function PlayersList() {
               <div className="flex items-center gap-3">
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button 
-                      className="gap-2 from-accent text-white shadow-lg"
-                      style={{ boxShadow: "0 4px 20px rgba(224,36,36,0.3)" }}
+                    <Button
+                      className="gap-2 text-white shadow-lg"
+                      style={{ boxShadow: "0 4px 20px hsl(var(--cta) / 0.3)" }}
                       data-testid="button-add-player"
                     >
                       <Plus className="w-4 h-4" />
@@ -362,7 +359,7 @@ export default function PlayersList() {
 
       {hasTeam ? (
         <Tabs defaultValue="roster" className="w-full">
-          <TabsList className="w-full grid grid-cols-2 mb-6 bg-black/40 border border-border p-1 rounded-xl" data-testid="tabs-roster">
+          <TabsList className="w-full grid grid-cols-2 mb-6 bg-muted/60 border border-border p-1 rounded-xl" data-testid="tabs-roster">
             <TabsTrigger 
               value="roster" 
               className="gap-2 data-[state=active]:data-[state=active]:from-accent/20 data-[state=active]:to-accent/10 data-[state=active]:border-accent/30 data-[state=active]:text-accent rounded-lg transition-all" 
@@ -630,8 +627,8 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
                   tierStyle.border,
                   "hover:scale-[1.02]"
                 )}
-                style={{ 
-                  boxShadow: tier !== "rookie" ? tierStyle.glow : "0 4px 30px rgba(0,0,0,0.3)"
+                style={{
+                  boxShadow: tier !== "rookie" ? tierStyle.glow : undefined
                 }}
               >
                 <div className="absolute inset-x-[20%] top-0 h-px from-transparent via-accent/40 to-transparent" />
@@ -712,14 +709,14 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
                           "w-16 h-16 rounded-full flex items-center justify-center text-2xl font-display font-bold",
                           "from-accent/20 to-accent/10 border-2",
                           tier === "elite" ? "border-yellow-400/40 text-yellow-700 dark:text-yellow-300" :
-                          tier === "pro" ? "border-purple-400/40 text-purple-700 dark:text-purple-300" :
-                          tier === "rising" ? "border-accent/40 text-accent" :
+                          tier === "pro" ? "border-accent/40 text-accent" :
+                          tier === "rising" ? "border-accent/30 text-accent" :
                           "border-border text-muted-foreground"
                         )}
-                        style={tier !== "rookie" ? { 
-                          boxShadow: tier === "elite" ? "0 0 25px rgba(234, 179, 8, 0.3)" :
-                                    tier === "pro" ? "0 0 20px rgba(168, 85, 247, 0.25)" :
-                                    "0 0 15px rgba(224,36,36,0.2)"
+                        style={tier !== "rookie" ? {
+                          boxShadow: tier === "elite" ? "0 0 25px hsl(45 93% 47% / 0.28)" :
+                                    tier === "pro" ? "0 0 20px hsl(var(--accent) / 0.22)" :
+                                    "0 0 15px hsl(var(--cta) / 0.18)"
                         } : {}}
                         whileHover={{ scale: 1.05 }}
                         transition={{ type: "spring", stiffness: 300 }}
@@ -894,10 +891,10 @@ function CreatePlayerForm({ onSuccess }: { onSuccess: () => void }) {
       
       <DialogFooter className="pt-4">
         <Button 
-          type="submit" 
+          type="submit"
           disabled={isPending}
-          className="w-full gap-2 bg-accent"
-          style={{ boxShadow: "0 4px 20px rgba(224,36,36,0.3)" }}
+          className="w-full gap-2"
+          style={{ boxShadow: "0 4px 20px hsl(var(--cta) / 0.3)" }}
           data-testid="button-submit-player"
         >
           {isPending ? (

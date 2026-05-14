@@ -7,9 +7,9 @@ export function DarkModeToggle() {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("caliber-theme");
       if (stored) return stored === "dark";
-      return true;
+      return false;
     }
-    return true;
+    return false;
   });
 
   useEffect(() => {

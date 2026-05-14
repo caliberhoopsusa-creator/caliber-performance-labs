@@ -21,6 +21,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useOffline } from "@/hooks/use-offline";
 import { useToast } from "@/hooks/use-toast";
 import { CaliberLogo } from "@/components/CaliberLogo";
+import { AuroraDefs } from "@/components/AuroraDefs";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { StatsTicker } from "@/components/StatsTicker";
 import { Loader2, ChevronLeft, Coins, Package, Mail } from "lucide-react";
@@ -458,15 +459,16 @@ function MainRouter() {
 function App() {
   useEffect(() => {
     const stored = localStorage.getItem("caliber-theme");
-    if (stored === "light") {
-      document.documentElement.classList.remove("dark");
-    } else {
+    if (stored === "dark") {
       document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
     }
   }, []);
 
   return (
     <ErrorBoundary>
+      <AuroraDefs />
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <ThemeProvider>

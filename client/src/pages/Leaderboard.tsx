@@ -148,21 +148,18 @@ export default function Leaderboard() {
   return (
     <div className="space-y-6 pb-24 md:pb-8">
       <div className="relative overflow-hidden rounded-2xl bg-card/80 border border-yellow-500/20">
-        <div className="absolute inset-0 opacity-20" />
-        <div className="absolute top-0 right-0 w-80 h-80 bg-yellow-500/10 blur-[100px] rounded-full" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-accent/10 blur-[60px] rounded-full" />
+        <div className="absolute top-0 right-0 w-80 h-80 bg-yellow-500/10 blur-[100px] rounded-full pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-accent/10 blur-[60px] rounded-full pointer-events-none" />
         
         <div className="relative z-10 p-6 md:p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-yellow-600 dark:text-yellow-400" style={{ filter: "drop-shadow(0 0 8px #c8d4de)" }} />
+                <Trophy className="w-5 h-5 text-yellow-600 dark:text-yellow-400" style={{ filter: "drop-shadow(0 0 8px hsl(var(--accent) / 0.6))" }} />
                 <span className="text-xs uppercase tracking-wider text-yellow-600 dark:text-yellow-400 font-semibold">Rankings</span>
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold" data-testid="text-leaderboard-title">
-                <span className="from-white">
-                  Player Leaderboard
-                </span>
+              <h1 className="text-3xl md:text-4xl font-bold text-foreground" data-testid="text-leaderboard-title">
+                Player Leaderboard
               </h1>
               <p className="text-muted-foreground">
                 Top performers ranked by average game grade
@@ -283,9 +280,9 @@ export default function Leaderboard() {
                       <button
                         onClick={(e) => sharePlayer(entry.playerId, entry.name, e)}
                         className="p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-opacity"
-                        title="Copy profile link"
+                        aria-label={`Copy ${entry.name}'s profile link`}
                       >
-                        <Share2 className="w-4 h-4 text-muted-foreground" />
+                        <Share2 className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
                       </button>
                       <Icon className={cn("w-8 h-8", rankStyle?.iconColor)} style={{ filter: `drop-shadow(0 0 10px currentColor)` }} />
                     </div>
@@ -321,7 +318,7 @@ export default function Leaderboard() {
                         <GradeBadge grade={entry.avgGrade} size="lg" />
                         <div className="text-right">
                           <p className="text-xs text-muted-foreground">Games</p>
-                          <p className="font-bold text-lg">{entry.gamesPlayed}</p>
+                          <p className="font-bold text-lg tabular-nums">{entry.gamesPlayed}</p>
                         </div>
                       </div>
                     </CardContent>
@@ -339,18 +336,18 @@ export default function Leaderboard() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[700px]">
             <thead>
-              <tr className="from-accent/5 to-transparent border-b border-border/50">
-                <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">Rank</th>
-                <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">Player</th>
-                <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">Grade</th>
+              <tr className="bg-accent/[0.03] border-b border-border/50">
+                <th scope="col" className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Rank</th>
+                <th scope="col" className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Player</th>
+                <th scope="col" className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Grade</th>
                 <>
-                    <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">PPG</th>
-                    <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">RPG</th>
-                    <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">APG</th>
-                    <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">FG%</th>
+                    <th scope="col" className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">PPG</th>
+                    <th scope="col" className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">RPG</th>
+                    <th scope="col" className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">APG</th>
+                    <th scope="col" className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">FG%</th>
                   </>
-                <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60">Games</th>
-                <th className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-accent/60"></th>
+                <th scope="col" className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Games</th>
+                <th scope="col" className="px-4 md:px-6 py-4 sr-only">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/50">
@@ -382,12 +379,12 @@ export default function Leaderboard() {
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.03 }}
-                        className="transition-all duration-300 hover:hover:from-accent/5 hover:to-transparent group"
+                        className="transition-all duration-300 hover:bg-accent/[0.04] group"
                         data-testid={`row-leaderboard-${rank}`}
                       >
                         <td className="px-4 md:px-6 py-4">
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-lg text-accent/50">#{rank}</span>
+                            <span className="font-bold text-base tabular-nums text-foreground/50">#{rank}</span>
                           </div>
                         </td>
                         <td className="px-4 md:px-6 py-4">
@@ -411,19 +408,19 @@ export default function Leaderboard() {
                           <GradeBadge grade={entry.avgGrade} size="sm" />
                         </td>
                         <>
-                            <td className="px-4 md:px-6 py-4 font-mono font-bold text-foreground">{entry.avgPoints ?? 0}</td>
-                            <td className="px-4 md:px-6 py-4 font-mono text-accent/70">{entry.avgRebounds ?? 0}</td>
-                            <td className="px-4 md:px-6 py-4 font-mono text-accent/70">{entry.avgAssists ?? 0}</td>
-                            <td className="px-4 md:px-6 py-4 font-mono text-accent/70">{entry.fgPct ?? 0}%</td>
+                            <td className="px-4 md:px-6 py-4 font-mono font-bold tabular-nums text-foreground">{entry.avgPoints ?? 0}</td>
+                            <td className="px-4 md:px-6 py-4 font-mono tabular-nums text-foreground/70">{entry.avgRebounds ?? 0}</td>
+                            <td className="px-4 md:px-6 py-4 font-mono tabular-nums text-foreground/70">{entry.avgAssists ?? 0}</td>
+                            <td className="px-4 md:px-6 py-4 font-mono tabular-nums text-foreground/70">{entry.fgPct ?? 0}%</td>
                           </>
-                        <td className="px-4 md:px-6 py-4 text-accent/50">{entry.gamesPlayed}</td>
+                        <td className="px-4 md:px-6 py-4 tabular-nums text-foreground/50">{entry.gamesPlayed}</td>
                         <td className="px-4 md:px-6 py-4">
                           <button
                             onClick={(e) => sharePlayer(entry.playerId, entry.name, e)}
                             className="p-1.5 rounded-md opacity-0 group-hover:opacity-100 hover:bg-accent/10 transition-opacity"
-                            title="Copy profile link"
+                            aria-label={`Copy ${entry.name}'s profile link`}
                           >
-                            <Share2 className="w-4 h-4 text-muted-foreground" />
+                            <Share2 className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
                           </button>
                         </td>
                       </motion.tr>

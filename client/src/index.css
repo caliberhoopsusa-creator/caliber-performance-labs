@@ -5,36 +5,38 @@
 @tailwind utilities;
 
 :root {
-  --font-display: 'Outfit', sans-serif;
-  --font-body: 'Inter', sans-serif;
-  --font-sans: 'Inter', sans-serif;
+  --font-display: 'Geist', 'Outfit', sans-serif;
+  --font-body: 'Geist', 'Inter', sans-serif;
+  --font-sans: 'Geist', 'Inter', sans-serif;
+  --font-editorial: 'Instrument Serif', serif;
+  --font-mono: 'JetBrains Mono', monospace;
 
-  --background: 0 0% 100%;
-  --foreground: 220 14% 10%;
+  --background: 220 30% 99%;
+  --foreground: 222 24% 8%;
 
-  --card: 220 10% 97%;
-  --card-foreground: 220 14% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 24% 8%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 220 14% 10%;
+  --popover-foreground: 222 24% 8%;
 
-  --primary: 220 14% 10%;
+  --primary: 222 24% 8%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 220 10% 93%;
-  --secondary-foreground: 220 14% 20%;
+  --secondary: 220 20% 96%;
+  --secondary-foreground: 222 18% 18%;
 
-  --muted: 220 10% 93%;
-  --muted-foreground: 220 8% 46%;
+  --muted: 220 20% 96%;
+  --muted-foreground: 220 10% 40%;
 
-  --border: 220 10% 90%;
-  --input: 220 10% 90%;
+  --border: 217 22% 88%;
+  --input: 217 22% 88%;
 
-  --ring: 220 14% 10%;
+  --ring: 211 100% 50%;
 
-  --sidebar-background: 220 10% 97%;
-  --sidebar-foreground: 220 14% 10%;
-  --sidebar-border: 220 10% 90%;
+  --sidebar-background: 220 24% 98%;
+  --sidebar-foreground: 222 24% 8%;
+  --sidebar-border: 220 16% 90%;
 
   --grade-a: 142 71% 45%;
   --grade-b: 142 71% 45%;
@@ -45,19 +47,37 @@
   --gold: 210 22% 72%;
   --platinum: 210 22% 72%;
 
-  --accent: 210 21% 39%;
-  --accent-foreground: 0 0% 100%;
-  --accent-border: 210 21% 29%;
-  --accent-hover: 210 21% 47%;
+  /* Refined accent family — single-hue blue→indigo. Used sparingly for primary
+     actions, gradient text, and ambient atmosphere. Reads as futuristic without
+     resorting to rainbow. */
+  --aurora-1: 211 100% 50%;   /* Apple system blue */
+  --aurora-2: 222 92% 55%;    /* deeper blue */
+  --aurora-3: 232 84% 60%;    /* indigo */
+  --aurora-soft-1: 211 100% 96%;
+  --aurora-soft-2: 222 100% 96%;
+  --aurora-soft-3: 232 100% 96%;
 
-  --cta: 0 76% 45%;
+  --accent: 211 100% 50%;
+  --accent-foreground: 0 0% 100%;
+  --accent-border: 211 100% 44%;
+  --accent-hover: 211 100% 56%;
+
+  --cta: 0 76% 50%;
   --cta-foreground: 0 0% 100%;
 
-  --sidebar-accent: 210 21% 39%;
+  --sidebar-accent: 211 100% 50%;
   --sidebar-accent-foreground: 0 0% 100%;
-  --sidebar-accent-border: 210 21% 29%;
+  --sidebar-accent-border: 211 100% 44%;
 
-  --radius: 0.5rem;
+  --radius: 0.875rem;
+
+  /* Premium shadow stack — soft, layered, Apple-grade */
+  --shadow-xs: 0 1px 2px hsl(222 24% 8% / 0.04);
+  --shadow-sm: 0 2px 4px hsl(222 24% 8% / 0.04), 0 1px 2px hsl(222 24% 8% / 0.03);
+  --shadow-md: 0 4px 12px hsl(222 24% 8% / 0.06), 0 2px 4px hsl(222 24% 8% / 0.04);
+  --shadow-lg: 0 12px 32px hsl(222 24% 8% / 0.08), 0 4px 8px hsl(222 24% 8% / 0.04);
+  --shadow-xl: 0 24px 48px hsl(222 24% 8% / 0.10), 0 8px 16px hsl(222 24% 8% / 0.06);
+  --shadow-aurora: 0 8px 24px hsl(222 24% 8% / 0.08), 0 2px 6px hsl(222 24% 8% / 0.04);
 }
 
 .dark {
@@ -133,9 +153,251 @@
     outline: 2px solid hsl(var(--accent));
     outline-offset: 2px;
   }
+
+  /* Light-mode card lift — applies to every shadcn Card (.bg-card + border).
+     Refined cool-blue hairline + layered soft shadow makes plain white cards
+     read as elevated surfaces instead of empty rectangles. */
+  html:not(.dark) [class*="bg-card"][class*="border"],
+  html:not(.dark) .rounded-xl[class*="border"]:not([class*="border-0"]),
+  html:not(.dark) .rounded-lg[class*="border"]:not([class*="border-0"]) {
+    box-shadow:
+      0 1px 0 hsl(217 22% 92% / 0.8) inset,
+      0 1px 2px hsl(217 30% 50% / 0.04),
+      0 4px 16px hsl(217 30% 50% / 0.06),
+      0 12px 32px hsl(217 30% 50% / 0.04);
+    border-color: hsl(217 22% 88%);
+  }
 }
 
 @layer utilities {
+  /* ═══════════════════════════════════════════════════════════════
+     AURORA SYSTEM — Apple-grade futuristic light mode
+     ═══════════════════════════════════════════════════════════════ */
+
+  /* Slow-drifting mesh gradient background. Apply to body or any
+     full-bleed wrapper. Pure CSS, no JS, GPU-accelerated. */
+  .aurora-bg {
+    position: relative;
+    isolation: isolate;
+  }
+  .aurora-bg::before {
+    content: "";
+    position: fixed;
+    inset: -20%;
+    z-index: -1;
+    background:
+      radial-gradient(40% 50% at 20% 30%, hsl(var(--aurora-soft-1) / 0.55), transparent 60%),
+      radial-gradient(45% 55% at 80% 20%, hsl(var(--aurora-soft-3) / 0.45), transparent 65%),
+      radial-gradient(50% 60% at 60% 80%, hsl(var(--aurora-soft-2) / 0.50), transparent 70%),
+      radial-gradient(35% 40% at 10% 90%, hsl(var(--aurora-soft-1) / 0.40), transparent 60%);
+    filter: blur(40px) saturate(120%);
+    animation: aurora-drift 28s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+  .aurora-bg::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0.05 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    opacity: 0.4;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  @keyframes aurora-drift {
+    0%   { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+    33%  { transform: translate3d(-3%, 2%, 0) rotate(8deg) scale(1.05); }
+    66%  { transform: translate3d(2%, -3%, 0) rotate(-6deg) scale(0.98); }
+    100% { transform: translate3d(0, 4%, 0) rotate(4deg) scale(1.02); }
+  }
+
+  /* Animated gradient — for text, borders, fills */
+  .gradient-aurora {
+    background: linear-gradient(
+      120deg,
+      hsl(var(--aurora-1)) 0%,
+      hsl(var(--aurora-2)) 50%,
+      hsl(var(--aurora-3)) 100%
+    );
+    background-size: 200% 200%;
+    animation: gradient-shift 8s ease-in-out infinite;
+  }
+  @keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
+  }
+
+  .gradient-text {
+    background: linear-gradient(
+      120deg,
+      hsl(var(--aurora-1)) 0%,
+      hsl(var(--aurora-2)) 50%,
+      hsl(var(--aurora-3)) 100%
+    );
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: gradient-shift 8s ease-in-out infinite;
+  }
+
+  /* Gradient stroke for SVG icons. Wrap any lucide icon in a parent
+     with .gradient-icon and the icon strokes will animate. */
+  .gradient-icon {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .gradient-icon > svg {
+    stroke: url(#aurora-gradient);
+  }
+  /* Fallback for icons rendered outside an SVG defs context */
+  .gradient-icon-css > svg {
+    color: transparent;
+    background: linear-gradient(120deg, hsl(var(--aurora-1)), hsl(var(--aurora-2)) 50%, hsl(var(--aurora-3)));
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: gradient-shift 8s ease-in-out infinite;
+  }
+
+  /* Frosted glass surfaces — Apple-style translucency */
+  .glass {
+    background: hsl(0 0% 100% / 0.65);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border: 1px solid hsl(0 0% 100% / 0.6);
+    box-shadow: var(--shadow-md);
+  }
+  .glass-strong {
+    background: hsl(0 0% 100% / 0.85);
+    backdrop-filter: saturate(180%) blur(24px);
+    -webkit-backdrop-filter: saturate(180%) blur(24px);
+    border: 1px solid hsl(220 16% 92% / 0.8);
+    box-shadow: var(--shadow-lg);
+  }
+  .glass-subtle {
+    background: hsl(0 0% 100% / 0.5);
+    backdrop-filter: saturate(160%) blur(12px);
+    -webkit-backdrop-filter: saturate(160%) blur(12px);
+    border: 1px solid hsl(220 16% 94% / 0.6);
+  }
+
+  /* Aurora-bordered cards (animated gradient ring) */
+  .ring-aurora {
+    position: relative;
+    background: hsl(var(--card));
+    border-radius: var(--radius);
+  }
+  .ring-aurora::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(120deg, hsl(var(--aurora-1)), hsl(var(--aurora-2)) 50%, hsl(var(--aurora-3)));
+    background-size: 200% 200%;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    animation: gradient-shift 8s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  /* Premium shadow utilities */
+  .shadow-xs-soft { box-shadow: var(--shadow-xs); }
+  .shadow-sm-soft { box-shadow: var(--shadow-sm); }
+  .shadow-md-soft { box-shadow: var(--shadow-md); }
+  .shadow-lg-soft { box-shadow: var(--shadow-lg); }
+  .shadow-xl-soft { box-shadow: var(--shadow-xl); }
+  .shadow-aurora-soft { box-shadow: var(--shadow-aurora); }
+
+  /* Spring-physics hover lift */
+  .spring-lift {
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .spring-lift:hover {
+    transform: translateY(-3px) scale(1.01);
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* Aurora pulse — for icons / badges that need a heartbeat */
+  .pulse-aurora {
+    animation: pulse-aurora 3s ease-in-out infinite;
+  }
+  @keyframes pulse-aurora {
+    0%, 100% { box-shadow: 0 0 0 0 hsl(var(--aurora-1) / 0.4); }
+    50%      { box-shadow: 0 0 0 12px hsl(var(--aurora-1) / 0); }
+  }
+
+  /* Futuristic refined atmosphere — visible grid + accent halos + soft vignette.
+     Strong enough to read as engineered/architectural at a glance, restrained
+     enough to never compete with content. */
+  body {
+    background-color: hsl(var(--background));
+    background-image:
+      radial-gradient(ellipse 70% 55% at 100% 0%, hsl(211 100% 50% / 0.12), transparent 60%),
+      radial-gradient(ellipse 60% 45% at 0% 100%, hsl(232 84% 60% / 0.08), transparent 65%),
+      linear-gradient(to right, hsl(217 30% 75% / 0.18) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(217 30% 75% / 0.18) 1px, transparent 1px);
+    background-size: auto, auto, 48px 48px, 48px 48px;
+    background-position: 0 0, 0 0, 0 0, 0 0;
+    background-attachment: fixed;
+  }
+  /* Top-edge soft white wash so headers/nav read cleanly against the grid */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+    background:
+      radial-gradient(ellipse 90% 50% at 50% -20%, hsl(0 0% 100% / 0.55), transparent 60%),
+      radial-gradient(ellipse 100% 40% at 50% 110%, hsl(0 0% 100% / 0.4), transparent 60%);
+  }
+  /* Faint scan-line accent — runs across the very top, signals "live system" */
+  body::after {
+    content: "";
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 1px;
+    pointer-events: none;
+    z-index: 100;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      hsl(211 100% 50% / 0.45) 30%,
+      hsl(232 84% 60% / 0.55) 50%,
+      hsl(211 100% 50% / 0.45) 70%,
+      transparent 100%);
+  }
+  .dark body {
+    background-color: hsl(var(--background));
+    background-image: none;
+  }
+  .dark body::before,
+  .dark body::after {
+    display: none;
+  }
+
+  /* Respect reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    .aurora-bg::before,
+    .gradient-aurora,
+    .gradient-text,
+    .gradient-icon-css > svg,
+    .ring-aurora::before,
+    .pulse-aurora {
+      animation: none !important;
+    }
+  }
+
   .text-readable { font-size: clamp(16px, 16px, 100%); }
   .text-readable-lg { font-size: clamp(18px, 18px, 100%); }
 
@@ -1385,6 +1647,216 @@ html.theme-active .nav-active {
   background: rgba(198, 208, 216, 0.08);
   border-color: rgba(198, 208, 216, 0.4);
   color: #d4e0ea;
+}
+
+/* ── Player hero card — distinctive identity treatment ──────────────
+   Used on the main player profile page (.player-hero-card). The most-
+   visited surface in the app, so it gets a real signature: animated
+   aurora stripe pinned to the top edge, a futuristic mesh-gradient
+   banner with subtle grid scan, an aurora ring around the avatar, and
+   a gradient-text treatment on the player's name. */
+@layer components {
+  .player-hero-card {
+    position: relative;
+    border-radius: 1.25rem;
+    background: linear-gradient(180deg,
+      hsl(0 0% 100%) 0%,
+      hsl(211 100% 99%) 100%);
+    box-shadow:
+      0 1px 0 hsl(0 0% 100%) inset,
+      0 2px 4px hsl(217 30% 50% / 0.04),
+      0 12px 32px hsl(217 30% 50% / 0.08),
+      0 32px 64px hsl(211 100% 50% / 0.06);
+    border: 1px solid hsl(217 22% 88%);
+  }
+  .dark .player-hero-card {
+    background: linear-gradient(180deg,
+      hsl(var(--card)) 0%,
+      hsl(0 0% 5%) 100%);
+    box-shadow:
+      0 1px 0 hsl(0 0% 100% / 0.04) inset,
+      0 12px 32px rgba(0,0,0,0.5);
+  }
+
+  .player-hero-stripe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    border-radius: 1.25rem 1.25rem 0 0;
+    background: linear-gradient(90deg,
+      hsl(211 100% 50%) 0%,
+      hsl(222 92% 55%) 35%,
+      hsl(232 84% 60%) 65%,
+      hsl(211 100% 50%) 100%);
+    background-size: 200% 100%;
+    animation: hero-stripe-flow 8s linear infinite;
+    z-index: 20;
+    pointer-events: none;
+    box-shadow: 0 1px 12px hsl(211 100% 50% / 0.4);
+  }
+  @keyframes hero-stripe-flow {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+  }
+
+  /* Fallback banner — futuristic mesh + grid scan (when no bannerUrl) */
+  .player-hero-banner {
+    position: relative;
+    background:
+      radial-gradient(ellipse 60% 80% at 15% 50%, hsl(211 100% 50% / 0.22), transparent 60%),
+      radial-gradient(ellipse 50% 80% at 85% 30%, hsl(232 84% 60% / 0.20), transparent 60%),
+      radial-gradient(ellipse 40% 60% at 50% 100%, hsl(222 92% 55% / 0.18), transparent 65%),
+      linear-gradient(135deg,
+        hsl(217 30% 96%) 0%,
+        hsl(211 100% 96%) 50%,
+        hsl(232 50% 95%) 100%);
+    overflow: hidden;
+  }
+  .player-hero-banner::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, hsl(211 100% 50% / 0.08) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(211 100% 50% / 0.08) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: linear-gradient(to bottom, black, transparent 85%);
+    -webkit-mask-image: linear-gradient(to bottom, black, transparent 85%);
+  }
+  .player-hero-banner::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(115deg,
+        transparent 30%,
+        hsl(0 0% 100% / 0.25) 50%,
+        transparent 70%);
+    background-size: 250% 100%;
+    animation: hero-shine 12s ease-in-out infinite;
+    mix-blend-mode: overlay;
+  }
+  @keyframes hero-shine {
+    0%, 100% { background-position: -100% 0; }
+    50% { background-position: 200% 0; }
+  }
+  .dark .player-hero-banner {
+    background:
+      radial-gradient(ellipse 60% 80% at 15% 50%, hsl(211 100% 50% / 0.18), transparent 60%),
+      radial-gradient(ellipse 50% 80% at 85% 30%, hsl(232 84% 60% / 0.14), transparent 60%),
+      linear-gradient(135deg, #0a0f1c 0%, #0d1422 50%, #11162a 100%);
+  }
+
+  /* Aurora ring around avatar — circular halo + thin ring outline.
+     Sized in pixels to match the Avatar (w-24 = 96px, md:w-32 = 128px),
+     anchored to top-left so it stays a perfect circle around the avatar
+     and doesn't stretch over the Camera button bounding box. */
+  .player-hero-avatar-ring::before {
+    content: "";
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    width: 108px;
+    height: 108px;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 0deg,
+      hsl(211 100% 50% / 0.5),
+      hsl(222 92% 55% / 0.5),
+      hsl(232 84% 60% / 0.5),
+      hsl(211 100% 50% / 0.5));
+    filter: blur(14px);
+    opacity: 0.6;
+    z-index: 0;
+    animation: avatar-ring-spin 14s linear infinite;
+    pointer-events: none;
+  }
+  .player-hero-avatar-ring::after {
+    content: "";
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 0deg,
+      hsl(211 100% 50%),
+      hsl(222 92% 55%),
+      hsl(232 84% 60%),
+      hsl(211 100% 50%));
+    -webkit-mask: radial-gradient(circle, transparent 0 47px, #000 48px);
+            mask: radial-gradient(circle, transparent 0 47px, #000 48px);
+    z-index: 1;
+    animation: avatar-ring-spin 14s linear infinite;
+    pointer-events: none;
+  }
+  @media (min-width: 768px) {
+    .player-hero-avatar-ring::before {
+      top: -8px;
+      left: -8px;
+      width: 144px;
+      height: 144px;
+    }
+    .player-hero-avatar-ring::after {
+      top: -2px;
+      left: -2px;
+      width: 132px;
+      height: 132px;
+      -webkit-mask: radial-gradient(circle, transparent 0 63px, #000 64px);
+              mask: radial-gradient(circle, transparent 0 63px, #000 64px);
+    }
+  }
+  @keyframes avatar-ring-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* Gradient text for player name — Apple-blue family, animated drift */
+  .player-hero-name {
+    background: linear-gradient(120deg,
+      hsl(222 24% 8%) 0%,
+      hsl(222 24% 8%) 40%,
+      hsl(211 100% 35%) 65%,
+      hsl(232 84% 45%) 100%);
+    background-size: 200% 200%;
+    background-position: 0% 50%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: hero-name-drift 10s ease-in-out infinite;
+  }
+  .dark .player-hero-name {
+    background: linear-gradient(120deg,
+      hsl(0 0% 98%) 0%,
+      hsl(0 0% 95%) 40%,
+      hsl(211 100% 75%) 70%,
+      hsl(232 84% 78%) 100%);
+    background-size: 200% 200%;
+    background-position: 0% 50%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: hero-name-drift 10s ease-in-out infinite;
+  }
+  @keyframes hero-name-drift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .player-hero-stripe,
+    .player-hero-banner::after,
+    .player-hero-avatar-ring::before,
+    .player-hero-avatar-ring::after,
+    .player-hero-name {
+      animation: none !important;
+    }
+  }
 }
 
 /* ── Editorial landing page system ───────────────────────────────── */
