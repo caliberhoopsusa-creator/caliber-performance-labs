@@ -236,6 +236,15 @@ app.use((req, res, next) => {
     console.error('Failed to seed colleges:', error);
   }
 
+  // Keep college program records, rosters, coaches & rankings live.
+  // No-op unless ENABLE_COLLEGE_SYNC=true (see collegeDataScheduler).
+  try {
+    const { startCollegeDataScheduler } = await import('./services/collegeDataScheduler');
+    startCollegeDataScheduler();
+  } catch (error) {
+    console.error('Failed to start college data scheduler:', error);
+  }
+
   // Sentry error handler must be before any other error handler
   if (process.env.SENTRY_DSN) {
     app.use(Sentry.expressErrorHandler());
