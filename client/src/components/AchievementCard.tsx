@@ -1,6 +1,21 @@
 import { useRef, useState } from "react";
 import html2canvas from "html2canvas";
-import { Download, Share2, X, Instagram, Twitter } from "lucide-react";
+import {
+  Download,
+  Share2,
+  Twitter,
+  Crown,
+  Flame,
+  TrendingUp,
+  Star,
+  BadgeCheck,
+  Lock,
+  Zap,
+  Sparkles,
+  Crosshair,
+  Trophy,
+  type LucideIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -17,73 +32,26 @@ interface AchievementCardProps {
   achievementType: string;
 }
 
-const ACHIEVEMENT_CONFIG: Record<string, { title: string; subtitle: string; gradient: string; icon: string }> = {
-  triple_double: {
-    title: "TRIPLE DOUBLE",
-    subtitle: "Elite Performance",
-    gradient: "from-yellow-500",
-    icon: "👑",
-  },
-  thirty_bomb: {
-    title: "30+ POINTS",
-    subtitle: "Bucket Machine",
-    gradient: "from-orange-500",
-    icon: "🔥",
-  },
-  twenty_piece: {
-    title: "20+ POINTS",
-    subtitle: "Scoring Threat",
-    gradient: "from-blue-500",
-    icon: "💪",
-  },
-  double_double: {
-    title: "DOUBLE DOUBLE",
-    subtitle: "All-Around Game",
-    gradient: "from-green-500",
-    icon: "⭐",
-  },
-  efficiency_master: {
-    title: "A+ GRADE",
-    subtitle: "Maximum Efficiency",
-    gradient: "from-emerald-500",
-    icon: "💯",
-  },
-  lockdown_defender: {
-    title: "LOCKDOWN",
-    subtitle: "Defensive Anchor",
-    gradient: "from-slate-500",
-    icon: "🔒",
-  },
-  hustle_king: {
-    title: "HUSTLE KING",
-    subtitle: "Maximum Effort",
-    gradient: "from-accent via-accent/80",
-    icon: "⚡",
-  },
-  hot_streak_3: {
-    title: "HOT STREAK",
-    subtitle: "3 Games B+ or Better",
-    gradient: "from-red-500",
-    icon: "🔥",
-  },
-  hot_streak_5: {
-    title: "ON FIRE",
-    subtitle: "5 Games B+ or Better",
-    gradient: "from-red-600",
-    icon: "🌟",
-  },
-  clean_sheet: {
-    title: "CLEAN SHEET",
-    subtitle: "Zero Turnovers",
-    gradient: "from-accent",
-    icon: "✨",
-  },
-  sharpshooter: {
-    title: "SHARPSHOOTER",
-    subtitle: "50%+ from 3PT",
-    gradient: "from-purple-500",
-    icon: "🎯",
-  },
+/**
+ * Tier-based achievement identity — clean lucide iconography on a uniform
+ * near-black, platinum-framed card. One restrained accent per tier (used only
+ * for the icon + a faint glow), never full-card rainbow gradients.
+ */
+const ACHIEVEMENT_CONFIG: Record<
+  string,
+  { title: string; subtitle: string; icon: LucideIcon; accent: string }
+> = {
+  triple_double: { title: "TRIPLE DOUBLE", subtitle: "Elite Performance", icon: Crown, accent: "#e7c66b" },
+  thirty_bomb: { title: "30+ POINTS", subtitle: "Bucket Machine", icon: Flame, accent: "#e0762b" },
+  twenty_piece: { title: "20+ POINTS", subtitle: "Scoring Threat", icon: TrendingUp, accent: "#c6d0d8" },
+  double_double: { title: "DOUBLE DOUBLE", subtitle: "All-Around Game", icon: Star, accent: "#8fb3c9" },
+  efficiency_master: { title: "A+ GRADE", subtitle: "Maximum Efficiency", icon: BadgeCheck, accent: "#4ade80" },
+  lockdown_defender: { title: "LOCKDOWN", subtitle: "Defensive Anchor", icon: Lock, accent: "#94a3b8" },
+  hustle_king: { title: "HUSTLE KING", subtitle: "Maximum Effort", icon: Zap, accent: "#c6d0d8" },
+  hot_streak_3: { title: "HOT STREAK", subtitle: "3 Games B+ or Better", icon: Flame, accent: "#e0762b" },
+  hot_streak_5: { title: "ON FIRE", subtitle: "5 Games B+ or Better", icon: Flame, accent: "#ef4444" },
+  clean_sheet: { title: "CLEAN SHEET", subtitle: "Zero Turnovers", icon: Sparkles, accent: "#c6d0d8" },
+  sharpshooter: { title: "SHARPSHOOTER", subtitle: "50%+ from 3PT", icon: Crosshair, accent: "#60a5fa" },
 };
 
 function getInitials(name: string): string {
@@ -110,9 +78,10 @@ export function AchievementCard({
   const config = ACHIEVEMENT_CONFIG[achievementType] || {
     title: achievementType.toUpperCase().replace(/_/g, " "),
     subtitle: "Achievement Unlocked",
-    gradient: "from-accent to-accent/80",
-    icon: "🏀",
+    icon: Trophy,
+    accent: "#c6d0d8",
   };
+  const Icon = config.icon;
 
   const handleDownload = async () => {
     if (!cardRef.current) return;
@@ -164,7 +133,7 @@ export function AchievementCard({
           const file = new File([blob], `caliber-achievement.png`, { type: "image/png" });
           const shareData = {
             title: `${player.name} - ${config.title}`,
-            text: `Check out my achievement on Caliber! ${config.title} ${config.icon}`,
+            text: `Check out my achievement on Caliber — ${config.title}`,
             files: [file],
           };
 
@@ -199,66 +168,89 @@ export function AchievementCard({
         <div className="flex flex-col items-center gap-4">
           <div
             ref={cardRef}
-            className={`relative w-[360px] aspect-[4/5] rounded-2xl overflow-hidden ${config.gradient} p-1`}
+            className="relative w-[360px] aspect-[4/5] rounded-[1.6rem] overflow-hidden p-px"
+            style={{ background: `linear-gradient(160deg, ${config.accent}66, rgba(255,255,255,0.06) 40%, rgba(255,255,255,0.02))` }}
             data-testid="achievement-card"
           >
-            <div className="absolute inset-0 bg-black/20" />
-            <div className="relative h-full w-full bg-black/80 backdrop-blur-xl rounded-xl p-6 flex flex-col">
-              <div className="absolute top-4 right-4 text-4xl">{config.icon}</div>
+            <div className="relative h-full w-full rounded-[1.55rem] p-6 flex flex-col" style={{ backgroundColor: "#0a0a0b" }}>
+              {/* tier glow */}
+              <div
+                className="pointer-events-none absolute inset-x-0 top-0 h-44"
+                style={{ background: `radial-gradient(120% 80% at 50% 0%, ${config.accent}26, transparent 70%)` }}
+              />
+              {/* fine grid */}
+              <div
+                className="pointer-events-none absolute inset-0 opacity-[0.05]"
+                style={{ backgroundImage: "radial-gradient(circle, #ffffff 1px, transparent 1px)", backgroundSize: "22px 22px" }}
+              />
 
-              <div className="flex-1 flex flex-col items-center justify-center text-center">
-                <Avatar className="w-24 h-24 border-4 border-white/20 mb-4">
+              {/* header row */}
+              <div className="relative flex items-center justify-between">
+                <span className="text-[0.62rem] font-semibold uppercase tracking-[0.28em]" style={{ color: "#7c8694" }}>
+                  Achievement
+                </span>
+                <span
+                  className="flex h-9 w-9 items-center justify-center rounded-xl border"
+                  style={{ borderColor: `${config.accent}40`, backgroundColor: `${config.accent}1a`, color: config.accent }}
+                >
+                  <Icon className="h-[18px] w-[18px]" strokeWidth={2.25} />
+                </span>
+              </div>
+
+              <div className="relative flex flex-1 flex-col items-center justify-center text-center">
+                <Avatar className="mb-4 h-24 w-24 border" style={{ borderColor: "rgba(255,255,255,0.12)" }}>
                   {player.photoUrl && <AvatarImage src={player.photoUrl} alt={player.name} width={96} height={96} />}
-                  <AvatarFallback className="from-accent/50 to-accent/20 text-2xl font-bold text-white">
+                  <AvatarFallback className="text-2xl font-bold" style={{ backgroundColor: "#16171a", color: "#e7ecf0" }}>
                     {getInitials(player.name)}
                   </AvatarFallback>
                 </Avatar>
 
-                <h2 className="text-2xl font-display font-bold text-white uppercase tracking-wide mb-1">
+                <h2 className="font-display text-xl font-bold uppercase tracking-wide" style={{ color: "#f4f6f8" }}>
                   {player.name}
                 </h2>
-                <p className="text-sm text-white/70 mb-6">
-                  {player.position} {player.team && `• ${player.team}`}
+                <p className="mt-1 text-sm" style={{ color: "#8b95a1" }}>
+                  {player.position}
+                  {player.team && ` · ${player.team}`}
                 </p>
 
-                <div className={`text-4xl font-display font-black ${config.gradient} uppercase tracking-wider mb-2`}>
+                <div className="mt-6 font-display text-[2.1rem] font-black uppercase leading-none tracking-tight" style={{ color: "#ffffff" }}>
                   {config.title}
                 </div>
-                <p className="text-lg text-white/80 font-medium">{config.subtitle}</p>
+                <p className="mt-2 text-base font-medium" style={{ color: config.accent }}>
+                  {config.subtitle}
+                </p>
 
                 {game && (
-                  <div className="mt-6 bg-white/10 rounded-xl px-6 py-4 backdrop-blur-sm">
-                    <div className="text-xs text-white/50 uppercase tracking-wider mb-2">
-                      vs {game.opponent} • {format(new Date(game.date), "MMM d, yyyy")}
+                  <div className="mt-6 w-full rounded-2xl border px-6 py-4" style={{ borderColor: "rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.03)" }}>
+                    <div className="mb-3 text-[0.6rem] uppercase tracking-[0.2em]" style={{ color: "#6b7480" }}>
+                      vs {game.opponent} · {format(new Date(game.date), "MMM d, yyyy")}
                     </div>
-                    <div className="flex items-center justify-center gap-6 text-white">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold">{game.points}</div>
-                        <div className="text-xs text-white/50">PTS</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold">{game.rebounds}</div>
-                        <div className="text-xs text-white/50">REB</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold">{game.assists}</div>
-                        <div className="text-xs text-white/50">AST</div>
-                      </div>
+                    <div className="flex items-center justify-center gap-8">
+                      {[
+                        { v: game.points, l: "PTS" },
+                        { v: game.rebounds, l: "REB" },
+                        { v: game.assists, l: "AST" },
+                      ].map((s) => (
+                        <div key={s.l} className="text-center">
+                          <div className="font-display text-2xl font-bold tabular-nums" style={{ color: "#f4f6f8" }}>{s.v}</div>
+                          <div className="mt-0.5 text-[0.6rem] tracking-widest" style={{ color: "#6b7480" }}>{s.l}</div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
               </div>
 
-              <div className="mt-auto pt-4 border-t border-white/10 flex items-center justify-between">
+              <div className="relative mt-auto flex items-center justify-between border-t pt-4" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full from-accent to-accent/80 flex items-center justify-center">
-                    <span className="text-white font-bold text-xs">C</span>
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ backgroundColor: "#c6d0d8" }}>
+                    <span className="font-display text-xs font-black" style={{ color: "#0a0a0b" }}>C</span>
                   </div>
-                  <span className="text-sm font-display font-bold text-white/80 uppercase tracking-wider">
+                  <span className="font-display text-sm font-bold uppercase tracking-[0.18em]" style={{ color: "#cdd5dd" }}>
                     Caliber
                   </span>
                 </div>
-                <div className="text-xs text-white/40">
+                <div className="text-[0.7rem]" style={{ color: "#6b7480" }}>
                   {badge.earnedAt && format(new Date(badge.earnedAt), "MMM d, yyyy")}
                 </div>
               </div>

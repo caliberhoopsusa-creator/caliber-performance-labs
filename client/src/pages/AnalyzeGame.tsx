@@ -985,7 +985,7 @@ function ReportCardView({ game, onReset }: { game: any, onReset: () => void }) {
           {game.grade && ['A+', 'A', 'A-'].includes(game.grade) && (
             <div className="p-4 rounded-xl bg-gradient-to-r from-accent/20 to-accent/5 border border-accent/30 text-center space-y-2">
               <p className="text-sm font-bold text-accent">
-                {game.grade === 'A+' ? '🔥 Elite performance!' : '⭐ Standout game!'} Share it with your teammates.
+                {game.grade === 'A+' ? 'Elite performance.' : 'Standout game.'} Share it with your teammates.
               </p>
               <p className="text-xs text-muted-foreground">
                 Let your network see your {game.grade} grade vs {game.opponent}.
@@ -1037,7 +1037,7 @@ function ReportCardView({ game, onReset }: { game: any, onReset: () => void }) {
           onOpenChange={setBadgeShareOpen}
           title="Share Badge"
           shareUrl={`${window.location.origin}/players/${game.playerId}`}
-          shareText={`I just earned the "${BADGE_DEFINITIONS[selectedBadge as keyof typeof BADGE_DEFINITIONS]?.name || selectedBadge}" badge on @CaliberApp! 🏆`}
+          shareText={`I just earned the "${BADGE_DEFINITIONS[selectedBadge as keyof typeof BADGE_DEFINITIONS]?.name || selectedBadge}" badge on @CaliberApp.`}
         >
           <ShareableBadgeCard
             badgeType={selectedBadge}

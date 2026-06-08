@@ -393,7 +393,7 @@ export default function ScoutHub() {
 
             <div className="flex items-center gap-2 px-2 py-1.5 rounded-xl bg-muted/80 border border-accent/20 backdrop-blur-sm">
               <span className="text-sm font-medium flex items-center gap-2 px-3 py-1.5">
-                <span className="text-lg">🏀</span>
+                <span className="h-1.5 w-1.5 rounded-full bg-accent" />
                 Basketball
               </span>
             </div>

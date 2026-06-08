@@ -53,6 +53,7 @@ import {
   X,
   Plus,
   Loader2,
+  Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format, parseISO, isAfter } from "date-fns";
@@ -275,8 +276,8 @@ function EventCard({ eventData, isSaved, onToggleSave, isPending }: EventCardPro
                 </Badge>
               )}
               {event.isFeatured && (
-                <Badge variant="outline" className="border-amber-500/50 text-amber-400 bg-amber-500/10 text-xs font-semibold">
-                  ★ Featured
+                <Badge variant="outline" className="border-accent/40 text-accent bg-accent/10 text-xs font-semibold inline-flex items-center gap-1">
+                  <Star className="h-3 w-3 fill-current" /> Featured
                 </Badge>
               )}
             </div>
