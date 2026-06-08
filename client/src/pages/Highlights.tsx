@@ -237,15 +237,18 @@ export default function Highlights() {
     <div className="min-h-screen p-4 md:p-6 space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
-            <div className="relative">
-              <div className="absolute inset-0 bg-accent/30 blur-xl rounded-full" />
-              <Film className="w-8 h-8 text-accent relative z-10" />
-            </div>
+          <span className="flex items-center gap-2 font-label text-accent">
+            <span className="h-px w-5 bg-accent/60" />
+            Highlights
+          </span>
+          <h1 className="mt-2 flex items-center gap-3 font-display text-3xl font-bold tracking-[-0.02em] text-foreground">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-accent/10">
+              <Film className="h-5 w-5 text-accent" />
+            </span>
             My Highlights
           </h1>
-          <p className="text-muted-foreground mt-1">
-            TikTok-style clips with stat overlays
+          <p className="mt-2 text-muted-foreground">
+            Vertical clips with stat overlays — built to share with scouts and fans.
           </p>
         </div>
 
@@ -273,7 +276,7 @@ export default function Highlights() {
 
           <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
             <DialogTrigger asChild>
-              <Button className="gap-2 bg-accent " data-testid="button-upload-highlight">
+              <Button className="gap-2" data-testid="button-upload-highlight">
                 <Plus className="w-4 h-4" />
                 Upload Highlight
               </Button>
@@ -458,33 +461,18 @@ export default function Highlights() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="bg-card/50 border-border">
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-accent">{clips.length}</p>
-            <p className="text-sm text-muted-foreground">Total Clips</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-card/50 border-border">
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-accent">{totalViews.toLocaleString()}</p>
-            <p className="text-sm text-muted-foreground">Total Views</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-card/50 border-border">
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-pink-400">{totalLikes.toLocaleString()}</p>
-            <p className="text-sm text-muted-foreground">Total Likes</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-card/50 border-border">
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-green-400">
-              {clips.filter((c) => c.overlayStyle).length}
-            </p>
-            <p className="text-sm text-muted-foreground">With Overlays</p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.05] md:grid-cols-4">
+        {[
+          { value: clips.length, label: "Total Clips" },
+          { value: totalViews.toLocaleString(), label: "Total Views" },
+          { value: totalLikes.toLocaleString(), label: "Total Likes" },
+          { value: clips.filter((c) => c.overlayStyle).length, label: "With Overlays" },
+        ].map((s) => (
+          <div key={s.label} className="bg-background/40 px-5 py-5 text-center">
+            <p className="font-display text-2xl font-bold tabular-nums text-foreground">{s.value}</p>
+            <p className="mt-1 font-label text-muted-foreground">{s.label}</p>
+          </div>
+        ))}
       </div>
 
       {isLoading ? (
@@ -494,26 +482,23 @@ export default function Highlights() {
           ))}
         </div>
       ) : clips.length === 0 ? (
-        <Card className="bg-card/50 border-border">
-          <CardContent className="p-12 text-center">
-            <div className="relative inline-block mb-6">
-              <div className="absolute inset-0 bg-accent/20 blur-2xl rounded-full" />
-              <Film className="w-16 h-16 text-accent relative z-10" />
-            </div>
-            <h3 className="text-xl font-semibold text-foreground mb-2">No Highlights Yet</h3>
-            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Upload your best plays and add TikTok-style stat overlays to share with scouts and fans.
-            </p>
-            <Button
-              className="gap-2 bg-accent "
-              onClick={() => setIsUploadOpen(true)}
-              data-testid="button-first-upload"
-            >
-              <Plus className="w-4 h-4" />
-              Upload Your First Highlight
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-12 text-center">
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-3xl border border-white/10 bg-accent/10">
+            <Film className="h-8 w-8 text-accent" />
+          </div>
+          <h3 className="mb-2 font-display text-xl font-bold tracking-tight text-foreground">No highlights yet</h3>
+          <p className="mx-auto mb-6 max-w-md text-muted-foreground">
+            Upload your best plays and add stat overlays to share with scouts and fans.
+          </p>
+          <Button
+            className="gap-2"
+            onClick={() => setIsUploadOpen(true)}
+            data-testid="button-first-upload"
+          >
+            <Plus className="w-4 h-4" />
+            Upload Your First Highlight
+          </Button>
+        </div>
       ) : (
         <motion.div
           className={cn(
@@ -625,7 +610,7 @@ export default function Highlights() {
               </Button>
               <Button
                 type="submit"
-                className="gap-2 bg-accent "
+                className="gap-2"
                 disabled={overlayMutation.isPending}
                 data-testid="button-submit-overlay"
               >

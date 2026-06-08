@@ -85,15 +85,15 @@ export function HeroHeader({ user }: HeroHeaderProps) {
           backgroundSize: "20px 20px",
         }}
       />
-      {/* Amber left-edge accent line */}
-      <div className="absolute left-0 top-4 bottom-4 w-[3px] rounded-full bg-gradient-to-b from-amber-500/60 via-amber-400/80 to-amber-600/40" />
+      {/* Platinum left-edge accent line */}
+      <div className="absolute left-0 top-4 bottom-4 w-[3px] rounded-full bg-gradient-to-b from-accent/40 via-accent/80 to-accent/30" />
 
       <div className="relative z-10 flex items-center justify-between gap-3 px-5 py-5 sm:px-6">
         {/* LEFT — Avatar + identity + CTA */}
         <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-          <Avatar className="w-14 h-14 shrink-0 border-2 border-amber-500/40 ring-1 ring-amber-500/10">
+          <Avatar className="w-14 h-14 shrink-0 border border-accent/40 ring-1 ring-accent/10">
             <AvatarImage src={player?.photoUrl ?? undefined} alt={displayName} />
-            <AvatarFallback className="bg-amber-950/60 text-amber-300 font-display font-bold text-xl">
+            <AvatarFallback className="bg-white/[0.04] text-accent font-display font-bold text-xl">
               {initials}
             </AvatarFallback>
           </Avatar>
@@ -102,12 +102,12 @@ export function HeroHeader({ user }: HeroHeaderProps) {
             <p className="font-display font-bold text-white text-base sm:text-lg leading-tight">
               {player?.name || displayName}
             </p>
-            <p className="text-xs sm:text-sm text-amber-400/75 font-medium truncate mt-0.5">
+            <p className="text-xs sm:text-sm text-accent/80 font-medium truncate mt-0.5">
               {[player?.position, player?.school].filter(Boolean).join(" · ") || "Complete your profile"}
             </p>
             <Button
               size="sm"
-              className="mt-2 h-7 px-3 text-xs bg-amber-500 hover:bg-amber-400 text-black font-bold leading-none"
+              className="mt-2 h-7 px-3 text-xs bg-[hsl(var(--cta))] hover:bg-[hsl(var(--cta))]/90 text-white font-bold leading-none"
               onClick={() => setLocation("/analyze")}
               data-testid="hero-cta-log-game"
             >
@@ -127,7 +127,7 @@ export function HeroHeader({ user }: HeroHeaderProps) {
                   {String(value)}
                 </span>
               )}
-              <span className="text-[10px] text-amber-200/40 uppercase tracking-widest leading-none">
+              <span className="text-[10px] text-muted-foreground uppercase tracking-widest leading-none">
                 {label}
               </span>
             </div>

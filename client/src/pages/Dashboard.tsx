@@ -133,25 +133,25 @@ function RecruiterActivityBanner({ playerId }: { playerId: number }) {
       transition={{ duration: 0.35 }}
     >
       <Link href={`/players/${playerId}/recruiting`}>
-        <div className="relative overflow-hidden rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 cursor-pointer group hover:border-amber-500/40 transition-colors">
+        <div className="relative overflow-hidden rounded-2xl border border-accent/20 bg-accent/[0.05] p-4 cursor-pointer group hover:border-accent/40 transition-colors">
           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
-            style={{ background: "radial-gradient(ellipse at 0% 50%, rgba(245,158,11,0.06) 0%, transparent 60%)" }} />
+            style={{ background: "radial-gradient(ellipse at 0% 50%, rgba(198,208,216,0.07) 0%, transparent 60%)" }} />
           <div className="relative flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-9 h-9 rounded-full bg-amber-500/15 flex items-center justify-center flex-shrink-0">
-                <Eye className="w-4 h-4 text-amber-400" />
+              <div className="w-9 h-9 rounded-full bg-accent/15 flex items-center justify-center flex-shrink-0">
+                <Eye className="w-4 h-4 text-accent" />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-semibold text-sm text-foreground">
                     {newToday > 0 ? (
-                      <><span className="text-amber-400">{newToday} new</span> recruiter view{newToday !== 1 ? 's' : ''} today</>
+                      <><span className="text-accent">{newToday} new</span> recruiter view{newToday !== 1 ? 's' : ''} today</>
                     ) : (
-                      <><span className="text-amber-400">{data.totalViews}</span> total recruiter view{data.totalViews !== 1 ? 's' : ''}</>
+                      <><span className="text-accent">{data.totalViews}</span> total recruiter view{data.totalViews !== 1 ? 's' : ''}</>
                     )}
                   </span>
                   {data.unreadSignals > 0 && (
-                    <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs">
+                    <Badge className="bg-accent/20 text-accent border-accent/30 text-xs">
                       {data.unreadSignals} signal{data.unreadSignals !== 1 ? 's' : ''}
                     </Badge>
                   )}
@@ -168,7 +168,7 @@ function RecruiterActivityBanner({ playerId }: { playerId: number }) {
                 </div>
               </div>
             </div>
-            <ChevronRight className="w-4 h-4 text-amber-400/60 group-hover:text-amber-400 transition-colors flex-shrink-0" />
+            <ChevronRight className="w-4 h-4 text-accent/60 group-hover:text-accent transition-colors flex-shrink-0" />
           </div>
         </div>
       </Link>
@@ -299,26 +299,24 @@ export default function Dashboard() {
       )}
 
       {/* Hero welcome card with animated CSS gradient */}
-      <div className="relative overflow-hidden rounded-xl border border-accent/[0.15]">
+      <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.02]">
         {/* Red precision top line */}
-        <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[hsl(var(--cta))]/70 to-transparent" />
-        {/* Animated gradient background */}
-        <div className="absolute inset-0 z-0 hero-gradient-bg" />
-        {/* Dark overlay for readability */}
-        <div className="absolute inset-0 z-[1] bg-gradient-to-r from-background/85 via-background/60 to-background/30" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[hsl(var(--cta))]/60 to-transparent" />
+        {/* Clean platinum wash */}
+        <div aria-hidden className="absolute inset-0" style={{ background: "radial-gradient(120% 140% at 85% 0%, hsl(var(--accent) / 0.13), transparent 55%)" }} />
         {/* Content */}
         <CardContent className="relative z-[2] p-6 md:p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-2">
-              <div className="flex items-center gap-2 flex-wrap">
-                <Activity className="w-5 h-5 text-accent" />
-                <span className="text-xs uppercase tracking-wider text-accent font-semibold">Command Center</span>
-              </div>
-              <h1 className="text-3xl md:text-4xl font-bold text-foreground" data-testid="text-dashboard-title">
-                Welcome Back{user?.firstName ? `, ${user.firstName}` : ''}
+              <span className="flex items-center gap-2 font-label text-accent">
+                <span className="h-px w-5 bg-accent/60" />
+                Command Center
+              </span>
+              <h1 className="font-display text-3xl md:text-4xl font-bold tracking-[-0.02em] text-foreground" data-testid="text-dashboard-title">
+                Welcome back{user?.firstName ? `, ${user.firstName}` : ''}
               </h1>
               <p className="text-muted-foreground max-w-md">
-                Track performance, analyze games, and unlock your potential
+                Track performance, analyze games, and unlock your potential.
               </p>
             </div>
 
@@ -331,7 +329,7 @@ export default function Dashboard() {
                     <p className="font-bold text-accent">{currentStreak} days</p>
                   </div>
                   {currentStreak >= 3 && (
-                    <span className="text-xs font-bold text-yellow-400 bg-yellow-400/10 px-1.5 py-0.5 rounded ml-1">
+                    <span className="text-xs font-bold text-accent bg-accent/10 px-1.5 py-0.5 rounded ml-1">
                       {currentStreak >= 30 ? '2×' : currentStreak >= 14 ? '1.75×' : currentStreak >= 7 ? '1.5×' : '1.25×'} XP
                     </span>
                   )}
@@ -398,10 +396,10 @@ export default function Dashboard() {
 
       {/* Team Activity Nudge */}
       {teamActivity && teamActivity.teammateCount > 0 && !teamActivity.playerLoggedToday && (
-        <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-orange-500/10 border border-orange-500/20 text-sm">
-          <Flame className="w-4 h-4 text-orange-500 shrink-0" />
+        <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-accent/[0.06] border border-accent/20 text-sm">
+          <Flame className="w-4 h-4 text-accent shrink-0" />
           <span className="text-foreground">
-            <span className="font-semibold text-orange-500">{teamActivity.teammateCount}</span>{" "}
+            <span className="font-semibold text-accent">{teamActivity.teammateCount}</span>{" "}
             teammate{teamActivity.teammateCount !== 1 ? 's' : ''} logged{" "}
             {teamActivity.teammateCount !== 1 ? 'games' : 'a game'} today — don't fall behind!
           </span>
