@@ -12,19 +12,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  Star, 
-  Zap, 
-  Trophy, 
-  Crown, 
-  Sparkles, 
-  Copy, 
-  Mail, 
-  MapPin, 
-  GraduationCap, 
-  TrendingUp, 
-  TrendingDown, 
-  Minus, 
+import {
+  Star,
+  Zap,
+  Trophy,
+  Crown,
+  Sparkles,
+  Copy,
+  Mail,
+  MapPin,
+  GraduationCap,
+  TrendingUp,
+  TrendingDown,
+  Minus,
   ChevronRight,
   User,
   Target,
@@ -33,10 +33,14 @@ import {
   MessageSquareQuote,
   Film,
   Play,
-  Loader2
+  Loader2,
+  BadgeCheck,
+  Ruler,
+  CalendarDays,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CaliberLogo } from "@/components/CaliberLogo";
+import { GradeBadge } from "@/components/GradeBadge";
 import { CoachRecommendations } from "@/components/CoachRecommendations";
 import { useAuth } from "@/hooks/use-auth";
 import { X as XIcon } from "lucide-react";
@@ -104,6 +108,7 @@ interface PublicPlayerData {
   ogImage: string;
 }
 
+// Tier identity — one disciplined platinum treatment, distinguished only by icon.
 const TIER_ICONS: Record<string, typeof Star> = {
   Rookie: Star,
   Starter: Zap,
@@ -112,21 +117,7 @@ const TIER_ICONS: Record<string, typeof Star> = {
   "Hall of Fame": Crown,
 };
 
-const TIER_COLORS: Record<string, string> = {
-  Rookie: "text-gray-400 bg-gray-500/10 border-gray-500/20",
-  Starter: "text-green-600 dark:text-green-400 bg-green-500/10 border-green-500/20",
-  "All-Star": "text-blue-600 dark:text-blue-400 bg-blue-500/10 border-blue-500/20",
-  MVP: "text-purple-600 dark:text-purple-400 bg-purple-500/10 border-purple-500/20",
-  "Hall of Fame": "text-yellow-600 dark:text-yellow-400 bg-yellow-500/10 border-yellow-500/20",
-};
-
-const GRADE_COLORS: Record<string, string> = {
-  'A': "from-green-500 to-emerald-500",
-  'B': "from-blue-500 to-accent",
-  'C': "from-yellow-500 to-orange-500",
-  'D': "from-orange-500 to-red-500",
-  'F': "from-red-500 to-rose-500",
-};
+const TIER_CLASS = "text-accent bg-accent/10 border-accent/30";
 
 function getInitials(name: string): string {
   return name
@@ -137,36 +128,26 @@ function getInitials(name: string): string {
     .slice(0, 2);
 }
 
-function getGradeColor(grade: string): string {
-  const letter = grade.charAt(0).toUpperCase();
-  return GRADE_COLORS[letter] || GRADE_COLORS['C'];
-}
-
 function formatPosition(position: string | null | undefined): string {
   if (!position) return '';
-  return position.split(',').map(p => {
-    return p.trim();
-  }).join(' / ');
+  return position.split(',').map(p => p.trim()).join(' / ');
 }
+
+/** Surface conventions — keep cards uniform across the whole profile. */
+const SURFACE = "rounded-2xl border border-white/[0.07] bg-white/[0.02]";
+const SECTION_TITLE = "flex items-center gap-2 font-display text-lg font-bold tracking-tight";
 
 function PublicPlayerProfileSkeleton() {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
-        <div className="flex items-center gap-4">
-          <Skeleton className="w-24 h-24 rounded-full" />
-          <div className="flex-1 space-y-2">
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-4 w-24" />
-          </div>
-        </div>
-        <div className="grid grid-cols-3 gap-4">
-          {[1, 2, 3].map(i => (
-            <Skeleton key={i} className="h-24 rounded-xl" />
+      <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
+        <Skeleton className="h-56 rounded-3xl" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[1, 2, 3, 4].map(i => (
+            <Skeleton key={i} className="h-24 rounded-2xl" />
           ))}
         </div>
-        <Skeleton className="h-48 rounded-xl" />
+        <Skeleton className="h-48 rounded-2xl" />
       </div>
     </div>
   );
@@ -217,7 +198,7 @@ export default function PublicPlayerProfile() {
   useEffect(() => {
     if (data?.player) {
       document.title = `${data.player.name} - Player Profile | Caliber`;
-      
+
       const metaTags = [
         { property: 'og:title', content: `${data.player.name} - ${formatPosition(data.player.position)} | Caliber` },
         { property: 'og:description', content: `Check out ${data.player.name}'s player profile. ${data.stats.averageGrade} grade average, ${data.stats.gamesPlayed} games played.` },
@@ -230,10 +211,10 @@ export default function PublicPlayerProfile() {
       ];
 
       metaTags.forEach(({ property, name, content }) => {
-        let meta = property 
+        let meta = property
           ? document.querySelector(`meta[property="${property}"]`)
           : document.querySelector(`meta[name="${name}"]`);
-        
+
         if (!meta) {
           meta = document.createElement('meta');
           if (property) meta.setAttribute('property', property);
@@ -252,16 +233,9 @@ export default function PublicPlayerProfile() {
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(data?.shareUrl || window.location.href);
-      toast({
-        title: "Link Copied!",
-        description: "Profile link copied to clipboard",
-      });
+      toast({ title: "Link Copied!", description: "Profile link copied to clipboard" });
     } catch {
-      toast({
-        title: "Failed to copy",
-        description: "Could not copy link to clipboard",
-        variant: "destructive",
-      });
+      toast({ title: "Failed to copy", description: "Could not copy link to clipboard", variant: "destructive" });
     }
   };
 
@@ -271,22 +245,22 @@ export default function PublicPlayerProfile() {
 
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
-        <Card className="p-8 text-center max-w-md">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4">
+        <div className={cn(SURFACE, "p-8 text-center max-w-md")}>
           <User className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-          <h2 className="text-xl font-bold mb-2">Player Not Found</h2>
-          <p className="text-muted-foreground mb-4">This player profile doesn't exist or has been removed.</p>
+          <h2 className="text-xl font-bold mb-2 font-display">Player Not Found</h2>
+          <p className="text-muted-foreground mb-5">This player profile doesn't exist or has been removed.</p>
           <Link href="/">
             <Button data-testid="button-go-home">Go to Home</Button>
           </Link>
-        </Card>
+        </div>
       </div>
     );
   }
 
   const { player, stats, recentGames, skillBadges, accolades } = data;
   const TierIcon = TIER_ICONS[player.currentTier] || Star;
-  const tierColorClass = TIER_COLORS[player.currentTier] || TIER_COLORS.Rookie;
+  const firstName = player.name.split(' ')[0];
 
   const handleContactSubmit = async () => {
     if (!contactForm.senderName || !contactForm.senderEmail || !contactForm.message) {
@@ -314,221 +288,202 @@ export default function PublicPlayerProfile() {
     }
   };
 
-  const TrendIcon = stats.performanceTrend === 'improving' ? TrendingUp : 
+  const TrendIcon = stats.performanceTrend === 'improving' ? TrendingUp :
                     stats.performanceTrend === 'declining' ? TrendingDown : Minus;
-  const trendColor = stats.performanceTrend === 'improving' ? 'text-green-600 dark:text-green-400' :
-                     stats.performanceTrend === 'declining' ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400';
+  const trendColor = stats.performanceTrend === 'improving' ? 'text-emerald-400' :
+                     stats.performanceTrend === 'declining' ? 'text-red-400' : 'text-muted-foreground';
+
+  const statStrip = [
+    { label: "PPG", value: stats.basketball.ppg },
+    { label: "RPG", value: stats.basketball.rpg },
+    { label: "APG", value: stats.basketball.apg },
+    { label: "Games", value: stats.gamesPlayed },
+  ];
+
+  const metaItems = [
+    player.school && { icon: GraduationCap, text: player.school },
+    player.graduationYear && { icon: CalendarDays, text: `Class of ${player.graduationYear}` },
+    player.state && { icon: MapPin, text: player.state },
+    player.height && { icon: Ruler, text: player.height },
+  ].filter(Boolean) as Array<{ icon: typeof MapPin; text: string }>;
+
+  const ContactDialog = (
+    <Dialog open={contactOpen} onOpenChange={setContactOpen}>
+      <DialogTrigger asChild>
+        <Button className="gap-2 bg-[hsl(var(--cta))] text-white hover:bg-[hsl(var(--cta))]/90" data-testid="button-contact-recruit">
+          <Mail className="w-4 h-4" />
+          Contact for Recruiting
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Contact {player.name}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="senderName">Your Name *</Label>
+            <Input id="senderName" placeholder="Full name" value={contactForm.senderName} onChange={e => setContactForm(f => ({ ...f, senderName: e.target.value }))} data-testid="input-sender-name" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="senderEmail">Email *</Label>
+            <Input id="senderEmail" type="email" placeholder="your@email.com" value={contactForm.senderEmail} onChange={e => setContactForm(f => ({ ...f, senderEmail: e.target.value }))} data-testid="input-sender-email" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="senderRole">Your Role</Label>
+            <Select value={contactForm.senderRole} onValueChange={v => setContactForm(f => ({ ...f, senderRole: v }))}>
+              <SelectTrigger data-testid="select-sender-role"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="coach">Coach</SelectItem>
+                <SelectItem value="recruiter">Recruiter</SelectItem>
+                <SelectItem value="parent">Parent</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="senderSchool">School/Organization</Label>
+            <Input id="senderSchool" placeholder="Optional" value={contactForm.senderSchool} onChange={e => setContactForm(f => ({ ...f, senderSchool: e.target.value }))} data-testid="input-sender-school" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="message">Message *</Label>
+            <Textarea id="message" placeholder="Introduce yourself and your interest..." rows={4} value={contactForm.message} onChange={e => setContactForm(f => ({ ...f, message: e.target.value }))} data-testid="input-message" />
+          </div>
+          <Button onClick={handleContactSubmit} disabled={contactSubmitting} className="w-full gap-2" data-testid="button-submit-inquiry">
+            {contactSubmitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Sending...</> : "Send Inquiry"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="absolute inset-0 pointer-events-none opacity-30" />
-      
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <CaliberLogo size={28} />
-            <span className="font-display text-lg font-bold tracking-tight text-accent">CALIBER</span>
-          </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleCopyLink}
-            className="gap-2"
-            data-testid="button-copy-link"
-          >
-            <Copy className="w-4 h-4" />
-            Share
+      {/* ambient platinum wash */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-x-0 top-0 h-[420px]"
+        style={{ background: "radial-gradient(ellipse 70% 100% at 50% 0%, hsl(var(--accent) / 0.08), transparent 70%)" }}
+      />
+
+      <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-background/70 backdrop-blur-xl">
+        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+          <Link href="/" className="flex items-center gap-2">
+            <CaliberLogo size={26} />
+            <span className="font-display text-base font-bold tracking-tight">Caliber</span>
+          </Link>
+          <Button variant="outline" size="sm" onClick={handleCopyLink} className="gap-2" data-testid="button-copy-link">
+            <Copy className="w-4 h-4" /> Share
           </Button>
         </div>
       </header>
 
-      <main className="relative z-10 max-w-4xl mx-auto px-4 py-6 space-y-6 pb-12">
-        <Card className="overflow-hidden border-border bg-card/50 backdrop-blur-sm">
-          {player.bannerUrl && (
-            <div className="h-32 md:h-48 overflow-hidden">
-              <img 
-                src={player.bannerUrl} 
-                alt="" 
-                className="w-full h-full object-cover"
-                data-testid="img-player-banner"
+      <main className="relative z-10 max-w-5xl mx-auto px-4 py-6 space-y-5 pb-16">
+        {/* ───── Hero ───── */}
+        <section className={cn(SURFACE, "relative overflow-hidden")} data-testid="profile-hero">
+          {/* banner / fallback */}
+          <div className="relative h-36 md:h-52">
+            {player.bannerUrl ? (
+              <img src={player.bannerUrl} alt="" className="h-full w-full object-cover" data-testid="img-player-banner" />
+            ) : (
+              <div
+                className="h-full w-full"
+                style={{ background: "radial-gradient(120% 140% at 80% 0%, hsl(var(--accent) / 0.18), transparent 55%), linear-gradient(180deg, #101113, #0a0a0b)" }}
               />
-            </div>
-          )}
-          
-          <div className="p-4 md:p-6">
-            <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-6">
-              <div className="flex items-start gap-4 flex-1">
-                <div className="relative flex-shrink-0">
-                  <Avatar className="w-20 h-20 md:w-24 md:h-24 border-2 border-accent/30">
-                    <AvatarImage src={player.photoUrl || undefined} alt={player.name} data-testid="img-player-photo" />
-                    <AvatarFallback className="bg-gradient-to-br from-accent/30 to-blue-600/30 text-xl font-bold">
+            )}
+            <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, transparent 30%, hsl(var(--background)) 98%)" }} />
+          </div>
+
+          <div className="px-5 pb-6 md:px-7">
+            <div className="-mt-12 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+              {/* identity */}
+              <div className="flex items-end gap-4">
+                <div className="relative shrink-0">
+                  <Avatar className="h-24 w-24 rounded-2xl border border-white/10 bg-background md:h-28 md:w-28" >
+                    <AvatarImage src={player.photoUrl || undefined} alt={player.name} className="rounded-2xl object-cover" data-testid="img-player-photo" />
+                    <AvatarFallback className="rounded-2xl bg-white/[0.04] text-2xl font-bold text-foreground">
                       {getInitials(player.name)}
                     </AvatarFallback>
                   </Avatar>
-                  <div className={cn(
-                    "absolute -bottom-1 -right-1 w-8 h-8 rounded-lg flex items-center justify-center border",
-                    tierColorClass
-                  )}>
-                    <TierIcon className="w-4 h-4" />
-                  </div>
+                  <span className={cn("absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-xl border", TIER_CLASS)}>
+                    <TierIcon className="h-4 w-4" />
+                  </span>
                 </div>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    {player.jerseyNumber && (
-                      <span className="text-xl font-bold text-accent font-display">#{player.jerseyNumber}</span>
+                <div className="min-w-0 pb-1">
+                  <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                    {player.jerseyNumber != null && (
+                      <span className="font-display text-sm font-bold text-accent">#{player.jerseyNumber}</span>
                     )}
-                    <Badge variant="outline" className="border-accent/30 text-accent text-xs uppercase">
+                    <Badge variant="outline" className="border-white/12 text-foreground/80 text-[0.65rem] uppercase tracking-wide">
                       {formatPosition(player.position)}
                     </Badge>
-                    <Badge 
-                      variant="outline" 
-                      className={cn(
-                        "text-xs uppercase",
-                        "border-accent/30 text-accent"
-                      )}
-                      data-testid="badge-sport-basketball"
-                    >
-                      {"Basketball"}
+                    <Badge variant="outline" className="border-white/12 text-foreground/80 text-[0.65rem] uppercase tracking-wide" data-testid="badge-sport-basketball">
+                      Basketball
                     </Badge>
+                    {(player as any).verifiedAthlete && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[0.65rem] font-medium text-emerald-400">
+                        <BadgeCheck className="h-3 w-3" /> Verified
+                      </span>
+                    )}
                   </div>
-                  
-                  <h1 className="text-2xl md:text-3xl font-bold font-display uppercase tracking-tight truncate" data-testid="text-player-name">
+                  <h1 className="truncate font-display text-3xl font-bold tracking-[-0.02em] md:text-4xl" data-testid="text-player-name">
                     {player.name}
                   </h1>
-
-                  {(player as any).verifiedAthlete && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 text-xs font-medium border border-blue-500/30">
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      Verified Athlete
-                    </span>
-                  )}
-
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-sm text-muted-foreground">
-                    {player.school && (
-                      <span className="flex items-center gap-1">
-                        <GraduationCap className="w-4 h-4" />
-                        {player.school}
+                  <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-muted-foreground">
+                    {metaItems.map((m, i) => (
+                      <span key={i} className="flex items-center gap-1.5">
+                        <m.icon className="h-3.5 w-3.5 text-accent/70" />
+                        {m.text}
                       </span>
-                    )}
-                    {player.graduationYear && (
-                      <span className="font-medium text-accent" data-testid="text-graduation-year">
-                        Class of {player.graduationYear}
-                      </span>
-                    )}
-                    {player.state && (
-                      <span className="flex items-center gap-1">
-                        <MapPin className="w-4 h-4" />
-                        {player.state}
-                      </span>
-                    )}
-                    {player.height && <span>{player.height}</span>}
-                  </div>
-                  
-                  <div className="flex flex-wrap items-center gap-2 mt-3">
-                    <Badge className={cn("gap-1 border", tierColorClass)}>
-                      <TierIcon className="w-3 h-3" />
-                      {player.currentTier}
-                    </Badge>
+                    ))}
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-center md:justify-end gap-4">
+              {/* grade + trend */}
+              <div className="flex items-center gap-5 md:pb-1">
                 <div className="text-center">
-                  <div className="text-xs text-muted-foreground uppercase mb-1">Overall</div>
-                  <div 
-                    className={cn(
-                      "w-16 h-16 rounded-xl flex items-center justify-center text-2xl font-bold text-foreground bg-gradient-to-br",
-                      getGradeColor(stats.averageGrade)
-                    )}
-                    data-testid="badge-overall-grade"
-                  >
-                    {stats.averageGrade}
-                  </div>
+                  <div className="mb-2 font-label text-muted-foreground">Overall</div>
+                  <span data-testid="badge-overall-grade"><GradeBadge grade={stats.averageGrade} size="lg" /></span>
                 </div>
+                <div className="h-12 w-px bg-white/[0.08]" />
                 <div className="text-center">
-                  <div className="text-xs text-muted-foreground uppercase mb-1">Trend</div>
-                  <div className={cn("flex items-center gap-1 font-medium", trendColor)} data-testid="indicator-trend">
-                    <TrendIcon className="w-5 h-5" />
-                    <span className="capitalize text-sm">{stats.performanceTrend}</span>
+                  <div className="mb-2 font-label text-muted-foreground">Trend</div>
+                  <div className={cn("flex items-center gap-1.5 font-medium", trendColor)} data-testid="indicator-trend">
+                    <TrendIcon className="h-5 w-5" />
+                    <span className="text-sm capitalize">{stats.performanceTrend}</span>
                   </div>
                 </div>
               </div>
             </div>
 
             {player.bio && (
-              <p className="mt-4 text-sm text-muted-foreground line-clamp-3" data-testid="text-player-bio">
+              <p className="mt-5 max-w-2xl text-sm leading-relaxed text-muted-foreground" data-testid="text-player-bio">
                 {player.bio}
               </p>
             )}
           </div>
-        </Card>
+        </section>
 
-        <Card className="bg-gradient-to-r from-accent/10 via-accent/5 to-accent/10 border-accent/20 overflow-hidden" data-testid="card-scout-me">
-          <div className="p-4 md:p-6 flex flex-col md:flex-row items-center gap-4">
-            <div className="flex-1 text-center md:text-left">
-              <h3 className="text-lg font-bold text-foreground flex items-center gap-2 justify-center md:justify-start">
-                <Target className="w-5 h-5 text-accent" />
-                Interested in Recruiting {player.name.split(' ')[0]}?
+        {/* ───── Recruit CTA ───── */}
+        <section className={cn(SURFACE, "relative overflow-hidden p-5 md:p-6")} data-testid="card-scout-me">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -right-10 -top-10 h-44 w-44 rounded-full"
+            style={{ background: "radial-gradient(circle, hsl(var(--accent) / 0.12), transparent 70%)", filter: "blur(20px)" }}
+          />
+          <div className="relative flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h3 className={cn(SECTION_TITLE)}>
+                <Target className="h-5 w-5 text-accent" />
+                Recruiting {firstName}?
               </h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                {player.school && `${player.school}`}
-                {player.graduationYear && ` - Class of ${player.graduationYear}`}
-                {player.state && ` - ${player.state}`}
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                {[player.school, player.graduationYear && `Class of ${player.graduationYear}`, player.state].filter(Boolean).join(' · ')}
               </p>
             </div>
-            <div className="flex gap-2 flex-wrap">
-              <Dialog open={contactOpen} onOpenChange={setContactOpen}>
-                <DialogTrigger asChild>
-                  <Button className="gap-2" data-testid="button-contact-recruit">
-                    <Mail className="w-4 h-4" />
-                    Contact for Recruiting
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Contact {player.name}</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="senderName">Your Name *</Label>
-                      <Input id="senderName" placeholder="Full name" value={contactForm.senderName} onChange={e => setContactForm(f => ({ ...f, senderName: e.target.value }))} data-testid="input-sender-name" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="senderEmail">Email *</Label>
-                      <Input id="senderEmail" type="email" placeholder="your@email.com" value={contactForm.senderEmail} onChange={e => setContactForm(f => ({ ...f, senderEmail: e.target.value }))} data-testid="input-sender-email" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="senderRole">Your Role</Label>
-                      <Select value={contactForm.senderRole} onValueChange={v => setContactForm(f => ({ ...f, senderRole: v }))}>
-                        <SelectTrigger data-testid="select-sender-role">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="coach">Coach</SelectItem>
-                          <SelectItem value="recruiter">Recruiter</SelectItem>
-                          <SelectItem value="parent">Parent</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="senderSchool">School/Organization</Label>
-                      <Input id="senderSchool" placeholder="Optional" value={contactForm.senderSchool} onChange={e => setContactForm(f => ({ ...f, senderSchool: e.target.value }))} data-testid="input-sender-school" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="message">Message *</Label>
-                      <Textarea id="message" placeholder="Introduce yourself and your interest..." rows={4} value={contactForm.message} onChange={e => setContactForm(f => ({ ...f, message: e.target.value }))} data-testid="input-message" />
-                    </div>
-                    <Button onClick={handleContactSubmit} disabled={contactSubmitting} className="w-full gap-2" data-testid="button-submit-inquiry">
-                      {contactSubmitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Sending...</> : "Send Inquiry"}
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
+            <div className="flex flex-wrap gap-2">
+              {ContactDialog}
               <Button
                 variant="outline"
                 onClick={() => {
@@ -538,307 +493,235 @@ export default function PublicPlayerProfile() {
                 className="gap-2"
                 data-testid="button-copy-scout-link"
               >
-                <Copy className="w-4 h-4" />
-                Copy Link
+                <Copy className="h-4 w-4" /> Copy Link
               </Button>
             </div>
           </div>
-        </Card>
+        </section>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-          <Card className="p-4 text-center border-border bg-card/50">
-            <div className="text-2xl md:text-3xl font-bold text-foreground font-display" data-testid="stat-ppg">
-              {stats.basketball.ppg}
+        {/* ───── Stat strip ───── */}
+        <section className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.05] md:grid-cols-4">
+          {statStrip.map((s) => (
+            <div key={s.label} className="bg-background/40 px-5 py-5 text-center" data-testid={`stat-${s.label.toLowerCase()}`}>
+              <div className="font-display text-3xl font-bold tabular-nums">{s.value}</div>
+              <div className="mt-1 font-label text-muted-foreground">{s.label}</div>
             </div>
-            <div className="text-xs text-muted-foreground uppercase">PPG</div>
-          </Card>
-          <Card className="p-4 text-center border-border bg-card/50">
-            <div className="text-2xl md:text-3xl font-bold text-foreground font-display" data-testid="stat-rpg">
-              {stats.basketball.rpg}
-            </div>
-            <div className="text-xs text-muted-foreground uppercase">RPG</div>
-          </Card>
-          <Card className="p-4 text-center border-border bg-card/50">
-            <div className="text-2xl md:text-3xl font-bold text-foreground font-display" data-testid="stat-apg">
-              {stats.basketball.apg}
-            </div>
-            <div className="text-xs text-muted-foreground uppercase">APG</div>
-          </Card>
-          <Card className="p-4 text-center border-border bg-card/50">
-            <div className="text-2xl md:text-3xl font-bold text-foreground font-display" data-testid="stat-games-played">
-              {stats.gamesPlayed}
-            </div>
-            <div className="text-xs text-muted-foreground uppercase">Games</div>
-          </Card>
-        </div>
+          ))}
+        </section>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className="p-4 md:p-6 border-border bg-card/50">
-            <h2 className="text-lg font-bold font-display uppercase tracking-wide mb-4 flex items-center gap-2">
-              <GraduationCap className="w-5 h-5 text-accent" />
-              Recruiting Info
+        {/* ───── Recruiting info + recent games ───── */}
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+          <section className={cn(SURFACE, "p-5 md:p-6")}>
+            <h2 className={cn(SECTION_TITLE, "mb-5")}>
+              <GraduationCap className="h-5 w-5 text-accent" /> Recruiting Info
             </h2>
-            <div className="space-y-3">
-              {player.graduationYear && (
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Class Year</span>
-                  <span className="font-medium text-lg text-accent" data-testid="text-class-year">{player.graduationYear}</span>
+            <dl className="divide-y divide-white/[0.06]">
+              {[
+                player.graduationYear && { k: "Class Year", v: String(player.graduationYear), accent: true },
+                player.gpa && { k: "GPA", v: player.gpa },
+                player.level && { k: "Level", v: player.level.replace('_', ' ') },
+                player.height && { k: "Height", v: player.height },
+              ].filter(Boolean).map((row: any) => (
+                <div key={row.k} className="flex items-center justify-between py-3 first:pt-0">
+                  <dt className="text-sm text-muted-foreground">{row.k}</dt>
+                  <dd className={cn("font-medium capitalize", row.accent ? "text-accent" : "text-foreground")}>{row.v}</dd>
                 </div>
-              )}
-              {player.gpa && (
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">GPA</span>
-                  <span className="font-medium text-lg" data-testid="text-gpa">{player.gpa}</span>
-                </div>
-              )}
-              {player.level && (
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Level</span>
-                  <span className="font-medium capitalize">{player.level.replace('_', ' ')}</span>
-                </div>
-              )}
-              {player.height && (
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Height</span>
-                  <span className="font-medium">{player.height}</span>
-                </div>
-              )}
-            </div>
-            <Button 
-              className="w-full mt-4 gap-2" 
-              variant="outline"
-              onClick={() => setLocation('/community?tab=messages')}
-              data-testid="button-contact-player"
-            >
-              <Mail className="w-4 h-4" />
-              Contact Player
+              ))}
+            </dl>
+            <Button className="mt-5 w-full gap-2" variant="outline" onClick={() => setLocation('/community?tab=messages')} data-testid="button-contact-player">
+              <Mail className="h-4 w-4" /> Contact Player
             </Button>
-          </Card>
+          </section>
 
-          <Card className="p-4 md:p-6 border-border bg-card/50">
-            <h2 className="text-lg font-bold font-display uppercase tracking-wide mb-4 flex items-center gap-2">
-              <Activity className="w-5 h-5 text-accent" />
-              Recent Highlights
+          <section className={cn(SURFACE, "p-5 md:p-6")}>
+            <h2 className={cn(SECTION_TITLE, "mb-5")}>
+              <Activity className="h-5 w-5 text-accent" /> Recent Games
             </h2>
             {recentGames.length > 0 ? (
               <div className="space-y-2">
                 {recentGames.map((game) => (
-                  <div 
-                    key={game.id} 
-                    className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border"
+                  <div
+                    key={game.id}
+                    className="flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.02] p-3"
                     data-testid={`highlight-game-${game.id}`}
                   >
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium truncate">vs {game.opponent}</div>
-                      <div className="text-xs text-muted-foreground">
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium">vs {game.opponent}</div>
+                      <div className="mt-0.5 text-xs text-muted-foreground">
                         {new Date(game.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="text-sm text-muted-foreground">
-                        <span>{game.points} pts</span>
-                      </div>
-                      <div 
-                        className={cn(
-                          "w-10 h-10 rounded-lg flex items-center justify-center font-bold text-foreground bg-gradient-to-br text-sm",
-                          getGradeColor(game.grade || 'C')
-                        )}
-                      >
-                        {game.grade || '—'}
-                      </div>
+                      <span className="text-sm tabular-nums text-muted-foreground">{game.points} pts</span>
+                      <GradeBadge grade={game.grade || 'C'} size="sm" />
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                No games recorded yet
-              </div>
+              <div className="py-10 text-center text-sm text-muted-foreground">No games recorded yet</div>
             )}
-          </Card>
+          </section>
         </div>
 
+        {/* ───── Achievements ───── */}
         {(skillBadges.length > 0 || accolades.length > 0) && (
-          <Card className="p-4 md:p-6 border-border bg-card/50">
-            <h2 className="text-lg font-bold font-display uppercase tracking-wide mb-4 flex items-center gap-2">
-              <Award className="w-5 h-5 text-accent" />
-              Achievements
+          <section className={cn(SURFACE, "p-5 md:p-6")}>
+            <h2 className={cn(SECTION_TITLE, "mb-5")}>
+              <Award className="h-5 w-5 text-accent" /> Achievements
             </h2>
-            <div className="space-y-4">
+            <div className="space-y-5">
               {skillBadges.length > 0 && (
                 <div>
-                  <div className="text-xs text-muted-foreground uppercase mb-2">Skill Badges</div>
+                  <div className="mb-2.5 font-label text-muted-foreground">Skill Badges</div>
                   <div className="flex flex-wrap gap-2">
                     {skillBadges.map((badge) => (
-                      <Badge 
-                        key={badge.skillType} 
-                        variant="outline" 
-                        className="capitalize gap-1 border-accent/30"
+                      <span
+                        key={badge.skillType}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs capitalize text-foreground/85"
                         data-testid={`badge-skill-${badge.skillType}`}
                       >
-                        <Target className="w-3 h-3" />
-                        {badge.skillType.replace('_', ' ')} ({badge.level})
-                      </Badge>
+                        <Target className="h-3 w-3 text-accent" />
+                        {badge.skillType.replace('_', ' ')}
+                        <span className="text-muted-foreground">· {badge.level}</span>
+                      </span>
                     ))}
                   </div>
                 </div>
               )}
               {accolades.length > 0 && (
                 <div>
-                  <div className="text-xs text-muted-foreground uppercase mb-2">Accolades</div>
+                  <div className="mb-2.5 font-label text-muted-foreground">Accolades</div>
                   <div className="flex flex-wrap gap-2">
                     {accolades.map((accolade) => (
-                      <Badge 
-                        key={accolade.id} 
-                        variant="outline" 
-                        className="gap-1 border-accent/30 text-accent"
+                      <span
+                        key={accolade.id}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-accent/25 bg-accent/[0.07] px-3 py-1.5 text-xs text-accent"
                         data-testid={`badge-accolade-${accolade.id}`}
                       >
-                        <Trophy className="w-3 h-3" />
+                        <Trophy className="h-3 w-3" />
                         {accolade.title}
-                        {accolade.season && <span className="text-muted-foreground">({accolade.season})</span>}
-                      </Badge>
+                        {accolade.season && <span className="text-accent/60">· {accolade.season}</span>}
+                      </span>
                     ))}
                   </div>
                 </div>
               )}
             </div>
-          </Card>
+          </section>
         )}
 
+        {/* ───── Endorsements ───── */}
         {endorsements.length > 0 && (
-          <div className="space-y-4" data-testid="section-public-endorsements">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <MessageSquareQuote className="w-5 h-5 text-accent" />
+          <section className="space-y-4" data-testid="section-public-endorsements">
+            <h2 className={SECTION_TITLE}>
+              <MessageSquareQuote className="h-5 w-5 text-accent" />
               Coach Endorsements
-              <Badge className="bg-accent/10 text-accent border-accent/20 no-default-hover-elevate no-default-active-elevate">
-                {endorsements.length}
-              </Badge>
+              <span className="rounded-full bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">{endorsements.length}</span>
             </h2>
             <div className="grid gap-3">
               {endorsements.map((e: any) => (
-                <Card key={e.id} className="p-4 bg-muted/50 border-border" data-testid={`public-endorsement-${e.id}`}>
+                <div key={e.id} className={cn(SURFACE, "p-4")} data-testid={`public-endorsement-${e.id}`}>
                   <div className="flex items-start gap-3">
-                    <Avatar className="w-8 h-8 border border-border">
-                      <AvatarFallback className="bg-accent/20 text-accent text-xs font-bold">
+                    <Avatar className="h-9 w-9 border border-white/10">
+                      <AvatarFallback className="bg-accent/15 text-xs font-bold text-accent">
                         {e.coachName?.split(" ").map((n: string) => n[0]).join("").slice(0, 2)}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <span className="text-sm font-bold text-foreground">{e.coachName}</span>
-                        <Badge className="text-[10px] bg-muted/50 border-border no-default-hover-elevate no-default-active-elevate">
+                      <div className="mb-1 flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-bold">{e.coachName}</span>
+                        <span className="rounded-full bg-white/[0.05] px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
                           {e.skillCategory?.replace('_', ' ')}
-                        </Badge>
+                        </span>
                       </div>
-                      <p className="text-sm text-foreground/70">{e.content}</p>
+                      <p className="text-sm leading-relaxed text-foreground/70">{e.content}</p>
                     </div>
                   </div>
-                </Card>
+                </div>
               ))}
             </div>
-          </div>
+          </section>
         )}
 
+        {/* ───── Highlights ───── */}
         {highlights.length > 0 && (
-          <div className="space-y-4" data-testid="section-public-highlights">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <Film className="w-5 h-5 text-accent" />
+          <section className="space-y-4" data-testid="section-public-highlights">
+            <h2 className={SECTION_TITLE}>
+              <Film className="h-5 w-5 text-accent" />
               Highlight Clips
-              <Badge className="bg-accent/10 text-accent border-accent/20 no-default-hover-elevate no-default-active-elevate">
-                {highlights.length}
-              </Badge>
+              <span className="rounded-full bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">{highlights.length}</span>
             </h2>
             <div className="grid gap-3 sm:grid-cols-2">
               {highlights.map((clip: any) => (
-                <Card key={clip.id} className="overflow-hidden border-border bg-muted/50" data-testid={`public-highlight-${clip.id}`}>
+                <div key={clip.id} className={cn(SURFACE, "group overflow-hidden")} data-testid={`public-highlight-${clip.id}`}>
                   {clip.thumbnailUrl ? (
-                    <div className="relative aspect-video bg-card">
-                      <img src={clip.thumbnailUrl} alt={clip.title || 'Highlight'} className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-12 h-12 rounded-full bg-card/80 flex items-center justify-center border border-border">
-                          <Play className="w-5 h-5 text-white ml-0.5" />
+                    <div className="relative aspect-video bg-black/40">
+                      <img src={clip.thumbnailUrl} alt={clip.title || 'Highlight'} className="h-full w-full object-cover" />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity group-hover:opacity-100">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-background/80">
+                          <Play className="ml-0.5 h-5 w-5 text-foreground" />
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <div className="aspect-video bg-gradient-to-br from-accent/10 to-blue-600/10 flex items-center justify-center">
-                      <Film className="w-10 h-10 text-muted-foreground/20" />
+                    <div className="flex aspect-video items-center justify-center bg-white/[0.02]">
+                      <Film className="h-10 w-10 text-muted-foreground/20" />
                     </div>
                   )}
-                  <div className="p-3">
-                    <h4 className="text-sm font-bold text-foreground truncate">{clip.title || 'Highlight Clip'}</h4>
+                  <div className="p-3.5">
+                    <h4 className="truncate text-sm font-semibold">{clip.title || 'Highlight Clip'}</h4>
                     {clip.description && (
-                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{clip.description}</p>
+                      <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{clip.description}</p>
                     )}
                   </div>
-                </Card>
+                </div>
               ))}
             </div>
-          </div>
+          </section>
         )}
 
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Button 
-            size="lg" 
-            onClick={handleCopyLink}
-            className="gap-2"
-            data-testid="button-copy-profile-link"
-          >
-            <Copy className="w-4 h-4" />
-            Copy Profile Link
+        {/* ───── Bottom actions ───── */}
+        <div className="flex flex-col justify-center gap-3 pt-2 sm:flex-row">
+          <Button size="lg" onClick={handleCopyLink} className="gap-2" data-testid="button-copy-profile-link">
+            <Copy className="h-4 w-4" /> Copy Profile Link
           </Button>
           <Link href="/">
-            <Button 
-              variant="outline" 
-              size="lg" 
-              className="gap-2 w-full sm:w-auto"
-              data-testid="button-view-in-app"
-            >
-              View in Caliber
-              <ChevronRight className="w-4 h-4" />
+            <Button variant="outline" size="lg" className="w-full gap-2 sm:w-auto" data-testid="button-view-in-app">
+              View in Caliber <ChevronRight className="h-4 w-4" />
             </Button>
           </Link>
         </div>
 
-        {/* Coach Recommendations Section */}
-        <section className="py-12 border-t border-border">
-          <CoachRecommendations 
-            playerId={player.id}
-            isCoachViewing={false}
-            showWriteForm={false}
-          />
+        <section className="border-t border-white/[0.06] pt-10">
+          <CoachRecommendations playerId={player.id} isCoachViewing={false} showWriteForm={false} />
         </section>
       </main>
 
-      <footer className="relative z-10 border-t border-border py-6 text-center text-sm text-muted-foreground">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <div className="w-6 h-6 rounded bg-gradient-to-br from-accent to-blue-600 flex items-center justify-center">
-            <span className="text-white font-bold text-xs">C</span>
-          </div>
-          <span className="font-display font-bold">CALIBER</span>
+      <footer className="relative z-10 border-t border-white/[0.06] py-7 text-center text-sm text-muted-foreground">
+        <div className="mb-2 flex items-center justify-center gap-2">
+          <CaliberLogo size={22} />
+          <span className="font-display font-bold tracking-tight">Caliber</span>
         </div>
-        <p>The #1 App for Youth Athletes</p>
+        <p>The performance platform for serious athletes.</p>
       </footer>
 
       {/* Sticky "Join Caliber" CTA for non-authenticated visitors */}
       {!isAuthenticated && !ctaDismissed && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 p-3 pb-safe">
-          <div className="max-w-lg mx-auto flex items-center gap-3 px-4 py-3 rounded-xl bg-card border border-accent/30 shadow-2xl shadow-accent/10">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-blue-600 flex items-center justify-center shrink-0">
-              <span className="text-white font-bold text-xs">C</span>
-            </div>
-            <p className="flex-1 text-sm text-foreground">
+        <div className="fixed inset-x-0 bottom-0 z-50 p-3 pb-safe">
+          <div className="mx-auto flex max-w-lg items-center gap-3 rounded-2xl border border-white/10 bg-background/90 px-4 py-3 shadow-2xl backdrop-blur-xl">
+            <CaliberLogo size={28} />
+            <p className="flex-1 text-sm">
               <span className="font-semibold">{player.name}</span> tracks stats on Caliber.{" "}
               <span className="text-muted-foreground">Get your own free profile.</span>
             </p>
             <a href="/api/login">
-              <Button size="sm" className="shrink-0 shadow-lg shadow-accent/25">
+              <Button size="sm" className="shrink-0 bg-[hsl(var(--cta))] text-white hover:bg-[hsl(var(--cta))]/90">
                 Sign Up Free
               </Button>
             </a>
-            <button onClick={dismissCta} className="p-1 rounded-md hover:bg-muted transition-colors shrink-0">
-              <XIcon className="w-4 h-4 text-muted-foreground" />
+            <button onClick={dismissCta} className="shrink-0 rounded-md p-1 transition-colors hover:bg-white/[0.06]" aria-label="Dismiss">
+              <XIcon className="h-4 w-4 text-muted-foreground" />
             </button>
           </div>
         </div>
