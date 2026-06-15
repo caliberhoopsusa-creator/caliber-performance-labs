@@ -35,6 +35,7 @@ import {
   Play,
   Loader2,
   BadgeCheck,
+  ShieldCheck,
   Ruler,
   CalendarDays,
 } from "lucide-react";
@@ -42,6 +43,7 @@ import { cn } from "@/lib/utils";
 import { CaliberLogo } from "@/components/CaliberLogo";
 import { GradeBadge } from "@/components/GradeBadge";
 import { CoachRecommendations } from "@/components/CoachRecommendations";
+import { computeCaliberScore } from "@shared/trust-engine";
 import { useAuth } from "@/hooks/use-auth";
 import { X as XIcon } from "lucide-react";
 
@@ -262,6 +264,21 @@ export default function PublicPlayerProfile() {
   const TierIcon = TIER_ICONS[player.currentTier] || Star;
   const firstName = player.name.split(' ')[0];
 
+  // Caliber Score — the trust graph (computed client-side from fetched data).
+  const caliber = computeCaliberScore({
+    gamesPlayed: stats.gamesPlayed,
+    averageGrade: stats.averageGrade,
+    recentGrades: recentGames.map((g) => g.grade),
+    performanceTrend: stats.performanceTrend,
+    verifiedAthlete: Boolean((player as any).verifiedAthlete),
+    hasFilm: highlights.length > 0,
+    coachEndorsements: endorsements.length,
+    accolades: accolades.length,
+    skillBadges: skillBadges.length,
+  });
+  const confidenceDot =
+    caliber.confidence === "High" ? "bg-emerald-400" : caliber.confidence === "Medium" ? "bg-accent" : "bg-muted-foreground";
+
   const handleContactSubmit = async () => {
     if (!contactForm.senderName || !contactForm.senderEmail || !contactForm.message) {
       toast({ title: "Missing Fields", description: "Please fill in all required fields.", variant: "destructive" });
@@ -462,6 +479,50 @@ export default function PublicPlayerProfile() {
                 {player.bio}
               </p>
             )}
+          </div>
+        </section>
+
+        {/* ───── Caliber Score (trust graph) ───── */}
+        <section className={cn(SURFACE, "relative overflow-hidden p-5 md:p-6")} data-testid="caliber-score">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full"
+            style={{ background: "radial-gradient(circle, hsl(var(--accent) / 0.12), transparent 70%)", filter: "blur(22px)" }}
+          />
+          <div className="relative flex flex-col gap-6 md:flex-row md:items-center">
+            <div className="flex items-center gap-5">
+              <div className="flex h-24 w-24 shrink-0 flex-col items-center justify-center rounded-2xl border border-accent/20 bg-accent/[0.06]">
+                <span className="font-display text-4xl font-black leading-none tabular-nums text-foreground" data-testid="caliber-score-value">
+                  {caliber.score}
+                </span>
+                <span className="mt-1 font-label text-[0.6rem] text-muted-foreground">/ 100</span>
+              </div>
+              <div className="min-w-0">
+                <span className="flex items-center gap-2 font-label text-accent">
+                  <ShieldCheck className="h-3.5 w-3.5" /> Caliber Score
+                </span>
+                <div className="mt-1.5 font-display text-xl font-bold tracking-tight">{caliber.tier}</div>
+                <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-0.5 text-xs text-muted-foreground">
+                  <span className={cn("h-1.5 w-1.5 rounded-full", confidenceDot)} />
+                  {caliber.confidence} confidence
+                </span>
+                <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">{caliber.summary}</p>
+              </div>
+            </div>
+
+            <div className="grid flex-1 grid-cols-1 gap-x-7 gap-y-3.5 sm:grid-cols-2 md:border-l md:border-white/[0.07] md:pl-7">
+              {caliber.components.map((c) => (
+                <div key={c.key}>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">{c.label}</span>
+                    <span className="font-medium tabular-nums text-foreground/80">{c.value}</span>
+                  </div>
+                  <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+                    <div className="h-full rounded-full bg-accent transition-[width] duration-500" style={{ width: `${c.value}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
