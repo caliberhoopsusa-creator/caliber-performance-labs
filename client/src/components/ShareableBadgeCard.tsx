@@ -104,7 +104,7 @@ export const ShareableBadgeCard = forwardRef<HTMLDivElement, ShareableBadgeCardP
             style={{
               left: `${Math.random() * 100}%`,
               top: `${-10 + Math.random() * 30}%`,
-              backgroundColor: ['#E8192C', '#22c55e', '#3b82f6', '#a855f7', '#eab308'][Math.floor(Math.random() * 5)],
+              backgroundColor: ['#4f6878', '#22c55e', '#3b82f6', '#a855f7', '#eab308'][Math.floor(Math.random() * 5)],
               opacity: 0.6,
               animation: `fall ${3 + Math.random() * 3}s linear infinite`,
               animationDelay: `${Math.random() * 3}s`,

@@ -35,10 +35,11 @@ import {
   Play,
   Loader2
 } from "lucide-react";
-import { FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS, type FootballPosition } from "@shared/sports-config";
 import { cn } from "@/lib/utils";
 import { CaliberLogo } from "@/components/CaliberLogo";
 import { CoachRecommendations } from "@/components/CoachRecommendations";
+import { useAuth } from "@/hooks/use-auth";
+import { X as XIcon } from "lucide-react";
 
 interface PublicPlayerData {
   player: {
@@ -67,13 +68,6 @@ interface PublicPlayerData {
       ppg: number;
       rpg: number;
       apg: number;
-    };
-    football: {
-      passingYpg: number;
-      rushingYpg: number;
-      receivingYpg: number;
-      totalTDs: number;
-      tacklesPerGame: number;
     };
   };
   recentGames: Array<{
@@ -151,11 +145,7 @@ function getGradeColor(grade: string): string {
 function formatPosition(position: string | null | undefined): string {
   if (!position) return '';
   return position.split(',').map(p => {
-    const pos = p.trim();
-    if (FOOTBALL_POSITIONS.includes(pos as FootballPosition)) {
-      return FOOTBALL_POSITION_LABELS[pos as FootballPosition];
-    }
-    return pos;
+    return p.trim();
   }).join(' / ');
 }
 
@@ -187,6 +177,15 @@ export default function PublicPlayerProfile() {
   const [, setLocation] = useLocation();
   const playerId = Number(params?.id);
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
+  const [ctaDismissed, setCtaDismissed] = useState(() =>
+    typeof sessionStorage !== 'undefined' && !!sessionStorage.getItem('joinCtaDismissed')
+  );
+
+  const dismissCta = () => {
+    sessionStorage.setItem('joinCtaDismissed', '1');
+    setCtaDismissed(true);
+  };
 
   const { data, isLoading, error } = useQuery<PublicPlayerData>({
     queryKey: [`/api/players/${playerId}/public`],
@@ -286,7 +285,6 @@ export default function PublicPlayerProfile() {
   }
 
   const { player, stats, recentGames, skillBadges, accolades } = data;
-  const isFootball = player.sport === 'football';
   const TierIcon = TIER_ICONS[player.currentTier] || Star;
   const tierColorClass = TIER_COLORS[player.currentTier] || TIER_COLORS.Rookie;
 
@@ -387,18 +385,27 @@ export default function PublicPlayerProfile() {
                       variant="outline" 
                       className={cn(
                         "text-xs uppercase",
-                        isFootball ? "border-accent/30 text-accent" : "border-accent/30 text-accent"
+                        "border-accent/30 text-accent"
                       )}
-                      data-testid={isFootball ? "badge-sport-football" : "badge-sport-basketball"}
+                      data-testid="badge-sport-basketball"
                     >
-                      {isFootball ? "Football" : "Basketball"}
+                      {"Basketball"}
                     </Badge>
                   </div>
                   
                   <h1 className="text-2xl md:text-3xl font-bold font-display uppercase tracking-tight truncate" data-testid="text-player-name">
                     {player.name}
                   </h1>
-                  
+
+                  {(player as any).verifiedAthlete && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 text-xs font-medium border border-blue-500/30">
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      Verified Athlete
+                    </span>
+                  )}
+
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-sm text-muted-foreground">
                     {player.school && (
                       <span className="flex items-center gap-1">
@@ -539,61 +546,30 @@ export default function PublicPlayerProfile() {
         </Card>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-          {isFootball ? (
-            <>
-              <Card className="p-4 text-center border-border bg-card/50">
-                <div className="text-2xl md:text-3xl font-bold text-foreground font-display" data-testid="stat-total-tds">
-                  {stats.football.totalTDs}
-                </div>
-                <div className="text-xs text-muted-foreground uppercase">Total TDs</div>
-              </Card>
-              <Card className="p-4 text-center border-border bg-card/50">
-                <div className="text-2xl md:text-3xl font-bold text-foreground font-display" data-testid="stat-rushing-ypg">
-                  {stats.football.rushingYpg}
-                </div>
-                <div className="text-xs text-muted-foreground uppercase">Rush YPG</div>
-              </Card>
-              <Card className="p-4 text-center border-border bg-card/50">
-                <div className="text-2xl md:text-3xl font-bold text-foreground font-display" data-testid="stat-passing-ypg">
-                  {stats.football.passingYpg}
-                </div>
-                <div className="text-xs text-muted-foreground uppercase">Pass YPG</div>
-              </Card>
-              <Card className="p-4 text-center border-border bg-card/50">
-                <div className="text-2xl md:text-3xl font-bold text-foreground font-display" data-testid="stat-games-played">
-                  {stats.gamesPlayed}
-                </div>
-                <div className="text-xs text-muted-foreground uppercase">Games</div>
-              </Card>
-            </>
-          ) : (
-            <>
-              <Card className="p-4 text-center border-border bg-card/50">
-                <div className="text-2xl md:text-3xl font-bold text-foreground font-display" data-testid="stat-ppg">
-                  {stats.basketball.ppg}
-                </div>
-                <div className="text-xs text-muted-foreground uppercase">PPG</div>
-              </Card>
-              <Card className="p-4 text-center border-border bg-card/50">
-                <div className="text-2xl md:text-3xl font-bold text-foreground font-display" data-testid="stat-rpg">
-                  {stats.basketball.rpg}
-                </div>
-                <div className="text-xs text-muted-foreground uppercase">RPG</div>
-              </Card>
-              <Card className="p-4 text-center border-border bg-card/50">
-                <div className="text-2xl md:text-3xl font-bold text-foreground font-display" data-testid="stat-apg">
-                  {stats.basketball.apg}
-                </div>
-                <div className="text-xs text-muted-foreground uppercase">APG</div>
-              </Card>
-              <Card className="p-4 text-center border-border bg-card/50">
-                <div className="text-2xl md:text-3xl font-bold text-foreground font-display" data-testid="stat-games-played">
-                  {stats.gamesPlayed}
-                </div>
-                <div className="text-xs text-muted-foreground uppercase">Games</div>
-              </Card>
-            </>
-          )}
+          <Card className="p-4 text-center border-border bg-card/50">
+            <div className="text-2xl md:text-3xl font-bold text-foreground font-display" data-testid="stat-ppg">
+              {stats.basketball.ppg}
+            </div>
+            <div className="text-xs text-muted-foreground uppercase">PPG</div>
+          </Card>
+          <Card className="p-4 text-center border-border bg-card/50">
+            <div className="text-2xl md:text-3xl font-bold text-foreground font-display" data-testid="stat-rpg">
+              {stats.basketball.rpg}
+            </div>
+            <div className="text-xs text-muted-foreground uppercase">RPG</div>
+          </Card>
+          <Card className="p-4 text-center border-border bg-card/50">
+            <div className="text-2xl md:text-3xl font-bold text-foreground font-display" data-testid="stat-apg">
+              {stats.basketball.apg}
+            </div>
+            <div className="text-xs text-muted-foreground uppercase">APG</div>
+          </Card>
+          <Card className="p-4 text-center border-border bg-card/50">
+            <div className="text-2xl md:text-3xl font-bold text-foreground font-display" data-testid="stat-games-played">
+              {stats.gamesPlayed}
+            </div>
+            <div className="text-xs text-muted-foreground uppercase">Games</div>
+          </Card>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -660,11 +636,7 @@ export default function PublicPlayerProfile() {
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="text-sm text-muted-foreground">
-                        {isFootball ? (
-                          <span>{(game.rushingYards || 0) + (game.passingYards || 0)} yds</span>
-                        ) : (
-                          <span>{game.points} pts</span>
-                        )}
+                        <span>{game.points} pts</span>
                       </div>
                       <div 
                         className={cn(
@@ -848,6 +820,29 @@ export default function PublicPlayerProfile() {
         </div>
         <p>The #1 App for Youth Athletes</p>
       </footer>
+
+      {/* Sticky "Join Caliber" CTA for non-authenticated visitors */}
+      {!isAuthenticated && !ctaDismissed && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 p-3 pb-safe">
+          <div className="max-w-lg mx-auto flex items-center gap-3 px-4 py-3 rounded-xl bg-card border border-accent/30 shadow-2xl shadow-accent/10">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-blue-600 flex items-center justify-center shrink-0">
+              <span className="text-white font-bold text-xs">C</span>
+            </div>
+            <p className="flex-1 text-sm text-foreground">
+              <span className="font-semibold">{player.name}</span> tracks stats on Caliber.{" "}
+              <span className="text-muted-foreground">Get your own free profile.</span>
+            </p>
+            <a href="/api/login">
+              <Button size="sm" className="shrink-0 shadow-lg shadow-accent/25">
+                Sign Up Free
+              </Button>
+            </a>
+            <button onClick={dismissCta} className="p-1 rounded-md hover:bg-muted transition-colors shrink-0">
+              <XIcon className="w-4 h-4 text-muted-foreground" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -133,7 +133,7 @@ const DIVISION_COLORS: Record<string, string> = {
 const LOGO_COLORS = [
   'bg-gradient-to-br from-accent to-blue-600',
   'bg-gradient-to-br from-accent to-accent/80',
-  'bg-gradient-to-br from-emerald-500 to-teal-600',
+  'bg-gradient-to-br from-emerald-500 to-amber-600',
   'bg-gradient-to-br from-purple-500 to-indigo-600',
   'bg-gradient-to-br from-rose-500 to-pink-600',
   'bg-gradient-to-br from-sky-500 to-accent',
@@ -458,14 +458,14 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
                     {college.tournamentAppearances !== null && (
                       <div className="flex items-center gap-2">
                         <Trophy className="w-3.5 h-3.5 text-muted-foreground" />
-                        <span className="text-muted-foreground">{college.sport === 'basketball' ? 'March Madness' : 'Bowl Games'}:</span>
+                        <span className="text-muted-foreground">March Madness:</span>
                         <span className="text-foreground">{college.tournamentAppearances}</span>
                       </div>
                     )}
                     {college.finalFourAppearances !== null && college.finalFourAppearances > 0 && (
                       <div className="flex items-center gap-2">
                         <Star className="w-3.5 h-3.5 text-accent" />
-                        <span className="text-muted-foreground">{college.sport === 'basketball' ? 'Final Fours' : 'Playoffs'}:</span>
+                        <span className="text-muted-foreground">Final Fours:</span>
                         <span className="text-accent font-medium">{college.finalFourAppearances}</span>
                       </div>
                     )}
@@ -480,27 +480,19 @@ function CollegeMatchCard({ match, onToggleSave, isInterested, onToggleInterest,
                 </div>
               )}
 
-              {((college.sport === 'basketball' && college.nbaPlayersProduced) || 
-                (college.sport === 'football' && college.nflPlayersProduced) ||
+              {(college.nbaPlayersProduced ||
                 college.averageMinutesForFreshmen) && (
-                <div className="p-3 rounded-lg bg-gradient-to-br from-emerald-500/10 to-teal-500/5 border border-emerald-500/20">
+                <div className="p-3 rounded-lg bg-gradient-to-br from-emerald-500/10 to-amber-500/5 border border-emerald-500/20">
                   <h4 className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                     <TrendingUp className="w-3.5 h-3.5" />
                     Player Development
                   </h4>
                   <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                    {college.sport === 'basketball' && college.nbaPlayersProduced !== null && (
+                    {college.nbaPlayersProduced !== null && (
                       <div className="flex items-center gap-2">
                         <Star className="w-3.5 h-3.5 text-muted-foreground" />
                         <span className="text-muted-foreground">NBA Players:</span>
                         <span className="text-foreground">{college.nbaPlayersProduced}</span>
-                      </div>
-                    )}
-                    {college.sport === 'football' && college.nflPlayersProduced !== null && (
-                      <div className="flex items-center gap-2">
-                        <Star className="w-3.5 h-3.5 text-muted-foreground" />
-                        <span className="text-muted-foreground">NFL Players:</span>
-                        <span className="text-foreground">{college.nflPlayersProduced}</span>
                       </div>
                     )}
                     {college.averageMinutesForFreshmen !== null && (

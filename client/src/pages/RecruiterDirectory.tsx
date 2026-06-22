@@ -116,7 +116,7 @@ export default function RecruiterDirectory() {
           <SelectContent>
             <SelectItem value="all">All Sports</SelectItem>
             <SelectItem value="Basketball">Basketball</SelectItem>
-            <SelectItem value="Football">Football</SelectItem>
+            
           </SelectContent>
         </Select>
         <Select value={divisionFilter} onValueChange={setDivisionFilter}>

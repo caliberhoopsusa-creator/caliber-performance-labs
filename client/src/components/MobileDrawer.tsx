@@ -25,7 +25,7 @@ type NavItem = {
   icon: React.ComponentType<{ className?: string }>;
   featured?: boolean;
   premium?: SubscriptionTier;
-  sport?: 'basketball' | 'football';
+  sport?: 'basketball';
 };
 
 type NavSection = {
@@ -61,7 +61,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
   }, [moreExpanded]);
 
   const { equippedTheme } = useEquippedItems();
-  const drawerThemeColor = equippedTheme?.item?.value || '#E8192C';
+  const drawerThemeColor = '#4f6878';
   const currentSport = useSport();
   const isPlayer = userRole === 'player';
   const isCoach = userRole === 'coach';
@@ -257,8 +257,9 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
         
         <div className="flex flex-col h-full relative z-10">
           {/* Premium header with gradient */}
-          <div className="p-5 border-b border-accent/10 bg-gradient-to-r from-accent/[0.04] to-transparent">
-            <div className="flex items-center gap-4">
+          <div className="relative p-5 border-b border-accent/10 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-accent/12 via-accent/5 to-transparent pointer-events-none" />
+            <div className="relative z-[1] flex items-center gap-4 w-full">
               <div className="relative">
                 <div className="absolute inset-[-3px] rounded-xl bg-gradient-to-br from-accent/40 to-accent/20 blur-sm" />
                 <CaliberLogo size={50} color={drawerThemeColor} className="relative" />
@@ -335,10 +336,10 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
                                 "mobile-menu-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium min-h-11 touch-target",
                                 "transition-all duration-200",
                                 isActive && "mobile-menu-item-active",
-                                isActive 
-                                  ? "text-accent bg-accent/15" 
+                                isActive
+                                  ? "text-[hsl(var(--cta))] bg-[hsl(var(--cta))]/[0.10]"
                                   : isFeatured
-                                  ? "text-accent bg-accent/5 hover:bg-accent/10"
+                                  ? "text-[hsl(var(--cta))] bg-[hsl(var(--cta))]/[0.06] hover:bg-[hsl(var(--cta))]/[0.10]"
                                   : needsUpgrade
                                   ? "text-muted-foreground/60"
                                   : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
@@ -349,7 +350,7 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
                                 className={cn(
                                   "p-1.5 rounded-lg transition-all duration-300 flex-shrink-0",
                                   isActive 
-                                    ? "bg-accent/30" 
+                                    ? "bg-[hsl(var(--cta))]/[0.20]"
                                     : "bg-white/[0.04]"
                                 )}
                                 animate={isActive && !prefersReducedMotion ? { scale: [1, 1.1, 1] } : {}}
@@ -357,13 +358,13 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
                               >
                                 <item.icon className={cn(
                                   "w-4 h-4 transition-all duration-300",
-                                  isActive && "text-accent"
+                                  isActive && "text-[hsl(var(--cta))]"
                                 )} />
                               </motion.div>
                               <span className="flex-1 truncate">{item.label}</span>
                               {isFeatured && (
                                 <motion.span 
-                                  className="text-[9px] bg-accent text-accent-foreground px-2 py-0.5 rounded-full font-bold uppercase tracking-wide whitespace-nowrap"
+                                  className="text-[9px] bg-[hsl(var(--cta))] text-white px-2 py-0.5 rounded-full font-bold uppercase tracking-wide whitespace-nowrap"
                                   initial={prefersReducedMotion ? { scale: 1, opacity: 1 } : { scale: 0.8, opacity: 0 }}
                                   animate={{ scale: 1, opacity: 1 }}
                                   transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3, delay: 0.2 }}
@@ -427,10 +428,10 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
                                 "mobile-menu-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium min-h-11 touch-target",
                                 "transition-all duration-200",
                                 isActive && "mobile-menu-item-active",
-                                isActive 
-                                  ? "text-accent bg-accent/15" 
+                                isActive
+                                  ? "text-[hsl(var(--cta))] bg-[hsl(var(--cta))]/[0.10]"
                                   : isFeatured
-                                  ? "text-accent bg-accent/5 hover:bg-accent/10"
+                                  ? "text-[hsl(var(--cta))] bg-[hsl(var(--cta))]/[0.06] hover:bg-[hsl(var(--cta))]/[0.10]"
                                   : needsUpgrade
                                   ? "text-muted-foreground/60"
                                   : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
@@ -441,13 +442,13 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
                                 className={cn(
                                   "p-1.5 rounded-lg transition-all duration-300 flex-shrink-0",
                                   isActive 
-                                    ? "bg-accent/30" 
+                                    ? "bg-[hsl(var(--cta))]/[0.20]"
                                     : "bg-white/[0.04]"
                                 )}
                               >
                                 <item.icon className={cn(
                                   "w-4 h-4 transition-all duration-300",
-                                  isActive && "text-accent"
+                                  isActive && "text-[hsl(var(--cta))]"
                                 )} />
                               </motion.div>
                               <span className="flex-1 truncate">{item.label}</span>

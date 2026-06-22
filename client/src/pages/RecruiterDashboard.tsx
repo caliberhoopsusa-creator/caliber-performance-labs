@@ -33,6 +33,12 @@ import {
   Mail,
   Building,
   Ruler,
+  ClipboardList,
+  Star,
+  Trash2,
+  ChevronDown,
+  ChevronUp,
+  BarChart3,
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -60,6 +66,16 @@ interface PlayerResult {
   tier: string | null;
   openToRecruiting: boolean;
   photoUrl: string | null;
+  avgGrade?: string | null;
+  gamesPlayed?: number;
+}
+
+interface RecruiterNote {
+  id: number;
+  note: string;
+  rating: number | null;
+  contactType: string | null;
+  createdAt: string;
 }
 
 interface BookmarkedPlayer extends PlayerResult {
@@ -117,6 +133,139 @@ function PlayerCardSkeleton() {
   );
 }
 
+const GRADE_COLORS: Record<string, string> = {
+  'A+': 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
+  'A':  'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
+  'A-': 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
+  'B+': 'text-blue-400 bg-blue-500/10 border-blue-500/30',
+  'B':  'text-blue-400 bg-blue-500/10 border-blue-500/30',
+  'B-': 'text-blue-400 bg-blue-500/10 border-blue-500/30',
+  'C+': 'text-amber-400 bg-amber-500/10 border-amber-500/30',
+  'C':  'text-amber-400 bg-amber-500/10 border-amber-500/30',
+  'C-': 'text-amber-400 bg-amber-500/10 border-amber-500/30',
+};
+
+const CONTACT_TYPES = [
+  { value: 'note', label: 'Note' },
+  { value: 'called', label: 'Called' },
+  { value: 'emailed', label: 'Emailed' },
+  { value: 'visited', label: 'Campus Visit' },
+  { value: 'offered', label: 'Offered' },
+];
+
+function NotesPanel({ playerId, playerName }: { playerId: number; playerName: string }) {
+  const { toast } = useToast();
+  const [noteText, setNoteText] = useState('');
+  const [rating, setRating] = useState<number>(0);
+  const [contactType, setContactType] = useState('note');
+
+  const { data: notes = [], isLoading } = useQuery<RecruiterNote[]>({
+    queryKey: ['/api/recruiter/notes', playerId],
+    queryFn: () => fetch(`/api/recruiter/notes/${playerId}`, { credentials: 'include' }).then(r => r.json()),
+  });
+
+  const addMutation = useMutation({
+    mutationFn: () => apiRequest('POST', `/api/recruiter/notes/${playerId}`, {
+      note: noteText, rating: rating || null, contactType,
+    }).then(r => r.json()),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/recruiter/notes', playerId] });
+      setNoteText(''); setRating(0);
+      toast({ title: 'Note saved' });
+    },
+    onError: () => toast({ title: 'Failed to save note', variant: 'destructive' }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (noteId: number) => apiRequest('DELETE', `/api/recruiter/notes/${noteId}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['/api/recruiter/notes', playerId] }),
+  });
+
+  return (
+    <div className="mt-4 pt-4 border-t border-border space-y-3" onClick={e => e.stopPropagation()}>
+      <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+        <ClipboardList className="w-3.5 h-3.5" />
+        Recruiting Notes
+        {notes.length > 0 && <span className="ml-auto font-normal normal-case">{notes.length} log{notes.length !== 1 ? 's' : ''}</span>}
+      </div>
+
+      {/* Existing notes */}
+      {isLoading ? (
+        <div className="space-y-1"><Skeleton className="h-8 w-full" /><Skeleton className="h-8 w-3/4" /></div>
+      ) : notes.length > 0 ? (
+        <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+          {(notes as RecruiterNote[]).map((n: RecruiterNote) => (
+            <div key={n.id} className="group flex items-start gap-2 text-xs p-2 rounded-lg bg-background/50 border border-border">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="font-medium text-foreground/80 capitalize">{n.contactType ?? 'note'}</span>
+                  {n.rating && (
+                    <span className="flex items-center gap-0.5 text-amber-400">
+                      {Array.from({ length: n.rating }).map((_, i) => (
+                        <Star key={i} className="w-2.5 h-2.5 fill-current" />
+                      ))}
+                    </span>
+                  )}
+                  <span className="text-muted-foreground ml-auto">
+                    {new Date(n.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </span>
+                </div>
+                <p className="text-muted-foreground leading-relaxed">{n.note}</p>
+              </div>
+              <button
+                className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                onClick={() => deleteMutation.mutate(n.id)}
+              >
+                <Trash2 className="w-3 h-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-xs text-muted-foreground italic">No notes yet for {playerName}</p>
+      )}
+
+      {/* New note form */}
+      <div className="space-y-2">
+        <div className="flex gap-2">
+          <select
+            value={contactType}
+            onChange={e => setContactType(e.target.value)}
+            className="text-xs rounded-md border border-input bg-background px-2 py-1.5 text-foreground focus:outline-none"
+          >
+            {CONTACT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+          </select>
+          <div className="flex items-center gap-0.5">
+            {[1, 2, 3, 4, 5].map(i => (
+              <button key={i} onClick={() => setRating(rating === i ? 0 : i)}>
+                <Star className={`w-3.5 h-3.5 ${i <= rating ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground'}`} />
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <textarea
+            value={noteText}
+            onChange={e => setNoteText(e.target.value)}
+            placeholder="Add a note…"
+            rows={2}
+            className="flex-1 text-xs rounded-md border border-input bg-background px-2.5 py-1.5 text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-1 focus:ring-ring"
+            onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && noteText.trim()) addMutation.mutate(); }}
+          />
+          <Button
+            size="sm"
+            onClick={() => addMutation.mutate()}
+            disabled={!noteText.trim() || addMutation.isPending}
+            className="self-end"
+          >
+            {addMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PlayerCard({
   player,
   bookmarkedIds,
@@ -137,6 +286,7 @@ function PlayerCard({
   signalPending: boolean;
 }) {
   const isBookmarked = bookmarkedIds.has(player.id);
+  const [showNotes, setShowNotes] = useState(false);
 
   return (
     <Card
@@ -174,6 +324,12 @@ function PlayerCard({
         {player.tier && (
           <Badge variant="secondary" className={getTierColor(player.tier)} data-testid={`badge-tier-${player.id}`}>
             {player.tier}
+          </Badge>
+        )}
+        {player.avgGrade && (
+          <Badge variant="outline" className={`font-bold text-xs ${GRADE_COLORS[player.avgGrade] ?? 'text-muted-foreground'}`} data-testid={`badge-grade-${player.id}`}>
+            <BarChart3 className="w-2.5 h-2.5 mr-1" />
+            {player.avgGrade} avg
           </Badge>
         )}
         {player.openToRecruiting && (
@@ -241,7 +397,19 @@ function PlayerCard({
             <ExternalLink className="w-4 h-4" />
           </Button>
         </Link>
+
+        <Button
+          size="icon"
+          variant={showNotes ? "default" : "outline"}
+          onClick={() => setShowNotes(!showNotes)}
+          title="Recruiting notes"
+          data-testid={`button-notes-${player.id}`}
+        >
+          {showNotes ? <ChevronUp className="w-4 h-4" /> : <ClipboardList className="w-4 h-4" />}
+        </Button>
       </div>
+
+      {showNotes && <NotesPanel playerId={player.id} playerName={player.name} />}
     </Card>
   );
 }
@@ -267,12 +435,15 @@ function SearchPlayersTab({
   const [stateFilter, setStateFilter] = useState("");
   const [gradYearFilter, setGradYearFilter] = useState("");
   const [openOnlyFilter, setOpenOnlyFilter] = useState(false);
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [minGradeFilter, setMinGradeFilter] = useState("");
 
   const queryParams = new URLSearchParams();
   if (positionFilter) queryParams.set("position", positionFilter);
   if (stateFilter) queryParams.set("state", stateFilter);
   if (gradYearFilter) queryParams.set("graduationYear", gradYearFilter);
   if (openOnlyFilter) queryParams.set("openToRecruiting", "true");
+  if (minGradeFilter) queryParams.set("minGrade", minGradeFilter);
 
   const queryString = queryParams.toString();
 
@@ -288,13 +459,19 @@ function SearchPlayersTab({
     },
   });
 
-  const hasFilters = positionFilter || stateFilter || gradYearFilter || openOnlyFilter;
+  const hasFilters = positionFilter || stateFilter || gradYearFilter || openOnlyFilter || verifiedOnly || minGradeFilter;
+
+  const displayedPlayers = verifiedOnly
+    ? (players || []).filter((p: any) => p.verifiedAthlete)
+    : players;
 
   const clearFilters = () => {
     setPositionFilter("");
     setStateFilter("");
     setGradYearFilter("");
     setOpenOnlyFilter(false);
+    setVerifiedOnly(false);
+    setMinGradeFilter("");
   };
 
   return (
@@ -341,6 +518,25 @@ function SearchPlayersTab({
             />
           </div>
 
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">Min Grade</Label>
+            <Select value={minGradeFilter} onValueChange={setMinGradeFilter}>
+              <SelectTrigger className="w-[120px]" data-testid="select-filter-grade">
+                <SelectValue placeholder="Any Grade" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Any Grade</SelectItem>
+                <SelectItem value="A+">A+ only</SelectItem>
+                <SelectItem value="A">A or better</SelectItem>
+                <SelectItem value="A-">A− or better</SelectItem>
+                <SelectItem value="B+">B+ or better</SelectItem>
+                <SelectItem value="B">B or better</SelectItem>
+                <SelectItem value="B-">B− or better</SelectItem>
+                <SelectItem value="C+">C+ or better</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="flex items-center gap-2">
             <Switch
               checked={openOnlyFilter}
@@ -349,6 +545,21 @@ function SearchPlayersTab({
             />
             <Label className="text-sm cursor-pointer">Open to Recruiting</Label>
           </div>
+
+          <button
+            onClick={() => setVerifiedOnly(!verifiedOnly)}
+            data-testid="button-filter-verified"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+              verifiedOnly
+                ? 'bg-blue-500/20 border-blue-500/50 text-blue-400'
+                : 'bg-gray-700/50 border-gray-600 text-gray-400 hover:text-gray-200'
+            }`}
+          >
+            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            Verified Only
+          </button>
 
           {hasFilters && (
             <Button
@@ -370,9 +581,9 @@ function SearchPlayersTab({
             <PlayerCardSkeleton key={i} />
           ))}
         </div>
-      ) : players && players.length > 0 ? (
+      ) : displayedPlayers && displayedPlayers.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" data-testid="grid-players">
-          {players.map((player) => (
+          {displayedPlayers.map((player) => (
             <PlayerCard
               key={player.id}
               player={player}
@@ -715,11 +926,11 @@ export default function RecruiterDashboard() {
     <div className="space-y-6 pb-20" data-testid="page-recruiter-dashboard">
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center">
             <Users className="w-6 h-6 text-accent" />
           </div>
           <div>
-            <h1 className="text-2xl md:text-3xl font-display font-bold bg-gradient-to-r from-white via-accent/20 to-accent bg-clip-text text-transparent">
+            <h1 className="text-2xl md:text-3xl font-display font-bold uppercase tracking-tight text-foreground">
               Recruiter Dashboard
             </h1>
             <p className="text-sm text-muted-foreground">
@@ -731,7 +942,7 @@ export default function RecruiterDashboard() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList
-          className="w-full justify-start bg-card border border-white/10 p-1 rounded-xl overflow-x-auto flex-nowrap"
+          className="w-full justify-start bg-card border border-border p-1 rounded-xl overflow-x-auto flex-nowrap"
           data-testid="recruiter-tabs"
         >
           <TabsTrigger

@@ -5,7 +5,6 @@ import { Progress } from "@/components/ui/progress";
 import { Star, Zap, Trophy, Crown, Sparkles, Target, Crosshair, Shield, Hand, Grab } from "lucide-react";
 import { type PlayerWithGames, type Badge as BadgeType, BADGE_DEFINITIONS, TIER_THRESHOLDS } from "@shared/schema";
 import { type SkillBadge } from "@/hooks/use-basketball";
-import { FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS, type FootballPosition } from "@shared/sports-config";
 
 const SKILL_ICONS: Record<string, typeof Target> = {
   sharpshooter: Crosshair,
@@ -101,20 +100,12 @@ interface ShareablePlayerCardProps {
 export const ShareablePlayerCard = forwardRef<HTMLDivElement, ShareablePlayerCardProps>(
   ({ player, badges = [], skillBadges = [], progression, aspectRatio = "1:1", sport }, ref) => {
     const games = player.games || [];
-    const isFootball = sport === 'football' || player.sport === 'football';
-    
+
     // Basketball averages
     const avgPoints = games.length ? (games.reduce((acc, g) => acc + g.points, 0) / games.length).toFixed(1) : "—";
     const avgReb = games.length ? (games.reduce((acc, g) => acc + g.rebounds, 0) / games.length).toFixed(1) : "—";
     const avgAst = games.length ? (games.reduce((acc, g) => acc + g.assists, 0) / games.length).toFixed(1) : "—";
-    
-    // Football averages
-    const avgPassYds = games.length ? (games.reduce((acc, g) => acc + (g.passingYards || 0), 0) / games.length).toFixed(0) : "—";
-    const avgRushYds = games.length ? (games.reduce((acc, g) => acc + (g.rushingYards || 0), 0) / games.length).toFixed(0) : "—";
-    const avgRecYds = games.length ? (games.reduce((acc, g) => acc + (g.receivingYards || 0), 0) / games.length).toFixed(0) : "—";
-    const totalTDs = games.reduce((acc, g) => acc + (g.passingTouchdowns || 0) + (g.rushingTouchdowns || 0) + (g.receivingTouchdowns || 0), 0);
-    const avgTackles = games.length ? (games.reduce((acc, g) => acc + (g.tackles || 0), 0) / games.length).toFixed(1) : "—";
-    
+
     const averageGrade = getAverageGrade(games);
     
     const currentTier = progression?.currentTier || player.currentTier || "Rookie";
@@ -177,11 +168,7 @@ export const ShareablePlayerCard = forwardRef<HTMLDivElement, ShareablePlayerCar
                   <span className="text-xl font-bold text-accent font-display">#{player.jerseyNumber}</span>
                 )}
                 <span className="text-xs font-bold uppercase tracking-wider bg-accent/20 text-accent px-2 py-0.5 rounded border border-accent/30">
-                  {player.position?.split(',').map(p => p.trim()).map(pos => 
-                    FOOTBALL_POSITIONS.includes(pos as FootballPosition)
-                      ? FOOTBALL_POSITION_LABELS[pos as FootballPosition]
-                      : pos
-                  ).join(' / ') || player.position}
+                  {player.position}
                 </span>
               </div>
               <h2 className="text-2xl font-bold text-white font-display uppercase tracking-tight truncate">
@@ -201,37 +188,18 @@ export const ShareablePlayerCard = forwardRef<HTMLDivElement, ShareablePlayerCar
           </div>
           
           <div className="grid grid-cols-3 gap-3 mb-4">
-            {isFootball ? (
-              <>
-                <div className="bg-white/5 rounded-lg p-3 text-center border border-white/10">
-                  <div className="text-2xl font-bold text-white font-display">{totalTDs}</div>
-                  <div className="text-[10px] text-white/50 uppercase tracking-wider">TDs</div>
-                </div>
-                <div className="bg-white/5 rounded-lg p-3 text-center border border-white/10">
-                  <div className="text-2xl font-bold text-white font-display">{avgRushYds}</div>
-                  <div className="text-[10px] text-white/50 uppercase tracking-wider">Rush YPG</div>
-                </div>
-                <div className="bg-white/5 rounded-lg p-3 text-center border border-white/10">
-                  <div className="text-2xl font-bold text-white font-display">{avgTackles}</div>
-                  <div className="text-[10px] text-white/50 uppercase tracking-wider">TCK/G</div>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="bg-white/5 rounded-lg p-3 text-center border border-white/10">
-                  <div className="text-2xl font-bold text-white font-display">{avgPoints}</div>
-                  <div className="text-[10px] text-white/50 uppercase tracking-wider">PPG</div>
-                </div>
-                <div className="bg-white/5 rounded-lg p-3 text-center border border-white/10">
-                  <div className="text-2xl font-bold text-white font-display">{avgReb}</div>
-                  <div className="text-[10px] text-white/50 uppercase tracking-wider">RPG</div>
-                </div>
-                <div className="bg-white/5 rounded-lg p-3 text-center border border-white/10">
-                  <div className="text-2xl font-bold text-white font-display">{avgAst}</div>
-                  <div className="text-[10px] text-white/50 uppercase tracking-wider">APG</div>
-                </div>
-              </>
-            )}
+            <div className="bg-white/5 rounded-lg p-3 text-center border border-white/10">
+              <div className="text-2xl font-bold text-white font-display">{avgPoints}</div>
+              <div className="text-[10px] text-white/50 uppercase tracking-wider">PPG</div>
+            </div>
+            <div className="bg-white/5 rounded-lg p-3 text-center border border-white/10">
+              <div className="text-2xl font-bold text-white font-display">{avgReb}</div>
+              <div className="text-[10px] text-white/50 uppercase tracking-wider">RPG</div>
+            </div>
+            <div className="bg-white/5 rounded-lg p-3 text-center border border-white/10">
+              <div className="text-2xl font-bold text-white font-display">{avgAst}</div>
+              <div className="text-[10px] text-white/50 uppercase tracking-wider">APG</div>
+            </div>
           </div>
           
           <div className="flex-1 flex flex-col justify-end">

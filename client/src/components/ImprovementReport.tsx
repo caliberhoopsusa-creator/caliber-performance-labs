@@ -3,7 +3,6 @@ import { usePlayer } from "@/hooks/use-basketball";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useSport } from "@/components/SportToggle";
 import {
   Select,
   SelectContent,
@@ -82,19 +81,11 @@ const GRADE_VALUES: Record<string, number> = {
 };
 
 const GRADE_COLORS: Record<string, string> = {
-  "A+": "#22c55e",
-  "A": "#22c55e",
-  "A-": "#4ade80",
-  "B+": "#60a5fa",
-  "B": "#3b82f6",
-  "B-": "#93c5fd",
-  "C+": "#fbbf24",
-  "C": "#f59e0b",
-  "C-": "#fcd34d",
-  "D+": "#E8192C",
-  "D": "#ea580c",
-  "D-": "#fb923c",
-  "F": "#ef4444",
+  'A+': 'hsl(var(--grade-a))', 'A':  'hsl(var(--grade-a))', 'A-': 'hsl(var(--grade-a))',
+  'B+': 'hsl(var(--grade-b))', 'B':  'hsl(var(--grade-b))', 'B-': 'hsl(var(--grade-b))',
+  'C+': 'hsl(var(--grade-c))', 'C':  'hsl(var(--grade-c))', 'C-': 'hsl(var(--grade-c))',
+  'D+': 'hsl(var(--grade-d))', 'D':  'hsl(var(--grade-d))', 'D-': 'hsl(var(--grade-d))',
+  'F':  'hsl(var(--grade-f))',
 };
 
 function gradeToValue(grade: string | null): number {
@@ -203,59 +194,6 @@ function calculateAverages(games: Game[]) {
   };
 }
 
-function calculateFootballAverages(games: Game[]) {
-  if (games.length === 0) {
-    return {
-      passingYards: 0,
-      rushingYards: 0,
-      receivingYards: 0,
-      totalTDs: 0,
-      tackles: 0,
-      sacks: 0,
-      interceptions: 0,
-      compPercent: 0,
-      avgGrade: 0,
-      gamesPlayed: 0,
-    };
-  }
-
-  const totals = games.reduce(
-    (acc, g) => ({
-      passingYards: acc.passingYards + (g.passingYards || 0),
-      rushingYards: acc.rushingYards + (g.rushingYards || 0),
-      receivingYards: acc.receivingYards + (g.receivingYards || 0),
-      passingTDs: acc.passingTDs + (g.passingTouchdowns || 0),
-      rushingTDs: acc.rushingTDs + (g.rushingTouchdowns || 0),
-      receivingTDs: acc.receivingTDs + (g.receivingTouchdowns || 0),
-      tackles: acc.tackles + (g.tackles || 0),
-      sacks: acc.sacks + (g.sacks || 0),
-      interceptions: acc.interceptions + (g.defensiveInterceptions || 0),
-      completions: acc.completions + (g.completions || 0),
-      passAttempts: acc.passAttempts + (g.passAttempts || 0),
-      gradeSum: acc.gradeSum + gradeToValue(g.grade),
-    }),
-    {
-      passingYards: 0, rushingYards: 0, receivingYards: 0,
-      passingTDs: 0, rushingTDs: 0, receivingTDs: 0,
-      tackles: 0, sacks: 0, interceptions: 0,
-      completions: 0, passAttempts: 0, gradeSum: 0,
-    }
-  );
-
-  const count = games.length;
-  return {
-    passingYards: totals.passingYards / count,
-    rushingYards: totals.rushingYards / count,
-    receivingYards: totals.receivingYards / count,
-    totalTDs: (totals.passingTDs + totals.rushingTDs + totals.receivingTDs) / count,
-    tackles: totals.tackles / count,
-    sacks: totals.sacks / count,
-    interceptions: totals.interceptions / count,
-    compPercent: totals.passAttempts > 0 ? (totals.completions / totals.passAttempts) * 100 : 0,
-    avgGrade: totals.gradeSum / count,
-    gamesPlayed: count,
-  };
-}
 
 function TrendIndicator({
   current,
@@ -332,16 +270,12 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
   const [period, setPeriod] = useState<TimePeriod>("30");
   const reportRef = useRef<HTMLDivElement>(null);
   const { data: player, isLoading } = usePlayer(playerId);
-  const sport = useSport();
-  const isFootball = sport === 'football';
 
   const games = useMemo(() => {
-    const allGames = player?.games ?? [];
-    // Filter games by current sport
-    return allGames.filter(g => g.sport === sport);
-  }, [player, sport]);
+    return player?.games ?? [];
+  }, [player]);
 
-  const { currentPeriodGames, previousPeriodGames, currentStats, previousStats, footballStats, prevFootballStats } = useMemo(() => {
+  const { currentPeriodGames, previousPeriodGames, currentStats, previousStats } = useMemo(() => {
     const current = filterGamesByPeriod(games, period);
     const previous = getPreviousPeriodGames(games, period);
     return {
@@ -349,8 +283,6 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
       previousPeriodGames: previous,
       currentStats: calculateAverages(current),
       previousStats: calculateAverages(previous),
-      footballStats: calculateFootballAverages(current),
-      prevFootballStats: calculateFootballAverages(previous),
     };
   }, [games, period]);
 
@@ -384,63 +316,39 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
 
   const improvements = useMemo(() => {
     const items: { label: string; change: number; type: "improvement" | "decline" }[] = [];
-    
-    if (isFootball) {
-      const footballStatsList = [
-        { key: "passingYards", label: "Pass YDS" },
-        { key: "rushingYards", label: "Rush YDS" },
-        { key: "receivingYards", label: "Rec YDS" },
-        { key: "totalTDs", label: "Total TDs" },
-        { key: "tackles", label: "Tackles" },
-        { key: "sacks", label: "Sacks" },
-        { key: "interceptions", label: "INTs" },
-        { key: "compPercent", label: "CMP%" },
-      ] as const;
 
-      footballStatsList.forEach(({ key, label }) => {
-        const diff = footballStats[key] - prevFootballStats[key];
-        if (Math.abs(diff) > 0.5) {
-          items.push({
-            label,
-            change: diff,
-            type: diff > 0 ? "improvement" : "decline",
-          });
-        }
-      });
-    } else {
-      const stats = [
-        { key: "points", label: "Points" },
-        { key: "rebounds", label: "Rebounds" },
-        { key: "assists", label: "Assists" },
-        { key: "steals", label: "Steals" },
-        { key: "blocks", label: "Blocks" },
-        { key: "fgPercent", label: "FG%" },
-        { key: "threePercent", label: "3PT%" },
-      ] as const;
+    const stats = [
+      { key: "points", label: "Points" },
+      { key: "rebounds", label: "Rebounds" },
+      { key: "assists", label: "Assists" },
+      { key: "steals", label: "Steals" },
+      { key: "blocks", label: "Blocks" },
+      { key: "fgPercent", label: "FG%" },
+      { key: "threePercent", label: "3PT%" },
+    ] as const;
 
-      stats.forEach(({ key, label }) => {
-        const diff = currentStats[key] - previousStats[key];
-        if (Math.abs(diff) > 0.5) {
-          items.push({
-            label,
-            change: diff,
-            type: diff > 0 ? "improvement" : "decline",
-          });
-        }
-      });
-
-      const toDiff = previousStats.turnovers - currentStats.turnovers;
-      if (Math.abs(toDiff) > 0.3) {
+    stats.forEach(({ key, label }) => {
+      const diff = currentStats[key] - previousStats[key];
+      if (Math.abs(diff) > 0.5) {
         items.push({
-          label: "Turnovers",
-          change: toDiff,
-          type: toDiff > 0 ? "improvement" : "decline",
+          label,
+          change: diff,
+          type: diff > 0 ? "improvement" : "decline",
         });
       }
+    });
+
+    const toDiff = previousStats.turnovers - currentStats.turnovers;
+    if (Math.abs(toDiff) > 0.3) {
+      items.push({
+        label: "Turnovers",
+        change: toDiff,
+        type: toDiff > 0 ? "improvement" : "decline",
+      });
     }
 
     return items.sort((a, b) => Math.abs(b.change) - Math.abs(a.change));
-  }, [currentStats, previousStats, footballStats, prevFootballStats, isFootball]);
+  }, [currentStats, previousStats]);
 
   const handlePrint = () => {
     window.print();
@@ -449,36 +357,24 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
   const handleExport = () => {
     if (!player) return;
 
-    const averages = isFootball 
-      ? {
-          passingYards: footballStats.passingYards.toFixed(1),
-          rushingYards: footballStats.rushingYards.toFixed(1),
-          receivingYards: footballStats.receivingYards.toFixed(1),
-          totalTDs: footballStats.totalTDs.toFixed(1),
-          tackles: footballStats.tackles.toFixed(1),
-          sacks: footballStats.sacks.toFixed(1),
-          interceptions: footballStats.interceptions.toFixed(1),
-          compPercent: footballStats.compPercent.toFixed(1),
-          averageGrade: valueToGrade(footballStats.avgGrade),
-        }
-      : {
-          points: currentStats.points.toFixed(1),
-          rebounds: currentStats.rebounds.toFixed(1),
-          assists: currentStats.assists.toFixed(1),
-          steals: currentStats.steals.toFixed(1),
-          blocks: currentStats.blocks.toFixed(1),
-          turnovers: currentStats.turnovers.toFixed(1),
-          fgPercent: currentStats.fgPercent.toFixed(1),
-          threePercent: currentStats.threePercent.toFixed(1),
-          ftPercent: currentStats.ftPercent.toFixed(1),
-          averageGrade: valueToGrade(currentStats.avgGrade),
-        };
+    const averages = {
+      points: currentStats.points.toFixed(1),
+      rebounds: currentStats.rebounds.toFixed(1),
+      assists: currentStats.assists.toFixed(1),
+      steals: currentStats.steals.toFixed(1),
+      blocks: currentStats.blocks.toFixed(1),
+      turnovers: currentStats.turnovers.toFixed(1),
+      fgPercent: currentStats.fgPercent.toFixed(1),
+      threePercent: currentStats.threePercent.toFixed(1),
+      ftPercent: currentStats.ftPercent.toFixed(1),
+      averageGrade: valueToGrade(currentStats.avgGrade),
+    };
 
     const data = {
       player: player.name,
-      sport: isFootball ? 'football' : 'basketball',
+      sport: 'basketball',
       period: period === "7" ? "Last 7 Days" : period === "30" ? "Last 30 Days" : "Season",
-      gamesPlayed: isFootball ? footballStats.gamesPlayed : currentStats.gamesPlayed,
+      gamesPlayed: currentStats.gamesPlayed,
       averages,
       improvements: improvements.filter((i) => i.type === "improvement").map((i) => i.label),
       areasToImprove: improvements.filter((i) => i.type === "decline").map((i) => i.label),
@@ -528,6 +424,7 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
           <p className="text-muted-foreground text-sm">
             {currentStats.gamesPlayed} games in {periodLabel.toLowerCase()}
           </p>
+
         </div>
 
         <div className="flex items-center gap-2 print:hidden">
@@ -571,125 +468,68 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {isFootball ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                  <StatComparisonCard
-                    label="Pass YDS"
-                    current={footballStats.passingYards}
-                    previous={prevFootballStats.passingYards}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                <StatComparisonCard
+                  label="Points"
+                  current={currentStats.points}
+                  previous={previousStats.points}
+                />
+                <StatComparisonCard
+                  label="Rebounds"
+                  current={currentStats.rebounds}
+                  previous={previousStats.rebounds}
+                />
+                <StatComparisonCard
+                  label="Assists"
+                  current={currentStats.assists}
+                  previous={previousStats.assists}
+                />
+                <StatComparisonCard
+                  label="Steals"
+                  current={currentStats.steals}
+                  previous={previousStats.steals}
+                />
+                <StatComparisonCard
+                  label="Blocks"
+                  current={currentStats.blocks}
+                  previous={previousStats.blocks}
+                />
+                <StatComparisonCard
+                  label="Turnovers"
+                  current={currentStats.turnovers}
+                  previous={previousStats.turnovers}
+                  inverted
+                />
+                <StatComparisonCard
+                  label="FG%"
+                  current={currentStats.fgPercent}
+                  previous={previousStats.fgPercent}
+                  format="percent"
+                />
+                <StatComparisonCard
+                  label="3PT%"
+                  current={currentStats.threePercent}
+                  previous={previousStats.threePercent}
+                  format="percent"
+                />
+                <StatComparisonCard
+                  label="FT%"
+                  current={currentStats.ftPercent}
+                  previous={previousStats.ftPercent}
+                  format="percent"
+                />
+                <div
+                  className="bg-secondary/20 rounded-lg p-3 space-y-1"
+                  data-testid="stat-comparison-avg-grade"
+                >
+                  <p className="text-xs text-muted-foreground">Avg Grade</p>
+                  <p className="text-xl font-bold">{valueToGrade(currentStats.avgGrade)}</p>
+                  <TrendIndicator
+                    current={currentStats.avgGrade}
+                    previous={previousStats.avgGrade}
                   />
-                  <StatComparisonCard
-                    label="Rush YDS"
-                    current={footballStats.rushingYards}
-                    previous={prevFootballStats.rushingYards}
-                  />
-                  <StatComparisonCard
-                    label="Rec YDS"
-                    current={footballStats.receivingYards}
-                    previous={prevFootballStats.receivingYards}
-                  />
-                  <StatComparisonCard
-                    label="Total TDs"
-                    current={footballStats.totalTDs}
-                    previous={prevFootballStats.totalTDs}
-                  />
-                  <StatComparisonCard
-                    label="Tackles"
-                    current={footballStats.tackles}
-                    previous={prevFootballStats.tackles}
-                  />
-                  <StatComparisonCard
-                    label="Sacks"
-                    current={footballStats.sacks}
-                    previous={prevFootballStats.sacks}
-                  />
-                  <StatComparisonCard
-                    label="INTs"
-                    current={footballStats.interceptions}
-                    previous={prevFootballStats.interceptions}
-                  />
-                  <StatComparisonCard
-                    label="CMP%"
-                    current={footballStats.compPercent}
-                    previous={prevFootballStats.compPercent}
-                    format="percent"
-                  />
-                  <div
-                    className="bg-secondary/20 rounded-lg p-3 space-y-1"
-                    data-testid="stat-comparison-avg-grade"
-                  >
-                    <p className="text-xs text-muted-foreground">Avg Grade</p>
-                    <p className="text-xl font-bold">{valueToGrade(footballStats.avgGrade)}</p>
-                    <TrendIndicator
-                      current={footballStats.avgGrade}
-                      previous={prevFootballStats.avgGrade}
-                    />
-                  </div>
                 </div>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                  <StatComparisonCard
-                    label="Points"
-                    current={currentStats.points}
-                    previous={previousStats.points}
-                  />
-                  <StatComparisonCard
-                    label="Rebounds"
-                    current={currentStats.rebounds}
-                    previous={previousStats.rebounds}
-                  />
-                  <StatComparisonCard
-                    label="Assists"
-                    current={currentStats.assists}
-                    previous={previousStats.assists}
-                  />
-                  <StatComparisonCard
-                    label="Steals"
-                    current={currentStats.steals}
-                    previous={previousStats.steals}
-                  />
-                  <StatComparisonCard
-                    label="Blocks"
-                    current={currentStats.blocks}
-                    previous={previousStats.blocks}
-                  />
-                  <StatComparisonCard
-                    label="Turnovers"
-                    current={currentStats.turnovers}
-                    previous={previousStats.turnovers}
-                    inverted
-                  />
-                  <StatComparisonCard
-                    label="FG%"
-                    current={currentStats.fgPercent}
-                    previous={previousStats.fgPercent}
-                    format="percent"
-                  />
-                  <StatComparisonCard
-                    label="3PT%"
-                    current={currentStats.threePercent}
-                    previous={previousStats.threePercent}
-                    format="percent"
-                  />
-                  <StatComparisonCard
-                    label="FT%"
-                    current={currentStats.ftPercent}
-                    previous={previousStats.ftPercent}
-                    format="percent"
-                  />
-                  <div
-                    className="bg-secondary/20 rounded-lg p-3 space-y-1"
-                    data-testid="stat-comparison-avg-grade"
-                  >
-                    <p className="text-xs text-muted-foreground">Avg Grade</p>
-                    <p className="text-xl font-bold">{valueToGrade(currentStats.avgGrade)}</p>
-                    <TrendIndicator
-                      current={currentStats.avgGrade}
-                      previous={previousStats.avgGrade}
-                    />
-                  </div>
-                </div>
-              )}
+              </div>
             </CardContent>
           </Card>
 
@@ -702,7 +542,7 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={gradeDistribution} layout="vertical">
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                       <XAxis type="number" tick={{ fontSize: 11, fill: "rgba(255,255,255,0.5)" }} axisLine={{ stroke: 'rgba(255,255,255,0.1)' }} />
                       <YAxis
                         dataKey="name"
@@ -711,7 +551,7 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
                         width={40}
                         axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
                       />
-                      <Tooltip content={<PremiumTooltip />} cursor={{ fill: 'rgba(234,88,12,0.1)' }} />
+                      <Tooltip content={<PremiumTooltip />} cursor={{ fill: 'rgba(224,36,36,0.1)' }} />
                       <Bar dataKey="value" radius={[0, 6, 6, 0]} isAnimationActive>
                         {gradeDistribution.map((entry, index) => (
                           <Cell 
@@ -733,16 +573,22 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
               <CardTitle>Grade Progression</CardTitle>
             </CardHeader>
             <CardContent>
+              <div className="flex items-center gap-3 mb-2 px-1">
+                <span className="flex items-center gap-1.5 text-xs text-muted-foreground uppercase tracking-wider">
+                  <span className="w-5 h-0.5 bg-accent inline-block rounded" />
+                  Grade Trend
+                </span>
+              </div>
               <div className="h-48">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={trendData}>
                     <defs>
                       <linearGradient id="gradeGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(24, 95%, 53%)" stopOpacity={0.8} />
+                        <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.8} />
                         <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.2} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" vertical={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                     <XAxis
                       dataKey="date"
                       tick={{ fontSize: 11, fill: "rgba(255,255,255,0.5)" }}
@@ -763,7 +609,7 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
                           return (
                             <div className="bg-card/80 backdrop-blur-md border border-accent/20 rounded-lg p-3 shadow-xl shadow-accent/10">
                               <p className="text-xs text-muted-foreground">{payload[0].payload.date}</p>
-                              <p style={{ color: 'hsl(24, 95%, 53%)' }} className="text-sm font-medium">
+                              <p style={{ color: 'hsl(var(--accent))' }} className="text-sm font-medium">
                                 Grade: {valueToGrade(payload[0].value)}
                               </p>
                             </div>
@@ -771,15 +617,15 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
                         }
                         return null;
                       }}
-                      cursor={{ stroke: 'rgba(234,88,12,0.3)' }}
+                      cursor={{ stroke: 'rgba(224,36,36,0.3)' }}
                     />
                     <Line
                       type="monotone"
                       dataKey="grade"
-                      stroke="hsl(24, 95%, 53%)"
+                      stroke="hsl(var(--accent))"
                       strokeWidth={3}
-                      dot={{ r: 4, fill: 'hsl(24, 95%, 53%)', filter: 'drop-shadow(0 0 8px rgba(234,88,12,0.6))' }}
-                      activeDot={{ r: 6, filter: 'drop-shadow(0 0 12px rgba(234,88,12,0.8))' }}
+                      dot={{ r: 4, fill: 'hsl(var(--accent))', filter: 'drop-shadow(0 0 8px rgba(224,36,36,0.6))' }}
+                      activeDot={{ r: 6, filter: 'drop-shadow(0 0 12px rgba(224,36,36,0.8))' }}
                       isAnimationActive
                       name="Grade"
                     />
@@ -877,41 +723,24 @@ export function ImprovementReport({ playerId }: ImprovementReportProps) {
                 </p>
                 <p>
                   Over the <span className="text-foreground font-semibold">{periodLabel.toLowerCase()}</span>, they played{" "}
-                  <span className="text-foreground font-semibold">{isFootball ? footballStats.gamesPlayed : currentStats.gamesPlayed} game{(isFootball ? footballStats.gamesPlayed : currentStats.gamesPlayed) !== 1 ? "s" : ""}</span>{" "}
-                  with an average grade of <span className="text-foreground font-semibold">{valueToGrade(isFootball ? footballStats.avgGrade : currentStats.avgGrade)}</span>.
+                  <span className="text-foreground font-semibold">{currentStats.gamesPlayed} game{currentStats.gamesPlayed !== 1 ? "s" : ""}</span>{" "}
+                  with an average grade of <span className="text-foreground font-semibold">{valueToGrade(currentStats.avgGrade)}</span>.
                 </p>
                 <p>
                   Stat averages:{" "}
-                  {isFootball ? (
-                    <>
-                      <span className="text-foreground font-semibold">{footballStats.passingYards.toFixed(1)} Pass YDS</span>,{" "}
-                      <span className="text-foreground font-semibold">{footballStats.rushingYards.toFixed(1)} Rush YDS</span>,{" "}
-                      <span className="text-foreground font-semibold">{footballStats.receivingYards.toFixed(1)} Rec YDS</span>,{" "}
-                      <span className="text-foreground font-semibold">{footballStats.totalTDs.toFixed(1)} TDs</span>,{" "}
-                      <span className="text-foreground font-semibold">{footballStats.tackles.toFixed(1)} Tackles</span>.
-                    </>
-                  ) : (
-                    <>
-                      <span className="text-foreground font-semibold">{currentStats.points.toFixed(1)} PPG</span>,{" "}
-                      <span className="text-foreground font-semibold">{currentStats.rebounds.toFixed(1)} RPG</span>,{" "}
-                      <span className="text-foreground font-semibold">{currentStats.assists.toFixed(1)} APG</span>,{" "}
-                      <span className="text-foreground font-semibold">{currentStats.steals.toFixed(1)} SPG</span>,{" "}
-                      <span className="text-foreground font-semibold">{currentStats.blocks.toFixed(1)} BPG</span>.
-                    </>
-                  )}
+                  <>
+                    <span className="text-foreground font-semibold">{currentStats.points.toFixed(1)} PPG</span>,{" "}
+                    <span className="text-foreground font-semibold">{currentStats.rebounds.toFixed(1)} RPG</span>,{" "}
+                    <span className="text-foreground font-semibold">{currentStats.assists.toFixed(1)} APG</span>,{" "}
+                    <span className="text-foreground font-semibold">{currentStats.steals.toFixed(1)} SPG</span>,{" "}
+                    <span className="text-foreground font-semibold">{currentStats.blocks.toFixed(1)} BPG</span>.
+                  </>
                 </p>
                 {(() => {
                   const bestImprovement = improvements.find((i) => i.type === "improvement");
                   const worstDecline = improvements.find((i) => i.type === "decline");
-                  
-                  const statCategories = isFootball ? [
-                    { key: "passingYards", label: "Passing", value: footballStats.passingYards },
-                    { key: "rushingYards", label: "Rushing", value: footballStats.rushingYards },
-                    { key: "receivingYards", label: "Receiving", value: footballStats.receivingYards },
-                    { key: "touchdowns", label: "Scoring TDs", value: footballStats.totalTDs },
-                    { key: "tackles", label: "Tackling", value: footballStats.tackles },
-                    { key: "compPercent", label: "Completion percentage", value: footballStats.compPercent },
-                  ] : [
+
+                  const statCategories = [
                     { key: "points", label: "Scoring", value: currentStats.points },
                     { key: "rebounds", label: "Rebounding", value: currentStats.rebounds },
                     { key: "assists", label: "Playmaking", value: currentStats.assists },

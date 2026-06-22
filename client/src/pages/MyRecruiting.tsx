@@ -38,7 +38,7 @@ interface Player {
   id: number;
   name: string;
   position: string;
-  sport: 'basketball' | 'football';
+  sport: 'basketball';
   gpa: string | null;
   city: string | null;
   state: string | null;
@@ -106,29 +106,9 @@ function getBasketballMilestones(graduationYear: number): Milestone[] {
   ];
 }
 
-function getFootballMilestones(graduationYear: number): Milestone[] {
-  const freshmanYear = graduationYear - 3;
-  const sophomoreYear = graduationYear - 2;
-  const juniorYear = graduationYear - 1;
-  const seniorYear = graduationYear;
 
-  return [
-    { id: 'freshman-film', year: freshmanYear, month: 9, period: `Fall ${freshmanYear}`, title: 'Film Training', description: 'Learn to break down film and understand what coaches look for' },
-    { id: 'freshman-camps', year: freshmanYear, month: 6, period: `Summer ${freshmanYear}`, title: 'Start Attending Camps', description: 'Attend college camps and combines to get evaluated and learn techniques' },
-    { id: 'sophomore-profile', year: sophomoreYear, month: 9, period: `Fall ${sophomoreYear}`, title: 'Build Recruiting Profile', description: 'Create profiles on recruiting services and start building your highlight tape' },
-    { id: 'sophomore-combines', year: sophomoreYear, month: 6, period: `Summer ${sophomoreYear}`, title: 'Attend Combines', description: 'Participate in regional combines to get measurables and performance data' },
-    { id: 'junior-contact', year: juniorYear, month: 9, period: `Sept 1, ${juniorYear}`, title: 'Coach Contact Allowed', description: 'College coaches can begin calling and initiating contact with you' },
-    { id: 'junior-unofficials', year: juniorYear, month: 10, period: `Fall ${juniorYear}`, title: 'Unofficial Visits', description: 'Take unofficial visits to schools you\'re interested in at your own expense' },
-    { id: 'senior-officials', year: seniorYear, month: 8, period: `August ${seniorYear - 1}`, title: 'Official Visits Begin', description: 'Start taking official visits (expenses paid by schools, up to 5 total)' },
-    { id: 'senior-early', year: seniorYear, month: 12, period: `December ${seniorYear - 1}`, title: 'Early Signing Period', description: 'Sign your National Letter of Intent during the early signing period' },
-    { id: 'senior-nsd', year: seniorYear, month: 2, period: `February ${seniorYear}`, title: 'National Signing Day', description: 'Traditional National Signing Day for those who haven\'t signed early' },
-  ];
-}
-
-function getNextMilestone(graduationYear: number, sport: 'basketball' | 'football'): Milestone | null {
-  const milestones = sport === 'basketball' 
-    ? getBasketballMilestones(graduationYear) 
-    : getFootballMilestones(graduationYear);
+function getNextMilestone(graduationYear: number, sport: 'basketball'): Milestone | null {
+  const milestones = getBasketballMilestones(graduationYear);
   
   const currentDate = new Date();
   const currentMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
@@ -253,7 +233,7 @@ export default function MyRecruiting() {
     );
   }
 
-  const sport = (player?.sport as 'basketball' | 'football') || currentSport;
+  const sport = (player?.sport as 'basketball') || currentSport;
   const graduationYear = player?.graduationYear || new Date().getFullYear() + 1;
   const nextMilestone = getNextMilestone(graduationYear, sport);
   const profileCompleteness = calculateProfileCompleteness(player);
@@ -308,11 +288,7 @@ export default function MyRecruiting() {
               )}
               data-testid="sport-badge"
             >
-              {sport === 'basketball' ? (
-                <><Dribbble className="w-3 h-3 mr-1" /> Basketball</>
-              ) : (
-                <><Trophy className="w-3 h-3 mr-1" /> Football</>
-              )}
+              <><Dribbble className="w-3 h-3 mr-1" /> Basketball</>
             </Badge>
           </div>
         </div>

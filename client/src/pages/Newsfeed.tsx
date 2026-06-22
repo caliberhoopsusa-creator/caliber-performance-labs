@@ -47,13 +47,13 @@ const ACTIVITY_GRADIENTS: Record<string, string> = {
   game: "from-accent/30 to-accent/10",
   badge: "from-yellow-500/15 dark:from-yellow-500/30 to-accent/10",
   streak: "from-red-500/15 dark:from-red-500/30 to-accent/10",
-  goal: "from-emerald-500/15 dark:from-emerald-500/30 to-green-600/10",
-  challenge: "from-purple-500/15 dark:from-purple-500/30 to-violet-600/10",
+  goal: "from-emerald-500/15 dark:from-emerald-500/30",
+  challenge: "from-purple-500/15 dark:from-purple-500/30",
   repost: "from-blue-500/15 dark:from-blue-500/30 to-accent/10",
-  poll: "from-indigo-500/15 dark:from-indigo-500/30 to-blue-600/10",
-  prediction: "from-pink-500/15 dark:from-pink-500/30 to-rose-600/10",
-  story: "from-accent/30 to-teal-600/10",
-  fallback: "from-gray-500/10 dark:from-gray-500/30 to-gray-600/5 dark:to-gray-600/10",
+  poll: "from-indigo-500/15 dark:from-indigo-500/30",
+  prediction: "from-pink-500/15 dark:from-pink-500/30",
+  story: "from-accent/30",
+  fallback: "from-gray-500/10 dark:from-gray-500/30 dark:to-gray-600/10",
 };
 
 const ACTIVITY_COLORS: Record<string, string> = {
@@ -70,15 +70,15 @@ const ACTIVITY_COLORS: Record<string, string> = {
 };
 
 const ACTIVITY_GLOW: Record<string, string> = {
-  game: "#E8192C",
-  badge: "#FBBF24",
+  game: "#4f6878",
+  badge: "#c8d4de",
   streak: "#EF4444",
   goal: "#10B981",
   challenge: "#A855F7",
   repost: "#3B82F6",
   poll: "#6366F1",
   prediction: "#EC4899",
-  story: "#06B6D4",
+  story: "#4f6878",
 };
 
 function ActivitySkeleton({ index }: { index: number }) {
@@ -140,7 +140,7 @@ function ActivityCard({ activity, index }: { activity: FeedActivity; index: numb
         onClick={activity.playerId ? handleClick : undefined}
         data-testid={`card-activity-${activity.id}`}
       >
-        <div className={cn("absolute inset-0 bg-gradient-to-br opacity-50", gradient)} />
+        <div className={cn("absolute inset-0 opacity-50", gradient)} />
         <div 
           className="absolute top-0 right-0 w-32 h-32 rounded-full blur-[60px] opacity-20"
           style={{ backgroundColor: glowColor }}
@@ -290,19 +290,19 @@ function FeedList({ activities, isLoading, error, emptyMessage, emptyDescription
             <div className="relative">
               <div className="absolute inset-0 bg-accent/20 blur-3xl rounded-full" />
               <motion.div 
-                className="w-20 h-20 rounded-2xl bg-gradient-to-br from-accent/20 to-accent/10 border border-accent/30 flex items-center justify-center relative z-10"
+                className="w-20 h-20 rounded-2xl bg-accent/10 border border-accent/30 flex items-center justify-center relative z-10"
                 animate={{ 
                   boxShadow: [
-                    "0 0 20px rgba(234, 88, 12, 0.2)",
-                    "0 0 40px rgba(234, 88, 12, 0.4)",
-                    "0 0 20px rgba(234, 88, 12, 0.2)"
+                    "0 0 20px rgba(224,36,36,0.2)",
+                    "0 0 40px rgba(224,36,36,0.4)",
+                    "0 0 20px rgba(224,36,36,0.2)"
                   ]
                 }}
                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
               >
                 <EmptyIcon 
                   className="w-10 h-10 text-accent" 
-                  style={{ filter: "drop-shadow(0 0 10px hsl(24, 95%, 53%))" }} 
+                  style={{ filter: "drop-shadow(0 0 10px hsl(var(--accent)))" }} 
                 />
               </motion.div>
             </div>
@@ -362,7 +362,7 @@ export default function Newsfeed() {
 
   return (
     <div className="pb-24 md:pb-6 space-y-8" data-testid="page-newsfeed">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-card/80 via-card to-card/80 border border-accent/20">
+      <div className="relative overflow-hidden rounded-2xl from-card/80 via-card to-card/80 border border-accent/20">
         <div className="absolute inset-0 opacity-30" />
         <div className="absolute top-0 right-0 w-96 h-96 bg-accent/10 blur-[100px] rounded-full" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 blur-[80px] rounded-full" />
@@ -371,11 +371,11 @@ export default function Newsfeed() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Activity className="w-5 h-5 text-accent" style={{ filter: "drop-shadow(0 0 8px hsl(24, 95%, 53%))" }} />
+                <Activity className="w-5 h-5 text-accent" style={{ filter: "drop-shadow(0 0 8px hsl(var(--accent)))" }} />
                 <span className="text-xs uppercase tracking-wider text-accent font-semibold">Live Updates</span>
               </div>
               <h1 className="text-3xl md:text-4xl font-bold">
-                <span className="bg-gradient-to-r from-white via-accent to-accent bg-clip-text text-transparent">
+                <span className="from-white via-accent to-accent">
                   Activity Feed
                 </span>
               </h1>
@@ -384,9 +384,9 @@ export default function Newsfeed() {
               </p>
             </div>
             
-            <div className="flex items-center gap-3 px-5 py-3 rounded-xl bg-gradient-to-r from-accent/15 to-accent/5 border border-accent/30 backdrop-blur-sm">
+            <div className="flex items-center gap-3 px-5 py-3 rounded-xl bg-accent/10 border border-accent/30 backdrop-blur-sm">
               <div className="relative">
-                <Rss className="w-7 h-7 text-accent" style={{ filter: "drop-shadow(0 0 8px hsl(24, 95%, 53%))" }} />
+                <Rss className="w-7 h-7 text-accent" style={{ filter: "drop-shadow(0 0 8px hsl(var(--accent)))" }} />
                 <motion.div 
                   className="absolute inset-0"
                   animate={{ opacity: [1, 0.3, 1] }}
@@ -397,7 +397,7 @@ export default function Newsfeed() {
               </div>
               <div>
                 <p className="text-xs text-accent/80 uppercase tracking-wide">Live Feed</p>
-                <p className="text-lg font-bold text-accent" style={{ textShadow: "0 0 20px rgba(234,88,12,0.5)" }}>
+                <p className="text-lg font-bold text-accent" style={{ textShadow: "0 0 20px rgba(224,36,36,0.5)" }}>
                   {allActivities?.length || 0} Updates
                 </p>
               </div>
@@ -419,7 +419,7 @@ export default function Newsfeed() {
                 value={tab}
                 className={cn(
                   "flex items-center justify-center gap-2 py-3 px-4 rounded-lg transition-all",
-                  "data-[state=active]:bg-gradient-to-br data-[state=active]:from-accent data-[state=active]:to-accent",
+                  "data-[state=active]:data-[state=active]:from-accent data-[state=active]:to-accent",
                   "data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/20"
                 )}
                 data-testid={`tab-${tab}`}

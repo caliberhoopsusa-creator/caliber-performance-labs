@@ -99,7 +99,7 @@ export default function HighlightClipsPage() {
           <div className="absolute inset-0 bg-accent/20 blur-3xl rounded-full" />
           <Film className="w-20 h-20 text-accent relative z-10 mb-6" />
         </div>
-        <h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-white to-accent bg-clip-text text-transparent">
+        <h2 className="text-2xl font-bold mb-2 from-white to-accent">
           Highlights Unavailable
         </h2>
         <p className="text-muted-foreground text-center max-w-md">
@@ -124,7 +124,7 @@ export default function HighlightClipsPage() {
                 <span className="text-xs uppercase tracking-wider text-accent font-semibold">Video Gallery</span>
               </div>
               <h1 className="text-3xl md:text-4xl font-bold">
-                <span className="bg-gradient-to-r from-white via-accent to-accent bg-clip-text text-transparent">
+                <span className="from-white via-accent to-accent">
                   Highlights Gallery
                 </span>
               </h1>
@@ -293,11 +293,11 @@ export default function HighlightClipsPage() {
         />
       </div>
 
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-card via-purple-950/20 to-card border border-accent/20 p-6">
+      <div className="relative overflow-hidden rounded-xl from-card to-card border border-accent/20 p-6">
         <div className="absolute inset-0 opacity-20" />
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-accent/20 to-purple-500/20 border border-border">
+            <div className="p-3 rounded-xl from-accent/20 border border-border">
               <Sparkles className="w-8 h-8 text-accent" />
             </div>
             <div>

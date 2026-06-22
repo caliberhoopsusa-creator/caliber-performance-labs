@@ -45,7 +45,6 @@ import {
   Users,
   Heart,
   Clock,
-  Trophy,
   Dribbble,
   Building,
   GraduationCap,
@@ -88,6 +87,8 @@ interface RecruitingEvent {
   maxParticipants: number | null;
   spotsRemaining: number | null;
   isVerified: boolean | null;
+  isFeatured?: boolean | null;
+  listingTier?: string | null;
 }
 
 interface EventWithCollege {
@@ -271,6 +272,11 @@ function EventCard({ eventData, isSaved, onToggleSave, isPending }: EventCardPro
               {event.isVerified && (
                 <Badge variant="outline" className="border-accent/50 text-accent bg-accent/10 text-xs">
                   Verified
+                </Badge>
+              )}
+              {event.isFeatured && (
+                <Badge variant="outline" className="border-amber-500/50 text-amber-400 bg-amber-500/10 text-xs font-semibold">
+                  ★ Featured
                 </Badge>
               )}
             </div>
@@ -570,15 +576,9 @@ export default function CampShowcaseContent() {
                 : "border-accent/50 text-accent bg-accent/10"
             )}
           >
-            {currentSport === "basketball" ? (
-              <>
-                <Dribbble className="w-3 h-3 mr-1" /> Basketball
-              </>
-            ) : (
-              <>
-                <Trophy className="w-3 h-3 mr-1" /> Football
-              </>
-            )}
+            <>
+              <Dribbble className="w-3 h-3 mr-1" /> Basketball
+            </>
           </Badge>
           <p className="text-muted-foreground text-sm">
             Find {currentSport} camps, showcases, and combines to get recruited
@@ -670,6 +670,7 @@ export default function CampShowcaseContent() {
         <div className="grid gap-4 md:gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {eventsData
             .filter((eventData) => eventData?.event?.id)
+            .sort((a, b) => (b.event.isFeatured ? 1 : 0) - (a.event.isFeatured ? 1 : 0))
             .map((eventData) => (
               <EventCard
                 key={eventData.event.id}
@@ -799,7 +800,6 @@ export default function CampShowcaseContent() {
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="basketball">Basketball</SelectItem>
-                          <SelectItem value="football">Football</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />

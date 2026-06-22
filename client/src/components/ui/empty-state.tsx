@@ -106,7 +106,7 @@ export function EmptyStateCard({ cardClassName, ...props }: EmptyStateCardProps)
       <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
       
       {/* Cyber grid pattern */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(234,88,12,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(234,88,12,0.02)_1px,transparent_1px)] bg-[size:30px_30px] opacity-30 pointer-events-none" />
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(224,36,36,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(224,36,36,0.02)_1px,transparent_1px)] bg-[size:30px_30px] opacity-30 pointer-events-none" />
       
       <EmptyState {...props} />
     </div>

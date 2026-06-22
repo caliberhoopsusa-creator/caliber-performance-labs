@@ -20,7 +20,7 @@ type NavItem = {
   featured?: boolean;
   premium?: SubscriptionTier;
   badgeCount?: number;
-  sport?: 'basketball' | 'football';
+  sport?: 'basketball';
 };
 
 type NavSection = {
@@ -54,7 +54,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
   }, [moreExpanded]);
 
   const { equippedTheme } = useEquippedItems();
-  const sidebarThemeColor = equippedTheme?.item?.value || '#E8192C';
+  const sidebarThemeColor = '#C6D0D8';
   const currentSport = useSport();
   const isPlayer = userRole === 'player';
   const isCoach = userRole === 'coach';
@@ -116,10 +116,17 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
       items: [
         { href: playerId ? `/players/${playerId}` : "/", label: "My Profile", icon: UserCircle },
         { href: "/community?tab=feed", label: "Feed", icon: Rss },
-        { href: "/discover/highlights", label: "Highlights", icon: Film },
-        { href: "/recruiting", label: "Recruiting", icon: GraduationCap },
-        { href: "/recruiter-directory", label: "Find Recruiters", icon: UserSearch },
         { href: "/analyze", label: "Log Game", icon: PlusCircle },
+      ],
+    },
+    {
+      title: "Exposure",
+      items: [
+        { href: "/recruiting", label: "Recruiting", icon: GraduationCap },
+        { href: "/whos-watching", label: "Who's Watching", icon: Binoculars },
+        { href: "/highlights", label: "Highlights", icon: Camera },
+        { href: "/reel-builder", label: "Reel Builder", icon: Wand2 },
+        { href: "/scout", label: "Scout Hub", icon: Eye },
       ],
     },
   ];
@@ -127,13 +134,11 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
   const playerMoreItems: NavItem[] = [
     { href: "/performance", label: "Performance", icon: Activity },
     { href: "/analytics", label: "Analytics", icon: BarChart3 },
-    { href: "/whos-watching", label: "Who's Watching", icon: Binoculars },
     { href: "/community", label: "Community", icon: UsersRound },
     { href: "/community?tab=stories", label: "Stories", icon: BookOpen },
     { href: "/video", label: "Video Analysis", icon: Video, premium: "pro" },
-    { href: "/highlights", label: "My Highlights", icon: Camera },
-    { href: "/reel-builder", label: "Reel Builder", icon: Wand2 },
-    { href: "/scout", label: "Scout Hub", icon: Eye },
+    { href: "/discover/highlights", label: "Discover", icon: Film },
+    { href: "/recruiter-directory", label: "Find Recruiters", icon: UserSearch },
     { href: "/schedule", label: "Schedule", icon: CalendarDays },
     { href: "/leagues", label: "League Hub", icon: Medal },
     { href: "/teams", label: "Teams", icon: Users },
@@ -234,10 +239,13 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
 
   return (
     <div className="hidden md:flex flex-col w-64 bg-sidebar border-r border-border h-screen sticky top-0 overflow-y-auto">
-      <div className="p-5 flex items-center gap-3 border-b border-border">
+      <div className="relative p-5 flex items-center gap-3 border-b border-border overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-accent/10 via-accent/5 to-transparent pointer-events-none" />
+        {/* Red precision top line */}
+        <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[hsl(var(--cta))]/60 to-transparent" />
         <CaliberLogo size={44} color={sidebarThemeColor} />
         <div className="flex-1">
-          <h1 className="text-xl font-bold font-display tracking-wider uppercase" style={{ color: sidebarThemeColor }}>CALIBER</h1>
+          <h1 className="text-xl font-bold font-display tracking-wider uppercase text-platinum" style={{ color: sidebarThemeColor }}>CALIBER</h1>
           <button 
             onClick={handleRoleSwitch}
             disabled={isSwitchingRole}
@@ -256,10 +264,10 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         )}
       </div>
 
-      <nav className="flex-1 p-3 space-y-5">
+      <nav className="flex-1 p-3 space-y-6">
         {navSections.map((section) => (
           <div key={section.title}>
-            <h3 className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest mb-1.5 px-3">{section.title}</h3>
+            <h3 className="text-[11px] font-bold text-muted-foreground/55 uppercase tracking-[0.13em] mb-3 px-3">{section.title}</h3>
             <div className="space-y-0.5">
               {section.items.map((item) => {
                 const baseHref = item.href.split('?')[0];
@@ -271,24 +279,24 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
                 const isFeatured = item.featured && !isActive;
                 return (
                   <Link key={item.href} href={item.href} className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 group font-medium text-base relative overflow-hidden",
-                    isActive 
-                      ? "bg-accent/10 text-foreground" 
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 group text-base relative overflow-hidden",
+                    isActive
+                      ? "border-l-2 border-[hsl(var(--cta))] bg-[hsl(var(--cta))]/[0.08] text-foreground font-semibold pl-[10px]"
                       : isFeatured
-                      ? "text-accent bg-accent/5"
+                      ? "text-[hsl(var(--cta))] bg-[hsl(var(--cta))]/[0.06] font-medium"
                       : needsUpgrade
-                      ? "text-muted-foreground/50"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      ? "text-muted-foreground/50 font-medium"
+                      : "text-muted-foreground hover:text-foreground hover:bg-white/5 font-medium"
                   )} data-testid={`nav-${item.href.replace(/\//g, '-').replace(/^-/, '') || 'home'}`}>
-                    <item.icon className={cn("w-4 h-4", isActive && "text-accent", isFeatured && "text-accent")} />
+                    <item.icon className={cn("w-4 h-4", isActive && "text-[hsl(var(--cta))]", isFeatured && "text-[hsl(var(--cta))]")} />
                     {item.label}
                     {item.badgeCount !== undefined && item.badgeCount > 0 && (
-                      <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] bg-accent text-white rounded-full font-bold">
+                      <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] bg-[hsl(var(--cta))] text-white rounded-full font-bold">
                         {item.badgeCount > 99 ? '99+' : item.badgeCount}
                       </span>
                     )}
                     {isFeatured && !item.badgeCount && (
-                      <span className="ml-auto text-[9px] bg-accent text-white px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">
+                      <span className="ml-auto text-[9px] bg-[hsl(var(--cta))] text-white px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">
                         LIVE
                       </span>
                     )}
@@ -308,7 +316,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
           <div>
             <button
               onClick={() => setMoreExpanded(!moreExpanded)}
-              className="flex items-center gap-2 w-full text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest mb-1.5 px-3 cursor-pointer transition-colors"
+              className="flex items-center gap-2 w-full text-[11px] font-bold text-muted-foreground/55 uppercase tracking-[0.13em] mb-3 px-3 cursor-pointer transition-colors hover:text-muted-foreground/80"
               data-testid="button-more-toggle"
             >
               {moreExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
@@ -318,31 +326,31 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
               <div className="space-y-0.5">
                 {moreItems.map((item) => {
                   const baseHref = item.href.split('?')[0];
-                  const isActive = location === item.href || 
+                  const isActive = location === item.href ||
                     location === baseHref ||
                     (item.href.includes('/players/') && location.includes('/players/') && location === item.href);
                   const needsUpgrade = item.premium && !hasAccess(item.premium);
                   const isFeatured = item.featured && !isActive;
                   return (
                     <Link key={item.href} href={item.href} className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 group font-medium text-base relative overflow-hidden",
-                      isActive 
-                        ? "bg-accent/10 text-foreground" 
+                      "flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 text-sm relative overflow-hidden",
+                      isActive
+                        ? "border-l-2 border-[hsl(var(--cta))] bg-[hsl(var(--cta))]/[0.08] text-foreground font-semibold pl-[10px]"
                         : isFeatured
-                        ? "text-accent bg-accent/5"
+                        ? "text-[hsl(var(--cta))] bg-[hsl(var(--cta))]/[0.06] font-medium"
                         : needsUpgrade
-                        ? "text-muted-foreground/50"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        ? "text-muted-foreground/35"
+                        : "text-muted-foreground/60 hover:text-foreground hover:bg-white/5"
                     )} data-testid={`nav-${item.href.replace(/\//g, '-').replace(/^-/, '') || 'home'}`}>
-                      <item.icon className={cn("w-4 h-4", isActive && "text-accent", isFeatured && "text-accent")} />
+                      <item.icon className={cn("w-3.5 h-3.5 shrink-0", isActive && "text-[hsl(var(--cta))]", isFeatured && "text-[hsl(var(--cta))]")} />
                       {item.label}
                       {item.badgeCount !== undefined && item.badgeCount > 0 && (
-                        <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] bg-accent text-white rounded-full font-bold">
+                        <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] bg-[hsl(var(--cta))] text-white rounded-full font-bold">
                           {item.badgeCount > 99 ? '99+' : item.badgeCount}
                         </span>
                       )}
                       {needsUpgrade && !isActive && (
-                        <span className="ml-auto inline-flex items-center gap-1 text-[9px] text-muted-foreground/70">
+                        <span className="ml-auto inline-flex items-center gap-1 text-[9px] text-muted-foreground/50">
                           <Lock className="w-3 h-3" />
                         </span>
                       )}
@@ -355,18 +363,18 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         )}
 
         <div>
-          <h3 className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest mb-1.5 px-3">{accountSection.title}</h3>
+          <h3 className="text-[11px] font-bold text-muted-foreground/55 uppercase tracking-[0.13em] mb-3 px-3">{accountSection.title}</h3>
           <div className="space-y-0.5">
             {accountSection.items.map((item) => {
               const isActive = location === item.href;
               return (
                 <Link key={item.href} href={item.href} className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 group font-medium text-base relative overflow-hidden",
-                  isActive 
-                    ? "bg-accent/10 text-foreground" 
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 group text-base relative overflow-hidden",
+                  isActive
+                    ? "border-l-2 border-[hsl(var(--cta))] bg-[hsl(var(--cta))]/[0.08] text-foreground font-semibold pl-[10px]"
+                    : "text-muted-foreground hover:text-foreground hover:bg-white/5 font-medium"
                 )} data-testid={`nav-${item.href.replace(/\//g, '-').replace(/^-/, '') || 'home'}`}>
-                  <item.icon className={cn("w-4 h-4", isActive && "text-accent")} />
+                  <item.icon className={cn("w-4 h-4", isActive && "text-[hsl(var(--cta))]")} />
                   {item.label}
                 </Link>
               );
@@ -444,14 +452,15 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
                 aria-label={item.label}
               >
                 <div className={cn(
-                  "rounded-full p-3 bg-accent text-white",
-                  isActive && "ring-2 ring-accent/30 ring-offset-2 ring-offset-background"
+                  "rounded-full p-3 text-white cta-glow",
+                  "bg-[hsl(var(--cta))]",
+                  isActive && "ring-2 ring-[hsl(var(--cta))]/30 ring-offset-2 ring-offset-background"
                 )}>
                   <Icon className="w-5 h-5" />
                 </div>
                 <span className={cn(
                   "text-[10px] font-medium mt-1",
-                  isActive ? "text-accent" : "text-muted-foreground"
+                  isActive ? "text-[hsl(var(--cta))]" : "text-muted-foreground"
                 )}>
                   {item.label}
                 </span>
@@ -473,7 +482,7 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
                 {isActive && (
                   <motion.div 
                     layoutId="mobile-nav-indicator"
-                    className="absolute top-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-accent"
+                    className="absolute top-0 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[hsl(var(--cta))]"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -484,12 +493,12 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
               
               <Icon className={cn(
                 "w-5 h-5",
-                isActive ? "text-accent" : "text-muted-foreground"
+                isActive ? "text-[hsl(var(--cta))]" : "text-muted-foreground"
               )} />
-              
+
               <span className={cn(
                 "text-[10px] font-medium mt-1",
-                isActive ? "text-accent" : "text-muted-foreground"
+                isActive ? "text-[hsl(var(--cta))]" : "text-muted-foreground"
               )}>
                 {item.label}
               </span>

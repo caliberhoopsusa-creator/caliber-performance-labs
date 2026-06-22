@@ -217,7 +217,7 @@ export default function Shop() {
           <div className="absolute inset-0 bg-accent/20 blur-3xl rounded-full" />
           <Lock className="w-20 h-20 text-accent relative z-10 mb-6" />
         </div>
-        <h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-foreground to-accent bg-clip-text text-transparent">
+        <h2 className="text-2xl font-bold mb-2 from-foreground to-accent">
           Sign in to access the Shop
         </h2>
         <p className="text-muted-foreground text-center max-w-md">
@@ -242,7 +242,7 @@ export default function Shop() {
                 <span className="text-xs uppercase tracking-wider text-accent font-semibold">Premium Store</span>
               </div>
               <h1 className="text-3xl md:text-4xl font-bold">
-                <span className="bg-gradient-to-r from-foreground via-accent to-accent bg-clip-text text-transparent">
+                <span className="from-foreground via-accent to-accent">
                   Caliber Shop
                 </span>
               </h1>
@@ -252,7 +252,7 @@ export default function Shop() {
             </div>
             
             <div className="flex flex-col items-start md:items-end gap-3">
-              <div className="flex items-center gap-3 px-5 py-3 rounded-xl bg-gradient-to-r from-yellow-500/15 to-yellow-600/5 border border-yellow-500/30 backdrop-blur-sm">
+              <div className="flex items-center gap-3 px-5 py-3 rounded-xl border border-yellow-500/30 backdrop-blur-sm">
                 <div className="relative">
                   <Coins className="w-8 h-8 text-yellow-500" style={{ filter: "drop-shadow(0 0 8px #FFD700)" }} />
                   <div className="absolute inset-0 animate-ping">
@@ -314,7 +314,7 @@ export default function Shop() {
                 {pkg.popular && (
                   <div className="absolute top-0 left-0 right-0 flex justify-center">
                     <Badge 
-                      className="rounded-t-none rounded-b-lg bg-gradient-to-r from-yellow-600 to-yellow-500 text-black text-[10px] font-bold px-3 py-1 shadow-lg"
+                      className="rounded-t-none rounded-b-lg text-black text-[10px] font-bold px-3 py-1 shadow-lg"
                       style={{ boxShadow: "0 4px 20px rgba(234, 179, 8, 0.4)" }}
                     >
                       <Star className="w-3 h-3 mr-1" />
@@ -328,7 +328,7 @@ export default function Shop() {
                     <motion.div 
                       className={cn(
                         "w-16 h-16 rounded-xl flex items-center justify-center relative",
-                        "bg-gradient-to-br from-yellow-500/20 to-yellow-600/10 border border-yellow-500/40"
+                        "from-yellow-500/20 border border-yellow-500/40"
                       )}
                       whileHover={{ scale: 1.1, rotate: 5 }}
                       transition={{ type: "spring", stiffness: 300 }}
@@ -367,8 +367,8 @@ export default function Shop() {
                     className={cn(
                       "w-full font-bold transition-all",
                       pkg.popular
-                        ? "bg-gradient-to-r from-yellow-500 to-yellow-400 hover:from-yellow-400 hover:to-yellow-300 text-black shadow-lg shadow-yellow-500/25"
-                        : "bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-black"
+                        ? "from-yellow-500 hover:from-yellow-400 hover:to-yellow-300 text-black shadow-lg shadow-yellow-500/25"
+                        : "from-yellow-600 hover:from-yellow-500 hover:to-yellow-400 text-black"
                     )}
                     disabled={purchaseCoinsMutation.isPending}
                     data-testid={`btn-buy-coins-${pkg.id}`}
@@ -416,7 +416,7 @@ export default function Shop() {
             </div>
           </div>
           
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-950/30 to-card/80 border border-purple-500/20 p-6">
+          <div className="relative overflow-hidden rounded-xl to-card/80 border border-purple-500/20 p-6">
             <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 blur-[80px] rounded-full" />
             <AnimatePresence mode="wait">
               {featuredItems[featuredIndex] && (
@@ -514,7 +514,7 @@ export default function Shop() {
                   value={key}
                   className={cn(
                     "flex flex-col items-center gap-1.5 py-3 px-2 rounded-lg transition-all",
-                    "data-[state=active]:bg-gradient-to-br data-[state=active]:from-accent data-[state=active]:to-accent",
+                    "data-[state=active]:data-[state=active]:from-accent data-[state=active]:to-accent",
                     "data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-accent/20"
                   )}
                   data-testid={`tab-shop-${key}`}
@@ -602,11 +602,11 @@ export default function Shop() {
         </Tabs>
       </div>
 
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-card via-purple-950/20 to-card border border-accent/20 p-6">
+      <div className="relative overflow-hidden rounded-xl from-card to-card border border-accent/20 p-6">
         <div className="absolute inset-0 opacity-20" />
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-accent/20 to-purple-500/20 border border-border">
+            <div className="p-3 rounded-xl from-accent/20 border border-border">
               <Gift className="w-8 h-8 text-accent" />
             </div>
             <div>
@@ -708,7 +708,7 @@ function FeaturedItemCard({
               size="lg"
               className={cn(
                 canAfford 
-                  ? "bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-black shadow-lg shadow-yellow-500/25"
+                  ? "from-yellow-600 hover:from-yellow-500 hover:to-yellow-400 text-black shadow-lg shadow-yellow-500/25"
                   : "bg-muted text-muted-foreground"
               )}
               onClick={onPurchase}
@@ -830,7 +830,7 @@ function ShopItemCard({
                 className={cn(
                   "w-full transition-all",
                   canAfford 
-                    ? "bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-black shadow-md shadow-yellow-500/20"
+                    ? "from-yellow-600 hover:from-yellow-500 hover:to-yellow-400 text-black shadow-md shadow-yellow-500/20"
                     : "bg-muted text-muted-foreground"
                 )}
                 onClick={onPurchase}

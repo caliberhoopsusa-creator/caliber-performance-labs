@@ -8,7 +8,7 @@ export function SportSpinner({
   className 
 }: { 
   size?: "sm" | "md" | "lg"; 
-  sport?: "basketball" | "football"; 
+  sport?: "basketball";
   className?: string;
 }) {
   const px = SIZES[size];
@@ -35,7 +35,7 @@ function BasketballSpinner({ size, className }: { size: number; className?: stri
         width={size} height={size} viewBox="0 0 40 40"
         style={{ animation: "basketball-bounce 0.8s ease-in-out infinite" }}
       >
-        <circle cx="20" cy="20" r="18" fill="#E8192C" />
+        <circle cx="20" cy="20" r="18" fill="#4f6878" />
         <path d="M2 20 Q20 16 38 20" stroke="#C2410C" strokeWidth="1.2" fill="none" opacity="0.6" />
         <path d="M20 2 Q16 20 20 38" stroke="#C2410C" strokeWidth="1.2" fill="none" opacity="0.6" />
         <path d="M6 8 Q14 20 6 32" stroke="#C2410C" strokeWidth="1" fill="none" opacity="0.4" />
@@ -53,33 +53,6 @@ function BasketballSpinner({ size, className }: { size: number; className?: stri
   );
 }
 
-function FootballSpinner({ size, className }: { size: number; className?: string }) {
-  return (
-    <div className={cn("flex items-center justify-center", className)} data-testid="spinner-football">
-      <style>{`
-        @keyframes football-spiral {
-          0% { transform: rotate(0deg) translateY(0); }
-          25% { transform: rotate(90deg) translateY(-${size * 0.2}px); }
-          50% { transform: rotate(180deg) translateY(0); }
-          75% { transform: rotate(270deg) translateY(-${size * 0.2}px); }
-          100% { transform: rotate(360deg) translateY(0); }
-        }
-      `}</style>
-      <svg 
-        width={size} height={size * 0.6} viewBox="0 0 50 30"
-        style={{ animation: "football-spiral 1s linear infinite" }}
-      >
-        <ellipse cx="25" cy="15" rx="22" ry="12" fill="#92400E" stroke="#78350F" strokeWidth="1.5" />
-        <line x1="25" y1="6" x2="25" y2="24" stroke="#FEFCE8" strokeWidth="1.2" opacity="0.8" />
-        <line x1="22" y1="9" x2="28" y2="9" stroke="#FEFCE8" strokeWidth="0.8" opacity="0.7" />
-        <line x1="21.5" y1="12" x2="28.5" y2="12" stroke="#FEFCE8" strokeWidth="0.8" opacity="0.7" />
-        <line x1="21.5" y1="18" x2="28.5" y2="18" stroke="#FEFCE8" strokeWidth="0.8" opacity="0.7" />
-        <line x1="22" y1="21" x2="28" y2="21" stroke="#FEFCE8" strokeWidth="0.8" opacity="0.7" />
-        <ellipse cx="25" cy="15" rx="22" ry="12" fill="none" stroke="#78350F" strokeWidth="0.5" opacity="0.3" />
-      </svg>
-    </div>
-  );
-}
 
 export function SportSpinnerPage({ className }: { className?: string }) {
   return (

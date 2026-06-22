@@ -104,7 +104,7 @@ export default function Highlights() {
       title: "",
       description: "",
       videoUrl: "",
-      gameId: "",
+      gameId: "none",
       overlayStyle: "minimal",
       statsToFeature: [],
     },
@@ -112,7 +112,7 @@ export default function Highlights() {
 
   const overlayForm = useForm({
     defaultValues: {
-      overlayStyle: "minimal" as const,
+      overlayStyle: "minimal" as "minimal" | "full" | "animated",
       statsToFeature: [] as string[],
     },
   });
@@ -124,7 +124,7 @@ export default function Highlights() {
         title: data.title,
         description: data.description || null,
         videoUrl: data.videoUrl,
-        gameId: data.gameId ? parseInt(data.gameId) : null,
+        gameId: data.gameId && data.gameId !== "none" ? parseInt(data.gameId) : null,
         overlayStyle: data.overlayStyle,
         statsToFeature: JSON.stringify(data.statsToFeature),
       };
@@ -351,7 +351,7 @@ export default function Highlights() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="">No game</SelectItem>
+                            <SelectItem value="none">No game</SelectItem>
                             {player?.games?.map((game) => (
                               <SelectItem key={game.id} value={game.id.toString()}>
                                 {game.date} vs {game.opponent}
@@ -641,8 +641,7 @@ export default function Highlights() {
         <VideoPlayerModal
           isOpen={!!playingClip}
           onClose={() => setPlayingClip(null)}
-          videoUrl={playingClip.videoUrl}
-          title={playingClip.title}
+          clip={playingClip}
         />
       )}
     </div>

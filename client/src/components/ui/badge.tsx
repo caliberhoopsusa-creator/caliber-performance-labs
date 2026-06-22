@@ -10,8 +10,8 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          "border-transparent bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-[0_2px_10px_rgba(234,88,12,0.3)]",
-        secondary: "border-accent/[0.1] bg-gradient-to-r from-[hsl(220,25%,12%)] to-[hsl(220,25%,10%)] text-accent/80",
+          "border-transparent bg-accent text-accent-foreground shadow-[0_2px_10px_rgba(224,36,36,0.3)]",
+        secondary: "border-accent/[0.1] bg-muted text-muted-foreground",
         destructive:
           "border-transparent bg-destructive text-destructive-foreground shadow-xs",
 

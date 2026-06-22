@@ -54,12 +54,12 @@ export default function PerformanceHub() {
     <div className="space-y-6 pb-8" data-testid="page-performance-hub">
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center">
             <Zap className="w-6 h-6 text-accent" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl md:text-3xl font-display font-bold bg-gradient-to-r from-white via-accent/20 to-accent bg-clip-text text-transparent">
+              <h1 className="text-2xl md:text-3xl font-display font-bold uppercase tracking-tight text-foreground">
                 Performance Hub
               </h1>
               <HelpTooltip
@@ -78,7 +78,7 @@ export default function PerformanceHub() {
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList 
-          className="w-full justify-start bg-card border border-white/10 p-1 rounded-xl overflow-x-auto flex-nowrap"
+          className="w-full justify-start bg-card border border-border p-1 rounded-xl overflow-x-auto flex-nowrap"
           data-testid="tabs-performance"
         >
           <TabsTrigger 

@@ -207,7 +207,6 @@ export default function CoachEndorsements() {
             <SelectContent>
               <SelectItem value="all">All Sports</SelectItem>
               <SelectItem value="basketball">Basketball</SelectItem>
-              <SelectItem value="football">Football</SelectItem>
             </SelectContent>
           </Select>
         </div>

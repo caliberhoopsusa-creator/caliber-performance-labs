@@ -11,7 +11,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Target, Award, Repeat2, BarChart3, Users, Camera, Flame, Trophy, Zap, Rss, UserCheck, UsersRound, Heart, ArrowUp, MessageCircle, Send, Trash2, Reply, Bookmark, Dumbbell, Clock, Swords, Quote, Bell, MoreHorizontal, Share2, Plus, X, ChevronLeft, ChevronRight, Eye, User, Star, ThumbsUp, Image, Video } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
@@ -247,13 +247,12 @@ function InlineStoryViewer({
       </div>
 
       <div className="absolute top-12 left-4 flex items-center gap-3 z-10" onClick={e => e.stopPropagation()}>
-        <div className="w-10 h-10 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center overflow-hidden">
-          {currentStory.playerPhoto ? (
-            <img src={currentStory.playerPhoto} alt="" className="w-full h-full object-cover" />
-          ) : (
-            <User className="w-5 h-5 text-accent" />
-          )}
-        </div>
+        <Avatar className="w-10 h-10 border border-accent/30">
+          <AvatarImage src={currentStory.playerPhoto ?? undefined} alt={currentStory.playerName} className="object-cover" />
+          <AvatarFallback className="text-xs font-semibold bg-accent/20 text-accent">
+            {getInitials(currentStory.playerName)}
+          </AvatarFallback>
+        </Avatar>
         <div>
           <p className="text-white font-semibold text-sm">{currentStory.playerName}</p>
           <p className="text-white/60 text-xs">
@@ -393,13 +392,10 @@ function StoriesRow({ currentPlayerId, currentUserName }: { currentPlayerId?: nu
             data-testid={`story-avatar-${sp.playerId}`}
           >
             <Avatar className={cn("w-16 h-16", sp.hasActiveStory && "ring-2 ring-accent ring-offset-2 ring-offset-background")}>
-              {sp.playerPhoto ? (
-                <img src={sp.playerPhoto} alt={sp.playerName} className="w-full h-full object-cover" />
-              ) : (
-                <AvatarFallback className="text-sm font-semibold bg-muted text-muted-foreground">
-                  {getInitials(sp.playerName)}
-                </AvatarFallback>
-              )}
+              <AvatarImage src={sp.playerPhoto ?? undefined} alt={sp.playerName} className="object-cover" />
+              <AvatarFallback className="text-sm font-semibold bg-muted text-muted-foreground">
+                {getInitials(sp.playerName)}
+              </AvatarFallback>
             </Avatar>
             <span className="text-[11px] text-muted-foreground truncate max-w-[64px]">
               {sp.playerUsername ? `@${sp.playerUsername}` : sp.playerName.split(" ")[0]}
@@ -450,6 +446,7 @@ interface FeedActivity {
   subtext: string | null;
   playerName?: string;
   playerUsername?: string;
+  playerPhoto?: string | null;
   createdAt: string;
 }
 
@@ -1390,10 +1387,32 @@ function FeedStreakBanner({ currentPlayerId }: { currentPlayerId: number }) {
   );
 }
 
-function ProfileViewsCard({ currentPlayerId }: { currentPlayerId: number }) {
-  const [, setLocation] = useLocation();
+type ProfileViewer = {
+  id: number;
+  viewedAt: string;
+  viewerName: string | null;
+  viewerAvatar: string | null;
+  viewerRole: string | null;
+  referrer: string | null;
+};
 
-  const { data } = useQuery<{ totalViews: number; recentViews: { viewerUserId: string; viewedAt: string }[]; viewsByDay: Record<string, number> }>({
+function timeAgo(dateStr: string) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
+function ProfileViewsCard({ currentPlayerId }: { currentPlayerId: number }) {
+  const [expanded, setExpanded] = useState(false);
+
+  const { data } = useQuery<{
+    totalViews: number;
+    viewsLast30Days: number;
+    recentViewers: ProfileViewer[];
+  }>({
     queryKey: ['/api/players', currentPlayerId, 'profile-views'],
     queryFn: async () => {
       const res = await fetch(`/api/players/${currentPlayerId}/profile-views`);
@@ -1404,28 +1423,61 @@ function ProfileViewsCard({ currentPlayerId }: { currentPlayerId: number }) {
 
   if (!data || data.totalViews <= 0) return null;
 
-  const recentCount = data.recentViews?.length || 0;
+  const viewers = data.recentViewers || [];
+  const namedViewers = viewers.filter(v => v.viewerName);
+  const anonymousCount = viewers.length - namedViewers.length;
+  const displayViewers = expanded ? viewers : viewers.slice(0, 5);
 
   return (
     <Card className="border-accent/20 p-3" data-testid="card-profile-views">
-      <div className="flex items-center justify-between gap-2 flex-wrap">
+      <div className="flex items-center justify-between gap-2 mb-2">
         <div className="flex items-center gap-2">
           <Eye className="w-4 h-4 text-accent" />
           <span className="text-sm font-semibold text-foreground">Profile Views</span>
           <Badge variant="secondary" className="text-xs">{data.totalViews}</Badge>
         </div>
-        <button
-          onClick={() => setLocation(`/players/${currentPlayerId}`)}
-          className="text-xs text-accent font-medium"
-          data-testid="link-view-profile-details"
-        >
-          View Details
-        </button>
+        {data.viewsLast30Days > 0 && (
+          <span className="text-xs text-muted-foreground">{data.viewsLast30Days} this month</span>
+        )}
       </div>
-      {recentCount > 0 && (
-        <p className="text-xs text-muted-foreground mt-1.5">
-          {recentCount} {recentCount === 1 ? 'view' : 'views'} this week
-        </p>
+
+      {viewers.length > 0 && (
+        <div className="flex flex-col gap-1.5 mt-1">
+          {displayViewers.map((viewer) => (
+            <div key={viewer.id} className="flex items-center gap-2.5">
+              <Avatar className="w-7 h-7 flex-shrink-0">
+                {viewer.viewerAvatar && (
+                  <img src={viewer.viewerAvatar} alt="" className="w-full h-full object-cover rounded-full" />
+                )}
+                <AvatarFallback className="text-xs bg-muted">
+                  {viewer.viewerName ? viewer.viewerName[0].toUpperCase() : '?'}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <span className="text-xs font-medium text-foreground">
+                  {viewer.viewerName || 'Anonymous visitor'}
+                </span>
+                {viewer.viewerRole && (
+                  <span className="ml-1.5 text-[10px] text-muted-foreground capitalize">{viewer.viewerRole}</span>
+                )}
+              </div>
+              <span className="text-[10px] text-muted-foreground flex-shrink-0">{timeAgo(viewer.viewedAt)}</span>
+            </div>
+          ))}
+          {anonymousCount > 0 && !expanded && (
+            <p className="text-xs text-muted-foreground pl-0.5">
+              + {anonymousCount} anonymous {anonymousCount === 1 ? 'visitor' : 'visitors'}
+            </p>
+          )}
+          {viewers.length > 5 && (
+            <button
+              onClick={() => setExpanded(e => !e)}
+              className="text-xs text-accent font-medium text-left mt-0.5"
+            >
+              {expanded ? 'Show less' : `Show all ${viewers.length} viewers`}
+            </button>
+          )}
+        </div>
       )}
     </Card>
   );
@@ -1490,7 +1542,7 @@ function ActivityCard({ activity, index, currentUserName, currentPlayerId, isAct
       transition={{ delay: Math.min(index * 0.03, 0.3), duration: 0.25 }}
     >
       <Card
-        className="overflow-hidden"
+        className="overflow-hidden transition-colors hover:border-white/10"
         data-testid={`card-activity-${activity.id}`}
       >
         <div className="flex items-center gap-3 p-4 pb-3 flex-wrap">
@@ -1499,6 +1551,7 @@ function ActivityCard({ activity, index, currentUserName, currentPlayerId, isAct
             onClick={handleProfileClick}
           >
             <Avatar className="w-9 h-9">
+              <AvatarImage src={activity.playerPhoto ?? undefined} alt={displayName} />
               <AvatarFallback className="text-xs font-semibold bg-muted text-muted-foreground">
                 {getInitials(displayName)}
               </AvatarFallback>
@@ -1691,23 +1744,24 @@ interface FeedListProps {
 
 function FeedList({ activities, isLoading, error, emptyMessage, emptyDescription, emptyIcon: EmptyIcon, currentUserName, currentPlayerId, hasNextPage, isFetchingNextPage, onLoadMore, variant = 'post', activePlayerIds }: FeedListProps) {
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     if (!onLoadMore || !hasNextPage) return;
-    
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && !isFetchingNextPage) {
           onLoadMore();
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1, rootMargin: "200px" }
     );
-    
+
     if (loadMoreRef.current) {
       observer.observe(loadMoreRef.current);
     }
-    
+
     return () => observer.disconnect();
   }, [onLoadMore, hasNextPage, isFetchingNextPage]);
 
@@ -1765,26 +1819,13 @@ function FeedList({ activities, isLoading, error, emptyMessage, emptyDescription
               <ActivityCard key={activity.id} activity={activity} index={idx} currentUserName={currentUserName} currentPlayerId={currentPlayerId} isActive={activity.playerId ? activePlayerIds?.has(activity.playerId) : false} />
             ))
           )}
-          {onLoadMore && hasNextPage && (
-            <div ref={loadMoreRef} className="py-4 flex justify-center">
-              <Button
-                variant="outline"
-                onClick={onLoadMore}
-                disabled={isFetchingNextPage}
-                data-testid="button-load-more"
-              >
-                {isFetchingNextPage ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin mr-2" />
-                    Loading...
-                  </>
-                ) : (
-                  'Load more'
-                )}
-              </Button>
-            </div>
-          )}
-          {!hasNextPage && activities.length > 0 && (
+          {/* Auto-load sentinel — IntersectionObserver triggers fetch when visible */}
+          <div ref={loadMoreRef} className="py-2 flex justify-center" aria-hidden>
+            {isFetchingNextPage && (
+              <div className="w-5 h-5 border-2 border-muted-foreground/20 border-t-muted-foreground/60 rounded-full animate-spin" data-testid="spinner-load-more" />
+            )}
+          </div>
+          {!hasNextPage && activities.length > 5 && (
             <div className="py-6 text-center">
               <p className="text-sm text-muted-foreground" data-testid="text-caught-up">You're all caught up!</p>
             </div>
@@ -1809,6 +1850,14 @@ function FeedList({ activities, isLoading, error, emptyMessage, emptyDescription
             {emptyDescription}
           </p>
         </div>
+        <Button
+          size="sm"
+          className="h-8 px-4 text-xs bg-amber-500 hover:bg-amber-400 text-black font-bold"
+          onClick={() => setLocation("/analyze")}
+          data-testid="button-empty-log-game"
+        >
+          Log a Game
+        </Button>
       </div>
     </Card>
   );
@@ -1846,8 +1895,19 @@ const TAB_LABELS = {
   alerts: "Alerts",
 };
 
+const CONTENT_FILTERS = [
+  { id: "all", label: "All" },
+  { id: "game", label: "Games" },
+  { id: "badge", label: "Badges" },
+  { id: "workout", label: "Workouts" },
+  { id: "streak", label: "Streaks" },
+] as const;
+
+type ContentFilter = typeof CONTENT_FILTERS[number]["id"];
+
 export default function FeedContent() {
   const [activeTab, setActiveTab] = useState("all");
+  const [contentFilter, setContentFilter] = useState<ContentFilter>("all");
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const currentUserName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Anonymous' : 'Anonymous';
@@ -1978,8 +2038,8 @@ export default function FeedContent() {
       {user?.playerId && <WeeklyRecapCard playerId={user.playerId} />}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList 
-          className="w-full h-auto p-1 bg-card border border-white/10 rounded-xl grid grid-cols-4 gap-1" 
+        <TabsList
+          className="w-full justify-start bg-transparent p-0 gap-1.5 overflow-x-auto flex-nowrap no-scrollbar h-auto"
           data-testid="tabs-feed"
         >
           {(["all", "following", "team", "alerts"] as const).map((tab) => {
@@ -1988,14 +2048,14 @@ export default function FeedContent() {
               <TabsTrigger
                 key={tab}
                 value={tab}
-                className={cn(
-                  "flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-md transition-all text-sm",
-                  "data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-sm",
-                )}
+                className="flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium border border-transparent transition-all duration-200
+                  text-muted-foreground/70 hover:text-foreground hover:bg-muted/50
+                  data-[state=active]:bg-amber-500 data-[state=active]:text-black data-[state=active]:border-amber-500/0 data-[state=active]:font-semibold
+                  data-[state=active]:shadow-[0_0_12px_rgba(198,208,216,0.25)]"
                 data-testid={`tab-${tab}`}
               >
-                <Icon className="w-4 h-4" />
-                <span className="font-medium hidden sm:inline">{TAB_LABELS[tab]}</span>
+                <Icon className="w-3.5 h-3.5" />
+                <span>{TAB_LABELS[tab]}</span>
               </TabsTrigger>
             );
           })}
@@ -2003,6 +2063,25 @@ export default function FeedContent() {
 
         <TabsContent value="all" className="mt-4">
           <div className="space-y-3" data-testid="container-activities-all">
+            {/* Content-type filter chips */}
+            <div className="flex gap-1.5 overflow-x-auto flex-nowrap no-scrollbar pb-0.5">
+              {CONTENT_FILTERS.map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => setContentFilter(f.id)}
+                  className={cn(
+                    "whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium border transition-all duration-150 shrink-0",
+                    contentFilter === f.id
+                      ? "bg-amber-500/15 border-amber-500/40 text-amber-400"
+                      : "border-white/8 text-muted-foreground/60 hover:text-muted-foreground hover:border-white/15"
+                  )}
+                  data-testid={`filter-${f.id}`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+
             {newPostsCount > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: -20 }}
@@ -2011,16 +2090,16 @@ export default function FeedContent() {
               >
                 <Button
                   onClick={handleLoadNewPosts}
-                  className="w-full rounded-md"
+                  className="w-full rounded-full bg-amber-500 hover:bg-amber-400 text-black font-semibold"
                   data-testid="button-new-posts"
                 >
                   <ArrowUp className="w-4 h-4 mr-2" />
-                  {newPostsCount} new {newPostsCount === 1 ? 'post' : 'posts'} available
+                  {newPostsCount} new {newPostsCount === 1 ? 'post' : 'posts'}
                 </Button>
               </motion.div>
             )}
             <FeedList
-              activities={allActivities}
+              activities={contentFilter === "all" ? allActivities : allActivities?.filter(a => a.activityType === contentFilter)}
               isLoading={allLoading}
               error={allError}
               emptyMessage="Your feed is quiet"
@@ -2028,7 +2107,7 @@ export default function FeedContent() {
               emptyIcon={Rss}
               currentUserName={currentUserName}
               currentPlayerId={user?.playerId}
-              hasNextPage={hasNextPage}
+              hasNextPage={contentFilter === "all" ? hasNextPage : false}
               isFetchingNextPage={isFetchingNextPage}
               onLoadMore={() => fetchNextPage()}
               activePlayerIds={activePlayerIds}

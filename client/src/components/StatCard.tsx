@@ -139,17 +139,16 @@ export function StatCard({ label, value, subValue, trend, className, highlight, 
   const statTestId = label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   return (
     <div className={cn(
-      "relative rounded-xl p-4 md:p-5 flex flex-col justify-between group overflow-hidden touch-press",
-      "bg-gradient-to-br from-[hsl(220,25%,8%)] via-[hsl(220,20%,6%)] to-[hsl(220,25%,5%)]",
+      "relative rounded-xl p-4 md:p-5 flex flex-col justify-between group overflow-hidden touch-press bg-card",
       "border border-accent/[0.08] backdrop-blur-xl",
-      "shadow-[0_4px_24px_rgba(0,0,0,0.4),0_0_50px_rgba(234,88,12,0.02)]",
+      "shadow-[0_4px_24px_rgba(0,0,0,0.4),0_0_50px_rgba(224,36,36,0.06)]",
       "transition-all duration-300",
-      "hover:border-accent/[0.15] hover:shadow-[0_8px_32px_rgba(0,0,0,0.5),0_0_60px_rgba(234,88,12,0.04)]",
+      "hover:border-accent/[0.15] hover:shadow-[0_8px_32px_rgba(0,0,0,0.5),0_0_60px_rgba(224,36,36,0.10)]",
       "active:shadow-[0_2px_12px_rgba(0,0,0,0.5)]",
-      highlight && "border-accent/20 shadow-[0_0_40px_rgba(234,88,12,0.08)]",
+      highlight && "border-accent/20 shadow-[0_0_40px_rgba(224,36,36,0.12)]",
       className
     )}>
-      <div className="absolute inset-x-[20%] top-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
+      <div className="absolute inset-x-[20%] top-0 h-px from-transparent via-accent/40 to-transparent" />
       
       {highlight && (
         <div className="absolute -right-8 -top-8 w-32 h-32 bg-gradient-radial from-accent/10 to-transparent rounded-full blur-2xl group-hover:from-accent/15 transition-all duration-500" />
@@ -170,11 +169,7 @@ export function StatCard({ label, value, subValue, trend, className, highlight, 
       </div>
       
       <div className="flex items-end gap-2 relative z-10">
-        <span className={cn(
-          "font-display text-4xl font-bold tracking-tight",
-          "bg-gradient-to-b from-white to-accent/20 bg-clip-text text-transparent",
-          "drop-shadow-[0_2px_10px_rgba(100,200,255,0.15)]"
-        )}>
+        <span className="font-display text-5xl font-bold tracking-tight text-foreground">
           <AnimatedValue value={value} />
         </span>
         {subValue && (

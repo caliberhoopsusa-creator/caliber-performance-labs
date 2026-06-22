@@ -6,7 +6,9 @@ import { eq } from "drizzle-orm";
 // (IMPORTANT) These user operations are mandatory for Replit Auth.
 export interface IAuthStorage {
   getUser(id: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  updateUser(id: string, fields: Partial<UpsertUser>): Promise<User | undefined>;
   updateUserRole(id: string, role: string, playerId?: number | null): Promise<User | undefined>;
   updateUserSport(id: string, sport: string): Promise<User | undefined>;
 }
@@ -17,43 +19,33 @@ class AuthStorage implements IAuthStorage {
     return user;
   }
 
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
   async upsertUser(userData: UpsertUser): Promise<User> {
-    try {
-      const [user] = await db
-        .insert(users)
-        .values(userData)
-        .onConflictDoUpdate({
-          target: users.id,
-          set: {
-            ...userData,
-            updatedAt: new Date(),
-          },
-        })
-        .returning();
-      return user;
-    } catch (error: any) {
-      if (error?.code === '23505' && error?.constraint?.includes('email')) {
-        if (userData.email) {
-          await db
-            .update(users)
-            .set({ email: null, updatedAt: new Date() })
-            .where(eq(users.email, userData.email));
-        }
-        const [user] = await db
-          .insert(users)
-          .values(userData)
-          .onConflictDoUpdate({
-            target: users.id,
-            set: {
-              ...userData,
-              updatedAt: new Date(),
-            },
-          })
-          .returning();
-        return user;
-      }
-      throw error;
-    }
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
+
+  async updateUser(id: string, fields: Partial<UpsertUser>): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ ...fields, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
   }
 
   async updateUserRole(id: string, role: string, playerId?: number | null): Promise<User | undefined> {

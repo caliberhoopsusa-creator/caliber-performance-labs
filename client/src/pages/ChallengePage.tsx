@@ -150,12 +150,12 @@ export default function ChallengePage() {
 
   return (
     <div className="pb-24 md:pb-8 max-w-2xl mx-auto space-y-6" data-testid="page-challenge">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-950/40 via-card/80 to-blue-950/40 border border-border">
+      <div className="relative overflow-hidden rounded-2xl via-card/80 border border-border">
         <div className="absolute inset-0 opacity-10" />
         <div className="relative z-10 p-6 text-center">
           <Swords className="w-10 h-10 mx-auto text-yellow-400 mb-2" style={{ filter: "drop-shadow(0 0 12px rgba(234,179,8,0.5))" }} />
           <h1 className="text-2xl md:text-3xl font-black uppercase tracking-wider">
-            <span className="bg-gradient-to-r from-red-400 via-yellow-400 to-blue-400 bg-clip-text text-transparent" data-testid="text-challenge-title">
+            <span className="from-red-400" data-testid="text-challenge-title">
               Head to Head Challenge
             </span>
           </h1>
@@ -164,7 +164,7 @@ export default function ChallengePage() {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <Card className="p-4 bg-gradient-to-br from-red-950/20 to-card/80 border-red-500/20 text-center" data-testid="card-challenger">
+        <Card className="p-4 to-card/80 border-red-500/20 text-center" data-testid="card-challenger">
           <Avatar className="w-16 h-16 mx-auto mb-2 border-2 border-red-500/30">
             <AvatarImage src={p1?.photo || undefined} />
             <AvatarFallback className="bg-red-500/20 text-red-400 text-lg font-bold">
@@ -180,7 +180,7 @@ export default function ChallengePage() {
           {p2 && <p className={cn("text-2xl font-black mt-2", p1Wins > p2Wins ? "text-emerald-400" : "text-red-400")} data-testid="text-p1-wins">{p1Wins}</p>}
         </Card>
 
-        <Card className="p-4 bg-gradient-to-br from-blue-950/20 to-card/80 border-blue-500/20 text-center" data-testid="card-opponent">
+        <Card className="p-4 to-card/80 border-blue-500/20 text-center" data-testid="card-opponent">
           {p2 ? (
             <>
               <Avatar className="w-16 h-16 mx-auto mb-2 border-2 border-blue-500/30">
@@ -247,7 +247,7 @@ export default function ChallengePage() {
 
       {p1 && (
         <Card className="bg-muted/50 border-border overflow-visible" data-testid="card-stats-comparison">
-          <div className="p-4 border-b border-border bg-gradient-to-r from-red-950/20 via-card/80 to-card">
+          <div className="p-4 border-b border-border via-card/80 to-card">
             <h3 className="text-center text-sm font-bold uppercase tracking-wider text-foreground">
               Stats Comparison (Last 10 Games)
             </h3>
@@ -275,10 +275,10 @@ export default function ChallengePage() {
               className={cn(
                 "p-4 text-center border-t",
                 p1Wins > p2Wins 
-                  ? "bg-gradient-to-r from-red-950/30 to-red-950/10 border-red-500/20" 
+                  ? "from-red-950/30 border-red-500/20" 
                   : p2Wins > p1Wins 
-                    ? "bg-gradient-to-r from-blue-950/30 to-blue-950/10 border-blue-500/20"
-                    : "bg-gradient-to-r from-yellow-950/20 to-yellow-950/10 border-yellow-500/20"
+                    ? "from-blue-950/30 border-blue-500/20"
+                    : "from-yellow-950/20 border-yellow-500/20"
               )}
             >
               <Trophy className={cn("w-6 h-6 mx-auto mb-1",

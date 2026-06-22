@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { Award, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Crosshair, Share2, Copy, ShieldCheck } from "lucide-react";
+import { Award, Activity, Target, Clock, Star, Shield, Zap, CheckCircle, Flame, Crosshair, Share2, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { BADGE_DEFINITIONS, type Game, type Badge } from "@shared/schema";
@@ -75,16 +75,10 @@ export function GameCard({ game, playerName, badges = [], showShareButton = true
   const [shareOpen, setShareOpen] = useState(false);
   const { toast } = useToast();
   const gradeColors = getGradeColor(game.grade || "");
-  const isFootball = sport === 'football';
 
   const fgPct = game.fgAttempted ? ((game.fgMade / game.fgAttempted) * 100).toFixed(0) : "—";
   const threePct = game.threeAttempted ? ((game.threeMade / game.threeAttempted) * 100).toFixed(0) : "—";
   const ftPct = game.ftAttempted ? ((game.ftMade / game.ftAttempted) * 100).toFixed(0) : "—";
-  
-  // Football stats
-  const totalYards = (game.passingYards || 0) + (game.rushingYards || 0) + (game.receivingYards || 0);
-  const totalTDs = (game.passingTouchdowns || 0) + (game.rushingTouchdowns || 0) + (game.receivingTouchdowns || 0);
-  const compPct = game.passAttempts ? (((game.completions || 0) / game.passAttempts) * 100).toFixed(0) : "—";
 
   const gameBadges = badges.filter(b => b.gameId === game.id);
 
@@ -155,123 +149,63 @@ export function GameCard({ game, playerName, badges = [], showShareButton = true
           </div>
         </div>
 
-        {isFootball ? (
-          <>
-            <div className="grid grid-cols-5 gap-2 mb-4">
+        <>
+          <div className="grid grid-cols-5 gap-2 mb-4">
+            {[
+              { label: "PTS", value: game.points },
+              { label: "REB", value: game.rebounds },
+              { label: "AST", value: game.assists },
+              { label: "STL", value: game.steals },
+              { label: "BLK", value: game.blocks },
+            ].map((stat) => (
+              <div key={stat.label} className="text-center p-2 rounded-lg bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/10 transition-all duration-300 hover:border-accent/30 hover:from-accent/15 hover:to-accent/8">
+                <div className="stat-value text-foreground">{stat.value}</div>
+                <div className="stat-label">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-center gap-3 mb-4 py-3 px-2 rounded-lg bg-muted/50 border border-border/50">
+            <div className="text-center px-3 py-1 rounded-md bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/10 transition-all duration-300 hover:border-blue-500/20 hover:from-blue-500/15 flex-1">
+              <div className="stat-value text-foreground text-2xl">{fgPct}%</div>
+              <div className="stat-label">FG</div>
+            </div>
+            <div className="text-center px-3 py-1 rounded-md bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/10 transition-all duration-300 hover:border-purple-500/20 hover:from-purple-500/15 flex-1">
+              <div className="stat-value text-foreground text-2xl">{threePct}%</div>
+              <div className="stat-label">3PT</div>
+            </div>
+            <div className="text-center px-3 py-1 rounded-md bg-gradient-to-br from-accent/10 to-accent/5 border border-border transition-all duration-300 hover:border-accent/20 hover:from-accent/15 flex-1">
+              <div className="stat-value text-foreground text-2xl">{ftPct}%</div>
+              <div className="stat-label">FT</div>
+            </div>
+          </div>
+
+          {(game.defensiveGrade || game.shootingGrade || game.reboundingGrade || game.passingGrade) && (
+            <div className="grid grid-cols-4 gap-2 mb-4">
               {[
-                { label: "YDS", value: totalYards },
-                { label: "TDs", value: totalTDs },
-                { label: "TCK", value: game.tackles || 0 },
-                { label: "SACK", value: game.sacks || 0 },
-                { label: "INT", value: game.defensiveInterceptions || 0 },
-              ].map((stat) => (
-                <div key={stat.label} className="text-center p-2 rounded-lg bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/10 transition-all duration-300 hover:border-accent/30 hover:from-accent/15 hover:to-accent/8">
-                  <div className="stat-value text-foreground">{stat.value}</div>
-                  <div className="stat-label">{stat.label}</div>
+                { label: "DEF", value: game.defensiveGrade, icon: Shield, color: "from-green-500/10 to-emerald-600/5 border-green-500/20", testId: "grade-defense" },
+                { label: "SHOT", value: game.shootingGrade, icon: Target, color: "from-red-500/10 to-rose-600/5 border-red-500/20", testId: "grade-shooting" },
+                { label: "REB", value: game.reboundingGrade, icon: Zap, color: "from-blue-500/10 to-sky-600/5 border-blue-500/20", testId: "grade-rebounding" },
+                { label: "PASS", value: game.passingGrade, icon: Activity, color: "from-purple-500/10 to-violet-600/5 border-purple-500/20", testId: "grade-passing" },
+              ].map((cat) => (
+                <div
+                  key={cat.label}
+                  data-testid={`${cat.testId}-${game.id}`}
+                  className={cn(
+                    "text-center p-2 rounded-lg bg-gradient-to-br border transition-colors duration-300",
+                    cat.color
+                  )}
+                >
+                  <cat.icon className="w-3 h-3 mx-auto mb-1 text-muted-foreground" />
+                  <div className={cn("text-lg font-bold", getGradeColor(cat.value || "").text)}>
+                    {cat.value || "—"}
+                  </div>
+                  <div className="stat-label text-[9px]">{cat.label}</div>
                 </div>
               ))}
             </div>
-
-            <div className="flex justify-center gap-3 mb-4 py-3 px-2 rounded-lg bg-muted/50 border border-border/50">
-              <div className="text-center px-3 py-1 rounded-md bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/10 transition-all duration-300 hover:border-blue-500/20 hover:from-blue-500/15 flex-1">
-                <div className="stat-value text-foreground text-2xl">{game.passingYards || 0}</div>
-                <div className="stat-label">PASS YDS</div>
-              </div>
-              <div className="text-center px-3 py-1 rounded-md bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/10 transition-all duration-300 hover:border-purple-500/20 hover:from-purple-500/15 flex-1">
-                <div className="stat-value text-foreground text-2xl">{game.rushingYards || 0}</div>
-                <div className="stat-label">RUSH YDS</div>
-              </div>
-              <div className="text-center px-3 py-1 rounded-md bg-gradient-to-br from-accent/10 to-accent/5 border border-border transition-all duration-300 hover:border-accent/20 hover:from-accent/15 flex-1">
-                <div className="stat-value text-foreground text-2xl">{game.receivingYards || 0}</div>
-                <div className="stat-label">REC YDS</div>
-              </div>
-            </div>
-
-            {(game.efficiencyGrade || game.playmakingGrade || game.ballSecurityGrade || game.impactGrade) && (
-              <div className="grid grid-cols-4 gap-2 mb-4">
-                {[
-                  { label: "EFF", value: game.efficiencyGrade, icon: Target, color: "from-blue-500/10 to-sky-600/5 border-blue-500/20", testId: "grade-efficiency" },
-                  { label: "PLAY", value: game.playmakingGrade, icon: Zap, color: "from-purple-500/10 to-violet-600/5 border-purple-500/20", testId: "grade-playmaking" },
-                  { label: "SEC", value: game.ballSecurityGrade, icon: ShieldCheck, color: "from-green-500/10 to-emerald-600/5 border-green-500/20", testId: "grade-security" },
-                  { label: "IMP", value: game.impactGrade, icon: Flame, color: "from-accent/10 to-red-600/5 border-accent/20", testId: "grade-impact" },
-                ].map((cat) => (
-                  <div 
-                    key={cat.label} 
-                    data-testid={`${cat.testId}-${game.id}`}
-                    className={cn(
-                      "text-center p-2 rounded-lg bg-gradient-to-br border transition-colors duration-300",
-                      cat.color
-                    )}
-                  >
-                    <cat.icon className="w-3 h-3 mx-auto mb-1 text-muted-foreground" />
-                    <div className={cn("text-lg font-bold", getGradeColor(cat.value || "").text)}>
-                      {cat.value || "—"}
-                    </div>
-                    <div className="stat-label text-[9px]">{cat.label}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        ) : (
-          <>
-            <div className="grid grid-cols-5 gap-2 mb-4">
-              {[
-                { label: "PTS", value: game.points },
-                { label: "REB", value: game.rebounds },
-                { label: "AST", value: game.assists },
-                { label: "STL", value: game.steals },
-                { label: "BLK", value: game.blocks },
-              ].map((stat) => (
-                <div key={stat.label} className="text-center p-2 rounded-lg bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/10 transition-all duration-300 hover:border-accent/30 hover:from-accent/15 hover:to-accent/8">
-                  <div className="stat-value text-foreground">{stat.value}</div>
-                  <div className="stat-label">{stat.label}</div>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex justify-center gap-3 mb-4 py-3 px-2 rounded-lg bg-muted/50 border border-border/50">
-              <div className="text-center px-3 py-1 rounded-md bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/10 transition-all duration-300 hover:border-blue-500/20 hover:from-blue-500/15 flex-1">
-                <div className="stat-value text-foreground text-2xl">{fgPct}%</div>
-                <div className="stat-label">FG</div>
-              </div>
-              <div className="text-center px-3 py-1 rounded-md bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/10 transition-all duration-300 hover:border-purple-500/20 hover:from-purple-500/15 flex-1">
-                <div className="stat-value text-foreground text-2xl">{threePct}%</div>
-                <div className="stat-label">3PT</div>
-              </div>
-              <div className="text-center px-3 py-1 rounded-md bg-gradient-to-br from-accent/10 to-accent/5 border border-border transition-all duration-300 hover:border-accent/20 hover:from-accent/15 flex-1">
-                <div className="stat-value text-foreground text-2xl">{ftPct}%</div>
-                <div className="stat-label">FT</div>
-              </div>
-            </div>
-
-            {(game.defensiveGrade || game.shootingGrade || game.reboundingGrade || game.passingGrade) && (
-              <div className="grid grid-cols-4 gap-2 mb-4">
-                {[
-                  { label: "DEF", value: game.defensiveGrade, icon: Shield, color: "from-green-500/10 to-emerald-600/5 border-green-500/20", testId: "grade-defense" },
-                  { label: "SHOT", value: game.shootingGrade, icon: Target, color: "from-red-500/10 to-rose-600/5 border-red-500/20", testId: "grade-shooting" },
-                  { label: "REB", value: game.reboundingGrade, icon: Zap, color: "from-blue-500/10 to-sky-600/5 border-blue-500/20", testId: "grade-rebounding" },
-                  { label: "PASS", value: game.passingGrade, icon: Activity, color: "from-purple-500/10 to-violet-600/5 border-purple-500/20", testId: "grade-passing" },
-                ].map((cat) => (
-                  <div 
-                    key={cat.label} 
-                    data-testid={`${cat.testId}-${game.id}`}
-                    className={cn(
-                      "text-center p-2 rounded-lg bg-gradient-to-br border transition-colors duration-300",
-                      cat.color
-                    )}
-                  >
-                    <cat.icon className="w-3 h-3 mx-auto mb-1 text-muted-foreground" />
-                    <div className={cn("text-lg font-bold", getGradeColor(cat.value || "").text)}>
-                      {cat.value || "—"}
-                    </div>
-                    <div className="stat-label text-[9px]">{cat.label}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        )}
+          )}
+        </>
 
         {gameBadges.length > 0 && (
           <div className="flex flex-wrap gap-2 justify-center mb-4">
@@ -322,9 +256,7 @@ export function GameCard({ game, playerName, badges = [], showShareButton = true
         onOpenChange={setShareOpen}
         title="Share Game Performance"
         shareUrl={`${window.location.origin}/players/${game.playerId}/card?gameId=${game.id}`}
-        shareText={isFootball 
-          ? `Check out my ${totalYards} YDS, ${totalTDs} TD game vs ${game.opponent}! Grade: ${game.grade} on @CaliberApp`
-          : `Check out my ${game.points} PTS, ${game.rebounds} REB, ${game.assists} AST game vs ${game.opponent}! Grade: ${game.grade} on @CaliberApp`}
+        shareText={`Check out my ${game.points} PTS, ${game.rebounds} REB, ${game.assists} AST game vs ${game.opponent}! Grade: ${game.grade} on @CaliberApp`}
       >
         <ShareableGameCard 
           game={game} 

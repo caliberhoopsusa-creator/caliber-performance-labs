@@ -187,7 +187,7 @@ function ClipCard({ clip, isActive, onPlay }: { clip: DiscoverClip; isActive: bo
       </div>
 
       <div className="absolute bottom-0 left-0 right-16 p-4 z-20">
-        <div className="bg-gradient-to-t from-black/80 via-black/40 to-transparent absolute inset-0 -top-20" />
+        <div className="from-black/80 via-black/40 to-transparent absolute inset-0 -top-20" />
         <div className="relative z-10">
           <Link href={`/players/${clip.playerId}`} data-testid={`link-player-${clip.playerId}`}>
             <div className="flex items-center gap-3 mb-2">
@@ -278,7 +278,7 @@ export default function DiscoverHighlights() {
                 <span className="text-xs uppercase tracking-wider text-purple-400 font-semibold">Discover</span>
               </div>
               <h2 className="text-2xl md:text-3xl font-bold" data-testid="text-discover-title">
-                <span className="bg-gradient-to-r from-white via-purple-200 to-purple-400 bg-clip-text text-transparent">
+                <span className="from-white">
                   Highlight Reels
                 </span>
               </h2>

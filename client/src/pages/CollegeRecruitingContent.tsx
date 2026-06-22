@@ -19,7 +19,6 @@ import {
   BookOpen,
   RefreshCw,
   Dribbble,
-  Trophy,
   Search,
   X,
   GitCompare
@@ -79,6 +78,13 @@ export default function CollegeRecruitingContent() {
     },
   });
 
+  // Auto-generate matches on first visit if player has none
+  useEffect(() => {
+    if (playerId && !matchesLoading && matches && matches.length === 0 && generateMutation.isIdle) {
+      generateMutation.mutate();
+    }
+  }, [playerId, matchesLoading, matches]);
+
   const handleGenerate = () => {
     generateMutation.mutate();
   };
@@ -104,18 +110,9 @@ export default function CollegeRecruitingContent() {
         <div className="flex items-center gap-3 flex-wrap">
           <Badge 
             variant="outline" 
-            className={cn(
-              "text-xs uppercase font-semibold",
-              currentSport === 'basketball' 
-                ? "border-accent/50 text-accent bg-accent/10" 
-                : "border-accent/50 text-accent bg-accent/10"
-            )}
+            className="text-xs uppercase font-semibold border-accent/50 text-accent bg-accent/10"
           >
-            {currentSport === 'basketball' ? (
-              <><Dribbble className="w-3 h-3 mr-1" /> Basketball</>
-            ) : (
-              <><Trophy className="w-3 h-3 mr-1" /> Football</>
-            )}
+            <><Dribbble className="w-3 h-3 mr-1" /> Basketball</>
           </Badge>
           <p className="text-muted-foreground text-sm">
             Find your perfect {currentSport} program based on your skills and preferences

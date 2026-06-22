@@ -126,13 +126,13 @@ function getStatDivisionLevel(stat: string, value: number, position: string): st
 
 function getBarColor(percent: number): string {
   if (percent >= 100) return "#10B981";
-  if (percent >= 70) return "#F59E0B";
+  if (percent >= 70) return "#C6D0D8";
   return "#EF4444";
 }
 
 function getBarColorClass(percent: number): string {
   if (percent >= 100) return "text-[#10B981]";
-  if (percent >= 70) return "text-[#F59E0B]";
+  if (percent >= 70) return "text-[#C6D0D8]";
   return "text-[#EF4444]";
 }
 
@@ -594,7 +594,7 @@ export default function DevelopmentRoadmap({ playerId }: DevelopmentRoadmapProps
                         const skillName = STAT_SKILL_NAMES[gap.stat] || gap.label;
                         const levelColor = abilityLevel === "D1" ? "text-[#10B981] border-[#10B981]/30 bg-[#10B981]/10"
                           : abilityLevel === "D2" ? "text-[#3B82F6] border-[#3B82F6]/30 bg-[#3B82F6]/10"
-                          : abilityLevel === "D3" ? "text-[#F59E0B] border-[#F59E0B]/30 bg-[#F59E0B]/10"
+                          : abilityLevel === "D3" ? "text-[#C6D0D8] border-[#C6D0D8]/30 bg-[#C6D0D8]/10"
                           : "text-muted-foreground border-border bg-muted/20";
                         return (
                           <Badge variant="outline" className={`text-[10px] py-0 px-1.5 ${levelColor}`} data-testid={`badge-ability-${gap.stat}`}>
@@ -748,7 +748,7 @@ export default function DevelopmentRoadmap({ playerId }: DevelopmentRoadmapProps
               const rankColor = isTopThree
                 ? "text-[#10B981]"
                 : isTopHalf
-                  ? "text-[#F59E0B]"
+                  ? "text-[#C6D0D8]"
                   : "text-muted-foreground";
 
               return (
@@ -781,11 +781,11 @@ export default function DevelopmentRoadmap({ playerId }: DevelopmentRoadmapProps
                 const skillName = STAT_SKILL_NAMES[gap.stat] || gap.label;
                 const levelColor = abilityLevel === "D1" ? "border-[#10B981]/40 bg-[#10B981]/5"
                   : abilityLevel === "D2" ? "border-[#3B82F6]/40 bg-[#3B82F6]/5"
-                  : abilityLevel === "D3" ? "border-[#F59E0B]/40 bg-[#F59E0B]/5"
+                  : abilityLevel === "D3" ? "border-[#C6D0D8]/40 bg-[#C6D0D8]/5"
                   : "border-border bg-muted/10";
                 const textColor = abilityLevel === "D1" ? "text-[#10B981]"
                   : abilityLevel === "D2" ? "text-[#3B82F6]"
-                  : abilityLevel === "D3" ? "text-[#F59E0B]"
+                  : abilityLevel === "D3" ? "text-[#C6D0D8]"
                   : "text-muted-foreground";
 
                 return (

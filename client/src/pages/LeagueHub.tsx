@@ -38,7 +38,6 @@ import {
   Calendar,
   Zap,
 } from "lucide-react";
-import { GiAmericanFootballBall } from "react-icons/gi";
 
 interface League {
   id: number;
@@ -74,8 +73,8 @@ function generateJoinCode(): string {
 
 function LeagueCardSkeleton() {
   return (
-    <Card className="border-accent/[0.08] bg-gradient-to-br from-muted/80 to-muted/40 dark:from-black/60 dark:to-black/30 relative overflow-hidden">
-      <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
+    <Card className="border-accent/[0.08] from-muted/80 to-muted/40 dark:from-black/60 dark:to-black/30 relative overflow-hidden">
+      <div className="absolute inset-x-[10%] top-0 h-px from-transparent via-accent/20 to-transparent" />
       <CardContent className="p-5">
         <div className="flex items-start gap-4">
           <Skeleton className="w-14 h-14 rounded-xl skeleton-premium" />
@@ -111,13 +110,13 @@ function LeagueCard({ league, index }: LeagueCardProps) {
         <Card
           className={cn(
             "group cursor-pointer transition-all duration-300 h-full overflow-hidden relative",
-            "bg-gradient-to-br from-muted/80 to-muted/40 dark:from-black/60 dark:to-black/30 backdrop-blur-sm",
+            "from-muted/80 to-muted/40 dark:from-black/60 dark:to-black/30 backdrop-blur-sm",
             "hover:scale-[1.02] hover:-translate-y-1 border-border",
             "hover:border-accent/30"
           )}
           data-testid={`card-league-${league.id}`}
         >
-          <div className="absolute inset-x-[10%] top-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
+          <div className="absolute inset-x-[10%] top-0 h-px from-transparent via-accent/30 to-transparent" />
 
           <CardContent className="p-5">
             <div className="flex items-start gap-4">
@@ -134,16 +133,12 @@ function LeagueCard({ league, index }: LeagueCardProps) {
                       : "bg-green-500/20 border-green-500/30"
                   )}
                 >
-                  {isBasketball ? (
-                    <Dribbble className="w-7 h-7 text-accent" />
-                  ) : (
-                    <GiAmericanFootballBall className="w-7 h-7 text-green-600 dark:text-green-400" />
-                  )}
+                  <Dribbble className="w-7 h-7 text-accent" />
                 </div>
               </div>
 
               <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-white truncate group-hover:text-accent transition-colors">
+                <h3 className="font-bold text-foreground truncate group-hover:text-accent transition-colors">
                   {league.name}
                 </h3>
                 {league.seasonName && (
@@ -170,12 +165,8 @@ function LeagueCard({ league, index }: LeagueCardProps) {
                     : "border-green-500/30 text-green-600 dark:text-green-400 bg-green-500/10"
                 )}
               >
-                {isBasketball ? (
-                  <Dribbble className="w-3 h-3" />
-                ) : (
-                  <GiAmericanFootballBall className="w-3 h-3" />
-                )}
-                {isBasketball ? "Basketball" : "Football"}
+                <Dribbble className="w-3 h-3" />
+                Basketball
               </Badge>
 
               <Badge variant="outline" className="text-xs gap-1 py-0.5 border-border bg-white/5">
@@ -200,12 +191,12 @@ function LeagueCard({ league, index }: LeagueCardProps) {
 export default function LeagueHub() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const [sportFilter, setSportFilter] = useState<"all" | "basketball" | "football">("all");
+  const [sportFilter, setSportFilter] = useState<"all" | "basketball">("all");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
 
   const [formName, setFormName] = useState("");
-  const [formSport, setFormSport] = useState<"basketball" | "football">("basketball");
+  const [formSport, setFormSport] = useState<"basketball">("basketball");
   const [formDescription, setFormDescription] = useState("");
   const [formSeasonName, setFormSeasonName] = useState("");
   const [formMaxTeams, setFormMaxTeams] = useState(12);
@@ -341,7 +332,7 @@ export default function LeagueHub() {
     <div className="space-y-6" data-testid="league-hub-page">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-display uppercase tracking-wide bg-gradient-to-b from-white to-accent/20 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-display uppercase tracking-wide from-white to-accent/20">
             League Hub
           </h1>
           <p className="text-accent/50 mt-1">Create, join, and manage competitive leagues</p>
@@ -414,13 +405,12 @@ export default function LeagueHub() {
 
                 <div className="space-y-2">
                   <Label htmlFor="league-sport">Sport</Label>
-                  <Select value={formSport} onValueChange={(v) => setFormSport(v as "basketball" | "football")}>
+                  <Select value={formSport} onValueChange={(v) => setFormSport(v as "basketball")}>
                     <SelectTrigger id="league-sport" data-testid="select-sport">
                       <SelectValue placeholder="Select sport" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="basketball">Basketball</SelectItem>
-                      <SelectItem value="football">Football</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -550,22 +540,6 @@ export default function LeagueHub() {
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent rounded-full" />
           )}
         </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className={cn(
-            "relative gap-1.5",
-            sportFilter === "football" && "text-green-600 dark:text-green-400"
-          )}
-          onClick={() => setSportFilter("football")}
-          data-testid="filter-football"
-        >
-          <GiAmericanFootballBall className="w-4 h-4" />
-          Football
-          {sportFilter === "football" && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-green-400 rounded-full" />
-          )}
-        </Button>
       </div>
 
       {isLoading ? (
@@ -575,12 +549,12 @@ export default function LeagueHub() {
           ))}
         </div>
       ) : filteredLeagues.length === 0 ? (
-        <Card className="border-border bg-gradient-to-br from-muted/80 to-muted/40 dark:from-black/60 dark:to-black/30">
+        <Card className="border-border from-muted/80 to-muted/40 dark:from-black/60 dark:to-black/30">
           <CardContent className="flex flex-col items-center justify-center py-16">
             <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mb-4">
               <Trophy className="w-8 h-8 text-accent" />
             </div>
-            <h3 className="text-lg font-display uppercase tracking-wide text-white mb-2">
+            <h3 className="text-lg font-display uppercase tracking-wide text-foreground mb-2">
               No Leagues Yet
             </h3>
             <p className="text-muted-foreground text-sm text-center max-w-md mb-6">

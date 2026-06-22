@@ -362,7 +362,7 @@ export function ShareableRankingCard({ playerName, playerPhoto, rank, totalPlaye
             <span className="text-sm font-black uppercase tracking-widest text-accent">Caliber</span>
           </div>
           <span className="text-xs text-white/60 font-medium bg-white/10 px-3 py-1 rounded-full">
-            {sport === 'football' ? 'Football' : 'Basketball'}
+            {'Basketball'}
           </span>
         </div>
 

@@ -83,20 +83,20 @@ const TIER_STYLES = {
   elite: {
     border: "border-yellow-500/40 hover:border-yellow-400/60",
     glow: "0 0 30px rgba(234, 179, 8, 0.3)",
-    badge: "bg-gradient-to-r from-yellow-600 to-yellow-500 text-black",
+    badge: "from-yellow-600 text-black",
     icon: Crown,
     label: "Elite",
   },
   pro: {
     border: "border-purple-500/40 hover:border-purple-400/60",
     glow: "0 0 25px rgba(168, 85, 247, 0.25)",
-    badge: "bg-gradient-to-r from-purple-600 to-purple-500 text-white",
+    badge: "from-purple-600 text-white",
     icon: Star,
     label: "Pro",
   },
   rising: {
     border: "border-accent/40 hover:border-accent/60",
-    glow: "0 0 20px rgba(234, 88, 12, 0.2)",
+    glow: "0 0 20px rgba(224,36,36,0.2)",
     badge: "bg-accent text-white",
     icon: Zap,
     label: "Rising",
@@ -202,7 +202,7 @@ export default function PlayersList() {
 
   return (
     <div className="pb-24 md:pb-6 space-y-8">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-muted/80 via-card to-muted/80 dark:from-black/60 dark:via-card dark:to-black/60 border border-accent/20">
+      <div className="relative overflow-hidden rounded-2xl from-muted/80 via-card to-muted/80 dark:from-black/60 dark:via-card dark:to-black/60 border border-accent/20">
         <div className="absolute inset-0 opacity-30" />
         <div className="absolute top-0 right-0 w-96 h-96 bg-accent/10 blur-[100px] rounded-full" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 blur-[80px] rounded-full" />
@@ -211,13 +211,13 @@ export default function PlayersList() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Users className="w-6 h-6 text-accent" style={{ filter: "drop-shadow(0 0 8px hsl(24, 95%, 53%))" }} />
+                <Users className="w-6 h-6 text-accent" style={{ filter: "drop-shadow(0 0 8px hsl(var(--accent)))" }} />
                 <span className="text-xs uppercase tracking-wider text-accent font-semibold">
                   {hasTeam ? primaryTeam?.name : "Team Management"}
                 </span>
               </div>
               <h1 className="text-3xl md:text-4xl font-bold">
-                <span className="bg-gradient-to-r from-white via-accent to-accent bg-clip-text text-transparent">
+                <span className="from-white via-accent to-accent">
                   Player Roster
                 </span>
               </h1>
@@ -231,8 +231,8 @@ export default function PlayersList() {
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                   <DialogTrigger asChild>
                     <Button 
-                      className="gap-2 bg-gradient-to-r from-accent to-blue-600 text-white shadow-lg"
-                      style={{ boxShadow: "0 4px 20px rgba(234, 88, 12, 0.3)" }}
+                      className="gap-2 from-accent text-white shadow-lg"
+                      style={{ boxShadow: "0 4px 20px rgba(224,36,36,0.3)" }}
                       data-testid="button-add-player"
                     >
                       <Plus className="w-4 h-4" />
@@ -365,7 +365,7 @@ export default function PlayersList() {
           <TabsList className="w-full grid grid-cols-2 mb-6 bg-black/40 border border-border p-1 rounded-xl" data-testid="tabs-roster">
             <TabsTrigger 
               value="roster" 
-              className="gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent/20 data-[state=active]:to-accent/10 data-[state=active]:border-accent/30 data-[state=active]:text-accent rounded-lg transition-all" 
+              className="gap-2 data-[state=active]:data-[state=active]:from-accent/20 data-[state=active]:to-accent/10 data-[state=active]:border-accent/30 data-[state=active]:text-accent rounded-lg transition-all" 
               data-testid="tab-roster"
             >
               <Users className="w-4 h-4" />
@@ -373,7 +373,7 @@ export default function PlayersList() {
             </TabsTrigger>
             <TabsTrigger 
               value="find" 
-              className="gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-accent/20 data-[state=active]:to-accent/10 data-[state=active]:border-accent/30 data-[state=active]:text-accent rounded-lg transition-all" 
+              className="gap-2 data-[state=active]:data-[state=active]:from-accent/20 data-[state=active]:to-accent/10 data-[state=active]:border-accent/30 data-[state=active]:text-accent rounded-lg transition-all" 
               data-testid="tab-find"
             >
               <Search className="w-4 h-4" />
@@ -425,10 +425,10 @@ export default function PlayersList() {
 
           <TabsContent value="find">
             <div className="space-y-6">
-              <Card className="p-4 bg-gradient-to-r from-accent/10 to-accent/5 border-accent/20 backdrop-blur-sm">
+              <Card className="p-4 from-accent/10 to-accent/5 border-accent/20 backdrop-blur-sm">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-accent/20 border border-accent/30">
-                    <Send className="w-5 h-5 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(24, 95%, 53%))" }} />
+                    <Send className="w-5 h-5 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(var(--accent)))" }} />
                   </div>
                   <div className="flex-1">
                     <p className="text-sm text-foreground font-medium">Invite players to your team</p>
@@ -556,7 +556,7 @@ function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps)
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative overflow-hidden text-center py-20 border border-border rounded-2xl bg-gradient-to-br from-muted/60 to-muted/30 dark:from-black/40 dark:to-black/20"
+      className="relative overflow-hidden text-center py-20 border border-border rounded-2xl from-muted/60 to-muted/30 dark:from-black/40 dark:to-black/20"
     >
       <div className="absolute inset-0 opacity-10" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-accent/5 blur-[80px] rounded-full" />
@@ -564,10 +564,10 @@ function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps)
       <div className="relative z-10">
         <div className="relative inline-block mb-6">
           <div className="absolute inset-0 bg-accent/20 blur-2xl rounded-full animate-pulse" />
-          <div className="relative p-4 rounded-full bg-gradient-to-br from-accent/20 to-accent/10 border border-accent/30">
+          <div className="relative p-4 rounded-full from-accent/20 to-accent/10 border border-accent/30">
             <Icon 
               className="w-10 h-10 text-accent" 
-              style={{ filter: "drop-shadow(0 0 10px hsl(24, 95%, 53%))" }}
+              style={{ filter: "drop-shadow(0 0 10px hsl(var(--accent)))" }}
             />
           </div>
         </div>
@@ -626,7 +626,7 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
               <Card
                 className={cn(
                   "h-full relative overflow-hidden transition-all duration-300",
-                  "bg-gradient-to-br from-muted/80 to-muted/40 dark:from-black/60 dark:to-black/30 backdrop-blur-xl",
+                  "from-muted/80 to-muted/40 dark:from-black/60 dark:to-black/30 backdrop-blur-xl",
                   tierStyle.border,
                   "hover:scale-[1.02]"
                 )}
@@ -634,7 +634,7 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
                   boxShadow: tier !== "rookie" ? tierStyle.glow : "0 4px 30px rgba(0,0,0,0.3)"
                 }}
               >
-                <div className="absolute inset-x-[20%] top-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
+                <div className="absolute inset-x-[20%] top-0 h-px from-transparent via-accent/40 to-transparent" />
                 
                 {isOnRoster && showInvite && (
                   <Badge className="absolute top-3 left-3 z-10 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-400/30 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
@@ -710,7 +710,7 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
                       <motion.div 
                         className={cn(
                           "w-16 h-16 rounded-full flex items-center justify-center text-2xl font-display font-bold",
-                          "bg-gradient-to-br from-accent/20 to-accent/10 border-2",
+                          "from-accent/20 to-accent/10 border-2",
                           tier === "elite" ? "border-yellow-400/40 text-yellow-700 dark:text-yellow-300" :
                           tier === "pro" ? "border-purple-400/40 text-purple-700 dark:text-purple-300" :
                           tier === "rising" ? "border-accent/40 text-accent" :
@@ -719,7 +719,7 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
                         style={tier !== "rookie" ? { 
                           boxShadow: tier === "elite" ? "0 0 25px rgba(234, 179, 8, 0.3)" :
                                     tier === "pro" ? "0 0 20px rgba(168, 85, 247, 0.25)" :
-                                    "0 0 15px rgba(234, 88, 12, 0.2)"
+                                    "0 0 15px rgba(224,36,36,0.2)"
                         } : {}}
                         whileHover={{ scale: 1.05 }}
                         transition={{ type: "spring", stiffness: 300 }}
@@ -897,7 +897,7 @@ function CreatePlayerForm({ onSuccess }: { onSuccess: () => void }) {
           type="submit" 
           disabled={isPending}
           className="w-full gap-2 bg-accent"
-          style={{ boxShadow: "0 4px 20px rgba(234, 88, 12, 0.3)" }}
+          style={{ boxShadow: "0 4px 20px rgba(224,36,36,0.3)" }}
           data-testid="button-submit-player"
         >
           {isPending ? (

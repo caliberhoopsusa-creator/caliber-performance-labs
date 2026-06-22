@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react";
 import { Component, ReactNode } from "react";
 import { AlertTriangle, RefreshCw, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error("Error caught by boundary:", error, errorInfo);
+    Sentry.captureException(error, { extra: { componentStack: errorInfo.componentStack } });
   }
 
   handleRetry = () => {
@@ -78,7 +80,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 {/* Top border accent */}
                 <div className="absolute -top-3 left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
                 
-                <h1 className="text-3xl font-display font-bold tracking-wide uppercase bg-clip-text text-transparent bg-gradient-to-r from-accent via-white to-accent" data-testid="text-error-title">
+                <h1 className="text-3xl font-display font-bold tracking-wide uppercase bg-gradient-to-r from-accent via-white to-accent bg-clip-text text-transparent" data-testid="text-error-title">
                   System Error
                 </h1>
               </div>
@@ -110,7 +112,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
               <Button 
                 onClick={this.handleRetry} 
-                className="gap-2 bg-gradient-to-r from-accent/80 to-blue-500/80 hover:from-accent hover:to-blue-500 text-white border-accent/30 hover:border-accent/60"
+                className="gap-2 bg-gradient-to-r from-accent/80 hover:from-accent hover:to-blue-500 text-white border-accent/30 hover:border-accent/60"
                 data-testid="button-error-retry"
               >
                 <RefreshCw className="w-4 h-4" />

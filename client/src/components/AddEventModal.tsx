@@ -32,7 +32,7 @@ type AddEventModalProps = {
   defaultDate?: Date;
   defaultEventType?: 'practice' | 'game' | 'workout' | 'meeting' | 'other';
   playerId?: number;
-  sport?: 'basketball' | 'football';
+  sport?: 'basketball';
 };
 
 export function AddEventModal({ open, onOpenChange, defaultDate, defaultEventType, playerId, sport = 'basketball' }: AddEventModalProps) {

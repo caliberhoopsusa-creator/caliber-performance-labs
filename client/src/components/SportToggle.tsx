@@ -8,7 +8,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type Sport = 'basketball' | 'football';
+type Sport = 'basketball';
 
 interface SportContextType {
   sport: Sport;

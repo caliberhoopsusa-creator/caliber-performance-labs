@@ -94,12 +94,12 @@ interface Particle {
 }
 
 const PARTICLE_COLORS = [
-  "hsl(24, 95%, 53%)", // accent (orange)
+  "hsl(var(--accent))", // accent (laser red)
   "#FFD700", // gold
   "#FF6B6B", // coral
-  "#4ECDC4", // teal
+  "#4f6878", // amber
   "#A855F7", // purple
-  "#F59E0B", // amber
+  "#C6D0D8", // amber
   "#10B981", // emerald
   "#EC4899", // pink
 ];

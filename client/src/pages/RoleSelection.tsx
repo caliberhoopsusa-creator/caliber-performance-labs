@@ -159,13 +159,13 @@ export default function RoleSelection() {
   };
 
   const handleGuardianSelect = async () => {
-    await setRoleMutation.mutateAsync('guardian' as any);
+    await setRoleMutation.mutateAsync({ role: 'guardian' } as any);
     setSelectedRole('guardian');
   };
 
   const setRoleMutation = useMutation({
-    mutationFn: async (role: 'player' | 'coach' | 'recruiter') => {
-      return await apiRequest('POST', '/api/users/role', { role });
+    mutationFn: async ({ role, organizationName }: { role: 'player' | 'coach' | 'recruiter'; organizationName?: string }) => {
+      return await apiRequest('POST', '/api/users/role', { role, organizationName });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
@@ -244,7 +244,7 @@ export default function RoleSelection() {
 
   const createTeamMutation = useMutation({
     mutationFn: async (data: { name: string }) => {
-      await setRoleMutation.mutateAsync('coach');
+      await setRoleMutation.mutateAsync({ role: 'coach', organizationName: data.name });
       // Get or create a session ID for team membership
       let sessionId = localStorage.getItem("caliber_session_id");
       if (!sessionId) {
@@ -278,7 +278,7 @@ export default function RoleSelection() {
 
   const joinTeamMutation = useMutation({
     mutationFn: async (data: { code: string }) => {
-      await setRoleMutation.mutateAsync('coach');
+      await setRoleMutation.mutateAsync({ role: 'coach', organizationName: data.code });
       return await apiRequest('POST', '/api/teams/join', { code: data.code, displayName: 'Coach' });
     },
     onSuccess: () => {
@@ -328,12 +328,12 @@ export default function RoleSelection() {
   };
 
   const handleRecruiterSelect = async () => {
-    await setRoleMutation.mutateAsync('recruiter');
+    await setRoleMutation.mutateAsync({ role: 'recruiter' });
     setSelectedRole('recruiter');
   };
 
   const handlePlayerSelect = async () => {
-    await setRoleMutation.mutateAsync('player');
+    await setRoleMutation.mutateAsync({ role: 'player' });
     setSelectedRole('player');
   };
 

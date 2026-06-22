@@ -3,7 +3,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Star, Zap, Trophy, Crown, Sparkles } from "lucide-react";
 import { type PlayerWithGames, type Badge as BadgeType, TIER_THRESHOLDS } from "@shared/schema";
 import { type SkillBadge } from "@/hooks/use-basketball";
-import { FOOTBALL_POSITIONS, FOOTBALL_POSITION_LABELS, type FootballPosition } from "@shared/sports-config";
 import caliberLogo from "@assets/caliber-logo-orange.png";
 
 const TIER_ICONS: Record<string, typeof Star> = {
@@ -96,19 +95,12 @@ interface ShareCardProps {
 export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
   ({ player, badges = [], skillBadges = [], progression, sport }, ref) => {
     const games = player.games || [];
-    const isFootball = sport === 'football' || player.sport === 'football';
-    
+
     // Basketball averages
     const avgPoints = games.length ? (games.reduce((acc, g) => acc + g.points, 0) / games.length).toFixed(1) : "—";
     const avgReb = games.length ? (games.reduce((acc, g) => acc + g.rebounds, 0) / games.length).toFixed(1) : "—";
     const avgAst = games.length ? (games.reduce((acc, g) => acc + g.assists, 0) / games.length).toFixed(1) : "—";
-    
-    // Football averages
-    const avgPassYds = games.length ? (games.reduce((acc, g) => acc + (g.passingYards || 0), 0) / games.length).toFixed(0) : "—";
-    const avgRushYds = games.length ? (games.reduce((acc, g) => acc + (g.rushingYards || 0), 0) / games.length).toFixed(0) : "—";
-    const totalTDs = games.reduce((acc, g) => acc + (g.passingTouchdowns || 0) + (g.rushingTouchdowns || 0) + (g.receivingTouchdowns || 0), 0);
-    const avgTackles = games.length ? (games.reduce((acc, g) => acc + (g.tackles || 0), 0) / games.length).toFixed(1) : "—";
-    
+
     const averageGrade = getAverageGrade(games);
     const gradeColors = getGradeGlowColor(averageGrade);
     
@@ -197,11 +189,7 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
               </h2>
               <div className="flex items-center gap-2 mt-1">
                 <span className="text-xs font-bold uppercase tracking-wider bg-accent/20 text-accent px-2 py-1 rounded border border-accent/30">
-                  {player.position?.split(',').map(p => p.trim()).map(pos => 
-                    FOOTBALL_POSITIONS.includes(pos as FootballPosition)
-                      ? FOOTBALL_POSITION_LABELS[pos as FootballPosition]
-                      : pos
-                  ).join(' / ') || player.position}
+                  {player.position}
                 </span>
                 {player.team && (
                   <span className="text-xs text-white/50">{player.team}</span>
@@ -224,37 +212,18 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
           
           {/* Stats Grid */}
           <div className="grid grid-cols-3 gap-3 mb-6">
-            {isFootball ? (
-              <>
-                <div className="bg-white/5 rounded-xl p-4 text-center border border-border backdrop-blur-sm">
-                  <div className="text-3xl font-bold text-white font-display">{totalTDs}</div>
-                  <div className="text-[10px] text-accent/70 uppercase tracking-wider mt-1">TDs</div>
-                </div>
-                <div className="bg-white/5 rounded-xl p-4 text-center border border-border backdrop-blur-sm">
-                  <div className="text-3xl font-bold text-white font-display">{avgRushYds}</div>
-                  <div className="text-[10px] text-accent/70 uppercase tracking-wider mt-1">Rush YPG</div>
-                </div>
-                <div className="bg-white/5 rounded-xl p-4 text-center border border-border backdrop-blur-sm">
-                  <div className="text-3xl font-bold text-white font-display">{avgTackles}</div>
-                  <div className="text-[10px] text-accent/70 uppercase tracking-wider mt-1">TCK/G</div>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="bg-white/5 rounded-xl p-4 text-center border border-border backdrop-blur-sm">
-                  <div className="text-3xl font-bold text-white font-display">{avgPoints}</div>
-                  <div className="text-[10px] text-accent/70 uppercase tracking-wider mt-1">PPG</div>
-                </div>
-                <div className="bg-white/5 rounded-xl p-4 text-center border border-border backdrop-blur-sm">
-                  <div className="text-3xl font-bold text-white font-display">{avgReb}</div>
-                  <div className="text-[10px] text-accent/70 uppercase tracking-wider mt-1">RPG</div>
-                </div>
-                <div className="bg-white/5 rounded-xl p-4 text-center border border-border backdrop-blur-sm">
-                  <div className="text-3xl font-bold text-white font-display">{avgAst}</div>
-                  <div className="text-[10px] text-accent/70 uppercase tracking-wider mt-1">APG</div>
-                </div>
-              </>
-            )}
+            <div className="bg-white/5 rounded-xl p-4 text-center border border-border backdrop-blur-sm">
+              <div className="text-3xl font-bold text-white font-display">{avgPoints}</div>
+              <div className="text-[10px] text-accent/70 uppercase tracking-wider mt-1">PPG</div>
+            </div>
+            <div className="bg-white/5 rounded-xl p-4 text-center border border-border backdrop-blur-sm">
+              <div className="text-3xl font-bold text-white font-display">{avgReb}</div>
+              <div className="text-[10px] text-accent/70 uppercase tracking-wider mt-1">RPG</div>
+            </div>
+            <div className="bg-white/5 rounded-xl p-4 text-center border border-border backdrop-blur-sm">
+              <div className="text-3xl font-bold text-white font-display">{avgAst}</div>
+              <div className="text-[10px] text-accent/70 uppercase tracking-wider mt-1">APG</div>
+            </div>
           </div>
           
           {/* Tier & XP */}

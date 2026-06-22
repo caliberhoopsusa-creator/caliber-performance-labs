@@ -1367,12 +1367,6 @@ export type PreGameReportMatchup = {
   points: number;
   rebounds: number;
   assists: number;
-  // Football stats
-  passingYards: number;
-  rushingYards: number;
-  receivingYards: number;
-  touchdowns: number;
-  tackles: number;
 };
 
 export type PreGameReportScoutingReport = {
@@ -1403,12 +1397,6 @@ export type PreGameReportData = {
     avgPoints?: string;
     avgRebounds?: string;
     avgAssists?: string;
-    // Football stats (optional)
-    avgPassingYards?: string;
-    avgRushingYards?: string;
-    avgReceivingYards?: string;
-    avgTouchdowns?: string;
-    avgTackles?: string;
   };
   opponentHistory: {
     matchups: PreGameReportMatchup[];

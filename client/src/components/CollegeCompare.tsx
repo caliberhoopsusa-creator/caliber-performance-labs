@@ -75,7 +75,7 @@ const DIVISION_COLORS: Record<string, string> = {
 const LOGO_COLORS = [
   'bg-gradient-to-br from-accent to-blue-600',
   'bg-gradient-to-br from-accent to-accent/80',
-  'bg-gradient-to-br from-emerald-500 to-teal-600',
+  'bg-gradient-to-br from-emerald-500 to-amber-600',
   'bg-gradient-to-br from-purple-500 to-indigo-600',
   'bg-gradient-to-br from-rose-500 to-pink-600',
   'bg-gradient-to-br from-sky-500 to-accent',
@@ -274,8 +274,7 @@ export function CollegeCompare({ open, onOpenChange }: CollegeCompareProps) {
 
   const getProDraftPicks = (college: College) => {
     if (college.draftPicksLast5Years) return college.draftPicksLast5Years;
-    if (college.sport === 'basketball' && college.nbaPlayersProduced) return college.nbaPlayersProduced;
-    if (college.sport === 'football' && college.nflPlayersProduced) return college.nflPlayersProduced;
+    if (college.nbaPlayersProduced) return college.nbaPlayersProduced;
     return null;
   };
 

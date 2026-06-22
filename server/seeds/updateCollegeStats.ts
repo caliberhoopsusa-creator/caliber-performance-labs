@@ -842,7 +842,6 @@ export async function updateCollegeStats(): Promise<void> {
           tournamentAppearances: stats.tournamentAppearances,
           finalFourAppearances: stats.finalFourAppearances,
           nbaPlayersProduced: stats.nbaPlayersProduced ?? 0,
-          nflPlayersProduced: stats.nflPlayersProduced ?? 0,
           draftPicksLast5Years: stats.draftPicksLast5Years,
           averageMinutesForFreshmen: stats.averageMinutesForFreshmen,
           athleteGraduationRate: stats.athleteGraduationRate,

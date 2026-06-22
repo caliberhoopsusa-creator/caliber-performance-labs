@@ -1,7 +1,10 @@
+import * as Sentry from "@sentry/node";
 import express, { type Request, Response, NextFunction } from "express";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
-import { createServer } from "http";
+import { createServer, type Server } from "http";
 import { runMigrations } from 'stripe-replit-sync';
 import { getStripeSync } from './stripeClient';
 import { WebhookHandlers } from './webhookHandlers';
@@ -9,6 +12,15 @@ import { seedColleges } from './seeds/colleges';
 import { updateCollegeStats } from './seeds/updateCollegeStats';
 import { seedRecruitingContacts, seedAdditionalLowerDivisionColleges } from './seeds/recruitingContacts';
 import type Stripe from 'stripe';
+
+// Initialize Sentry before anything else (only when DSN is configured)
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV || 'development',
+    tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.2 : 1.0,
+  });
+}
 
 const app = express();
 const httpServer = createServer(app);
@@ -46,14 +58,14 @@ async function initStripe() {
     const isProduction = process.env.REPLIT_DEPLOYMENT === '1';
     const devDomain = process.env.REPLIT_DOMAINS?.split(',')[0];
     const knownProdDomain = 'hoops-analyst--moppenheim25.replit.app';
-    
+
     // Determine the webhook URL for THIS environment
-    const currentWebhookUrl = isProduction 
+    const currentWebhookUrl = isProduction
       ? `https://${knownProdDomain}/api/stripe/webhook`
       : devDomain ? `https://${devDomain}/api/stripe/webhook` : null;
-    
+
     console.log(`Webhook URL: ${currentWebhookUrl || 'none'} (production: ${isProduction})`);
-    
+
     const webhookEvents: Stripe.WebhookEndpointCreateParams.EnabledEvent[] = [
       'checkout.session.completed',
       'customer.subscription.created',
@@ -62,27 +74,29 @@ async function initStripe() {
       'invoice.paid',
       'invoice.payment_failed',
     ];
-    
-    if (currentWebhookUrl) {
+
+    // Use stored secret from env if available (avoids recreating the endpoint on every restart)
+    if (process.env.STRIPE_WEBHOOK_SECRET) {
+      webhookEndpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+      console.log('Using STRIPE_WEBHOOK_SECRET from environment');
+    } else if (currentWebhookUrl) {
       try {
         const existingWebhooks = await stripe.webhookEndpoints.list({ limit: 100 });
-        
-        // Delete existing webhook for this URL and recreate to get secret
-        for (const w of existingWebhooks.data.filter(w => w.url === currentWebhookUrl)) {
-          await stripe.webhookEndpoints.del(w.id);
-          console.log(`Deleted old webhook: ${w.id}`);
-        }
-        
-        // Create webhook for current environment
-        const webhook = await stripe.webhookEndpoints.create({
-          url: currentWebhookUrl,
-          enabled_events: webhookEvents,
-        });
-        webhookEndpointSecret = webhook.secret || null;
-        console.log(`Webhook created: ${webhook.url}`);
-        
-        if (webhookEndpointSecret) {
-          console.log('Webhook secret captured for signature verification');
+        const existing = existingWebhooks.data.find(w => w.url === currentWebhookUrl);
+
+        if (existing) {
+          // Can't retrieve secret from existing endpoint — set STRIPE_WEBHOOK_SECRET env var
+          console.log(`Webhook already registered (${existing.id}). Set STRIPE_WEBHOOK_SECRET in env to enable signature verification.`);
+        } else {
+          const webhook = await stripe.webhookEndpoints.create({
+            url: currentWebhookUrl,
+            enabled_events: webhookEvents,
+          });
+          webhookEndpointSecret = webhook.secret || null;
+          console.log(`Webhook created: ${webhook.url}`);
+          if (webhookEndpointSecret) {
+            console.log(`Webhook secret captured. Add STRIPE_WEBHOOK_SECRET=${webhookEndpointSecret} to your env to avoid recreating on restart.`);
+          }
         }
       } catch (webhookErr: any) {
         console.log('Webhook setup error:', webhookErr.message);
@@ -99,6 +113,44 @@ async function initStripe() {
 }
 
 initStripe();
+
+// Security headers
+app.use(helmet({
+  contentSecurityPolicy: false, // managed separately to avoid breaking Vite/WS in dev
+}));
+
+// Block admin API on the main public port — only reachable via the admin port
+app.use('/api/admin', (req, res, next) => {
+  const adminPort = parseInt(process.env.ADMIN_PORT || '3099', 10);
+  const localPort = (req.socket as any)?.localPort;
+  if (localPort !== adminPort) {
+    return res.status(403).json({ error: 'Admin API is not accessible on this port.' });
+  }
+  next();
+});
+
+// Rate limiting on auth endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many requests, please try again later." },
+});
+app.use("/api/login", authLimiter);
+app.use("/api/register", authLimiter);
+app.use("/api/admin/login", authLimiter);
+
+// General API rate limiter
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => req.path.startsWith('/api/stripe/'),
+  message: { message: "Too many requests, please try again later." },
+});
+app.use("/api/", apiLimiter);
 
 app.post(
   '/api/stripe/webhook',
@@ -161,7 +213,8 @@ app.use((req, res, next) => {
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+        const body = JSON.stringify(capturedJsonResponse);
+        logLine += ` :: ${body.length > 200 ? body.slice(0, 200) + "…" : body}`;
       }
 
       log(logLine);
@@ -183,12 +236,17 @@ app.use((req, res, next) => {
     console.error('Failed to seed colleges:', error);
   }
 
+  // Sentry error handler must be before any other error handler
+  if (process.env.SENTRY_DSN) {
+    app.use(Sentry.expressErrorHandler());
+  }
+
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
     res.status(status).json({ message });
-    throw err;
+    console.error(err);
   });
 
   // importantly only setup vite in development and after
@@ -206,14 +264,15 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || "5000", 10);
-  httpServer.listen(
-    {
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    },
-    () => {
-      log(`serving on port ${port}`);
-    },
-  );
+  httpServer.listen(port, "0.0.0.0", () => {
+    log(`serving on port ${port}`);
+  });
+
+  // Admin server — binds to 127.0.0.1 only (never publicly reachable).
+  // Access via: http://localhost:ADMIN_PORT  or SSH tunnel from a remote machine.
+  const adminPort = parseInt(process.env.ADMIN_PORT || "3099", 10);
+  const adminHttpServer: Server = createServer(app);
+  adminHttpServer.listen(adminPort, "127.0.0.1", () => {
+    log(`admin serving on port ${adminPort} (localhost only)`);
+  });
 })();

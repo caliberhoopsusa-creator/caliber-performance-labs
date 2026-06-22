@@ -1,6 +1,5 @@
-const CACHE_NAME = 'caliber-cache-v1';
+const CACHE_NAME = 'caliber-cache-v3';
 const STATIC_ASSETS = [
-  '/',
   '/favicon.png',
 ];
 
@@ -38,9 +37,32 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Scripts and styles: network-first so code changes are always reflected
+  // immediately. Only fall back to cache when fully offline.
   if (
-    request.destination === 'style' ||
     request.destination === 'script' ||
+    request.destination === 'style'
+  ) {
+    event.respondWith(
+      fetch(request).then((networkResponse) => {
+        if (networkResponse.ok) {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, responseToCache);
+          });
+        }
+        return networkResponse;
+      }).catch(() => {
+        return caches.match(request).then((cached) => {
+          return cached || new Response('Offline', { status: 503 });
+        });
+      })
+    );
+    return;
+  }
+
+  // Images and fonts: stale-while-revalidate (safe to cache aggressively)
+  if (
     request.destination === 'image' ||
     request.destination === 'font'
   ) {
@@ -56,7 +78,6 @@ self.addEventListener('fetch', (event) => {
           }).catch(() => {});
           return cachedResponse;
         }
-
         return fetch(request).then((networkResponse) => {
           if (networkResponse.ok) {
             const responseToCache = networkResponse.clone();
@@ -73,6 +94,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Everything else: network-first, fall back to cache
   event.respondWith(
     fetch(request).catch(() => {
       return caches.match(request).then((cachedResponse) => {
