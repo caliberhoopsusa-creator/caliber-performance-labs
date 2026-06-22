@@ -1,0 +1,9 @@
+User-agent: *
+Disallow: /api/
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /coach
+Disallow: /scout
+Allow: /
+
+Sitemap: https://caliber.replit.app/sitemap.xml
