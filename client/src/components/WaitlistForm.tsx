@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Check, ArrowRight, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -82,19 +81,18 @@ export function WaitlistForm({ source = "landing", className, align = "start" }:
           className="flex-1 h-12 rounded-lg border border-border bg-card/60 px-4 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus:border-accent"
           data-testid="input-waitlist-email"
         />
-        <Button
+        <button
           type="submit"
-          size="lg"
           disabled={submitting}
-          className="h-12 shrink-0 bg-accent text-accent-foreground border border-accent-border hover:bg-accent-hover"
+          className="btn-chrome inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-lg px-6 font-semibold"
           data-testid="button-waitlist-submit"
         >
           {submitting ? (
-            <>Joining<Loader2 className="ml-2 h-4 w-4 animate-spin" /></>
+            <>Joining<Loader2 className="ml-1 h-4 w-4 animate-spin" /></>
           ) : (
-            <>Join the founding class<ArrowRight className="ml-2 h-4 w-4" /></>
+            <>Join the founding class<ArrowRight className="ml-1 h-4 w-4" /></>
           )}
-        </Button>
+        </button>
       </div>
 
       <label className={cn("mt-3 flex items-center gap-2 text-sm text-muted-foreground cursor-pointer", align === "center" && "justify-center")}>

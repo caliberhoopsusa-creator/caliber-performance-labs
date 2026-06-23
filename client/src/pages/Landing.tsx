@@ -4,6 +4,11 @@ import {
   motion,
   useInView,
   useReducedMotion,
+  useScroll,
+  useSpring,
+  useTransform,
+  useMotionValue,
+  useMotionTemplate,
   animate,
 } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -14,6 +19,8 @@ import {
 import { Link } from "wouter";
 import { CaliberLogo } from "@/components/CaliberLogo";
 import { WaitlistForm } from "@/components/WaitlistForm";
+import { CaliberScore } from "@/components/CaliberScore";
+import { SignalBackground } from "@/components/SignalBackground";
 import { LiquidMetal } from "@paper-design/shaders-react";
 import metalC from "@/assets/images/caliber-c-chrome.png";
 
@@ -153,6 +160,61 @@ function EngineCard() {
 /* data                                                                */
 /* ------------------------------------------------------------------ */
 
+function ForgeGrade() {
+  const POS = {
+    Guard: { s: 0.35, p: 0.4, d: 0.25 },
+    Wing: { s: 0.4, p: 0.3, d: 0.3 },
+    Big: { s: 0.3, p: 0.2, d: 0.5 },
+  } as const;
+  const [pos, setPos] = useState<keyof typeof POS>("Guard");
+  const [scoring, setScoring] = useState(74);
+  const [playmaking, setPlaymaking] = useState(68);
+  const [defense, setDefense] = useState(63);
+  const w = POS[pos];
+  const score = Math.max(1, Math.min(99, Math.round(scoring * w.s + playmaking * w.p + defense * w.d)));
+  const rows = [
+    { label: "Scoring", value: scoring, set: setScoring },
+    { label: "Playmaking", value: playmaking, set: setPlaymaking },
+    { label: "Defense", value: defense, set: setDefense },
+  ];
+  return (
+    <div className="grid items-center gap-10 rounded-2xl border border-border bg-card/40 p-8 md:grid-cols-2 md:p-12">
+      <div className="space-y-7">
+        <div className="flex gap-2">
+          {(Object.keys(POS) as (keyof typeof POS)[]).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPos(p)}
+              className={`rounded-full border px-4 py-1.5 font-label transition-colors ${pos === p ? "border-accent/50 bg-accent/12 text-accent" : "border-border text-muted-foreground hover:text-foreground"}`}
+              data-testid={`forge-pos-${p.toLowerCase()}`}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+        {rows.map((row) => (
+          <div key={row.label}>
+            <div className="mb-2 flex items-baseline justify-between">
+              <span className="font-label text-muted-foreground">{row.label}</span>
+              <span className="font-display tabular-nums text-foreground">{row.value}</span>
+            </div>
+            <input
+              type="range" min={0} max={100} value={row.value}
+              onChange={(e) => row.set(Number(e.target.value))}
+              className="w-full accent-[hsl(var(--accent))]"
+              aria-label={row.label}
+            />
+          </div>
+        ))}
+        <p className="font-label text-muted-foreground/70">Weighted for a {pos.toLowerCase()} · drag to recompute</p>
+      </div>
+      <div className="flex justify-center">
+        <CaliberScore score={score} size="lg" />
+      </div>
+    </div>
+  );
+}
+
 const features = [
   { icon: BarChart3, title: "Performance Grades", description: "Position-weighted A–F grade after every game, with the why behind each mark.", span: "lg:col-span-3 lg:row-span-2", hero: true },
   { icon: Video, title: "AI Video Analysis", description: "Upload footage — the engine extracts your stats automatically.", span: "lg:col-span-3" },
@@ -187,8 +249,25 @@ export default function Landing() {
   const gamesLogged = platformStats?.gameCount ?? 0;
   const foundingAthletes = platformStats?.playerCount ?? 0;
 
+  // scroll-driven chrome: top progress bar + hero parallax
+  const { scrollYProgress } = useScroll();
+  const progressX = useSpring(scrollYProgress, { stiffness: 120, damping: 30, mass: 0.3 });
+  const heroLift = useTransform(scrollYProgress, [0, 0.25], [0, -70]);
+  const heroSpin = useTransform(scrollYProgress, [0, 0.25], [0, 10]);
+
+  // cursor-reactive hero glow
+  const mx = useMotionValue(-1000);
+  const my = useMotionValue(-1000);
+  const glow = useMotionTemplate`radial-gradient(560px circle at ${mx}px ${my}px, hsl(var(--accent) / 0.20), transparent 65%)`;
+
   return (
-    <div className="min-h-screen bg-background text-foreground relative overflow-x-hidden">
+    <div className="min-h-screen text-foreground relative overflow-x-hidden">
+      <SignalBackground />
+      <motion.div
+        aria-hidden
+        className="fixed top-0 left-0 right-0 z-[200] h-[3px] origin-left"
+        style={{ scaleX: progressX, background: "linear-gradient(90deg, hsl(var(--silver-dim)), hsl(var(--silver)), #ffffff 60%, hsl(var(--accent)))" }}
+      />
       <style>{`
         @keyframes cal-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
         .cal-grid {
@@ -200,116 +279,158 @@ export default function Landing() {
           -webkit-mask-image: radial-gradient(ellipse 95% 65% at 50% 0%, #000 20%, transparent 75%);
         }
         .bg-foreground\\/8 { background-color: hsl(var(--foreground) / 0.08); }
-        @media (prefers-reduced-motion: reduce) { [style*="cal-marquee"] { animation: none !important; } }
+        @keyframes chrome-sheen { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+        .hero-blooms {
+          background:
+            radial-gradient(42% 52% at 24% 28%, hsl(356 82% 46% / 0.24), transparent 70%),
+            radial-gradient(38% 46% at 80% 34%, hsl(210 22% 62% / 0.15), transparent 70%),
+            radial-gradient(48% 52% at 62% 82%, hsl(356 70% 34% / 0.20), transparent 72%),
+            radial-gradient(40% 42% at 14% 76%, hsl(220 16% 52% / 0.11), transparent 70%);
+          filter: blur(22px);
+          animation: hero-bloom-drift 20s ease-in-out infinite;
+        }
+        @keyframes hero-bloom-drift {
+          0%, 100% { transform: scale(1) translate(0, 0); }
+          33% { transform: scale(1.12) translate(2%, -2%); }
+          66% { transform: scale(1.06) translate(-2%, 2%); }
+        }
+        @media (prefers-reduced-motion: reduce) { .hero-blooms { animation: none; } }
+        .btn-chrome {
+          position: relative; overflow: hidden;
+          background: linear-gradient(180deg, #f6f8fb 0%, #ccd1d9 46%, #b1b7c1 56%, #eaedf1 100%);
+          color: #0a0a0b;
+          border: 1px solid hsl(var(--accent) / 0.55);
+          box-shadow: 0 2px 12px hsl(var(--accent) / 0.28), inset 0 1px 0 rgba(255,255,255,0.75);
+          transition: box-shadow .2s ease, transform .15s ease;
+        }
+        .btn-chrome:hover { box-shadow: 0 6px 24px hsl(var(--accent) / 0.5), inset 0 1px 0 rgba(255,255,255,0.85); transform: translateY(-1px); }
+        .btn-chrome:active { transform: translateY(0); }
+        .btn-chrome::after {
+          content: ""; position: absolute; inset: 0; pointer-events: none;
+          background: linear-gradient(115deg, transparent 32%, rgba(255,255,255,0.6) 48%, transparent 64%);
+          background-size: 250% 100%; background-position: 210% 0;
+          transition: background-position .65s ease;
+        }
+        .btn-chrome:hover::after { background-position: -60% 0; }
+        .btn-chrome:disabled { opacity: 0.6; cursor: not-allowed; }
+        .signal-blooms {
+          background:
+            radial-gradient(42% 48% at 18% 14%, hsl(356 90% 54% / 0.52), transparent 68%),
+            radial-gradient(38% 44% at 84% 20%, hsl(214 45% 72% / 0.34), transparent 70%),
+            radial-gradient(46% 50% at 76% 66%, hsl(356 82% 48% / 0.44), transparent 72%),
+            radial-gradient(40% 46% at 18% 84%, hsl(264 60% 66% / 0.30), transparent 72%),
+            radial-gradient(36% 40% at 56% 44%, hsl(196 60% 62% / 0.20), transparent 74%);
+          filter: blur(26px);
+          animation: signal-flow 26s ease-in-out infinite;
+        }
+        @keyframes signal-flow {
+          0%, 100% { transform: scale(1) translate(0, 0); }
+          25% { transform: scale(1.1) translate(2%, -1.5%); }
+          50% { transform: scale(1.06) translate(-1.5%, 1.5%); }
+          75% { transform: scale(1.12) translate(1.5%, 2%); }
+        }
+        .signal-cursor { background: radial-gradient(520px circle at var(--mx, 50%) var(--my, 28%), hsl(var(--accent) / 0.16), transparent 70%); }
+        @media (prefers-reduced-motion: reduce) { .signal-blooms { animation: none; } }
+        .text-chrome {
+          background-image: linear-gradient(100deg, hsl(var(--silver-dim)) 0%, hsl(var(--silver)) 22%, #ffffff 50%, hsl(var(--silver)) 78%, hsl(var(--silver-dim)) 100%);
+          background-size: 200% auto;
+          -webkit-background-clip: text; background-clip: text;
+          color: transparent;
+          animation: chrome-sheen 9s linear infinite;
+        }
+        @media (prefers-reduced-motion: reduce) { [style*="cal-marquee"] { animation: none !important; } .text-chrome { animation: none; } }
       `}</style>
 
-      {/* NAV */}
-      <header className="sticky top-0 z-[100] border-b border-border bg-background/70 backdrop-blur-xl">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between" aria-label="Main">
-          <div className="flex items-center gap-2.5">
-            <CaliberLogo size={30} color="#E11D2A" />
-            <span className="font-display text-2xl tracking-wide leading-none">CALIBER</span>
-          </div>
-          <div className="flex items-center gap-1 sm:gap-2">
-            <Link href="/pricing"><Button variant="ghost" className="hidden sm:inline-flex" data-testid="button-pricing">Pricing</Button></Link>
-            <Link href="/scout"><Button variant="ghost" className="hidden sm:inline-flex" data-testid="button-scout-hub">Scout Hub</Button></Link>
-            <Button asChild className="bg-accent text-accent-foreground border border-accent-border hover:bg-accent-hover" data-testid="button-login">
-              <Link href="/login">Sign In</Link>
-            </Button>
-          </div>
+      {/* NAV — floating telemetry pill */}
+      <header className="fixed inset-x-0 top-5 z-[150] flex justify-center px-4">
+        <nav aria-label="Main" className="flex items-center gap-1 rounded-full border border-border/80 bg-background/55 px-2 py-1.5 backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.5)]">
+          <span className="flex items-center gap-1.5 rounded-full bg-accent/12 px-3 py-1.5 font-label text-accent">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" /> SYSTEM ONLINE
+          </span>
+          <Link href="/pricing" className="hidden sm:block rounded-full px-3 py-1.5 font-label text-muted-foreground hover:text-foreground transition-colors" data-testid="button-pricing">PRICING</Link>
+          <Link href="/scout" className="hidden sm:block rounded-full px-3 py-1.5 font-label text-muted-foreground hover:text-foreground transition-colors" data-testid="button-scout-hub">SCOUT</Link>
+          <Link href="/login" className="rounded-full bg-foreground/10 px-3.5 py-1.5 font-label text-foreground hover:bg-foreground/15 transition-colors" data-testid="button-login">SIGN IN</Link>
         </nav>
       </header>
 
-      <main>
-        {/* HERO */}
-        <section className="relative isolate px-4 pt-16 sm:pt-24 pb-24">
-          <div aria-hidden className="absolute inset-0 -z-10" style={{ background: "radial-gradient(ellipse 70% 60% at 72% 28%, hsl(var(--accent) / 0.12), transparent 62%)" }} />
-          <div aria-hidden className="absolute inset-x-0 bottom-0 -z-10 h-40 bg-gradient-to-b from-transparent to-background" />
+      <main className="relative z-10">
+        {/* HERO — Act 00 · SIGNAL (clean, CALIBER-led) — background is global (SignalBackground) */}
+        <section className="relative isolate flex min-h-screen flex-col items-center justify-center overflow-hidden px-5 py-32 text-center sm:px-8">
+          <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-center">
+            {/* eyebrow */}
+            <Rise>
+              <span className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/[0.07] px-3.5 py-1.5 backdrop-blur-sm">
+                <span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60" /><span className="relative inline-flex h-2 w-2 rounded-full bg-accent" /></span>
+                <span className="font-label text-foreground/80">The future of sports · Founding class open</span>
+              </span>
+            </Rise>
 
-          <div className="max-w-7xl mx-auto grid lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-            <div className="lg:col-span-6 text-center lg:text-left">
-              <Rise>
-                <span className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/[0.07] px-3.5 py-1.5">
-                  <span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60" /><span className="relative inline-flex h-2 w-2 rounded-full bg-accent" /></span>
-                  <span className="font-label text-foreground/80">The future of sports · Early access</span>
-                </span>
-              </Rise>
-              <Rise delay={0.06}>
-                <h1 className="mt-6 font-display font-semibold leading-[0.84] tracking-[-0.01em]" style={{ fontSize: "clamp(3.5rem, 9vw, 8rem)" }} data-testid="hero-masthead">
-                  <span
-                    className="block"
-                    style={{
-                      backgroundImage: "linear-gradient(180deg, hsl(var(--silver)) 0%, hsl(var(--silver-dim)) 100%)",
-                      WebkitBackgroundClip: "text",
-                      backgroundClip: "text",
-                      color: "transparent",
-                    }}
-                  >
-                    EVERY GAME
-                  </span>
-                  <span className="block text-accent" style={{ textShadow: "0 0 48px hsl(var(--accent)/0.45)" }}>GRADED.</span>
-                </h1>
-              </Rise>
-              <Rise delay={0.12}>
-                <p className="mt-6 mx-auto lg:mx-0 max-w-xl font-body text-lg sm:text-xl leading-relaxed text-muted-foreground">
-                  Caliber turns your stats into a position-weighted grade after every game — so you know
-                  <span className="text-foreground"> exactly where you stand and what to work on next.</span>
-                </p>
-              </Rise>
-              <Rise delay={0.18}>
-                <div className="mt-9">
-                  <WaitlistForm source="landing-hero" />
-                  <div className="mt-4">
-                    <Link href="/pricing" className="font-label text-muted-foreground hover:text-foreground transition-colors" data-testid="button-hero-pricing">View pricing →</Link>
-                  </div>
-                </div>
-              </Rise>
-              <Rise delay={0.24}>
-                <p className="mt-7 font-label text-muted-foreground">
-                  Free to start · No credit card · Be one of the first
-                </p>
-              </Rise>
-            </div>
+            {/* CALIBER — the main placeholder */}
+            <Rise delay={0.08}>
+              <motion.h1
+                style={{ y: heroLift, fontSize: "clamp(4rem, 16vw, 14rem)" }}
+                className="text-chrome mt-10 w-full select-none font-display font-extrabold leading-[0.85] tracking-[-0.04em]"
+                data-testid="hero-masthead"
+              >
+                CALIBER
+              </motion.h1>
+            </Rise>
 
-            <div className="lg:col-span-6">
-              <Rise delay={0.14}>
-                <div
-                  className="relative mx-auto aspect-square w-full max-w-[540px]"
-                  style={{
-                    maskImage: "radial-gradient(circle at 50% 50%, #000 58%, transparent 92%)",
-                    WebkitMaskImage: "radial-gradient(circle at 50% 50%, #000 58%, transparent 92%)",
-                  }}
-                >
-                  <div aria-hidden className="absolute inset-0 -z-10" style={{ background: "radial-gradient(circle at 50% 46%, hsl(var(--accent) / 0.16), transparent 64%)", filter: "blur(36px)" }} />
-                  <LiquidMetal
-                    image={metalC}
-                    colorBack="#0A0A0B"
-                    colorTint="#D4D9E0"
-                    repetition={4}
-                    softness={0.85}
-                    shiftRed={0}
-                    shiftBlue={0}
-                    distortion={0.18}
-                    contour={0.62}
-                    speed={0.5}
-                    scale={0.72}
-                    fit="contain"
-                    style={{ width: "100%", height: "100%" }}
-                  />
-                </div>
-              </Rise>
-            </div>
+            {/* value line */}
+            <Rise delay={0.16}>
+              <p className="mt-8 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+                Every game, <span className="font-editorial-italic italic text-accent" style={{ textShadow: "0 0 45px hsl(var(--accent)/0.5)" }}>graded.</span>
+              </p>
+            </Rise>
+
+            {/* subhead */}
+            <Rise delay={0.22}>
+              <p className="mt-5 max-w-xl font-body text-lg leading-relaxed text-muted-foreground">
+                Every game is a signal. Caliber reads it — a position-weighted grade after every game, so you know exactly where you stand.
+              </p>
+            </Rise>
+
+            {/* signup */}
+            <Rise delay={0.28}>
+              <div className="mt-12 flex flex-col items-center gap-4">
+                <WaitlistForm source="landing-hero" align="center" />
+                <p className="font-label text-muted-foreground">Free to start · No credit card · Be one of the first</p>
+              </div>
+            </Rise>
           </div>
         </section>
 
-        {/* MARQUEE */}
-        <section className="relative border-y border-border overflow-hidden py-5 bg-card/30">
-          <div aria-hidden className="absolute inset-y-0 left-0 w-24 z-10 bg-gradient-to-r from-background to-transparent" />
-          <div aria-hidden className="absolute inset-y-0 right-0 w-24 z-10 bg-gradient-to-l from-background to-transparent" />
-          <div className="flex gap-10 whitespace-nowrap" style={{ width: "max-content", animation: "cal-marquee 30s linear infinite" }}>
-            {[...marqueeItems, ...marqueeItems].map((item, i) => (
-              <span key={`${item}-${i}`} className="flex items-center gap-3 font-display text-lg tracking-wide text-muted-foreground"><Shield className="h-4 w-4 text-accent/70" /> {item}</span>
-            ))}
+        {/* ACT 01 · THE PROBLEM */}
+        <section className="relative border-t border-border px-4 py-32">
+          <div className="mx-auto max-w-4xl text-center">
+            <Rise><span className="font-label text-accent">ACT 01 · THE PROBLEM</span></Rise>
+            <Rise delay={0.08}>
+              <h2 className="mt-6 font-display text-4xl font-semibold leading-[1.05] tracking-tight md:text-6xl">
+                You can feel a good game. But you're{" "}
+                <span className="font-editorial-italic italic text-accent">guessing</span> at how good.
+              </h2>
+            </Rise>
+            <Rise delay={0.16}>
+              <p className="mx-auto mt-6 max-w-xl font-body text-lg leading-relaxed text-muted-foreground">
+                A stat line doesn't tell you what mattered. Caliber turns every box score into a position-weighted grade — the honest measure of your game.
+              </p>
+            </Rise>
+          </div>
+        </section>
+
+        {/* ACT 02 · FORGE YOUR GRADE — interactive */}
+        <section className="relative border-t border-border px-4 py-28">
+          <div className="mx-auto max-w-6xl">
+            <Rise className="mb-12 max-w-2xl">
+              <span className="font-label text-accent">ACT 02 · THE ENGINE</span>
+              <h2 className="mt-5 font-display text-5xl leading-[0.95] text-chrome md:text-7xl">
+                Forge your <span className="font-editorial-italic italic text-accent">grade</span>.
+              </h2>
+              <p className="mt-5 max-w-xl font-body text-lg text-muted-foreground">
+                Move the sliders. Watch the Caliber Score re-cast in real time — position-weighted, exactly like after a real game.
+              </p>
+            </Rise>
+            <Rise delay={0.1}><ForgeGrade /></Rise>
           </div>
         </section>
 
@@ -318,7 +439,7 @@ export default function Landing() {
           <div className="max-w-6xl mx-auto">
             <Rise className="max-w-2xl mb-14">
               <span className="editorial-rule font-label text-accent">The Platform</span>
-              <h2 className="mt-7 font-display text-5xl md:text-7xl leading-[0.95]">Built to measure <span className="text-accent">everything</span>.</h2>
+              <h2 className="mt-7 font-display text-5xl md:text-7xl leading-[0.95] text-chrome">Built to measure <span className="text-accent">everything</span>.</h2>
             </Rise>
             <div className="grid sm:grid-cols-2 lg:grid-cols-6 gap-4 lg:auto-rows-[150px]">
               {features.map((f, i) => {
@@ -347,7 +468,7 @@ export default function Landing() {
           <div className="max-w-5xl mx-auto">
             <Rise className="max-w-2xl mb-14">
               <span className="editorial-rule font-label text-accent">How It Works</span>
-              <h2 className="mt-7 font-display text-5xl md:text-7xl leading-[0.95]">Three steps to your <span className="text-accent">best season</span>.</h2>
+              <h2 className="mt-7 font-display text-5xl md:text-7xl leading-[0.95] text-chrome">Three steps to your <span className="text-accent">best season</span>.</h2>
             </Rise>
             <div className="grid md:grid-cols-3 gap-4">
               {howItWorks.map((item, i) => (
@@ -369,7 +490,7 @@ export default function Landing() {
           <div className="max-w-6xl mx-auto">
             <Rise className="max-w-2xl mb-12">
               <span className="editorial-rule font-label text-accent">The System</span>
-              <h2 className="mt-7 font-display text-5xl md:text-7xl leading-[0.95]">Precision, by <span className="text-accent">design</span>.</h2>
+              <h2 className="mt-7 font-display text-5xl md:text-7xl leading-[0.95] text-chrome">Precision, by <span className="text-accent">design</span>.</h2>
               <p className="mt-5 font-body text-lg text-muted-foreground max-w-xl">What the engine actually does — measured, not marketed.</p>
             </Rise>
             <div className="grid grid-cols-2 md:grid-cols-4 border-y border-border">
@@ -403,7 +524,7 @@ export default function Landing() {
           <div className="max-w-6xl mx-auto">
             <Rise className="max-w-2xl mb-14">
               <span className="editorial-rule font-label text-accent">Who It's For</span>
-              <h2 className="mt-7 font-display text-5xl md:text-7xl leading-[0.95]">One platform, <span className="text-accent">four</span> vantage points.</h2>
+              <h2 className="mt-7 font-display text-5xl md:text-7xl leading-[0.95] text-chrome">One platform, <span className="text-accent">four</span> vantage points.</h2>
             </Rise>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {audience.map((a, i) => (
@@ -425,7 +546,7 @@ export default function Landing() {
           <div className="max-w-3xl mx-auto text-center">
             <Rise>
               <span className="editorial-rule font-label text-accent">Founding Class</span>
-              <h2 className="mt-7 font-display text-6xl md:text-8xl leading-[0.9]">Know your <span className="text-accent" style={{ textShadow: "0 0 40px hsl(var(--accent)/0.4)" }}>caliber</span>.</h2>
+              <h2 className="mt-7 font-display text-6xl md:text-8xl leading-[0.9] text-chrome">Know your <span className="text-accent" style={{ textShadow: "0 0 40px hsl(var(--accent)/0.4)" }}>caliber</span>.</h2>
               <p className="mt-6 mx-auto max-w-xl font-body text-lg text-muted-foreground">Be one of the first athletes on the platform. Log a game, get graded, and start climbing — free.</p>
               <div className="mt-9">
                 <WaitlistForm source="landing-cta" align="center" />
@@ -439,7 +560,7 @@ export default function Landing() {
       </main>
 
       {/* FOOTER */}
-      <footer className="py-16 px-4 border-t border-border">
+      <footer className="relative z-10 py-16 px-4 border-t border-border">
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-4 gap-10 mb-12">
             <div className="md:col-span-2 space-y-4">

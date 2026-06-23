@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 :root {
-  --font-display: 'Barlow Condensed', 'Oswald', 'Geist', sans-serif;
+  --font-display: 'Sora', 'Geist', sans-serif;
   --font-body: 'Geist', 'Inter', sans-serif;
   --font-sans: 'Geist', 'Inter', sans-serif;
   --font-editorial: 'Instrument Serif', serif;
