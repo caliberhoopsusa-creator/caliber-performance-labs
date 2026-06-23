@@ -20,6 +20,7 @@ import { Link } from "wouter";
 import { CaliberLogo } from "@/components/CaliberLogo";
 import { WaitlistForm } from "@/components/WaitlistForm";
 import { CaliberScore } from "@/components/CaliberScore";
+import { getTier, tierColor } from "@/lib/caliberTier";
 import { SignalBackground } from "@/components/SignalBackground";
 import { LiquidMetal } from "@paper-design/shaders-react";
 import metalC from "@/assets/images/caliber-c-chrome.png";
@@ -156,6 +157,25 @@ function EngineCard() {
   );
 }
 
+/* 3D scroll reveal — the dashboard tilts up to flat as it enters (Container-Scroll pattern,
+   framer-motion only, no WebGL). Reuses EngineCard. */
+function ProductReveal() {
+  const ref = useRef<HTMLDivElement>(null);
+  const reduced = useReducedMotion();
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "center center"] });
+  const rotateX = useTransform(scrollYProgress, [0, 1], [reduced ? 0 : 26, 0]);
+  const scale = useTransform(scrollYProgress, [0, 1], [reduced ? 1 : 0.86, 1]);
+  const y = useTransform(scrollYProgress, [0, 1], [reduced ? 0 : 70, 0]);
+  const opacity = useTransform(scrollYProgress, [0, 0.55], [reduced ? 1 : 0.25, 1]);
+  return (
+    <div ref={ref} style={{ perspective: "1300px" }} className="mx-auto max-w-2xl">
+      <motion.div style={{ rotateX, scale, y, opacity, transformStyle: "preserve-3d" }}>
+        <EngineCard />
+      </motion.div>
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /* data                                                                */
 /* ------------------------------------------------------------------ */
@@ -172,44 +192,57 @@ function ForgeGrade() {
   const [defense, setDefense] = useState(63);
   const w = POS[pos];
   const score = Math.max(1, Math.min(99, Math.round(scoring * w.s + playmaking * w.p + defense * w.d)));
+  const tier = getTier(score);
   const rows = [
     { label: "Scoring", value: scoring, set: setScoring },
     { label: "Playmaking", value: playmaking, set: setPlaymaking },
     { label: "Defense", value: defense, set: setDefense },
   ];
   return (
-    <div className="grid items-center gap-10 rounded-2xl border border-border bg-card/40 p-8 md:grid-cols-2 md:p-12">
-      <div className="space-y-7">
-        <div className="flex gap-2">
-          {(Object.keys(POS) as (keyof typeof POS)[]).map((p) => (
-            <button
-              key={p}
-              onClick={() => setPos(p)}
-              className={`rounded-full border px-4 py-1.5 font-label transition-colors ${pos === p ? "border-accent/50 bg-accent/12 text-accent" : "border-border text-muted-foreground hover:text-foreground"}`}
-              data-testid={`forge-pos-${p.toLowerCase()}`}
-            >
-              {p}
-            </button>
-          ))}
-        </div>
-        {rows.map((row) => (
-          <div key={row.label}>
-            <div className="mb-2 flex items-baseline justify-between">
-              <span className="font-label text-muted-foreground">{row.label}</span>
-              <span className="font-display tabular-nums text-foreground">{row.value}</span>
-            </div>
-            <input
-              type="range" min={0} max={100} value={row.value}
-              onChange={(e) => row.set(Number(e.target.value))}
-              className="w-full accent-[hsl(var(--accent))]"
-              aria-label={row.label}
-            />
+    /* gradient frame → sharp beveled inner panel */
+    <div className="cal-bevel bg-gradient-to-br from-accent/60 via-[hsl(var(--silver)/0.25)] to-accent/20 p-px">
+      <div className="cal-bevel cal-bracket relative grid items-center gap-10 bg-[#0b0b0d]/92 p-8 backdrop-blur-xl md:grid-cols-[1.1fr_0.9fr] md:p-12">
+        <div className="space-y-7">
+          <div className="flex items-center justify-between">
+            <span className="font-label text-accent">INPUT · YOUR GAME</span>
+            <span className="flex items-center gap-1.5 font-label text-muted-foreground"><span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" /> RECOMPUTING</span>
           </div>
-        ))}
-        <p className="font-label text-muted-foreground/70">Weighted for a {pos.toLowerCase()} · drag to recompute</p>
-      </div>
-      <div className="flex justify-center">
-        <CaliberScore score={score} size="lg" />
+          <div className="flex gap-2">
+            {(Object.keys(POS) as (keyof typeof POS)[]).map((p) => (
+              <button
+                key={p}
+                onClick={() => setPos(p)}
+                className={`cal-bevel border px-4 py-1.5 font-label uppercase tracking-wider transition-all duration-150 ${pos === p ? "border-accent bg-accent/15 text-accent shadow-[0_0_18px_hsl(var(--accent)/0.3)]" : "border-border text-muted-foreground hover:border-accent/40 hover:text-foreground"}`}
+                data-testid={`forge-pos-${p.toLowerCase()}`}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+          {rows.map((row) => (
+            <div key={row.label}>
+              <div className="mb-2 flex items-baseline justify-between">
+                <span className="font-label uppercase tracking-wider text-muted-foreground">{row.label}</span>
+                <span className="font-display text-lg tabular-nums text-foreground">{row.value}</span>
+              </div>
+              <input
+                type="range" min={0} max={100} value={row.value}
+                onChange={(e) => row.set(Number(e.target.value))}
+                className="cal-range w-full"
+                aria-label={row.label}
+              />
+            </div>
+          ))}
+          <p className="font-label text-muted-foreground/70">Weighted for a {pos.toLowerCase()} · drag to recompute the grade →</p>
+        </div>
+        <div className="flex flex-col items-center justify-center gap-5">
+          <div aria-hidden className="absolute right-0 top-1/2 hidden h-3/4 w-px -translate-y-1/2 bg-gradient-to-b from-transparent via-accent/30 to-transparent md:left-[58%] md:block" />
+          <CaliberScore score={score} size="lg" />
+          <div className="text-center">
+            <p className="font-display text-2xl tracking-wide" style={{ color: tierColor(tier.cssVar) }}>{tier.label}</p>
+            <p className="font-label uppercase tracking-[0.2em] text-muted-foreground">{tier.blurb}</p>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -339,6 +372,50 @@ export default function Landing() {
           animation: chrome-sheen 9s linear infinite;
         }
         @media (prefers-reduced-motion: reduce) { [style*="cal-marquee"] { animation: none !important; } .text-chrome { animation: none; } }
+
+        /* ── gradient + sharpness system ── */
+        .grad-text-crimson {
+          background-image: linear-gradient(100deg, #ffffff 0%, hsl(var(--silver)) 22%, hsl(var(--accent)) 58%, #ff5a63 100%);
+          background-size: 200% auto;
+          -webkit-background-clip: text; background-clip: text; color: transparent;
+          animation: chrome-sheen 11s linear infinite;
+        }
+        @media (prefers-reduced-motion: reduce) { .grad-text-crimson { animation: none; } }
+        /* gradient hairline edge on rounded cards (mask trick) */
+        .grad-border { position: relative; }
+        .grad-border::before {
+          content: ""; position: absolute; inset: 0; padding: 1px; border-radius: inherit; pointer-events: none;
+          background: linear-gradient(135deg, hsl(var(--accent) / 0.55), hsl(var(--silver) / 0.22) 38%, transparent 64%);
+          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor; mask-composite: exclude;
+          transition: background .3s ease;
+        }
+        .grad-border:hover::before, .group:hover .grad-border::before, .grad-border.is-hot::before {
+          background: linear-gradient(135deg, hsl(var(--accent) / 0.9), hsl(var(--silver) / 0.45) 42%, hsl(var(--accent) / 0.3) 80%);
+        }
+        /* telemetry corner brackets */
+        .cal-bracket::before, .cal-bracket::after {
+          content: ""; position: absolute; width: 13px; height: 13px; pointer-events: none;
+          border: 0 solid hsl(var(--accent) / 0.65);
+        }
+        .cal-bracket::before { top: 10px; left: 10px; border-top-width: 1.5px; border-left-width: 1.5px; }
+        .cal-bracket::after { bottom: 10px; right: 10px; border-bottom-width: 1.5px; border-right-width: 1.5px; }
+        /* sharp beveled clip (cut corners) */
+        .cal-bevel { clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px)); }
+        /* gradient seam divider */
+        .cal-seam { height: 1px; border: 0; background: linear-gradient(90deg, transparent, hsl(var(--accent) / 0.55) 28%, hsl(var(--silver) / 0.6) 50%, hsl(var(--accent) / 0.55) 72%, transparent); }
+        /* sharp range slider */
+        .cal-range { -webkit-appearance: none; appearance: none; height: 4px; background: linear-gradient(90deg, hsl(var(--accent)), hsl(var(--silver) / 0.35)); outline: none; cursor: pointer; }
+        .cal-range::-webkit-slider-thumb {
+          -webkit-appearance: none; appearance: none; width: 16px; height: 20px; cursor: pointer;
+          background: linear-gradient(180deg, #f6f8fb, #b1b7c1); border: 1px solid hsl(var(--accent) / 0.8);
+          box-shadow: 0 0 12px hsl(var(--accent) / 0.55); clip-path: polygon(0 0, 100% 0, 100% 66%, 50% 100%, 0 66%);
+        }
+        .cal-range::-moz-range-thumb {
+          width: 16px; height: 20px; cursor: pointer; border-radius: 0;
+          background: linear-gradient(180deg, #f6f8fb, #b1b7c1); border: 1px solid hsl(var(--accent) / 0.8);
+          box-shadow: 0 0 12px hsl(var(--accent) / 0.55);
+        }
       `}</style>
 
       {/* NAV — floating telemetry pill */}
@@ -434,6 +511,22 @@ export default function Landing() {
           </div>
         </section>
 
+        {/* ACT 03 · THE READOUT — 3D scroll dashboard reveal */}
+        <section className="relative border-t border-border px-4 py-32">
+          <div className="mx-auto max-w-5xl">
+            <Rise className="mb-14 text-center">
+              <span className="font-label text-accent">ACT 03 · THE READOUT</span>
+              <h2 className="mx-auto mt-5 max-w-2xl font-display text-5xl leading-[0.95] md:text-7xl">
+                Your game, <span className="grad-text-crimson">on the record</span>.
+              </h2>
+              <p className="mx-auto mt-5 max-w-xl font-body text-lg text-muted-foreground">
+                Every grade locks to a live readout — the score, the splits, the rank. This is what your profile looks like.
+              </p>
+            </Rise>
+            <ProductReveal />
+          </div>
+        </section>
+
         {/* FEATURES — bento */}
         <section id="features" className="py-24 px-4">
           <div className="max-w-6xl mx-auto">
@@ -446,7 +539,7 @@ export default function Landing() {
                 const Icon = f.icon;
                 return (
                   <Rise key={f.title} delay={i * 0.05} className={f.span}>
-                    <div className={`group h-full rounded-2xl border border-border bg-card/60 p-6 transition-all duration-300 hover:border-accent/40 hover:bg-card ${f.hero ? "flex flex-col justify-between" : ""}`} data-testid={`feature-${f.title.toLowerCase().replace(/\s+/g, "-")}`}>
+                    <div className={`group grad-border cal-bracket relative h-full rounded-2xl border border-border bg-card/60 p-6 transition-all duration-200 hover:-translate-y-0.5 hover:bg-card ${f.hero ? "flex flex-col justify-between" : ""}`} data-testid={`feature-${f.title.toLowerCase().replace(/\s+/g, "-")}`}>
                       <div className="flex items-start justify-between">
                         <span className="grid place-items-center h-11 w-11 rounded-xl bg-accent/12 text-accent transition-transform duration-300 group-hover:scale-110"><Icon className="h-5 w-5" /></span>
                         <span className="font-label text-muted-foreground">{`0${i + 1}`}</span>
@@ -473,7 +566,7 @@ export default function Landing() {
             <div className="grid md:grid-cols-3 gap-4">
               {howItWorks.map((item, i) => (
                 <Rise key={item.step} delay={i * 0.08}>
-                  <div className="relative h-full rounded-2xl border border-border bg-card/50 p-7 overflow-hidden">
+                  <div className="grad-border relative h-full overflow-hidden rounded-2xl border border-border bg-card/50 p-7 transition-transform duration-200 hover:-translate-y-0.5">
                     <span aria-hidden className="absolute -top-4 -right-2 font-display text-[7rem] leading-none text-foreground/[0.04] select-none">{`0${item.step}`}</span>
                     <span className="grid place-items-center h-11 w-11 rounded-xl bg-accent/12 text-accent mb-6"><item.icon className="h-5 w-5" /></span>
                     <h3 className="font-display text-2xl tracking-wide" data-testid={`step-title-${item.step}`}>{item.title}</h3>
@@ -501,8 +594,8 @@ export default function Landing() {
                 { node: <span className="tabular-nums">A–F</span>, label: "Every game" },
               ].map((s, i) => (
                 <div key={s.label} className={`hairline-col py-12 px-6 ${i === 0 ? "" : "md:pl-8"}`}>
-                  <div className="font-label text-muted-foreground mb-4">{`0${i + 1}`}</div>
-                  <div className="font-display text-foreground leading-none" style={{ fontSize: "clamp(3rem, 6vw, 5rem)" }}>{s.node}</div>
+                  <div className="font-label text-accent mb-4">{`0${i + 1}`}</div>
+                  <div className="grad-text-crimson font-display leading-none" style={{ fontSize: "clamp(3rem, 6vw, 5rem)" }}>{s.node}</div>
                   <div className="font-label text-muted-foreground mt-5">{s.label}</div>
                 </div>
               ))}
@@ -529,8 +622,8 @@ export default function Landing() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {audience.map((a, i) => (
                 <Rise key={a.title} delay={i * 0.06}>
-                  <div className="group h-full rounded-2xl border border-border bg-card/50 p-7 transition-all duration-300 hover:border-accent/40">
-                    <span className="grid place-items-center h-11 w-11 rounded-xl bg-accent/12 text-accent mb-6 transition-transform duration-300 group-hover:scale-110"><a.icon className="h-5 w-5" /></span>
+                  <div className="group grad-border cal-bracket relative h-full rounded-2xl border border-border bg-card/50 p-7 transition-transform duration-200 hover:-translate-y-0.5">
+                    <span className="grid place-items-center h-11 w-11 rounded-xl bg-accent/12 text-accent mb-6 transition-transform duration-200 group-hover:scale-110"><a.icon className="h-5 w-5" /></span>
                     <h3 className="font-display text-2xl tracking-wide">{a.title}</h3>
                     <p className="mt-2.5 text-sm text-muted-foreground leading-relaxed">{a.line}</p>
                   </div>
