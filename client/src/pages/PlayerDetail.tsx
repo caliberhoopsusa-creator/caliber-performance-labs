@@ -92,6 +92,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { AvatarImage } from "@/components/ui/avatar";
+import { PlayerCaliberScore } from "@/components/CaliberScore";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { MilestonesSection } from "@/components/MilestoneCard";
 import { MemorySection } from "@/components/MemoryCard";
@@ -347,10 +348,12 @@ function InventorySection() {
                         
                         <div className="flex flex-col items-center text-center gap-2">
                           {item.previewUrl ? (
-                            <img 
-                              src={item.previewUrl} 
+                            <img
+                              src={item.previewUrl}
                               alt={item.name}
                               className="w-12 h-12 rounded-lg object-cover"
+                              loading="lazy"
+                              decoding="async"
                             />
                           ) : item.category === 'theme' ? (
                             <div 
@@ -2345,7 +2348,7 @@ export default function PlayerDetail() {
 
           <div className="relative h-32 md:h-40 overflow-hidden">
             {player.bannerUrl ? (
-              <img src={player.bannerUrl} alt="" className="w-full h-full object-cover" />
+              <img src={player.bannerUrl} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
             ) : (
               <div className="player-hero-banner w-full h-full" aria-hidden="true" />
             )}
@@ -2373,6 +2376,10 @@ export default function PlayerDetail() {
                 )}
               </div>
               
+              <div className="shrink-0 mx-auto md:mx-0 md:order-last md:ml-auto md:-mt-10" data-testid="player-caliber-score">
+                <PlayerCaliberScore playerId={id} size="lg" />
+              </div>
+
               <div className="flex-1 min-w-0 text-center md:text-left pt-2">
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 md:gap-3 mb-2">
                   {player.jerseyNumber && (
@@ -2742,17 +2749,7 @@ export default function PlayerDetail() {
                 </motion.div>
               </div>
 
-              <div className="hidden md:flex flex-col items-center gap-3 shrink-0 pt-2">
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-[0.15em]">Overall Grade</span>
-                <GradeBadge grade={averageGrade} size="xl" />
-              </div>
-            </div>
-
-            <div className="flex md:hidden justify-center mt-4">
-              <div className="flex flex-col items-center gap-2 p-4 rounded-xl bg-muted/50 border border-border">
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">Overall Grade</span>
-                <GradeBadge grade={averageGrade} size="lg" />
-              </div>
+              {/* Overall grade is now the single signature Caliber Score ring (PlayerCaliberScore) in the hero. */}
             </div>
           </div>
         </Card>
@@ -3003,33 +3000,31 @@ export default function PlayerDetail() {
                     Player Profile
                   </h3>
                 </div>
-                <div 
-                  className="relative overflow-hidden rounded-xl border border-purple-500/20 p-4"
-                  style={{ 
-                    background: "linear-gradient(135deg, rgba(168, 85, 247, 0.05) 0%, rgba(0, 0, 0, 0.4) 100%)",
-                  }}
+                <div
+                  className="relative overflow-hidden rounded-xl border border-border bg-card p-4"
                 >
-                  <div className="absolute top-0 left-0 w-32 h-32 bg-purple-500/5 blur-[60px] rounded-full pointer-events-none" />
+                  <div className="absolute top-0 left-0 w-32 h-32 bg-purple-500/10 blur-[60px] rounded-full pointer-events-none" />
                   <div className="h-[200px] w-full">
                     {games.length > 0 ? (
                       <ResponsiveContainer width="100%" height="100%">
                         <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
                           <defs>
                             <linearGradient id="playerRadarGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                              <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity={0.4} />
-                              <stop offset="100%" stopColor="#3B82F6" stopOpacity={0.1} />
+                              <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity={0.5} />
+                              <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity={0.15} />
                             </linearGradient>
                           </defs>
-                          <PolarGrid stroke="rgba(255,255,255,0.08)" />
-                          <PolarAngleAxis 
-                            dataKey="category" 
-                            tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 11 }}
+                          <PolarGrid stroke="hsl(var(--border))" />
+                          <PolarAngleAxis
+                            dataKey="category"
+                            tick={{ fill: 'hsl(var(--foreground))', fontSize: 11, fontWeight: 500 }}
                           />
-                          <PolarRadiusAxis 
-                            angle={30} 
-                            domain={[0, 100]} 
-                            tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }}
+                          <PolarRadiusAxis
+                            angle={30}
+                            domain={[0, 100]}
+                            tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
                             tickCount={4}
+                            axisLine={false}
                           />
                           <Radar
                             name="Rating"
@@ -3049,20 +3044,20 @@ export default function PlayerDetail() {
                     )}
                   </div>
                   {games.length > 0 && (
-                    <div className="grid grid-cols-2 gap-3 mt-2 pt-3 border-t border-border/50">
+                    <div className="grid grid-cols-2 gap-3 mt-2 pt-3 border-t border-border">
                       <div>
-                        <span className="text-xs text-muted-foreground block mb-1">Strengths</span>
+                        <span className="text-xs font-medium text-muted-foreground block mb-1.5">Strengths</span>
                         {strengths.map((s, i) => (
-                          <div key={i} className="text-xs font-medium text-green-600 dark:text-green-400 flex items-center gap-1">
-                            <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                          <div key={i} className="text-xs font-medium text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                             {s.category} ({s.value})
                           </div>
                         ))}
                       </div>
                       <div>
-                        <span className="text-xs text-muted-foreground block mb-1">Areas to Improve</span>
+                        <span className="text-xs font-medium text-muted-foreground block mb-1.5">Areas to Improve</span>
                         {weaknesses.map((w, i) => (
-                          <div key={i} className="text-xs font-medium text-accent flex items-center gap-1">
+                          <div key={i} className="text-xs font-medium text-foreground/80 flex items-center gap-1.5">
                             <div className="w-1.5 h-1.5 rounded-full bg-accent" />
                             {w.category} ({w.value})
                           </div>

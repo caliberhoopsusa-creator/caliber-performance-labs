@@ -17196,6 +17196,55 @@ Only respond with the JSON array, no other text.`;
     }
   });
 
+  // === WAITLIST (Founding Class early-access capture) ===
+  // POST /api/waitlist - Join the founding-class waitlist (public, no auth, idempotent on email)
+  app.post("/api/waitlist", async (req, res) => {
+    try {
+      const schema = z.object({
+        email: z.string().email("Valid email required").max(254),
+        name: z.string().max(200).optional().nullable(),
+        role: z.enum(["player", "coach", "parent", "recruiter"]).optional().nullable(),
+        teamName: z.string().max(200).optional().nullable(),
+        source: z.string().max(80).optional().nullable(),
+      });
+      const input = schema.parse(req.body);
+      const email = input.email.trim().toLowerCase();
+
+      const existing = await storage.getWaitlistSignupByEmail(email);
+      if (existing) {
+        return res.json({ success: true, message: "You're already on the list — see you soon." });
+      }
+
+      await storage.createWaitlistSignup({
+        email,
+        name: input.name?.trim() || null,
+        role: input.role || null,
+        teamName: input.teamName?.trim() || null,
+        sport: "basketball",
+        source: input.source || "landing",
+      });
+
+      res.json({ success: true, message: "You're in. Welcome to the founding class." });
+    } catch (error: any) {
+      if (error.name === "ZodError") {
+        return res.status(400).json({ message: error.errors[0]?.message || "Invalid input" });
+      }
+      console.error("Error creating waitlist signup:", error);
+      res.status(500).json({ message: "Failed to join the waitlist" });
+    }
+  });
+
+  // GET /api/public/waitlist-count - Honest live count for the landing
+  app.get("/api/public/waitlist-count", async (_req, res) => {
+    try {
+      const total = await storage.getWaitlistCount();
+      res.json({ total });
+    } catch (error) {
+      console.error("Error fetching waitlist count:", error);
+      res.status(500).json({ message: "Failed to fetch waitlist count" });
+    }
+  });
+
   // POST /api/public/players/:id/inquiries - Submit recruiting inquiry (public, no auth required)
   app.post("/api/public/players/:id/inquiries", async (req: any, res) => {
     try {

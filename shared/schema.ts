@@ -3074,5 +3074,23 @@ export const COIN_PACKAGES = [
 
 export type CoinPackage = typeof COIN_PACKAGES[number];
 
+// === WAITLIST (Founding Class early-access capture) ===
+export const waitlistSignups = pgTable("waitlist_signups", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull(),
+  name: text("name"),
+  role: text("role"), // 'player' | 'coach' | 'parent' | 'recruiter'
+  teamName: text("team_name"), // for coach / founding-program signups
+  sport: text("sport").default("basketball"),
+  source: text("source"), // e.g. 'landing-hero', 'founding-program'
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  emailIdx: uniqueIndex("waitlist_signups_email_idx").on(table.email),
+}));
+
+export const insertWaitlistSignupSchema = createInsertSchema(waitlistSignups).omit({ id: true, createdAt: true });
+export type InsertWaitlistSignup = z.infer<typeof insertWaitlistSignupSchema>;
+export type WaitlistSignup = typeof waitlistSignups.$inferSelect;
+
 // Export auth models
 export * from "./models/auth";

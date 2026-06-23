@@ -41,6 +41,7 @@ export default {
           DEFAULT: "hsl(var(--accent) / <alpha-value>)",
           foreground: "hsl(var(--accent-foreground) / <alpha-value>)",
           border: "var(--accent-border)",
+          hover: "hsl(var(--accent-hover) / <alpha-value>)",
         },
         cta: {
           DEFAULT: "hsl(var(--cta) / <alpha-value>)",

@@ -25,64 +25,67 @@ import { AuroraDefs } from "@/components/AuroraDefs";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { StatsTicker } from "@/components/StatsTicker";
 import { Loader2, ChevronLeft, Coins, Package, Mail } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-// Pages
-import ModernLandingPage from "./pages/ModernLandingPage";
+// Eagerly loaded — on the critical path for unauthenticated and first-render flows
 import Landing from "./pages/Landing";
-import PricingPage from "./pages/PricingPage";
-import BlogPage from "./pages/BlogPage";
-import PrivacyPage from "./pages/PrivacyPage";
-import TermsPage from "./pages/TermsPage";
 import Login from "./pages/Login";
 import RoleSelection from "./pages/RoleSelection";
 import Dashboard from "./pages/Dashboard";
-import PlayersList from "./pages/PlayersList";
-import PlayerDetail from "./pages/PlayerDetail";
-import PlayerCard from "./pages/PlayerCard";
-import AnalyzeGame from "./pages/AnalyzeGame";
-import Leaderboard from "./pages/Leaderboard";
-import ComparePlayers from "./pages/ComparePlayers";
-import GradingSystem from "./pages/GradingSystem";
-import VideoAnalysis from "./pages/VideoAnalysis";
-import ScoutHub from "./pages/ScoutHub";
-import Challenges from "./pages/Challenges";
-import Teams from "./pages/Teams";
-import CommunityHub from "./pages/CommunityHub";
-import CoachHub from "./pages/CoachHub";
-import Pricing from "./pages/Pricing";
-import Admin from "./pages/Admin";
-import PerformanceHub from "./pages/PerformanceHub";
-import ScheduleCalendar from "./pages/ScheduleCalendar";
-import HighlightClipsPage from "./pages/HighlightClipsPage";
-import Highlights from "./pages/Highlights";
-import ReelPage from "./pages/ReelPage";
-import ReelGenerator from "./pages/ReelGenerator";
-import TeamComparison from "./pages/TeamComparison";
-import ReportCardPage from "./pages/ReportCardPage";
-import AnalyticsHub from "./pages/AnalyticsHub";
-import LeagueHub from "./pages/LeagueHub";
-import LeagueDetail from "./pages/LeagueDetail";
-import RecruitingHub from "./pages/RecruitingHub";
-import PublicPlayerProfile from "./pages/PublicPlayerProfile";
-import PublicRecruitProfile from "./pages/PublicRecruitProfile";
-import PlayerDirectory from "./pages/PlayerDirectory";
-import DiscoverHighlights from "./pages/DiscoverHighlights";
-import ChallengePage from "./pages/ChallengePage";
-import JoinPage from "./pages/JoinPage";
-import RecruiterDashboard from "@/pages/RecruiterDashboard";
-import RecruiterDirectory from "@/pages/RecruiterDirectory";
-import WhosWatching from "@/pages/WhosWatching";
-import CollegeDetail from "@/pages/CollegeDetail";
-import GuardianDashboard from "./pages/GuardianDashboard";
-import DebugPage from "./pages/DebugPage";
-import TransferPortal from "./pages/TransferPortal";
 import NotFound from "./pages/not-found";
+
+// Lazy-loaded pages — split into separate chunks, fetched only when navigated to
+const ModernLandingPage = lazy(() => import("./pages/ModernLandingPage"));
+const PricingPage = lazy(() => import("./pages/PricingPage"));
+const BlogPage = lazy(() => import("./pages/BlogPage"));
+const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
+const TermsPage = lazy(() => import("./pages/TermsPage"));
+const PlayersList = lazy(() => import("./pages/PlayersList"));
+const PlayerDetail = lazy(() => import("./pages/PlayerDetail"));
+const PlayerCard = lazy(() => import("./pages/PlayerCard"));
+const AnalyzeGame = lazy(() => import("./pages/AnalyzeGame"));
+const Leaderboard = lazy(() => import("./pages/Leaderboard"));
+const ComparePlayers = lazy(() => import("./pages/ComparePlayers"));
+const GradingSystem = lazy(() => import("./pages/GradingSystem"));
+const VideoAnalysis = lazy(() => import("./pages/VideoAnalysis"));
+const ScoutHub = lazy(() => import("./pages/ScoutHub"));
+const Challenges = lazy(() => import("./pages/Challenges"));
+const Teams = lazy(() => import("./pages/Teams"));
+const CommunityHub = lazy(() => import("./pages/CommunityHub"));
+const CoachHub = lazy(() => import("./pages/CoachHub"));
+const Pricing = lazy(() => import("./pages/Pricing"));
+const Admin = lazy(() => import("./pages/Admin"));
+const PerformanceHub = lazy(() => import("./pages/PerformanceHub"));
+const ScheduleCalendar = lazy(() => import("./pages/ScheduleCalendar"));
+const HighlightClipsPage = lazy(() => import("./pages/HighlightClipsPage"));
+const Highlights = lazy(() => import("./pages/Highlights"));
+const ReelPage = lazy(() => import("./pages/ReelPage"));
+const ReelGenerator = lazy(() => import("./pages/ReelGenerator"));
+const TeamComparison = lazy(() => import("./pages/TeamComparison"));
+const ReportCardPage = lazy(() => import("./pages/ReportCardPage"));
+const AnalyticsHub = lazy(() => import("./pages/AnalyticsHub"));
+const LeagueHub = lazy(() => import("./pages/LeagueHub"));
+const LeagueDetail = lazy(() => import("./pages/LeagueDetail"));
+const RecruitingHub = lazy(() => import("./pages/RecruitingHub"));
+const PublicPlayerProfile = lazy(() => import("./pages/PublicPlayerProfile"));
+const PublicRecruitProfile = lazy(() => import("./pages/PublicRecruitProfile"));
+const PlayerDirectory = lazy(() => import("./pages/PlayerDirectory"));
+const DiscoverHighlights = lazy(() => import("./pages/DiscoverHighlights"));
+const ChallengePage = lazy(() => import("./pages/ChallengePage"));
+const JoinPage = lazy(() => import("./pages/JoinPage"));
+const RecruiterDashboard = lazy(() => import("@/pages/RecruiterDashboard"));
+const RecruiterDirectory = lazy(() => import("@/pages/RecruiterDirectory"));
+const WhosWatching = lazy(() => import("@/pages/WhosWatching"));
+const CollegeDetail = lazy(() => import("@/pages/CollegeDetail"));
+const GuardianDashboard = lazy(() => import("./pages/GuardianDashboard"));
+const DebugPage = lazy(() => import("./pages/DebugPage"));
+const TransferPortal = lazy(() => import("./pages/TransferPortal"));
+const CanvasPage = lazy(() => import("./pages/CanvasPage"));
 
 interface ExtendedUser {
   id: string;
@@ -176,11 +179,12 @@ function HeaderCoinDisplay() {
       {playerId && (
         <Link href={`/players/${playerId}?tab=inventory`}>
           <Button 
-            variant="ghost" 
-            size="icon" 
+            variant="ghost"
+            size="icon"
             className="text-muted-foreground hover:text-accent"
             data-testid="header-inventory-btn"
             title="My Inventory"
+            aria-label="My Inventory"
           >
             <Package className="w-4 h-4" />
           </Button>
@@ -322,6 +326,12 @@ function MainRouter() {
       <SyncHandler />
       <SessionExpiryHandler />
       <OfflineBanner />
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[9999] focus:rounded-md focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-foreground focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-accent"
+      >
+        Skip to main content
+      </a>
       <div className="flex min-h-screen w-full max-w-full overflow-x-hidden bg-background text-foreground font-body selection:bg-primary/30">
         <Sidebar userRole={resolvedUser.role!} playerId={resolvedUser.playerId} />
         <div className="flex-1 flex flex-col min-w-0 relative bg-background">
@@ -340,8 +350,9 @@ function MainRouter() {
           </header>
           <StatsTicker />
           <EmailVerificationBanner user={authUser} />
-          <main className="relative z-10 flex-1 p-4 pb-24 md:px-8 md:pb-8 w-full max-w-[1600px] mx-auto overflow-x-hidden overflow-y-auto">
+          <main id="main-content" className="relative z-10 flex-1 p-4 pb-24 md:px-8 md:pb-8 w-full max-w-[1600px] mx-auto overflow-x-hidden overflow-y-auto">
             <PageTransition>
+              <Suspense fallback={<div className="flex items-center justify-center py-24"><Loader2 className="w-8 h-8 text-accent animate-spin" /></div>}>
               <Switch>
                 <Route path="/">
                   {resolvedUser.role === 'player' && resolvedUser.playerId ? (
@@ -443,9 +454,11 @@ function MainRouter() {
                 <Route path="/colleges/:id" component={CollegeDetail} />
                 <Route path="/family" component={GuardianDashboard} />
                 <Route path="/transfer-portal" component={TransferPortal} />
+                <Route path="/canvas" component={CanvasPage} />
                 <Route path="/debug" component={DebugPage} />
                 <Route component={NotFound} />
               </Switch>
+              </Suspense>
             </PageTransition>
           </main>
         </div>
@@ -458,12 +471,9 @@ function MainRouter() {
 
 function App() {
   useEffect(() => {
-    const stored = localStorage.getItem("caliber-theme");
-    if (stored === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    // Dark-only experience for now — force dark regardless of any stored preference.
+    document.documentElement.classList.add("dark");
+    localStorage.setItem("caliber-theme", "dark");
   }, []);
 
   return (
@@ -478,6 +488,7 @@ function App() {
                   <XPNotificationProvider>
                     <Toaster />
                     <InstallPrompt />
+                    <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-8 h-8 text-accent animate-spin" /></div>}>
                     <Switch>
                     <Route path="/admin" component={Admin} />
                     <Route path="/profile/:id/public" component={PublicPlayerProfile} />
@@ -489,6 +500,7 @@ function App() {
                       <MainRouter />
                     </Route>
                   </Switch>
+                    </Suspense>
                   </XPNotificationProvider>
                 </CelebrationProvider>
               </SportProvider>

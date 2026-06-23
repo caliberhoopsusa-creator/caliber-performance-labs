@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 :root {
-  --font-display: 'Geist', 'Outfit', sans-serif;
+  --font-display: 'Barlow Condensed', 'Oswald', 'Geist', sans-serif;
   --font-body: 'Geist', 'Inter', sans-serif;
   --font-sans: 'Geist', 'Inter', sans-serif;
   --font-editorial: 'Instrument Serif', serif;
@@ -65,6 +65,17 @@
   --cta: 0 76% 50%;
   --cta-foreground: 0 0% 100%;
 
+  /* Brand silver — the third pillar of the brand (black · silver · crimson). */
+  --silver: 220 12% 80%;
+  --silver-dim: 220 8% 60%;
+
+  /* Caliber Score tier colors — color MEANS rating tier (used by CaliberScore). */
+  --tier-elite: 42 92% 56%;        /* gold — 90+ */
+  --tier-strong: 356 78% 52%;      /* crimson — 80-89 */
+  --tier-solid: 199 89% 55%;       /* electric blue — 70-79 */
+  --tier-developing: 220 14% 58%;  /* steel — 60-69 */
+  --tier-raw: 0 0% 46%;            /* zinc — below 60 */
+
   --sidebar-accent: 211 100% 50%;
   --sidebar-accent-foreground: 0 0% 100%;
   --sidebar-accent-border: 211 100% 44%;
@@ -81,14 +92,14 @@
 }
 
 .dark {
-  --background: 0 0% 3%;
-  --foreground: 0 0% 95%;
+  --background: 240 6% 4%;        /* obsidian — near-black with a cool undertone */
+  --foreground: 0 0% 96%;
 
-  --card: 0 0% 6%;
-  --card-foreground: 0 0% 95%;
+  --card: 240 5% 7%;              /* lifted obsidian surface, separated from canvas */
+  --card-foreground: 0 0% 96%;
 
-  --popover: 0 0% 6%;
-  --popover-foreground: 0 0% 95%;
+  --popover: 240 5% 7%;
+  --popover-foreground: 0 0% 96%;
 
   --primary: 210 18% 82%;
   --primary-foreground: 0 0% 8%;
@@ -102,23 +113,30 @@
   --border: 0 0% 11%;
   --input: 0 0% 11%;
 
-  --ring: 210 18% 82%;
+  --ring: 356 78% 52%;            /* crimson focus ring */
 
-  --gold: 210 18% 82%;
+  --gold: 210 18% 82%;            /* platinum kept as the SECONDARY neutral-metallic accent */
   --platinum: 210 18% 82%;
 
-  --accent: 210 18% 82%;           /* platinum #c6d0d8 — refined metallic */
-  --accent-foreground: 0 0% 8%;   /* dark text on platinum */
-  --accent-border: 210 18% 68%;   /* #9aaab6 */
-  --accent-hover: 210 18% 90%;    /* #dde4e8 */
+  /* CSS fallback for the crimson accent — ThemeContext re-applies the same hue at
+     runtime from #E11D2A; this prevents a platinum flash before hydration. */
+  --accent: 356 78% 52%;          /* Caliber crimson #E11D2A */
+  --accent-foreground: 0 0% 100%; /* white text on crimson */
+  --accent-border: 356 80% 42%;
+  --accent-hover: 356 84% 60%;
 
-  --cta: 0 76% 51%;               /* Caliber Red #e02424 */
+  /* Crimson ambient atmosphere (was blue). Used for hero glows / gradient washes. */
+  --aurora-1: 356 80% 52%;
+  --aurora-2: 350 74% 44%;
+  --aurora-3: 0 70% 36%;
+
+  --cta: 356 78% 52%;             /* crimson action */
   --cta-foreground: 0 0% 100%;
-  --cta-glow: 0 76% 41%;
+  --cta-glow: 356 80% 40%;
 
-  --sidebar-accent: 210 18% 82%;
-  --sidebar-accent-foreground: 0 0% 8%;
-  --sidebar-accent-border: 210 18% 68%;
+  --sidebar-accent: 356 78% 52%;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-accent-border: 356 80% 42%;
 
   --sidebar-background: 0 0% 4%;
   --sidebar-foreground: 0 0% 95%;
@@ -129,7 +147,7 @@
   html, body {
     @apply bg-background text-foreground antialiased selection:bg-primary/30;
     font-family: var(--font-body);
-    font-size: 16px;
+    font-size: clamp(14px, 0.95rem + 0.2vw, 18px);
     overflow-x: hidden;
     overscroll-behavior-x: none;
   }
@@ -393,8 +411,23 @@
     .gradient-text,
     .gradient-icon-css > svg,
     .ring-aurora::before,
-    .pulse-aurora {
-      animation: none !important;
+    .pulse-aurora,
+    .animate-fade-up,
+    .animate-fade-in,
+    .animate-scale-in,
+    .animate-spin-slow,
+    .float,
+    .mobile-shimmer,
+    .mobile-skeleton {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+    }
+    .spring-lift,
+    .transition-premium,
+    .mobile-menu-item,
+    .press-effect,
+    .touch-press {
+      transition-duration: 0.01ms !important;
     }
   }
 
@@ -1686,15 +1719,15 @@ html.theme-active .nav-active {
     height: 3px;
     border-radius: 1.25rem 1.25rem 0 0;
     background: linear-gradient(90deg,
-      hsl(211 100% 50%) 0%,
-      hsl(222 92% 55%) 35%,
-      hsl(232 84% 60%) 65%,
-      hsl(211 100% 50%) 100%);
+      hsl(356 80% 28%) 0%,
+      hsl(356 84% 52%) 35%,
+      hsl(356 84% 52%) 65%,
+      hsl(356 80% 28%) 100%);
     background-size: 200% 100%;
     animation: hero-stripe-flow 8s linear infinite;
     z-index: 20;
     pointer-events: none;
-    box-shadow: 0 1px 12px hsl(211 100% 50% / 0.4);
+    box-shadow: 0 1px 12px hsl(356 84% 52% / 0.4);
   }
   @keyframes hero-stripe-flow {
     0% { background-position: 0% 50%; }
@@ -1719,8 +1752,8 @@ html.theme-active .nav-active {
     position: absolute;
     inset: 0;
     background-image:
-      linear-gradient(to right, hsl(211 100% 50% / 0.08) 1px, transparent 1px),
-      linear-gradient(to bottom, hsl(211 100% 50% / 0.08) 1px, transparent 1px);
+      linear-gradient(to right, hsl(0 0% 100% / 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(0 0% 100% / 0.05) 1px, transparent 1px);
     background-size: 32px 32px;
     mask-image: linear-gradient(to bottom, black, transparent 85%);
     -webkit-mask-image: linear-gradient(to bottom, black, transparent 85%);
@@ -1744,9 +1777,9 @@ html.theme-active .nav-active {
   }
   .dark .player-hero-banner {
     background:
-      radial-gradient(ellipse 60% 80% at 15% 50%, hsl(211 100% 50% / 0.18), transparent 60%),
-      radial-gradient(ellipse 50% 80% at 85% 30%, hsl(232 84% 60% / 0.14), transparent 60%),
-      linear-gradient(135deg, #0a0f1c 0%, #0d1422 50%, #11162a 100%);
+      radial-gradient(ellipse 60% 80% at 15% 50%, hsl(356 80% 50% / 0.16), transparent 60%),
+      radial-gradient(ellipse 50% 80% at 85% 30%, hsl(356 70% 45% / 0.10), transparent 60%),
+      linear-gradient(135deg, hsl(240 6% 5%) 0%, hsl(240 6% 4%) 50%, hsl(356 28% 6%) 100%);
   }
 
   /* Aurora ring around avatar — circular halo + thin ring outline.
@@ -1763,10 +1796,10 @@ html.theme-active .nav-active {
     border-radius: 50%;
     background: conic-gradient(
       from 0deg,
-      hsl(211 100% 50% / 0.5),
-      hsl(222 92% 55% / 0.5),
-      hsl(232 84% 60% / 0.5),
-      hsl(211 100% 50% / 0.5));
+      hsl(356 84% 52% / 0.5),
+      hsl(356 70% 40% / 0.5),
+      hsl(356 88% 62% / 0.5),
+      hsl(356 84% 52% / 0.5));
     filter: blur(14px);
     opacity: 0.6;
     z-index: 0;
@@ -1783,10 +1816,10 @@ html.theme-active .nav-active {
     border-radius: 50%;
     background: conic-gradient(
       from 0deg,
-      hsl(211 100% 50%),
-      hsl(222 92% 55%),
-      hsl(232 84% 60%),
-      hsl(211 100% 50%));
+      hsl(356 84% 52%),
+      hsl(356 70% 42%),
+      hsl(356 88% 62%),
+      hsl(356 84% 52%));
     -webkit-mask: radial-gradient(circle, transparent 0 47px, #000 48px);
             mask: radial-gradient(circle, transparent 0 47px, #000 48px);
     z-index: 1;
