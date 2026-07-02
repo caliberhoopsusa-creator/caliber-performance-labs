@@ -66,7 +66,10 @@ const labelStyle: React.CSSProperties = {
 export default function Login() {
   const [location, navigate] = useLocation();
   const queryClient = useQueryClient();
-  const [mode, setMode] = useState<"login" | "register">("login");
+  // Arriving via /register (all "Get started" CTAs) opens sign-up, not "Welcome back"
+  const [mode, setMode] = useState<"login" | "register">(
+    window.location.pathname === "/register" ? "register" : "login",
+  );
   const redirectTo = new URLSearchParams(location.split("?")[1] ?? "").get("redirect") ?? "/";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -110,7 +113,6 @@ export default function Login() {
       fontFamily: "Inter, sans-serif",
     }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Inter:wght@400;500;600&display=swap');
         .login-input:focus { border-color: rgba(198,208,216,0.4) !important; }
         @keyframes login-glow {
           0%,100% { opacity: 0.5; }

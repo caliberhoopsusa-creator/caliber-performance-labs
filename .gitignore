@@ -8,3 +8,7 @@ vite.config.ts.*
 .env.*
 !.env.example
 uploads/
+# Coach outreach — never commit lead PII or send state
+script/coach-outreach/leads.csv
+script/coach-outreach/sent-log.json
+script/coach-outreach/outbox/

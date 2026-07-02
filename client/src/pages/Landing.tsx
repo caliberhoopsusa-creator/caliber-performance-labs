@@ -668,7 +668,7 @@ export default function Landing() {
             <div className="space-y-3">
               <h4 className="font-label text-foreground">Get Started</h4>
               <Link href="/login" className="block text-sm text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-sign-in">Sign In</Link>
-              <Link href="/login" className="block text-sm text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-create-account">Create Account</Link>
+              <Link href="/register" className="block text-sm text-muted-foreground hover:text-foreground transition-colors" data-testid="footer-link-create-account">Create Account</Link>
             </div>
           </div>
           <div className="border-t border-border pt-8 flex flex-col sm:flex-row items-center justify-between gap-3">

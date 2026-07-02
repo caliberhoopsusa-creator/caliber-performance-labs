@@ -43,58 +43,58 @@ const ROLE_OPTIONS = [
 ];
 
 function RoleDropdown({ isLoading, onSelect }: { isLoading: boolean; onSelect: (role: RoleType) => void }) {
-  const [pickedRole, setPickedRole] = useState<string>("");
+  const [pickedRole, setPickedRole] = useState<RoleType>(null);
 
-  const selected = ROLE_OPTIONS.find(r => r.value === pickedRole);
+  const handlePick = (role: RoleType) => {
+    if (isLoading) return;
+    setPickedRole(role);
+    onSelect(role);
+  };
 
   return (
-    <div className="max-w-md mx-auto space-y-6">
-      <div className="space-y-2">
-        <Label className="text-sm text-muted-foreground">I am a...</Label>
-        <Select value={pickedRole} onValueChange={setPickedRole}>
-          <SelectTrigger className="w-full h-14 text-base" data-testid="select-role-trigger">
-            <SelectValue placeholder="Select your role" />
-          </SelectTrigger>
-          <SelectContent>
-            {ROLE_OPTIONS.map((role) => {
-              const Icon = role.icon;
-              return (
-                <SelectItem key={role.value} value={role.value} data-testid={`role-option-${role.value}`}>
-                  <div className="flex items-center gap-3">
-                    <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
-                    <span className="font-display font-bold tracking-wide uppercase">{role.label}</span>
-                  </div>
-                </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
+    <div className="space-y-4">
+      <div className="grid sm:grid-cols-2 gap-3">
+        {ROLE_OPTIONS.map((role) => {
+          const Icon = role.icon;
+          const isPicked = pickedRole === role.value;
+          return (
+            <button
+              key={role.value}
+              type="button"
+              disabled={isLoading}
+              onClick={() => handlePick(role.value)}
+              className={`group text-left p-5 rounded-xl border transition-all duration-150 ${
+                isPicked
+                  ? "border-accent bg-accent/10 shadow-lg shadow-accent/10"
+                  : "border-border bg-card hover:border-accent/50 hover:bg-accent/5 hover:-translate-y-0.5"
+              } ${isLoading && !isPicked ? "opacity-50" : ""}`}
+              data-testid={`role-option-${role.value}`}
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className={`w-11 h-11 rounded-lg flex items-center justify-center transition-colors ${
+                  isPicked ? "bg-accent text-accent-foreground" : "bg-accent/10 text-accent"
+                }`}>
+                  {isLoading && isPicked
+                    ? <Loader2 className="w-5 h-5 animate-spin" />
+                    : <Icon className="w-5 h-5" />}
+                </div>
+                <ChevronRight className={`w-4 h-4 mt-1 transition-all ${
+                  isPicked ? "text-accent translate-x-0.5" : "text-muted-foreground/40 group-hover:text-accent group-hover:translate-x-0.5"
+                }`} />
+              </div>
+              <p className="font-display font-bold text-foreground tracking-wide uppercase">
+                {role.label}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                {role.description}
+              </p>
+            </button>
+          );
+        })}
       </div>
-
-      {selected && (
-        <Card className="p-4 bg-accent/5 border-accent/20">
-          <div className="flex items-center gap-3">
-            <selected.icon className="w-6 h-6 text-accent shrink-0" />
-            <div>
-              <p className="font-display font-bold text-accent tracking-wide uppercase">{selected.label}</p>
-              <p className="text-xs text-muted-foreground">{selected.description}</p>
-            </div>
-          </div>
-        </Card>
-      )}
-
-      <Button
-        className="w-full"
-        size="lg"
-        disabled={!pickedRole || isLoading}
-        onClick={() => pickedRole && onSelect(pickedRole as RoleType)}
-        data-testid="button-continue-role"
-      >
-        {isLoading ? (
-          <Loader2 className="w-4 h-4 animate-spin mr-2" />
-        ) : null}
-        {selected ? `Continue as ${selected.label}` : "Select a role to continue"}
-      </Button>
+      <p className="text-xs text-muted-foreground text-center">
+        Tap the card that fits you best to continue.
+      </p>
     </div>
   );
 }
