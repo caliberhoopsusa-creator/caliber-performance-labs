@@ -30,19 +30,15 @@ export class WebhookHandlers {
       
       let event: any;
       
-      if (webhookSecret) {
-        // Verify signature if we have the secret
-        const stripe = await getUncachableStripeClient();
-        event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
-        console.log('Webhook signature verified successfully');
-      } else {
-        // Fall back to parsing without verification (for existing webhooks)
-        // Stripe-replit-sync already verified this, so it should be safe
-        const rawBody = payload.toString('utf8');
-        event = JSON.parse(rawBody);
-        console.log('Processing webhook event (no local secret, relying on sync verification)');
+      if (!webhookSecret) {
+        // Never credit purchases from an unverified payload — a forged POST
+        // to this endpoint could otherwise mint coins for free.
+        console.error('STRIPE_WEBHOOK_SECRET not set; skipping coin-purchase handling for unverified webhook');
+        return;
       }
-      
+      const stripe = await getUncachableStripeClient();
+      event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
+
       // Handle coin purchase events
       await WebhookHandlers.handleCoinPurchase(event);
     } catch (err: any) {

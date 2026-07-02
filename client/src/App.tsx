@@ -40,7 +40,6 @@ import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/not-found";
 
 // Lazy-loaded pages — split into separate chunks, fetched only when navigated to
-const ModernLandingPage = lazy(() => import("./pages/ModernLandingPage"));
 const PricingPage = lazy(() => import("./pages/PricingPage"));
 const BlogPage = lazy(() => import("./pages/BlogPage"));
 const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));

@@ -101,6 +101,14 @@ const canModifyPlayer = async (req: any, playerId: number): Promise<boolean> => 
   return false;
 };
 
+// Resolve the authenticated user's own playerId. Null when unauthenticated
+// or the account has no player profile (e.g. coach/recruiter accounts).
+const getAuthedPlayerId = async (req: any): Promise<number | null> => {
+  if (!req.isAuthenticated() || !req.user?.claims?.sub) return null;
+  const user = await authStorage.getUser(req.user.claims.sub);
+  return user?.playerId ?? null;
+};
+
 // Helper to check if subscription is active (includes trialing)
 const isSubscriptionActive = (status: string | null | undefined): boolean => {
   return status === 'active' || status === 'trialing';
@@ -4334,7 +4342,12 @@ export async function registerRoutes(
     res.json(game);
   });
 
-  app.delete(api.games.delete.path, async (req, res) => {
+  app.delete(api.games.delete.path, isAuthenticated, async (req, res) => {
+    const game = await storage.getGame(Number(req.params.id));
+    if (!game) return res.status(404).json({ message: "Game not found" });
+    if (!(await canModifyPlayer(req, game.playerId))) {
+      return res.status(403).json({ message: "Not authorized to delete this game" });
+    }
     await storage.deleteGame(Number(req.params.id));
     res.status(204).send();
   });
@@ -7058,15 +7071,14 @@ Respond in this exact JSON format (no extra text outside the JSON):
 
   // === DIRECT MESSAGES ===
   
-  // Get all DM threads for the current player
-  app.get('/api/dm/threads', async (req, res) => {
+  // Get all DM threads for the current player (identity from session, never the query)
+  app.get('/api/dm/threads', isAuthenticated, async (req, res) => {
     try {
-      const sessionId = req.query.sessionId as string;
-      const playerId = Number(req.query.playerId);
-      if (!playerId) {
-        return res.status(400).json({ message: 'playerId required' });
+      const myPlayerId = await getAuthedPlayerId(req);
+      if (!myPlayerId) {
+        return res.status(403).json({ message: 'No player profile on this account' });
       }
-      const threads = await storage.getPlayerDmThreads(playerId);
+      const threads = await storage.getPlayerDmThreads(myPlayerId);
       res.json(threads);
     } catch (err) {
       console.error('Get DM threads error:', err);
@@ -7074,14 +7086,14 @@ Respond in this exact JSON format (no extra text outside the JSON):
     }
   });
 
-  // Get unread DM count for a player
-  app.get('/api/dm/unread-count', async (req, res) => {
+  // Get unread DM count for the current player
+  app.get('/api/dm/unread-count', isAuthenticated, async (req, res) => {
     try {
-      const playerId = Number(req.query.playerId);
-      if (!playerId) {
-        return res.status(400).json({ message: 'playerId required' });
+      const myPlayerId = await getAuthedPlayerId(req);
+      if (!myPlayerId) {
+        return res.status(403).json({ message: 'No player profile on this account' });
       }
-      const count = await storage.getUnreadDmCount(playerId);
+      const count = await storage.getUnreadDmCount(myPlayerId);
       res.json({ count });
     } catch (err) {
       console.error('Get unread DM count error:', err);
@@ -7090,13 +7102,17 @@ Respond in this exact JSON format (no extra text outside the JSON):
   });
 
   // Start or find a DM thread with another player
-  app.post('/api/dm/threads', async (req, res) => {
+  app.post('/api/dm/threads', isAuthenticated, async (req, res) => {
     try {
       const { participantIds } = req.body; // array of player IDs
       if (!participantIds || !Array.isArray(participantIds) || participantIds.length < 2) {
         return res.status(400).json({ message: 'At least 2 participantIds required' });
       }
-      
+      const myPlayerId = await getAuthedPlayerId(req);
+      if (!myPlayerId || !participantIds.map(Number).includes(myPlayerId)) {
+        return res.status(403).json({ message: 'You can only start threads you participate in' });
+      }
+
       // Check if thread already exists between these players
       const existingThread = await storage.findExistingDmThread(participantIds);
       if (existingThread) {
@@ -7120,10 +7136,20 @@ Respond in this exact JSON format (no extra text outside the JSON):
     }
   });
 
-  // Get messages in a thread
-  app.get('/api/dm/threads/:threadId/messages', async (req, res) => {
+  // Membership gate: only thread participants may touch a thread
+  const isThreadParticipant = async (threadId: number, playerId: number): Promise<boolean> => {
+    const participants = await storage.getDmParticipants(threadId);
+    return participants.some((p) => p.playerId === playerId);
+  };
+
+  // Get messages in a thread (participants only)
+  app.get('/api/dm/threads/:threadId/messages', isAuthenticated, async (req, res) => {
     try {
       const threadId = Number(req.params.threadId);
+      const myPlayerId = await getAuthedPlayerId(req);
+      if (!myPlayerId || !(await isThreadParticipant(threadId, myPlayerId))) {
+        return res.status(403).json({ message: 'Not a participant in this thread' });
+      }
       const limit = Number(req.query.limit) || 50;
       const before = req.query.before ? Number(req.query.before) : undefined;
       const messages = await storage.getDmMessages(threadId, limit, before);
@@ -7134,17 +7160,21 @@ Respond in this exact JSON format (no extra text outside the JSON):
     }
   });
 
-  // Send a message in a thread
-  app.post('/api/dm/threads/:threadId/messages', async (req, res) => {
+  // Send a message in a thread — sender is always the session's player
+  app.post('/api/dm/threads/:threadId/messages', isAuthenticated, async (req, res) => {
     try {
       const threadId = Number(req.params.threadId);
-      const { senderPlayerId, content } = req.body;
-      if (!content || !senderPlayerId) {
-        return res.status(400).json({ message: 'content and senderPlayerId required' });
+      const { content } = req.body;
+      if (!content) {
+        return res.status(400).json({ message: 'content required' });
+      }
+      const myPlayerId = await getAuthedPlayerId(req);
+      if (!myPlayerId || !(await isThreadParticipant(threadId, myPlayerId))) {
+        return res.status(403).json({ message: 'Not a participant in this thread' });
       }
       const message = await storage.sendDmMessage({
         threadId,
-        senderPlayerId,
+        senderPlayerId: myPlayerId,
         content,
       });
       res.status(201).json(message);
@@ -7154,15 +7184,15 @@ Respond in this exact JSON format (no extra text outside the JSON):
     }
   });
 
-  // Mark thread as read
-  app.post('/api/dm/threads/:threadId/read', async (req, res) => {
+  // Mark thread as read (own membership only)
+  app.post('/api/dm/threads/:threadId/read', isAuthenticated, async (req, res) => {
     try {
       const threadId = Number(req.params.threadId);
-      const { playerId } = req.body;
-      if (!playerId) {
-        return res.status(400).json({ message: 'playerId required' });
+      const myPlayerId = await getAuthedPlayerId(req);
+      if (!myPlayerId || !(await isThreadParticipant(threadId, myPlayerId))) {
+        return res.status(403).json({ message: 'Not a participant in this thread' });
       }
-      await storage.markDmThreadRead(threadId, playerId);
+      await storage.markDmThreadRead(threadId, myPlayerId);
       res.json({ success: true });
     } catch (err) {
       console.error('Mark thread read error:', err);
@@ -9619,7 +9649,7 @@ Only respond with the JSON array, no other text.`;
       const playerResult = await db.execute(sql`
         SELECT 
           COUNT(*) as total_players,
-          COUNT(*) FILTER (WHERE sport = 'basketball') as basketball_players,
+          COUNT(*) FILTER (WHERE sport = 'basketball') as basketball_players
         FROM players
       `);
       const playerStats = playerResult.rows[0] as any;
