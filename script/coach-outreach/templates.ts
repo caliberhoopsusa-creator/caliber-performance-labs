@@ -15,21 +15,24 @@ export const templates: EmailTemplate[] = [
     subject: "Free game-grading tool for {{school}} basketball",
     body: `Hi Coach {{lastName}},
 
-I'm reaching out to basketball coaches in {{state}} about Caliber, a free
-player-development platform we built for programs like {{school}}.
+I'm the founder of Caliber, a player-development platform I'm launching
+with {{state}} basketball programs first.
 
 In short: your players log their stats after each game (takes under two
-minutes), and Caliber turns them into position-weighted A-F grades with
-specific improvement feedback. As a coach you get:
+minutes), and Caliber's AI turns them into position-weighted A-F grades
+with specific improvement feedback. As a coach you get:
 
 - A team dashboard with every player's grades and trends
 - Game verification, lineup analytics, and practice tracking
 - AI scouting reports you can share with college recruiters
 
-The core platform is free for coaches and players. If you'd like a look,
-you can explore it here: https://caliber.app
+I'll be straight with you: we're early, and that's the opportunity. I'm
+looking for a handful of {{state}} programs to be founding teams — free
+access, set up personally by me, and a direct line to shape what gets
+built next.
 
-Happy to answer any questions — just reply to this email.
+If you'd give it ten minutes, reply to this email and I'll set up
+{{school}} myself. Or take a look first: https://caliber.app
 
 Best,
 {{senderName}}
@@ -37,19 +40,26 @@ Caliber Performance Labs`,
   },
   {
     touch: 2,
-    subject: "Re: Free game-grading tool for {{school}} basketball",
+    subject: "What Caliber looks like for {{school}} basketball",
     body: `Hi Coach {{lastName}},
 
-Following up on my note last week about Caliber. One thing coaches tell us
-saves them the most time: the game verification system. Players log their
-own stats, you approve them in one tap, and the season averages, grades,
-and leaderboards stay accurate without you keeping a spreadsheet.
+Following up on my note about Caliber. Here's what a week of it actually
+looks like for a {{level}} program:
 
-A program director running three AAU teams told us it saves him 5+ hours
-a week.
+- A player logs 14 pts / 6 reb / 3 ast after Tuesday's game
+- Caliber grades it for their position and minutes — with two or three
+  specific things to work on before Friday
+- You approve the stat line in one tap, and season averages, grades, and
+  leaderboards stay accurate with no spreadsheet
+- When a college coach looks, your player has a verified, season-long
+  graded record — not just a highlight reel
 
-If {{level}} basketball at {{school}} could use that, it's free to try:
-https://caliber.app
+The big platforms make you choose between film tools and stat books.
+Caliber's bet is that AI can grade the game itself, and your players
+deserve that without the big-school price tag.
+
+Free for founding {{state}} programs. Reply and I'll set {{school}} up
+personally: https://caliber.app
 
 Best,
 {{senderName}}
