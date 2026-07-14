@@ -76,3 +76,26 @@ tests/                 Vitest + Supertest integration tests, one real test DB, s
 - Before touching anything a Coach/Recruiter/Guardian can see: read `privacy-and-roles`.
 - Before touching Gemini calls: read `ai-integration`.
 - New session, unfamiliar area: read `codebase-onboarding` first.
+
+## gstack (installed — use it)
+gstack (Garry Tan's AI-eng-team skill pack) is installed at `~/.claude/skills/gstack`.
+Prefer these skills over re-solving the same problems by hand.
+
+- **Web browsing / QA / screenshots:** ALWAYS use the **`/browse`** skill (and `/qa`, `/qa-only`)
+  for opening pages, testing URLs, and visual verification. **Never** use
+  `mcp__claude-in-chrome__*` tools. `/browse` handles the WebGL/animation-canvas
+  pages (like the landing) that make raw Playwright `networkidle`/stability waits hang.
+- **Design quality:** `/design-review` (find slop, spacing, hierarchy, slow interactions),
+  `/design-consultation`, `/design-shotgun`, `/design-html` — use for landing/UI work.
+- **Code review & security:** `/review` (production bugs), `/cso` (OWASP + STRIDE — relevant
+  given the per-route privacy flags).
+- **Planning:** `/office-hours`, `/autoplan`, `/plan-ceo-review`, `/plan-eng-review`,
+  `/plan-design-review`, `/plan-devex-review`, `/spec`.
+- **Debug / ship / learn:** `/investigate` (root cause), `/ship`, `/land-and-deploy`,
+  `/canary`, `/retro`, `/learn`, `/document-release`, `/document-generate`.
+- Stay current with `/gstack-upgrade`. Full list: `office-hours, autoplan, plan-ceo-review,
+  plan-eng-review, plan-design-review, plan-devex-review, devex-review, design-consultation,
+  design-shotgun, design-html, design-review, review, ship, land-and-deploy, canary, benchmark,
+  browse, connect-chrome, qa, qa-only, setup-browser-cookies, setup-deploy, setup-gbrain, retro,
+  investigate, document-release, document-generate, codex, cso, careful, freeze, guard, unfreeze,
+  spec, scrape, diagram, make-pdf, health, learn, gstack-upgrade`.
