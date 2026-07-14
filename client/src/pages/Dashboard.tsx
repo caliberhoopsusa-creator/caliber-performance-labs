@@ -22,6 +22,7 @@ import { useSubscription } from "@/hooks/use-subscription";
 import { Lock, Sparkles, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DailyQuestsWidget } from "@/components/DailyQuestsWidget";
+import { ShareCaliberScoreButton } from "@/components/ShareCaliberScoreButton";
 
 const BADGE_ICONS: Record<string, any> = {
   twenty_piece: Target,
@@ -340,6 +341,7 @@ export default function Dashboard() {
                   )}
                 </div>
               )}
+              {playerId && <ShareCaliberScoreButton playerId={playerId} />}
               <Link href="/analyze">
                 <Button
                   data-testid="button-new-analysis"

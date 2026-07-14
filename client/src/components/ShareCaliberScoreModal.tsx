@@ -1,8 +1,9 @@
 import { useRef, useState } from "react";
-import html2canvas from "html2canvas";
+import { createPortal } from "react-dom";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -198,7 +199,8 @@ function ScoreCard({
             className={cn("font-body text-white/40", isWide ? "mt-6" : "mt-8")}
             style={{ fontSize: isStory ? 26 : 20 }}
           >
-            {gamesPlayed} game{gamesPlayed === 1 ? "" : "s"} logged · Season 2026
+            {gamesPlayed} game{gamesPlayed === 1 ? "" : "s"} logged ·{" "}
+            {new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
           </div>
         </div>
       </div>
@@ -227,7 +229,7 @@ export function ShareCaliberScoreModal(props: ShareCaliberScoreModalProps) {
   const { open, onOpenChange, playerName } = props;
   const [selectedFormat, setSelectedFormat] = useState<CardFormat>("story");
   const [isWorking, setIsWorking] = useState(false);
-  const cardRef = useRef<HTMLDivElement>(null);
+  const exportRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   const format = FORMATS[selectedFormat];
@@ -236,9 +238,11 @@ export function ShareCaliberScoreModal(props: ShareCaliberScoreModalProps) {
   const fileName = `caliber-score-${playerName.replace(/\s+/g, "-").toLowerCase()}-${selectedFormat}.png`;
 
   const renderToBlob = async (): Promise<Blob> => {
-    if (!cardRef.current) throw new Error("Card not mounted");
+    if (!exportRef.current) throw new Error("Card not mounted");
+    // Heavy dep — only loaded when the user actually exports a card.
+    const { default: html2canvas } = await import("html2canvas");
     await document.fonts.ready;
-    const canvas = await html2canvas(cardRef.current, {
+    const canvas = await html2canvas(exportRef.current, {
       backgroundColor: null,
       scale: 2,
       useCORS: true,
@@ -270,10 +274,13 @@ export function ShareCaliberScoreModal(props: ShareCaliberScoreModalProps) {
     }
   };
 
-  const canNativeShare =
-    typeof navigator !== "undefined" &&
-    "canShare" in navigator &&
-    navigator.canShare({ files: [new File([], "x.png", { type: "image/png" })] });
+  // Computed once — feature detection doesn't change within a session.
+  const [canNativeShare] = useState(
+    () =>
+      typeof navigator !== "undefined" &&
+      "canShare" in navigator &&
+      navigator.canShare({ files: [new File([], "x.png", { type: "image/png" })] }),
+  );
 
   const handleNativeShare = async () => {
     setIsWorking(true);
@@ -298,11 +305,30 @@ export function ShareCaliberScoreModal(props: ShareCaliberScoreModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
+      {/* Full-size card rendered off-screen at body level for pixel-perfect capture.
+          html2canvas mishandles CSS transforms on the capture root, so we never
+          capture the scaled preview — only this untransformed node. */}
+      {open &&
+        createPortal(
+          <div
+            aria-hidden
+            style={{ position: "absolute", left: -20000, top: 0, pointerEvents: "none" }}
+          >
+            <div ref={exportRef}>
+              <ScoreCard format={selectedFormat} {...props} />
+            </div>
+          </div>,
+          document.body,
+        )}
       <DialogContent className="max-w-[480px] gap-0 overflow-hidden overflow-y-auto p-0 max-h-[90vh] border-white/10 bg-card">
         <DialogHeader className="p-4 pb-2">
           <DialogTitle className="font-display text-lg uppercase tracking-wider">
             Share your Caliber Score
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Preview your Caliber Score card, pick a format, then download it as a PNG or share it
+            to social apps.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="px-4 pb-3">
@@ -336,7 +362,7 @@ export function ShareCaliberScoreModal(props: ShareCaliberScoreModalProps) {
             className="relative overflow-hidden rounded-xl border border-white/10 shadow-2xl"
             style={{ width: format.width * previewScale, height: format.height * previewScale }}
           >
-            <div ref={cardRef} style={{ transform: `scale(${previewScale})`, transformOrigin: "top left" }}>
+            <div aria-hidden style={{ transform: `scale(${previewScale})`, transformOrigin: "top left" }}>
               <ScoreCard format={selectedFormat} {...props} />
             </div>
           </div>

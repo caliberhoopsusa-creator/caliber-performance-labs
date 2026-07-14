@@ -38,6 +38,7 @@ import {
 import { cn } from "@/lib/utils";
 import { CaliberLogo } from "@/components/CaliberLogo";
 import { CoachRecommendations } from "@/components/CoachRecommendations";
+import { ShareCaliberScoreButton } from "@/components/ShareCaliberScoreButton";
 import { useAuth } from "@/hooks/use-auth";
 import { X as XIcon } from "lucide-react";
 
@@ -329,16 +330,19 @@ export default function PublicPlayerProfile() {
             <CaliberLogo size={28} />
             <span className="font-display text-lg font-bold tracking-tight text-accent">CALIBER</span>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleCopyLink}
-            className="gap-2"
-            data-testid="button-copy-link"
-          >
-            <Copy className="w-4 h-4" />
-            Share
-          </Button>
+          <div className="flex items-center gap-2">
+            <ShareCaliberScoreButton playerId={playerId} size="sm" label="Score Card" />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCopyLink}
+              className="gap-2"
+              data-testid="button-copy-link"
+            >
+              <Copy className="w-4 h-4" />
+              Share
+            </Button>
+          </div>
         </div>
       </header>
 
