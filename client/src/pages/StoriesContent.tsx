@@ -65,14 +65,14 @@ function StoryRing({
       <motion.div 
         className={cn(
           "relative p-[3px] rounded-full transition-all duration-300",
-          isViewed 
-            ? "from-gray-500" 
-            : "from-accent via-accent to-accent"
+          isViewed
+            ? "bg-muted"
+            : "ring-aurora"
         )}
         animate={!isViewed ? { boxShadow: [
-          "0 0 0 0 rgba(224,36,36,0.4)",
-          "0 0 0 8px rgba(224,36,36,0.2)",
-          "0 0 0 12px rgba(224,36,36,0)"
+          "0 0 0 0 hsl(var(--cta) / 0.4)",
+          "0 0 0 8px hsl(var(--cta) / 0.18)",
+          "0 0 0 12px hsl(var(--cta) / 0)"
         ]} : {}}
         transition={!isViewed ? { duration: 2, repeat: Infinity } : {}}
       >
@@ -93,7 +93,7 @@ function StoryRing({
         </div>
         {story.mediaType === 'video' && (
           <motion.div 
-            className="absolute bottom-0 right-0 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center border-2 border-background"
+            className="absolute bottom-0 right-0 w-5 h-5 bg-accent rounded-full flex items-center justify-center border-2 border-background"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: "spring" }}
@@ -259,7 +259,7 @@ function StoryViewer({
         {stories.map((_, idx) => (
           <div key={idx} className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
             <motion.div 
-              className="h-full bg-accent rounded-full shadow-[0_0_10px_rgba(224,36,36,0.6)]"
+              className="h-full bg-accent rounded-full shadow-[0_0_10px_hsl(var(--accent)/0.6)]"
               style={{ 
                 width: idx < currentIndex ? '100%' : idx === currentIndex ? `${progress}%` : '0%' 
               }}

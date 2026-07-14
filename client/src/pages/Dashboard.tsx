@@ -131,6 +131,9 @@ function RecruiterActivityBanner({ playerId }: { playerId: number }) {
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
     >
       <Link href={`/players/${playerId}/recruiting`}>
         <div className="relative overflow-hidden rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 cursor-pointer group hover:border-amber-500/40 transition-colors">
@@ -350,7 +353,20 @@ export default function Dashboard() {
         </CardContent>
       </div>
 
-      <motion.div 
+      {totalGames === 0 && (
+        <div className="rounded-xl border border-accent/20 bg-accent/5 p-6 text-center space-y-3">
+          <p className="text-sm font-semibold text-foreground">Log your first game to get a graded performance report card</p>
+          <p className="text-xs text-muted-foreground">Enter your stats and receive an AI-powered grade with personalized feedback.</p>
+          <Link href="/analyze">
+            <Button className="gap-2" data-testid="button-first-game-cta">
+              <Plus className="w-4 h-4" />
+              Log First Game
+            </Button>
+          </Link>
+        </div>
+      )}
+
+      <motion.div
         className="grid grid-cols-2 lg:grid-cols-4 gap-4"
         variants={staggerContainer}
         initial="initial"
@@ -388,8 +404,8 @@ export default function Dashboard() {
         <motion.div variants={fadeUpVariants}>
           <StatCard
             icon={Trophy}
-            label="Leaderboard"
-            value="View"
+            label="Rankings"
+            value="Leaderboard"
             href="/leaderboard"
             testId="card-leaderboard"
           />

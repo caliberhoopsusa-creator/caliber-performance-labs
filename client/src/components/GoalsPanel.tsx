@@ -285,7 +285,7 @@ export function GoalsPanel({ playerId, games }: GoalsPanelProps) {
             <p className="text-sm text-muted-foreground max-w-xs mb-4">
               Goals help track progress and keep players motivated. Set targets for points, assists, or grades.
             </p>
-            <Button size="sm" onClick={() => setIsOpen(true)} className="gap-1 bg-gradient-to-r from-accent to-blue-600 hover:from-accent hover:to-blue-500 border-0 shadow-lg">
+            <Button size="sm" onClick={() => setIsOpen(true)} className="gap-1">
               <Plus className="w-4 h-4" /> Create Goal
             </Button>
           </div>

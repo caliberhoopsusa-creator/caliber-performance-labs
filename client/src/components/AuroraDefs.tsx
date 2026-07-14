@@ -11,8 +11,11 @@ export function AuroraDefs() {
   const stopCRef = useRef<SVGStopElement>(null);
 
   useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
     let raf = 0;
     const start = performance.now();
+
     const tick = (now: number) => {
       const t = ((now - start) / 8000) % 1;
       const ease = 0.5 - 0.5 * Math.cos(t * Math.PI * 2);
@@ -22,10 +25,22 @@ export function AuroraDefs() {
       if (stopCRef.current) stopCRef.current.setAttribute("offset", `${100}%`);
       raf = requestAnimationFrame(tick);
     };
-    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      raf = requestAnimationFrame(tick);
-    }
-    return () => cancelAnimationFrame(raf);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        cancelAnimationFrame(raf);
+      } else {
+        raf = requestAnimationFrame(tick);
+      }
+    };
+
+    raf = requestAnimationFrame(tick);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
   return (

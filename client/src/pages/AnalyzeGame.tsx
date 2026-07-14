@@ -139,6 +139,14 @@ export default function AnalyzeGame() {
               <h1 className="text-3xl md:text-4xl font-bold text-foreground">
                 Game Analysis
               </h1>
+              {effectivePlayerId && (() => {
+                const prePlayer = (players || []).find((p: any) => String(p.id) === String(effectivePlayerId));
+                return prePlayer ? (
+                  <p className="text-accent text-sm font-medium">
+                    Logging game for {prePlayer.name}{prePlayer.jerseyNumber ? ` #${prePlayer.jerseyNumber}` : ''}
+                  </p>
+                ) : null;
+              })()}
               <p className="text-muted-foreground max-w-md">
                 Input your game stats to generate an AI-powered performance report card with personalized feedback.
               </p>
@@ -385,14 +393,17 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach, 
             </div>
             
             <div className="space-y-2">
-              <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Opponent</label>
-              <Input {...form.register("opponent")} placeholder="vs. Team Name" className="bg-muted/50 border-border text-foreground h-11 focus:border-accent/50 transition-colors" />
-              {form.formState.errors.opponent && <p className="text-red-400 text-xs">Opponent required</p>}
+              <label htmlFor="input-opponent" className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Opponent</label>
+              <Input id="input-opponent" {...form.register("opponent")} placeholder="vs. Team Name" className="bg-muted/50 border-border text-foreground h-11 focus:border-accent/50 transition-colors"
+                aria-invalid={!!form.formState.errors.opponent}
+                aria-describedby={form.formState.errors.opponent ? "error-opponent" : undefined}
+              />
+              {form.formState.errors.opponent && <p id="error-opponent" className="text-red-400 text-xs" role="alert">Opponent required</p>}
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Date</label>
-              <Input type="date" {...form.register("date")} className="bg-muted/50 border-border text-foreground h-11 focus:border-accent/50 transition-colors" />
+              <label htmlFor="input-date" className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Date</label>
+              <Input id="input-date" type="date" {...form.register("date")} className="bg-muted/50 border-border text-foreground h-11 focus:border-accent/50 transition-colors" />
             </div>
 
             <div className="space-y-2">
@@ -723,9 +734,10 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach, 
           )}
 
           <div className="space-y-2">
-            <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Coach's Notes</label>
-            <Textarea 
-              {...form.register("notes")} 
+            <label htmlFor="textarea-notes" className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Coach's Notes</label>
+            <Textarea
+              id="textarea-notes"
+              {...form.register("notes")}
               placeholder="Add specific observations, areas for improvement, or key moments..."
               className="bg-muted/50 border-border text-foreground min-h-[100px] focus:border-accent/50 transition-colors"
             />
@@ -760,10 +772,12 @@ function GameForm({ players, preselectedPlayerId, onSubmit, isPending, isCoach, 
 function StepperInput({ label, name, setValue, watch }: { label: string; name: string; register?: any; setValue?: any; watch?: any }) {
   const raw = watch?.(name);
   const displayValue = raw === undefined || raw === null || (typeof raw === 'number' && isNaN(raw)) ? 0 : raw;
+  const inputId = `stepper-input-${name}`;
   return (
     <div className="space-y-1 w-full" data-testid={`stepper-${name}`}>
-      <label className="text-[10px] md:text-xs uppercase font-bold text-muted-foreground tracking-wider block text-center">{label}</label>
+      <label htmlFor={inputId} className="text-[10px] md:text-xs uppercase font-bold text-muted-foreground tracking-wider block text-center">{label}</label>
       <Input
+        id={inputId}
         type="text"
         inputMode="numeric"
         pattern="[0-9]*"
@@ -785,10 +799,12 @@ function StepperInput({ label, name, setValue, watch }: { label: string; name: s
 function NumberInput({ label, name, setValue, watch }: any) {
   const raw = watch?.(name);
   const displayValue = raw === undefined || raw === null || (typeof raw === 'number' && isNaN(raw)) ? 0 : raw;
+  const inputId = `number-input-${name}`;
   return (
     <div className="space-y-1 w-full">
-      <label className="text-[10px] md:text-xs uppercase font-bold text-muted-foreground tracking-wider block text-center">{label}</label>
+      <label htmlFor={inputId} className="text-[10px] md:text-xs uppercase font-bold text-muted-foreground tracking-wider block text-center">{label}</label>
       <Input
+        id={inputId}
         type="text"
         inputMode="numeric"
         pattern="[0-9]*"

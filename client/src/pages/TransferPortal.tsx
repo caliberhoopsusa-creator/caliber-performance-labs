@@ -76,7 +76,8 @@ function PlayerPortalCard({ player }: { player: PortalPlayer }) {
           <div className="flex items-center gap-3 min-w-0">
             {player.photoUrl ? (
               <img src={player.photoUrl} alt={player.name}
-                className="w-12 h-12 rounded-full object-cover flex-shrink-0 border border-white/10" />
+                className="w-12 h-12 rounded-full object-cover flex-shrink-0 border border-white/10"
+                loading="lazy" decoding="async" />
             ) : (
               <div className="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center text-sm font-bold"
                 style={{ background: "rgba(198,208,216,0.1)", color: "#C6D0D8", border: "1px solid rgba(198,208,216,0.2)" }}>

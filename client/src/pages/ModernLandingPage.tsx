@@ -2606,9 +2606,9 @@ function Features() {
   return (
     <section id="features" className="py-24 px-5" style={{ background: C.bg }}>
       <div className="max-w-6xl mx-auto">
-        <Reveal className="mb-12 text-center">
+        <Reveal className="mb-14 text-center">
           <Eyebrow>Features</Eyebrow>
-          <h2 className="font-display font-bold mt-4" style={{ fontSize: 'clamp(28px, 4vw, 42px)', color: C.white }}>
+          <h2 className="font-display font-bold mt-5" style={{ fontSize: 'clamp(32px, 4.5vw, 48px)', color: C.white, letterSpacing: '-0.02em' }}>
             Everything you need to{' '}
             <span style={{ color: C.amber }}>level up</span>
           </h2>
@@ -2650,9 +2650,9 @@ function HowItWorks() {
       style={{ background: C.bg1, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}
     >
       <div className="max-w-6xl mx-auto">
-        <Reveal className="text-center mb-16">
+        <Reveal className="text-center mb-20">
           <Eyebrow>How it works</Eyebrow>
-          <h2 className="font-display font-bold mt-4" style={{ fontSize: 'clamp(28px, 4vw, 42px)', color: C.white }}>
+          <h2 className="font-display font-bold mt-5" style={{ fontSize: 'clamp(32px, 4.5vw, 48px)', color: C.white, letterSpacing: '-0.02em' }}>
             Three steps to your best season
           </h2>
         </Reveal>
@@ -2700,8 +2700,8 @@ function HowItWorks() {
                   </span>
                 </motion.div>
                 <div>
-                  <h3 className="font-display font-bold text-lg mb-2" style={{ color: C.white }}>{title}</h3>
-                  <p className="text-[14px] leading-relaxed max-w-xs mx-auto" style={{ color: C.white40 }}>{body}</p>
+                  <h3 className="font-display font-bold text-lg mb-3" style={{ color: C.white }}>{title}</h3>
+                  <p className="font-editorial text-[15px] leading-relaxed max-w-xs mx-auto" style={{ color: C.white60, fontStyle: 'italic' }}>{body}</p>
                 </div>
               </div>
             </Reveal>
@@ -2734,10 +2734,16 @@ function Testimonials() {
   return (
     <section className="py-24 px-5" style={{ background: C.bg }}>
       <div className="max-w-6xl mx-auto">
-        <Reveal className="text-center mb-14">
+        <Reveal className="text-center mb-16">
           <Eyebrow>Testimonials</Eyebrow>
-          <h2 className="font-display font-bold mt-4" style={{ fontSize: 'clamp(28px, 4vw, 42px)', color: C.white }}>
-            Real athletes. <span style={{ color: C.amber }}>Real recruitments.</span>
+          <h2 className="font-display font-bold mt-5" style={{ fontSize: 'clamp(32px, 4.5vw, 48px)', color: C.white, letterSpacing: '-0.02em' }}>
+            Real athletes.{' '}
+            <span
+              className="font-editorial-italic italic"
+              style={{ color: C.amber, fontFamily: "'Instrument Serif', 'Times New Roman', serif", fontWeight: 400 }}
+            >
+              Real results.
+            </span>
           </h2>
         </Reveal>
 
@@ -2749,18 +2755,25 @@ function Testimonials() {
           {TESTIMONIALS.map(({ quote, name, role, rating, initials, color }, i) => (
             <motion.div key={name} variants={fadeUp} custom={i}>
               <SpotlightCard
-                className="trace-border rounded-2xl p-7 h-full flex flex-col gap-5"
+                className="trace-border rounded-2xl p-7 h-full flex flex-col gap-6"
                 style={{ background: C.bg1, border: `1px solid ${C.border}` } as React.CSSProperties}
               >
-                <div className="flex gap-0.5">
-                  {Array.from({ length: rating }).map((_, j) => (
-                    <Star key={j} className="w-3.5 h-3.5 fill-current" style={{ color: C.amber }} />
-                  ))}
-                </div>
-                <p className="text-[14px] leading-relaxed flex-1" style={{ color: C.white60 }}>
-                  "{quote}"
+                {/* Drop-quote mark */}
+                <span
+                  className="font-editorial-italic italic select-none block"
+                  style={{ fontSize: '4.5rem', lineHeight: 1, color: C.amber, opacity: 0.65, marginBottom: '-1.2rem' }}
+                  aria-hidden
+                >
+                  &ldquo;
+                </span>
+                {/* Quote body — larger, serif italic for pull-quote weight */}
+                <p
+                  className="font-editorial text-[16px] leading-relaxed flex-1"
+                  style={{ color: C.white60, fontStyle: 'italic' }}
+                >
+                  {quote}
                 </p>
-                <div className="flex items-center gap-3 pt-2 border-t" style={{ borderColor: C.borderFine }}>
+                <div className="flex items-center gap-3 pt-4 border-t" style={{ borderColor: C.borderFine }}>
                   <div
                     className="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-bold font-display flex-shrink-0"
                     style={{ background: `${color}20`, color, border: `1px solid ${color}30` }}
@@ -2769,7 +2782,7 @@ function Testimonials() {
                   </div>
                   <div>
                     <div className="text-[13px] font-semibold font-display" style={{ color: C.white }}>{name}</div>
-                    <div className="text-[11px]" style={{ color: C.white40 }}>{role}</div>
+                    <div className="text-[11px] font-label" style={{ color: C.white40 }}>{role}</div>
                   </div>
                 </div>
               </SpotlightCard>

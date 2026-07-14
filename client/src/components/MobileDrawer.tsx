@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { ToastAction } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
@@ -9,7 +10,7 @@ import {
   Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, 
   UsersRound, CalendarCheck, Eye, UserCircle, LogOut, CreditCard, Lock, Dumbbell, 
   CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, Bell, ShoppingBag, GraduationCap,
-  ChevronDown, ChevronRight, BookOpen, Wand2, Medal, Binoculars, Search, Bookmark, Heart
+  ChevronDown, ChevronRight, BookOpen, Wand2, Medal, Binoculars, Search, Bookmark, Heart, LayoutTemplate
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CaliberLogo } from "@/components/CaliberLogo";
@@ -72,39 +73,48 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
     const roleOrder: Array<'player' | 'coach' | 'recruiter' | 'guardian'> = ['player', 'coach', 'recruiter', 'guardian'];
     const currentIndex = roleOrder.indexOf(userRole as any);
     const newRole = roleOrder[(currentIndex + 1) % roleOrder.length];
+    const previousRole = userRole as 'player' | 'coach' | 'recruiter' | 'guardian';
     switchRole(newRole as any, {
       onSuccess: () => {
         const labels: Record<string, string> = { player: 'Player', coach: 'Coach', recruiter: 'Recruiter', guardian: 'Guardian' };
-        toast({ 
+        toast({
           title: `Switched to ${labels[newRole]} Mode`,
-          description: `You're now viewing the app as a ${labels[newRole].toLowerCase()}.`
+          description: `You're now viewing the app as a ${labels[newRole].toLowerCase()}.`,
+          action: (
+            <ToastAction
+              altText="Undo role switch"
+              onClick={() => switchRole(previousRole, {})}
+            >
+              Undo
+            </ToastAction>
+          ),
         });
         setOpen(false);
       },
       onError: (error) => {
         const errorMessage = error?.message || 'Failed to switch mode';
         const errorType = error?.type;
-        
+
         if (errorType === 'session_expired') {
-          toast({ 
-            title: 'Session Expired', 
+          toast({
+            title: 'Session Expired',
             description: 'Your session has expired. Please log in again.',
             variant: 'destructive'
           });
           return;
         }
-        
+
         if (errorType === 'network_error') {
-          toast({ 
-            title: 'Network Error', 
+          toast({
+            title: 'Network Error',
             description: 'Unable to connect. Please check your internet connection.',
             variant: 'destructive'
           });
           return;
         }
 
-        toast({ 
-          title: 'Error', 
+        toast({
+          title: 'Error',
           description: errorMessage,
           variant: 'destructive'
         });
@@ -123,17 +133,23 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
         { href: "/analyze", label: "Log Game", icon: PlusCircle },
       ],
     },
+    {
+      title: "Exposure",
+      items: [
+        { href: "/whos-watching", label: "Who's Watching", icon: Binoculars },
+      ],
+    },
   ];
 
   const playerMoreItems: NavItem[] = [
     { href: "/performance", label: "Performance", icon: Activity },
     { href: "/analytics", label: "Analytics", icon: BarChart3 },
-    { href: "/whos-watching", label: "Who's Watching", icon: Binoculars },
     { href: "/community", label: "Community", icon: UsersRound },
     { href: "/community?tab=stories", label: "Stories", icon: BookOpen },
     { href: "/video", label: "Video Analysis", icon: Video, premium: "pro" },
     { href: "/highlights", label: "My Highlights", icon: Camera },
     { href: "/reel-builder", label: "Reel Builder", icon: Wand2 },
+    { href: "/canvas", label: "Canvas Studio", icon: LayoutTemplate },
     { href: "/scout", label: "Scout Hub", icon: Eye },
     { href: "/schedule", label: "Schedule", icon: CalendarDays },
     { href: "/leagues", label: "League Hub", icon: Medal },
@@ -394,8 +410,9 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
                 >
                   <button
                     onClick={() => setMoreExpanded(!moreExpanded)}
-                    className="flex items-center gap-2 w-full text-[10px] uppercase font-semibold text-accent/50 tracking-[0.2em] px-3 mb-2 cursor-pointer transition-colors"
+                    className="flex items-center gap-2 w-full text-[10px] uppercase font-semibold text-accent tracking-[0.2em] px-3 mb-2 cursor-pointer transition-colors"
                     data-testid="button-mobile-more-toggle"
+                    aria-expanded={moreExpanded}
                   >
                     <span className="w-2 h-px bg-gradient-to-r from-accent/40 to-transparent" />
                     {moreExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}

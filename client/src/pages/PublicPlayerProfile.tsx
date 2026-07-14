@@ -754,7 +754,7 @@ export default function PublicPlayerProfile() {
                 <Card key={clip.id} className="overflow-hidden border-border bg-muted/50" data-testid={`public-highlight-${clip.id}`}>
                   {clip.thumbnailUrl ? (
                     <div className="relative aspect-video bg-card">
-                      <img src={clip.thumbnailUrl} alt={clip.title || 'Highlight'} className="w-full h-full object-cover" />
+                      <img src={clip.thumbnailUrl} alt={clip.title || 'Highlight'} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div className="w-12 h-12 rounded-full bg-card/80 flex items-center justify-center border border-border">
                           <Play className="w-5 h-5 text-white ml-0.5" />

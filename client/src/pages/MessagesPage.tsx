@@ -221,12 +221,13 @@ export default function MessagesPage() {
             variant="ghost"
             size="icon"
             onClick={goBackToInbox}
+            aria-label="Back to inbox"
             data-testid="button-back-to-inbox"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5" aria-hidden="true" />
           </Button>
           <Avatar className="w-9 h-9">
-            <AvatarFallback className="from-accent/30 text-white text-sm">
+            <AvatarFallback className="bg-accent/15 text-accent text-sm">
               {getInitials(otherPlayerName)}
             </AvatarFallback>
           </Avatar>
@@ -264,7 +265,7 @@ export default function MessagesPage() {
                     <div
                       className={`max-w-[75%] px-4 py-2.5 rounded-2xl ${
                         isMine
-                          ? "from-accent text-white rounded-br-md"
+                          ? "bg-accent text-accent-foreground rounded-br-md"
                           : "bg-card border border-border text-foreground rounded-bl-md"
                       }`}
                     >
@@ -273,7 +274,7 @@ export default function MessagesPage() {
                       </p>
                       <p
                         className={`text-[10px] mt-1 ${
-                          isMine ? "text-white/60" : "text-muted-foreground"
+                          isMine ? "text-accent-foreground/70" : "text-muted-foreground"
                         }`}
                         data-testid={`text-message-time-${msg.id}`}
                       >
@@ -325,9 +326,10 @@ export default function MessagesPage() {
           size="icon"
           variant="ghost"
           onClick={() => setNewMessageOpen(true)}
+          aria-label="New message"
           data-testid="button-new-message"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-5 h-5" aria-hidden="true" />
         </Button>
       </div>
 
@@ -370,7 +372,7 @@ export default function MessagesPage() {
                   data-testid={`thread-item-${ts.thread.id}`}
                 >
                   <Avatar className="w-11 h-11">
-                    <AvatarFallback className="from-accent/30 text-white text-sm">
+                    <AvatarFallback className="bg-accent/15 text-accent text-sm">
                       {getInitials(otherName)}
                     </AvatarFallback>
                   </Avatar>
@@ -402,7 +404,7 @@ export default function MessagesPage() {
       </ScrollArea>
 
       <Dialog open={newMessageOpen} onOpenChange={setNewMessageOpen}>
-        <DialogContent className="from-muted/95 to-muted/80 dark:from-black/95 dark:to-black/80 border-border" data-testid="dialog-new-message">
+        <DialogContent className="bg-card border-border" data-testid="dialog-new-message">
           <DialogHeader>
             <DialogTitle className="text-foreground">New Message</DialogTitle>
           </DialogHeader>
@@ -432,7 +434,7 @@ export default function MessagesPage() {
                       data-testid={`player-select-${p.id}`}
                     >
                       <Avatar className="w-9 h-9">
-                        <AvatarFallback className="from-accent/30 text-white text-sm">
+                        <AvatarFallback className="bg-accent/15 text-accent text-sm">
                           {getInitials(p.name)}
                         </AvatarFallback>
                       </Avatar>

@@ -85,28 +85,28 @@ const TIER_STYLES = {
     glow: "0 0 30px hsl(45 93% 47% / 0.28)",
     badge: "bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30",
     icon: Crown,
-    label: "Elite",
+    label: "Legend",
   },
   pro: {
     border: "border-accent/40 hover:border-accent/60",
     glow: "0 0 25px hsl(var(--accent) / 0.2)",
     badge: "bg-accent/15 text-accent border-accent/30",
     icon: Star,
-    label: "Pro",
+    label: "Veteran",
   },
   rising: {
     border: "border-accent/30 hover:border-accent/50",
     glow: "0 0 20px hsl(var(--cta) / 0.15)",
     badge: "bg-cta/10 text-[hsl(var(--cta))] border-[hsl(var(--cta))]/30",
     icon: Zap,
-    label: "Rising",
+    label: "Active",
   },
   rookie: {
     border: "border-border hover:border-accent/30",
     glow: "none",
     badge: "bg-muted text-muted-foreground border-border",
     icon: UserPlus,
-    label: "Rookie",
+    label: "Newcomer",
   },
 };
 
@@ -179,17 +179,27 @@ export default function PlayersList() {
     }
   };
 
-  const filterPlayers = (playerList: any[]) => {
-    return playerList.filter(p => {
-      const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || 
-        p.team?.toLowerCase().includes(search.toLowerCase());
+  const searchLower = search.toLowerCase();
+
+  const filteredRosterPlayers = useMemo(
+    () => rosterPlayers.filter(p => {
+      const matchesSearch = p.name.toLowerCase().includes(searchLower) ||
+        p.team?.toLowerCase().includes(searchLower);
       const matchesPosition = positionFilter === "All" || p.position === positionFilter;
       return matchesSearch && matchesPosition;
-    });
-  };
+    }),
+    [rosterPlayers, searchLower, positionFilter]
+  );
 
-  const filteredRosterPlayers = filterPlayers(rosterPlayers);
-  const filteredAllPlayers = filterPlayers(players || []);
+  const filteredAllPlayers = useMemo(
+    () => (players || []).filter(p => {
+      const matchesSearch = p.name.toLowerCase().includes(searchLower) ||
+        p.team?.toLowerCase().includes(searchLower);
+      const matchesPosition = positionFilter === "All" || p.position === positionFilter;
+      return matchesSearch && matchesPosition;
+    }),
+    [players, searchLower, positionFilter]
+  );
 
   const isLoading = playersLoading || teamsLoading || membersLoading;
   const hasTeam = myTeams.length > 0;
@@ -276,15 +286,7 @@ export default function PlayersList() {
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-accent/10 border border-accent/20">
-              <Filter className="w-5 h-5 text-accent" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold">Search & Filter</h2>
-              <p className="text-xs text-muted-foreground">Find players quickly</p>
-            </div>
-          </div>
+          <div />
           {hasActiveFilters && (
             <Button 
               variant="ghost" 

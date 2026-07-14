@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { api } from "@shared/routes";
@@ -123,11 +123,15 @@ export default function Leaderboard() {
     setSearchQuery("");
   };
 
-  const filteredLeaderboard = leaderboard?.filter((entry: any) => {
-    if (!searchQuery) return true;
-    return entry.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           entry.team?.toLowerCase().includes(searchQuery.toLowerCase());
-  }) || [];
+  const filteredLeaderboard = useMemo(() => {
+    if (!leaderboard) return [];
+    if (!searchQuery) return leaderboard;
+    const q = searchQuery.toLowerCase();
+    return leaderboard.filter((entry: any) =>
+      entry.name?.toLowerCase().includes(q) ||
+      entry.team?.toLowerCase().includes(q)
+    );
+  }, [leaderboard, searchQuery]);
 
   if (isLoading) {
     return (
@@ -279,7 +283,7 @@ export default function Leaderboard() {
                     <div className="absolute top-3 right-3 flex items-center gap-1">
                       <button
                         onClick={(e) => sharePlayer(entry.playerId, entry.name, e)}
-                        className="p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-opacity"
+                        className="p-1 rounded-md opacity-60 group-hover:opacity-100 hover:bg-white/10 transition-opacity"
                         aria-label={`Copy ${entry.name}'s profile link`}
                       >
                         <Share2 className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
@@ -297,12 +301,15 @@ export default function Leaderboard() {
                           )}>
                             {entry.jerseyNumber || "#"}
                           </div>
-                          <div className={cn(
-                            "absolute -bottom-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm",
-                            index === 0 && "bg-yellow-500 text-black",
-                            index === 1 && "bg-slate-400 text-black",
-                            index === 2 && "bg-orange-500 text-black"
-                          )}>
+                          <div
+                            className={cn(
+                              "absolute -bottom-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm",
+                              index === 0 && "bg-yellow-500 text-black",
+                              index === 1 && "bg-slate-400 text-black",
+                              index === 2 && "bg-orange-500 text-black"
+                            )}
+                            aria-label={index === 0 ? "1st place" : index === 1 ? "2nd place" : "3rd place"}
+                          >
                             #{index + 1}
                           </div>
                         </div>
@@ -417,7 +424,7 @@ export default function Leaderboard() {
                         <td className="px-4 md:px-6 py-4">
                           <button
                             onClick={(e) => sharePlayer(entry.playerId, entry.name, e)}
-                            className="p-1.5 rounded-md opacity-0 group-hover:opacity-100 hover:bg-accent/10 transition-opacity"
+                            className="p-1.5 rounded-md opacity-60 group-hover:opacity-100 hover:bg-accent/10 transition-opacity"
                             aria-label={`Copy ${entry.name}'s profile link`}
                           >
                             <Share2 className="w-4 h-4 text-muted-foreground" aria-hidden="true" />

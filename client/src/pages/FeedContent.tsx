@@ -1852,7 +1852,7 @@ function FeedList({ activities, isLoading, error, emptyMessage, emptyDescription
         </div>
         <Button
           size="sm"
-          className="h-8 px-4 text-xs bg-amber-500 hover:bg-amber-400 text-black font-bold"
+          className="h-8 px-4 text-xs"
           onClick={() => setLocation("/analyze")}
           data-testid="button-empty-log-game"
         >
@@ -2050,8 +2050,8 @@ export default function FeedContent() {
                 value={tab}
                 className="flex items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium border border-transparent transition-all duration-200
                   text-muted-foreground/70 hover:text-foreground hover:bg-muted/50
-                  data-[state=active]:bg-amber-500 data-[state=active]:text-black data-[state=active]:border-amber-500/0 data-[state=active]:font-semibold
-                  data-[state=active]:shadow-[0_0_12px_rgba(198,208,216,0.25)]"
+                  data-[state=active]:bg-accent/15 data-[state=active]:text-accent data-[state=active]:border-accent/30 data-[state=active]:font-semibold
+                  data-[state=active]:shadow-[0_0_12px_hsl(var(--accent)/0.2)]"
                 data-testid={`tab-${tab}`}
               >
                 <Icon className="w-3.5 h-3.5" />
@@ -2072,8 +2072,8 @@ export default function FeedContent() {
                   className={cn(
                     "whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium border transition-all duration-150 shrink-0",
                     contentFilter === f.id
-                      ? "bg-amber-500/15 border-amber-500/40 text-amber-400"
-                      : "border-white/8 text-muted-foreground/60 hover:text-muted-foreground hover:border-white/15"
+                      ? "bg-accent/15 border-accent/30 text-accent"
+                      : "border-border/60 text-muted-foreground/60 hover:text-muted-foreground hover:border-border"
                   )}
                   data-testid={`filter-${f.id}`}
                 >
@@ -2090,7 +2090,7 @@ export default function FeedContent() {
               >
                 <Button
                   onClick={handleLoadNewPosts}
-                  className="w-full rounded-full bg-amber-500 hover:bg-amber-400 text-black font-semibold"
+                  className="w-full rounded-full bg-accent text-accent-foreground font-semibold shadow-md-soft"
                   data-testid="button-new-posts"
                 >
                   <ArrowUp className="w-4 h-4 mr-2" />

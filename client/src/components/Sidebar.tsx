@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, ShoppingBag, ClipboardCheck, Medal, GraduationCap, Heart, Wand2, ChevronDown, ChevronRight, BookOpen, Binoculars, Search, Bookmark, UserSearch, Shield } from "lucide-react";
+import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, ShoppingBag, ClipboardCheck, Medal, GraduationCap, Heart, Wand2, ChevronDown, ChevronRight, BookOpen, Binoculars, Search, Bookmark, UserSearch, Shield, LayoutTemplate } from "lucide-react";
+import { ToastAction } from "@/components/ui/toast";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -71,38 +72,47 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
     const roleOrder: Array<'player' | 'coach' | 'recruiter' | 'guardian'> = ['player', 'coach', 'recruiter', 'guardian'];
     const currentIndex = roleOrder.indexOf(userRole as any);
     const newRole = roleOrder[(currentIndex + 1) % roleOrder.length];
+    const previousRole = userRole as 'player' | 'coach' | 'recruiter' | 'guardian';
     switchRole(newRole as any, {
       onSuccess: () => {
         const labels: Record<string, string> = { player: 'Player', coach: 'Coach', recruiter: 'Recruiter', guardian: 'Guardian' };
-        toast({ 
+        toast({
           title: `Switched to ${labels[newRole]} Mode`,
-          description: `You're now viewing the app as a ${labels[newRole].toLowerCase()}.`
+          description: `You're now viewing the app as a ${labels[newRole].toLowerCase()}.`,
+          action: (
+            <ToastAction
+              altText="Undo role switch"
+              onClick={() => switchRole(previousRole, {})}
+            >
+              Undo
+            </ToastAction>
+          ),
         });
       },
       onError: (error) => {
         const errorMessage = error?.message || 'Failed to switch mode';
         const errorType = error?.type;
-        
+
         if (errorType === 'session_expired') {
-          toast({ 
-            title: 'Session Expired', 
+          toast({
+            title: 'Session Expired',
             description: 'Your session has expired. Please log in again.',
             variant: 'destructive'
           });
           return;
         }
-        
+
         if (errorType === 'network_error') {
-          toast({ 
-            title: 'Network Error', 
+          toast({
+            title: 'Network Error',
             description: 'Unable to connect. Please check your internet connection.',
             variant: 'destructive'
           });
           return;
         }
 
-        toast({ 
-          title: 'Error', 
+        toast({
+          title: 'Error',
           description: errorMessage,
           variant: 'destructive'
         });
@@ -126,6 +136,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         { href: "/whos-watching", label: "Who's Watching", icon: Binoculars },
         { href: "/highlights", label: "Highlights", icon: Camera },
         { href: "/reel-builder", label: "Reel Builder", icon: Wand2 },
+        { href: "/canvas", label: "Canvas Studio", icon: LayoutTemplate },
         { href: "/scout", label: "Scout Hub", icon: Eye },
       ],
     },
@@ -267,7 +278,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
       <nav className="flex-1 p-3 space-y-6">
         {navSections.map((section) => (
           <div key={section.title}>
-            <h3 className="text-[11px] font-bold text-muted-foreground/55 uppercase tracking-[0.13em] mb-3 px-3">{section.title}</h3>
+            <h3 className="text-[11px] font-bold text-muted-foreground/70 uppercase tracking-[0.13em] mb-3 px-3">{section.title}</h3>
             <div className="space-y-0.5">
               {section.items.map((item) => {
                 const baseHref = item.href.split('?')[0];
@@ -316,7 +327,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
           <div>
             <button
               onClick={() => setMoreExpanded(!moreExpanded)}
-              className="flex items-center gap-2 w-full text-[11px] font-bold text-muted-foreground/55 uppercase tracking-[0.13em] mb-3 px-3 cursor-pointer transition-colors hover:text-muted-foreground/80"
+              className="flex items-center gap-2 w-full text-[11px] font-bold text-muted-foreground/70 uppercase tracking-[0.13em] mb-3 px-3 cursor-pointer transition-colors hover:text-muted-foreground/90"
               data-testid="button-more-toggle"
             >
               {moreExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
@@ -363,7 +374,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         )}
 
         <div>
-          <h3 className="text-[11px] font-bold text-muted-foreground/55 uppercase tracking-[0.13em] mb-3 px-3">{accountSection.title}</h3>
+          <h3 className="text-[11px] font-bold text-muted-foreground/70 uppercase tracking-[0.13em] mb-3 px-3">{accountSection.title}</h3>
           <div className="space-y-0.5">
             {accountSection.items.map((item) => {
               const isActive = location === item.href;

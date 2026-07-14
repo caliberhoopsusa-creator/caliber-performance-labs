@@ -28,6 +28,8 @@ export function DarkModeToggle() {
       variant="ghost"
       onClick={() => setIsDark(!isDark)}
       data-testid="button-theme-toggle"
+      aria-label="Toggle dark/light mode"
+      aria-pressed={isDark}
     >
       {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
     </Button>
