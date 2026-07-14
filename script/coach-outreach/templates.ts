@@ -31,8 +31,10 @@ looking for a handful of {{state}} programs to be founding teams — free
 access, set up personally by me, and a direct line to shape what gets
 built next.
 
-If you'd give it ten minutes, reply to this email and I'll set up
-{{school}} myself. Or take a look first: https://caliber.app
+Want proof before you commit ten minutes? Reply with the stat sheet from
+your last game and I'll send back a graded report card for every player
+within a day — free, no signup. If your kids don't find it useful,
+delete my email. Or take a look first: https://caliber.app
 
 Best,
 {{senderName}}
