@@ -1,9 +1,15 @@
-# CALIBER Design Language — "SIGNAL"
+# CALIBER Design Language — "SIGNAL: Career Mode"
 
 > The single source of truth for front-end design across all ~99 pages.
-> Direction: **broadcast-grade sports telemetry** — the precision of F1 pit-wall
-> data, the drama of an ESPN title card, the finish of a premium instrument.
-> Obsidian · Silver · Crimson. Dark-first. Honest. The future of sports.
+> Direction: **console sports-game UI** (PS2 grit → Xbox 360 gloss → Xbox One
+> tiles — NBA Street / 2K MyCareer / EA menu-screen energy) built on
+> broadcast-grade telemetry discipline. Basketball as a video game; getting
+> scouted as career mode. Obsidian · Silver · Crimson. Dark-first. Honest.
+>
+> The fantasy: *you are the player in the game.* Your profile is your player
+> card, your Caliber Score is your OVR, badges unlock like achievements, and
+> recruiter interest fills like a career-mode scout meter. The discipline:
+> every number is real — the video-game feel NEVER fabricates video-game data.
 
 ## 0. Who it must win
 
@@ -115,11 +121,43 @@ from the app shell. Exception — **"Paper mode"**: print/PDF/export surfaces
   signature (landing, share cards, public profile hero). Never on dense app UI.
 - MetalFx (liquid-metal buttons) = **primary CTAs only** — one per screen max.
 
+## 4.5 The Console Layer (what makes it a game)
+
+Era vocabulary — used structurally, never as pastiche (no pixel fonts, no
+console logos/trade dress, no fake trophies):
+
+- **The Lean.** Display type and hero panels get `skewX(-6deg)` (`.lean`
+  utility) — the forward-speed italic every sports game used. Counter-skew
+  inner text where readability demands.
+- **Angled geometry.** Section headers, chips, tabs, and hero panels cut on
+  4–8° diagonals via `clip-path` (the 360 "blade" sweep). Straight edges are
+  for tables; angles are for identity moments.
+- **Plastic-glass finish.** Cards in identity contexts get a 1px top-edge
+  white gradient at low alpha (the PS2/360 gloss). Dense app tables stay matte.
+- **OVR language.** The Caliber Score renders as an overall rating plate —
+  big two-digit Archivo Expanded Black numeral in an angled shield — with
+  attribute bars (2K-style category ratings from real stat splits) beneath.
+- **Career Mode framing.** Recruiting surfaces speak the fantasy: Who's
+  Watching = scout interest meter; Transfer Portal = free agency; season log
+  = career timeline. Copy follows ("Season 3 · Game 12"), data stays real.
+- **Achievement toasts.** Badge/XP unlocks pop as a full-width sweep toast
+  ("BADGE UNLOCKED — Sharpshooter II") with the crimson glow. Real unlocks
+  only; queue and rate-limit them.
+- **Console focus states.** Controller-first UI made focus obvious — so do we:
+  `:focus-visible` = 2px crimson ring + 2px offset on every interactive
+  element. The retro move is also the accessibility win.
+- **Loading screens, not spinners.** Skeletons carry rotating real tips
+  ("TIP — verify your stat line within 24h so coaches see a ✓").
+
 ## 5. Signature components (the identity carriers)
 
 | Component | Rule |
 |---|---|
 | `StatNumber` | Archivo Expanded Black, tabular, count-up on mount, label in Condensed caps under it. THE signature. |
+| `OvrPlate` | The Caliber Score as a 2K-style overall: angled shield plate, leaned two-digit numeral, tier color. Hero of profile + share card. |
+| `PlayerCard` | Gamertag-card identity block: name, position/#, school, OVR, badge row. One component reused on profile hero, share card, leaderboard rows, scout views. |
+| `AttributeBars` | 2K-style category ratings (scoring/playmaking/defense/…) computed from REAL stat splits; angled bar caps; tier-ramp fills. |
+| `AchievementToast` | "BADGE UNLOCKED" sweep for real badge/XP events; queued, rate-limited, reduced-motion = static banner. |
 | `CaliberScore` ring | Existing tier ring — the crown jewel; identical rendering in-app and on share cards. |
 | `SectionEyebrow` | Archivo Condensed caps + 24px crimson rule to the left. Replaces every ad-hoc section header. |
 | `TelemetryStrip` | JetBrains Mono ticker row (last game, streak, rank delta) for hero areas. |
@@ -135,10 +173,11 @@ Self-hosted fonts, the token overhaul in `index.css` + `tailwind.config.ts`
 signature components, kill the 7-family Google Fonts link. *No page redesigns yet.*
 
 **Phase 1 — The coach-conversion path (design as sales)**
-Landing (align to tokens, keep HeroCanvas) → **PublicPlayerProfile** (what a
-cold-emailed coach actually opens; scoreboard hero, TelemetryStrip, verified
-provenance) → Dashboard (player's daily home; hero StatNumber, first-game CTA)
-→ AnalyzeGame (the "wow" moment where the grade appears — count-up + tier reveal).
+Landing (align to tokens, keep HeroCanvas) → **PublicPlayerProfile** becomes
+the **player card / career screen** (what a cold-emailed coach actually opens:
+PlayerCard hero, OvrPlate, AttributeBars, verified provenance) → Dashboard
+(the career-mode home; hero StatNumber, first-game CTA) → AnalyzeGame (the
+"wow" moment — grade reveal as an unlock: count-up, tier flash, toast).
 
 **Phase 2 — Competition surfaces:** Leaderboard, PlayersList, game log,
 badges/XP — ranking drama, dense tables done right (tabular nums, sticky headers).
@@ -157,6 +196,12 @@ one hero element per screen · every PR checks the component table above ·
 
 - No light app theme (Paper mode = print/export only)
 - No new component library — shadcn primitives re-skinned by tokens
-- No fabricated numbers in any design artifact, demo, or screenshot
+- No fabricated numbers in any design artifact, demo, or screenshot —
+  the video-game *feel* never invents video-game *data*
 - No animation of layout properties; compositor-only motion
 - No per-page fonts, colors, or one-off "special" styles — the system is the style
+- No pastiche: no pixel/8-bit fonts (wrong era), no PlayStation/Xbox/2K/EA
+  logos, trade dress, or asset lifts — we evoke the era, we don't copy IP
+- No juvenile skin on coach/recruiter/guardian surfaces: the console energy
+  concentrates on player-facing screens; adult surfaces keep the telemetry
+  discipline (angles and OVR language stay, gloss and toasts go quiet)
