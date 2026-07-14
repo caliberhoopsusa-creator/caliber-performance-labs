@@ -50,7 +50,9 @@ export function HeroCanvas({ className }: { className?: string }) {
     }
     tctx.putImageData(img, 0, 0);
 
-    function resize() {
+    // Arrow consts (not hoisted fn declarations) so TS keeps the null-narrowing
+    // from the guards above inside these closures.
+    const resize = () => {
       w = wrap.clientWidth;
       h = wrap.clientHeight;
       for (const c of [canvas, grain]) {
@@ -61,9 +63,9 @@ export function HeroCanvas({ className }: { className?: string }) {
       }
       ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
       gctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-    }
+    };
 
-    function draw() {
+    const draw = () => {
       // base
       ctx.fillStyle = "#070708";
       ctx.fillRect(0, 0, w, h);
@@ -130,9 +132,9 @@ export function HeroCanvas({ className }: { className?: string }) {
         }
       }
       gctx.globalAlpha = 1;
-    }
+    };
 
-    function loop(now: number) {
+    const loop = (now: number) => {
       if (!running || !visible) { raf = requestAnimationFrame(loop); return; }
       const dt = Math.min((now - last) / 1000, 0.05);
       last = now;
@@ -140,7 +142,7 @@ export function HeroCanvas({ className }: { className?: string }) {
       rot += dt * 0.28;
       draw();
       raf = requestAnimationFrame(loop);
-    }
+    };
 
     resize();
     window.addEventListener("resize", resize);
