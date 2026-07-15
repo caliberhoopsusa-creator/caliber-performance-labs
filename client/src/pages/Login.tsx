@@ -50,7 +50,7 @@ const inputStyle: React.CSSProperties = {
   fontSize: 14,
   outline: "none",
   transition: "border-color 0.15s",
-  fontFamily: "Inter, sans-serif",
+  fontFamily: "var(--font-body)",
 };
 
 const labelStyle: React.CSSProperties = {
@@ -110,7 +110,7 @@ export default function Login() {
       minHeight: "100vh",
       background: "#080808",
       display: "flex",
-      fontFamily: "Inter, sans-serif",
+      fontFamily: "var(--font-body)",
     }}>
       <style>{`
         .login-input:focus { border-color: rgba(198,208,216,0.4) !important; }
@@ -141,7 +141,7 @@ export default function Login() {
             <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", marginBottom: 56 }}>
               <CaliberLogo size={28} color="#4f6878" />
               <span style={{
-                fontFamily: "Outfit, sans-serif",
+                fontFamily: "var(--font-display)",
                 fontSize: 15,
                 fontWeight: 800,
                 letterSpacing: "0.12em",
@@ -163,7 +163,7 @@ export default function Login() {
           </div>
 
           <h2 style={{
-            fontFamily: "Outfit, sans-serif",
+            fontFamily: "var(--font-display)",
             fontSize: 34,
             fontWeight: 800,
             color: "#fff",
@@ -227,13 +227,13 @@ export default function Login() {
             <Link href="/">
               <div style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
                 <CaliberLogo size={24} color="#4f6878" />
-                <span style={{ fontFamily: "Outfit, sans-serif", fontSize: 14, fontWeight: 800, letterSpacing: "0.1em", color: "#C6D0D8", textTransform: "uppercase" }}>CALIBER</span>
+                <span style={{ fontFamily: "var(--font-display)", fontSize: 14, fontWeight: 800, letterSpacing: "0.1em", color: "#C6D0D8", textTransform: "uppercase" }}>CALIBER</span>
               </div>
             </Link>
           </div>
 
           <h1 style={{
-            fontFamily: "Outfit, sans-serif",
+            fontFamily: "var(--font-display)",
             fontSize: 26,
             fontWeight: 800,
             color: "#fff",
@@ -391,7 +391,7 @@ export default function Login() {
                 color: "#fff",
                 fontSize: 15,
                 fontWeight: 700,
-                fontFamily: "Outfit, sans-serif",
+                fontFamily: "var(--font-display)",
                 letterSpacing: "0.03em",
                 cursor: mutation.isPending || under13Warning ? "not-allowed" : "pointer",
                 opacity: mutation.isPending || under13Warning ? 0.7 : 1,

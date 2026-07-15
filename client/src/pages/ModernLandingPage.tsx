@@ -2,7 +2,7 @@
  * Caliber Performance Labs — Cinematic Edition
  * ──────────────────────────────────────────────────────────────────────────────
  * Aesthetic: Obsidian × Platinum × Maximum Wow
- * Font: Outfit (display) + Inter (body)
+ * Font: Archivo (display) + Geist (body) — SIGNAL type system
  * Signature moves:
  *   • GlobalCursor — 900px platinum glow + 6px dot, spring lag, no re-renders
  *   • SplitReveal — character-by-character blur+y+opacity reveal
@@ -50,10 +50,10 @@ const C = {
 
 // ─── Global styles + keyframes ────────────────────────────────────────────────
 const GLOBAL_STYLES = `
-/* Fonts loaded via index.html (Outfit + Inter) */
+/* SIGNAL fonts self-hosted via index.css (Archivo + Geist + JetBrains Mono) */
 
-* { font-family: 'Inter', sans-serif; }
-.font-display { font-family: 'Outfit', sans-serif; }
+* { font-family: var(--font-body); }
+.font-display { font-family: var(--font-display); }
 
 
 @keyframes shimmer {
@@ -505,7 +505,7 @@ function Nav() {
           </Link>
           <Link href="/login">
             <a className="shimmer-btn px-4 py-1.5 rounded-lg text-[13px] font-semibold"
-              style={{ fontFamily: "'Outfit', sans-serif" }}>
+              style={{ fontFamily: "var(--font-display)" }}>
               Get started
             </a>
           </Link>
@@ -633,7 +633,7 @@ function AIRatingCard() {
           <div style={{ fontSize: 11, color: C.white40, marginTop: 2 }}>PG · Basketball · Jr.</div>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: 52, fontWeight: 900, color: '#22c55e', lineHeight: 1, fontFamily: "'Outfit',sans-serif", fontVariantNumeric: 'tabular-nums lining-nums', letterSpacing: '-0.03em', textShadow: '0 0 32px rgba(34,197,94,0.4)' }}>94</div>
+          <div style={{ fontSize: 52, fontWeight: 900, color: '#22c55e', lineHeight: 1, fontFamily: "var(--font-display)", fontVariantNumeric: 'tabular-nums lining-nums', letterSpacing: '-0.03em', textShadow: '0 0 32px rgba(34,197,94,0.4)' }}>94</div>
           <div style={{ fontSize: 9, letterSpacing: '0.16em', color: '#22c55e', textTransform: 'uppercase' as const, marginTop: 2 }}>Elite</div>
         </div>
       </div>
@@ -659,7 +659,7 @@ function AIRatingCard() {
       <div style={{ display: 'flex', borderTop: `1px solid ${C.border}`, paddingTop: 12, marginTop: 'auto' }}>
         {[{ label: 'Season PTS', value: '247' }, { label: 'APG', value: '8.4' }, { label: 'eFG%', value: '58.2' }].map(({ label, value }, i) => (
           <div key={label} style={{ flex: 1, textAlign: 'center', borderRight: i < 2 ? `1px solid ${C.border}` : 'none' }}>
-            <div style={{ fontSize: 17, fontWeight: 800, color: C.white, fontFamily: "'Outfit',sans-serif", fontVariantNumeric: 'tabular-nums lining-nums' as const }}>{value}</div>
+            <div style={{ fontSize: 17, fontWeight: 800, color: C.white, fontFamily: "var(--font-display)", fontVariantNumeric: 'tabular-nums lining-nums' as const }}>{value}</div>
             <div style={{ fontSize: 9, color: C.white40, textTransform: 'uppercase' as const, letterSpacing: '0.12em', marginTop: 3 }}>{label}</div>
           </div>
         ))}
@@ -713,7 +713,7 @@ function RecruitingCard() {
               </div>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 22, fontWeight: 900, color: college.color, fontFamily: "'Outfit',sans-serif", fontVariantNumeric: 'tabular-nums lining-nums' as const, lineHeight: 1 }}>{college.match}%</div>
+              <div style={{ fontSize: 22, fontWeight: 900, color: college.color, fontFamily: "var(--font-display)", fontVariantNumeric: 'tabular-nums lining-nums' as const, lineHeight: 1 }}>{college.match}%</div>
               <div style={{ fontSize: 8, color: C.white40, letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>Match</div>
             </div>
           </div>
@@ -863,14 +863,14 @@ function VideoCard() {
           </div>
           {/* Grade circle */}
           <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(34,197,94,0.12)', border: '2px solid rgba(34,197,94,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 16px rgba(34,197,94,0.2)' }}>
-            <span style={{ fontSize: 16, fontWeight: 900, color: '#22c55e', fontFamily: "'Outfit',sans-serif" }}>A</span>
+            <span style={{ fontSize: 16, fontWeight: 900, color: '#22c55e', fontFamily: "var(--font-display)" }}>A</span>
           </div>
         </div>
         {/* Stat pills */}
         <div style={{ display: 'flex', gap: 6 }}>
           {[{ v: '24', l: 'PTS' }, { v: '7', l: 'AST' }, { v: '5', l: 'REB' }, { v: '58%', l: 'FG' }].map(({ v, l }) => (
             <div key={l} style={{ flex: 1, textAlign: 'center', padding: '6px 4px', borderRadius: 7, background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.border}` }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: C.white, fontFamily: "'Outfit',sans-serif", fontVariantNumeric: 'tabular-nums lining-nums' as const }}>{v}</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: C.white, fontFamily: "var(--font-display)", fontVariantNumeric: 'tabular-nums lining-nums' as const }}>{v}</div>
               <div style={{ fontSize: 8.5, color: C.white40, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>{l}</div>
             </div>
           ))}
@@ -1561,17 +1561,17 @@ function AppShowcase() {
                   <div style={{
                     width: 48, height: 48, borderRadius: '50%', background: '#1c1c1c',
                     border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 14, fontWeight: 800, color: C.white, flexShrink: 0, fontFamily: "'Outfit',sans-serif",
+                    fontSize: 14, fontWeight: 800, color: C.white, flexShrink: 0, fontFamily: "var(--font-display)",
                   }}>
                     MO
                   </div>
                   {/* Name + info */}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
-                      <span style={{ fontSize: 13, fontWeight: 800, color: C.white, fontFamily: "'Outfit',sans-serif" }}>#1</span>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: C.white, fontFamily: "var(--font-display)" }}>#1</span>
                       <span style={{ fontSize: 9, fontWeight: 700, color: C.white60, border: `1px solid ${C.border}`, borderRadius: 4, padding: '1px 6px', letterSpacing: '0.08em' }}>GUARD</span>
                     </div>
-                    <div style={{ fontSize: 16, fontWeight: 900, color: C.white, fontFamily: "'Outfit',sans-serif", letterSpacing: '-0.02em', lineHeight: 1, marginBottom: 6 }}>
+                    <div style={{ fontSize: 16, fontWeight: 900, color: C.white, fontFamily: "var(--font-display)", letterSpacing: '-0.02em', lineHeight: 1, marginBottom: 6 }}>
                       MATTHEW OPPENHEIM
                     </div>
                     {/* Stat pills */}
@@ -1599,7 +1599,7 @@ function AppShowcase() {
                     width: 44, height: 44, borderRadius: 10, background: '#22c55e',
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                   }}>
-                    <div style={{ fontSize: 16, fontWeight: 900, color: '#fff', fontFamily: "'Outfit',sans-serif", lineHeight: 1 }}>A+</div>
+                    <div style={{ fontSize: 16, fontWeight: 900, color: '#fff', fontFamily: "var(--font-display)", lineHeight: 1 }}>A+</div>
                   </div>
                 </div>
 
@@ -1697,7 +1697,7 @@ function AppShowcase() {
                         background: '#1a1a1a', border: `1px solid ${C.border}`,
                         borderRadius: 8, padding: '8px 6px', textAlign: 'center',
                       }}>
-                        <div style={{ fontSize: 14, fontWeight: 800, color: C.white, fontFamily: "'Outfit',sans-serif", lineHeight: 1 }}>{val}</div>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: C.white, fontFamily: "var(--font-display)", lineHeight: 1 }}>{val}</div>
                         <div style={{ fontSize: 9, color: C.white40, marginTop: 2 }}>{label}</div>
                       </div>
                     ))}
@@ -1954,7 +1954,7 @@ function GetDiscovered() {
             }}>
               {/* Profile header */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12, background: C.white03, border: `1px solid ${C.border}` }}>
-                <div style={{ width: 44, height: 44, borderRadius: '50%', background: C.amberGlow, border: `1px solid ${C.amberTrace}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800, color: C.amber, fontFamily: "'Outfit',sans-serif", flexShrink: 0 }}>
+                <div style={{ width: 44, height: 44, borderRadius: '50%', background: C.amberGlow, border: `1px solid ${C.amberTrace}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800, color: C.amber, fontFamily: "var(--font-display)", flexShrink: 0 }}>
                   DW
                 </div>
                 <div style={{ flex: 1 }}>
@@ -1962,7 +1962,7 @@ function GetDiscovered() {
                   <div style={{ fontSize: 10.5, color: C.white40, marginTop: 1 }}>SG · Basketball · Sr. · Oakland, CA</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 22, fontWeight: 900, color: C.amber, fontFamily: "'Outfit',sans-serif", lineHeight: 1, fontVariantNumeric: 'tabular-nums lining-nums' }}>A−</div>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: C.amber, fontFamily: "var(--font-display)", lineHeight: 1, fontVariantNumeric: 'tabular-nums lining-nums' }}>A−</div>
                   <div style={{ fontSize: 8, color: C.white40, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Grade</div>
                 </div>
               </div>
@@ -1986,7 +1986,7 @@ function GetDiscovered() {
                         background: `${color}0a`, border: `1px solid ${color}20`,
                       }}
                     >
-                      <div style={{ width: 28, height: 28, borderRadius: '50%', background: `${color}18`, border: `1px solid ${color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color, flexShrink: 0, fontFamily: "'Outfit',sans-serif" }}>
+                      <div style={{ width: 28, height: 28, borderRadius: '50%', background: `${color}18`, border: `1px solid ${color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color, flexShrink: 0, fontFamily: "var(--font-display)" }}>
                         {initials}
                       </div>
                       <div style={{ flex: 1 }}>
@@ -2032,7 +2032,7 @@ function GetDiscovered() {
                       <div style={{ fontSize: 9, padding: '1px 5px', borderRadius: 4, background: `${color}22`, color, fontWeight: 700, display: 'inline-block', marginTop: 2 }}>{div}</div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: 18, fontWeight: 900, color, fontFamily: "'Outfit',sans-serif", lineHeight: 1, fontVariantNumeric: 'tabular-nums lining-nums' }}>{match}%</div>
+                      <div style={{ fontSize: 18, fontWeight: 900, color, fontFamily: "var(--font-display)", lineHeight: 1, fontVariantNumeric: 'tabular-nums lining-nums' }}>{match}%</div>
                       <div style={{ fontSize: 8, color: C.white40, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Match</div>
                     </div>
                   </motion.div>
@@ -2187,7 +2187,7 @@ function GradesCell({ index }: { index: number }) {
                     <Icon style={{ width: 10, height: 10, color, flexShrink: 0 }} />
                     <span style={{ fontSize: 11, color: C.white60 }}>{label}</span>
                   </div>
-                  <span style={{ fontSize: 11, fontWeight: 700, color, fontFamily: "'Outfit',sans-serif" }}>{pct}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color, fontFamily: "var(--font-display)" }}>{pct}</span>
                 </div>
                 <div style={{ height: 5, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden' }}>
                   <motion.div
@@ -2458,19 +2458,19 @@ function LeaderboardCell({ index }: { index: number }) {
                 border: `1px solid ${rank === 1 ? 'rgba(245,158,11,0.4)' : you ? 'rgba(198,208,216,0.25)' : 'rgba(255,255,255,0.08)'}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 8, fontWeight: 800, color: rank === 1 ? accent : you ? C.amber : C.white40,
-                fontFamily: "'Outfit',sans-serif",
+                fontFamily: "var(--font-display)",
               }}>
                 {initials}
               </div>
               {/* Rank + name */}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-                  <span style={{ fontSize: 9, fontWeight: 800, color: rank === 1 ? accent : C.white40, fontFamily: "'Outfit',sans-serif" }}>#{rank}</span>
+                  <span style={{ fontSize: 9, fontWeight: 800, color: rank === 1 ? accent : C.white40, fontFamily: "var(--font-display)" }}>#{rank}</span>
                   <span style={{ fontSize: 11, color: you ? C.white : C.white60, fontWeight: you ? 700 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
                 </div>
               </div>
-              <span style={{ fontSize: 10, color: '#22c55e', fontWeight: 700, fontFamily: "'Outfit',sans-serif" }}>{grade}</span>
-              <span style={{ fontSize: 10, color: C.white40, fontVariantNumeric: 'tabular-nums', fontFamily: "'Outfit',sans-serif" }}>{pts}</span>
+              <span style={{ fontSize: 10, color: '#22c55e', fontWeight: 700, fontFamily: "var(--font-display)" }}>{grade}</span>
+              <span style={{ fontSize: 10, color: C.white40, fontVariantNumeric: 'tabular-nums', fontFamily: "var(--font-display)" }}>{pts}</span>
             </div>
           ))}
         </div>
@@ -2533,7 +2533,7 @@ function CoachCell({ index }: { index: number }) {
               <div key={label}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                   <span style={{ fontSize: 10, color: C.white60 }}>{label}</span>
-                  <span style={{ fontSize: 10, fontWeight: 700, color, fontFamily: "'Outfit',sans-serif" }}>{val}</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color, fontFamily: "var(--font-display)" }}>{val}</span>
                 </div>
                 <div style={{ height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
                   <motion.div
@@ -2561,7 +2561,7 @@ function CoachCell({ index }: { index: number }) {
                   width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
                   background: `${gc}15`, border: `1px solid ${gc}35`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 10, fontWeight: 800, color: gc, fontFamily: "'Outfit',sans-serif",
+                  fontSize: 10, fontWeight: 800, color: gc, fontFamily: "var(--font-display)",
                 }}>
                   {initials}
                 </div>
@@ -2589,7 +2589,7 @@ function CoachCell({ index }: { index: number }) {
                 <div style={{
                   padding: '2px 7px', borderRadius: 5,
                   background: `${gc}15`, border: `1px solid ${gc}30`,
-                  fontSize: 11, fontWeight: 800, color: gc, fontFamily: "'Outfit',sans-serif",
+                  fontSize: 11, fontWeight: 800, color: gc, fontFamily: "var(--font-display)",
                 }}>
                   {grade}
                 </div>
@@ -2740,7 +2740,7 @@ function Testimonials() {
             Real athletes.{' '}
             <span
               className="font-editorial-italic italic"
-              style={{ color: C.amber, fontFamily: "'Instrument Serif', 'Times New Roman', serif", fontWeight: 400 }}
+              style={{ color: C.amber, fontFamily: "var(--font-editorial)", fontWeight: 400 }}
             >
               Real results.
             </span>
@@ -3052,7 +3052,7 @@ function CollegeTrustBar() {
               background: `linear-gradient(135deg, ${c.color}60, ${c.color}30)`,
               border: `1px solid ${c.color}50`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 7, fontWeight: 900, color: '#fff', fontFamily: "'Outfit',sans-serif",
+              fontSize: 7, fontWeight: 900, color: '#fff', fontFamily: "var(--font-display)",
             }}>
               {c.name.slice(0, 2).toUpperCase()}
             </div>

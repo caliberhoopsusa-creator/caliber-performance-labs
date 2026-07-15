@@ -96,13 +96,58 @@ export default {
           800: "#2a3d4a",
           900: "#1a2d38",
         },
+        // ── SIGNAL scales (docs/DESIGN-LANGUAGE.md §3) ──
+        obsidian: {
+          0: "hsl(var(--obsidian-0) / <alpha-value>)",
+          1: "hsl(var(--obsidian-1) / <alpha-value>)",
+          2: "hsl(var(--obsidian-2) / <alpha-value>)",
+          3: "hsl(var(--obsidian-3) / <alpha-value>)",
+        },
+        silver: {
+          DEFAULT: "hsl(var(--silver) / <alpha-value>)",
+          hi: "hsl(var(--silver-hi) / <alpha-value>)",
+          lo: "hsl(var(--silver-lo) / <alpha-value>)",
+          mute: "hsl(var(--silver-mute) / <alpha-value>)",
+        },
+        crimson: {
+          DEFAULT: "hsl(var(--crimson) / <alpha-value>)",
+          hot: "hsl(var(--crimson-hot) / <alpha-value>)",
+          deep: "hsl(var(--crimson-deep) / <alpha-value>)",
+        },
+        // --line carries its own alpha (the 1px border everywhere)
+        line: "hsl(var(--line))",
+        grade: {
+          "a-plus": "hsl(var(--grade-a-plus) / <alpha-value>)",
+          a: "hsl(var(--grade-a) / <alpha-value>)",
+          b: "hsl(var(--grade-b) / <alpha-value>)",
+          c: "hsl(var(--grade-c) / <alpha-value>)",
+          d: "hsl(var(--grade-d) / <alpha-value>)",
+          f: "hsl(var(--grade-f) / <alpha-value>)",
+        },
+        tier: {
+          elite: "hsl(var(--tier-elite) / <alpha-value>)",
+          strong: "hsl(var(--tier-strong) / <alpha-value>)",
+          solid: "hsl(var(--tier-solid) / <alpha-value>)",
+          developing: "hsl(var(--tier-developing) / <alpha-value>)",
+          raw: "hsl(var(--tier-raw) / <alpha-value>)",
+        },
       },
       fontFamily: {
-        sans: ["var(--font-sans)", "Inter", "sans-serif"],
-        serif: ["var(--font-serif)"],
-        mono: ["var(--font-mono)"],
-        display: ["var(--font-display)", "Outfit", "sans-serif"],
-        body: ["var(--font-body)", "Inter", "sans-serif"],
+        sans: ["var(--font-sans)", "sans-serif"],
+        serif: ["var(--font-serif)", "sans-serif"],
+        mono: ["var(--font-mono)", "monospace"],
+        display: ["var(--font-display)", "sans-serif"],
+        body: ["var(--font-body)", "sans-serif"],
+      },
+      // SIGNAL fluid type scale — text-hero / text-title / text-stat / …
+      fontSize: {
+        hero: ["var(--text-hero)", { lineHeight: "1" }],
+        title: ["var(--text-title)", { lineHeight: "1.05" }],
+        stat: ["var(--text-stat)", { lineHeight: "1" }],
+        section: ["var(--text-section)", { lineHeight: "1.3" }],
+        body: ["var(--text-body)", { lineHeight: "1.5" }],
+        label: ["var(--text-label)", { lineHeight: "1.2", letterSpacing: "0.18em" }],
+        data: ["var(--text-data)", { lineHeight: "1.4" }],
       },
       borderRadius: {
         lg: ".5625rem",
@@ -112,6 +157,10 @@ export default {
         "2xl": tokens.radius["2xl"],
         "3xl": "1.75rem",
         full: tokens.radius.full,
+        // SIGNAL shape steps — sharp-ish on purpose (instrument, not bubble)
+        input: "var(--radius-input)",
+        card: "var(--radius-card)",
+        modal: "var(--radius-modal)",
       },
       spacing: {
         xs: tokens.spacing.xs,
@@ -122,6 +171,7 @@ export default {
         "2xl": tokens.spacing["2xl"],
         "3xl": tokens.spacing["3xl"],
         "4xl": tokens.spacing["4xl"],
+        section: "var(--space-section)",
       },
       boxShadow: {
         ...tokens.shadows,
@@ -139,6 +189,7 @@ export default {
       transitionTimingFunction: {
         smooth: "cubic-bezier(0.4, 0, 0.2, 1)",
         spring: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "out-expo": "var(--ease-out-expo)",
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",

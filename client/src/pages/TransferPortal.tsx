@@ -289,7 +289,7 @@ export default function TransferPortal() {
   );
 
   return (
-    <div className="min-h-screen" style={{ background: "#080808", color: "#fff", fontFamily: "Inter, sans-serif" }}>
+    <div className="min-h-screen" style={{ background: "#080808", color: "#fff", fontFamily: "var(--font-body)" }}>
       {/* Header */}
       <div className="border-b border-white/6 px-6 py-5">
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-4 flex-wrap">

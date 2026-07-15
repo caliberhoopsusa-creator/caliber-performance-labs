@@ -1,15 +1,91 @@
-/* Fonts are loaded via index.html for better performance */
+/* ═══════════════════════════════════════════════════════════════
+   SIGNAL type system — self-hosted (files in /public/fonts, preloaded
+   from index.html). Three voices: Archivo (display), Geist (UI/body),
+   JetBrains Mono (telemetry). Latin subset, font-display: swap.
+   ═══════════════════════════════════════════════════════════════ */
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  src: url('/fonts/archivo-latin-wdth-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('/fonts/geist-latin-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('/fonts/jetbrains-mono-latin-400-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url('/fonts/jetbrains-mono-latin-500-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --font-display: 'Sora', 'Geist', sans-serif;
-  --font-body: 'Geist', 'Inter', sans-serif;
-  --font-sans: 'Geist', 'Inter', sans-serif;
-  --font-editorial: 'Instrument Serif', serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  /* Three voices only — the legacy display/body/condensed/serif families are
+     deleted; the serif/editorial vars re-point to Geist so nothing breaks. */
+  --font-display: 'Archivo', 'Geist', sans-serif;
+  --font-body: 'Geist', sans-serif;
+  --font-sans: 'Geist', sans-serif;
+  --font-serif: 'Geist', sans-serif;
+  --font-editorial: 'Geist', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* ── SIGNAL scales (identical in :root and .dark — dark is the product) ── */
+  /* Obsidian — surfaces (elevation = lightness step, not shadow) */
+  --obsidian-0: 240 4% 3%;
+  --obsidian-1: 240 4% 5.5%;
+  --obsidian-2: 240 4% 8%;
+  --obsidian-3: 240 5% 11%;
+
+  /* Silver — text & lines */
+  --silver-hi: 220 14% 93%;
+  --silver: 220 14% 82%;
+  --silver-lo: 220 10% 58%;
+  --silver-mute: 220 8% 38%;
+  --line: 220 14% 82% / 0.14;
+
+  /* Crimson — the signal */
+  --crimson: 356 85% 55%;
+  --crimson-hot: 356 90% 65%;
+  --crimson-deep: 356 70% 40%;
+  --crimson-glow: 356 85% 55% / 0.25;
+
+  /* Fluid type scale */
+  --text-hero: clamp(3rem, 1.2rem + 6vw, 6.5rem);
+  --text-title: clamp(1.9rem, 1.2rem + 2vw, 3rem);
+  --text-stat: clamp(2.2rem, 1.4rem + 2.6vw, 4rem);
+  --text-section: 1.25rem;
+  --text-body: 0.9375rem;
+  --text-label: 0.6875rem;
+  --text-data: 0.8125rem;
+
+  /* Space, shape, motion */
+  --space-section: clamp(3rem, 2rem + 4vw, 6rem);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --radius-input: 6px;
+  --radius-card: 10px;
+  --radius-modal: 14px;
 
   --background: 220 30% 99%;
   --foreground: 222 24% 8%;
@@ -32,17 +108,33 @@
   --border: 217 22% 88%;
   --input: 217 22% 88%;
 
-  --ring: 211 100% 50%;
+  --ring: var(--crimson);
+
+  --destructive: var(--grade-f);
+  --destructive-foreground: 0 0% 100%;
+
+  --chart-1: var(--crimson);
+  --chart-2: var(--silver);
+  --chart-3: var(--grade-a);
+  --chart-4: var(--grade-c);
+  --chart-5: var(--silver-lo);
 
   --sidebar-background: 220 24% 98%;
   --sidebar-foreground: 222 24% 8%;
   --sidebar-border: 220 16% 90%;
 
-  --grade-a: 142 71% 45%;
-  --grade-b: 142 71% 45%;
+  /* Grade ramp — every step distinct; A+ is the crimson personal-record moment */
+  --grade-a-plus: var(--crimson-hot);
+  --grade-a: 152 68% 48%;
+  --grade-b: 170 60% 45%;
   --grade-c: 48 96% 53%;
-  --grade-d: 350 89% 60%;
+  --grade-d: 26 90% 55%;
   --grade-f: 0 84% 60%;
+
+  /* Semantic states reuse the grade ramp */
+  --success: 152 68% 48%;
+  --warn: 48 96% 53%;
+  --danger: 0 84% 60%;
 
   --gold: 210 22% 72%;
   --platinum: 210 22% 72%;
@@ -65,16 +157,17 @@
   --cta: 0 76% 50%;
   --cta-foreground: 0 0% 100%;
 
-  /* Brand silver — the third pillar of the brand (black · silver · crimson). */
-  --silver: 220 12% 80%;
-  --silver-dim: 220 8% 60%;
+  /* Brand silver — the third pillar of the brand (black · silver · crimson).
+     --silver now lives in the SIGNAL scale above; --silver-dim re-points to it. */
+  --silver-dim: var(--silver-lo);
 
-  /* Caliber Score tier colors — color MEANS rating tier (used by CaliberScore). */
-  --tier-elite: 42 92% 56%;        /* gold — 90+ */
-  --tier-strong: 356 78% 52%;      /* crimson — 80-89 */
-  --tier-solid: 199 89% 55%;       /* electric blue — 70-79 */
-  --tier-developing: 220 14% 58%;  /* steel — 60-69 */
-  --tier-raw: 0 0% 46%;            /* zinc — below 60 */
+  /* Caliber Score tier colors — aligned to the grade ramp (used by CaliberScore).
+     Elite = the crimson personal-record moment, then A → D down the ramp. */
+  --tier-elite: var(--crimson-hot);    /* 90+ — the A+ moment */
+  --tier-strong: var(--grade-a);       /* 80-89 */
+  --tier-solid: var(--grade-b);        /* 70-79 */
+  --tier-developing: var(--grade-c);   /* 60-69 */
+  --tier-raw: var(--grade-d);          /* below 60 */
 
   --sidebar-accent: 211 100% 50%;
   --sidebar-accent-foreground: 0 0% 100%;
@@ -92,55 +185,117 @@
 }
 
 .dark {
-  --background: 240 6% 4%;        /* obsidian — near-black with a cool undertone */
-  --foreground: 0 0% 96%;
+  /* ── SIGNAL scales (same values as :root — dark IS the product) ── */
+  --obsidian-0: 240 4% 3%;
+  --obsidian-1: 240 4% 5.5%;
+  --obsidian-2: 240 4% 8%;
+  --obsidian-3: 240 5% 11%;
 
-  --card: 240 5% 7%;              /* lifted obsidian surface, separated from canvas */
-  --card-foreground: 0 0% 96%;
+  --silver-hi: 220 14% 93%;
+  --silver: 220 14% 82%;
+  --silver-lo: 220 10% 58%;
+  --silver-mute: 220 8% 38%;
+  --line: 220 14% 82% / 0.14;
 
-  --popover: 240 5% 7%;
-  --popover-foreground: 0 0% 96%;
+  --crimson: 356 85% 55%;
+  --crimson-hot: 356 90% 65%;
+  --crimson-deep: 356 70% 40%;
+  --crimson-glow: 356 85% 55% / 0.25;
 
-  --primary: 210 18% 82%;
-  --primary-foreground: 0 0% 8%;
+  --text-hero: clamp(3rem, 1.2rem + 6vw, 6.5rem);
+  --text-title: clamp(1.9rem, 1.2rem + 2vw, 3rem);
+  --text-stat: clamp(2.2rem, 1.4rem + 2.6vw, 4rem);
+  --text-section: 1.25rem;
+  --text-body: 0.9375rem;
+  --text-label: 0.6875rem;
+  --text-data: 0.8125rem;
 
-  --secondary: 20 3% 12%;
-  --secondary-foreground: 0 0% 90%;
+  --space-section: clamp(3rem, 2rem + 4vw, 6rem);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --radius-input: 6px;
+  --radius-card: 10px;
+  --radius-modal: 14px;
 
-  --muted: 20 3% 12%;
-  --muted-foreground: 20 4% 45%;
+  /* Grade ramp + tiers + semantic (identical to :root) */
+  --grade-a-plus: var(--crimson-hot);
+  --grade-a: 152 68% 48%;
+  --grade-b: 170 60% 45%;
+  --grade-c: 48 96% 53%;
+  --grade-d: 26 90% 55%;
+  --grade-f: 0 84% 60%;
+  --success: 152 68% 48%;
+  --warn: 48 96% 53%;
+  --danger: 0 84% 60%;
+  --tier-elite: var(--crimson-hot);
+  --tier-strong: var(--grade-a);
+  --tier-solid: var(--grade-b);
+  --tier-developing: var(--grade-c);
+  --tier-raw: var(--grade-d);
 
-  --border: 0 0% 11%;
-  --input: 0 0% 11%;
+  /* ── shadcn semantic tokens mapped onto the SIGNAL scales — every existing
+     shadcn component inherits the language through these. Names kept, values
+     re-pointed. ── */
+  --background: var(--obsidian-0);
+  --foreground: var(--silver-hi);
 
-  --ring: 356 78% 52%;            /* crimson focus ring */
+  --card: var(--obsidian-1);
+  --card-foreground: var(--silver-hi);
 
-  --gold: 210 18% 82%;            /* platinum kept as the SECONDARY neutral-metallic accent */
-  --platinum: 210 18% 82%;
+  --popover: var(--obsidian-2);
+  --popover-foreground: var(--silver-hi);
+
+  --primary: var(--silver);
+  --primary-foreground: var(--obsidian-0);
+
+  --secondary: var(--obsidian-2);
+  --secondary-foreground: var(--silver);
+
+  --muted: var(--obsidian-2);
+  --muted-foreground: var(--silver-lo);
+
+  /* Solid-color equivalent of --line (hsl(220 14% 82% / .14) over obsidian-0),
+     kept as a flat triplet so `hsl(var(--border) / <alpha>)` stays composable. */
+  --border: 220 4% 14%;
+  --input: 220 4% 14%;
+
+  --ring: var(--crimson);          /* crimson focus ring */
+
+  --destructive: var(--grade-f);
+  --destructive-foreground: 0 0% 100%;
+
+  --gold: var(--silver);           /* platinum kept as the SECONDARY neutral-metallic accent */
+  --platinum: var(--silver);
 
   /* CSS fallback for the crimson accent — ThemeContext re-applies the same hue at
      runtime from #E11D2A; this prevents a platinum flash before hydration. */
-  --accent: 356 78% 52%;          /* Caliber crimson #E11D2A */
+  --accent: var(--crimson);
   --accent-foreground: 0 0% 100%; /* white text on crimson */
-  --accent-border: 356 80% 42%;
-  --accent-hover: 356 84% 60%;
+  --accent-border: var(--crimson-deep);
+  --accent-hover: var(--crimson-hot);
 
   /* Crimson ambient atmosphere (was blue). Used for hero glows / gradient washes. */
-  --aurora-1: 356 80% 52%;
+  --aurora-1: var(--crimson);
   --aurora-2: 350 74% 44%;
-  --aurora-3: 0 70% 36%;
+  --aurora-3: var(--crimson-deep);
 
-  --cta: 356 78% 52%;             /* crimson action */
+  --cta: var(--crimson);           /* crimson action */
   --cta-foreground: 0 0% 100%;
-  --cta-glow: 356 80% 40%;
+  --cta-glow: var(--crimson-deep);
 
-  --sidebar-accent: 356 78% 52%;
+  /* Charts draw from silver + crimson + grade ramp only */
+  --chart-1: var(--crimson);
+  --chart-2: var(--silver);
+  --chart-3: var(--grade-a);
+  --chart-4: var(--grade-c);
+  --chart-5: var(--silver-lo);
+
+  --sidebar-accent: var(--crimson);
   --sidebar-accent-foreground: 0 0% 100%;
-  --sidebar-accent-border: 356 80% 42%;
+  --sidebar-accent-border: var(--crimson-deep);
 
-  --sidebar-background: 0 0% 4%;
-  --sidebar-foreground: 0 0% 95%;
-  --sidebar-border: 0 0% 9%;
+  --sidebar-background: var(--obsidian-0);
+  --sidebar-foreground: var(--silver-hi);
+  --sidebar-border: 220 4% 12%;
 }
 
 @layer base {
@@ -164,11 +319,17 @@
     font-feature-settings: 'tnum' 1, 'lnum' 1;
   }
 
+  /* Console focus states — controller-first UI made focus obvious. 2px crimson
+     ring + 2px offset on every interactive element, wired through --ring. */
   .focus-ring:focus-visible,
   button:focus-visible,
   a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [tabindex]:focus-visible,
   [role="button"]:focus-visible {
-    outline: 2px solid hsl(var(--accent));
+    outline: 2px solid hsl(var(--ring));
     outline-offset: 2px;
   }
 
@@ -188,6 +349,42 @@
 }
 
 @layer utilities {
+  /* ═══════════════════════════════════════════════════════════════
+     SIGNAL: CAREER MODE — console-layer foundation utilities
+     Era vocabulary used structurally, never as pastiche.
+     ═══════════════════════════════════════════════════════════════ */
+
+  /* The Lean — forward-speed italic for display type and hero panels. */
+  .lean {
+    transform: skewX(-6deg);
+  }
+  /* Counter-skew for inner content where readability demands. */
+  .lean-reset {
+    transform: skewX(6deg);
+  }
+
+  /* Plastic-glass finish — 1px top-edge white gradient at low alpha for
+     identity cards. Dense app tables stay matte. */
+  .gloss {
+    position: relative;
+  }
+  .gloss::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    border-radius: inherit;
+    background: linear-gradient(90deg, transparent, hsl(0 0% 100% / 0.07) 20%, hsl(0 0% 100% / 0.07) 80%, transparent);
+    pointer-events: none;
+  }
+
+  /* Angled geometry — the "blade" cut. Default: 6deg-feel diagonal clipped
+     off the bottom-right corner, for chips / section headers / identity
+     moments. Straight edges are for tables. */
+  .angle-cut {
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 0.625em), calc(100% - 0.625em) 100%, 0 100%);
+  }
+
   /* ═══════════════════════════════════════════════════════════════
      AURORA SYSTEM — Apple-grade futuristic light mode
      ═══════════════════════════════════════════════════════════════ */
@@ -1894,12 +2091,12 @@ html.theme-active .nav-active {
 
 /* ── Editorial landing page system ───────────────────────────────── */
 .font-editorial {
-  font-family: 'Instrument Serif', 'Times New Roman', serif;
+  font-family: var(--font-editorial);
   font-weight: 400;
   letter-spacing: -0.015em;
 }
 .font-editorial-italic {
-  font-family: 'Instrument Serif', 'Times New Roman', serif;
+  font-family: var(--font-editorial);
   font-style: italic;
   font-weight: 400;
   letter-spacing: -0.02em;

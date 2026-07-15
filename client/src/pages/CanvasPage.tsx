@@ -154,7 +154,7 @@ function ClassicCard({
         display: "flex",
         flexDirection: "column",
         padding,
-        fontFamily: "'Geist', 'Inter', sans-serif",
+        fontFamily: "'Geist', sans-serif",
       }}
     >
       <div
@@ -445,7 +445,7 @@ function MinimalCard({
         display: "flex",
         flexDirection: "column",
         padding,
-        fontFamily: "'Geist', 'Inter', sans-serif",
+        fontFamily: "'Geist', sans-serif",
       }}
     >
       <div
@@ -621,7 +621,7 @@ function EliteCard({
         display: "flex",
         flexDirection: "column",
         padding,
-        fontFamily: "'Geist', 'Inter', sans-serif",
+        fontFamily: "'Geist', sans-serif",
       }}
     >
       <div
