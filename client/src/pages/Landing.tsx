@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   motion,
@@ -24,6 +25,7 @@ import {
   PlayerCard,
   type TelemetryItem,
 } from "@/components/signal";
+import { runBootTimeline, setInitial, stagger } from "@/lib/motion";
 
 /**
  * Landing — SIGNAL: Career Mode, Phase 1a.
@@ -31,9 +33,30 @@ import {
  * old full-screen ShaderGradient (−~1.1MB of JS on this path). One hero
  * moment: the leaned CALIBER wordmark + a labeled DEMO PlayerCard.
  * All color/type through tokens — no raw hex, no arbitrary font values.
+ *
+ * Hero boot: one anime.js timeline choreographs the attract-screen power-on
+ * (SYSTEM ONLINE flicker → wordmark clip-path wipe → staggered rise → card
+ * lands + OVR count-up → telemetry). framer-motion keeps the below-the-fold
+ * scroll reveals — the two engines never share an element (DESIGN-LANGUAGE
+ * §1.5). Reduced motion / timeline failure → the final static frame.
  */
 
 const EASE = [0.16, 1, 0.3, 1] as const;
+
+/* Boot choreography — timeline positions (ms). Ends ≈1.44s (≤1.6s budget). */
+const BOOT = {
+  chipAt: 0, // SYSTEM ONLINE flicker-on
+  wordmarkAt: 100, // CALIBER wipe + lean settle
+  riseAt: 300, // chip / headline / subhead / form stagger
+  riseStaggerMs: 90,
+  cardAt: 520, // PlayerCard slides in; count-up restarts here
+  telemetryAt: 1080, // TelemetryStrip, last
+} as const;
+
+/* Wordmark wipe — negative outer insets keep the skew overhang + text glow
+   unclipped; the right inset sweeps 106% → 0% (left→right reveal). */
+const WORDMARK_CLIP_HIDDEN = "inset(-10% 106% -12% -6%)";
+const WORDMARK_CLIP_SHOWN = "inset(-10% 0% -12% -6%)";
 
 /* ------------------------------------------------------------------ */
 /* primitives                                                          */
@@ -67,16 +90,20 @@ function AngleChip({
   children,
   tone = "silver",
   className = "",
+  chipRef,
   "data-testid": testId,
 }: {
   children: React.ReactNode;
   tone?: "crimson" | "silver";
   className?: string;
+  /** For boot-timeline targeting (e.g. the SYSTEM ONLINE flicker). */
+  chipRef?: React.Ref<HTMLSpanElement>;
   "data-testid"?: string;
 }) {
   const isCrimson = tone === "crimson";
   return (
     <span
+      ref={chipRef}
       className={`angle-cut inline-flex items-center gap-2 border px-3 py-1.5 font-display text-label uppercase ${className}`}
       style={{
         fontWeight: 500,
@@ -222,6 +249,77 @@ export default function Landing() {
   const { scrollYProgress } = useScroll();
   const progressX = useSpring(scrollYProgress, { stiffness: 120, damping: 30, mass: 0.3 });
 
+  /* --- hero boot (anime.js) — see docblock. Refs mark the timeline slots. */
+  const systemChipRef = useRef<HTMLSpanElement>(null);
+  const wordmarkWrapRef = useRef<HTMLDivElement>(null);
+  const heroLeftRef = useRef<HTMLDivElement>(null); // owns [data-boot-rise] items
+  const cardShellRef = useRef<HTMLDivElement>(null);
+  const telemetryRef = useRef<HTMLDivElement>(null);
+  /* Bumping this key remounts the PlayerCard, restarting its OVR count-up
+     exactly when the card lands — the signal components stay untouched. */
+  const [cardBootKey, setCardBootKey] = useState(0);
+
+  useLayoutEffect(() => {
+    const chip = systemChipRef.current;
+    const wordmark = wordmarkWrapRef.current;
+    const card = cardShellRef.current;
+    const strip = telemetryRef.current;
+    const risers = Array.from(
+      heroLeftRef.current?.querySelectorAll<HTMLElement>("[data-boot-rise]") ??
+        [],
+    );
+
+    return runBootTimeline({
+      targets: [chip, wordmark, card, strip, ...risers],
+      build: (tl) => {
+        if (!chip || !wordmark || !card || !strip || risers.length === 0) {
+          return; // nothing hidden, nothing animated — final state stands
+        }
+
+        /* initial hidden states — inline styles, motion-allowed path only */
+        setInitial(chip, { opacity: 0 });
+        setInitial(wordmark, { clipPath: WORDMARK_CLIP_HIDDEN, x: -18, skewX: -3 });
+        setInitial(risers, { opacity: 0, y: 14 });
+        setInitial(card, { opacity: 0, y: 32 });
+        setInitial(strip, { opacity: 0 });
+
+        /* 1 — SYSTEM ONLINE: CRT flicker-on (dot keeps its CSS ping after) */
+        tl.add(
+          chip,
+          {
+            opacity: [
+              { to: 1, duration: 45 },
+              { to: 0.35, duration: 55 },
+              { to: 1, duration: 60 },
+              { to: 0.55, duration: 45 },
+              { to: 1, duration: 75 },
+            ],
+            ease: "linear",
+          },
+          BOOT.chipAt,
+        );
+        /* 2 — CALIBER: left→right wipe + lean settle. The wrapper animates so
+           the h1's own .lean skew is never fought (transform composition). */
+        tl.add(
+          wordmark,
+          { clipPath: WORDMARK_CLIP_SHOWN, x: 0, skewX: 0, duration: 620 },
+          BOOT.wordmarkAt,
+        );
+        /* 3 — founding chip / headline / subhead / form: staggered rise */
+        tl.add(
+          risers,
+          { opacity: 1, y: 0, duration: 520, delay: stagger(BOOT.riseStaggerMs) },
+          BOOT.riseAt,
+        );
+        /* 4 — PlayerCard slides up + settles; OVR count-up starts as it lands */
+        tl.add(card, { opacity: 1, y: 0, duration: 600 }, BOOT.cardAt);
+        tl.call(() => setCardBootKey((k) => k + 1), BOOT.cardAt);
+        /* 5 — telemetry strip, last */
+        tl.add(strip, { opacity: 1, duration: 360 }, BOOT.telemetryAt);
+      },
+    });
+  }, []);
+
   // Hero telemetry — product truths + live platform numbers (real, never inflated).
   const telemetry: TelemetryItem[] = [
     { label: "Grade scale", value: "A–F" },
@@ -304,7 +402,7 @@ export default function Landing() {
             backgroundColor: "hsl(var(--obsidian-0) / 0.65)",
           }}
         >
-          <AngleChip tone="crimson">
+          <AngleChip tone="crimson" chipRef={systemChipRef}>
             <span className="relative flex h-1.5 w-1.5">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60 motion-reduce:animate-none" />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
@@ -345,15 +443,17 @@ export default function Landing() {
           <div aria-hidden className="grain-overlay -z-10" />
 
           <div className="mx-auto grid w-full max-w-6xl items-center gap-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10">
-            {/* left — identity + pitch + waitlist */}
-            <div className="flex flex-col items-start">
-              <Rise>
+            {/* left — identity + pitch + waitlist. Boot-timeline territory:
+                anime.js only here — framer-motion never touches these. */}
+            <div ref={heroLeftRef} className="flex flex-col items-start">
+              <div data-boot-rise>
                 <AngleChip tone="crimson" data-testid="chip-founding-class">
                   Founding class open
                 </AngleChip>
-              </Rise>
+              </div>
 
-              <Rise delay={0.08}>
+              {/* wipe/settle animates this wrapper — never the skewed h1 */}
+              <div ref={wordmarkWrapRef}>
                 <h1
                   className="lean wordmark-metal mt-8 select-none uppercase leading-none text-hero"
                   style={{
@@ -366,39 +466,39 @@ export default function Landing() {
                 >
                   Caliber
                 </h1>
-              </Rise>
+              </div>
 
-              <Rise delay={0.16}>
-                <p
-                  className="mt-6 uppercase leading-none text-title"
+              <p
+                data-boot-rise
+                className="mt-6 uppercase leading-none text-title"
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontWeight: 900,
+                  fontStretch: "125%",
+                  letterSpacing: "-0.01em",
+                }}
+              >
+                Every game,{" "}
+                <span
                   style={{
-                    fontFamily: "var(--font-display)",
-                    fontWeight: 900,
-                    fontStretch: "125%",
-                    letterSpacing: "-0.01em",
+                    color: "hsl(var(--crimson))",
+                    textShadow: "0 0 40px hsl(var(--crimson-glow))",
                   }}
                 >
-                  Every game,{" "}
-                  <span
-                    style={{
-                      color: "hsl(var(--crimson))",
-                      textShadow: "0 0 40px hsl(var(--crimson-glow))",
-                    }}
-                  >
-                    graded.
-                  </span>
-                </p>
-              </Rise>
+                  graded.
+                </span>
+              </p>
 
-              <Rise delay={0.22}>
-                <p className="mt-5 max-w-md font-body text-base leading-relaxed text-muted-foreground">
-                  Your season, played like career mode. Log the game, watch your
-                  Caliber Score move, and build the graded record that gets you
-                  scouted — every number earned on the floor.
-                </p>
-              </Rise>
+              <p
+                data-boot-rise
+                className="mt-5 max-w-md font-body text-base leading-relaxed text-muted-foreground"
+              >
+                Your season, played like career mode. Log the game, watch your
+                Caliber Score move, and build the graded record that gets you
+                scouted — every number earned on the floor.
+              </p>
 
-              <Rise delay={0.28} className="mt-8 w-full">
+              <div data-boot-rise className="mt-8 w-full">
                 <div id="join">
                   <WaitlistForm source="landing-hero" />
                   <p
@@ -408,18 +508,16 @@ export default function Landing() {
                     Free to start · No credit card · Be one of the first
                   </p>
                 </div>
-              </Rise>
+              </div>
             </div>
 
-            {/* right — the Career Mode proof moment (labeled DEMO) */}
-            <motion.div
-              initial={reduced ? false : { opacity: 0, y: 34, rotate: 3 }}
-              animate={{ opacity: 1, y: 0, rotate: 0 }}
-              transition={{ duration: 0.7, ease: EASE, delay: 0.25 }}
-              className="mx-auto w-full max-w-sm lg:max-w-md"
-            >
+            {/* right — the Career Mode proof moment (labeled DEMO). Slides in
+                on the boot timeline; the key-remount restarts the OVR count-up
+                the moment the card lands (no signal-component edits). */}
+            <div ref={cardShellRef} className="mx-auto w-full max-w-sm lg:max-w-md">
               <div style={{ transform: reduced ? undefined : "perspective(1200px) rotateY(-4deg)" }}>
                 <PlayerCard
+                  key={`boot-${cardBootKey}`}
                   name={DEMO_PLAYER.name}
                   position={DEMO_PLAYER.position}
                   jerseyNumber={DEMO_PLAYER.jerseyNumber}
@@ -438,13 +536,13 @@ export default function Landing() {
                   }
                 />
               </div>
-            </motion.div>
+            </div>
           </div>
 
           {/* hero telemetry — product truths + live platform numbers */}
-          <Rise delay={0.35} className="mx-auto mt-14 max-w-6xl">
+          <div ref={telemetryRef} className="mx-auto mt-14 max-w-6xl">
             <TelemetryStrip items={telemetry} data-testid="hero-telemetry" />
-          </Rise>
+          </div>
         </section>
 
         {/* CAREER MODE — the narrative */}
