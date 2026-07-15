@@ -38,6 +38,10 @@ share card) is the storefront. It gets flagship polish before anything else.
 5. **Broadcast motion.** Numbers count up. Panels reveal with clip-path wipes.
    150ms/300ms, `--ease-out-expo`, compositor-only properties.
    `prefers-reduced-motion` → single static frame (HeroCanvas already models this).
+   Engine roles: **anime.js** owns choreographed timelines (hero boot sequences,
+   unlock/toast moments, staggered reveals); **framer-motion** owns
+   scroll-triggered reveals. Never both on the same element. Both respect
+   reduced-motion and animate transform/opacity/clip-path only.
 6. **Honest surfaces.** Empty states guide ("Log your first game →"), never
    fake. No invented stats, ever, anywhere — including mockups.
 
