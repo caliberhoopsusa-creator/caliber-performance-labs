@@ -10,10 +10,11 @@ interface WaitlistFormProps {
   className?: string;
   align?: "start" | "center";
   /**
-   * "metal" = the liquid-metal primary CTA (MetalFx — one per screen max);
+   * "console" = solid crimson angle-cut CTA (the Career Mode primary);
+   * "metal" = the liquid-metal CTA (legacy — retired from the hero);
    * "quiet" = bordered secondary submit for supporting sections.
    */
-  variant?: "metal" | "quiet";
+  variant?: "console" | "metal" | "quiet";
   /** Pre-check the coach checkbox (e.g. the coach-facing section). */
   defaultCoach?: boolean;
 }
@@ -98,10 +99,12 @@ export function WaitlistForm({
           type="submit"
           disabled={submitting}
           className={cn(
-            "inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-input px-6 font-semibold",
-            variant === "metal"
-              ? "btn-chrome"
-              : "border border-silver/30 bg-obsidian-2 text-silver-hi transition-colors hover:border-accent/60 hover:text-foreground disabled:opacity-60",
+            "inline-flex h-12 shrink-0 items-center justify-center gap-2 px-6 font-semibold",
+            variant === "console" &&
+              "angle-cut bg-crimson font-display uppercase tracking-[0.06em] text-white transition-colors hover:bg-crimson-hot disabled:opacity-60",
+            variant === "metal" && "rounded-input btn-chrome",
+            variant === "quiet" &&
+              "rounded-input border border-silver/30 bg-obsidian-2 text-silver-hi transition-colors hover:border-accent/60 hover:text-foreground disabled:opacity-60",
           )}
           data-testid="button-waitlist-submit"
         >

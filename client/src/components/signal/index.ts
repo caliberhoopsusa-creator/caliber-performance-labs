@@ -17,4 +17,5 @@ export {
   type Attribute,
 } from "./AttributeBars";
 export { PlayerCard, type PlayerCardProps } from "./PlayerCard";
+export { PlasmaField, type PlasmaFieldProps } from "./PlasmaField";
 export { useCountUp, usePrefersReducedMotion } from "./useCountUp";

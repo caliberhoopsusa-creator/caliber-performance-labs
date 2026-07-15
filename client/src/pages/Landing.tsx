@@ -23,6 +23,7 @@ import {
   SectionEyebrow,
   TelemetryStrip,
   PlayerCard,
+  PlasmaField,
   type TelemetryItem,
 } from "@/components/signal";
 import { runBootTimeline, setInitial, stagger } from "@/lib/motion";
@@ -439,7 +440,18 @@ export default function Landing() {
       <main className="relative z-10">
         {/* HERO — the wordmark + player-card moment on an obsidian field */}
         <section className="relative isolate overflow-hidden px-5 pb-16 pt-32 sm:px-8 md:pb-24 md:pt-40">
-          <div aria-hidden className="hero-atmosphere absolute inset-0 -z-10" />
+          {/* dithered chrome plasma — the attract-screen backdrop; a veil
+              keeps text contrast and melts it into obsidian below the fold */}
+          <div aria-hidden className="absolute inset-0 -z-10">
+            <PlasmaField className="absolute inset-0 opacity-60" pixelSize={9} />
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(90deg, hsl(var(--obsidian-0) / 0.92) 0%, hsl(var(--obsidian-0) / 0.72) 42%, hsl(var(--obsidian-0) / 0.35) 100%), linear-gradient(180deg, hsl(var(--obsidian-0) / 0.55) 0%, hsl(var(--obsidian-0) / 0.25) 45%, hsl(var(--obsidian-0)) 100%)",
+              }}
+            />
+          </div>
           <div aria-hidden className="grain-overlay -z-10" />
 
           <div className="mx-auto grid w-full max-w-6xl items-center gap-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10">
@@ -500,7 +512,7 @@ export default function Landing() {
 
               <div data-boot-rise className="mt-8 w-full">
                 <div id="join">
-                  <WaitlistForm source="landing-hero" />
+                  <WaitlistForm source="landing-hero" variant="console" />
                   <p
                     className="mt-3 font-display text-label uppercase text-muted-foreground"
                     style={{ fontWeight: 500, fontStretch: "70%" }}
