@@ -32,6 +32,8 @@ export interface PlayerCardProps {
   grades?: string[];
   /** Marks the card as a product demo — renders the DEMO chip. */
   demo?: boolean;
+  /** Optional avatar slot rendered beside the name block (e.g. a photo). */
+  avatar?: ReactNode;
   /** Optional footer slot (e.g. a telemetry line or CTA). */
   footer?: ReactNode;
   className?: string;
@@ -55,6 +57,7 @@ export function PlayerCard({
   attributes,
   grades,
   demo = false,
+  avatar,
   footer,
   className,
   "data-testid": testId,
@@ -90,9 +93,11 @@ export function PlayerCard({
         )}
       </header>
 
-      {/* identity row — leaned name block + OVR plate */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="lean min-w-0 pl-1">
+      {/* identity row — leaned name block + OVR plate. Wraps on narrow
+          viewports (long names + the plate exceed ~320px otherwise). */}
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        {avatar && <div className="shrink-0">{avatar}</div>}
+        <div className="lean min-w-[9rem] flex-1 pl-1">
           <div className="lean-reset">
             <h3
               className="uppercase leading-none"

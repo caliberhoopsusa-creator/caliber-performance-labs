@@ -1,46 +1,63 @@
-import { useRoute, Link, useLocation } from "wouter";
+import { useRoute, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  Star, 
-  Zap, 
-  Trophy, 
-  Crown, 
-  Sparkles, 
-  Copy, 
-  Mail, 
-  MapPin, 
-  GraduationCap, 
-  TrendingUp, 
-  TrendingDown, 
-  Minus, 
-  ChevronRight,
-  User,
+import {
+  Copy,
+  Mail,
+  Trophy,
   Target,
-  Award,
-  Activity,
-  MessageSquareQuote,
   Film,
   Play,
-  Loader2
+  Loader2,
+  ChevronRight,
+  MessageSquareQuote,
+  X as XIcon,
+  Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getTier } from "@/lib/caliberTier";
 import { CaliberLogo } from "@/components/CaliberLogo";
 import { CoachRecommendations } from "@/components/CoachRecommendations";
 import { ShareCaliberScoreButton } from "@/components/ShareCaliberScoreButton";
 import { useAuth } from "@/hooks/use-auth";
-import { X as XIcon } from "lucide-react";
+import {
+  PlayerCard,
+  SectionEyebrow,
+  TelemetryStrip,
+  GradeBadge,
+  type TelemetryItem,
+  type Attribute,
+} from "@/components/signal";
+
+/**
+ * PublicPlayerProfile — SIGNAL: Career Mode, Phase 1b. The career screen.
+ * This is what a cold-emailed coach opens: PlayerCard hero with the real
+ * Caliber Score (OvrPlate), real attribute splits from the AI rating engine,
+ * verified-stat provenance from the statVerifications table, and the season
+ * log as a career timeline. Every number is real — no score renders as an
+ * honest RAW state, never a fake numeral.
+ */
 
 interface PublicPlayerData {
   player: {
@@ -64,12 +81,8 @@ interface PublicPlayerData {
   stats: {
     gamesPlayed: number;
     averageGrade: string;
-    performanceTrend: 'improving' | 'stable' | 'declining';
-    basketball: {
-      ppg: number;
-      rpg: number;
-      apg: number;
-    };
+    performanceTrend: "improving" | "stable" | "declining";
+    basketball: { ppg: number; rpg: number; apg: number };
   };
   recentGames: Array<{
     id: number;
@@ -79,184 +92,272 @@ interface PublicPlayerData {
     points: number;
     rebounds: number;
     assists: number;
-    passingYards?: number;
-    rushingYards?: number;
-    receivingYards?: number;
-    passingTouchdowns?: number;
-    rushingTouchdowns?: number;
-    receivingTouchdowns?: number;
-    tackles?: number;
   }>;
-  badges: Array<{
-    type: string;
-    earnedAt: string | null;
-  }>;
-  skillBadges: Array<{
-    skillType: string;
-    level: string;
-  }>;
-  accolades: Array<{
-    id: number;
-    type: string;
-    title: string;
-    season: string | null;
-  }>;
+  badges: Array<{ type: string; earnedAt: string | null }>;
+  skillBadges: Array<{ skillType: string; level: string }>;
+  accolades: Array<{ id: number; type: string; title: string; season: string | null }>;
   shareUrl: string;
   ogImage: string;
 }
 
-const TIER_ICONS: Record<string, typeof Star> = {
-  Rookie: Star,
-  Starter: Zap,
-  "All-Star": Sparkles,
-  MVP: Trophy,
-  "Hall of Fame": Crown,
-};
+/** Real sub-scores from the AI rating engine — null until games exist. */
+interface AiRatingData {
+  overallRating: number | null;
+  subScores: {
+    production: number;
+    efficiency: number;
+    impact: number;
+    defense: number;
+    athletic: number;
+    intangibles: number;
+  } | null;
+  ratingBand?: string;
+  explanation?: string[];
+}
 
-const TIER_COLORS: Record<string, string> = {
-  Rookie: "text-gray-400 bg-gray-500/10 border-gray-500/20",
-  Starter: "text-green-600 dark:text-green-400 bg-green-500/10 border-green-500/20",
-  "All-Star": "text-blue-600 dark:text-blue-400 bg-blue-500/10 border-blue-500/20",
-  MVP: "text-purple-600 dark:text-purple-400 bg-purple-500/10 border-purple-500/20",
-  "Hall of Fame": "text-yellow-600 dark:text-yellow-400 bg-yellow-500/10 border-yellow-500/20",
-};
+/** A coach-verified game from the statVerifications table (status=verified). */
+interface VerifiedGameRecord {
+  id: number;
+  gameId: number;
+  verifierName: string;
+  verifierRole: string;
+  verificationMethod: string;
+  verifiedAt: string | null;
+}
 
-const GRADE_COLORS: Record<string, string> = {
-  'A': "from-green-500 to-emerald-500",
-  'B': "from-blue-500 to-accent",
-  'C': "from-yellow-500 to-orange-500",
-  'D': "from-orange-500 to-red-500",
-  'F': "from-red-500 to-rose-500",
-};
+const CONDENSED = { fontWeight: 500, fontStretch: "70%" } as const;
+const DISPLAY_BLACK = {
+  fontFamily: "var(--font-display)",
+  fontWeight: 900,
+  fontStretch: "125%",
+  letterSpacing: "-0.01em",
+} as const;
 
 function getInitials(name: string): string {
   return name
-    .split(' ')
-    .map(n => n[0])
-    .join('')
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
     .toUpperCase()
     .slice(0, 2);
 }
 
-function getGradeColor(grade: string): string {
-  const letter = grade.charAt(0).toUpperCase();
-  return GRADE_COLORS[letter] || GRADE_COLORS['C'];
+function formatPosition(position: string | null | undefined): string {
+  if (!position) return "";
+  return position
+    .split(",")
+    .map((p) => p.trim())
+    .join(" / ");
 }
 
-function formatPosition(position: string | null | undefined): string {
-  if (!position) return '';
-  return position.split(',').map(p => {
-    return p.trim();
-  }).join(' / ');
+function formatGameDate(date: string): string {
+  return new Date(date)
+    .toLocaleDateString("en-US", { month: "short", day: "numeric", year: "2-digit" })
+    .toUpperCase();
+}
+
+/* ------------------------------------------------------------------ */
+/* local pieces                                                        */
+/* ------------------------------------------------------------------ */
+
+/** Honest early-state plate — neutral silver, no invented numeral. */
+function RawPlate() {
+  return (
+    <div
+      className="angle-cut lean inline-flex shrink-0 flex-col items-center border px-4 py-2.5"
+      style={{
+        backgroundColor: "hsl(var(--obsidian-2))",
+        borderColor: "hsl(var(--line))",
+        boxShadow: "inset 0 1px 0 hsl(var(--silver) / 0.08)",
+      }}
+      data-testid="plate-raw"
+    >
+      <span
+        className="leading-none"
+        style={{ ...DISPLAY_BLACK, fontSize: "var(--text-stat)", color: "hsl(var(--tier-raw))" }}
+      >
+        RAW
+      </span>
+      <span
+        className="mt-1 font-display text-label uppercase"
+        style={{ ...CONDENSED, color: "hsl(var(--silver-lo))" }}
+      >
+        NO GRADED GAMES YET
+      </span>
+    </div>
+  );
+}
+
+/** JetBrains Mono provenance mark — real verification state only. */
+function ProvenanceMark({ verified }: { verified: boolean }) {
+  return (
+    <span
+      className="inline-flex items-center gap-1 whitespace-nowrap font-mono uppercase"
+      style={{
+        fontSize: "var(--text-data)",
+        color: verified ? "hsl(var(--grade-a))" : "hsl(var(--silver-mute))",
+      }}
+    >
+      {verified && <Check aria-hidden className="h-3 w-3" />}
+      {verified ? "Verified" : "Self-reported"}
+    </span>
+  );
+}
+
+/** Mono label/value row for the scout readout. */
+function ReadoutRow({ label, value, testId }: { label: string; value: string; testId?: string }) {
+  return (
+    <div
+      className="flex items-baseline justify-between gap-4 border-b py-2"
+      style={{ borderColor: "hsl(var(--line))" }}
+    >
+      <span
+        className="font-display text-label uppercase"
+        style={{ ...CONDENSED, color: "hsl(var(--silver-lo))" }}
+      >
+        {label}
+      </span>
+      <span
+        className="text-right font-mono tabular-nums text-foreground"
+        style={{ fontSize: "var(--text-data)" }}
+        data-testid={testId}
+      >
+        {value}
+      </span>
+    </div>
+  );
 }
 
 function PublicPlayerProfileSkeleton() {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
-        <div className="flex items-center gap-4">
-          <Skeleton className="w-24 h-24 rounded-full" />
-          <div className="flex-1 space-y-2">
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-4 w-24" />
-          </div>
-        </div>
-        <div className="grid grid-cols-3 gap-4">
-          {[1, 2, 3].map(i => (
-            <Skeleton key={i} className="h-24 rounded-xl" />
+      <div className="mx-auto max-w-5xl space-y-6 px-4 py-10">
+        <Skeleton className="h-72 rounded-card" />
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-20 rounded-card" />
           ))}
         </div>
-        <Skeleton className="h-48 rounded-xl" />
+        <Skeleton className="h-48 rounded-card" />
+        <p
+          className="text-center font-display text-label uppercase text-muted-foreground"
+          style={CONDENSED}
+        >
+          TIP — coach-verified stat lines show a ✓ on the season log
+        </p>
       </div>
     </div>
   );
 }
 
+/* ------------------------------------------------------------------ */
+/* page                                                                */
+/* ------------------------------------------------------------------ */
+
 export default function PublicPlayerProfile() {
   const [, params] = useRoute("/profile/:id/public");
-  const [, setLocation] = useLocation();
   const playerId = Number(params?.id);
   const { toast } = useToast();
   const { isAuthenticated } = useAuth();
-  const [ctaDismissed, setCtaDismissed] = useState(() =>
-    typeof sessionStorage !== 'undefined' && !!sessionStorage.getItem('joinCtaDismissed')
+  const [ctaDismissed, setCtaDismissed] = useState(
+    () => typeof sessionStorage !== "undefined" && !!sessionStorage.getItem("joinCtaDismissed"),
   );
 
   const dismissCta = () => {
-    sessionStorage.setItem('joinCtaDismissed', '1');
+    sessionStorage.setItem("joinCtaDismissed", "1");
     setCtaDismissed(true);
   };
 
+  const hasPlayerId = !!playerId && !isNaN(playerId);
+
   const { data, isLoading, error } = useQuery<PublicPlayerData>({
     queryKey: [`/api/players/${playerId}/public`],
-    enabled: !!playerId,
+    enabled: hasPlayerId,
+  });
+
+  // Same key as ShareCaliberScoreButton / CaliberScore — shares the cache.
+  const { data: rating } = useQuery<AiRatingData>({
+    queryKey: ["/api/players", String(playerId), "ai-rating"],
+    enabled: hasPlayerId,
+  });
+
+  // Real provenance: coach-verified games from the statVerifications table.
+  const { data: verifiedGames = [] } = useQuery<VerifiedGameRecord[]>({
+    queryKey: [`/api/players/${playerId}/verified-games`],
+    enabled: hasPlayerId,
   });
 
   const { data: endorsements = [] } = useQuery({
-    queryKey: ['/api/players', playerId, 'endorsements'],
+    queryKey: ["/api/players", playerId, "endorsements"],
     queryFn: async () => {
       const res = await fetch(`/api/players/${playerId}/endorsements`);
       if (!res.ok) return [];
       return res.json();
     },
-    enabled: !!playerId && !isNaN(playerId),
+    enabled: hasPlayerId,
   });
 
   const { data: highlights = [] } = useQuery({
-    queryKey: ['/api/players', playerId, 'highlights'],
+    queryKey: ["/api/players", playerId, "highlights"],
     queryFn: async () => {
       try {
         const res = await fetch(`/api/players/${playerId}/highlights`);
         if (!res.ok) return [];
         return res.json();
-      } catch { return []; }
+      } catch {
+        return [];
+      }
     },
-    enabled: !!playerId && !isNaN(playerId),
+    enabled: hasPlayerId,
   });
 
   useEffect(() => {
     if (data?.player) {
       document.title = `${data.player.name} - Player Profile | Caliber`;
-      
       const metaTags = [
-        { property: 'og:title', content: `${data.player.name} - ${formatPosition(data.player.position)} | Caliber` },
-        { property: 'og:description', content: `Check out ${data.player.name}'s player profile. ${data.stats.averageGrade} grade average, ${data.stats.gamesPlayed} games played.` },
-        { property: 'og:image', content: data.ogImage },
-        { property: 'og:url', content: data.shareUrl },
-        { property: 'og:type', content: 'profile' },
-        { name: 'twitter:card', content: 'summary_large_image' },
-        { name: 'twitter:title', content: `${data.player.name} - Player Profile` },
-        { name: 'twitter:description', content: `${data.stats.averageGrade} grade average | ${data.player.currentTier} tier` },
+        { property: "og:title", content: `${data.player.name} - ${formatPosition(data.player.position)} | Caliber` },
+        { property: "og:description", content: `Check out ${data.player.name}'s player profile. ${data.stats.averageGrade} grade average, ${data.stats.gamesPlayed} games played.` },
+        { property: "og:image", content: data.ogImage },
+        { property: "og:url", content: data.shareUrl },
+        { property: "og:type", content: "profile" },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:title", content: `${data.player.name} - Player Profile` },
+        { name: "twitter:description", content: `${data.stats.averageGrade} grade average | ${data.player.currentTier} tier` },
       ];
-
       metaTags.forEach(({ property, name, content }) => {
-        let meta = property 
+        let meta = property
           ? document.querySelector(`meta[property="${property}"]`)
           : document.querySelector(`meta[name="${name}"]`);
-        
         if (!meta) {
-          meta = document.createElement('meta');
-          if (property) meta.setAttribute('property', property);
-          if (name) meta.setAttribute('name', name);
+          meta = document.createElement("meta");
+          if (property) meta.setAttribute("property", property);
+          if (name) meta.setAttribute("name", name);
           document.head.appendChild(meta);
         }
-        meta.setAttribute('content', content);
+        meta.setAttribute("content", content);
       });
     }
   }, [data]);
 
   const [contactOpen, setContactOpen] = useState(false);
-  const [contactForm, setContactForm] = useState({ senderName: '', senderEmail: '', senderRole: 'coach', senderSchool: '', message: '' });
+  const [contactForm, setContactForm] = useState({
+    senderName: "",
+    senderEmail: "",
+    senderRole: "coach",
+    senderSchool: "",
+    message: "",
+  });
   const [contactSubmitting, setContactSubmitting] = useState(false);
+
+  const verifiedGameIds = useMemo(
+    () => new Set(verifiedGames.map((v) => v.gameId)),
+    [verifiedGames],
+  );
 
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(data?.shareUrl || window.location.href);
-      toast({
-        title: "Link Copied!",
-        description: "Profile link copied to clipboard",
-      });
+      toast({ title: "Link Copied!", description: "Profile link copied to clipboard" });
     } catch {
       toast({
         title: "Failed to copy",
@@ -266,70 +367,160 @@ export default function PublicPlayerProfile() {
     }
   };
 
-  if (isLoading) {
-    return <PublicPlayerProfileSkeleton />;
-  }
+  if (isLoading) return <PublicPlayerProfileSkeleton />;
 
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
-        <Card className="p-8 text-center max-w-md">
-          <User className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-          <h2 className="text-xl font-bold mb-2">Player Not Found</h2>
-          <p className="text-muted-foreground mb-4">This player profile doesn't exist or has been removed.</p>
+      <div className="flex min-h-screen items-center justify-center bg-background px-4 text-foreground">
+        <div
+          className="gloss max-w-md rounded-card border p-8 text-center"
+          style={{ backgroundColor: "hsl(var(--obsidian-1))", borderColor: "hsl(var(--line))" }}
+        >
+          <SectionEyebrow as="div" className="justify-center">
+            Profile
+          </SectionEyebrow>
+          <h2 className="mt-5 uppercase leading-none text-title" style={DISPLAY_BLACK}>
+            Player not found
+          </h2>
+          <p className="mt-4 font-body text-sm leading-relaxed text-muted-foreground">
+            This player profile doesn't exist or has been removed.
+          </p>
           <Link href="/">
-            <Button data-testid="button-go-home">Go to Home</Button>
+            <Button className="mt-6" data-testid="button-go-home">
+              Go to Home
+            </Button>
           </Link>
-        </Card>
+        </div>
       </div>
     );
   }
 
   const { player, stats, recentGames, skillBadges, accolades } = data;
-  const TierIcon = TIER_ICONS[player.currentTier] || Star;
-  const tierColorClass = TIER_COLORS[player.currentTier] || TIER_COLORS.Rookie;
+
+  const score =
+    typeof rating?.overallRating === "number" && rating.overallRating > 0
+      ? Math.round(rating.overallRating)
+      : null;
+  const tier = score !== null ? getTier(score) : null;
+
+  const attributes: Attribute[] | undefined = rating?.subScores
+    ? [
+        { label: "Production", value: Math.round(rating.subScores.production) },
+        { label: "Efficiency", value: Math.round(rating.subScores.efficiency) },
+        { label: "Impact", value: Math.round(rating.subScores.impact) },
+        { label: "Defense", value: Math.round(rating.subScores.defense) },
+        { label: "Athletic", value: Math.round(rating.subScores.athletic) },
+        { label: "Intangibles", value: Math.round(rating.subScores.intangibles) },
+      ]
+    : undefined;
+
+  const schoolLine =
+    [player.school, player.state].filter(Boolean).join(" · ") || "School not listed";
+
+  const verifiedCount = recentGames.filter((g) => verifiedGameIds.has(g.id)).length;
+  const totalVerified = verifiedGames.length;
+
+  const seasonTelemetry: TelemetryItem[] = [
+    { label: "GP", value: stats.gamesPlayed },
+    { label: "PPG", value: stats.basketball.ppg },
+    { label: "RPG", value: stats.basketball.rpg },
+    { label: "APG", value: stats.basketball.apg },
+    ...(stats.averageGrade !== "—" ? [{ label: "Avg grade", value: stats.averageGrade }] : []),
+    ...(stats.gamesPlayed >= 6
+      ? [{ label: "Trend", value: stats.performanceTrend.toUpperCase() }]
+      : []),
+  ];
 
   const handleContactSubmit = async () => {
     if (!contactForm.senderName || !contactForm.senderEmail || !contactForm.message) {
-      toast({ title: "Missing Fields", description: "Please fill in all required fields.", variant: "destructive" });
+      toast({
+        title: "Missing Fields",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
       return;
     }
     setContactSubmitting(true);
     try {
       const res = await fetch(`/api/public/players/${player.id}/inquiries`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(contactForm),
       });
       if (!res.ok) {
         const errData = await res.json();
-        throw new Error(errData.message || 'Failed to send');
+        throw new Error(errData.message || "Failed to send");
       }
       toast({ title: "Inquiry Sent!", description: "Your message has been sent to the player." });
       setContactOpen(false);
-      setContactForm({ senderName: '', senderEmail: '', senderRole: 'coach', senderSchool: '', message: '' });
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Failed to send inquiry.", variant: "destructive" });
+      setContactForm({ senderName: "", senderEmail: "", senderRole: "coach", senderSchool: "", message: "" });
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to send inquiry.",
+        variant: "destructive",
+      });
     } finally {
       setContactSubmitting(false);
     }
   };
 
-  const TrendIcon = stats.performanceTrend === 'improving' ? TrendingUp : 
-                    stats.performanceTrend === 'declining' ? TrendingDown : Minus;
-  const trendColor = stats.performanceTrend === 'improving' ? 'text-green-600 dark:text-green-400' :
-                     stats.performanceTrend === 'declining' ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400';
+  const heroAvatar = (
+    <Avatar className="h-12 w-12 border sm:h-14 sm:w-14" style={{ borderColor: "hsl(var(--line))" }}>
+      <AvatarImage src={player.photoUrl || undefined} alt={player.name} data-testid="img-player-photo" />
+      <AvatarFallback
+        className="font-display text-sm"
+        style={{
+          fontWeight: 800,
+          backgroundColor: "hsl(var(--obsidian-3))",
+          color: "hsl(var(--silver))",
+        }}
+      >
+        {getInitials(player.name)}
+      </AvatarFallback>
+    </Avatar>
+  );
+
+  const provenanceFooter = (
+    <p className="font-mono text-muted-foreground" style={{ fontSize: "var(--text-data)" }}>
+      {totalVerified > 0 ? (
+        <>
+          <span style={{ color: "hsl(var(--grade-a))" }}>✓ {totalVerified}</span>
+          {` of ${stats.gamesPlayed} games coach-verified`}
+        </>
+      ) : stats.gamesPlayed > 0 ? (
+        "STATS SELF-REPORTED · coach verification pending"
+      ) : (
+        "Grades appear after the first logged game"
+      )}
+    </p>
+  );
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="absolute inset-0 pointer-events-none opacity-30" />
-      
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <CaliberLogo size={28} />
-            <span className="font-display text-lg font-bold tracking-tight text-accent">CALIBER</span>
-          </div>
+    <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
+      <style>{`
+        .pp-atmosphere {
+          background:
+            radial-gradient(52% 38% at 50% 0%, hsl(var(--crimson-deep) / 0.22), transparent 70%),
+            radial-gradient(36% 30% at 85% 30%, hsl(var(--crimson-deep) / 0.10), transparent 72%);
+        }
+      `}</style>
+
+      {/* sticky header — the scout actions stay one thumb away */}
+      <header
+        className="sticky top-0 z-50 border-b backdrop-blur-xl"
+        style={{
+          borderColor: "hsl(var(--line))",
+          backgroundColor: "hsl(var(--obsidian-0) / 0.8)",
+        }}
+      >
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
+          <Link href="/" className="flex items-center gap-2" data-testid="link-header-home">
+            <CaliberLogo size={26} color="hsl(var(--crimson))" />
+            <span className="lean hidden uppercase text-section sm:inline" style={DISPLAY_BLACK}>
+              Caliber
+            </span>
+          </Link>
           <div className="flex items-center gap-2">
             <ShareCaliberScoreButton playerId={playerId} size="sm" label="Score Card" />
             <Button
@@ -339,510 +530,584 @@ export default function PublicPlayerProfile() {
               className="gap-2"
               data-testid="button-copy-link"
             >
-              <Copy className="w-4 h-4" />
+              <Copy className="h-4 w-4" />
               Share
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="relative z-10 max-w-4xl mx-auto px-4 py-6 space-y-6 pb-12">
-        <Card className="overflow-hidden border-border bg-card/50 backdrop-blur-sm">
-          {player.bannerUrl && (
-            <div className="h-32 md:h-48 overflow-hidden">
-              <img 
-                src={player.bannerUrl} 
-                alt="" 
-                className="w-full h-full object-cover"
-                data-testid="img-player-banner"
+      <main className="relative z-10">
+        {/* HERO — the player card. One hero element; everything else supports it. */}
+        <section
+          aria-labelledby="player-name"
+          className="relative isolate overflow-hidden border-b px-4 pb-10 pt-8 sm:px-6 md:pb-14 md:pt-12"
+          style={{ borderColor: "hsl(var(--line))" }}
+        >
+          <div aria-hidden className="pp-atmosphere absolute inset-0 -z-10" />
+          <div aria-hidden className="grain-overlay -z-10" />
+
+          <div className="mx-auto grid w-full max-w-5xl items-start gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10">
+            {/* the card — real identity, real score or honest RAW state */}
+            <h1 id="player-name" className="sr-only">
+              {player.name}
+            </h1>
+            {score !== null ? (
+              <PlayerCard
+                name={player.name}
+                position={formatPosition(player.position)}
+                jerseyNumber={player.jerseyNumber != null ? String(player.jerseyNumber) : undefined}
+                school={schoolLine}
+                score={score}
+                attributes={attributes}
+                avatar={heroAvatar}
+                footer={provenanceFooter}
+                className="min-w-0"
+                data-testid="hero-player-card"
               />
-            </div>
-          )}
-          
-          <div className="p-4 md:p-6">
-            <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-6">
-              <div className="flex items-start gap-4 flex-1">
-                <div className="relative flex-shrink-0">
-                  <Avatar className="w-20 h-20 md:w-24 md:h-24 border-2 border-accent/30">
-                    <AvatarImage src={player.photoUrl || undefined} alt={player.name} data-testid="img-player-photo" />
-                    <AvatarFallback className="bg-gradient-to-br from-accent/30 to-blue-600/30 text-xl font-bold">
-                      {getInitials(player.name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className={cn(
-                    "absolute -bottom-1 -right-1 w-8 h-8 rounded-lg flex items-center justify-center border",
-                    tierColorClass
-                  )}>
-                    <TierIcon className="w-4 h-4" />
-                  </div>
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    {player.jerseyNumber && (
-                      <span className="text-xl font-bold text-accent font-display">#{player.jerseyNumber}</span>
-                    )}
-                    <Badge variant="outline" className="border-accent/30 text-accent text-xs uppercase">
-                      {formatPosition(player.position)}
-                    </Badge>
-                    <Badge 
-                      variant="outline" 
-                      className={cn(
-                        "text-xs uppercase",
-                        "border-accent/30 text-accent"
-                      )}
-                      data-testid="badge-sport-basketball"
-                    >
-                      {"Basketball"}
-                    </Badge>
-                  </div>
-                  
-                  <h1 className="text-2xl md:text-3xl font-bold font-display uppercase tracking-tight truncate" data-testid="text-player-name">
-                    {player.name}
-                  </h1>
-
-                  {(player as any).verifiedAthlete && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 text-xs font-medium border border-blue-500/30">
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      Verified Athlete
-                    </span>
-                  )}
-
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-sm text-muted-foreground">
-                    {player.school && (
-                      <span className="flex items-center gap-1">
-                        <GraduationCap className="w-4 h-4" />
-                        {player.school}
-                      </span>
-                    )}
-                    {player.graduationYear && (
-                      <span className="font-medium text-accent" data-testid="text-graduation-year">
-                        Class of {player.graduationYear}
-                      </span>
-                    )}
-                    {player.state && (
-                      <span className="flex items-center gap-1">
-                        <MapPin className="w-4 h-4" />
-                        {player.state}
-                      </span>
-                    )}
-                    {player.height && <span>{player.height}</span>}
-                  </div>
-                  
-                  <div className="flex flex-wrap items-center gap-2 mt-3">
-                    <Badge className={cn("gap-1 border", tierColorClass)}>
-                      <TierIcon className="w-3 h-3" />
-                      {player.currentTier}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-center md:justify-end gap-4">
-                <div className="text-center">
-                  <div className="text-xs text-muted-foreground uppercase mb-1">Overall</div>
-                  <div 
-                    className={cn(
-                      "w-16 h-16 rounded-xl flex items-center justify-center text-2xl font-bold text-foreground bg-gradient-to-br",
-                      getGradeColor(stats.averageGrade)
-                    )}
-                    data-testid="badge-overall-grade"
-                  >
-                    {stats.averageGrade}
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-xs text-muted-foreground uppercase mb-1">Trend</div>
-                  <div className={cn("flex items-center gap-1 font-medium", trendColor)} data-testid="indicator-trend">
-                    <TrendIcon className="w-5 h-5" />
-                    <span className="capitalize text-sm">{stats.performanceTrend}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {player.bio && (
-              <p className="mt-4 text-sm text-muted-foreground line-clamp-3" data-testid="text-player-bio">
-                {player.bio}
-              </p>
-            )}
-          </div>
-        </Card>
-
-        <Card className="bg-gradient-to-r from-accent/10 via-accent/5 to-accent/10 border-accent/20 overflow-hidden" data-testid="card-scout-me">
-          <div className="p-4 md:p-6 flex flex-col md:flex-row items-center gap-4">
-            <div className="flex-1 text-center md:text-left">
-              <h3 className="text-lg font-bold text-foreground flex items-center gap-2 justify-center md:justify-start">
-                <Target className="w-5 h-5 text-accent" />
-                Interested in Recruiting {player.name.split(' ')[0]}?
-              </h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                {player.school && `${player.school}`}
-                {player.graduationYear && ` - Class of ${player.graduationYear}`}
-                {player.state && ` - ${player.state}`}
-              </p>
-            </div>
-            <div className="flex gap-2 flex-wrap">
-              <Dialog open={contactOpen} onOpenChange={setContactOpen}>
-                <DialogTrigger asChild>
-                  <Button className="gap-2" data-testid="button-contact-recruit">
-                    <Mail className="w-4 h-4" />
-                    Contact for Recruiting
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Contact {player.name}</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="senderName">Your Name *</Label>
-                      <Input id="senderName" placeholder="Full name" value={contactForm.senderName} onChange={e => setContactForm(f => ({ ...f, senderName: e.target.value }))} data-testid="input-sender-name" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="senderEmail">Email *</Label>
-                      <Input id="senderEmail" type="email" placeholder="your@email.com" value={contactForm.senderEmail} onChange={e => setContactForm(f => ({ ...f, senderEmail: e.target.value }))} data-testid="input-sender-email" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="senderRole">Your Role</Label>
-                      <Select value={contactForm.senderRole} onValueChange={v => setContactForm(f => ({ ...f, senderRole: v }))}>
-                        <SelectTrigger data-testid="select-sender-role">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="coach">Coach</SelectItem>
-                          <SelectItem value="recruiter">Recruiter</SelectItem>
-                          <SelectItem value="parent">Parent</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="senderSchool">School/Organization</Label>
-                      <Input id="senderSchool" placeholder="Optional" value={contactForm.senderSchool} onChange={e => setContactForm(f => ({ ...f, senderSchool: e.target.value }))} data-testid="input-sender-school" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="message">Message *</Label>
-                      <Textarea id="message" placeholder="Introduce yourself and your interest..." rows={4} value={contactForm.message} onChange={e => setContactForm(f => ({ ...f, message: e.target.value }))} data-testid="input-message" />
-                    </div>
-                    <Button onClick={handleContactSubmit} disabled={contactSubmitting} className="w-full gap-2" data-testid="button-submit-inquiry">
-                      {contactSubmitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Sending...</> : "Send Inquiry"}
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  navigator.clipboard.writeText(window.location.href);
-                  toast({ title: "Profile Link Copied", description: "Share this link with coaches and recruiters." });
+            ) : (
+              <article
+                className="gloss relative min-w-0 rounded-card border p-5 sm:p-6"
+                style={{
+                  backgroundColor: "hsl(var(--obsidian-1))",
+                  borderColor: "hsl(var(--line))",
+                  boxShadow: "0 24px 64px hsl(var(--obsidian-0) / 0.6)",
                 }}
-                className="gap-2"
-                data-testid="button-copy-scout-link"
+                data-testid="hero-player-card-raw"
               >
-                <Copy className="w-4 h-4" />
-                Copy Link
-              </Button>
-            </div>
-          </div>
-        </Card>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-          <Card className="p-4 text-center border-border bg-card/50">
-            <div className="text-2xl md:text-3xl font-bold text-foreground font-display" data-testid="stat-ppg">
-              {stats.basketball.ppg}
-            </div>
-            <div className="text-xs text-muted-foreground uppercase">PPG</div>
-          </Card>
-          <Card className="p-4 text-center border-border bg-card/50">
-            <div className="text-2xl md:text-3xl font-bold text-foreground font-display" data-testid="stat-rpg">
-              {stats.basketball.rpg}
-            </div>
-            <div className="text-xs text-muted-foreground uppercase">RPG</div>
-          </Card>
-          <Card className="p-4 text-center border-border bg-card/50">
-            <div className="text-2xl md:text-3xl font-bold text-foreground font-display" data-testid="stat-apg">
-              {stats.basketball.apg}
-            </div>
-            <div className="text-xs text-muted-foreground uppercase">APG</div>
-          </Card>
-          <Card className="p-4 text-center border-border bg-card/50">
-            <div className="text-2xl md:text-3xl font-bold text-foreground font-display" data-testid="stat-games-played">
-              {stats.gamesPlayed}
-            </div>
-            <div className="text-xs text-muted-foreground uppercase">Games</div>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className="p-4 md:p-6 border-border bg-card/50">
-            <h2 className="text-lg font-bold font-display uppercase tracking-wide mb-4 flex items-center gap-2">
-              <GraduationCap className="w-5 h-5 text-accent" />
-              Recruiting Info
-            </h2>
-            <div className="space-y-3">
-              {player.graduationYear && (
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Class Year</span>
-                  <span className="font-medium text-lg text-accent" data-testid="text-class-year">{player.graduationYear}</span>
-                </div>
-              )}
-              {player.gpa && (
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">GPA</span>
-                  <span className="font-medium text-lg" data-testid="text-gpa">{player.gpa}</span>
-                </div>
-              )}
-              {player.level && (
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Level</span>
-                  <span className="font-medium capitalize">{player.level.replace('_', ' ')}</span>
-                </div>
-              )}
-              {player.height && (
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Height</span>
-                  <span className="font-medium">{player.height}</span>
-                </div>
-              )}
-            </div>
-            <Button 
-              className="w-full mt-4 gap-2" 
-              variant="outline"
-              onClick={() => setLocation('/community?tab=messages')}
-              data-testid="button-contact-player"
-            >
-              <Mail className="w-4 h-4" />
-              Contact Player
-            </Button>
-          </Card>
-
-          <Card className="p-4 md:p-6 border-border bg-card/50">
-            <h2 className="text-lg font-bold font-display uppercase tracking-wide mb-4 flex items-center gap-2">
-              <Activity className="w-5 h-5 text-accent" />
-              Recent Highlights
-            </h2>
-            {recentGames.length > 0 ? (
-              <div className="space-y-2">
-                {recentGames.map((game) => (
-                  <div 
-                    key={game.id} 
-                    className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border"
-                    data-testid={`highlight-game-${game.id}`}
+                <header className="mb-5">
+                  <span
+                    className="font-display text-label uppercase"
+                    style={{ ...CONDENSED, color: "hsl(var(--silver-lo))" }}
                   >
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium truncate">vs {game.opponent}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {new Date(game.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    Caliber ID
+                  </span>
+                </header>
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="shrink-0">{heroAvatar}</div>
+                  <div className="lean min-w-[9rem] flex-1 pl-1">
+                    <div className="lean-reset">
+                      <p
+                        className="uppercase leading-none text-title"
+                        style={{ ...DISPLAY_BLACK, color: "hsl(var(--silver-hi))" }}
+                        data-testid="text-player-name"
+                      >
+                        {player.name}
+                      </p>
+                      <p
+                        className="mt-2 font-mono tabular-nums"
+                        style={{ fontSize: "var(--text-data)", color: "hsl(var(--silver-lo))" }}
+                      >
+                        {formatPosition(player.position)}
+                        {player.jerseyNumber != null ? ` · #${player.jerseyNumber}` : ""}
+                      </p>
+                      <p className="mt-1 font-body text-body" style={{ color: "hsl(var(--silver-lo))" }}>
+                        {schoolLine}
+                      </p>
+                    </div>
+                  </div>
+                  <RawPlate />
+                </div>
+                <div className="mt-5 border-t pt-5" style={{ borderColor: "hsl(var(--line))" }}>
+                  {provenanceFooter}
+                </div>
+              </article>
+            )}
+
+            {/* scout readout — why the numbers are believable + the actions */}
+            <aside aria-label="Scout report" className="min-w-0">
+              <SectionEyebrow as="h2">Scout Report</SectionEyebrow>
+
+              {score !== null && rating?.ratingBand && (
+                <p
+                  className="mt-5 uppercase leading-none text-title"
+                  style={{ ...DISPLAY_BLACK, color: "hsl(var(--silver-hi))" }}
+                  data-testid="text-rating-band"
+                >
+                  {rating.ratingBand}
+                </p>
+              )}
+              {score !== null && tier && (
+                <p
+                  className="mt-2 font-display text-label uppercase"
+                  style={{ ...CONDENSED, color: `hsl(var(${tier.cssVar}))` }}
+                  data-testid="text-tier-label"
+                >
+                  {tier.label} — {tier.blurb}
+                </p>
+              )}
+              {score === null && (
+                <p className="mt-5 font-body text-body leading-relaxed text-muted-foreground">
+                  No graded games yet. The Caliber Score, attribute splits, and season log fill
+                  in as real games are logged and graded — nothing here is ever estimated.
+                </p>
+              )}
+
+              {rating?.explanation && rating.explanation.length > 0 && (
+                <ul className="mt-4 space-y-1.5" data-testid="list-rating-explanation">
+                  {rating.explanation.map((line) => (
+                    <li
+                      key={line}
+                      className="font-mono text-muted-foreground"
+                      style={{ fontSize: "var(--text-data)" }}
+                    >
+                      <span aria-hidden style={{ color: "hsl(var(--crimson))" }}>
+                        //{" "}
+                      </span>
+                      {line}
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <div className="mt-6">
+                {player.graduationYear && (
+                  <ReadoutRow label="Class of" value={String(player.graduationYear)} testId="text-class-year" />
+                )}
+                {player.height && <ReadoutRow label="Height" value={player.height} />}
+                {player.gpa && <ReadoutRow label="GPA" value={player.gpa} testId="text-gpa" />}
+                {player.level && (
+                  <ReadoutRow label="Level" value={player.level.replace("_", " ").toUpperCase()} />
+                )}
+                <ReadoutRow
+                  label="Verification"
+                  value={
+                    totalVerified > 0
+                      ? `${totalVerified}/${stats.gamesPlayed} GAMES COACH-VERIFIED`
+                      : stats.gamesPlayed > 0
+                        ? "SELF-REPORTED"
+                        : "—"
+                  }
+                  testId="text-verification-summary"
+                />
+              </div>
+
+              {player.bio && (
+                <p
+                  className="mt-4 line-clamp-3 font-body text-sm leading-relaxed text-muted-foreground"
+                  data-testid="text-player-bio"
+                >
+                  {player.bio}
+                </p>
+              )}
+
+              <div className="mt-6 flex flex-wrap gap-2.5">
+                <Dialog open={contactOpen} onOpenChange={setContactOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="gap-2" data-testid="button-contact-recruit">
+                      <Mail className="h-4 w-4" />
+                      Contact for Recruiting
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Contact {player.name}</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="senderName">Your Name *</Label>
+                        <Input
+                          id="senderName"
+                          placeholder="Full name"
+                          value={contactForm.senderName}
+                          onChange={(e) => setContactForm((f) => ({ ...f, senderName: e.target.value }))}
+                          data-testid="input-sender-name"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="senderEmail">Email *</Label>
+                        <Input
+                          id="senderEmail"
+                          type="email"
+                          placeholder="your@email.com"
+                          value={contactForm.senderEmail}
+                          onChange={(e) => setContactForm((f) => ({ ...f, senderEmail: e.target.value }))}
+                          data-testid="input-sender-email"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="senderRole">Your Role</Label>
+                        <Select
+                          value={contactForm.senderRole}
+                          onValueChange={(v) => setContactForm((f) => ({ ...f, senderRole: v }))}
+                        >
+                          <SelectTrigger data-testid="select-sender-role">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="coach">Coach</SelectItem>
+                            <SelectItem value="recruiter">Recruiter</SelectItem>
+                            <SelectItem value="parent">Parent</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="senderSchool">School/Organization</Label>
+                        <Input
+                          id="senderSchool"
+                          placeholder="Optional"
+                          value={contactForm.senderSchool}
+                          onChange={(e) => setContactForm((f) => ({ ...f, senderSchool: e.target.value }))}
+                          data-testid="input-sender-school"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="message">Message *</Label>
+                        <Textarea
+                          id="message"
+                          placeholder="Introduce yourself and your interest..."
+                          rows={4}
+                          value={contactForm.message}
+                          onChange={(e) => setContactForm((f) => ({ ...f, message: e.target.value }))}
+                          data-testid="input-message"
+                        />
+                      </div>
+                      <Button
+                        onClick={handleContactSubmit}
+                        disabled={contactSubmitting}
+                        className="w-full gap-2"
+                        data-testid="button-submit-inquiry"
+                      >
+                        {contactSubmitting ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" /> Sending...
+                          </>
+                        ) : (
+                          "Send Inquiry"
+                        )}
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                <Button
+                  variant="outline"
+                  onClick={handleCopyLink}
+                  className="gap-2"
+                  data-testid="button-copy-scout-link"
+                >
+                  <Copy className="h-4 w-4" />
+                  Copy Link
+                </Button>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <div className="mx-auto max-w-5xl space-y-12 px-4 py-10 sm:px-6 md:py-14">
+          {/* CAREER TIMELINE — the season log as career mode */}
+          <section aria-labelledby="career-timeline-heading">
+            <SectionEyebrow data-testid="eyebrow-career-timeline">
+              <span id="career-timeline-heading">Career Timeline</span>
+            </SectionEyebrow>
+            <TelemetryStrip items={seasonTelemetry} className="mt-4" data-testid="season-telemetry" />
+
+            {recentGames.length > 0 ? (
+              <div
+                className="mt-5 overflow-x-auto rounded-card border"
+                style={{ backgroundColor: "hsl(var(--obsidian-1))", borderColor: "hsl(var(--line))" }}
+              >
+                <table className="w-full border-collapse text-left" data-testid="table-season-log">
+                  <caption className="sr-only">Recent games with grades and verification status</caption>
+                  <thead>
+                    <tr
+                      className="border-b"
+                      style={{
+                        backgroundColor: "hsl(var(--obsidian-2))",
+                        borderColor: "hsl(var(--line))",
+                      }}
+                    >
+                      {["Date", "Opponent", "PTS", "REB", "AST", "Grade", "Stats"].map((h, i) => (
+                        <th
+                          key={h}
+                          scope="col"
+                          className={cn(
+                            "whitespace-nowrap px-4 py-2.5 font-display text-label uppercase",
+                            i >= 2 && i <= 4 && "text-right",
+                          )}
+                          style={{ ...CONDENSED, color: "hsl(var(--silver-lo))" }}
+                        >
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody
+                    className="font-mono tabular-nums"
+                    style={{ fontSize: "var(--text-data)", fontVariantNumeric: "tabular-nums lining-nums" }}
+                  >
+                    {recentGames.map((game, idx) => (
+                      <tr
+                        key={game.id}
+                        className={cn(idx > 0 && "border-t")}
+                        style={{ borderColor: "hsl(var(--line))" }}
+                        data-testid={`row-game-${game.id}`}
+                      >
+                        <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">
+                          {formatGameDate(game.date)}
+                        </td>
+                        <td className="max-w-[10rem] truncate px-4 py-3 font-body text-body text-foreground">
+                          {game.opponent ? `vs ${game.opponent}` : "—"}
+                        </td>
+                        <td className="px-4 py-3 text-right text-foreground">{game.points}</td>
+                        <td className="px-4 py-3 text-right text-foreground">{game.rebounds}</td>
+                        <td className="px-4 py-3 text-right text-foreground">{game.assists}</td>
+                        <td className="px-4 py-3">
+                          {game.grade ? (
+                            <GradeBadge grade={game.grade} size="sm" data-testid={`grade-game-${game.id}`} />
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <ProvenanceMark verified={verifiedGameIds.has(game.id)} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div
+                className="mt-5 rounded-card border p-8 text-center"
+                style={{ backgroundColor: "hsl(var(--obsidian-1))", borderColor: "hsl(var(--line))" }}
+                data-testid="empty-season-log"
+              >
+                <p className="font-body text-body text-muted-foreground">
+                  No games recorded yet — the season log fills in as games are graded.
+                </p>
+              </div>
+            )}
+          </section>
+
+          {/* ACHIEVEMENTS — real unlocks only */}
+          {(skillBadges.length > 0 || accolades.length > 0) && (
+            <section aria-labelledby="achievements-heading">
+              <SectionEyebrow>
+                <span id="achievements-heading">Achievements</span>
+              </SectionEyebrow>
+              <div className="mt-5 space-y-5">
+                {skillBadges.length > 0 && (
+                  <div>
+                    <p
+                      className="mb-2.5 font-mono uppercase text-muted-foreground"
+                      style={{ fontSize: "var(--text-data)" }}
+                    >
+                      Skill badges
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {skillBadges.map((badge) => (
+                        <span
+                          key={badge.skillType}
+                          className="angle-cut inline-flex items-center gap-1.5 border px-3 py-1.5 font-display text-label uppercase"
+                          style={{
+                            ...CONDENSED,
+                            color: "hsl(var(--silver))",
+                            borderColor: "hsl(var(--line))",
+                            backgroundColor: "hsl(var(--obsidian-2))",
+                          }}
+                          data-testid={`badge-skill-${badge.skillType}`}
+                        >
+                          <Target aria-hidden className="h-3 w-3" style={{ color: "hsl(var(--crimson))" }} />
+                          {badge.skillType.replace("_", " ")} · {badge.level}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {accolades.length > 0 && (
+                  <div>
+                    <p
+                      className="mb-2.5 font-mono uppercase text-muted-foreground"
+                      style={{ fontSize: "var(--text-data)" }}
+                    >
+                      Accolades
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {accolades.map((accolade) => (
+                        <span
+                          key={accolade.id}
+                          className="angle-cut inline-flex items-center gap-1.5 border px-3 py-1.5 font-display text-label uppercase"
+                          style={{
+                            ...CONDENSED,
+                            color: "hsl(var(--silver-hi))",
+                            borderColor: "hsl(var(--line))",
+                            backgroundColor: "hsl(var(--obsidian-2))",
+                          }}
+                          data-testid={`badge-accolade-${accolade.id}`}
+                        >
+                          <Trophy aria-hidden className="h-3 w-3" style={{ color: "hsl(var(--crimson))" }} />
+                          {accolade.title}
+                          {accolade.season ? ` (${accolade.season})` : ""}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
+
+          {/* COACH ENDORSEMENTS — human provenance */}
+          {endorsements.length > 0 && (
+            <section aria-labelledby="endorsements-heading" data-testid="section-public-endorsements">
+              <SectionEyebrow>
+                <span id="endorsements-heading">Coach Endorsements ({endorsements.length})</span>
+              </SectionEyebrow>
+              <div className="mt-5 grid gap-3">
+                {endorsements.map((e: any) => (
+                  <blockquote
+                    key={e.id}
+                    className="rounded-card border p-4"
+                    style={{ backgroundColor: "hsl(var(--obsidian-1))", borderColor: "hsl(var(--line))" }}
+                    data-testid={`public-endorsement-${e.id}`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <MessageSquareQuote
+                        aria-hidden
+                        className="mt-0.5 h-4 w-4 shrink-0"
+                        style={{ color: "hsl(var(--crimson))" }}
+                      />
+                      <div className="min-w-0">
+                        <p className="font-body text-sm leading-relaxed text-foreground/85">{e.content}</p>
+                        <footer
+                          className="mt-2 font-mono uppercase text-muted-foreground"
+                          style={{ fontSize: "var(--text-data)" }}
+                        >
+                          — {e.coachName}
+                          {e.skillCategory ? ` · ${String(e.skillCategory).replace("_", " ")}` : ""}
+                        </footer>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-sm text-muted-foreground">
-                        <span>{game.points} pts</span>
+                  </blockquote>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* HIGHLIGHT CLIPS */}
+          {highlights.length > 0 && (
+            <section aria-labelledby="highlights-heading" data-testid="section-public-highlights">
+              <SectionEyebrow>
+                <span id="highlights-heading">Highlight Clips ({highlights.length})</span>
+              </SectionEyebrow>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                {highlights.map((clip: any) => (
+                  <div
+                    key={clip.id}
+                    className="overflow-hidden rounded-card border"
+                    style={{ backgroundColor: "hsl(var(--obsidian-1))", borderColor: "hsl(var(--line))" }}
+                    data-testid={`public-highlight-${clip.id}`}
+                  >
+                    {clip.thumbnailUrl ? (
+                      <div className="relative aspect-video" style={{ backgroundColor: "hsl(var(--obsidian-2))" }}>
+                        <img
+                          src={clip.thumbnailUrl}
+                          alt={clip.title || "Highlight"}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div
+                            className="flex h-12 w-12 items-center justify-center rounded-full border"
+                            style={{
+                              backgroundColor: "hsl(var(--obsidian-0) / 0.8)",
+                              borderColor: "hsl(var(--line))",
+                            }}
+                          >
+                            <Play className="ml-0.5 h-5 w-5 text-foreground" />
+                          </div>
+                        </div>
                       </div>
-                      <div 
-                        className={cn(
-                          "w-10 h-10 rounded-lg flex items-center justify-center font-bold text-foreground bg-gradient-to-br text-sm",
-                          getGradeColor(game.grade || 'C')
-                        )}
+                    ) : (
+                      <div
+                        className="flex aspect-video items-center justify-center"
+                        style={{ backgroundColor: "hsl(var(--obsidian-2))" }}
                       >
-                        {game.grade || '—'}
+                        <Film className="h-10 w-10" style={{ color: "hsl(var(--silver-mute))" }} />
                       </div>
+                    )}
+                    <div className="p-3">
+                      <h3 className="truncate font-body text-sm font-semibold text-foreground">
+                        {clip.title || "Highlight Clip"}
+                      </h3>
+                      {clip.description && (
+                        <p className="mt-1 line-clamp-2 font-body text-xs text-muted-foreground">
+                          {clip.description}
+                        </p>
+                      )}
                     </div>
                   </div>
                 ))}
               </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                No games recorded yet
-              </div>
-            )}
-          </Card>
-        </div>
+            </section>
+          )}
 
-        {(skillBadges.length > 0 || accolades.length > 0) && (
-          <Card className="p-4 md:p-6 border-border bg-card/50">
-            <h2 className="text-lg font-bold font-display uppercase tracking-wide mb-4 flex items-center gap-2">
-              <Award className="w-5 h-5 text-accent" />
-              Achievements
-            </h2>
-            <div className="space-y-4">
-              {skillBadges.length > 0 && (
-                <div>
-                  <div className="text-xs text-muted-foreground uppercase mb-2">Skill Badges</div>
-                  <div className="flex flex-wrap gap-2">
-                    {skillBadges.map((badge) => (
-                      <Badge 
-                        key={badge.skillType} 
-                        variant="outline" 
-                        className="capitalize gap-1 border-accent/30"
-                        data-testid={`badge-skill-${badge.skillType}`}
-                      >
-                        <Target className="w-3 h-3" />
-                        {badge.skillType.replace('_', ' ')} ({badge.level})
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {accolades.length > 0 && (
-                <div>
-                  <div className="text-xs text-muted-foreground uppercase mb-2">Accolades</div>
-                  <div className="flex flex-wrap gap-2">
-                    {accolades.map((accolade) => (
-                      <Badge 
-                        key={accolade.id} 
-                        variant="outline" 
-                        className="gap-1 border-accent/30 text-accent"
-                        data-testid={`badge-accolade-${accolade.id}`}
-                      >
-                        <Trophy className="w-3 h-3" />
-                        {accolade.title}
-                        {accolade.season && <span className="text-muted-foreground">({accolade.season})</span>}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </Card>
-        )}
-
-        {endorsements.length > 0 && (
-          <div className="space-y-4" data-testid="section-public-endorsements">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <MessageSquareQuote className="w-5 h-5 text-accent" />
-              Coach Endorsements
-              <Badge className="bg-accent/10 text-accent border-accent/20 no-default-hover-elevate no-default-active-elevate">
-                {endorsements.length}
-              </Badge>
-            </h2>
-            <div className="grid gap-3">
-              {endorsements.map((e: any) => (
-                <Card key={e.id} className="p-4 bg-muted/50 border-border" data-testid={`public-endorsement-${e.id}`}>
-                  <div className="flex items-start gap-3">
-                    <Avatar className="w-8 h-8 border border-border">
-                      <AvatarFallback className="bg-accent/20 text-accent text-xs font-bold">
-                        {e.coachName?.split(" ").map((n: string) => n[0]).join("").slice(0, 2)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <span className="text-sm font-bold text-foreground">{e.coachName}</span>
-                        <Badge className="text-[10px] bg-muted/50 border-border no-default-hover-elevate no-default-active-elevate">
-                          {e.skillCategory?.replace('_', ' ')}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-foreground/70">{e.content}</p>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {highlights.length > 0 && (
-          <div className="space-y-4" data-testid="section-public-highlights">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <Film className="w-5 h-5 text-accent" />
-              Highlight Clips
-              <Badge className="bg-accent/10 text-accent border-accent/20 no-default-hover-elevate no-default-active-elevate">
-                {highlights.length}
-              </Badge>
-            </h2>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {highlights.map((clip: any) => (
-                <Card key={clip.id} className="overflow-hidden border-border bg-muted/50" data-testid={`public-highlight-${clip.id}`}>
-                  {clip.thumbnailUrl ? (
-                    <div className="relative aspect-video bg-card">
-                      <img src={clip.thumbnailUrl} alt={clip.title || 'Highlight'} className="w-full h-full object-cover" loading="lazy" decoding="async" />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-12 h-12 rounded-full bg-card/80 flex items-center justify-center border border-border">
-                          <Play className="w-5 h-5 text-white ml-0.5" />
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="aspect-video bg-gradient-to-br from-accent/10 to-blue-600/10 flex items-center justify-center">
-                      <Film className="w-10 h-10 text-muted-foreground/20" />
-                    </div>
-                  )}
-                  <div className="p-3">
-                    <h4 className="text-sm font-bold text-foreground truncate">{clip.title || 'Highlight Clip'}</h4>
-                    {clip.description && (
-                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{clip.description}</p>
-                    )}
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Button 
-            size="lg" 
-            onClick={handleCopyLink}
-            className="gap-2"
-            data-testid="button-copy-profile-link"
-          >
-            <Copy className="w-4 h-4" />
-            Copy Profile Link
-          </Button>
-          <Link href="/">
-            <Button 
-              variant="outline" 
-              size="lg" 
-              className="gap-2 w-full sm:w-auto"
-              data-testid="button-view-in-app"
-            >
-              View in Caliber
-              <ChevronRight className="w-4 h-4" />
+          {/* closing scout actions */}
+          <div className="flex flex-col justify-center gap-3 sm:flex-row">
+            <Button size="lg" onClick={handleCopyLink} className="gap-2" data-testid="button-copy-profile-link">
+              <Copy className="h-4 w-4" />
+              Copy Profile Link
             </Button>
-          </Link>
-        </div>
+            <Link href="/">
+              <Button variant="outline" size="lg" className="w-full gap-2 sm:w-auto" data-testid="button-view-in-app">
+                View in Caliber
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
 
-        {/* Coach Recommendations Section */}
-        <section className="py-12 border-t border-border">
-          <CoachRecommendations 
-            playerId={player.id}
-            isCoachViewing={false}
-            showWriteForm={false}
-          />
-        </section>
+          {/* Coach recommendations (existing recruiter-facing module) */}
+          <section className="border-t pt-10" style={{ borderColor: "hsl(var(--line))" }}>
+            <CoachRecommendations playerId={player.id} isCoachViewing={false} showWriteForm={false} />
+          </section>
+        </div>
       </main>
 
-      <footer className="relative z-10 border-t border-border py-6 text-center text-sm text-muted-foreground">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <div className="w-6 h-6 rounded bg-gradient-to-br from-accent to-blue-600 flex items-center justify-center">
-            <span className="text-white font-bold text-xs">C</span>
-          </div>
-          <span className="font-display font-bold">CALIBER</span>
+      <footer
+        className="relative z-10 border-t px-4 py-8 text-center"
+        style={{ borderColor: "hsl(var(--line))" }}
+      >
+        <div className="mb-2 flex items-center justify-center gap-2">
+          <CaliberLogo size={22} color="hsl(var(--crimson))" />
+          <span className="lean uppercase text-section" style={DISPLAY_BLACK}>
+            Caliber
+          </span>
         </div>
-        <p>The #1 App for Youth Athletes</p>
+        <p className="font-display text-label uppercase text-muted-foreground" style={CONDENSED}>
+          Every game, graded
+        </p>
       </footer>
 
       {/* Sticky "Join Caliber" CTA for non-authenticated visitors */}
       {!isAuthenticated && !ctaDismissed && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 p-3 pb-safe">
-          <div className="max-w-lg mx-auto flex items-center gap-3 px-4 py-3 rounded-xl bg-card border border-accent/30 shadow-2xl shadow-accent/10">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-blue-600 flex items-center justify-center shrink-0">
-              <span className="text-white font-bold text-xs">C</span>
-            </div>
-            <p className="flex-1 text-sm text-foreground">
+        <div className="pb-safe fixed bottom-0 left-0 right-0 z-50 p-3">
+          <div
+            className="mx-auto flex max-w-lg items-center gap-3 rounded-card border px-4 py-3 backdrop-blur-xl"
+            style={{
+              backgroundColor: "hsl(var(--obsidian-2) / 0.92)",
+              borderColor: "hsl(var(--line))",
+              boxShadow: "0 12px 40px hsl(var(--obsidian-0) / 0.7)",
+            }}
+          >
+            <CaliberLogo size={24} color="hsl(var(--crimson))" />
+            <p className="flex-1 font-body text-sm text-foreground">
               <span className="font-semibold">{player.name}</span> tracks stats on Caliber.{" "}
               <span className="text-muted-foreground">Get your own free profile.</span>
             </p>
             <a href="/api/login">
-              <Button size="sm" className="shrink-0 shadow-lg shadow-accent/25">
+              <Button size="sm" className="shrink-0" data-testid="button-join-cta">
                 Sign Up Free
               </Button>
             </a>
-            <button onClick={dismissCta} className="p-1 rounded-md hover:bg-muted transition-colors shrink-0">
-              <XIcon className="w-4 h-4 text-muted-foreground" />
+            <button
+              onClick={dismissCta}
+              aria-label="Dismiss"
+              className="shrink-0 rounded-md p-1 transition-colors hover:bg-muted"
+              data-testid="button-dismiss-cta"
+            >
+              <XIcon className="h-4 w-4 text-muted-foreground" />
             </button>
           </div>
         </div>
