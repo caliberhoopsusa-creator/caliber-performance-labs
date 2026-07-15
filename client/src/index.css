@@ -167,7 +167,7 @@
   --tier-strong: var(--grade-a);       /* 80-89 */
   --tier-solid: var(--grade-b);        /* 70-79 */
   --tier-developing: var(--grade-c);   /* 60-69 */
-  --tier-raw: var(--grade-d);          /* below 60 */
+  --tier-raw: var(--silver-mute); /* neutral, not punitive — every player starts RAW */          /* below 60 */
 
   --sidebar-accent: 211 100% 50%;
   --sidebar-accent-foreground: 0 0% 100%;
@@ -230,7 +230,7 @@
   --tier-strong: var(--grade-a);
   --tier-solid: var(--grade-b);
   --tier-developing: var(--grade-c);
-  --tier-raw: var(--grade-d);
+  --tier-raw: var(--silver-mute); /* neutral, not punitive — every player starts RAW */
 
   /* ── shadcn semantic tokens mapped onto the SIGNAL scales — every existing
      shadcn component inherits the language through these. Names kept, values
