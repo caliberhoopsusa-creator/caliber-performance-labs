@@ -152,6 +152,15 @@ console logos/trade dress, no fake trophies):
   element. The retro move is also the accessibility win.
 - **Loading screens, not spinners.** Skeletons carry rotating real tips
   ("TIP — verify your stat line within 24h so coaches see a ✓").
+- **Marketing surfaces are scrollytelling.** The landing (and future
+  marketing pages) tell ONE scroll-driven story — pinned scenes scrubbed by
+  scroll (anime.js `onScroll`), a single continuous gradient atmosphere that
+  evolves per scene, features as narrative moments instead of card grids.
+  Landing scene order: BOOT → THE GAME (stat line types out) → THE GRADE
+  (ring draws, grade stamps) → THE CLIMB (rank rises through leaderboard
+  rows) → THE SCOUT (interest meter fills) → THE ASK (coach offer + waitlist).
+  Reduced-motion = the same story as a static editorial layout. App surfaces
+  keep density discipline — scrollytelling never enters the product UI.
 
 ## 5. Signature components (the identity carriers)
 
