@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { useCountUp } from "./useCountUp";
 
 /**
  * StatNumber — THE signature SIGNAL component.
@@ -7,25 +7,6 @@ import { cn } from "@/lib/utils";
  * Condensed-caps label underneath. Respects prefers-reduced-motion by
  * rendering the final value statically.
  */
-
-const COUNT_UP_MS = 900;
-
-/** ease-out-expo — matches --ease-out-expo for JS-driven motion */
-function easeOutExpo(t: number): number {
-  return t >= 1 ? 1 : 1 - Math.pow(2, -10 * t);
-}
-
-function usePrefersReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduced(mq.matches);
-    const onChange = () => setReduced(mq.matches);
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
-  return reduced;
-}
 
 type Size = "sm" | "md" | "lg";
 
@@ -61,24 +42,7 @@ export function StatNumber({
   className,
   "data-testid": testId,
 }: StatNumberProps) {
-  const reduced = usePrefersReducedMotion();
-  const [display, setDisplay] = useState(reduced ? value : 0);
-
-  useEffect(() => {
-    if (reduced) {
-      setDisplay(value);
-      return;
-    }
-    let raf = 0;
-    const start = performance.now();
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / COUNT_UP_MS);
-      setDisplay(value * easeOutExpo(t));
-      if (t < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [value, reduced]);
+  const display = useCountUp(value);
 
   return (
     <div className={cn("flex flex-col", className)} data-testid={testId}>

@@ -9,12 +9,25 @@ interface WaitlistFormProps {
   source?: string;
   className?: string;
   align?: "start" | "center";
+  /**
+   * "metal" = the liquid-metal primary CTA (MetalFx — one per screen max);
+   * "quiet" = bordered secondary submit for supporting sections.
+   */
+  variant?: "metal" | "quiet";
+  /** Pre-check the coach checkbox (e.g. the coach-facing section). */
+  defaultCoach?: boolean;
 }
 
-export function WaitlistForm({ source = "landing", className, align = "start" }: WaitlistFormProps) {
+export function WaitlistForm({
+  source = "landing",
+  className,
+  align = "start",
+  variant = "metal",
+  defaultCoach = false,
+}: WaitlistFormProps) {
   const { toast } = useToast();
   const [email, setEmail] = useState("");
-  const [isCoach, setIsCoach] = useState(false);
+  const [isCoach, setIsCoach] = useState(defaultCoach);
   const [teamName, setTeamName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
@@ -49,7 +62,7 @@ export function WaitlistForm({ source = "landing", className, align = "start" }:
     return (
       <div
         className={cn(
-          "flex items-center gap-3 rounded-xl border border-accent/40 bg-accent/[0.07] px-5 py-4",
+          "flex items-center gap-3 rounded-card border border-accent/40 bg-accent/[0.07] px-5 py-4",
           align === "center" && "justify-center text-center mx-auto",
           className,
         )}
@@ -78,13 +91,18 @@ export function WaitlistForm({ source = "landing", className, align = "start" }:
           placeholder="you@email.com"
           aria-label="Email address"
           autoComplete="email"
-          className="flex-1 h-12 rounded-lg border border-border bg-card/60 px-4 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus:border-accent"
+          className="flex-1 h-12 rounded-input border border-border bg-card/60 px-4 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus:border-accent"
           data-testid="input-waitlist-email"
         />
         <button
           type="submit"
           disabled={submitting}
-          className="btn-chrome inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-lg px-6 font-semibold"
+          className={cn(
+            "inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-input px-6 font-semibold",
+            variant === "metal"
+              ? "btn-chrome"
+              : "border border-silver/30 bg-obsidian-2 text-silver-hi transition-colors hover:border-accent/60 hover:text-foreground disabled:opacity-60",
+          )}
           data-testid="button-waitlist-submit"
         >
           {submitting ? (
@@ -113,7 +131,7 @@ export function WaitlistForm({ source = "landing", className, align = "start" }:
           onChange={(e) => setTeamName(e.target.value)}
           placeholder="Team / program name"
           aria-label="Team or program name"
-          className="mt-2.5 w-full h-11 rounded-lg border border-border bg-card/60 px-4 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus:border-accent"
+          className="mt-2.5 w-full h-11 rounded-input border border-border bg-card/60 px-4 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus:border-accent"
           data-testid="input-waitlist-team"
         />
       )}

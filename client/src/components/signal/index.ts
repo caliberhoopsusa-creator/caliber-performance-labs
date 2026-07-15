@@ -10,3 +10,11 @@ export {
   type TelemetryItem,
 } from "./TelemetryStrip";
 export { GradeBadge, type GradeBadgeProps } from "./GradeBadge";
+export { OvrPlate, type OvrPlateProps } from "./OvrPlate";
+export {
+  AttributeBars,
+  type AttributeBarsProps,
+  type Attribute,
+} from "./AttributeBars";
+export { PlayerCard, type PlayerCardProps } from "./PlayerCard";
+export { useCountUp, usePrefersReducedMotion } from "./useCountUp";
