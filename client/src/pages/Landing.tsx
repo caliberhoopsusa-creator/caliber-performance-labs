@@ -6,21 +6,11 @@ import {
   useScroll,
   useSpring,
 } from "framer-motion";
-import {
-  BarChart3,
-  Video,
-  Award,
-  Trophy,
-  Target,
-  ClipboardList,
-  TrendingUp,
-  Check,
-} from "lucide-react";
 import { Link } from "wouter";
 import { CaliberLogo } from "@/components/CaliberLogo";
 import { WaitlistForm } from "@/components/WaitlistForm";
+import { ScrollyStory } from "@/components/scrolly";
 import {
-  SectionEyebrow,
   TelemetryStrip,
   PlayerCard,
   PlasmaField,
@@ -29,20 +19,20 @@ import {
 import { runBootTimeline, setInitial, stagger } from "@/lib/motion";
 
 /**
- * Landing — SIGNAL: Career Mode, Phase 1a.
- * Obsidian-first (crimson is earned): CSS atmosphere + film grain replace the
- * old full-screen ShaderGradient (−~1.1MB of JS on this path). One hero
- * moment: the leaned CALIBER wordmark + a labeled DEMO PlayerCard.
+ * Landing — SIGNAL: Career Mode.
+ * Obsidian-first (crimson is earned). One hero moment: the leaned CALIBER
+ * wordmark + a labeled DEMO PlayerCard over the plasma attract screen.
  * All color/type through tokens — no raw hex, no arbitrary font values.
  *
  * Hero boot: one anime.js timeline choreographs the attract-screen power-on
  * (SYSTEM ONLINE flicker → wordmark clip-path wipe → staggered rise → card
- * lands + OVR count-up → telemetry). framer-motion keeps the below-the-fold
- * scroll reveals — the two engines never share an element (DESIGN-LANGUAGE
- * §1.5). Reduced motion / timeline failure → the final static frame.
+ * lands + OVR count-up → telemetry). Below the fold, the page is ONE
+ * scroll-driven story — five scenes scrubbed by anime.js onScroll over a
+ * continuous gradient atmosphere (components/scrolly, DESIGN-LANGUAGE §4.5).
+ * framer-motion keeps only the scroll progress bar — the two engines never
+ * share an element (§1.5). Reduced motion / timeline failure → the final
+ * static frame everywhere.
  */
-
-const EASE = [0.16, 1, 0.3, 1] as const;
 
 /* Boot choreography — timeline positions (ms). Ends ≈1.44s (≤1.6s budget). */
 const BOOT = {
@@ -62,29 +52,6 @@ const WORDMARK_CLIP_SHOWN = "inset(-10% 0% -12% -6%)";
 /* ------------------------------------------------------------------ */
 /* primitives                                                          */
 /* ------------------------------------------------------------------ */
-
-function Rise({
-  children,
-  delay = 0,
-  className,
-}: {
-  children: React.ReactNode;
-  delay?: number;
-  className?: string;
-}) {
-  const reduced = useReducedMotion();
-  return (
-    <motion.div
-      className={className}
-      initial={reduced ? false : { opacity: 0, y: 22 }}
-      whileInView={reduced ? undefined : { opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-60px" }}
-      transition={{ duration: 0.6, ease: EASE, delay }}
-    >
-      {children}
-    </motion.div>
-  );
-}
 
 /** Angle-cut condensed-caps chip — the console status pill. */
 function AngleChip({
@@ -120,34 +87,6 @@ function AngleChip({
   );
 }
 
-/** Leaned display header — Archivo Expanded Black, the identity voice. */
-function DisplayHead({
-  children,
-  className = "",
-  lean = true,
-  "data-testid": testId,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  lean?: boolean;
-  "data-testid"?: string;
-}) {
-  return (
-    <h2
-      className={`${lean ? "lean " : ""}uppercase leading-none text-title text-foreground ${className}`}
-      style={{
-        fontFamily: "var(--font-display)",
-        fontWeight: 900,
-        fontStretch: "125%",
-        letterSpacing: "-0.01em",
-      }}
-      data-testid={testId}
-    >
-      {children}
-    </h2>
-  );
-}
-
 /* ------------------------------------------------------------------ */
 /* content                                                             */
 /* ------------------------------------------------------------------ */
@@ -166,71 +105,6 @@ const DEMO_PLAYER = {
     { label: "Rebounding", value: 74 },
   ],
 };
-
-const CAREER_STEPS = [
-  {
-    step: "01",
-    icon: ClipboardList,
-    title: "Log the game",
-    body: "Enter your stat line in under two minutes — or let the AI pull it from film.",
-  },
-  {
-    step: "02",
-    icon: BarChart3,
-    title: "Get your grade",
-    body: "The engine returns a position-weighted A–F with specific feedback. Your Caliber Score moves like an overall rating.",
-  },
-  {
-    step: "03",
-    icon: TrendingUp,
-    title: "Get seen",
-    body: "Every grade builds a verified, season-long record — the profile a college program can actually trust.",
-  },
-];
-
-const FEATURES = [
-  {
-    icon: BarChart3,
-    title: "Performance Grades",
-    body: "Position-weighted A–F grade after every game, with the why behind each mark.",
-    span: "sm:col-span-2",
-    hero: true,
-  },
-  {
-    icon: Video,
-    title: "AI Video Analysis",
-    body: "Upload footage — the engine pulls your stat line from film.",
-    span: "",
-    hero: false,
-  },
-  {
-    icon: Award,
-    title: "50+ Skill Badges",
-    body: "Progressive badges unlock like achievements — earned from real games only.",
-    span: "",
-    hero: false,
-  },
-  {
-    icon: Trophy,
-    title: "Leaderboards",
-    body: "Local and global boards update as games post. Climb them.",
-    span: "",
-    hero: false,
-  },
-  {
-    icon: Target,
-    title: "Get Scouted",
-    body: "Flip 'Open to Opportunities' and surface to college programs.",
-    span: "",
-    hero: false,
-  },
-];
-
-const COACH_POINTS = [
-  "A team dashboard with every player's grades and trends",
-  "Game verification, lineup analytics, and practice tracking",
-  "AI scouting reports you can share with college recruiters",
-];
 
 /* ------------------------------------------------------------------ */
 /* page                                                                */
@@ -334,8 +208,10 @@ export default function Landing() {
       : []),
   ];
 
+  /* overflow-x-clip (not -hidden) on the root: clips horizontal overhang
+     WITHOUT creating a scroll container — position:sticky scenes need this. */
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground">
+    <div className="relative min-h-screen overflow-x-clip bg-background text-foreground">
       <style>{`
         /* Metal CTA (MetalFx) — the ONE liquid-metal primary per screen. */
         .btn-chrome {
@@ -370,9 +246,6 @@ export default function Landing() {
             radial-gradient(56% 42% at 50% 8%, hsl(var(--crimson-deep) / 0.34), transparent 70%),
             radial-gradient(30% 24% at 50% 2%, hsl(var(--crimson) / 0.22), transparent 75%),
             radial-gradient(44% 40% at 82% 52%, hsl(var(--crimson-deep) / 0.14), transparent 72%);
-        }
-        .cta-atmosphere {
-          background: radial-gradient(60% 80% at 50% 110%, hsl(var(--crimson-deep) / 0.28), transparent 65%);
         }
 
         /* Silver metal sheen for the wordmark — token-only. */
@@ -557,259 +430,9 @@ export default function Landing() {
           </div>
         </section>
 
-        {/* CAREER MODE — the narrative */}
-        <section
-          className="border-t px-5 py-section sm:px-8"
-          style={{ borderColor: "hsl(var(--line))" }}
-          data-testid="section-how-it-works"
-        >
-          <div className="mx-auto max-w-6xl">
-            <Rise className="mb-12 max-w-2xl">
-              <SectionEyebrow>Career Mode</SectionEyebrow>
-              <DisplayHead className="mt-6">
-                Get scouted like a{" "}
-                <span style={{ color: "hsl(var(--crimson))" }}>video game</span>.
-              </DisplayHead>
-              <p className="mt-5 max-w-xl font-body text-base leading-relaxed text-muted-foreground">
-                Log the game → get your grade → get seen. The video-game feel,
-                built on real numbers — nothing on your record is invented.
-              </p>
-            </Rise>
-            <div className="grid gap-4 md:grid-cols-3">
-              {CAREER_STEPS.map((s, i) => (
-                <Rise key={s.step} delay={i * 0.08}>
-                  <div
-                    className="angle-cut gloss relative h-full border p-6"
-                    style={{
-                      backgroundColor: "hsl(var(--obsidian-1))",
-                      borderColor: "hsl(var(--line))",
-                    }}
-                  >
-                    <span
-                      aria-hidden
-                      className="lean absolute -top-2 right-3 select-none leading-none text-stat"
-                      style={{
-                        fontFamily: "var(--font-display)",
-                        fontWeight: 900,
-                        fontStretch: "125%",
-                        color: "hsl(var(--silver) / 0.07)",
-                      }}
-                    >
-                      {s.step}
-                    </span>
-                    <span className="mb-5 grid h-10 w-10 place-items-center rounded-input bg-accent/10 text-accent">
-                      <s.icon className="h-5 w-5" />
-                    </span>
-                    <h3
-                      className="uppercase text-section text-foreground"
-                      style={{
-                        fontFamily: "var(--font-display)",
-                        fontWeight: 800,
-                        fontStretch: "110%",
-                      }}
-                      data-testid={`step-title-${i + 1}`}
-                    >
-                      {s.title}
-                    </h3>
-                    <p className="mt-2.5 font-body text-sm leading-relaxed text-muted-foreground">
-                      {s.body}
-                    </p>
-                  </div>
-                </Rise>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* THE PLATFORM — what the engine does */}
-        <section
-          id="features"
-          className="border-t px-5 py-section sm:px-8"
-          style={{ borderColor: "hsl(var(--line))" }}
-        >
-          <div className="mx-auto max-w-6xl">
-            <Rise className="mb-12 max-w-2xl">
-              <SectionEyebrow>The Platform</SectionEyebrow>
-              <DisplayHead className="mt-6">Built to measure everything.</DisplayHead>
-            </Rise>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {FEATURES.map((f, i) => (
-                <Rise key={f.title} delay={i * 0.05} className={f.span}>
-                  <div
-                    className="group relative h-full rounded-card border p-6 transition-transform duration-200 hover:-translate-y-0.5 motion-reduce:transition-none"
-                    style={{
-                      backgroundColor: "hsl(var(--obsidian-1))",
-                      borderColor: "hsl(var(--line))",
-                    }}
-                    data-testid={`feature-${f.title.toLowerCase().replace(/\s+/g, "-")}`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <span className="grid h-10 w-10 place-items-center rounded-input bg-accent/10 text-accent">
-                        <f.icon className="h-5 w-5" />
-                      </span>
-                      <span
-                        className="font-mono text-muted-foreground"
-                        style={{ fontSize: "var(--text-data)" }}
-                      >
-                        0{i + 1}
-                      </span>
-                    </div>
-                    <h3
-                      className={`mt-5 uppercase text-foreground ${f.hero ? "text-title" : "text-section"}`}
-                      style={{
-                        fontFamily: "var(--font-display)",
-                        fontWeight: f.hero ? 900 : 800,
-                        fontStretch: f.hero ? "125%" : "110%",
-                      }}
-                    >
-                      {f.title}
-                    </h3>
-                    <p className="mt-2 max-w-sm font-body text-sm leading-relaxed text-muted-foreground">
-                      {f.body}
-                    </p>
-                  </div>
-                </Rise>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* FOR COACHES — the honest demo-first offer */}
-        <section
-          className="border-t px-5 py-section sm:px-8"
-          style={{ borderColor: "hsl(var(--line))" }}
-          data-testid="section-coaches"
-        >
-          <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-            <div>
-              <Rise>
-                <SectionEyebrow>For Coaches</SectionEyebrow>
-                <DisplayHead className="mt-6">
-                  Send a stat sheet.{" "}
-                  <span style={{ color: "hsl(var(--crimson))" }}>
-                    Get back report cards.
-                  </span>
-                </DisplayHead>
-              </Rise>
-              <Rise delay={0.08}>
-                <p className="mt-5 max-w-xl font-body text-base leading-relaxed text-muted-foreground">
-                  Want proof before you commit ten minutes? Send the stat sheet
-                  from your last game and we'll return a graded report card for
-                  every player within a day — free, no signup. We're early, and
-                  that's the opportunity: founding Montana programs get free
-                  access, set up personally by the founder, and a direct line to
-                  shape what gets built next.
-                </p>
-              </Rise>
-              <Rise delay={0.14}>
-                <ul className="mt-6 space-y-3">
-                  {COACH_POINTS.map((point) => (
-                    <li key={point} className="flex items-start gap-3 font-body text-sm text-foreground/85">
-                      <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-accent/12 text-accent">
-                        <Check className="h-3 w-3" />
-                      </span>
-                      {point}
-                    </li>
-                  ))}
-                </ul>
-              </Rise>
-            </div>
-            <Rise delay={0.1}>
-              <div
-                className="gloss rounded-card border p-6 sm:p-7"
-                style={{
-                  backgroundColor: "hsl(var(--obsidian-1))",
-                  borderColor: "hsl(var(--line))",
-                }}
-              >
-                <p
-                  className="font-display text-label uppercase text-muted-foreground"
-                  style={{ fontWeight: 500, fontStretch: "70%" }}
-                >
-                  Founding team access · Free
-                </p>
-                <p className="mt-3 font-body text-sm leading-relaxed text-muted-foreground">
-                  Drop your email and we'll reach out to set your program up —
-                  or just reply to our email with a stat sheet.
-                </p>
-                <WaitlistForm
-                  source="landing-coaches"
-                  variant="quiet"
-                  defaultCoach
-                  className="mt-5"
-                />
-              </div>
-            </Rise>
-          </div>
-        </section>
-
-        {/* FINAL CTA */}
-        <section
-          className="relative isolate overflow-hidden border-t px-5 py-section text-center sm:px-8"
-          style={{ borderColor: "hsl(var(--line))" }}
-          id="cta"
-        >
-          <div aria-hidden className="cta-atmosphere absolute inset-0 -z-10" />
-          <div aria-hidden className="grain-overlay -z-10" />
-          <div className="mx-auto max-w-3xl">
-            <Rise>
-              <SectionEyebrow as="div" className="justify-center">
-                Founding Class
-              </SectionEyebrow>
-              <h2
-                className="lean mt-7 uppercase leading-none text-hero"
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontWeight: 900,
-                  fontStretch: "125%",
-                  letterSpacing: "-0.02em",
-                  color: "hsl(var(--silver-hi))",
-                }}
-              >
-                Know your{" "}
-                <span
-                  style={{
-                    color: "hsl(var(--crimson))",
-                    textShadow: "0 0 40px hsl(var(--crimson-glow))",
-                  }}
-                >
-                  caliber
-                </span>
-                .
-              </h2>
-              <p className="mx-auto mt-6 max-w-xl font-body text-base leading-relaxed text-muted-foreground">
-                Be one of the first athletes on the platform. Log a game, get
-                graded, and start climbing — free.
-              </p>
-              <div className="mt-9 flex flex-col items-center gap-4">
-                <a
-                  href="#join"
-                  className="angle-cut inline-flex h-12 items-center justify-center border px-7 font-display uppercase transition-colors hover:border-accent/60"
-                  style={{
-                    fontWeight: 800,
-                    fontStretch: "110%",
-                    fontSize: "var(--text-body)",
-                    letterSpacing: "0.06em",
-                    color: "hsl(var(--silver-hi))",
-                    borderColor: "hsl(var(--silver) / 0.3)",
-                    backgroundColor: "hsl(var(--obsidian-2))",
-                  }}
-                  data-testid="button-cta-join"
-                >
-                  Join the founding class
-                </a>
-                <Link
-                  href="/pricing"
-                  className="font-display text-label uppercase text-muted-foreground transition-colors hover:text-foreground"
-                  style={{ fontWeight: 500, fontStretch: "70%" }}
-                  data-testid="button-cta-pricing"
-                >
-                  View pricing →
-                </Link>
-              </div>
-            </Rise>
-          </div>
-        </section>
+        {/* BELOW THE FOLD — one scroll-driven story (five scrubbed scenes
+            over a continuous gradient atmosphere). See components/scrolly. */}
+        <ScrollyStory reduced={!!reduced} />
       </main>
 
       {/* FOOTER — the honest line stays */}

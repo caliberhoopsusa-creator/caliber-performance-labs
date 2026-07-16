@@ -303,7 +303,13 @@
     @apply bg-background text-foreground antialiased selection:bg-primary/30;
     font-family: var(--font-body);
     font-size: clamp(14px, 0.95rem + 0.2vw, 18px);
+    /* clip, not hidden: overflow-x hidden makes body a scroll container,
+       which silently kills EVERY position:sticky descendant (the landing
+       scrollytelling scenes pin with sticky). `clip` clips the same
+       overhang without creating a scroll box; `hidden` stays as the
+       fallback for engines without clip support. */
     overflow-x: hidden;
+    overflow-x: clip;
     overscroll-behavior-x: none;
   }
 
@@ -1374,7 +1380,9 @@
   }
   
   html, body {
+    /* clip over hidden — keep position:sticky alive (see @layer base note) */
     overflow-x: hidden;
+    overflow-x: clip;
     max-width: 100vw;
   }
   

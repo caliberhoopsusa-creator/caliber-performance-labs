@@ -1,5 +1,5 @@
-import { createTimeline, stagger, utils } from "animejs";
-import type { Timeline } from "animejs";
+import { createTimeline, onScroll, stagger, utils } from "animejs";
+import type { ScrollObserver, Timeline } from "animejs";
 
 const animeSet = utils.set;
 
@@ -62,15 +62,19 @@ export interface CompositorTween extends CompositorProps {
   ease?: string;
 }
 
-export type BootTarget = HTMLElement | null | undefined;
+/** Timeline targets — HTML or SVG (score rings scrub stroke-dashoffset). */
+export type BootTarget = HTMLElement | SVGElement | null | undefined;
 
 type AnimeParams = Parameters<typeof animeSet>[1];
 
 function toElements(
   target: BootTarget | readonly BootTarget[],
-): HTMLElement[] {
+): (HTMLElement | SVGElement)[] {
   const list = Array.isArray(target) ? target : [target];
-  return list.filter((el): el is HTMLElement => el instanceof HTMLElement);
+  return list.filter(
+    (el): el is HTMLElement | SVGElement =>
+      el instanceof HTMLElement || el instanceof SVGElement,
+  );
 }
 
 export function prefersReducedMotion(): boolean {
@@ -94,11 +98,12 @@ export function setInitial(
 }
 
 /** Clear every inline style a boot may have set — the final, visible state. */
-function restoreFinalState(els: readonly HTMLElement[]): void {
+function restoreFinalState(els: ReadonlyArray<HTMLElement | SVGElement>): void {
   for (const el of els) {
     el.style.removeProperty("opacity");
     el.style.removeProperty("transform");
     el.style.removeProperty("clip-path");
+    el.style.removeProperty("stroke-dashoffset");
   }
 }
 
@@ -155,4 +160,125 @@ export function runBootTimeline({
     tl?.cancel();
     restoreFinalState(els);
   };
+}
+
+/* ------------------------------------------------------------------ */
+/* scroll scrub — anime.js onScroll (scrollytelling scenes)            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Scroll-scrub discipline (DESIGN-LANGUAGE §4.5 — marketing scrollytelling):
+ * - The timeline is LINKED to scroll (`sync`), never time — scrolling back
+ *   scrubs it back. Pinning is CSS `position: sticky` only; no scroll-jacking.
+ * - Every tween uses `[from, to]` tuples so the JSX renders the FINAL state:
+ *   reduced motion, an observer failure, or no-JS all resolve to the finished
+ *   editorial layout — content is never stranded hidden.
+ * - Same compositor-only vocabulary as boots (+ `strokeDashoffset` for SVG
+ *   line drawing, which is paint-only on the SVG layer).
+ */
+
+export interface ScrollScrubOptions {
+  /**
+   * The tall scene wrapper whose traversal through the viewport drives
+   * progress (the element the sticky stage lives inside).
+   */
+  driver: BootTarget;
+  /** Every element the scrub styles — restored to final state on cleanup/failure. */
+  targets: ReadonlyArray<BootTarget>;
+  /** Choreograph the timeline. Runs only when motion is allowed. */
+  build: (tl: Timeline) => void;
+  /** anime.js threshold "container target" — default: sticky engages. */
+  enter?: string;
+  /** anime.js threshold "container target" — default: sticky releases. */
+  leave?: string;
+  /** true = hard-linked scrub · number = smoothed follow (see anime docs). */
+  sync?: boolean | number;
+  /** Runs when the scrub is skipped (reduced motion) or fails. */
+  onSkip?: () => void;
+}
+
+/**
+ * Link a timeline to an element's scroll traversal. Returns a cleanup
+ * function suited to `useLayoutEffect`. Under `prefers-reduced-motion` the
+ * build never runs — the static final state (already in the JSX) stands.
+ */
+export function runScrollScrub({
+  driver,
+  targets,
+  build,
+  enter = "top top",
+  leave = "bottom bottom",
+  sync = true,
+  onSkip,
+}: ScrollScrubOptions): () => void {
+  const els = toElements(targets);
+
+  if (!driver || prefersReducedMotion()) {
+    onSkip?.();
+    return () => {};
+  }
+
+  let observer: ScrollObserver | undefined;
+  let tl: Timeline | undefined;
+  try {
+    observer = onScroll({ target: driver, enter, leave, sync });
+    tl = createTimeline({
+      autoplay: observer,
+      defaults: { ease: "linear", duration: DEFAULT_DURATION_MS },
+    });
+    build(tl);
+  } catch (error) {
+    observer?.revert();
+    tl?.cancel();
+    restoreFinalState(els);
+    onSkip?.();
+    console.error("[motion] scroll scrub failed — rendered final state", error);
+    return () => {};
+  }
+
+  return () => {
+    observer?.revert();
+    tl?.cancel();
+    restoreFinalState(els);
+  };
+}
+
+/**
+ * Scrub a numeric text readout (e.g. a rank counter). The element's JSX
+ * should render the FINAL value; the tween rewrites `textContent` frame by
+ * frame while scrubbing. Rounded — pair with `tabular-nums`.
+ */
+export function addTextCounter(
+  tl: Timeline,
+  el: BootTarget,
+  {
+    from,
+    to,
+    duration,
+    at,
+    format = (n) => String(n),
+  }: {
+    from: number;
+    to: number;
+    duration: number;
+    at: number;
+    format?: (n: number) => string;
+  },
+): void {
+  if (!el) return;
+  const state = { value: from };
+  el.textContent = format(from);
+  tl.add(
+    state,
+    {
+      value: to,
+      duration,
+      ease: "linear",
+      modifier: utils.round(0),
+      onUpdate: () => {
+        el.textContent = format(state.value);
+      },
+    },
+    at,
+  );
 }
