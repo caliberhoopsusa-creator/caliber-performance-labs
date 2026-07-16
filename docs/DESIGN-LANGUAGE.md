@@ -184,6 +184,18 @@ console logos/trade dress, no fake trophies):
 | `GuideCard` empty states | Existing pattern — every list/table empty state uses it. |
 | Share card | Already ships the language (obsidian gradient, tier ring, wordmark) — it is the reference artifact for "how CALIBER looks." |
 
+## 5.5 Brand continuity (operator direction 2026-07-16)
+
+**The platform is the same world as the landing** — a visitor who converts
+must never feel like they walked into a different product. Concretely, every
+app surface carries: the token scales (zero off-system colors — audit with a
+grep for raw hex + stock Tailwind palette classes), the three type voices,
+angle-cut chips on labels/status, the grade/tier ramp everywhere grades
+appear, telemetry mono for machine truth, and one restrained identity moment
+per screen (a chrome nameplate accent, an OvrPlate, a leaned heading). The
+landing's *volume* (plasma, scrollytelling, boot timelines) stays marketing-
+only; its *materials* go everywhere.
+
 ## 6. Rollout (phases = PR-sized, each ends with /design-review + screenshots at 320/768/1024/1440)
 
 **Phase 0 — Foundation (everything depends on this)**
