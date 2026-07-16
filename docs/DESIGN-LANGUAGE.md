@@ -123,7 +123,13 @@ from the app shell. Exception — **"Paper mode"**: print/PDF/export surfaces
   Shadows only under floating layers (menus, dialogs), and they're black, soft, low.
 - Grain: the film-grain overlay (HeroCanvas heritage) is a marketing-surface
   signature (landing, share cards, public profile hero). Never on dense app UI.
-- MetalFx (liquid-metal buttons) = **primary CTAs only** — one per screen max.
+- **Liquid metal / chrome is a core identity material** (operator direction
+  2026-07-16): the chrome wordmark, the plasma field's silver band, metallic
+  sheens on identity moments (score rings, scene accents in the scrollytelling
+  story). Keep it in play — it IS the "chrome, old video game" vibe.
+  As a *button* treatment, MetalFx stays for special moments (max one per
+  screen); the default CTA is the angle-cut console button, which meshes
+  better with the condensed display type.
 
 ## 4.5 The Console Layer (what makes it a game)
 
