@@ -3234,6 +3234,7 @@ export async function registerRoutes(
         advancedMetrics,
         newRecords,
         completedGoals,
+        awardedBadges,
         improvementTips,
         streakMultiplier: activeStreakMultiplier
       });
