@@ -18,4 +18,9 @@ export {
 } from "./AttributeBars";
 export { PlayerCard, type PlayerCardProps } from "./PlayerCard";
 export { PlasmaField, type PlasmaFieldProps } from "./PlasmaField";
+export {
+  AchievementToastHost,
+  pushAchievementToast,
+  type AchievementToastEvent,
+} from "./AchievementToast";
 export { useCountUp, usePrefersReducedMotion } from "./useCountUp";
