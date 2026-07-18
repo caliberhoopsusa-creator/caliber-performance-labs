@@ -44,7 +44,10 @@
 :root {
   /* Three voices only — the legacy display/body/condensed/serif families are
      deleted; the serif/editorial vars re-point to Geist so nothing breaks. */
-  --font-display: 'Archivo', 'Geist', sans-serif;
+  /* operator 2026-07-17: Apple-clean display voice (Geist). Archivo demoted to
+     --font-athletic — scoreboard numerals, OvrPlate digits, rank digits, ticker labels. */
+  --font-display: 'Geist', sans-serif;
+  --font-athletic: 'Archivo', 'Geist', sans-serif;
   --font-body: 'Geist', sans-serif;
   --font-sans: 'Geist', sans-serif;
   --font-serif: 'Geist', sans-serif;

@@ -51,9 +51,16 @@ share card) is the storefront. It gets flagship polish before anything else.
 
 | Voice | Family | Usage | Weights/axes |
 |---|---|---|---|
-| **Display** | **Archivo** (variable) | Page titles, hero numerals, scoreboard stats, section eyebrows | Width 62–125 + weight 100–900 from ONE variable file. Expanded Black (`wdth 125 / wght 900`, tight tracking, uppercase) for hero numerals & titles; Condensed Medium (`wdth 70 / wght 500`, `+0.18em` tracking, uppercase) for eyebrows/labels — the "jersey & ticker" voice. |
-| **UI / Body** | **Geist** (keep) | All interface text, forms, paragraphs, tables | 400 / 500 / 600 only. `font-variant-numeric: tabular-nums` on every stat table. |
-| **Data / Telemetry** | **JetBrains Mono** (keep) | Timestamps, stat readouts, jersey #s, "verified" hashes, HeroCanvas | 400 / 500 only. The "machine truth" voice — used sparingly, it *means* telemetry. |
+| **Display** | **Geist** (`--font-display`) | Headlines, page titles, marketing copy — "Apple marketing" clean (operator 2026-07-17): large sizes, 500–700 weight, tight tracking (−0.01 to −0.03em), **sentence case on marketing surfaces** (all-caps only for micro-labels), hierarchy through size/weight/space, not shouting. | 400–700 (900 sparingly) |
+| **Athletic** | **Archivo** (`--font-athletic`, variable) | ONLY scoreboard numerals + jersey/ticker micro-labels: OvrPlate digits, StatNumber, rank digits, condensed-caps eyebrow chips. The game DNA inside the product — never marketing headlines. | Expanded Black for digits; Condensed Medium caps for micro-labels |
+| **UI / Body** | **Geist** | All interface text, forms, paragraphs, tables | 400 / 500 / 600. `tabular-nums` on every stat table. |
+| **Data / Telemetry** | **JetBrains Mono** | Timestamps, stat readouts, verified hashes | 400 / 500. The "machine truth" voice — sparing. |
+
+**Material & color rebalance (operator 2026-07-17):** on marketing surfaces,
+**liquid metal / chrome leads** — metal sheens on headlines and the nameplate,
+chrome glows, metal CTAs — and **crimson demotes to a rare accent** (the CTA,
+a payoff word, live states). "Not just all red." Obsidian + silver/chrome is
+the field; red is the punctuation.
 
 **Delete:** Sora, Outfit, Inter, Barlow Condensed, Instrument Serif.
 Archivo replaces Barlow Condensed (condensed labels) *and* Outfit/Sora
