@@ -49,7 +49,7 @@ export function StatNumber({
       <span
         className="leading-none tracking-tight tabular-nums"
         style={{
-          fontFamily: "var(--font-display)",
+          fontFamily: "var(--font-athletic)",
           fontWeight: 900,
           fontStretch: "125%",
           fontSize: SIZE_STYLES[size].fontSize,

@@ -74,29 +74,38 @@ export function ScrollScene({
   );
 }
 
-/** Leaned display headline — the scene-resolution voice (Archivo Expanded Black). */
+/**
+ * Scene-resolution headline — Geist, sentence case, metal-led (operator
+ * 2026-07-17: Apple-marketing-clean direction). Defaults to the chrome sheen
+ * (`METAL_TEXT_STYLE`) so plain text-node children read as liquid metal;
+ * a child span can still override with an explicit crimson color for the
+ * one payoff word a scene earns. `lean` (the console skew) now defaults OFF
+ * — reserved for genuine hero/climax moments, not every scene headline.
+ */
 export function SceneHead({
   children,
   className = "",
-  lean = true,
+  lean = false,
+  metal = true,
   headRef,
   "data-testid": testId,
 }: {
   children: ReactNode;
   className?: string;
   lean?: boolean;
+  metal?: boolean;
   headRef?: Ref<HTMLHeadingElement>;
   "data-testid"?: string;
 }) {
   return (
     <h3
       ref={headRef}
-      className={`${lean ? "lean " : ""}uppercase leading-none text-title text-foreground ${className}`}
+      className={`${lean ? "lean " : ""}leading-none text-title ${className}`}
       style={{
         fontFamily: "var(--font-display)",
-        fontWeight: 900,
-        fontStretch: "125%",
-        letterSpacing: "-0.01em",
+        fontWeight: 700,
+        letterSpacing: "-0.02em",
+        ...(metal ? METAL_TEXT_STYLE : { color: "hsl(var(--foreground))" }),
       }}
       data-testid={testId}
     >

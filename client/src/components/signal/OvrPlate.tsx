@@ -64,7 +64,7 @@ export function OvrPlate({
       <span
         className="leading-none tabular-nums"
         style={{
-          fontFamily: "var(--font-display)",
+          fontFamily: "var(--font-athletic)",
           fontWeight: 900,
           fontStretch: "125%",
           fontSize: s.numeral,

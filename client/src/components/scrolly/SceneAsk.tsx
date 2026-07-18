@@ -4,7 +4,7 @@ import { Link } from "wouter";
 import { WaitlistForm } from "@/components/WaitlistForm";
 import { SectionEyebrow } from "@/components/signal";
 import { runScrollScrub, stagger } from "@/lib/motion";
-import { SceneHead } from "./shared";
+import { METAL_TEXT_STYLE, SceneHead } from "./shared";
 
 /**
  * Scene 05 — THE ASK. The story's conclusion: the honest coach offer and the
@@ -122,16 +122,18 @@ export function SceneAsk({ reduced }: { reduced: boolean }) {
           </div>
         </div>
 
-        {/* the final beat — the story ends where the player starts */}
+        {/* the final beat — the story ends where the player starts. The one
+            genuine hero moment left on the page: chrome sheen carries the
+            line, crimson lands only on the payoff word (operator 2026-07-17
+            — "not just all red"). */}
         <div data-ask-rise className="mt-24 text-center sm:mt-28">
           <h2
-            className="lean mx-auto uppercase leading-none text-hero"
+            className="lean mx-auto leading-none text-hero"
             style={{
               fontFamily: "var(--font-display)",
               fontWeight: 900,
-              fontStretch: "125%",
               letterSpacing: "-0.02em",
-              color: "hsl(var(--silver-hi))",
+              ...METAL_TEXT_STYLE,
             }}
           >
             Know your{" "}

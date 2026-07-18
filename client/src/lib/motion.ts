@@ -1,4 +1,4 @@
-import { createTimeline, onScroll, stagger, utils } from "animejs";
+import { animate, createTimeline, onScroll, stagger, utils } from "animejs";
 import type { ScrollObserver, Timeline } from "animejs";
 
 const animeSet = utils.set;
@@ -158,6 +158,55 @@ export function runBootTimeline({
 
   return () => {
     tl?.cancel();
+    restoreFinalState(els);
+  };
+}
+
+export interface PulseLoopOptions {
+  target: BootTarget;
+  /** Compositor-only props, `[from, to]` tuples — the loop alternates. */
+  props: CompositorProps;
+  /** One half-cycle in ms (alternate loop → full breath = 2×duration). */
+  duration: number;
+  /** Delay before the first cycle (e.g. wait out a boot timeline). */
+  delay?: number;
+}
+
+/**
+ * Run an infinite, alternating pulse (a breathing glow, a slow shimmer).
+ * Compositor-only, `inOutSine`. Under `prefers-reduced-motion` nothing runs —
+ * the element's static JSX state (tuned to mid-intensity) stands. Returns a
+ * cleanup function that cancels the loop and restores the static state.
+ */
+export function runPulseLoop({
+  target,
+  props,
+  duration,
+  delay = 0,
+}: PulseLoopOptions): () => void {
+  const els = toElements(target);
+  if (els.length === 0 || prefersReducedMotion()) {
+    return () => {};
+  }
+
+  let anim: ReturnType<typeof animate> | undefined;
+  try {
+    anim = animate(els, {
+      ...(props as AnimeParams),
+      duration,
+      delay,
+      loop: true,
+      alternate: true,
+      ease: "inOutSine",
+    });
+  } catch (error) {
+    restoreFinalState(els);
+    console.error("[motion] pulse loop failed — rendered static state", error);
+    return () => {};
+  }
+
+  return () => {
+    anim?.cancel();
     restoreFinalState(els);
   };
 }

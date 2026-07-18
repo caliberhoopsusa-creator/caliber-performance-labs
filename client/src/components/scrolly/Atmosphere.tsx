@@ -9,26 +9,30 @@ import { runScrollScrub } from "@/lib/motion";
  * camera move, never a room change. Gradients themselves are static paint;
  * only opacity/transform animate (compositor rule). Grain stays throughout.
  *
- * Scene → light script (fractions of the full story traversal):
- *   THE GAME   cold obsidian, one faint ember          (0 → 0.26)
- *   THE GRADE  a teal grade-light blooms center        (0.14 → 0.44)
- *   THE CLIMB  crimson pools deepen from below         (0.36 → 0.68)
- *   THE SCOUT  the crimson lifts, hot and high         (0.60 → 0.86)
- *   THE ASK    calm — one deep pool under the offer    (0.80 → 1)
+ * Scene → light script (fractions of the full story traversal). Operator
+ * 2026-07-17 (metal-led / "not just all red"): graphite and silver carry the
+ * atmosphere throughout — crimson only lifts at THE SCOUT, the one narrative
+ * peak, and stays a whisper everywhere else.
+ *   THE GAME   cold obsidian, one faint silver wash     (0 → 0.26)
+ *   THE GRADE  a teal grade-light blooms center         (0.14 → 0.44)
+ *   THE CLIMB  graphite pools rise from below            (0.36 → 0.68)
+ *   THE SCOUT  the narrative peak — crimson lifts, high (0.60 → 0.86)
+ *   THE ASK    calm graphite — one faint ember at rest   (0.80 → 1)
  */
 
 /** Story-progress scale — positions below read as fractions of 1000. */
 const T = 1000;
 
 const LAYER_PAINT = {
-  game: "radial-gradient(52% 40% at 22% 18%, hsl(var(--silver-mute) / 0.10), transparent 70%), radial-gradient(24% 18% at 74% 62%, hsl(var(--crimson-deep) / 0.14), transparent 75%)",
+  game: "radial-gradient(52% 40% at 22% 18%, hsl(var(--silver-mute) / 0.12), transparent 70%), radial-gradient(24% 18% at 74% 62%, hsl(var(--crimson-deep) / 0.07), transparent 75%)",
   grade:
     "radial-gradient(46% 40% at 50% 42%, hsl(var(--grade-b) / 0.13), transparent 70%), radial-gradient(60% 50% at 50% 90%, hsl(var(--obsidian-3) / 0.8), transparent 75%)",
   climb:
-    "radial-gradient(54% 46% at 18% 86%, hsl(var(--crimson-deep) / 0.30), transparent 70%), radial-gradient(44% 40% at 86% 72%, hsl(var(--crimson-deep) / 0.20), transparent 72%)",
+    "radial-gradient(54% 46% at 18% 86%, hsl(var(--silver-mute) / 0.18), transparent 70%), radial-gradient(44% 40% at 86% 72%, hsl(var(--crimson-deep) / 0.10), transparent 72%)",
+  /* the one narrative peak — crimson is allowed to lift here, still capped */
   scout:
-    "radial-gradient(56% 42% at 50% 12%, hsl(var(--crimson-deep) / 0.34), transparent 70%), radial-gradient(28% 22% at 50% 6%, hsl(var(--crimson) / 0.20), transparent 75%)",
-  ask: "radial-gradient(60% 70% at 50% 108%, hsl(var(--crimson-deep) / 0.28), transparent 65%)",
+    "radial-gradient(56% 42% at 50% 12%, hsl(var(--crimson-deep) / 0.22), transparent 70%), radial-gradient(28% 22% at 50% 6%, hsl(var(--crimson) / 0.14), transparent 75%)",
+  ask: "radial-gradient(60% 70% at 50% 108%, hsl(var(--silver-mute) / 0.15), transparent 65%), radial-gradient(30% 24% at 50% 100%, hsl(var(--crimson-deep) / 0.09), transparent 70%)",
 } as const;
 
 /** hold-then-release opacity ride: in → hold → out (all fractions of T). */
@@ -97,7 +101,7 @@ export function Atmosphere({
           className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(50% 30% at 20% 8%, hsl(var(--silver-mute) / 0.07), transparent 70%), radial-gradient(50% 34% at 80% 46%, hsl(var(--crimson-deep) / 0.16), transparent 72%), radial-gradient(60% 40% at 50% 100%, hsl(var(--crimson-deep) / 0.22), transparent 68%)",
+              "radial-gradient(50% 30% at 20% 8%, hsl(var(--silver-mute) / 0.09), transparent 70%), radial-gradient(50% 34% at 80% 46%, hsl(var(--silver-mute) / 0.13), transparent 72%), radial-gradient(60% 40% at 50% 100%, hsl(var(--crimson-deep) / 0.12), transparent 68%)",
           }}
         />
         <div className="grain-overlay" />

@@ -1,219 +1,171 @@
-import { useLayoutEffect, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import {
-  motion,
-  useReducedMotion,
-  useScroll,
-  useSpring,
-} from "framer-motion";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { CaliberLogo } from "@/components/CaliberLogo";
-import { WaitlistForm } from "@/components/WaitlistForm";
 import { ScrollyStory } from "@/components/scrolly";
 import {
-  TelemetryStrip,
-  PlayerCard,
-  PlasmaField,
-  type TelemetryItem,
-} from "@/components/signal";
-import { runBootTimeline, setInitial, stagger } from "@/lib/motion";
+  prefersReducedMotion,
+  runBootTimeline,
+  runPulseLoop,
+  runScrollScrub,
+  setInitial,
+} from "@/lib/motion";
 
 /**
  * Landing — SIGNAL: Career Mode.
- * Obsidian-first (crimson is earned). One hero moment: the leaned CALIBER
- * wordmark + a labeled DEMO PlayerCard over the plasma attract screen.
- * All color/type through tokens — no raw hex, no arbitrary font values.
+ * Hero v2 (Wemby template): vast, quiet, ONE glowing mark on a clean obsidian
+ * field (hairline grid + grain — no wallpaper). The chrome CALIBER nameplate
+ * sits above the crimson-lit logo mark; thin viewfinder corner brackets frame
+ * it, a faint concentric ring rings it, and a small SCROLL cue holds the
+ * bottom edge. The mark's radial glow BREATHES (slow anime.js pulse) — the
+ * hero's only ambient motion. No HUD, no headline, no form — the information
+ * starts at the first scroll beat (scene 00 in components/scrolly).
  *
- * Hero boot: one anime.js timeline choreographs the attract-screen power-on
- * (SYSTEM ONLINE flicker → wordmark clip-path wipe → staggered rise → card
- * lands + OVR count-up → telemetry). Below the fold, the page is ONE
- * scroll-driven story — five scenes scrubbed by anime.js onScroll over a
- * continuous gradient atmosphere (components/scrolly, DESIGN-LANGUAGE §4.5).
- * framer-motion keeps only the scroll progress bar — the two engines never
- * share an element (§1.5). Reduced motion / timeline failure → the final
- * static frame everywhere.
+ * Hero boot (anime.js, ≤1.2s): brackets draw in → nameplate wipes → the mark
+ * glows up (opacity + a glow-bloom layer, compositor-only) → SCROLL cue last.
+ * Below the fold the page is ONE scroll-driven story — six beats scrubbed by
+ * anime.js onScroll over a continuous atmosphere (DESIGN-LANGUAGE §4.5).
+ * Reduced motion / timeline failure → the final static frame everywhere.
  */
 
-/* Boot choreography — timeline positions (ms). Ends ≈1.44s (≤1.6s budget). */
+/* Boot choreography — timeline positions (ms). Ends ≈1.18s (≤1.2s budget). */
 const BOOT = {
-  chipAt: 0, // SYSTEM ONLINE flicker-on
-  wordmarkAt: 100, // CALIBER wipe + lean settle
-  riseAt: 300, // chip / headline / subhead / form stagger
-  riseStaggerMs: 90,
-  cardAt: 520, // PlayerCard slides in; count-up restarts here
-  telemetryAt: 1080, // TelemetryStrip, last
+  bracketsAt: 0, // viewfinder corners draw in
+  nameplateAt: 90, // chrome CALIBER wipes in above the mark
+  markAt: 240, // the logo mark arrives…
+  glowAt: 280, // …and blooms (opacity on the glow layer only)
+  ringAt: 320, // the faint concentric ring settles
+  cueAt: 860, // SCROLL cue, last
 } as const;
 
-/* Wordmark wipe — negative outer insets keep the skew overhang + text glow
-   unclipped; the right inset sweeps 106% → 0% (left→right reveal). */
-const WORDMARK_CLIP_HIDDEN = "inset(-10% 106% -12% -6%)";
-const WORDMARK_CLIP_SHOWN = "inset(-10% 0% -12% -6%)";
+/* Nameplate wipe — negative outer insets keep glyph edges unclipped while
+   the right inset sweeps 104% → 0% (left→right reveal). */
+const NAMEPLATE_CLIP_HIDDEN = "inset(-8% 104% -10% -4%)";
+const NAMEPLATE_CLIP_SHOWN = "inset(-8% -4% -10% -4%)";
 
-/* ------------------------------------------------------------------ */
-/* primitives                                                          */
-/* ------------------------------------------------------------------ */
+/* The shield PNG is 1204×650 with the glyph centered at ~47% of the canvas
+   width (transparent margins either side). Frame the GLYPH, not the canvas:
+   glyph width ≈ 0.88 × glyph height (glyph spans the full image height). */
+const MARK_GLYPH_W_RATIO = 0.88;
+const MARK_MIN_H = 136;
+const MARK_MAX_H = 248;
+const MARK_VW_RATIO = 0.4;
 
-/** Angle-cut condensed-caps chip — the console status pill. */
-function AngleChip({
-  children,
-  tone = "silver",
-  className = "",
-  chipRef,
-  "data-testid": testId,
-}: {
-  children: React.ReactNode;
-  tone?: "crimson" | "silver";
-  className?: string;
-  /** For boot-timeline targeting (e.g. the SYSTEM ONLINE flicker). */
-  chipRef?: React.Ref<HTMLSpanElement>;
-  "data-testid"?: string;
-}) {
-  const isCrimson = tone === "crimson";
-  return (
-    <span
-      ref={chipRef}
-      className={`angle-cut inline-flex items-center gap-2 border px-3 py-1.5 font-display text-label uppercase ${className}`}
-      style={{
-        fontWeight: 500,
-        fontStretch: "70%",
-        color: isCrimson ? "hsl(var(--crimson-hot))" : "hsl(var(--silver))",
-        borderColor: isCrimson ? "hsl(var(--crimson) / 0.45)" : "hsl(var(--line))",
-        backgroundColor: isCrimson ? "hsl(var(--crimson) / 0.08)" : "hsl(var(--obsidian-2) / 0.7)",
-      }}
-      data-testid={testId}
-    >
-      {children}
-    </span>
-  );
+/** Reduced-motion preference, sampled once per mount (page-level flag). */
+function useReducedMotionPref(): boolean {
+  const [reduced] = useState(() => prefersReducedMotion());
+  return reduced;
 }
 
-/* ------------------------------------------------------------------ */
-/* content                                                             */
-/* ------------------------------------------------------------------ */
-
-/* Labeled product demo — sample data only, never presented as a real player. */
-const DEMO_PLAYER = {
-  name: "Your Name Here",
-  position: "PG",
-  jerseyNumber: "00",
-  school: "Your School · Montana",
-  score: 91,
-  attributes: [
-    { label: "Scoring", value: 88 },
-    { label: "Playmaking", value: 84 },
-    { label: "Defense", value: 79 },
-    { label: "Rebounding", value: 74 },
-  ],
-};
-
-/* ------------------------------------------------------------------ */
-/* page                                                                */
-/* ------------------------------------------------------------------ */
+/** Responsive pixel height for the hero mark (CaliberLogo needs a number). */
+function useMarkHeight(): number {
+  const [h, setH] = useState(200);
+  useEffect(() => {
+    const compute = () =>
+      setH(
+        Math.round(
+          Math.min(MARK_MAX_H, Math.max(MARK_MIN_H, window.innerWidth * MARK_VW_RATIO)),
+        ),
+      );
+    compute();
+    window.addEventListener("resize", compute);
+    return () => window.removeEventListener("resize", compute);
+  }, []);
+  return h;
+}
 
 export default function Landing() {
-  const reduced = useReducedMotion();
-  const { data: platformStats } = useQuery<{
-    playerCount: number;
-    gameCount: number;
-    badgeCount: number;
-    coachCount: number;
-  }>({
-    queryKey: ["/api/public/platform-stats"],
-  });
-
-  const { scrollYProgress } = useScroll();
-  const progressX = useSpring(scrollYProgress, { stiffness: 120, damping: 30, mass: 0.3 });
+  const reduced = useReducedMotionPref();
+  const markH = useMarkHeight();
+  const markW = Math.round(markH * MARK_GLYPH_W_RATIO);
 
   /* --- hero boot (anime.js) — see docblock. Refs mark the timeline slots. */
-  const systemChipRef = useRef<HTMLSpanElement>(null);
-  const wordmarkWrapRef = useRef<HTMLDivElement>(null);
-  const heroLeftRef = useRef<HTMLDivElement>(null); // owns [data-boot-rise] items
-  const cardShellRef = useRef<HTMLDivElement>(null);
-  const telemetryRef = useRef<HTMLDivElement>(null);
-  /* Bumping this key remounts the PlayerCard, restarting its OVR count-up
-     exactly when the card lands — the signal components stay untouched. */
-  const [cardBootKey, setCardBootKey] = useState(0);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
+  const bracketsRef = useRef<HTMLDivElement>(null);
+  const nameplateWrapRef = useRef<HTMLDivElement>(null);
+  const markWrapRef = useRef<HTMLDivElement>(null);
+  const glowRef = useRef<HTMLDivElement>(null);
+  const glowPulseRef = useRef<HTMLDivElement>(null);
+  const ringRef = useRef<HTMLDivElement>(null);
+  const cueRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
-    const chip = systemChipRef.current;
-    const wordmark = wordmarkWrapRef.current;
-    const card = cardShellRef.current;
-    const strip = telemetryRef.current;
-    const risers = Array.from(
-      heroLeftRef.current?.querySelectorAll<HTMLElement>("[data-boot-rise]") ??
-        [],
-    );
+    const brackets = bracketsRef.current;
+    const nameplate = nameplateWrapRef.current;
+    const mark = markWrapRef.current;
+    const glow = glowRef.current;
+    const ring = ringRef.current;
+    const cue = cueRef.current;
 
     return runBootTimeline({
-      targets: [chip, wordmark, card, strip, ...risers],
+      targets: [brackets, nameplate, mark, glow, ring, cue],
       build: (tl) => {
-        if (!chip || !wordmark || !card || !strip || risers.length === 0) {
+        if (!brackets || !nameplate || !mark || !glow || !ring || !cue) {
           return; // nothing hidden, nothing animated — final state stands
         }
 
         /* initial hidden states — inline styles, motion-allowed path only */
-        setInitial(chip, { opacity: 0 });
-        setInitial(wordmark, { clipPath: WORDMARK_CLIP_HIDDEN, x: -18, skewX: -3 });
-        setInitial(risers, { opacity: 0, y: 14 });
-        setInitial(card, { opacity: 0, y: 32 });
-        setInitial(strip, { opacity: 0 });
+        setInitial(brackets, { opacity: 0, scale: 1.08 });
+        setInitial(nameplate, { clipPath: NAMEPLATE_CLIP_HIDDEN });
+        setInitial(mark, { opacity: 0, scale: 0.95 });
+        setInitial(glow, { opacity: 0 });
+        setInitial(ring, { opacity: 0 });
+        setInitial(cue, { opacity: 0 });
 
-        /* 1 — SYSTEM ONLINE: CRT flicker-on (dot keeps its CSS ping after) */
+        /* 1 — viewfinder brackets draw in around the empty frame */
+        tl.add(brackets, { opacity: 1, scale: 1, duration: 520 }, BOOT.bracketsAt);
+        /* 2 — the chrome nameplate wipes in, left→right */
         tl.add(
-          chip,
-          {
-            opacity: [
-              { to: 1, duration: 45 },
-              { to: 0.35, duration: 55 },
-              { to: 1, duration: 60 },
-              { to: 0.55, duration: 45 },
-              { to: 1, duration: 75 },
-            ],
-            ease: "linear",
-          },
-          BOOT.chipAt,
+          nameplate,
+          { clipPath: NAMEPLATE_CLIP_SHOWN, duration: 460 },
+          BOOT.nameplateAt,
         );
-        /* 2 — CALIBER: left→right wipe + lean settle. The wrapper animates so
-           the h1's own .lean skew is never fought (transform composition). */
-        tl.add(
-          wordmark,
-          { clipPath: WORDMARK_CLIP_SHOWN, x: 0, skewX: 0, duration: 620 },
-          BOOT.wordmarkAt,
-        );
-        /* 3 — founding chip / headline / subhead / form: staggered rise */
-        tl.add(
-          risers,
-          { opacity: 1, y: 0, duration: 520, delay: stagger(BOOT.riseStaggerMs) },
-          BOOT.riseAt,
-        );
-        /* 4 — PlayerCard slides up + settles; OVR count-up starts as it lands */
-        tl.add(card, { opacity: 1, y: 0, duration: 600 }, BOOT.cardAt);
-        tl.call(() => setCardBootKey((k) => k + 1), BOOT.cardAt);
-        /* 5 — telemetry strip, last */
-        tl.add(strip, { opacity: 1, duration: 360 }, BOOT.telemetryAt);
+        /* 3 — the mark arrives and blooms (glow layer is opacity-only) */
+        tl.add(mark, { opacity: 1, scale: 1, duration: 600 }, BOOT.markAt);
+        tl.add(glow, { opacity: 1, duration: 640 }, BOOT.glowAt);
+        tl.add(ring, { opacity: 1, duration: 480 }, BOOT.ringAt);
+        /* 4 — the quiet exit sign */
+        tl.add(cue, { opacity: 1, duration: 320 }, BOOT.cueAt);
       },
     });
   }, []);
 
-  // Hero telemetry — product truths + live platform numbers (real, never inflated).
-  const telemetry: TelemetryItem[] = [
-    { label: "Grade scale", value: "A–F" },
-    { label: "Categories", value: 6 },
-    { label: "Time to log", value: "<2 min" },
-    ...(platformStats
-      ? [
-          { label: "Athletes", value: platformStats.playerCount },
-          { label: "Games graded", value: platformStats.gameCount },
-        ]
-      : []),
-  ];
+  /* The glow BREATHES — a slow heartbeat behind the mark (~5.6s full cycle),
+     starting once the boot has bloomed it in. Reduced motion → the static
+     mid-intensity frame in the JSX stands. */
+  useEffect(() => {
+    return runPulseLoop({
+      target: glowPulseRef.current,
+      props: { opacity: [0.65, 1], scale: [0.98, 1.05] },
+      duration: 2800,
+      delay: 1200, // wait out the boot bloom
+    });
+  }, []);
+
+  /* Scroll progress bar — anime.js scrub over the full page (no framer). */
+  useLayoutEffect(() => {
+    if (reduced) return;
+    const bar = progressRef.current;
+    return runScrollScrub({
+      driver: rootRef.current,
+      targets: [bar],
+      build: (tl) => {
+        if (!bar) return;
+        tl.add(bar, { scaleX: [0, 1], duration: 1000, ease: "linear" }, 0);
+      },
+    });
+  }, [reduced]);
 
   /* overflow-x-clip (not -hidden) on the root: clips horizontal overhang
      WITHOUT creating a scroll container — position:sticky scenes need this. */
   return (
-    <div className="relative min-h-screen overflow-x-clip bg-background text-foreground">
+    <div
+      ref={rootRef}
+      className="relative min-h-screen overflow-x-clip bg-background text-foreground"
+    >
       <style>{`
-        /* Metal CTA (MetalFx) — the ONE liquid-metal primary per screen. */
+        /* Metal CTA (MetalFx) — the ONE liquid-metal primary per screen.
+           (WaitlistForm's "metal" variant depends on this.) */
         .btn-chrome {
           position: relative; overflow: hidden;
           background: linear-gradient(180deg, hsl(var(--silver-hi)) 0%, hsl(var(--silver)) 46%, hsl(var(--silver-lo)) 58%, hsl(var(--silver-hi)) 100%);
@@ -239,34 +191,69 @@ export default function Landing() {
           .btn-chrome, .btn-chrome::after { transition: none; }
         }
 
-        /* Obsidian-first hero — concentrated crimson atmosphere above/behind
-           the wordmark; the rest of the field stays obsidian. */
-        .hero-atmosphere {
-          background:
-            radial-gradient(56% 42% at 50% 8%, hsl(var(--crimson-deep) / 0.34), transparent 70%),
-            radial-gradient(30% 24% at 50% 2%, hsl(var(--crimson) / 0.22), transparent 75%),
-            radial-gradient(44% 40% at 82% 52%, hsl(var(--crimson-deep) / 0.14), transparent 72%);
-        }
-
-        /* Silver metal sheen for the wordmark — token-only. */
+        /* Silver metal sheen for the nameplate — token-only. */
         .wordmark-metal {
           background-image: linear-gradient(100deg, hsl(var(--silver-mute)) 0%, hsl(var(--silver)) 25%, hsl(var(--silver-hi)) 50%, hsl(var(--silver)) 75%, hsl(var(--silver-mute)) 100%);
           -webkit-background-clip: text; background-clip: text; color: transparent;
         }
+
+        /* Subtle background grid — hairlines, faded out radially (Wemby's
+           near-black field given the telemetry treatment). */
+        .hero-grid {
+          background-image:
+            linear-gradient(hsl(var(--silver) / 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, hsl(var(--silver) / 0.05) 1px, transparent 1px);
+          background-size: 52px 52px;
+          -webkit-mask-image: radial-gradient(70% 62% at 50% 46%, black, transparent 88%);
+          mask-image: radial-gradient(70% 62% at 50% 46%, black, transparent 88%);
+        }
+
+        /* Viewfinder corner brackets — thin, silver, framing the mark. */
+        .vf span {
+          position: absolute;
+          width: clamp(1.1rem, 3.5vw, 1.9rem);
+          height: clamp(1.1rem, 3.5vw, 1.9rem);
+          border: 0 solid hsl(var(--silver) / 0.55);
+        }
+        .vf .vf-tl { top: 0; left: 0; border-top-width: 1px; border-left-width: 1px; }
+        .vf .vf-tr { top: 0; right: 0; border-top-width: 1px; border-right-width: 1px; }
+        .vf .vf-bl { bottom: 0; left: 0; border-bottom-width: 1px; border-left-width: 1px; }
+        .vf .vf-br { bottom: 0; right: 0; border-bottom-width: 1px; border-right-width: 1px; }
+
+        /* SCROLL cue — mono whisper + breathing line (Wemby's scroll-hint). */
+        .scroll-cue-line {
+          display: block;
+          width: 1px; height: 28px;
+          margin-top: 0.6rem;
+          background: hsl(var(--silver) / 0.35);
+          transform-origin: top;
+          animation: heroScrollLine 2s ease-in-out infinite;
+        }
+        @keyframes heroScrollLine {
+          0%, 100% { transform: scaleY(0.3); }
+          50% { transform: scaleY(1); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .scroll-cue-line { animation: none; }
+        }
       `}</style>
 
-      {/* scroll progress — silver into crimson */}
-      <motion.div
-        aria-hidden
-        className="fixed left-0 right-0 top-0 z-[200] h-[2px] origin-left"
-        style={{
-          scaleX: progressX,
-          background:
-            "linear-gradient(90deg, hsl(var(--silver-mute)), hsl(var(--silver)) 55%, hsl(var(--crimson)))",
-        }}
-      />
+      {/* scroll progress — silver into crimson (anime scrub; hidden when
+          reduced — a bar that never moves is noise, not signal) */}
+      {!reduced && (
+        <div
+          ref={progressRef}
+          aria-hidden
+          className="fixed left-0 right-0 top-0 z-[200] h-[2px] origin-left"
+          style={{
+            transform: "scaleX(1)",
+            background:
+              "linear-gradient(90deg, hsl(var(--silver-mute)), hsl(var(--silver)) 55%, hsl(var(--crimson)))",
+          }}
+        />
+      )}
 
-      {/* NAV — telemetry pill with angle-cut chips */}
+      {/* NAV — quiet telemetry pill: links only, no status chips */}
       <header className="fixed inset-x-0 top-5 z-[150] flex justify-center px-4">
         <nav
           aria-label="Main"
@@ -276,16 +263,9 @@ export default function Landing() {
             backgroundColor: "hsl(var(--obsidian-0) / 0.65)",
           }}
         >
-          <AngleChip tone="crimson" chipRef={systemChipRef}>
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60 motion-reduce:animate-none" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
-            </span>
-            System online
-          </AngleChip>
           <Link
             href="/pricing"
-            className="hidden px-3 py-1.5 font-display text-label uppercase text-muted-foreground transition-colors hover:text-foreground sm:block"
+            className="px-3 py-1.5 font-display text-label uppercase text-muted-foreground transition-colors hover:text-foreground"
             style={{ fontWeight: 500, fontStretch: "70%" }}
             data-testid="button-pricing"
           >
@@ -293,7 +273,7 @@ export default function Landing() {
           </Link>
           <Link
             href="/scout"
-            className="hidden px-3 py-1.5 font-display text-label uppercase text-muted-foreground transition-colors hover:text-foreground sm:block"
+            className="px-3 py-1.5 font-display text-label uppercase text-muted-foreground transition-colors hover:text-foreground"
             style={{ fontWeight: 500, fontStretch: "70%" }}
             data-testid="button-scout-hub"
           >
@@ -311,41 +291,74 @@ export default function Landing() {
       </header>
 
       <main className="relative z-10">
-        {/* HERO — the wordmark + player-card moment on an obsidian field */}
-        <section className="relative isolate overflow-hidden px-5 pb-16 pt-32 sm:px-8 md:pb-24 md:pt-40">
-          {/* dithered chrome plasma — the attract-screen backdrop; a veil
-              keeps text contrast and melts it into obsidian below the fold */}
-          <div aria-hidden className="absolute inset-0 -z-10">
-            <PlasmaField className="absolute inset-0 opacity-60" pixelSize={9} />
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(90deg, hsl(var(--obsidian-0) / 0.92) 0%, hsl(var(--obsidian-0) / 0.72) 42%, hsl(var(--obsidian-0) / 0.35) 100%), linear-gradient(180deg, hsl(var(--obsidian-0) / 0.55) 0%, hsl(var(--obsidian-0) / 0.25) 45%, hsl(var(--obsidian-0)) 100%)",
-              }}
-            />
-          </div>
+        {/* HERO — vast and quiet: one glowing mark in a viewfinder frame */}
+        <section className="relative isolate flex min-h-[100svh] flex-col items-center justify-center overflow-hidden px-5 py-24 sm:px-8">
+          {/* the field — clean obsidian vastness (the Wemby near-black):
+              just the hairline grid and grain. All the life lives in the
+              mark's breathing glow. */}
+          <div aria-hidden className="hero-grid absolute inset-0 -z-10" />
           <div aria-hidden className="grain-overlay -z-10" />
 
-          <div className="mx-auto grid w-full max-w-6xl items-center gap-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10">
-            {/* left — identity + pitch + waitlist. Boot-timeline territory:
-                anime.js only here — framer-motion never touches these. */}
-            <div ref={heroLeftRef} className="flex flex-col items-start">
-              <div data-boot-rise>
-                <AngleChip tone="crimson" data-testid="chip-founding-class">
-                  Founding class open
-                </AngleChip>
-              </div>
+          {/* the framed mark */}
+          <div className="relative">
+            {/* glow bloom — the dedicated radial behind the mark. The boot
+                animates the OUTER wrapper's opacity (0→1); the breathing
+                pulse owns the INNER layer (opacity/scale) — two elements, so
+                the tweens never fight. Static state = mid-intensity breath
+                (the reduced-motion frame). */}
+            <div ref={glowRef} aria-hidden className="absolute inset-[-34%]">
+              <div
+                ref={glowPulseRef}
+                className="h-full w-full"
+                style={{
+                  opacity: 0.85,
+                  /* chrome-first (operator 2026-07-17): a silver-white core
+                     carries the bloom; crimson only ghosts the outer rim —
+                     a faint warm edge, never the dominant hue. */
+                  background:
+                    "radial-gradient(50% 50% at 50% 50%, hsl(var(--silver-hi) / 0.55), hsl(var(--silver) / 0.22) 32%, hsl(var(--crimson-deep) / 0.16) 58%, transparent 76%)",
+                  filter: "blur(18px)",
+                }}
+              />
+            </div>
+            {/* faint concentric ring — anchored on the MARK's center (the
+                stage also holds the nameplate above). The wrapper owns the
+                centering transform (class, never inline) so the boot's
+                opacity tween and its cleanup can't displace it. */}
+            <div
+              aria-hidden
+              className="absolute left-1/2 -translate-x-1/2 translate-y-1/2"
+              style={{ bottom: markH / 2 }}
+            >
+              <div
+                ref={ringRef}
+                className="aspect-square w-[clamp(19rem,64vw,30rem)] rounded-full border"
+                style={{ borderColor: "hsl(var(--silver) / 0.16)" }}
+              />
+            </div>
+            {/* viewfinder corner brackets */}
+            <div
+              ref={bracketsRef}
+              aria-hidden
+              className="vf absolute -inset-x-7 -inset-y-8 sm:-inset-x-12 sm:-inset-y-10"
+            >
+              <span className="vf-tl" />
+              <span className="vf-tr" />
+              <span className="vf-bl" />
+              <span className="vf-br" />
+            </div>
 
-              {/* wipe/settle animates this wrapper — never the skewed h1 */}
-              <div ref={wordmarkWrapRef}>
+            <div className="relative flex flex-col items-center">
+              {/* the chrome nameplate — a nameplate, not a billboard */}
+              <div ref={nameplateWrapRef}>
                 <h1
-                  className="lean wordmark-metal mt-8 select-none uppercase leading-none text-hero"
+                  className="wordmark-metal select-none uppercase leading-none"
                   style={{
                     fontFamily: "var(--font-display)",
                     fontWeight: 900,
                     fontStretch: "125%",
-                    letterSpacing: "-0.03em",
+                    letterSpacing: "0.05em",
+                    fontSize: "clamp(1.5rem, 0.9rem + 2.4vw, 2.6rem)",
                   }}
                   data-testid="hero-masthead"
                 >
@@ -353,86 +366,51 @@ export default function Landing() {
                 </h1>
               </div>
 
-              <p
-                data-boot-rise
-                className="mt-6 uppercase leading-none text-title"
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontWeight: 900,
-                  fontStretch: "125%",
-                  letterSpacing: "-0.01em",
-                }}
+              {/* the mark — chrome-lit shield glyph (operator 2026-07-17:
+                  metal leads; the glow's faint warm rim is the only red
+                  near the mark now). Canvas keys the dark glyph out of its
+                  light field, then composites the liquid-metal gradient in. */}
+              {/* overflow-hidden clips the PNG's edge-artifact columns
+                  (dark strips at the canvas edges recolor otherwise) */}
+              <div
+                ref={markWrapRef}
+                className="relative mt-6 overflow-hidden sm:mt-8"
+                style={{ width: markW, height: markH }}
+                data-testid="hero-mark"
               >
-                Every game,{" "}
-                <span
-                  style={{
-                    color: "hsl(var(--crimson))",
-                    textShadow: "0 0 40px hsl(var(--crimson-glow))",
-                  }}
+                <div
+                  className="absolute left-1/2 top-1/2"
+                  style={{ transform: "translate(-50%, -50%)" }}
                 >
-                  graded.
-                </span>
-              </p>
-
-              <p
-                data-boot-rise
-                className="mt-5 max-w-md font-body text-base leading-relaxed text-muted-foreground"
-              >
-                Your season, played like career mode. Log the game, watch your
-                Caliber Score move, and build the graded record that gets you
-                scouted — every number earned on the floor.
-              </p>
-
-              <div data-boot-rise className="mt-8 w-full">
-                <div id="join">
-                  <WaitlistForm source="landing-hero" variant="console" />
-                  <p
-                    className="mt-3 font-display text-label uppercase text-muted-foreground"
-                    style={{ fontWeight: 500, fontStretch: "70%" }}
-                  >
-                    Free to start · No credit card · Be one of the first
-                  </p>
+                  <CaliberLogo size={markH} chrome />
                 </div>
               </div>
             </div>
-
-            {/* right — the Career Mode proof moment (labeled DEMO). Slides in
-                on the boot timeline; the key-remount restarts the OVR count-up
-                the moment the card lands (no signal-component edits). */}
-            <div ref={cardShellRef} className="mx-auto w-full max-w-sm lg:max-w-md">
-              <div style={{ transform: reduced ? undefined : "perspective(1200px) rotateY(-4deg)" }}>
-                <PlayerCard
-                  key={`boot-${cardBootKey}`}
-                  name={DEMO_PLAYER.name}
-                  position={DEMO_PLAYER.position}
-                  jerseyNumber={DEMO_PLAYER.jerseyNumber}
-                  school={DEMO_PLAYER.school}
-                  score={DEMO_PLAYER.score}
-                  attributes={DEMO_PLAYER.attributes}
-                  demo
-                  data-testid="hero-player-card"
-                  footer={
-                    <p
-                      className="font-mono text-muted-foreground"
-                      style={{ fontSize: "var(--text-data)" }}
-                    >
-                      PRODUCT DEMO · sample data — your real games go here
-                    </p>
-                  }
-                />
-              </div>
-            </div>
           </div>
 
-          {/* hero telemetry — product truths + live platform numbers */}
-          <div ref={telemetryRef} className="mx-auto mt-14 max-w-6xl">
-            <TelemetryStrip items={telemetry} data-testid="hero-telemetry" />
+          {/* SCROLL — the only instruction on the screen */}
+          <div
+            ref={cueRef}
+            className="absolute inset-x-0 bottom-6 flex flex-col items-center"
+            data-testid="hero-scroll-cue"
+          >
+            <span
+              className="font-mono uppercase"
+              style={{
+                fontSize: "var(--text-data)",
+                letterSpacing: "0.3em",
+                color: "hsl(var(--silver-mute))",
+              }}
+            >
+              Scroll
+            </span>
+            <span aria-hidden className="scroll-cue-line" />
           </div>
         </section>
 
-        {/* BELOW THE FOLD — one scroll-driven story (five scrubbed scenes
-            over a continuous gradient atmosphere). See components/scrolly. */}
-        <ScrollyStory reduced={!!reduced} />
+        {/* BELOW THE FOLD — one scroll-driven story (scene 00 carries the
+            pitch, waitlist, and telemetry the hero withholds). */}
+        <ScrollyStory reduced={reduced} />
       </main>
 
       {/* FOOTER — the honest line stays */}
@@ -444,13 +422,12 @@ export default function Landing() {
           <div className="mb-12 grid gap-10 md:grid-cols-4">
             <div className="space-y-4 md:col-span-2">
               <div className="flex items-center gap-2.5">
-                <CaliberLogo size={34} color="hsl(var(--crimson))" />
+                <CaliberLogo size={34} chrome />
                 <span
-                  className="lean uppercase text-section"
+                  className="wordmark-metal uppercase text-section"
                   style={{
                     fontFamily: "var(--font-display)",
-                    fontWeight: 900,
-                    fontStretch: "125%",
+                    fontWeight: 700,
                   }}
                 >
                   Caliber

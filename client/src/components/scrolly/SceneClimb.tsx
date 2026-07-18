@@ -1,20 +1,33 @@
-import { useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { PlayerCard } from "@/components/signal";
 import { addTextCounter, runScrollScrub } from "@/lib/motion";
 import { METAL_TEXT_STYLE, ScrollScene } from "./shared";
 
 /**
- * Scene 03 — THE CLIMB. Leaderboard rows drift downward past a pinned,
- * highlighted YOU row (relative motion = you rising through the board) while
- * the big rank counter scrubs 47 → 12. Crimson pools deepen in the shared
- * atmosphere behind this scene.
+ * Scene 03 — THE CLIMB. The DEMO PlayerCard (relocated from the old hero) is
+ * the YOU anchor: it rises in beside the board while leaderboard rows drift
+ * downward past the pinned, highlighted YOU row (relative motion = you rising
+ * through the board). The season rank scrubs 47 → 12 in the card's footer —
+ * chrome digits, crimson #.
  *
- * Rows are illustrative sample data (labeled once in scene 01) — generic
- * initials, never real users. Motion: transform/opacity only; the counter
- * rewrites textContent (tabular mono, zero layout shift).
+ * Rows and card values are illustrative sample data (labeled DEMO on the card
+ * and once in scene 01) — generic initials, never real users. Motion:
+ * transform/opacity only; counters rewrite textContent (tabular, zero layout
+ * shift). The OVR count-up restarts the first time the scene enters view.
  */
 
 const RANK_FROM = 47;
 const RANK_TO = 12;
+
+/* Labeled product demo — sample data only, never presented as a real player. */
+const DEMO_PLAYER = {
+  name: "Your Name Here",
+  position: "PG",
+  jerseyNumber: "00",
+  school: "Your School · Montana",
+  score: 91,
+  grades: ["A-", "B+", "A", "B+"],
+} as const;
 
 /* The board YOU rises through — final neighborhood around rank 12. */
 const BOARD_ROWS = [
@@ -54,6 +67,7 @@ function BoardRow({
 
 export function SceneClimb({ reduced }: { reduced: boolean }) {
   const driverRef = useRef<HTMLElement>(null);
+  const cardWrapRef = useRef<HTMLDivElement>(null);
   const counterRef = useRef<HTMLSpanElement>(null);
   const youRankRef = useRef<HTMLSpanElement>(null);
   const boardWrapRef = useRef<HTMLDivElement>(null);
@@ -61,9 +75,30 @@ export function SceneClimb({ reduced }: { reduced: boolean }) {
   const youRef = useRef<HTMLDivElement>(null);
   const headRef = useRef<HTMLParagraphElement>(null);
   const subRef = useRef<HTMLParagraphElement>(null);
+  /* Bumping this key remounts the PlayerCard so its OVR count-up plays when
+     the scene is actually on screen — not silently at page load. */
+  const [cardKey, setCardKey] = useState(0);
+
+  useEffect(() => {
+    if (reduced) return; // count-up already renders its final frame
+    const driver = driverRef.current;
+    if (!driver || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setCardKey((k) => k + 1);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.15 },
+    );
+    io.observe(driver);
+    return () => io.disconnect();
+  }, [reduced]);
 
   useLayoutEffect(() => {
     if (reduced) return;
+    const cardWrap = cardWrapRef.current;
     const counter = counterRef.current;
     const youRank = youRankRef.current;
     const boardWrap = boardWrapRef.current;
@@ -74,28 +109,39 @@ export function SceneClimb({ reduced }: { reduced: boolean }) {
 
     return runScrollScrub({
       driver: driverRef.current,
-      targets: [boardWrap, rows, you, head, sub],
+      targets: [cardWrap, boardWrap, rows, you, head, sub],
       build: (tl) => {
-        if (!counter || !youRank || !boardWrap || !rows || !you || !head || !sub)
+        if (
+          !cardWrap ||
+          !counter ||
+          !youRank ||
+          !boardWrap ||
+          !rows ||
+          !you ||
+          !head ||
+          !sub
+        )
           return;
         tl.add(head, { opacity: [0, 1], y: [12, 0], duration: 90 }, 0);
-        tl.add(boardWrap, { opacity: [0, 1], duration: 110 }, 40);
+        /* YOU arrives — the demo card rises in as the scene's anchor */
+        tl.add(cardWrap, { opacity: [0, 1], y: [24, 0], duration: 130 }, 30);
+        tl.add(boardWrap, { opacity: [0, 1], duration: 110 }, 60);
         /* the board slides DOWN past the pinned YOU row — you're rising */
-        tl.add(rows, { y: ["-34%", "18%"], duration: 830, ease: "inOutSine" }, 80);
+        tl.add(rows, { y: ["-34%", "18%"], duration: 820, ease: "inOutSine" }, 90);
         /* YOU settles in and its glow earns intensity as the rank climbs */
         tl.add(you, { opacity: [0, 1], y: [16, 0], duration: 120 }, 120);
-        /* rank counters — the big numeral and the YOU-row cell, in lockstep */
+        /* rank counters — the card-footer numeral and the YOU cell, in lockstep */
         addTextCounter(tl, counter, {
           from: RANK_FROM,
           to: RANK_TO,
           duration: 700,
-          at: 160,
+          at: 170,
         });
         addTextCounter(tl, youRank, {
           from: RANK_FROM,
           to: RANK_TO,
           duration: 700,
-          at: 160,
+          at: 170,
         });
         tl.add(sub, { opacity: [0, 1], y: [10, 0], duration: 100 }, 880);
       },
@@ -117,40 +163,65 @@ export function SceneClimb({ reduced }: { reduced: boolean }) {
         Every grade moves your rank. The board updates as games post — climb it.
       </p>
 
-      <div className="mt-6 grid items-center gap-6 sm:mt-10 sm:gap-10 md:grid-cols-[auto_1fr] md:gap-14">
-        {/* the big rank — scrubbed 47 → 12 */}
-        <div className="select-none">
-          <span
-            className="font-display text-label uppercase text-muted-foreground"
-            style={{ fontWeight: 500, fontStretch: "70%" }}
-          >
-            Season rank
-          </span>
-          <div
-            className="lean mt-2 leading-none"
-            style={{
-              fontFamily: "var(--font-display)",
-              fontWeight: 900,
-              fontStretch: "125%",
-              fontSize: "var(--text-hero)",
-              fontVariantNumeric: "tabular-nums",
-            }}
-            data-testid="scene-climb-rank"
-          >
-            <span aria-hidden style={{ color: "hsl(var(--crimson))" }}>
-              #
-            </span>
-            {/* chrome digits — the wordmark's metal band on the rank (§4) */}
-            <span ref={counterRef} style={METAL_TEXT_STYLE}>
-              {RANK_TO}
-            </span>
-          </div>
+      <div className="mt-6 grid items-center gap-8 sm:mt-10 md:grid-cols-[minmax(0,21rem)_1fr] md:gap-12">
+        {/* YOU — the labeled DEMO card; season rank scrubs in its footer */}
+        <div ref={cardWrapRef} className="w-full max-w-sm">
+          <PlayerCard
+            key={`climb-${cardKey}`}
+            name={DEMO_PLAYER.name}
+            position={DEMO_PLAYER.position}
+            jerseyNumber={DEMO_PLAYER.jerseyNumber}
+            school={DEMO_PLAYER.school}
+            score={DEMO_PLAYER.score}
+            grades={[...DEMO_PLAYER.grades]}
+            demo
+            data-testid="demo-player-card"
+            footer={
+              <div
+                className="border-t pt-4"
+                style={{ borderColor: "hsl(var(--line))" }}
+              >
+                <span
+                  className="font-display text-label uppercase text-muted-foreground"
+                  style={{ fontWeight: 500, fontStretch: "70%" }}
+                >
+                  Season rank
+                </span>
+                <div
+                  className="mt-1 leading-none"
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontWeight: 900,
+                    fontStretch: "125%",
+                    fontSize: "var(--text-stat)",
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                  data-testid="scene-climb-rank"
+                >
+                  <span aria-hidden style={{ color: "hsl(var(--crimson))" }}>
+                    #
+                  </span>
+                  {/* chrome digits — the wordmark's metal band on the rank (§4) */}
+                  <span ref={counterRef} style={METAL_TEXT_STYLE}>
+                    {RANK_TO}
+                  </span>
+                </div>
+                <p
+                  className="mt-3 font-mono text-muted-foreground"
+                  style={{ fontSize: "var(--text-data)" }}
+                >
+                  PRODUCT DEMO · sample data — your real games go here
+                </p>
+              </div>
+            }
+          />
         </div>
 
-        {/* the board — rows drift past the pinned YOU */}
+        {/* the board — rows drift past the pinned YOU (md+; the card carries
+            the story alone on small screens, where both won't fit a pin) */}
         <div
           ref={boardWrapRef}
-          className="relative max-w-md overflow-hidden border"
+          className="relative hidden max-w-md overflow-hidden border md:block"
           style={{
             height: "clamp(15rem, 40vh, 19rem)",
             backgroundColor: "hsl(var(--obsidian-1) / 0.6)",
@@ -208,7 +279,7 @@ export function SceneClimb({ reduced }: { reduced: boolean }) {
 
       <p
         ref={subRef}
-        className="mt-8 max-w-md font-body text-sm leading-relaxed text-muted-foreground"
+        className="mt-8 hidden max-w-md font-body text-sm leading-relaxed text-muted-foreground sm:block"
       >
         Badges unlock on the way up — earned from real games only, never bought.
       </p>
