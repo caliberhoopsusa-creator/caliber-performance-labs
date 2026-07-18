@@ -31,7 +31,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useRoute, Link, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { StatCard } from "@/components/StatCard";
-import { GradeBadge } from "@/components/GradeBadge";
+import { GradeBadge } from "@/components/signal";
 import { PlayerArchetype } from "@/components/PlayerArchetype";
 import { EliteAchievements } from "@/components/EliteAchievements";
 import { CaliberBadge } from "@/components/CaliberBadge";
@@ -152,37 +152,55 @@ function getAverageGrade(games: Game[]): string {
   return "F";
 }
 
+// SIGNAL grade ramp (docs/DESIGN-LANGUAGE.md §3) — A+ is the crimson personal-record
+// moment, everything else steps down the fixed grade-a..grade-f tokens.
 function getGradeColor(grade: string) {
   const normalizedGrade = grade?.trim().toUpperCase() || "";
-  if (["A+", "A", "A-"].includes(normalizedGrade)) {
+  if (normalizedGrade === "A+") {
     return {
-      bg: "from-amber-500/20",
-      border: "border-amber-500/50",
-      text: "text-amber-600 dark:text-amber-400",
-      glow: "shadow-amber-500/30",
+      bg: "bg-crimson/15",
+      border: "border-crimson/40",
+      text: "text-crimson-hot",
+      glow: "shadow-crimson/30",
     };
   }
-  if (["B+", "B", "B-"].includes(normalizedGrade)) {
+  if (normalizedGrade.startsWith("A")) {
     return {
-      bg: "from-slate-400/20",
-      border: "border-slate-400/50",
-      text: "text-slate-600 dark:text-slate-300",
-      glow: "shadow-slate-400/30",
+      bg: "bg-grade-a/15",
+      border: "border-grade-a/40",
+      text: "text-grade-a",
+      glow: "shadow-grade-a/30",
     };
   }
-  if (["C+", "C", "C-"].includes(normalizedGrade)) {
+  if (normalizedGrade.startsWith("B")) {
     return {
-      bg: "from-orange-500/20",
-      border: "border-orange-500/50",
-      text: "text-orange-400",
-      glow: "shadow-orange-500/30",
+      bg: "bg-grade-b/15",
+      border: "border-grade-b/40",
+      text: "text-grade-b",
+      glow: "shadow-grade-b/30",
+    };
+  }
+  if (normalizedGrade.startsWith("C")) {
+    return {
+      bg: "bg-grade-c/15",
+      border: "border-grade-c/40",
+      text: "text-grade-c",
+      glow: "shadow-grade-c/30",
+    };
+  }
+  if (normalizedGrade.startsWith("D")) {
+    return {
+      bg: "bg-grade-d/15",
+      border: "border-grade-d/40",
+      text: "text-grade-d",
+      glow: "shadow-grade-d/30",
     };
   }
   return {
-    bg: "from-red-500/20",
-    border: "border-red-500/50",
-    text: "text-red-600 dark:text-red-400",
-    glow: "shadow-red-500/30",
+    bg: "bg-grade-f/15",
+    border: "border-grade-f/40",
+    text: "text-grade-f",
+    glow: "shadow-grade-f/30",
   };
 }
 
@@ -202,19 +220,20 @@ function hasPosition(position: string | null | undefined, positionsToCheck: stri
   return playerPositions.some(p => positionsToCheck.includes(p));
 }
 
-// Rarity colors for inventory items
+// Rarity colors for inventory items — a graduated silver-to-crimson ladder so
+// "legendary" earns the same crimson-glow treatment as an A+ grade (§3).
 const RARITY_COLORS: Record<string, string> = {
-  common: "border-gray-500/50 bg-gray-500/10",
-  rare: "border-blue-500/50 bg-blue-500/10",
-  epic: "border-purple-500/50 bg-purple-500/10",
-  legendary: "border-yellow-500/50 bg-yellow-500/10",
+  common: "border-silver-mute/40 bg-silver-mute/10",
+  rare: "border-silver/40 bg-silver/10",
+  epic: "border-grade-b/40 bg-grade-b/10",
+  legendary: "border-crimson/50 bg-crimson/10",
 };
 
 const RARITY_TEXT_COLORS: Record<string, string> = {
-  common: "text-gray-400",
-  rare: "text-blue-600 dark:text-blue-400",
-  epic: "text-purple-600 dark:text-purple-400",
-  legendary: "text-yellow-600 dark:text-yellow-400",
+  common: "text-silver-mute",
+  rare: "text-silver-hi",
+  epic: "text-grade-b",
+  legendary: "text-crimson-hot",
 };
 
 const CATEGORY_ICONS: Record<string, any> = {
@@ -409,14 +428,14 @@ function RecruitingReadiness({ player }: { player: any }) {
         <h3 className="text-sm font-bold font-display uppercase tracking-wider flex items-center gap-2">
           <Target className="w-4 h-4 text-accent" /> Recruiting Readiness
         </h3>
-        <UIBadge variant="secondary" className={`text-xs ${pct === 100 ? 'bg-emerald-500/15 text-emerald-400' : 'bg-accent/15 text-accent'}`} data-testid="badge-readiness-pct">
+        <UIBadge variant="secondary" className={`text-xs ${pct === 100 ? 'bg-grade-a/15 text-grade-a' : 'bg-accent/15 text-accent'}`} data-testid="badge-readiness-pct">
           {pct}%
         </UIBadge>
       </div>
 
       <div className="h-2 rounded-full bg-muted overflow-hidden mb-3">
         <div
-          className={`h-full rounded-full transition-all duration-500 ${pct === 100 ? 'bg-emerald-500' : 'bg-accent'}`}
+          className={`h-full rounded-full transition-all duration-500 ${pct === 100 ? 'bg-grade-a' : 'bg-accent'}`}
           style={{ width: `${pct}%` }}
           data-testid="progress-readiness"
         />
@@ -428,7 +447,7 @@ function RecruitingReadiness({ player }: { player: any }) {
           return (
             <div key={field.label} className="flex items-center gap-2 text-sm" data-testid={`readiness-field-${field.label.toLowerCase().replace(/\s+/g, '-')}`}>
               {field.filled ? (
-                <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <CheckCircle className="w-3.5 h-3.5 text-grade-a shrink-0" />
               ) : (
                 <Circle className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
               )}
@@ -716,7 +735,7 @@ function GoalTracker({ playerId }: { playerId: number }) {
             const statLabel = GOAL_STAT_OPTIONS.find(o => o.value === goal.statName)?.label || goal.statName;
             return (
               <div key={goal.id} className="flex items-center gap-2 mb-1.5" data-testid={`goal-completed-${goal.id}`}>
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-grade-a flex-shrink-0" />
                 <span className="text-xs text-muted-foreground">{statLabel}: {parseFloat(goal.targetValue)}</span>
               </div>
             );
@@ -798,12 +817,13 @@ function WeeklyRecapSection({ playerId, playerName }: { playerId: number; player
 
   if (!recap?.hasData) return null;
 
+  // SIGNAL grade ramp (§3) — A+ gets the crimson personal-record treatment.
   const GRADE_COLORS: Record<string, string> = {
-    'A+': 'text-emerald-500', 'A': 'text-emerald-500', 'A-': 'text-emerald-500',
-    'B+': 'text-blue-500', 'B': 'text-blue-500', 'B-': 'text-blue-500',
-    'C+': 'text-amber-500', 'C': 'text-amber-500', 'C-': 'text-amber-500',
-    'D+': 'text-orange-500', 'D': 'text-orange-500', 'D-': 'text-orange-500',
-    'F': 'text-red-500',
+    'A+': 'text-crimson-hot', 'A': 'text-grade-a', 'A-': 'text-grade-a',
+    'B+': 'text-grade-b', 'B': 'text-grade-b', 'B-': 'text-grade-b',
+    'C+': 'text-grade-c', 'C': 'text-grade-c', 'C-': 'text-grade-c',
+    'D+': 'text-grade-d', 'D': 'text-grade-d', 'D-': 'text-grade-d',
+    'F': 'text-grade-f',
   };
 
   return (
@@ -838,7 +858,7 @@ function WeeklyRecapSection({ playerId, playerName }: { playerId: number; player
           <span>{recap.apg} APG</span>
         </div>
         {recap.ppgChange !== undefined && recap.ppgChange !== 0 && (
-          <div className={`flex items-center gap-0.5 ${recap.ppgChange > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+          <div className={`flex items-center gap-0.5 ${recap.ppgChange > 0 ? 'text-grade-a' : 'text-grade-f'}`}>
             {recap.ppgChange > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
             <span>{recap.ppgChange > 0 ? '+' : ''}{recap.ppgChange} PPG vs last week</span>
           </div>
@@ -1030,9 +1050,9 @@ function CoachToolsSection({ playerId, games }: CoachToolsSectionProps) {
 const ACCOLADE_TYPES = {
   championship: { name: "Championship", icon: Trophy, color: "text-accent", bgColor: "bg-accent/10", borderColor: "border-accent/20" },
   career_high: { name: "Career High", icon: TrendingUp, color: "text-accent", bgColor: "bg-accent/10", borderColor: "border-accent/20" },
-  award: { name: "Award", icon: Medal, color: "text-purple-500", bgColor: "bg-purple-500/10", borderColor: "border-purple-500/20" },
+  award: { name: "Award", icon: Medal, color: "text-silver-hi", bgColor: "bg-silver/10", borderColor: "border-silver/20" },
   record: { name: "Record", icon: Star, color: "text-accent", bgColor: "bg-accent/10", borderColor: "border-accent/20" },
-  state_award: { name: "State Award", icon: Award, color: "text-emerald-500", bgColor: "bg-emerald-500/10", borderColor: "border-emerald-500/20" },
+  state_award: { name: "State Award", icon: Award, color: "text-grade-a", bgColor: "bg-grade-a/10", borderColor: "border-grade-a/20" },
 } as const;
 
 type AccoladeType = keyof typeof ACCOLADE_TYPES;
@@ -1336,7 +1356,7 @@ function AccoladesSection({ playerId, isOwnProfile }: AccoladesSectionProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs uppercase font-bold text-muted-foreground tracking-wider">
-                      Title <span className="text-red-600 dark:text-red-400">*</span>
+                      Title <span className="text-destructive">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -1619,14 +1639,14 @@ function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: n
 
   const ACTIVITY_TYPE_COLORS: Record<string, string> = {
     game: 'text-accent',
-    badge: 'text-purple-600 dark:text-purple-400',
+    badge: 'text-grade-a',
     streak: 'text-accent',
-    workout: 'text-emerald-600 dark:text-emerald-400',
-    goal: 'text-blue-600 dark:text-blue-400',
+    workout: 'text-grade-b',
+    goal: 'text-silver-hi',
     challenge: 'text-accent',
     repost: 'text-accent',
-    poll: 'text-pink-400',
-    prediction: 'text-indigo-400',
+    poll: 'text-silver',
+    prediction: 'text-silver-lo',
   };
 
   return (
@@ -1648,8 +1668,8 @@ function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: n
 
       <Card className="p-5 bg-card/80 border-border" data-testid="section-social-overview">
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-1.5 rounded-lg bg-purple-500/20 border border-purple-500/30">
-            <Users className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+          <div className="p-1.5 rounded-lg bg-silver/10 border border-silver/20">
+            <Users className="w-4 h-4 text-silver-hi" />
           </div>
           <h3 className="text-sm font-bold uppercase tracking-wider from-foreground">
             Social Overview
@@ -1738,8 +1758,8 @@ function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: n
       {isOwnProfile && (
         <div data-testid="section-recent-workouts">
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/30">
-              <Dumbbell className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <div className="p-1.5 rounded-lg bg-grade-b/15 border border-grade-b/30">
+              <Dumbbell className="w-4 h-4 text-grade-b" />
             </div>
             <h3 className="text-sm font-bold uppercase tracking-wider from-foreground">
               Recent Workouts
@@ -1771,8 +1791,8 @@ function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: n
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="p-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex-shrink-0">
-                        <Dumbbell className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      <div className="p-1.5 rounded-lg bg-grade-b/10 border border-grade-b/20 flex-shrink-0">
+                        <Dumbbell className="w-4 h-4 text-grade-b" />
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">{workout.title}</p>
@@ -1811,7 +1831,7 @@ function PlayerActivityTab({ playerId, playerName, isOwnProfile }: { playerId: n
                       }}
                       data-testid={`button-share-workout-${workout.id}`}
                     >
-                      <Share2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      <Share2 className="w-4 h-4 text-grade-b" />
                     </Button>
                   </div>
                 </Card>
@@ -2430,12 +2450,12 @@ export default function PlayerDetail() {
                     <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-muted/50 border border-border" data-testid="equipped-cosmetics-indicator">
                       {equippedProfileSkin && (
                         <div className="flex items-center gap-1" title={`Skin: ${equippedProfileSkin.item.name}`}>
-                          <User className="w-3 h-3 text-purple-600 dark:text-purple-400" />
+                          <User className="w-3 h-3 text-silver-hi" />
                         </div>
                       )}
                       {equippedEffect && (
                         <div className="flex items-center gap-1" title={`Effect: ${equippedEffect.item.name}`}>
-                          <Sparkles className="w-3 h-3 text-pink-400" />
+                          <Sparkles className="w-3 h-3 text-crimson-hot" />
                         </div>
                       )}
                       {equippedBadgeStyle && (
@@ -2548,7 +2568,7 @@ export default function PlayerDetail() {
                           <span className="text-sm font-bold text-foreground">{avgPoints}</span>
                         </div>
                         <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border">
-                          <TrendingUp className="w-4 h-4 text-green-500" />
+                          <TrendingUp className="w-4 h-4 text-accent" />
                           <span className="text-xs text-muted-foreground uppercase font-medium">RPG</span>
                           <span className="text-sm font-bold text-foreground">{avgReb}</span>
                         </div>
@@ -2993,8 +3013,8 @@ export default function PlayerDetail() {
             <div className={`grid grid-cols-1 ${isOwnProfile ? 'lg:grid-cols-2' : ''} gap-5`}>
               <div>
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="p-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20">
-                    <TrendingUp className="w-4 h-4 text-purple-600 dark:text-purple-400" style={{ filter: "drop-shadow(0 0 6px rgba(168, 85, 247, 0.6))" }} />
+                  <div className="p-1.5 rounded-lg bg-silver/10 border border-silver/20">
+                    <TrendingUp className="w-4 h-4 text-silver-hi" style={{ filter: "drop-shadow(0 0 6px hsl(var(--silver) / 0.5))" }} />
                   </div>
                   <h3 className="text-base font-bold font-display from-foreground">
                     Player Profile
@@ -3003,7 +3023,7 @@ export default function PlayerDetail() {
                 <div
                   className="relative overflow-hidden rounded-xl border border-border bg-card p-4"
                 >
-                  <div className="absolute top-0 left-0 w-32 h-32 bg-purple-500/10 blur-[60px] rounded-full pointer-events-none" />
+                  <div className="absolute top-0 left-0 w-32 h-32 bg-silver/10 blur-[60px] rounded-full pointer-events-none" />
                   <div className="h-[200px] w-full">
                     {games.length > 0 ? (
                       <ResponsiveContainer width="100%" height="100%">
@@ -3048,8 +3068,8 @@ export default function PlayerDetail() {
                       <div>
                         <span className="text-xs font-medium text-muted-foreground block mb-1.5">Strengths</span>
                         {strengths.map((s, i) => (
-                          <div key={i} className="text-xs font-medium text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
-                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          <div key={i} className="text-xs font-medium text-grade-a flex items-center gap-1.5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-grade-a" />
                             {s.category} ({s.value})
                           </div>
                         ))}
@@ -3220,18 +3240,15 @@ export default function PlayerDetail() {
                               <div className="text-xs text-muted-foreground mb-3 uppercase tracking-wider font-medium">Category Grades</div>
                               <div className="grid grid-cols-4 gap-2">
                                 {[
-                                  { label: "DEF", value: game.defensiveGrade, icon: Shield, color: "from-green-500/10 border-green-500/20", testId: "grade-defense" },
-                                  { label: "SHOT", value: game.shootingGrade, icon: Target, color: "from-red-500/10 border-red-500/20", testId: "grade-shooting" },
-                                  { label: "REB", value: game.reboundingGrade, icon: Zap, color: "from-blue-500/10 border-blue-500/20", testId: "grade-rebounding" },
-                                  { label: "PASS", value: game.passingGrade, icon: Activity, color: "from-purple-500/10 border-purple-500/20", testId: "grade-passing" },
+                                  { label: "DEF", value: game.defensiveGrade, icon: Shield, testId: "grade-defense" },
+                                  { label: "SHOT", value: game.shootingGrade, icon: Target, testId: "grade-shooting" },
+                                  { label: "REB", value: game.reboundingGrade, icon: Zap, testId: "grade-rebounding" },
+                                  { label: "PASS", value: game.passingGrade, icon: Activity, testId: "grade-passing" },
                                 ].map((cat) => (
                                   <div
                                     key={cat.label}
                                     data-testid={`${cat.testId}-${game.id}`}
-                                    className={cn(
-                                      "text-center p-2 rounded-lg border transition-colors duration-300",
-                                      cat.color
-                                    )}
+                                    className="text-center p-2 rounded-lg border border-border bg-muted/30 transition-colors duration-300"
                                   >
                                     <cat.icon className="w-3 h-3 mx-auto mb-1 text-muted-foreground" />
                                     <div className={cn("text-lg font-bold", getGradeColor(cat.value || "").text)}>
@@ -3413,7 +3430,7 @@ export default function PlayerDetail() {
                         {isOwnProfile && (
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <button className="text-muted-foreground hover:text-red-600 dark:hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 p-1" data-testid={`button-delete-game-${game.id}`}>
+                            <button className="text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100 p-1" data-testid={`button-delete-game-${game.id}`}>
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </AlertDialogTrigger>
@@ -3440,13 +3457,13 @@ export default function PlayerDetail() {
           </Card>
 
           {/* Equipment Section */}
-          <div className="bg-gray-800/50 rounded-xl border border-gray-700 p-4">
+          <div className="bg-muted/50 rounded-xl border border-border p-4">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-gray-200">Gear & Equipment</h3>
+              <h3 className="text-sm font-semibold text-foreground">Gear & Equipment</h3>
               {isOwnProfile && (
                 <button
                   onClick={() => setShowAddGear(!showAddGear)}
-                  className="text-xs text-blue-400 hover:text-blue-300"
+                  className="text-xs text-accent hover:text-accent-hover"
                 >
                   + Add Gear
                 </button>
@@ -3456,13 +3473,13 @@ export default function PlayerDetail() {
             {showAddGear && (
               <div className="mb-3 grid grid-cols-2 gap-2">
                 <input
-                  className="col-span-2 bg-gray-700 rounded px-2 py-1 text-sm text-white placeholder-gray-400"
+                  className="col-span-2 bg-input rounded px-2 py-1 text-sm text-foreground placeholder:text-muted-foreground border border-border"
                   placeholder="Brand (e.g. Nike)"
                   value={gearForm.brand}
                   onChange={e => setGearForm(f => ({ ...f, brand: e.target.value }))}
                 />
                 <select
-                  className="bg-gray-700 rounded px-2 py-1 text-sm text-white"
+                  className="bg-input rounded px-2 py-1 text-sm text-foreground border border-border"
                   value={gearForm.category}
                   onChange={e => setGearForm(f => ({ ...f, category: e.target.value }))}
                 >
@@ -3473,13 +3490,13 @@ export default function PlayerDetail() {
                   <option value="accessory">Accessory</option>
                 </select>
                 <input
-                  className="bg-gray-700 rounded px-2 py-1 text-sm text-white placeholder-gray-400"
+                  className="bg-input rounded px-2 py-1 text-sm text-foreground placeholder:text-muted-foreground border border-border"
                   placeholder="Model"
                   value={gearForm.model}
                   onChange={e => setGearForm(f => ({ ...f, model: e.target.value }))}
                 />
                 <button
-                  className="col-span-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded py-1"
+                  className="col-span-2 bg-accent hover:bg-accent-hover text-accent-foreground text-sm rounded py-1"
                   onClick={() => {
                     if (gearForm.brand && gearForm.category) {
                       addEquipmentMutation.mutate(gearForm);
@@ -3494,16 +3511,16 @@ export default function PlayerDetail() {
             )}
 
             {equipment.length === 0 ? (
-              <p className="text-gray-500 text-xs">No gear logged yet.</p>
+              <p className="text-muted-foreground text-xs">No gear logged yet.</p>
             ) : (
               <div className="space-y-2">
                 {(equipment as any[]).map((item: any) => (
                   <div key={item.id} className="flex items-center justify-between text-sm">
                     <div>
-                      <span className="text-white font-medium">{item.brand}</span>
-                      {item.model && <span className="text-gray-400 ml-1">— {item.model}</span>}
+                      <span className="text-foreground font-medium">{item.brand}</span>
+                      {item.model && <span className="text-muted-foreground ml-1">— {item.model}</span>}
                     </div>
-                    <span className="text-xs text-gray-500 capitalize">{item.category}</span>
+                    <span className="text-xs text-muted-foreground capitalize">{item.category}</span>
                   </div>
                 ))}
               </div>

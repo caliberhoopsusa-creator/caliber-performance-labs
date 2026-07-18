@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { usePlayers, useCreatePlayer, useDeletePlayer } from "@/hooks/use-basketball";
 import { Link } from "wouter";
-import { Search, Plus, UserPlus, Trash2, ChevronRight, MoreVertical, Pencil, Eye, Users, Copy, Check, Send, Filter, Star, Zap, Crown, X } from "lucide-react";
+import { Search, Plus, UserPlus, Trash2, MoreVertical, Pencil, Eye, Users, Copy, Check, Send, Star, Zap, Crown, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,7 +9,7 @@ import { z } from "zod";
 import { insertPlayerSchema } from "@shared/schema";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
+import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
   DialogDescription, DialogFooter
 } from "@/components/ui/dialog";
@@ -34,13 +34,27 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { SkeletonPlayerCard } from "@/components/ui/skeleton-premium";
 import { cn } from "@/lib/utils";
+import { SectionEyebrow } from "@/components/signal";
+
+/**
+ * PlayersList — SIGNAL: Career Mode, Phase 2a. Dense browsing done right:
+ * token surfaces, condensed-caps labels, angle-cut jersey plates, and the
+ * tier ramp for activity tiers. Console energy stays quiet — the only
+ * crimson is the earned Legend tier and interactive accents.
+ */
+
+const CONDENSED = { fontWeight: 500, fontStretch: "70%" } as const;
+const DISPLAY_BLACK = {
+  fontFamily: "var(--font-display)",
+  fontWeight: 900,
+  fontStretch: "125%",
+  letterSpacing: "-0.01em",
+} as const;
 
 interface TeamMember {
   id: number;
@@ -79,36 +93,67 @@ function getPlayerTier(player: any): "elite" | "pro" | "rising" | "rookie" {
   return "rookie";
 }
 
+/** Activity tiers on the tier ramp — Legend is the earned crimson moment. */
 const TIER_STYLES = {
   elite: {
-    border: "border-yellow-500/40 hover:border-yellow-400/60",
-    glow: "0 0 30px hsl(45 93% 47% / 0.28)",
-    badge: "bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30",
+    cssVar: "--tier-elite",
+    glow: "0 0 24px hsl(var(--crimson-glow))" as string | undefined,
     icon: Crown,
     label: "Legend",
   },
   pro: {
-    border: "border-accent/40 hover:border-accent/60",
-    glow: "0 0 25px hsl(var(--accent) / 0.2)",
-    badge: "bg-accent/15 text-accent border-accent/30",
+    cssVar: "--tier-strong",
+    glow: undefined,
     icon: Star,
     label: "Veteran",
   },
   rising: {
-    border: "border-accent/30 hover:border-accent/50",
-    glow: "0 0 20px hsl(var(--cta) / 0.15)",
-    badge: "bg-cta/10 text-[hsl(var(--cta))] border-[hsl(var(--cta))]/30",
+    cssVar: "--tier-solid",
+    glow: undefined,
     icon: Zap,
     label: "Active",
   },
   rookie: {
-    border: "border-border hover:border-accent/30",
-    glow: "none",
-    badge: "bg-muted text-muted-foreground border-border",
+    cssVar: "--tier-raw",
+    glow: undefined,
     icon: UserPlus,
     label: "Newcomer",
   },
-};
+} as const;
+
+/** Angle-cut condensed-caps chip on a tier/grade token. */
+function TierChip({
+  cssVar,
+  icon: Icon,
+  children,
+  className,
+  ...rest
+}: {
+  cssVar: string;
+  icon?: typeof Users;
+  children: React.ReactNode;
+  className?: string;
+  "data-testid"?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        "angle-cut inline-flex items-center gap-1 border px-2 py-1 font-display text-label uppercase",
+        className,
+      )}
+      style={{
+        ...CONDENSED,
+        color: `hsl(var(${cssVar}))`,
+        backgroundColor: `hsl(var(${cssVar}) / 0.12)`,
+        borderColor: `hsl(var(${cssVar}) / 0.35)`,
+      }}
+      {...rest}
+    >
+      {Icon && <Icon aria-hidden className="h-3 w-3" />}
+      {children}
+    </span>
+  );
+}
 
 export default function PlayersList() {
   const { data: players, isLoading: playersLoading } = usePlayers();
@@ -212,85 +257,89 @@ export default function PlayersList() {
 
   return (
     <div className="pb-24 md:pb-6 space-y-8">
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-muted/80 via-card to-muted/80 dark:from-black/60 dark:via-card dark:to-black/60 border border-accent/20">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-accent/10 blur-[100px] rounded-full pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-accent/[0.06] blur-[80px] rounded-full pointer-events-none" />
-        
-        <div className="relative z-10 p-6 md:p-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Users className="w-6 h-6 text-accent" style={{ filter: "drop-shadow(0 0 8px hsl(var(--accent)))" }} />
-                <span className="text-xs uppercase tracking-wider text-accent font-semibold">
-                  {hasTeam ? primaryTeam?.name : "Team Management"}
-                </span>
-              </div>
-              <h1 className="text-3xl md:text-4xl font-bold text-foreground">
-                Player Roster
-              </h1>
-              <p className="text-muted-foreground max-w-md">
-                {hasTeam ? "Manage your team roster and track player performance" : "Search and manage players across all teams"}
-              </p>
-            </div>
-            
-            <div className="flex flex-col items-start md:items-end gap-3">
-              <div className="flex items-center gap-3">
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button
-                      className="gap-2 text-white shadow-lg"
-                      style={{ boxShadow: "0 4px 20px hsl(var(--cta) / 0.3)" }}
-                      data-testid="button-add-player"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Add Player
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="bg-card border-border text-foreground max-w-md">
-                    <DialogHeader>
-                      <DialogTitle className="text-xl font-display">Add New Player</DialogTitle>
-                      <DialogDescription className="text-muted-foreground">
-                        Create a player profile to start tracking stats and performance.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <CreatePlayerForm onSuccess={() => setIsDialogOpen(false)} />
-                  </DialogContent>
-                </Dialog>
-                
-                {hasTeam && (
-                  <Button 
-                    variant="outline" 
-                    onClick={copyTeamCode} 
-                    className="gap-2 border-accent/30 text-accent hover:bg-accent/10 hover:border-accent/50" 
-                    data-testid="button-copy-code"
-                  >
-                    {copiedCode ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                    {copiedCode ? "Copied!" : `Code: ${primaryTeam?.code}`}
-                  </Button>
-                )}
-              </div>
-              
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent/10 border border-accent/20">
-                  <Users className="w-4 h-4 text-accent" />
-                  <span className="text-accent font-medium">
-                    {hasTeam ? rosterPlayers.length : players?.length || 0}
-                  </span>
-                  <span>players</span>
-                </div>
-              </div>
-            </div>
-          </div>
+      {/* page header — quiet roster framing */}
+      <header
+        className="flex flex-col gap-6 border-b pb-6 md:flex-row md:items-end md:justify-between"
+        style={{ borderColor: "hsl(var(--line))" }}
+      >
+        <div className="min-w-0">
+          <SectionEyebrow as="div">
+            {hasTeam ? primaryTeam?.name : "Team Management"}
+          </SectionEyebrow>
+          <h1
+            className="lean mt-3 uppercase leading-none text-title"
+            style={{ ...DISPLAY_BLACK, color: "hsl(var(--silver-hi))" }}
+          >
+            Player Roster
+          </h1>
+          <p className="mt-2 max-w-md font-body text-body text-muted-foreground">
+            {hasTeam ? "Manage your team roster and track player performance" : "Search and manage players across all teams"}
+          </p>
         </div>
-      </div>
+
+        <div className="flex flex-col items-start gap-3 md:items-end">
+          <div className="flex items-center gap-3">
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="gap-2" data-testid="button-add-player">
+                  <Plus className="w-4 h-4" />
+                  Add Player
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-card border-border text-foreground max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="text-xl font-display uppercase tracking-wide">Add New Player</DialogTitle>
+                  <DialogDescription className="text-muted-foreground">
+                    Create a player profile to start tracking stats and performance.
+                  </DialogDescription>
+                </DialogHeader>
+                <CreatePlayerForm onSuccess={() => setIsDialogOpen(false)} />
+              </DialogContent>
+            </Dialog>
+
+            {hasTeam && (
+              <Button
+                variant="outline"
+                onClick={copyTeamCode}
+                className="gap-2"
+                data-testid="button-copy-code"
+              >
+                {copiedCode ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {copiedCode ? "Copied!" : `Code: ${primaryTeam?.code}`}
+              </Button>
+            )}
+          </div>
+
+          <span
+            className="angle-cut inline-flex items-center gap-1.5 border px-3 py-1.5 font-mono tabular-nums"
+            style={{
+              fontSize: "var(--text-data)",
+              color: "hsl(var(--silver))",
+              borderColor: "hsl(var(--line))",
+              backgroundColor: "hsl(var(--obsidian-2))",
+            }}
+          >
+            <Users aria-hidden className="h-3.5 w-3.5" style={{ color: "hsl(var(--crimson))" }} />
+            <span className="font-medium text-foreground">
+              {hasTeam ? rosterPlayers.length : players?.length || 0}
+            </span>
+            <span
+              className="font-display text-label uppercase"
+              style={{ ...CONDENSED, color: "hsl(var(--silver-lo))" }}
+            >
+              players
+            </span>
+          </span>
+        </div>
+      </header>
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div />
           {hasActiveFilters && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={clearFilters}
               className="gap-1.5 text-muted-foreground hover:text-foreground"
             >
@@ -307,7 +356,8 @@ export default function PlayersList() {
               placeholder="Search players by name or team..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 bg-muted/30 border-border focus:border-accent/50"
+              className="pl-9"
+              style={{ backgroundColor: "hsl(var(--obsidian-2))", borderColor: "hsl(var(--line))" }}
               data-testid="input-search-players"
             />
           </div>
@@ -318,12 +368,7 @@ export default function PlayersList() {
                 size="sm"
                 variant={positionFilter === position ? "default" : "outline"}
                 onClick={() => setPositionFilter(position)}
-                className={cn(
-                  "capitalize transition-all",
-                  positionFilter === position 
-                    ? "bg-accent text-white border-transparent"
-                    : "border-border hover:border-accent/30"
-                )}
+                className="capitalize"
                 data-testid={`filter-position-${position.toLowerCase()}`}
               >
                 {position}
@@ -333,27 +378,46 @@ export default function PlayersList() {
         </div>
 
         {hasActiveFilters && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             className="flex items-center gap-2 flex-wrap"
           >
-            <span className="text-xs text-muted-foreground">Active filters:</span>
+            <span
+              className="font-display text-label uppercase"
+              style={{ ...CONDENSED, color: "hsl(var(--silver-lo))" }}
+            >
+              Active filters:
+            </span>
             {search && (
-              <Badge variant="outline" className="gap-1.5 border-accent/30 text-accent">
+              <span
+                className="angle-cut inline-flex items-center gap-1.5 border px-2 py-1 font-display text-label uppercase text-accent"
+                style={{
+                  ...CONDENSED,
+                  borderColor: "hsl(var(--crimson) / 0.3)",
+                  backgroundColor: "hsl(var(--crimson) / 0.08)",
+                }}
+              >
                 Search: "{search}"
-                <button onClick={() => setSearch("")} className="ml-1 hover:text-foreground">
+                <button onClick={() => setSearch("")} className="ml-1 hover:text-foreground" aria-label="Clear search filter">
                   <X className="w-3 h-3" />
                 </button>
-              </Badge>
+              </span>
             )}
             {positionFilter !== "All" && (
-              <Badge variant="outline" className="gap-1.5 border-accent/30 text-accent">
+              <span
+                className="angle-cut inline-flex items-center gap-1.5 border px-2 py-1 font-display text-label uppercase text-accent"
+                style={{
+                  ...CONDENSED,
+                  borderColor: "hsl(var(--crimson) / 0.3)",
+                  backgroundColor: "hsl(var(--crimson) / 0.08)",
+                }}
+              >
                 Position: {positionFilter}
-                <button onClick={() => setPositionFilter("All")} className="ml-1 hover:text-foreground">
+                <button onClick={() => setPositionFilter("All")} className="ml-1 hover:text-foreground" aria-label="Clear position filter">
                   <X className="w-3 h-3" />
                 </button>
-              </Badge>
+              </span>
             )}
           </motion.div>
         )}
@@ -361,20 +425,16 @@ export default function PlayersList() {
 
       {hasTeam ? (
         <Tabs defaultValue="roster" className="w-full">
-          <TabsList className="w-full grid grid-cols-2 mb-6 bg-muted/60 border border-border p-1 rounded-xl" data-testid="tabs-roster">
-            <TabsTrigger 
-              value="roster" 
-              className="gap-2 data-[state=active]:data-[state=active]:from-accent/20 data-[state=active]:to-accent/10 data-[state=active]:border-accent/30 data-[state=active]:text-accent rounded-lg transition-all" 
-              data-testid="tab-roster"
-            >
+          <TabsList
+            className="mb-6 grid w-full grid-cols-2 border p-1"
+            style={{ backgroundColor: "hsl(var(--obsidian-1))", borderColor: "hsl(var(--line))" }}
+            data-testid="tabs-roster"
+          >
+            <TabsTrigger value="roster" className="gap-2" data-testid="tab-roster">
               <Users className="w-4 h-4" />
               My Roster ({rosterPlayers.length})
             </TabsTrigger>
-            <TabsTrigger 
-              value="find" 
-              className="gap-2 data-[state=active]:data-[state=active]:from-accent/20 data-[state=active]:to-accent/10 data-[state=active]:border-accent/30 data-[state=active]:text-accent rounded-lg transition-all" 
-              data-testid="tab-find"
-            >
+            <TabsTrigger value="find" className="gap-2" data-testid="tab-find">
               <Search className="w-4 h-4" />
               Find Players
             </TabsTrigger>
@@ -404,7 +464,7 @@ export default function PlayersList() {
                         Clear Filters
                       </Button>
                     ) : (
-                      <Button onClick={copyTeamCode} variant="default" className="gap-2 bg-accent">
+                      <Button onClick={copyTeamCode} variant="default" className="gap-2">
                         <Copy className="w-4 h-4" />
                         Copy Invite Code
                       </Button>
@@ -412,7 +472,7 @@ export default function PlayersList() {
                   }
                 />
               ) : (
-                <PlayerGrid 
+                <PlayerGrid
                   players={filteredRosterPlayers}
                   navigate={navigate}
                   setPlayerToDelete={setPlayerToDelete}
@@ -424,26 +484,35 @@ export default function PlayersList() {
 
           <TabsContent value="find">
             <div className="space-y-6">
-              <Card className="p-4 from-accent/10 to-accent/5 border-accent/20 backdrop-blur-sm">
+              <div
+                className="rounded-card border p-4"
+                style={{ backgroundColor: "hsl(var(--obsidian-1))", borderColor: "hsl(var(--line))" }}
+              >
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-accent/20 border border-accent/30">
-                    <Send className="w-5 h-5 text-accent" style={{ filter: "drop-shadow(0 0 6px hsl(var(--accent)))" }} />
+                  <div
+                    className="angle-cut border p-2"
+                    style={{ backgroundColor: "hsl(var(--obsidian-2))", borderColor: "hsl(var(--line))" }}
+                  >
+                    <Send aria-hidden className="w-5 h-5" style={{ color: "hsl(var(--crimson))" }} />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm text-foreground font-medium">Invite players to your team</p>
-                    <p className="text-xs text-muted-foreground">Share your team code: <span className="text-accent font-bold">{primaryTeam?.code}</span></p>
+                    <p className="font-body text-sm font-medium text-foreground">Invite players to your team</p>
+                    <p className="font-mono text-muted-foreground" style={{ fontSize: "var(--text-data)" }}>
+                      Share your team code:{" "}
+                      <span className="font-medium" style={{ color: "hsl(var(--crimson))" }}>{primaryTeam?.code}</span>
+                    </p>
                   </div>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    onClick={copyTeamCode} 
-                    className="gap-1.5 border-accent/30 text-accent hover:bg-accent/10"
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={copyTeamCode}
+                    className="gap-1.5"
                   >
                     {copiedCode ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                     Copy
                   </Button>
                 </div>
-              </Card>
+              </div>
 
               {playersLoading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -466,7 +535,7 @@ export default function PlayersList() {
                   }
                 />
               ) : (
-                <PlayerGrid 
+                <PlayerGrid
                   players={filteredAllPlayers}
                   navigate={navigate}
                   setPlayerToDelete={setPlayerToDelete}
@@ -491,7 +560,7 @@ export default function PlayersList() {
               icon={UserPlus}
               title="No players found"
               description={
-                hasActiveFilters 
+                hasActiveFilters
                   ? "Try adjusting your search or filter criteria."
                   : "Create a team first to manage your roster."
               }
@@ -505,7 +574,7 @@ export default function PlayersList() {
               }
             />
           ) : (
-            <PlayerGrid 
+            <PlayerGrid
               players={filteredAllPlayers}
               navigate={navigate}
               setPlayerToDelete={setPlayerToDelete}
@@ -518,9 +587,9 @@ export default function PlayersList() {
       <AlertDialog open={!!playerToDelete} onOpenChange={(open) => !open && setPlayerToDelete(null)}>
         <AlertDialogContent className="bg-card border-border text-foreground">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl font-display">Remove Player</AlertDialogTitle>
+            <AlertDialogTitle className="text-xl font-display uppercase tracking-wide">Remove Player</AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground">
-              Are you sure you want to remove <span className="text-foreground font-semibold">{playerToDelete?.name}</span> from your roster? 
+              Are you sure you want to remove <span className="text-foreground font-semibold">{playerToDelete?.name}</span> from your roster?
               This will also delete all of their game history and stats. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -531,7 +600,7 @@ export default function PlayersList() {
             <AlertDialogAction
               onClick={() => playerToDelete && handleDeletePlayer(playerToDelete.id, playerToDelete.name)}
               disabled={isDeleting}
-              className="bg-red-500 text-white"
+              className="bg-destructive text-destructive-foreground"
               data-testid="button-confirm-delete"
             >
               {isDeleting ? "Removing..." : "Remove Player"}
@@ -552,28 +621,26 @@ interface EmptyStateProps {
 
 function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps) {
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative overflow-hidden text-center py-20 border border-border rounded-2xl from-muted/60 to-muted/30 dark:from-black/40 dark:to-black/20"
+      className="rounded-card border py-20 text-center"
+      style={{ backgroundColor: "hsl(var(--obsidian-1))", borderColor: "hsl(var(--line))" }}
     >
-      <div className="absolute inset-0 opacity-10" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-accent/5 blur-[80px] rounded-full" />
-      
-      <div className="relative z-10">
-        <div className="relative inline-block mb-6">
-          <div className="absolute inset-0 bg-accent/20 blur-2xl rounded-full animate-pulse" />
-          <div className="relative p-4 rounded-full from-accent/20 to-accent/10 border border-accent/30">
-            <Icon 
-              className="w-10 h-10 text-accent" 
-              style={{ filter: "drop-shadow(0 0 10px hsl(var(--accent)))" }}
-            />
-          </div>
-        </div>
-        <h3 className="text-xl font-bold text-foreground mb-2">{title}</h3>
-        <p className="text-muted-foreground max-w-sm mx-auto mb-6">{description}</p>
-        {action}
+      <div
+        className="angle-cut mx-auto mb-6 inline-flex border p-4"
+        style={{ backgroundColor: "hsl(var(--obsidian-2))", borderColor: "hsl(var(--line))" }}
+      >
+        <Icon aria-hidden className="h-10 w-10" style={{ color: "hsl(var(--silver-mute))" }} />
       </div>
+      <h3
+        className="mb-2 uppercase text-foreground"
+        style={{ ...DISPLAY_BLACK, fontSize: "clamp(1rem, 0.8rem + 1vw, 1.25rem)" }}
+      >
+        {title}
+      </h3>
+      <p className="mx-auto mb-6 max-w-sm font-body text-body text-muted-foreground">{description}</p>
+      {action}
     </motion.div>
   );
 }
@@ -607,57 +674,50 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
           const tier = getPlayerTier(player);
           const tierStyle = TIER_STYLES[tier];
           const TierIcon = tierStyle.icon;
-          
+
           return (
-            <motion.div 
-              key={player.id} 
+            <motion.div
+              key={player.id}
               className="group relative h-full"
               initial={{ opacity: 0, y: 20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ 
+              transition={{
                 duration: 0.3,
                 delay: index * 0.05,
                 ease: "easeOut"
               }}
               layout
             >
-              <Card
-                className={cn(
-                  "h-full relative overflow-hidden transition-all duration-300",
-                  "from-muted/80 to-muted/40 dark:from-black/60 dark:to-black/30 backdrop-blur-xl",
-                  tierStyle.border,
-                  "hover:scale-[1.02]"
-                )}
+              <article
+                className="gloss relative h-full overflow-hidden rounded-card border transition-transform duration-300 hover:scale-[1.02]"
                 style={{
-                  boxShadow: tier !== "rookie" ? tierStyle.glow : undefined
+                  backgroundColor: "hsl(var(--obsidian-1))",
+                  borderColor: tier === "elite" ? "hsl(var(--crimson) / 0.35)" : "hsl(var(--line))",
+                  boxShadow: tierStyle.glow,
                 }}
               >
-                <div className="absolute inset-x-[20%] top-0 h-px from-transparent via-accent/40 to-transparent" />
-                
                 {isOnRoster && showInvite && (
-                  <Badge className="absolute top-3 left-3 z-10 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-400/30 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                  <TierChip cssVar="--grade-a" className="absolute top-3 left-3 z-10">
                     On Roster
-                  </Badge>
+                  </TierChip>
                 )}
-                
-                <Badge 
-                  className={cn(
-                    "absolute top-3 right-12 z-10 gap-1",
-                    tierStyle.badge
-                  )}
+
+                <TierChip
+                  cssVar={tierStyle.cssVar}
+                  icon={TierIcon}
+                  className="absolute top-3 right-12 z-10"
                 >
-                  <TierIcon className="w-3 h-3" />
                   {tierStyle.label}
-                </Badge>
-                
+                </TierChip>
+
                 <div className="absolute top-3 right-3 z-20">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="w-8 h-8 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        className="w-8 h-8 text-muted-foreground hover:text-foreground"
                         data-testid={`button-player-menu-${player.id}`}
                       >
                         <MoreVertical className="w-4 h-4" />
@@ -692,7 +752,7 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
                           <DropdownMenuSeparator className="bg-border" />
                           <DropdownMenuItem
                             onClick={() => setPlayerToDelete({ id: player.id, name: player.name })}
-                            className="gap-2 cursor-pointer text-red-600 dark:text-red-400 focus:text-red-700 dark:focus:text-red-300 focus:bg-red-500/10"
+                            className="gap-2 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
                             data-testid={`menu-delete-player-${player.id}`}
                           >
                             <Trash2 className="w-4 h-4" /> Delete Player
@@ -702,58 +762,66 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
-                
-                <CardContent className="p-6">
+
+                <div className="p-6">
                   <Link href={`/players/${player.id}`} className="block">
-                    <div className="flex items-start justify-between mb-6 pr-16">
-                      <motion.div 
-                        className={cn(
-                          "w-16 h-16 rounded-full flex items-center justify-center text-2xl font-display font-bold",
-                          "from-accent/20 to-accent/10 border-2",
-                          tier === "elite" ? "border-yellow-400/40 text-yellow-700 dark:text-yellow-300" :
-                          tier === "pro" ? "border-accent/40 text-accent" :
-                          tier === "rising" ? "border-accent/30 text-accent" :
-                          "border-border text-muted-foreground"
-                        )}
-                        style={tier !== "rookie" ? {
-                          boxShadow: tier === "elite" ? "0 0 25px hsl(45 93% 47% / 0.28)" :
-                                    tier === "pro" ? "0 0 20px hsl(var(--accent) / 0.22)" :
-                                    "0 0 15px hsl(var(--cta) / 0.18)"
-                        } : {}}
-                        whileHover={{ scale: 1.05 }}
-                        transition={{ type: "spring", stiffness: 300 }}
+                    <div className="mb-6 flex items-start justify-between pr-16">
+                      {/* angle-cut jersey plate — the quiet identity carrier */}
+                      <div
+                        className="angle-cut flex h-16 w-16 items-center justify-center border font-display text-2xl tabular-nums"
+                        style={{
+                          fontWeight: 800,
+                          backgroundColor: "hsl(var(--obsidian-2))",
+                          borderColor: tier === "elite" ? "hsl(var(--crimson) / 0.4)" : "hsl(var(--line))",
+                          color: tier === "elite" ? "hsl(var(--crimson))" : "hsl(var(--silver))",
+                        }}
                       >
                         {player.jerseyNumber || "#"}
-                      </motion.div>
+                      </div>
                     </div>
-                    
-                    <h3 className="text-xl font-bold font-display text-foreground mb-1 group-hover:text-accent transition-colors truncate">
+
+                    <h3
+                      className="mb-1 truncate uppercase text-foreground transition-colors group-hover:text-accent"
+                      style={{ ...DISPLAY_BLACK, fontSize: "clamp(1rem, 0.8rem + 1vw, 1.25rem)" }}
+                    >
                       {player.name}
                     </h3>
-                    <p className="text-sm text-muted-foreground mb-4 font-medium">
-                      {player.team || "No Team"} • {player.height || "N/A"}
+                    <p
+                      className="mb-4 truncate font-mono text-muted-foreground"
+                      style={{ fontSize: "var(--text-data)" }}
+                    >
+                      {player.team || "No Team"} · {player.height || "N/A"}
                     </p>
-                    
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="px-3 py-1.5 rounded-lg bg-accent/10 border border-accent/20">
-                        <span className="text-xs font-bold uppercase tracking-wider text-accent">
-                          {player.position}
-                        </span>
-                      </div>
+
+                    <div className="mb-4 flex items-center gap-3">
+                      <span
+                        className="angle-cut inline-flex items-center border px-2.5 py-1 font-display text-label uppercase"
+                        style={{
+                          ...CONDENSED,
+                          color: "hsl(var(--silver))",
+                          borderColor: "hsl(var(--line))",
+                          backgroundColor: "hsl(var(--obsidian-2))",
+                        }}
+                      >
+                        {player.position}
+                      </span>
                       {player.gamesPlayed > 0 && (
-                        <div className="text-xs text-muted-foreground">
-                          <span className="text-foreground font-medium">{player.gamesPlayed}</span> games
-                        </div>
+                        <span className="font-mono text-muted-foreground" style={{ fontSize: "var(--text-data)" }}>
+                          <span className="font-medium tabular-nums text-foreground">{player.gamesPlayed}</span> games
+                        </span>
                       )}
                     </div>
                   </Link>
-                  
-                  <div className="pt-4 border-t border-border/50 flex items-center gap-2">
+
+                  <div
+                    className="flex items-center gap-2 border-t pt-4"
+                    style={{ borderColor: "hsl(var(--line))" }}
+                  >
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => navigate(`/players/${player.id}`)}
-                      className="flex-1 gap-1.5 border-border hover:border-accent/30 hover:bg-accent/10"
+                      className="flex-1 gap-1.5"
                       data-testid={`button-view-player-${player.id}`}
                     >
                       <Eye className="w-3.5 h-3.5" /> View
@@ -763,7 +831,7 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
                         variant="outline"
                         size="sm"
                         onClick={() => copyInviteMessage(player.name)}
-                        className="flex-1 gap-1.5 border-accent/30 text-accent hover:bg-accent/10"
+                        className="flex-1 gap-1.5"
                         data-testid={`button-invite-player-${player.id}`}
                       >
                         <Send className="w-3.5 h-3.5" /> Invite
@@ -774,7 +842,7 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
                           variant="outline"
                           size="sm"
                           onClick={() => navigate(`/players/${player.id}?edit=true`)}
-                          className="flex-1 gap-1.5 border-border hover:border-accent/30 hover:bg-accent/10"
+                          className="flex-1 gap-1.5"
                           data-testid={`button-edit-player-${player.id}`}
                         >
                           <Pencil className="w-3.5 h-3.5" /> Edit
@@ -783,7 +851,8 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
                           variant="outline"
                           size="icon"
                           onClick={() => setPlayerToDelete({ id: player.id, name: player.name })}
-                          className="text-red-600 dark:text-red-400 border-red-500/20 hover:bg-red-500/10 hover:border-red-500/40"
+                          className="text-destructive hover:bg-destructive/10"
+                          style={{ borderColor: "hsl(var(--destructive) / 0.3)" }}
                           data-testid={`button-delete-player-${player.id}`}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -791,8 +860,8 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
                       </>
                     ) : null}
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </article>
             </motion.div>
           );
         })}
@@ -803,7 +872,7 @@ function PlayerGrid({ players, navigate, setPlayerToDelete, showInvite, rosterPl
 
 function CreatePlayerForm({ onSuccess }: { onSuccess: () => void }) {
   const { mutate, isPending } = useCreatePlayer();
-  
+
   const form = useForm<z.infer<typeof insertPlayerSchema>>({
     resolver: zodResolver(insertPlayerSchema),
     defaultValues: {
@@ -824,29 +893,32 @@ function CreatePlayerForm({ onSuccess }: { onSuccess: () => void }) {
     });
   };
 
+  const labelStyle = { ...CONDENSED, color: "hsl(var(--silver-lo))" } as const;
+  const inputStyle = { backgroundColor: "hsl(var(--obsidian-2))", borderColor: "hsl(var(--line))" } as const;
+
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
       <div className="space-y-2">
-        <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Full Name</label>
+        <label className="font-display text-label uppercase" style={labelStyle}>Full Name</label>
         <Input
           {...form.register("name")}
           placeholder="Enter player name"
-          className="bg-muted/30 border-border focus:border-accent/50"
+          style={inputStyle}
           data-testid="input-player-name"
         />
         {form.formState.errors.name && (
-          <p className="text-xs text-red-600 dark:text-red-400">{form.formState.errors.name.message}</p>
+          <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
         )}
       </div>
-      
+
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Position</label>
+          <label className="font-display text-label uppercase" style={labelStyle}>Position</label>
           <Select
             value={form.watch("position")}
             onValueChange={(val) => form.setValue("position", val)}
           >
-            <SelectTrigger className="bg-muted/30 border-border focus:border-accent/50" data-testid="select-position">
+            <SelectTrigger style={inputStyle} data-testid="select-position">
               <SelectValue placeholder="Select position" />
             </SelectTrigger>
             <SelectContent className="bg-card border-border">
@@ -856,52 +928,57 @@ function CreatePlayerForm({ onSuccess }: { onSuccess: () => void }) {
             </SelectContent>
           </Select>
         </div>
-        
+
         <div className="space-y-2">
-          <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Jersey #</label>
+          <label className="font-display text-label uppercase" style={labelStyle}>Jersey #</label>
           <Input
             {...form.register("jerseyNumber", { valueAsNumber: true })}
             type="number"
             placeholder="#"
-            className="bg-muted/30 border-border focus:border-accent/50"
+            style={inputStyle}
             data-testid="input-jersey-number"
           />
         </div>
       </div>
-      
+
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Height</label>
+          <label className="font-display text-label uppercase" style={labelStyle}>Height</label>
           <Input
             {...form.register("height")}
             placeholder="e.g. 6'2"
-            className="bg-muted/30 border-border focus:border-accent/50"
+            style={inputStyle}
             data-testid="input-height"
           />
         </div>
-        
+
         <div className="space-y-2">
-          <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider">Team</label>
+          <label className="font-display text-label uppercase" style={labelStyle}>Team</label>
           <Input
             {...form.register("team")}
             placeholder="Team name"
-            className="bg-muted/30 border-border focus:border-accent/50"
+            style={inputStyle}
             data-testid="input-team"
           />
         </div>
       </div>
-      
+
       <DialogFooter className="pt-4">
-        <Button 
+        <Button
           type="submit"
           disabled={isPending}
           className="w-full gap-2"
-          style={{ boxShadow: "0 4px 20px hsl(var(--cta) / 0.3)" }}
           data-testid="button-submit-player"
         >
           {isPending ? (
             <>
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <div
+                className="h-4 w-4 animate-spin rounded-full border-2"
+                style={{
+                  borderColor: "hsl(var(--silver) / 0.3)",
+                  borderTopColor: "hsl(var(--silver-hi))",
+                }}
+              />
               Creating...
             </>
           ) : (

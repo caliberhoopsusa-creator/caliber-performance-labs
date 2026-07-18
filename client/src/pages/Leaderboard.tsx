@@ -2,19 +2,16 @@ import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { api } from "@shared/routes";
-import { GradeBadge } from "@/components/GradeBadge";
+import { GradeBadge, SectionEyebrow } from "@/components/signal";
 import { useSport } from "@/components/SportToggle";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Trophy, Medal, Filter, X, Users, Search, Crown,
-  TrendingUp, Star, ChevronRight, Target, Share2
+  Trophy, Medal, Filter, X, Users, Search, Target, Share2
 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Select,
@@ -24,6 +21,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SkeletonLeaderboardRow } from "@/components/ui/skeleton-premium";
+
+/**
+ * Leaderboard — SIGNAL: Career Mode, Phase 2a. Ranking drama with restraint:
+ * leaned Archivo rank numerals, the grade ramp for every grade, tabular
+ * numerals in the table, sticky headers. The single identity moment is the
+ * #1 podium card's crimson treatment — everything else stays quiet.
+ */
+
+const CONDENSED = { fontWeight: 500, fontStretch: "70%" } as const;
+const DISPLAY_BLACK = {
+  fontFamily: "var(--font-display)",
+  fontWeight: 900,
+  fontStretch: "125%",
+  letterSpacing: "-0.01em",
+} as const;
 
 function formatPositions(position: string): string {
   return position?.split(',').map(p => p.trim()).join(' / ') || position;
@@ -48,32 +60,36 @@ const LEVELS = [
   { value: "college", label: "College" },
 ];
 
-const RANK_STYLES = {
+/** Podium treatment — #1 earns the crimson signal; 2 and 3 stay silver. */
+const RANK_STYLES: Record<number, {
+  icon: typeof Trophy;
+  numeralColor: string;
+  iconColor: string;
+  borderColor: string;
+  glow?: string;
+}> = {
   1: {
-    bg: "from-yellow-500/20",
-    border: "border-yellow-500/40",
-    glow: "shadow-[0_0_30px_rgba(234,179,8,0.3)]",
     icon: Trophy,
-    iconColor: "text-yellow-600 dark:text-yellow-400",
-    ringColor: "ring-yellow-500/30",
+    numeralColor: "hsl(var(--crimson))",
+    iconColor: "hsl(var(--crimson))",
+    borderColor: "hsl(var(--crimson) / 0.4)",
+    glow: "0 0 24px hsl(var(--crimson-glow))",
   },
   2: {
-    bg: "from-slate-300/20",
-    border: "border-slate-400/40",
-    glow: "shadow-[0_0_20px_rgba(148,163,184,0.2)]",
     icon: Medal,
-    iconColor: "text-slate-600 dark:text-slate-300",
-    ringColor: "ring-slate-400/30",
+    numeralColor: "hsl(var(--silver-hi))",
+    iconColor: "hsl(var(--silver))",
+    borderColor: "hsl(var(--line))",
   },
   3: {
-    bg: "from-orange-600/20",
-    border: "border-orange-600/40",
-    glow: "shadow-[0_0_20px_rgba(234,88,12,0.2)]",
     icon: Medal,
-    iconColor: "text-orange-600 dark:text-orange-400",
-    ringColor: "ring-orange-500/30",
+    numeralColor: "hsl(var(--silver-lo))",
+    iconColor: "hsl(var(--silver-lo))",
+    borderColor: "hsl(var(--line))",
   },
 };
+
+const TABLE_COLUMNS = ["Rank", "Player", "Grade", "PPG", "RPG", "APG", "FG%", "Games"];
 
 export default function Leaderboard() {
   const currentSport = useSport();
@@ -105,9 +121,9 @@ export default function Leaderboard() {
       if (stateFilter) params.append("state", stateFilter);
       if (positionFilter) params.append("position", positionFilter);
       if (levelFilter) params.append("level", levelFilter);
-      
+
       const url = `${api.analytics.leaderboard.path}?${params.toString()}`;
-      
+
       const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to fetch leaderboard");
       return res.json();
@@ -136,7 +152,10 @@ export default function Leaderboard() {
   if (isLoading) {
     return (
       <div className="space-y-6 pb-24 md:pb-8">
-        <div className="relative overflow-hidden rounded-2xl bg-card/80 border border-yellow-500/20 p-6">
+        <div
+          className="relative overflow-hidden rounded-card border p-6"
+          style={{ backgroundColor: "hsl(var(--obsidian-1))", borderColor: "hsl(var(--line))" }}
+        >
           <div className="h-8 w-48 skeleton-premium rounded mb-2" />
           <div className="h-4 w-64 skeleton-premium rounded" />
         </div>
@@ -145,124 +164,148 @@ export default function Leaderboard() {
             <SkeletonLeaderboardRow key={i} />
           ))}
         </div>
+        <p
+          className="text-center font-display text-label uppercase text-muted-foreground"
+          style={CONDENSED}
+        >
+          TIP — rankings update as new games are graded
+        </p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6 pb-24 md:pb-8">
-      <div className="relative overflow-hidden rounded-2xl bg-card/80 border border-yellow-500/20">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-yellow-500/10 blur-[100px] rounded-full pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-accent/10 blur-[60px] rounded-full pointer-events-none" />
-        
-        <div className="relative z-10 p-6 md:p-8">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-yellow-600 dark:text-yellow-400" style={{ filter: "drop-shadow(0 0 8px hsl(var(--accent) / 0.6))" }} />
-                <span className="text-xs uppercase tracking-wider text-yellow-600 dark:text-yellow-400 font-semibold">Rankings</span>
-              </div>
-              <h1 className="text-3xl md:text-4xl font-bold text-foreground" data-testid="text-leaderboard-title">
-                Player Leaderboard
-              </h1>
-              <p className="text-muted-foreground">
-                Top performers ranked by average game grade
-              </p>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <Badge
-                className="px-4 py-2 text-sm font-bold flex items-center gap-2 from-accent to-accent/90 text-accent-foreground"
-                data-testid="badge-current-sport"
-              >
-                <Target className="w-4 h-4" />
-                Basketball
-              </Badge>
-            </div>
-          </div>
+      {/* page header — quiet scoreboard framing */}
+      <header
+        className="flex flex-col gap-4 border-b pb-6 md:flex-row md:items-end md:justify-between"
+        style={{ borderColor: "hsl(var(--line))" }}
+      >
+        <div className="min-w-0">
+          <SectionEyebrow as="div">Rankings</SectionEyebrow>
+          <h1
+            className="lean mt-3 uppercase leading-none text-title"
+            style={{ ...DISPLAY_BLACK, color: "hsl(var(--silver-hi))" }}
+            data-testid="text-leaderboard-title"
+          >
+            Leaderboard
+          </h1>
+          <p className="mt-2 font-body text-body text-muted-foreground">
+            Top performers ranked by average game grade
+          </p>
         </div>
-      </div>
 
-      <Card className="relative overflow-hidden bg-card/80 border-border">
-        <div className="absolute inset-x-[20%] top-0 h-px from-transparent via-accent/30 to-transparent" />
-        
-        <CardContent className="p-4 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-accent" />
-              <span className="text-sm font-medium text-foreground">Filters</span>
-            </div>
-            {hasFilters && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={clearFilters}
-                className="text-xs text-accent"
-                data-testid="button-clear-filters"
-              >
-                <X className="w-3 h-3 mr-1" />
-                Clear All
-              </Button>
-            )}
+        <span
+          className="angle-cut inline-flex w-fit shrink-0 items-center gap-1.5 border px-3 py-1.5 font-display text-label uppercase"
+          style={{
+            ...CONDENSED,
+            color: "hsl(var(--silver))",
+            borderColor: "hsl(var(--line))",
+            backgroundColor: "hsl(var(--obsidian-2))",
+          }}
+          data-testid="badge-current-sport"
+        >
+          <Target aria-hidden className="h-3.5 w-3.5" style={{ color: "hsl(var(--crimson))" }} />
+          Basketball
+        </span>
+      </header>
+
+      {/* filters */}
+      <section
+        aria-label="Leaderboard filters"
+        className="space-y-4 rounded-card border p-4"
+        style={{ backgroundColor: "hsl(var(--obsidian-1))", borderColor: "hsl(var(--line))" }}
+      >
+        <div className="flex items-center justify-between">
+          <span
+            className="flex items-center gap-2 font-display text-label uppercase"
+            style={{ ...CONDENSED, color: "hsl(var(--silver-lo))" }}
+          >
+            <Filter aria-hidden className="h-3.5 w-3.5" />
+            Filters
+          </span>
+          {hasFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearFilters}
+              className="text-xs text-accent"
+              data-testid="button-clear-filters"
+            >
+              <X className="w-3 h-3 mr-1" />
+              Clear All
+            </Button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search players..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+              style={{ backgroundColor: "hsl(var(--obsidian-2))", borderColor: "hsl(var(--line))" }}
+              data-testid="input-search"
+            />
           </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search players..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 bg-muted/50 border-border focus:border-accent/50"
-                data-testid="input-search"
-              />
-            </div>
-            
-            <Select value={stateFilter || "all"} onValueChange={(v) => setStateFilter(v === "all" ? "" : v)}>
-              <SelectTrigger className="bg-muted/50 border-border" data-testid="select-state-filter">
-                <SelectValue placeholder="All States" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All States</SelectItem>
-                {US_STATES.map((state) => (
-                  <SelectItem key={state} value={state}>{state}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
 
-            <Select value={positionFilter || "all"} onValueChange={(v) => setPositionFilter(v === "all" ? "" : v)}>
-              <SelectTrigger className="bg-muted/50 border-border" data-testid="select-position-filter">
-                <SelectValue placeholder="All Positions" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Positions</SelectItem>
-                {positions.map((pos) => (
-                  <SelectItem key={pos} value={pos}>{pos}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <Select value={stateFilter || "all"} onValueChange={(v) => setStateFilter(v === "all" ? "" : v)}>
+            <SelectTrigger
+              style={{ backgroundColor: "hsl(var(--obsidian-2))", borderColor: "hsl(var(--line))" }}
+              data-testid="select-state-filter"
+            >
+              <SelectValue placeholder="All States" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All States</SelectItem>
+              {US_STATES.map((state) => (
+                <SelectItem key={state} value={state}>{state}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-            <Select value={levelFilter || "all"} onValueChange={(v) => setLevelFilter(v === "all" ? "" : v)}>
-              <SelectTrigger className="bg-muted/50 border-border" data-testid="select-level-filter">
-                <SelectValue placeholder="All Levels" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Levels</SelectItem>
-                {LEVELS.map((level) => (
-                  <SelectItem key={level.value} value={level.value}>{level.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+          <Select value={positionFilter || "all"} onValueChange={(v) => setPositionFilter(v === "all" ? "" : v)}>
+            <SelectTrigger
+              style={{ backgroundColor: "hsl(var(--obsidian-2))", borderColor: "hsl(var(--line))" }}
+              data-testid="select-position-filter"
+            >
+              <SelectValue placeholder="All Positions" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Positions</SelectItem>
+              {positions.map((pos) => (
+                <SelectItem key={pos} value={pos}>{pos}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
+          <Select value={levelFilter || "all"} onValueChange={(v) => setLevelFilter(v === "all" ? "" : v)}>
+            <SelectTrigger
+              style={{ backgroundColor: "hsl(var(--obsidian-2))", borderColor: "hsl(var(--line))" }}
+              data-testid="select-level-filter"
+            >
+              <SelectValue placeholder="All Levels" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Levels</SelectItem>
+              {LEVELS.map((level) => (
+                <SelectItem key={level.value} value={level.value}>{level.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </section>
+
+      {/* podium — top three; #1 carries the only crimson moment on this screen */}
       {filteredLeaderboard.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {filteredLeaderboard.slice(0, 3).map((entry: any, index: number) => {
-            const rankStyle = RANK_STYLES[(index + 1) as keyof typeof RANK_STYLES];
-            const Icon = rankStyle?.icon || Medal;
-            
+            const rank = index + 1;
+            const rankStyle = RANK_STYLES[rank] ?? RANK_STYLES[3];
+            const Icon = rankStyle.icon;
+
             return (
               <motion.div
                 key={entry.playerId}
@@ -271,65 +314,97 @@ export default function Leaderboard() {
                 transition={{ delay: index * 0.1 }}
               >
                 <Link href={`/profile/${entry.playerId}/public`} data-testid={`link-top-player-${index}`}>
-                  <Card className={cn(
-                    "relative overflow-hidden transition-all duration-300 hover:scale-[1.02] cursor-pointer group",
-                    "border",
-                    rankStyle?.bg,
-                    rankStyle?.border,
-                    rankStyle?.glow,
-                    index === 0 && "ring-2",
-                    rankStyle?.ringColor
-                  )}>
+                  <article
+                    className={cn(
+                      "gloss group relative h-full cursor-pointer overflow-hidden rounded-card border p-5",
+                      "transition-transform duration-300 hover:scale-[1.02]",
+                    )}
+                    style={{
+                      backgroundColor: "hsl(var(--obsidian-1))",
+                      borderColor: rankStyle.borderColor,
+                      boxShadow: rankStyle.glow,
+                    }}
+                  >
                     <div className="absolute top-3 right-3 flex items-center gap-1">
                       <button
                         onClick={(e) => sharePlayer(entry.playerId, entry.name, e)}
-                        className="p-1 rounded-md opacity-60 group-hover:opacity-100 hover:bg-white/10 transition-opacity"
+                        className="rounded-md p-1 opacity-60 transition-opacity hover:bg-muted group-hover:opacity-100"
                         aria-label={`Copy ${entry.name}'s profile link`}
                       >
                         <Share2 className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
                       </button>
-                      <Icon className={cn("w-8 h-8", rankStyle?.iconColor)} style={{ filter: `drop-shadow(0 0 10px currentColor)` }} />
+                      <Icon aria-hidden className="h-6 w-6" style={{ color: rankStyle.iconColor }} />
                     </div>
 
-                    <CardContent className="p-5">
-                      <div className="flex items-center gap-4">
-                        <div className="relative">
-                          <div className={cn(
-                            "w-16 h-16 rounded-xl flex items-center justify-center text-xl font-bold border-2",
-                            rankStyle?.border,
-                            "from-muted to-muted/50"
-                          )}>
-                            {entry.jerseyNumber || "#"}
-                          </div>
-                          <div
-                            className={cn(
-                              "absolute -bottom-2 -right-2 w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm",
-                              index === 0 && "bg-yellow-500 text-black",
-                              index === 1 && "bg-slate-400 text-black",
-                              index === 2 && "bg-orange-500 text-black"
-                            )}
-                            aria-label={index === 0 ? "1st place" : index === 1 ? "2nd place" : "3rd place"}
-                          >
-                            #{index + 1}
-                          </div>
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-lg text-foreground truncate">{entry.name}</h3>
-                          <p className="text-sm text-muted-foreground">{entry.team || "No Team"}</p>
-                          <p className="text-xs text-muted-foreground">{formatPositions(entry.position)}</p>
-                        </div>
+                    <div className="flex items-center gap-4">
+                      {/* leaned rank numeral — the ranking drama */}
+                      <div className="lean flex flex-col items-center pr-1">
+                        <span
+                          className="leading-none tabular-nums"
+                          style={{
+                            ...DISPLAY_BLACK,
+                            fontSize: "clamp(2rem, 1.4rem + 2vw, 3rem)",
+                            color: rankStyle.numeralColor,
+                          }}
+                          aria-label={rank === 1 ? "1st place" : rank === 2 ? "2nd place" : "3rd place"}
+                        >
+                          {rank}
+                        </span>
+                        <span
+                          className="mt-1 font-display text-label uppercase"
+                          style={{ ...CONDENSED, color: "hsl(var(--silver-mute))" }}
+                        >
+                          Rank
+                        </span>
                       </div>
 
-                      <div className="mt-4 flex items-center justify-between">
-                        <GradeBadge grade={entry.avgGrade} size="lg" />
-                        <div className="text-right">
-                          <p className="text-xs text-muted-foreground">Games</p>
-                          <p className="font-bold text-lg tabular-nums">{entry.gamesPlayed}</p>
-                        </div>
+                      <div
+                        className="angle-cut flex h-14 w-14 shrink-0 items-center justify-center border font-display text-lg tabular-nums"
+                        style={{
+                          fontWeight: 800,
+                          backgroundColor: "hsl(var(--obsidian-2))",
+                          borderColor: "hsl(var(--line))",
+                          color: "hsl(var(--silver))",
+                        }}
+                      >
+                        {entry.jerseyNumber || "#"}
                       </div>
-                    </CardContent>
-                  </Card>
+
+                      <div className="flex-1 min-w-0">
+                        <h3
+                          className="truncate uppercase text-foreground"
+                          style={{ ...DISPLAY_BLACK, fontSize: "clamp(0.95rem, 0.7rem + 1vw, 1.15rem)" }}
+                        >
+                          {entry.name}
+                        </h3>
+                        <p className="truncate font-body text-sm text-muted-foreground">{entry.team || "No Team"}</p>
+                        <p
+                          className="mt-0.5 font-mono text-muted-foreground"
+                          style={{ fontSize: "var(--text-data)" }}
+                        >
+                          {formatPositions(entry.position)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div
+                      className="mt-4 flex items-center justify-between border-t pt-4"
+                      style={{ borderColor: "hsl(var(--line))" }}
+                    >
+                      <GradeBadge grade={entry.avgGrade} size="lg" />
+                      <div className="text-right">
+                        <p
+                          className="font-display text-label uppercase"
+                          style={{ ...CONDENSED, color: "hsl(var(--silver-lo))" }}
+                        >
+                          Games
+                        </p>
+                        <p className="font-mono text-lg font-medium tabular-nums text-foreground">
+                          {entry.gamesPlayed}
+                        </p>
+                      </div>
+                    </div>
+                  </article>
                 </Link>
               </motion.div>
             );
@@ -337,38 +412,52 @@ export default function Leaderboard() {
         </div>
       )}
 
-      <Card className="relative overflow-hidden bg-card/80 border-border">
-        <div className="absolute inset-x-[15%] top-0 h-px from-transparent via-accent/30 to-transparent" />
-        
-        <div className="overflow-x-auto">
+      {/* the full table — dense, tabular, sticky header */}
+      <section
+        aria-label="Full rankings"
+        className="overflow-hidden rounded-card border"
+        style={{ backgroundColor: "hsl(var(--obsidian-1))", borderColor: "hsl(var(--line))" }}
+      >
+        <div className="max-h-[70vh] overflow-auto">
           <table className="w-full text-left border-collapse min-w-[700px]">
             <thead>
-              <tr className="bg-accent/[0.03] border-b border-border/50">
-                <th scope="col" className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Rank</th>
-                <th scope="col" className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Player</th>
-                <th scope="col" className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Grade</th>
-                <>
-                    <th scope="col" className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">PPG</th>
-                    <th scope="col" className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">RPG</th>
-                    <th scope="col" className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">APG</th>
-                    <th scope="col" className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">FG%</th>
-                  </>
-                <th scope="col" className="px-4 md:px-6 py-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Games</th>
-                <th scope="col" className="px-4 md:px-6 py-4 sr-only">Actions</th>
+              <tr>
+                {TABLE_COLUMNS.map((h) => (
+                  <th
+                    key={h}
+                    scope="col"
+                    className="sticky top-0 z-10 whitespace-nowrap border-b px-4 py-3 font-display text-label uppercase md:px-6"
+                    style={{
+                      ...CONDENSED,
+                      color: "hsl(var(--silver-lo))",
+                      backgroundColor: "hsl(var(--obsidian-2))",
+                      borderColor: "hsl(var(--line))",
+                    }}
+                  >
+                    {h}
+                  </th>
+                ))}
+                <th
+                  scope="col"
+                  className="sticky top-0 z-10 border-b px-4 py-3 md:px-6"
+                  style={{ backgroundColor: "hsl(var(--obsidian-2))", borderColor: "hsl(var(--line))" }}
+                >
+                  <span className="sr-only">Actions</span>
+                </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border/50">
+            <tbody style={{ fontVariantNumeric: "tabular-nums lining-nums" }}>
               {filteredLeaderboard.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-4">
+                  <td colSpan={9} className="px-6 py-4">
                     <EmptyState
                       icon={hasFilters ? Trophy : Users}
                       title={hasFilters ? "No Matches Found" : "No Players Yet"}
-                      description={hasFilters 
+                      description={hasFilters
                         ? "No players match your current filters. Try adjusting your search criteria."
                         : "Add players and log games to see them ranked on the leaderboard."
                       }
-                      action={hasFilters 
+                      action={hasFilters
                         ? { label: "Clear Filters", onClick: clearFilters }
                         : { label: "Add Players", href: "/players" }
                       }
@@ -381,31 +470,46 @@ export default function Leaderboard() {
                   {filteredLeaderboard.slice(3).map((entry: any, index: number) => {
                     const rank = index + 4;
                     return (
-                      <motion.tr 
+                      <motion.tr
                         key={entry.playerId}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.03 }}
-                        className="transition-all duration-300 hover:bg-accent/[0.04] group"
+                        className="group border-t transition-colors duration-300 hover:bg-muted/40"
+                        style={{ borderColor: "hsl(var(--line))" }}
                         data-testid={`row-leaderboard-${rank}`}
                       >
                         <td className="px-4 md:px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-base tabular-nums text-foreground/50">#{rank}</span>
-                          </div>
+                          <span
+                            className="lean inline-block font-display text-base tabular-nums"
+                            style={{ fontWeight: 800, color: "hsl(var(--silver-mute))" }}
+                          >
+                            {rank}
+                          </span>
                         </td>
                         <td className="px-4 md:px-6 py-4">
                           <Link href={`/profile/${entry.playerId}/public`} data-testid={`link-player-profile-${entry.playerId}`}>
                             <div className="flex items-center gap-3 cursor-pointer">
-                              <div className="w-10 h-10 rounded-lg from-accent/20 to-transparent border border-accent/20 flex items-center justify-center font-bold text-sm text-accent shrink-0">
+                              <div
+                                className="angle-cut flex h-10 w-10 shrink-0 items-center justify-center border font-display text-sm tabular-nums"
+                                style={{
+                                  fontWeight: 800,
+                                  backgroundColor: "hsl(var(--obsidian-2))",
+                                  borderColor: "hsl(var(--line))",
+                                  color: "hsl(var(--silver))",
+                                }}
+                              >
                                 {entry.jerseyNumber || "#"}
                               </div>
                               <div className="min-w-0">
-                                <p className="font-bold text-foreground group-hover:text-accent transition-colors truncate">
+                                <p className="truncate font-body font-semibold text-foreground transition-colors group-hover:text-accent">
                                   {entry.name}
                                 </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {entry.team || "No Team"} • {entry.position}
+                                <p
+                                  className="truncate font-mono text-muted-foreground"
+                                  style={{ fontSize: "var(--text-data)" }}
+                                >
+                                  {entry.team || "No Team"} · {entry.position}
                                 </p>
                               </div>
                             </div>
@@ -414,17 +518,15 @@ export default function Leaderboard() {
                         <td className="px-4 md:px-6 py-4">
                           <GradeBadge grade={entry.avgGrade} size="sm" />
                         </td>
-                        <>
-                            <td className="px-4 md:px-6 py-4 font-mono font-bold tabular-nums text-foreground">{entry.avgPoints ?? 0}</td>
-                            <td className="px-4 md:px-6 py-4 font-mono tabular-nums text-foreground/70">{entry.avgRebounds ?? 0}</td>
-                            <td className="px-4 md:px-6 py-4 font-mono tabular-nums text-foreground/70">{entry.avgAssists ?? 0}</td>
-                            <td className="px-4 md:px-6 py-4 font-mono tabular-nums text-foreground/70">{entry.fgPct ?? 0}%</td>
-                          </>
-                        <td className="px-4 md:px-6 py-4 tabular-nums text-foreground/50">{entry.gamesPlayed}</td>
+                        <td className="px-4 md:px-6 py-4 font-mono font-medium tabular-nums text-foreground">{entry.avgPoints ?? 0}</td>
+                        <td className="px-4 md:px-6 py-4 font-mono tabular-nums" style={{ color: "hsl(var(--silver-lo))" }}>{entry.avgRebounds ?? 0}</td>
+                        <td className="px-4 md:px-6 py-4 font-mono tabular-nums" style={{ color: "hsl(var(--silver-lo))" }}>{entry.avgAssists ?? 0}</td>
+                        <td className="px-4 md:px-6 py-4 font-mono tabular-nums" style={{ color: "hsl(var(--silver-lo))" }}>{entry.fgPct ?? 0}%</td>
+                        <td className="px-4 md:px-6 py-4 font-mono tabular-nums" style={{ color: "hsl(var(--silver-mute))" }}>{entry.gamesPlayed}</td>
                         <td className="px-4 md:px-6 py-4">
                           <button
                             onClick={(e) => sharePlayer(entry.playerId, entry.name, e)}
-                            className="p-1.5 rounded-md opacity-60 group-hover:opacity-100 hover:bg-accent/10 transition-opacity"
+                            className="rounded-md p-1.5 opacity-60 transition-opacity hover:bg-muted group-hover:opacity-100"
                             aria-label={`Copy ${entry.name}'s profile link`}
                           >
                             <Share2 className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
@@ -438,7 +540,7 @@ export default function Leaderboard() {
             </tbody>
           </table>
         </div>
-      </Card>
+      </section>
     </div>
   );
 }
