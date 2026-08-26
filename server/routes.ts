@@ -2423,7 +2423,7 @@ export async function registerRoutes(
           sport: player.sport,
           currentTier: player.currentTier,
           totalXp: player.totalXp,
-          school: player.school,
+          school: player.showSchool ? player.school : null,
           graduationYear: player.graduationYear,
           state: player.state, // Only state, not city for privacy
           gpa: (player as any).isPublic !== false ? (player as any).gpa ?? null : null,
@@ -4431,7 +4431,9 @@ export async function registerRoutes(
     try {
       const { position, minHeight, minGrade, sortBy } = req.query;
       
-      const playersWithStats = await storage.getPlayersWithStats();
+      const allPlayersWithStats = await storage.getPlayersWithStats();
+      // Privacy flags are enforced per-route (see CLAUDE.md).
+      const playersWithStats = allPlayersWithStats.filter(p => p.profileVisibility !== 'hidden');
       const badges = await Promise.all(
         playersWithStats.map(p => storage.getPlayerBadges(p.id))
       );
@@ -4592,8 +4594,12 @@ export async function registerRoutes(
       // Default to basketball if no sport specified
       const selectedSport = (sport as string) || 'basketball';
       
-      const playersWithStats = await storage.getPlayersWithStats();
-      
+      const allPlayersWithStats = await storage.getPlayersWithStats();
+
+      // Privacy flags are enforced per-route (see CLAUDE.md). Drop players who
+      // hid their profile before any filtering, scoring or ranking happens.
+      const playersWithStats = allPlayersWithStats.filter(p => p.profileVisibility !== 'hidden');
+
       // Fetch all caliber badges once for efficiency
       const allCaliberBadges = await storage.getAllCaliberBadges();
       
@@ -4631,7 +4637,7 @@ export async function registerRoutes(
             photoUrl: player.photoUrl,
             city: player.city,
             state: player.state,
-            school: player.school,
+            school: player.showSchool ? player.school : null,
             graduationYear: player.graduationYear,
             currentTier: player.currentTier || 'Rookie',
             ppg: 0,
@@ -4654,7 +4660,7 @@ export async function registerRoutes(
             openToOpportunities: player.openToOpportunities || false,
             highlightCount,
             badgeCount,
-            gpa: player.gpa ? parseFloat(player.gpa) : null,
+            gpa: player.showGpa && player.gpa ? parseFloat(player.gpa) : null,
             threePtPct: null,
             completionPct: null,
             hasCaliberBadge,
@@ -4709,7 +4715,7 @@ export async function registerRoutes(
           photoUrl: player.photoUrl,
           city: player.city,
           state: player.state,
-          school: player.school,
+          school: player.showSchool ? player.school : null,
           graduationYear: player.graduationYear,
           currentTier: player.currentTier || 'Rookie',
           ppg: Number(ppg.toFixed(1)),
@@ -4732,7 +4738,7 @@ export async function registerRoutes(
           openToOpportunities: player.openToOpportunities || false,
           highlightCount,
           badgeCount,
-          gpa: player.gpa ? parseFloat(player.gpa) : null,
+          gpa: player.showGpa && player.gpa ? parseFloat(player.gpa) : null,
           threePtPct: threePtPct !== null ? Number(threePtPct.toFixed(1)) : null,
           completionPct: completionPct !== null ? Number(completionPct.toFixed(1)) : null,
           hasCaliberBadge,
@@ -11182,7 +11188,7 @@ Only respond with the JSON array, no other text.`;
           team: player.team,
           photoUrl: player.photoUrl,
           sport,
-          school: player.school,
+          school: player.showSchool ? player.school : null,
           graduationYear: player.graduationYear,
         },
         clips: topClips,
@@ -17005,9 +17011,14 @@ Only respond with the JSON array, no other text.`;
       if (graduationYear) conditions.push(eq(players.graduationYear, parseInt(graduationYear)));
       if (search) conditions.push(ilike(players.name, `%${search}%`));
 
-      const matchingPlayers = await db.select()
+      const allMatching = await db.select()
         .from(players)
         .where(and(...conditions));
+
+      // Privacy flags are enforced per-route (see CLAUDE.md). This endpoint is
+      // reachable without a login, so a player who hid their profile must not
+      // appear in it at all.
+      const matchingPlayers = allMatching.filter(p => p.profileVisibility !== 'hidden');
 
       const enrichedPlayers = await Promise.all(matchingPlayers.map(async (player) => {
         const playerGames = await storage.getGamesByPlayerId(player.id);
@@ -17053,10 +17064,10 @@ Only respond with the JSON array, no other text.`;
           position: player.position,
           city: player.city,
           state: player.state,
-          school: player.school,
+          school: player.showSchool ? player.school : null,
           graduationYear: player.graduationYear,
           height: player.height,
-          gpa: player.gpa ? parseFloat(player.gpa as any) : null,
+          gpa: player.showGpa && player.gpa ? parseFloat(player.gpa as any) : null,
           currentTier: player.currentTier,
           totalXp: player.totalXp,
           openToOpportunities: player.openToOpportunities,
@@ -17294,10 +17305,10 @@ Only respond with the JSON array, no other text.`;
           city: player.city,
           state: player.state,
           height: player.height,
-          school: player.school,
+          school: player.showSchool ? player.school : null,
           graduationYear: player.graduationYear,
           level: player.level,
-          gpa: player.gpa ? parseFloat(player.gpa.toString()) : null,
+          gpa: player.showGpa && player.gpa ? parseFloat(player.gpa.toString()) : null,
           currentTier: player.currentTier,
           totalXp: player.totalXp,
           jerseyNumber: player.jerseyNumber,
