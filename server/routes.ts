@@ -8,6 +8,7 @@ import { players, games, badges, headToHeadChallenges, statVerifications, player
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { calculateAIRating, calculateProjection, type GameStats, type PlayerMetrics, type PeerStats, type AIRatingResult, type ProjectionResult } from "@shared/ai-rating-engine";
 import type { Sport } from "@shared/sports-config";
+import { ROLE_LABELS, USER_ROLES, type UserRole } from "@shared/roles";
 import { GoogleGenAI } from "@google/genai";
 import multer from "multer";
 import fs from "fs";
@@ -85,6 +86,56 @@ const isPlayer: RequestHandler = async (req: any, res, next) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+/**
+ * Builds middleware that admits only the listed roles.
+ *
+ * Roles are locked at sign-up (see POST /api/users/role), so this is a durable
+ * check — a caller can't flip role to get past it. Mirrors the shape of the
+ * existing `requiresCoach`, including the app-owner bypass.
+ */
+const requireRole = (...roles: UserRole[]): RequestHandler => async (req: any, res, next) => {
+  try {
+    if (!req.isAuthenticated() || !req.user?.claims?.sub) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const user = await authStorage.getUser(req.user.claims.sub);
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    // Always publish the user first: handlers read req.caliberUser, and the
+    // app-owner bypass below must not leave it unset.
+    (req as any).caliberUser = user;
+
+    // App owner bypasses all role requirements
+    if (isAppOwner(req.user.claims.sub)) {
+      return next();
+    }
+
+    if (!user.role || !roles.includes(user.role as UserRole)) {
+      const required = roles.map((role) => ROLE_LABELS[role]).join(' or ');
+      return res.status(403).json({
+        message: `${required} access required`,
+        type: 'role_forbidden',
+      });
+    }
+
+    next();
+  } catch (error) {
+    console.error(`Error in requireRole(${roles.join(',')}) middleware:`, error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const isRecruiter = requireRole('recruiter');
+const isGuardian = requireRole('guardian');
+/** Athlete-side activity: logging, gear, training data. Recruiters and guardians
+ *  read player data but never write it. */
+const isPlayerOrCoach = requireRole('player', 'coach');
+/** Athlete-only surfaces — the athlete's own recruiting posture. */
+const isPlayerOnly = requireRole('player');
 
 // Helper to check if user can modify a specific player
 const canModifyPlayer = async (req: any, playerId: number): Promise<boolean> => {
@@ -1868,14 +1919,35 @@ export async function registerRoutes(
     }
   });
 
-  // Set user role (player, coach, recruiter, or guardian)
+  // Set user role (player, coach, recruiter, or guardian).
+  // Write-once: the role is chosen at sign-up and locked from then on. Only an
+  // admin can change it afterwards, via PATCH /api/admin/users/:id/role.
   app.post('/api/users/role', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { role, organizationName } = z.object({
-        role: z.enum(['player', 'coach', 'recruiter', 'guardian']),
+        role: z.enum(USER_ROLES),
         organizationName: z.string().optional(),
       }).parse(req.body);
+
+      const existingUser = await authStorage.getUser(userId);
+      if (!existingUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // `role` defaults to 'player' in the DB, so it can't tell us whether the
+      // user has chosen — `roleSelectedAt` is the marker that they have.
+      if (existingUser.roleSelectedAt) {
+        // Re-posting the same role is a no-op so retries and refreshes stay safe.
+        if (existingUser.role === role) {
+          return res.json(existingUser);
+        }
+        return res.status(409).json({
+          message: `Your account is registered as a ${ROLE_LABELS[existingUser.role as UserRole] ?? existingUser.role}. Roles are set once at sign-up and can't be changed. Contact support if this is wrong.`,
+          type: 'role_locked',
+          role: existingUser.role,
+        });
+      }
 
       // Coach role requires an organization/team to prevent uncredentialed claims
       if (role === 'coach') {
@@ -1888,7 +1960,8 @@ export async function registerRoutes(
         }
       }
 
-      const updatedUser = await authStorage.updateUserRole(userId, role);
+      // Locks the role — from here only an admin can change it.
+      const updatedUser = await authStorage.selectUserRoleAtSignup(userId, role, existingUser.playerId);
       if (!updatedUser) {
         return res.status(404).json({ message: 'User not found' });
       }
@@ -7647,7 +7720,7 @@ Respond in this exact JSON format (no extra text outside the JSON):
   });
 
   // Delete story (requires authentication)
-  app.delete('/api/stories/:id', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/stories/:id', isAuthenticated, isPlayerOrCoach, async (req: any, res) => {
     try {
       const storyId = Number(req.params.id);
       const story = await storage.getStory(storyId);
@@ -7920,7 +7993,7 @@ Respond in this exact JSON format (no extra text outside the JSON):
     }
   });
 
-  app.delete('/api/highlights/:id', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/highlights/:id', isAuthenticated, isPlayerOrCoach, async (req: any, res) => {
     try {
       const highlightId = Number(req.params.id);
       const highlight = await storage.getStoryHighlight(highlightId);
@@ -10085,10 +10158,17 @@ Only respond with the JSON array, no other text.`;
     try {
       const userId = req.params.id;
       const { role } = req.body;
-      if (!['player', 'coach', 'recruiter'].includes(role)) {
+      // Includes 'guardian' — this is now the only way a role can change after
+      // sign-up, so it must cover every role.
+      if (!(USER_ROLES as readonly string[]).includes(role)) {
         return res.status(400).json({ error: 'Invalid role' });
       }
-      await db.update(users).set({ role }).where(eq(users.id, userId));
+      // Stamp the lock too, so an admin-assigned role doesn't leave the user a
+      // free self-serve pick. Partial update — must not disturb playerId.
+      const updated = await authStorage.updateUser(userId, { role, roleSelectedAt: new Date() });
+      if (!updated) {
+        return res.status(404).json({ error: 'User not found' });
+      }
       res.json({ success: true });
     } catch (err) {
       console.error('Admin update role error:', err);
@@ -11325,7 +11405,7 @@ Only respond with the JSON array, no other text.`;
     }
   });
 
-  app.post('/api/workouts/:id/share', isAuthenticated, async (req: any, res) => {
+  app.post('/api/workouts/:id/share', isAuthenticated, isPlayerOrCoach, async (req: any, res) => {
     try {
       const workoutId = parseInt(req.params.id);
       const workout = await storage.getWorkout(workoutId);
@@ -12947,7 +13027,7 @@ Only respond with the JSON array, no other text.`;
   });
 
   // POST /api/shop/purchase - Purchase an item with coins (requires auth)
-  app.post('/api/shop/purchase', isAuthenticated, async (req: any, res) => {
+  app.post('/api/shop/purchase', isAuthenticated, isPlayerOrCoach, async (req: any, res) => {
     try {
       const user = await authStorage.getUser(req.user.claims.sub);
       if (!user) {
@@ -13022,7 +13102,7 @@ Only respond with the JSON array, no other text.`;
   });
 
   // POST /api/shop/equip - Equip/unequip an item (requires auth)
-  app.post('/api/shop/equip', isAuthenticated, async (req: any, res) => {
+  app.post('/api/shop/equip', isAuthenticated, isPlayerOrCoach, async (req: any, res) => {
     try {
       const user = await authStorage.getUser(req.user.claims.sub);
       if (!user) {
@@ -13183,7 +13263,7 @@ Only respond with the JSON array, no other text.`;
   });
 
   // POST /api/shop/coins/convert-xp - Convert XP to coins (100 XP = 1 coin)
-  app.post('/api/shop/coins/convert-xp', isAuthenticated, async (req: any, res) => {
+  app.post('/api/shop/coins/convert-xp', isAuthenticated, isPlayerOrCoach, async (req: any, res) => {
     try {
       const XP_PER_COIN = 100;
 
@@ -13309,7 +13389,7 @@ Only respond with the JSON array, no other text.`;
   });
 
   // PATCH /api/ratings/:id - Update a rating
-  app.patch('/api/ratings/:id', isAuthenticated, async (req: any, res) => {
+  app.patch('/api/ratings/:id', isAuthenticated, requiresCoach, async (req: any, res) => {
     try {
       const ratingId = parseInt(req.params.id);
       if (isNaN(ratingId)) {
@@ -13333,7 +13413,7 @@ Only respond with the JSON array, no other text.`;
   });
 
   // DELETE /api/ratings/:id - Delete a rating
-  app.delete('/api/ratings/:id', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/ratings/:id', isAuthenticated, requiresCoach, async (req: any, res) => {
     try {
       const ratingId = parseInt(req.params.id);
       if (isNaN(ratingId)) {
@@ -14248,7 +14328,7 @@ Only respond with the JSON array, no other text.`;
   });
 
   // POST /api/highlights/:id/verify - Run verification check
-  app.post('/api/highlights/:id/verify', isAuthenticated, async (req: any, res) => {
+  app.post('/api/highlights/:id/verify', isAuthenticated, requiresCoach, async (req: any, res) => {
     try {
       const highlightId = parseInt(req.params.id);
       if (isNaN(highlightId)) {
@@ -14627,6 +14707,12 @@ Only respond with the JSON array, no other text.`;
         return res.status(400).json({ message: "Team does not belong to this league" });
       }
 
+      // Roster changes are the team captain's call, or the league creator's.
+      const league = await storage.getLeague(leagueId);
+      if (team.captainUserId !== userId && league?.createdByUserId !== userId) {
+        return res.status(403).json({ message: "Only the team captain or league creator can add players to this roster" });
+      }
+
       const validatedData = insertLeagueTeamRosterSchema.parse({
         ...req.body,
         leagueTeamId: teamId,
@@ -14665,6 +14751,12 @@ Only respond with the JSON array, no other text.`;
 
       if (team.leagueId !== leagueId) {
         return res.status(400).json({ message: "Team does not belong to this league" });
+      }
+
+      // Roster changes are the team captain's call, or the league creator's.
+      const league = await storage.getLeague(leagueId);
+      if (team.captainUserId !== userId && league?.createdByUserId !== userId) {
+        return res.status(403).json({ message: "Only the team captain or league creator can remove players from this roster" });
       }
 
       await storage.removePlayerFromLeagueTeam(teamId, playerId);
@@ -14714,6 +14806,11 @@ Only respond with the JSON array, no other text.`;
         return res.status(404).json({ message: "League not found" });
       }
 
+      // Only the league creator may change league-wide structure.
+      if (league.createdByUserId !== userId) {
+        return res.status(403).json({ message: "Only the league creator can schedule games" });
+      }
+
       const validatedData = insertLeagueGameSchema.parse({
         ...req.body,
         leagueId,
@@ -14753,6 +14850,12 @@ Only respond with the JSON array, no other text.`;
         return res.status(400).json({ message: "Game does not belong to this league" });
       }
 
+      // Only the league creator may change league-wide structure.
+      const league = await storage.getLeague(leagueId);
+      if (league?.createdByUserId !== userId) {
+        return res.status(403).json({ message: "Only the league creator can update games" });
+      }
+
       const updates = req.body;
       delete updates.id;
       delete updates.leagueId;
@@ -14787,6 +14890,12 @@ Only respond with the JSON array, no other text.`;
 
       if (game.leagueId !== leagueId) {
         return res.status(400).json({ message: "Game does not belong to this league" });
+      }
+
+      // Only the league creator may change league-wide structure.
+      const league = await storage.getLeague(leagueId);
+      if (league?.createdByUserId !== userId) {
+        return res.status(403).json({ message: "Only the league creator can finalize games" });
       }
 
       if (game.status === "final") {
@@ -15037,6 +15146,11 @@ Only respond with the JSON array, no other text.`;
         return res.status(404).json({ message: "League not found" });
       }
 
+      // Only the league creator may change league-wide structure.
+      if (league.createdByUserId !== userId) {
+        return res.status(403).json({ message: "Only the league creator can create rivalries" });
+      }
+
       const { team1Id, team2Id, rivalryName } = req.body;
 
       if (!team1Id || !team2Id) {
@@ -15102,6 +15216,12 @@ Only respond with the JSON array, no other text.`;
         return res.status(400).json({ message: "Rivalry does not belong to this league" });
       }
 
+      // Only the league creator may change league-wide structure.
+      const league = await storage.getLeague(leagueId);
+      if (league?.createdByUserId !== userId) {
+        return res.status(403).json({ message: "Only the league creator can update rivalries" });
+      }
+
       const { rivalryName, team1Wins, team2Wins, ties, currentStreakTeamId, currentStreakCount } = req.body;
 
       const updates: Record<string, any> = {};
@@ -15143,6 +15263,12 @@ Only respond with the JSON array, no other text.`;
         return res.status(400).json({ message: "Rivalry does not belong to this league" });
       }
 
+      // Only the league creator may change league-wide structure.
+      const league = await storage.getLeague(leagueId);
+      if (league?.createdByUserId !== userId) {
+        return res.status(403).json({ message: "Only the league creator can delete rivalries" });
+      }
+
       await storage.deleteLeagueRivalry(rivalryId);
       res.status(204).send();
     } catch (error) {
@@ -15172,6 +15298,12 @@ Only respond with the JSON array, no other text.`;
 
       if (rivalry.leagueId !== leagueId) {
         return res.status(400).json({ message: "Rivalry does not belong to this league" });
+      }
+
+      // Only the league creator may change league-wide structure.
+      const league = await storage.getLeague(leagueId);
+      if (league?.createdByUserId !== userId) {
+        return res.status(403).json({ message: "Only the league creator can update rivalry records" });
       }
 
       const { winningTeamId, isTie } = req.body;
@@ -15715,7 +15847,7 @@ Only respond with the JSON array, no other text.`;
   });
 
   // POST /api/players/:id/fitness - Create new fitness data entry (manual entry)
-  app.post("/api/players/:id/fitness", isAuthenticated, async (req, res) => {
+  app.post("/api/players/:id/fitness", isAuthenticated, isPlayerOrCoach, async (req, res) => {
     try {
       const playerId = parseInt(req.params.id);
       if (isNaN(playerId)) {
@@ -15744,7 +15876,7 @@ Only respond with the JSON array, no other text.`;
   });
 
   // PUT /api/players/:id/fitness/:dataId - Update fitness data entry
-  app.put("/api/players/:id/fitness/:dataId", isAuthenticated, async (req, res) => {
+  app.put("/api/players/:id/fitness/:dataId", isAuthenticated, isPlayerOrCoach, async (req, res) => {
     try {
       const playerId = parseInt(req.params.id);
       const dataId = parseInt(req.params.dataId);
@@ -15771,7 +15903,7 @@ Only respond with the JSON array, no other text.`;
   });
 
   // DELETE /api/players/:id/fitness/:dataId - Delete fitness data entry
-  app.delete("/api/players/:id/fitness/:dataId", isAuthenticated, async (req, res) => {
+  app.delete("/api/players/:id/fitness/:dataId", isAuthenticated, isPlayerOrCoach, async (req, res) => {
     try {
       const playerId = parseInt(req.params.id);
       const dataId = parseInt(req.params.dataId);
@@ -15794,7 +15926,7 @@ Only respond with the JSON array, no other text.`;
   });
 
   // POST /api/players/:id/fitness/sync - Endpoint for syncing wearable data (bulk)
-  app.post("/api/players/:id/fitness/sync", isAuthenticated, async (req, res) => {
+  app.post("/api/players/:id/fitness/sync", isAuthenticated, isPlayerOrCoach, async (req, res) => {
     try {
       const playerId = parseInt(req.params.id);
       if (isNaN(playerId)) {
@@ -16477,7 +16609,7 @@ Only respond with the JSON array, no other text.`;
   });
 
   // POST /api/players/:playerId/event-registrations - Register interest in an event
-  app.post("/api/players/:playerId/event-registrations", isAuthenticated, async (req, res) => {
+  app.post("/api/players/:playerId/event-registrations", isAuthenticated, isPlayerOrCoach, async (req, res) => {
     try {
       const playerId = parseInt(req.params.playerId);
       if (isNaN(playerId)) {
@@ -16546,7 +16678,7 @@ Only respond with the JSON array, no other text.`;
   });
 
   // DELETE /api/players/:playerId/event-registrations/:eventId - Remove registration
-  app.delete("/api/players/:playerId/event-registrations/:eventId", isAuthenticated, async (req, res) => {
+  app.delete("/api/players/:playerId/event-registrations/:eventId", isAuthenticated, isPlayerOrCoach, async (req, res) => {
     try {
       const playerId = parseInt(req.params.playerId);
       const eventId = parseInt(req.params.eventId);
@@ -16626,7 +16758,7 @@ Only respond with the JSON array, no other text.`;
   });
 
   // POST /api/players/:playerId/ncaa-eligibility - Create/Update player's NCAA eligibility progress
-  app.post("/api/players/:playerId/ncaa-eligibility", isAuthenticated, async (req, res) => {
+  app.post("/api/players/:playerId/ncaa-eligibility", isAuthenticated, isPlayerOrCoach, async (req, res) => {
     try {
       const playerId = parseInt(req.params.playerId);
       if (isNaN(playerId)) {
@@ -16787,7 +16919,7 @@ Only respond with the JSON array, no other text.`;
   });
   
   // DELETE a recommendation (only the coach who wrote it can delete)
-  app.delete('/api/players/:playerId/recommendations/:recommendationId', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/players/:playerId/recommendations/:recommendationId', isAuthenticated, isPlayerOrCoach, async (req: any, res) => {
     try {
       const playerId = parseInt(req.params.playerId, 10);
       const recommendationId = parseInt(req.params.recommendationId, 10);
@@ -17431,7 +17563,7 @@ Only respond with the JSON array, no other text.`;
     }
   });
 
-  app.delete("/api/players/:playerId/athletic-measurements/:id", isAuthenticated, async (req, res) => {
+  app.delete("/api/players/:playerId/athletic-measurements/:id", isAuthenticated, isPlayerOrCoach, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteAthleticMeasurement(id);
@@ -17875,7 +18007,7 @@ The email should:
 
   // === RECRUITER FEATURES ===
 
-  app.post("/api/recruiter/profile", isAuthenticated, async (req: any, res) => {
+  app.post("/api/recruiter/profile", isAuthenticated, isRecruiter, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       if (!userId) return res.status(401).json({ message: "Not authenticated" });
@@ -17914,7 +18046,7 @@ The email should:
     }
   });
 
-  app.get("/api/recruiter/profile", isAuthenticated, async (req: any, res) => {
+  app.get("/api/recruiter/profile", isAuthenticated, isRecruiter, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       if (!userId) return res.status(401).json({ message: "Not authenticated" });
@@ -17929,7 +18061,7 @@ The email should:
     }
   });
 
-  app.patch("/api/recruiter/profile", isAuthenticated, async (req: any, res) => {
+  app.patch("/api/recruiter/profile", isAuthenticated, isRecruiter, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       if (!userId) return res.status(401).json({ message: "Not authenticated" });
@@ -17977,7 +18109,7 @@ The email should:
     }
   });
 
-  app.get("/api/recruiter/players", isAuthenticated, async (req: any, res) => {
+  app.get("/api/recruiter/players", isAuthenticated, isRecruiter, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       if (!userId) return res.status(401).json({ message: "Not authenticated" });
@@ -18103,7 +18235,7 @@ The email should:
     }
   });
 
-  app.get("/api/recruiter/bookmarks", isAuthenticated, async (req: any, res) => {
+  app.get("/api/recruiter/bookmarks", isAuthenticated, isRecruiter, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       if (!userId) return res.status(401).json({ message: "Not authenticated" });
@@ -18118,7 +18250,7 @@ The email should:
     }
   });
 
-  app.post("/api/recruiter/bookmarks/:playerId", isAuthenticated, async (req: any, res) => {
+  app.post("/api/recruiter/bookmarks/:playerId", isAuthenticated, isRecruiter, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       if (!userId) return res.status(401).json({ message: "Not authenticated" });
@@ -18141,7 +18273,7 @@ The email should:
     }
   });
 
-  app.delete("/api/recruiter/bookmarks/:playerId", isAuthenticated, async (req: any, res) => {
+  app.delete("/api/recruiter/bookmarks/:playerId", isAuthenticated, isRecruiter, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       if (!userId) return res.status(401).json({ message: "Not authenticated" });
@@ -18156,7 +18288,7 @@ The email should:
     }
   });
 
-  app.post("/api/recruiter/signals/:playerId", isAuthenticated, async (req: any, res) => {
+  app.post("/api/recruiter/signals/:playerId", isAuthenticated, isRecruiter, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       if (!userId) return res.status(401).json({ message: "Not authenticated" });
@@ -18187,7 +18319,7 @@ The email should:
     }
   });
 
-  app.post("/api/recruiter/views/:playerId", isAuthenticated, async (req: any, res) => {
+  app.post("/api/recruiter/views/:playerId", isAuthenticated, isRecruiter, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       if (!userId) return res.status(401).json({ message: "Not authenticated" });
@@ -18621,13 +18753,10 @@ The email should:
 
   // === GUARDIAN / FAMILY SYSTEM ROUTES ===
 
-  app.post("/api/guardian/request", isAuthenticated, async (req: any, res) => {
+  app.post("/api/guardian/request", isAuthenticated, isGuardian, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const user = await authStorage.getUser(userId);
-      if (!user || user.role !== 'guardian') {
-        return res.status(403).json({ message: "Guardian role required" });
-      }
+      const user = req.caliberUser;
 
       const { playerId, relationship, inviteCode } = req.body;
 
@@ -18759,7 +18888,7 @@ The email should:
     }
   });
 
-  app.get("/api/guardian/players", isAuthenticated, async (req: any, res) => {
+  app.get("/api/guardian/players", isAuthenticated, isGuardian, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const links = await storage.getLinkedPlayersByGuardian(userId);
@@ -18800,7 +18929,7 @@ The email should:
     }
   });
 
-  app.get("/api/guardian/players/:playerId/dashboard", isAuthenticated, async (req: any, res) => {
+  app.get("/api/guardian/players/:playerId/dashboard", isAuthenticated, isGuardian, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const playerId = parseInt(req.params.playerId);
@@ -19115,13 +19244,9 @@ The email should:
 
   // GET /api/coach/recommendations — coach's own list of recommendations they've written
   // This endpoint was missing but CoachEndorsements.tsx depends on it
-  app.get('/api/coach/recommendations', isAuthenticated, async (req: any, res) => {
+  app.get('/api/coach/recommendations', isAuthenticated, isCoach, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await authStorage.getUser(userId);
-      if (!user || user.role !== 'coach') {
-        return res.status(403).json({ message: 'Coach role required' });
-      }
+      const user = req.caliberUser;
       const recs = await db
         .select()
         .from(coachRecommendations)
@@ -19289,7 +19414,7 @@ The email should:
   });
 
   // DELETE /api/equipment/:id
-  app.delete('/api/equipment/:id', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/equipment/:id', isAuthenticated, isPlayerOrCoach, async (req: any, res) => {
     try {
       const itemId = parseInt(req.params.id);
       if (isNaN(itemId)) return res.status(400).json({ message: "Invalid equipment ID" });
@@ -19405,7 +19530,7 @@ The email should:
 
   // === RECRUITER CONTACT LOG (CRM) ===
 
-  app.get('/api/recruiter/notes/:playerId', isAuthenticated, async (req: any, res) => {
+  app.get('/api/recruiter/notes/:playerId', isRecruiter, async (req: any, res) => {
     try {
       const userId = req.user?.id || req.user?.claims?.sub;
       const recruiter = await storage.getRecruiterProfileByUserId(userId);
@@ -19420,7 +19545,7 @@ The email should:
     }
   });
 
-  app.post('/api/recruiter/notes/:playerId', isAuthenticated, async (req: any, res) => {
+  app.post('/api/recruiter/notes/:playerId', isRecruiter, async (req: any, res) => {
     try {
       const userId = req.user?.id || req.user?.claims?.sub;
       const recruiter = await storage.getRecruiterProfileByUserId(userId);
@@ -19441,7 +19566,7 @@ The email should:
     }
   });
 
-  app.delete('/api/recruiter/notes/:noteId', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/recruiter/notes/:noteId', isRecruiter, async (req: any, res) => {
     try {
       const userId = req.user?.id || req.user?.claims?.sub;
       const recruiter = await storage.getRecruiterProfileByUserId(userId);
@@ -19517,7 +19642,7 @@ The email should:
     }
   });
 
-  app.get('/api/me/transfer-portal-status', isAuthenticated, async (req: any, res) => {
+  app.get('/api/me/transfer-portal-status', isAuthenticated, isPlayerOnly, async (req: any, res) => {
     try {
       const userId = req.user?.id || req.user?.claims?.sub;
       const [player] = await db.select({
@@ -19533,7 +19658,7 @@ The email should:
 
   const portalNoteSchema = z.object({ note: z.string().max(200).optional() });
 
-  app.post('/api/me/transfer-portal', isAuthenticated, async (req: any, res) => {
+  app.post('/api/me/transfer-portal', isAuthenticated, isPlayerOnly, async (req: any, res) => {
     try {
       const userId = req.user?.id || req.user?.claims?.sub;
       const parsed = portalNoteSchema.safeParse(req.body ?? {});
@@ -19556,7 +19681,7 @@ The email should:
     }
   });
 
-  app.delete('/api/me/transfer-portal', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/me/transfer-portal', isAuthenticated, isPlayerOnly, async (req: any, res) => {
     try {
       const userId = req.user?.id || req.user?.claims?.sub;
       const result = await db.update(players).set({
