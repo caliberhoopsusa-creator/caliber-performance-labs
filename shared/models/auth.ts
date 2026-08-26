@@ -21,7 +21,14 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
-  role: varchar("role"), // 'player', 'coach', 'recruiter', or 'guardian' - null means role not yet selected
+  // NOTE: in the live DB this column is `user_role` NOT NULL DEFAULT 'player',
+  // so it is never null — a brand-new account reads as 'player' before the user
+  // has chosen anything. "Has the user actually picked?" is `roleSelectedAt`,
+  // not `role`. Don't reintroduce `!user.role` as a "no role yet" check.
+  role: varchar("role"), // 'player', 'coach', 'recruiter', 'guardian', 'admin'
+  // Set when the user confirms their role at sign-up. Once set, the role is
+  // locked: only an admin can change it (PATCH /api/admin/users/:id/role).
+  roleSelectedAt: timestamp("role_selected_at"),
   playerId: integer("player_id"), // For players, links to their player profile
   preferredSport: varchar("preferred_sport").default("basketball"), // 'basketball' - user's selected sport context
   passwordHash: varchar("password_hash"), // For local auth
