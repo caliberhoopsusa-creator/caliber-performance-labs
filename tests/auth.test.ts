@@ -129,7 +129,7 @@ describe("Role selection", () => {
     cookie = extractCookies(loginRes);
   });
 
-  it("PATCH /api/auth/role sets role to player", async () => {
+  it("PATCH /api/auth/role sets role to player on first selection", async () => {
     const res = await request
       .patch("/api/auth/role")
       .set("Cookie", cookie)
@@ -139,14 +139,72 @@ describe("Role selection", () => {
     expect(res.body.role).toBe("player");
   });
 
-  it("PATCH /api/auth/role sets role to coach", async () => {
+  it("PATCH /api/auth/role is idempotent when re-sending the same role", async () => {
+    const res = await request
+      .patch("/api/auth/role")
+      .set("Cookie", cookie)
+      .send({ role: "player" });
+
+    expect(res.status).toBe(200);
+    expect(res.body.role).toBe("player");
+  });
+
+  it("PATCH /api/auth/role refuses to change a role that is already set", async () => {
     const res = await request
       .patch("/api/auth/role")
       .set("Cookie", cookie)
       .send({ role: "coach" });
 
+    expect(res.status).toBe(409);
+    expect(res.body.type).toBe("role_locked");
+    expect(res.body.role).toBe("player");
+  });
+
+  it("POST /api/users/role refuses to change a role that is already set", async () => {
+    const res = await request
+      .post("/api/users/role")
+      .set("Cookie", cookie)
+      .send({ role: "coach", organizationName: "Some High School" });
+
+    expect(res.status).toBe(409);
+    expect(res.body.type).toBe("role_locked");
+  });
+
+  it("role survives the attempted switch", async () => {
+    const res = await request.get("/api/auth/user").set("Cookie", cookie);
+
     expect(res.status).toBe(200);
-    expect(res.body.role).toBe("coach");
+    expect(res.body.role).toBe("player");
+    expect(res.body.roleSelectedAt).toBeTruthy();
+  });
+
+  it("a locked player cannot reach recruiter-only endpoints", async () => {
+    const res = await request
+      .get("/api/recruiter/notes/1")
+      .set("Cookie", cookie);
+
+    expect(res.status).toBe(403);
+    expect(res.body.type).toBe("role_forbidden");
+  });
+
+  it.each([
+    ["get", "/api/recruiter/profile"],
+    ["get", "/api/recruiter/bookmarks"],
+    ["get", "/api/recruiter/players"],
+    ["get", "/api/guardian/players"],
+  ])("a locked player is refused %s %s", async (method, path) => {
+    const res = await (request as any)[method](path).set("Cookie", cookie);
+
+    expect(res.status).toBe(403);
+    expect(res.body.type).toBe("role_forbidden");
+  });
+
+  it("a player IS allowed on athlete-side routes", async () => {
+    const res = await request
+      .get("/api/me/transfer-portal-status")
+      .set("Cookie", cookie);
+
+    expect(res.status).not.toBe(403);
   });
 
   it("PATCH /api/auth/role rejects invalid role", async () => {

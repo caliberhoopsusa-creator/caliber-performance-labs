@@ -9,11 +9,44 @@ import { registerRoutes } from "../../server/routes.js";
 let _app: express.Express | null = null;
 let _ready: Promise<express.Express> | null = null;
 
+/**
+ * Neon scales its compute to zero after a few minutes idle, and a resume can
+ * outlast the pool's 15s connect budget (see `connectionTimeoutMillis` in
+ * server/db.ts). The first DB call in registerRoutes is seedShopItems(), which
+ * catches and logs its failure as non-fatal — so a cold database doesn't show
+ * up as "database down", it shows up as unrelated 500s in whichever suite runs
+ * first. Block here until the DB actually answers.
+ */
+async function waitForDatabase(attempts = 5): Promise<void> {
+  const { db } = await import("../../server/db.js");
+  const { sql } = await import("drizzle-orm");
+
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      await db.execute(sql`select 1`);
+      if (attempt > 1) {
+        console.log(`[tests] database answered on attempt ${attempt} (cold start)`);
+      }
+      return;
+    } catch (error) {
+      lastError = error;
+      if (attempt === attempts) break;
+      // A Neon resume takes seconds, not milliseconds — back off linearly.
+      await new Promise((resolve) => setTimeout(resolve, 2000 * attempt));
+    }
+  }
+  throw new Error(
+    `Database unreachable after ${attempts} attempts (is Neon resuming?): ${(lastError as Error)?.message}`
+  );
+}
+
 export async function getTestApp(): Promise<express.Express> {
   if (_app) return _app;
   if (_ready) return _ready;
 
   _ready = (async () => {
+    await waitForDatabase();
     const app = express();
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));

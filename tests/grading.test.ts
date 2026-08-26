@@ -150,7 +150,13 @@ describe("Grading response structure", () => {
   });
 });
 
-describe("Football grading", () => {
+// SKIPPED: football is not a supported sport any more. `shared/sports-config.ts`
+// declares `export type Sport = 'basketball'`, every `sport:` validator in
+// server/routes.ts is `z.enum(['basketball'])`, and the empty
+// shared/football-archetypes.ts stub was deleted on 2026-08-26. These tests
+// describe a capability the product removed — un-skip them (and re-widen the
+// enums) if football comes back.
+describe.skip("Football grading", () => {
   let fbPlayerId: number;
   let fbCookie: string;
 
