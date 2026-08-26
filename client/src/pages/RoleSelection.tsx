@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Activity, UserCircle, ClipboardList, ChevronRight, Loader2, Users, Plus, ArrowLeft, GraduationCap, Heart } from "lucide-react";
 import { GuardianOnboarding } from "@/components/GuardianOnboarding";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { BASKETBALL_POSITIONS } from "@shared/sports-config";
@@ -411,12 +411,22 @@ export default function RoleSelection() {
     await joinTeamMutation.mutateAsync({ code: teamForm.code });
   };
 
+  // The role is locked once chosen at sign-up. A user can still land here to
+  // finish a half-built profile, so when locked we skip the picker entirely and
+  // go straight to that role's setup instead of offering a choice we'd reject.
+  const { data: me } = useQuery<{ role: string | null; roleSelectedAt: string | null } | null>({
+    queryKey: ['/api/users/me'],
+    staleTime: 1000 * 60 * 5,
+  });
+  const lockedRole: RoleType = me?.roleSelectedAt ? (me.role as RoleType) : null;
+  const activeRole: RoleType = lockedRole ?? selectedRole;
+
   const isLoading = setRoleMutation.isPending || createPlayerMutation.isPending || createTeamMutation.isPending || joinTeamMutation.isPending || createRecruiterProfileMutation.isPending;
 
   const getSubtitle = () => {
-    if (selectedRole === 'player') return "Let's set up your player profile";
-    if (selectedRole === 'recruiter') return "Let's set up your recruiter profile";
-    if (selectedRole === 'guardian') return "Welcome to the family experience";
+    if (activeRole === 'player') return "Let's set up your player profile";
+    if (activeRole === 'recruiter') return "Let's set up your recruiter profile";
+    if (activeRole === 'guardian') return "Welcome to the family experience";
     if (coachStep === 'select-team-action') return "Do you have an existing team or want to create one?";
     if (coachStep === 'create-team') return "Create your team and start building your roster";
     if (coachStep === 'join-team') return "Enter the team code to join an existing team";
@@ -430,21 +440,21 @@ export default function RoleSelection() {
           <div className="mx-auto h-16 w-16 rounded-2xl bg-accent flex items-center justify-center text-primary-foreground shadow-lg shadow-accent/20 mb-4">
             <Activity className="w-8 h-8" />
           </div>
-          <h1 className="text-3xl font-bold font-display text-foreground tracking-wider uppercase">Choose Your Path</h1>
+          <h1 className="text-3xl font-bold font-display text-foreground tracking-wider uppercase">{lockedRole ? "Finish Setting Up" : "Choose Your Path"}</h1>
           <p className="text-muted-foreground mt-2">{getSubtitle()}</p>
         </div>
 
-        {selectedRole === 'guardian' ? (
+        {activeRole === 'guardian' ? (
           <GuardianOnboarding
             onComplete={() => {
               queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
               queryClient.invalidateQueries({ queryKey: ['/api/users/me'] });
             }}
-            onBack={() => {
+            onBack={lockedRole ? undefined : () => {
               setSelectedRole(null);
             }}
           />
-        ) : selectedRole === 'recruiter' ? (
+        ) : activeRole === 'recruiter' ? (
           <Card className="p-6 bg-card border-border">
             <form onSubmit={handleRecruiterProfileSubmit} className="space-y-4">
               <div>
@@ -567,7 +577,7 @@ export default function RoleSelection() {
               </Button>
             </form>
           </Card>
-        ) : selectedRole === 'player' ? (
+        ) : activeRole === 'player' ? (
           <Card className="p-6 bg-card border-border">
             <form onSubmit={handlePlayerProfileSubmit} className="space-y-4">
               <div>
@@ -725,18 +735,20 @@ export default function RoleSelection() {
                 </div>
               </Card>
             </div>
-            <Button 
-              variant="ghost" 
-              className="w-full text-muted-foreground"
-              onClick={() => {
-                setSelectedRole(null);
-                setCoachStep(null);
-              }}
-              data-testid="button-back-role"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to role selection
-            </Button>
+            {!lockedRole && (
+              <Button
+                variant="ghost"
+                className="w-full text-muted-foreground"
+                onClick={() => {
+                  setSelectedRole(null);
+                  setCoachStep(null);
+                }}
+                data-testid="button-back-role"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to role selection
+              </Button>
+            )}
           </div>
         ) : coachStep === 'create-team' ? (
           <Card className="p-6 bg-card border-border">

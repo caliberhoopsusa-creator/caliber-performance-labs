@@ -1,5 +1,6 @@
 import { Switch, Route, Redirect, useLocation, Link } from "wouter";
 import { queryClient } from "./lib/queryClient";
+import { canAccessRoute, isKnownRoute, ROLE_HOME, type UserRole } from "@shared/roles";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -93,6 +94,7 @@ interface ExtendedUser {
   lastName: string | null;
   profileImageUrl: string | null;
   role: string | null;
+  roleSelectedAt: string | null;
   playerId: number | null;
   playerProfile?: {
     id: number;
@@ -280,8 +282,10 @@ function MainRouter() {
     return <Landing />;
   }
   
-  // New user with no role - show role selection immediately (don't wait for extended user)
-  if (!authUser.role) {
+  // New user who hasn't picked a role yet — show role selection immediately
+  // (don't wait for extended user). `role` defaults to 'player' in the DB, so
+  // `roleSelectedAt` is what tells us the user has actually chosen.
+  if (!(authUser as any).roleSelectedAt) {
     return <RoleSelection />;
   }
   
@@ -305,11 +309,12 @@ function MainRouter() {
     lastName: authUser.lastName ?? null,
     profileImageUrl: authUser.profileImageUrl ?? null,
     role: authUser.role ?? null,
+    roleSelectedAt: (authUser as any).roleSelectedAt ?? null,
     playerId: (authUser as any).playerId ?? null,
     playerProfile: null,
   };
 
-  if (!resolvedUser.role) {
+  if (!resolvedUser.roleSelectedAt || !resolvedUser.role) {
     return <RoleSelection />;
   }
   
@@ -317,7 +322,15 @@ function MainRouter() {
   if (resolvedUser.role === 'player' && !resolvedUser.playerId) {
     return <RoleSelection />;
   }
-  
+
+  // Roles are locked at sign-up, so each role only reaches its own surfaces.
+  // A real page that belongs to another role bounces to this role's home; an
+  // unrecognised URL falls through to the normal 404 below.
+  const currentRole = resolvedUser.role as UserRole;
+  if (isKnownRoute(location) && !canAccessRoute(currentRole, location)) {
+    return <Redirect to={ROLE_HOME[currentRole]} />;
+  }
+
   // Fully authenticated with role - show main app
   return (
     <>

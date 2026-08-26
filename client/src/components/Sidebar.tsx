@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, ShoppingBag, ClipboardCheck, Medal, GraduationCap, Heart, Wand2, ChevronDown, ChevronRight, BookOpen, Binoculars, Search, Bookmark, UserSearch, Shield, LayoutTemplate } from "lucide-react";
-import { ToastAction } from "@/components/ui/toast";
+import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, CalendarDays, Film, FileText, UserPlus, ShoppingBag, ClipboardCheck, Medal, GraduationCap, Heart, Wand2, ChevronDown, ChevronRight, BookOpen, Binoculars, Search, Bookmark, UserSearch, Shield, LayoutTemplate } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -10,9 +9,8 @@ import { useEquippedItems } from "@/contexts/EquippedItemsContext";
 import { AlertsBadge } from "@/components/AlertsCenter";
 import { Button } from "@/components/ui/button";
 import { useSubscription, type SubscriptionTier } from "@/hooks/use-subscription";
-import { useAuth } from "@/hooks/use-auth";
-import { useToast } from "@/hooks/use-toast";
 import { SportToggle, useSport } from "@/components/SportToggle";
+import { ROLE_LABELS, type UserRole } from "@shared/roles";
 
 type NavItem = {
   href: string;
@@ -37,8 +35,6 @@ type SidebarProps = {
 export function Sidebar({ userRole, playerId }: SidebarProps) {
   const [location] = useLocation();
   const { hasAccess, isPro } = useSubscription();
-  const { switchRole, isSwitchingRole, switchRoleError } = useAuth();
-  const { toast } = useToast();
 
   const [moreExpanded, setMoreExpanded] = useState(() => {
     try {
@@ -67,58 +63,6 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
     enabled: isCoach,
   });
   const pendingCount = pendingGames?.length ?? 0;
-
-  const handleRoleSwitch = () => {
-    const roleOrder: Array<'player' | 'coach' | 'recruiter' | 'guardian'> = ['player', 'coach', 'recruiter', 'guardian'];
-    const currentIndex = roleOrder.indexOf(userRole as any);
-    const newRole = roleOrder[(currentIndex + 1) % roleOrder.length];
-    const previousRole = userRole as 'player' | 'coach' | 'recruiter' | 'guardian';
-    switchRole(newRole as any, {
-      onSuccess: () => {
-        const labels: Record<string, string> = { player: 'Player', coach: 'Coach', recruiter: 'Recruiter', guardian: 'Guardian' };
-        toast({
-          title: `Switched to ${labels[newRole]} Mode`,
-          description: `You're now viewing the app as a ${labels[newRole].toLowerCase()}.`,
-          action: (
-            <ToastAction
-              altText="Undo role switch"
-              onClick={() => switchRole(previousRole, {})}
-            >
-              Undo
-            </ToastAction>
-          ),
-        });
-      },
-      onError: (error) => {
-        const errorMessage = error?.message || 'Failed to switch mode';
-        const errorType = error?.type;
-
-        if (errorType === 'session_expired') {
-          toast({
-            title: 'Session Expired',
-            description: 'Your session has expired. Please log in again.',
-            variant: 'destructive'
-          });
-          return;
-        }
-
-        if (errorType === 'network_error') {
-          toast({
-            title: 'Network Error',
-            description: 'Unable to connect. Please check your internet connection.',
-            variant: 'destructive'
-          });
-          return;
-        }
-
-        toast({
-          title: 'Error',
-          description: errorMessage,
-          variant: 'destructive'
-        });
-      }
-    });
-  };
 
   const playerSections: NavSection[] = [
     {
@@ -257,16 +201,13 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         <CaliberLogo size={44} color={sidebarThemeColor} />
         <div className="flex-1">
           <h1 className="text-xl font-bold font-display tracking-wider uppercase text-platinum" style={{ color: sidebarThemeColor }}>CALIBER</h1>
-          <button 
-            onClick={handleRoleSwitch}
-            disabled={isSwitchingRole}
-            className="flex items-center gap-1.5 text-xs text-muted-foreground uppercase tracking-widest font-medium transition-colors cursor-pointer"
-            data-testid="button-switch-role"
-            aria-label={`Switch to ${isPlayer ? 'Coach' : isCoach ? 'Recruiter' : isRecruiter ? 'Guardian' : isGuardian ? 'Player' : 'Player'} Mode`}
+          {/* Role is locked to the one chosen at sign-up — a label, not a control. */}
+          <p
+            className="text-xs text-muted-foreground uppercase tracking-widest font-medium"
+            data-testid="text-user-role"
           >
-            {isGuardian ? "Guardian" : isRecruiter ? "Recruiter" : isPlayer ? "Player" : "Coach"} Mode
-            <ArrowLeftRight className="w-3 h-3" />
-          </button>
+            {ROLE_LABELS[userRole as UserRole] ?? "Player"} Mode
+          </p>
         </div>
         {isCoach && (
           <Link href="/coach/alerts" className="text-muted-foreground transition-colors" data-testid="header-alerts-badge">

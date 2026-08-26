@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { ToastAction } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
@@ -9,15 +8,14 @@ import {
   Menu, LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, 
   Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, 
   UsersRound, CalendarCheck, Eye, UserCircle, LogOut, CreditCard, Lock, Dumbbell, 
-  CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, Bell, ShoppingBag, GraduationCap,
+  CalendarDays, Film, FileText, UserPlus, Bell, ShoppingBag, GraduationCap,
   ChevronDown, ChevronRight, BookOpen, Wand2, Medal, Binoculars, Search, Bookmark, Heart, LayoutTemplate
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CaliberLogo } from "@/components/CaliberLogo";
 import { useEquippedItems } from "@/contexts/EquippedItemsContext";
 import { useSubscription, type SubscriptionTier } from "@/hooks/use-subscription";
-import { useAuth } from "@/hooks/use-auth";
-import { useToast } from "@/hooks/use-toast";
+import { ROLE_LABELS, type UserRole } from "@shared/roles";
 import { SportToggle, useSport } from "@/components/SportToggle";
 
 type NavItem = {
@@ -43,8 +41,6 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
   const [open, setOpen] = useState(false);
   const [location] = useLocation();
   const { hasAccess } = useSubscription();
-  const { switchRole, isSwitchingRole } = useAuth();
-  const { toast } = useToast();
   const prefersReducedMotion = useReducedMotion();
   
   const [moreExpanded, setMoreExpanded] = useState(() => {
@@ -68,59 +64,6 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
   const isCoach = userRole === 'coach';
   const isRecruiter = userRole === 'recruiter';
   const isGuardian = userRole === 'guardian';
-
-  const handleRoleSwitch = () => {
-    const roleOrder: Array<'player' | 'coach' | 'recruiter' | 'guardian'> = ['player', 'coach', 'recruiter', 'guardian'];
-    const currentIndex = roleOrder.indexOf(userRole as any);
-    const newRole = roleOrder[(currentIndex + 1) % roleOrder.length];
-    const previousRole = userRole as 'player' | 'coach' | 'recruiter' | 'guardian';
-    switchRole(newRole as any, {
-      onSuccess: () => {
-        const labels: Record<string, string> = { player: 'Player', coach: 'Coach', recruiter: 'Recruiter', guardian: 'Guardian' };
-        toast({
-          title: `Switched to ${labels[newRole]} Mode`,
-          description: `You're now viewing the app as a ${labels[newRole].toLowerCase()}.`,
-          action: (
-            <ToastAction
-              altText="Undo role switch"
-              onClick={() => switchRole(previousRole, {})}
-            >
-              Undo
-            </ToastAction>
-          ),
-        });
-        setOpen(false);
-      },
-      onError: (error) => {
-        const errorMessage = error?.message || 'Failed to switch mode';
-        const errorType = error?.type;
-
-        if (errorType === 'session_expired') {
-          toast({
-            title: 'Session Expired',
-            description: 'Your session has expired. Please log in again.',
-            variant: 'destructive'
-          });
-          return;
-        }
-
-        if (errorType === 'network_error') {
-          toast({
-            title: 'Network Error',
-            description: 'Unable to connect. Please check your internet connection.',
-            variant: 'destructive'
-          });
-          return;
-        }
-
-        toast({
-          title: 'Error',
-          description: errorMessage,
-          variant: 'destructive'
-        });
-      }
-    });
-  };
 
   const playerSections: NavSection[] = [
     {
@@ -282,27 +225,9 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
               </div>
               <div>
                 <h2 className="font-display font-bold text-foreground text-xl uppercase tracking-wider">Caliber</h2>
-                <p className="text-[10px] text-accent/80 uppercase tracking-[0.2em] font-medium">{isGuardian ? "Guardian" : isRecruiter ? "Recruiter" : isPlayer ? "Player" : "Coach"} Mode</p>
+                <p className="text-[10px] text-accent/80 uppercase tracking-[0.2em] font-medium" data-testid="text-user-role">{ROLE_LABELS[userRole as UserRole] ?? "Player"} Mode</p>
               </div>
             </div>
-          </div>
-
-          {/* Mode switching and sport toggle */}
-          <div className="p-4 border-b border-accent/10 space-y-4 bg-gradient-to-b from-white/[0.01] to-transparent">
-            <motion.div whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }} transition={prefersReducedMotion ? undefined : { type: "spring", stiffness: 400, damping: 25 }}>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRoleSwitch}
-                disabled={isSwitchingRole}
-                className="w-full text-xs border-accent/20 bg-accent/5 min-h-11 touch-target"
-                data-testid="button-mobile-role-switch"
-              >
-                <ArrowLeftRight className="w-3.5 h-3.5 mr-2 text-accent" />
-                Switch to {isPlayer ? 'Coach' : isCoach ? 'Recruiter' : isRecruiter ? 'Guardian' : isGuardian ? 'Player' : 'Player'} Mode
-              </Button>
-            </motion.div>
-            
           </div>
 
           {/* Navigation with enhanced styling */}
