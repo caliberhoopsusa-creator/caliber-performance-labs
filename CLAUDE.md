@@ -49,12 +49,11 @@ but present) and by searching for the route path string, not by reading top-to-b
    build it from scratch if extending that specific route — check first.
 
 ## Stack
-Node.js + Express (ESM). TypeScript. PostgreSQL + Drizzle ORM (`drizzle-zod` for validation).
-React 18 + Wouter + TanStack Query on the client. Tailwind + shadcn/ui (New York style).
-Replit Auth (session-based). Gemini AI (`@google/genai`) for video analysis + scouting reports.
-Stripe for subscriptions. ESPN API / CollegeFootballData.com for live college data. Vitest +
-Supertest for integration tests against a real Postgres test DB.
-Verify: `pnpm run check && pnpm test`.
+Read `package.json` for the dependency list. What it won't tell you:
+**npm, NOT pnpm** — the repo has a committed `package-lock.json` and no `.npmrc`; running
+`pnpm` moves npm packages to `node_modules/.ignored` and corrupts the install. Install with
+`npm install --legacy-peer-deps` (the flag is REQUIRED — @react-three/drei vs react@18 peer
+conflict). Verify: `npm run check && npm test`.
 
 ## Layout
 ```
