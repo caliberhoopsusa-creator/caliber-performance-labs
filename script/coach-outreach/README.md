@@ -32,6 +32,7 @@ npx tsx script/coach-outreach/send.ts --touch 3 --live
 | `OUTREACH_FROM_NAME` | e.g. `Matthew at Caliber` |
 | `OUTREACH_MAILING_ADDRESS` | Your physical mailing address — legally required in every email |
 | `OUTREACH_UNSUB_GROUP_ID` | SendGrid unsubscribe group; provides the one-click unsubscribe link and permanent suppression |
+| `OUTREACH_SITE_URL` | Public URL the emails link to, e.g. `https://caliber.app`. Preflighted before every live send |
 
 Optional: `OUTREACH_DAILY_CAP` (default 50), `OUTREACH_SEND_DELAY_MS` (default 30000).
 
@@ -45,7 +46,11 @@ Optional: `OUTREACH_DAILY_CAP` (default 50), `OUTREACH_SEND_DELAY_MS` (default 3
    that way when editing `templates.ts`.
 4. **Manual opt-outs**: if a coach replies asking to stop, add their email to
    `suppression.txt` the same day (law allows 10 days; do it immediately).
-5. **Volume**: daily cap defaults to 50 with a 30s delay between sends. New
+5. **Working link**: every template links to `OUTREACH_SITE_URL`. Live mode
+   fetches it first and aborts if it does not resolve or returns an error.
+   A cold list is spent the moment recipients click into nothing — never
+   bypass this check.
+6. **Volume**: daily cap defaults to 50 with a 30s delay between sends. New
    sender domains should warm up slowly (25-50/day for the first two weeks)
    or deliverability will tank.
 

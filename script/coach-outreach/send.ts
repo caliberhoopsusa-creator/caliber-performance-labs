@@ -14,11 +14,16 @@
  *   OUTREACH_MAILING_ADDRESS  physical mailing address (CAN-SPAM requires it)
  *   OUTREACH_UNSUB_GROUP_ID   SendGrid unsubscribe group id (handles the
  *                             one-click unsubscribe link + suppression)
+ *   OUTREACH_SITE_URL         public URL the emails link to, e.g.
+ *                             https://caliber.app — preflighted before every
+ *                             live send so a dead link can never go out
  *
  * Guardrails:
  *   - suppression.txt is checked before every send (one email per line)
  *   - sent-log.json prevents double-sending the same touch to a lead
  *   - DAILY_CAP limits volume; SEND_DELAY_MS throttles between sends
+ *   - the link target in OUTREACH_SITE_URL must resolve and return OK, or
+ *     live mode aborts before the first send
  */
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import path from "node:path";
@@ -33,6 +38,16 @@ const OUTBOX = path.join(DIR, "outbox");
 const DAILY_CAP = Number(process.env.OUTREACH_DAILY_CAP ?? 50);
 const SEND_DELAY_MS = Number(process.env.OUTREACH_SEND_DELAY_MS ?? 30_000);
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// leads.csv carries postal codes, but "MT basketball programs" reads like a
+// mail merge. Prose uses {{stateName}}; add states here as the list expands.
+const STATE_NAMES: Record<string, string> = {
+  MT: "Montana",
+  WY: "Wyoming",
+  ID: "Idaho",
+  ND: "North Dakota",
+  SD: "South Dakota",
+};
 
 interface Lead {
   firstName: string;
@@ -111,6 +126,35 @@ function complianceFooter(mailingAddress: string): string {
   ].join("\n");
 }
 
+/**
+ * Every template links to OUTREACH_SITE_URL. A cold-outreach list is spent the
+ * moment recipients click into nothing, so verify the target is actually up
+ * before a live run rather than discovering it from the bounce-back.
+ */
+async function preflightSiteUrl(siteUrl: string): Promise<string | null> {
+  let parsed: URL;
+  try {
+    parsed = new URL(siteUrl);
+  } catch {
+    return `not a valid URL: "${siteUrl}"`;
+  }
+  if (parsed.protocol !== "https:") {
+    return `must be https, got "${parsed.protocol}//"`;
+  }
+  try {
+    const res = await fetch(parsed.toString(), {
+      method: "GET",
+      redirect: "follow",
+      signal: AbortSignal.timeout(15_000),
+    });
+    if (!res.ok) return `${parsed.origin} returned HTTP ${res.status}`;
+    return null;
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : String(err);
+    return `${parsed.origin} is unreachable (${reason})`;
+  }
+}
+
 async function sendViaSendGrid(opts: {
   to: string;
   subject: string;
@@ -152,14 +196,33 @@ async function main(): Promise<void> {
 
   const senderName = process.env.OUTREACH_FROM_NAME ?? "The Caliber Team";
   const mailingAddress = process.env.OUTREACH_MAILING_ADDRESS ?? "";
+  const siteUrl = process.env.OUTREACH_SITE_URL ?? "";
 
   if (live) {
-    const missing = ["SENDGRID_API_KEY", "OUTREACH_FROM_EMAIL", "OUTREACH_FROM_NAME", "OUTREACH_MAILING_ADDRESS", "OUTREACH_UNSUB_GROUP_ID"]
+    const missing = ["SENDGRID_API_KEY", "OUTREACH_FROM_EMAIL", "OUTREACH_FROM_NAME", "OUTREACH_MAILING_ADDRESS", "OUTREACH_UNSUB_GROUP_ID", "OUTREACH_SITE_URL"]
       .filter((v) => !process.env[v]);
     if (missing.length > 0) {
       console.error(`Live mode requires env vars: ${missing.join(", ")}`);
       process.exit(1);
     }
+  }
+
+  // Preflight the link target: blocking in live mode, advisory in a dry run.
+  if (siteUrl) {
+    const problem = await preflightSiteUrl(siteUrl);
+    if (problem && live) {
+      console.error(`Preflight failed: ${problem}`);
+      console.error("Refusing to send — every email links here, and a dead link burns the list.");
+      process.exit(1);
+    }
+    if (problem) {
+      console.warn(`WARNING preflight: ${problem}`);
+      console.warn("A live run would abort. Fix before sending.");
+    } else {
+      console.log(`Preflight OK: ${siteUrl} is reachable`);
+    }
+  } else if (!live) {
+    console.warn("WARNING: OUTREACH_SITE_URL is unset — previews will show a placeholder.");
   }
 
   const suppression = loadSuppression();
@@ -189,7 +252,12 @@ async function main(): Promise<void> {
 
   const newRecords: SentRecord[] = [];
   for (const lead of queue) {
-    const tokens = { ...lead, senderName };
+    const tokens = {
+      ...lead,
+      senderName,
+      siteUrl: siteUrl || "[SITE URL — set OUTREACH_SITE_URL]",
+      stateName: STATE_NAMES[lead.state.toUpperCase()] ?? lead.state,
+    };
     const subject = renderTemplate(template.subject, tokens);
     const body = renderTemplate(template.body, tokens) + complianceFooter(mailingAddress || "[MAILING ADDRESS — set OUTREACH_MAILING_ADDRESS]");
 
