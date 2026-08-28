@@ -12,3 +12,15 @@ uploads/
 script/coach-outreach/leads.csv
 script/coach-outreach/sent-log.json
 script/coach-outreach/outbox/
+# Sourcing research names real coaches and the pages their contacts came from.
+# Same category as leads.csv — this repo is public.
+script/coach-outreach/SOURCING-NOTES.md
+.gstack/
+
+# Unrelated project living in this tree. Untracked AND unignored it would be
+# committed as a gitlink with no .gitmodules, which breaks every fresh clone.
+nike-wemby/
+
+# Held out until the endpoint that feeds it exists (see the review notes in
+# .claude/reviews/). Un-ignore this together with the team-report data path.
+client/src/components/report/
