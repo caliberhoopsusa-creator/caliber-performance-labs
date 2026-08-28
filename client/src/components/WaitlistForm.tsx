@@ -83,7 +83,7 @@ export function WaitlistForm({
       className={cn("w-full max-w-md", align === "center" && "mx-auto", className)}
       data-testid="waitlist-form"
     >
-      <div className="flex flex-col sm:flex-row gap-2.5">
+      <div className="flex flex-col gap-2.5">
         <input
           type="email"
           required

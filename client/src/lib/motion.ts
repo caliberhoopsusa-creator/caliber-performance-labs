@@ -42,7 +42,15 @@ type MotionValue =
   | readonly [number | string, number | string]
   | readonly MotionKeyframe[];
 
-/** The compositor-safe subset — transform, opacity, clip-path. Nothing else. */
+/**
+ * The compositor-safe subset — transform, opacity, clip-path. Nothing else.
+ *
+ * GOTCHA — `x`/`y` on an <svg> element: SVG has native `x`/`y` ATTRIBUTES, and
+ * anime writes those instead of a transform, so the element never moves (and
+ * `restoreFinalState` won't clear it, since it only removes inline styles).
+ * Wrap the icon in a span and animate that. SVG targets here are for
+ * `strokeDashoffset` line-drawing, not translation.
+ */
 export interface CompositorProps {
   opacity?: MotionValue;
   /** translateX (px unless a unit string is given) */
@@ -206,6 +214,73 @@ export function runPulseLoop({
   }
 
   return () => {
+    anim?.cancel();
+    restoreFinalState(els);
+  };
+}
+
+export interface HoverNudgeOptions {
+  /** Element whose pointer/focus state drives the nudge (usually the link). */
+  trigger: BootTarget;
+  /** Element that actually moves — e.g. the arrow inside the link. */
+  target: BootTarget;
+  /** Compositor props at rest — applied on pointerleave/blur. */
+  from: CompositorProps;
+  /** Compositor props while hovered or keyboard-focused. */
+  to: CompositorProps;
+  /** One direction of the nudge in ms. Keep it short — this is a micro-cue. */
+  duration?: number;
+  ease?: string;
+}
+
+/**
+ * Nudge an element while its trigger is hovered or focused (an arrow easing
+ * right inside a link). Focus is included deliberately: a CSS `:hover`-only
+ * nudge is invisible to keyboard users, and this is navigation.
+ *
+ * Under `prefers-reduced-motion` nothing is bound — the element keeps the rest
+ * state already in its JSX. Returns a cleanup suited to `useEffect`: it
+ * unbinds the listeners, cancels any in-flight tween, and clears inline styles.
+ */
+export function runHoverNudge({
+  trigger,
+  target,
+  from,
+  to,
+  duration = 220,
+  ease = EASE_OUT_EXPO,
+}: HoverNudgeOptions): () => void {
+  const [triggerEl] = toElements(trigger);
+  const els = toElements(target);
+  if (!triggerEl || els.length === 0 || prefersReducedMotion()) {
+    return () => {};
+  }
+
+  let anim: ReturnType<typeof animate> | undefined;
+
+  const run = (props: CompositorProps) => {
+    anim?.cancel();
+    try {
+      anim = animate(els, { ...(props as AnimeParams), duration, ease });
+    } catch (error) {
+      restoreFinalState(els);
+      console.error("[motion] hover nudge failed — rendered rest state", error);
+    }
+  };
+
+  const enter = () => run(to);
+  const leave = () => run(from);
+
+  triggerEl.addEventListener("pointerenter", enter);
+  triggerEl.addEventListener("pointerleave", leave);
+  triggerEl.addEventListener("focus", enter);
+  triggerEl.addEventListener("blur", leave);
+
+  return () => {
+    triggerEl.removeEventListener("pointerenter", enter);
+    triggerEl.removeEventListener("pointerleave", leave);
+    triggerEl.removeEventListener("focus", enter);
+    triggerEl.removeEventListener("blur", leave);
     anim?.cancel();
     restoreFinalState(els);
   };

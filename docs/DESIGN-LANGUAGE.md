@@ -166,14 +166,42 @@ console logos/trade dress, no fake trophies):
 - **Loading screens, not spinners.** Skeletons carry rotating real tips
   ("TIP — verify your stat line within 24h so coaches see a ✓").
 - **Marketing surfaces are scrollytelling.** The landing (and future
-  marketing pages) tell ONE scroll-driven story — pinned scenes scrubbed by
-  scroll (anime.js `onScroll`), a single continuous gradient atmosphere that
-  evolves per scene, features as narrative moments instead of card grids.
-  Landing scene order: BOOT → THE GAME (stat line types out) → THE GRADE
-  (ring draws, grade stamps) → THE CLIMB (rank rises through leaderboard
-  rows) → THE SCOUT (interest meter fills) → THE ASK (coach offer + waitlist).
-  Reduced-motion = the same story as a static editorial layout. App surfaces
-  keep density discipline — scrollytelling never enters the product UI.
+  marketing pages) tell ONE scroll-driven story — pinned beats scrubbed by
+  scroll (anime.js `onScroll`) over a single continuous field, features as
+  narrative moments instead of card grids.
+
+  **The landing concept is THE CALL** (operator direction 2026-08-26): one
+  continuous camera move from an empty gym at 6am to the phone call that
+  changes everything. There are no scene cuts and no separate hero section —
+  beat 00 *is* the opening frame, which is what lets the camera only ever push
+  forward. Beat order:
+
+  | Beat | Space | What happens | Light |
+  |---|---|---|---|
+  | 00 · 6:00 AM | empty gym, one work light | nameplate ignites; the pitch | one cold silver cone |
+  | 01 · THE GAME | same court, lit | house lights rise; real platform counts climb | silver floods, first crimson whisper |
+  | 02 · THE FILM ROOM | court recedes behind a screen | the grade lands, ring draws, line writes itself | scanline wash, grade-ramp bloom |
+  | 03 · THE CALL | near-black, one ember | a program is watching; the offer + waitlist | crimson lifts — the one peak |
+
+  The camera is `components/call/CameraField.tsx`: a sticky full-viewport field
+  holding four depth planes driven at different parallax rates by one scrubbed
+  timeline. The speed difference between planes is what reads as forward
+  travel. **The gym is drawn entirely from tokens** (`CourtGeometry.tsx`, SVG
+  hairlines in fake one-point perspective, `pathLength`-normalized so the
+  draw-on needs no measurement) — no photography, no stock art, no 3D.
+
+  Beats 00–02 are pinned; **beat 03 is not** — it carries the offer card, the
+  form, and the payoff line, which is more than one viewport holds, and pinning
+  a form the visitor has to fill in is hostile. The camera comes to rest there.
+
+  A non-parallaxed scrim sits above the planes and below the copy: the court
+  converges on the middle of the frame, which is exactly where the text lives.
+
+  Reduced-motion = the same four beats as a static editorial layout, sharing
+  the SAME sticky field (a separate layout for the reduced branch positions the
+  court against the whole story height instead of the viewport, and the gym
+  disappears). App surfaces keep density discipline — scrollytelling never
+  enters the product UI.
 
 ## 5. Signature components (the identity carriers)
 

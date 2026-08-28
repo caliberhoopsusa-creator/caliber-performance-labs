@@ -16,8 +16,8 @@ export const METAL_TEXT_STYLE: CSSProperties = {
 };
 
 /**
- * scrolly/shared — scaffolding for the landing scrollytelling scenes
- * (DESIGN-LANGUAGE §4.5). One tall wrapper per scene drives scroll progress;
+ * call/shared — scaffolding for the landing's scroll-driven beats
+ * (DESIGN-LANGUAGE §4.5). One tall wrapper per beat drives scroll progress;
  * a CSS `position: sticky` stage pins the visual (no JS pinning — the wheel
  * is never hijacked). Reduced motion: the SAME content renders as a normal
  * editorial section — no pinning, no scrubbing, final state visible.
