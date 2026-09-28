@@ -2360,6 +2360,66 @@ export async function registerRoutes(
    * hidden player 404s, and school follows showSchool exactly as everywhere
    * else (docs/PIVOT_AUDIT.md section 7).
    */
+  /**
+   * The real image type, from the file's magic number.
+   *
+   * The stored `.meta` sidecar is not trustworthy: uploads on this platform
+   * carry a declared content type, and at least one existing player photo is
+   * a PNG recorded as `image/jpeg`. Handing satori a data URI that lied about
+   * the format made it decode a PNG as a JPEG and throw "Invalid JPEG".
+   * Bytes do not lie, so read those instead.
+   */
+  function sniffImageType(bytes: Buffer): string | null {
+    if (bytes.length < 12) return null;
+    if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) {
+      return 'image/png';
+    }
+    if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
+      return 'image/jpeg';
+    }
+    if (bytes.toString('ascii', 0, 3) === 'GIF') return 'image/gif';
+    if (bytes.toString('ascii', 0, 4) === 'RIFF' && bytes.toString('ascii', 8, 12) === 'WEBP') {
+      return 'image/webp';
+    }
+    return null;
+  }
+
+  /**
+   * The photo in a form satori will actually draw.
+   *
+   * satori fetches an image source itself, rejects anything that is not an
+   * absolute URL, and blocks loopback addresses as SSRF. So a stored app
+   * relative path failed outright, and absolutising it against our own host
+   * was blocked locally and would make the server issue an HTTP request to
+   * itself on every render in production.
+   *
+   * A locally uploaded object is on this disk, so read it and inline it. A
+   * remote URL is passed through for satori to fetch as before.
+   */
+  function cardPhotoSource(photoUrl: string | null | undefined): string | null {
+    if (!photoUrl) return null;
+    if (/^data:/.test(photoUrl)) return photoUrl;
+    if (/^https?:\/\//.test(photoUrl)) return photoUrl;
+
+    const local = photoUrl.match(/^\/objects\/local\/([0-9a-f-]+)$/i);
+    if (!local) return null;
+
+    try {
+      const file = path.join(process.cwd(), 'uploads', local[1]!);
+      if (!fs.existsSync(file)) return null;
+      const bytes = fs.readFileSync(file);
+      const contentType = sniffImageType(bytes);
+      /* Unknown magic number means it is not an image we can prove is safe to
+         hand a decoder, so the card renders without it. */
+      if (!contentType) return null;
+      return `data:${contentType};base64,${bytes.toString('base64')}`;
+    } catch (err) {
+      /* A card without a photo beats no card at all. */
+      console.error('Could not inline card photo:', err);
+      return null;
+    }
+  }
+
   app.get('/api/players/:id/card.png', async (req: any, res) => {
     try {
       const playerId = Number(req.params.id);
@@ -2410,7 +2470,7 @@ export async function registerRoutes(
           { label: 'RPG', value: avg((g) => g.rebounds) },
         ],
         profileUrl: `${baseUrl.replace(/^https?:\/\//, '')}/profile/${playerId}/public`,
-        photoUrl: safe.photoUrl ?? null,
+        photoUrl: cardPhotoSource(safe.photoUrl),
       };
 
       const png = await renderCardCached(playerId, cardVersion(input), size, input);

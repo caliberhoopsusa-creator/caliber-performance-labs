@@ -21,17 +21,83 @@
  * without the width axis. The browser card matches deliberately, so the shared
  * artifact is identical to what the player saw.
  */
-import satori from "satori";
+import * as satoriNamespace from "satori";
 import { Resvg } from "@resvg/resvg-js";
-import { readFileSync } from "fs";
+import { readFileSync, existsSync } from "fs";
 import { createHash } from "crypto";
 import path from "path";
-import { fileURLToPath } from "url";
 import { rarityDefinition, type RarityTier } from "@shared/rarity";
 import { trendGlyph, type Trend } from "@shared/progression";
 
-const HERE = path.dirname(fileURLToPath(import.meta.url));
-const FONT_DIR = path.join(HERE, "fonts");
+type SatoriFn = typeof import("satori").default;
+
+/**
+ * The satori render function, whatever shape the module arrives in.
+ *
+ * satori is ESM only. Running as ESM under tsx, the default export IS the
+ * function. The production build is CJS, and esbuild's interop helper sets
+ * `.default` to the whole namespace object rather than to the function, so
+ * calling it threw "is not a function" on every card render in the built
+ * server while development and the tests stayed green.
+ *
+ * Resolving the callable instead of trusting either shape means this survives
+ * both, and any future change to how the module is bundled.
+ */
+let satoriFn: SatoriFn | null = null;
+function satori(): SatoriFn {
+  if (satoriFn) return satoriFn;
+  const mod = satoriNamespace as unknown as Record<string, unknown>;
+  const nested = mod.default as Record<string, unknown> | undefined;
+  const candidate = [mod, mod.default, nested?.default].find(
+    (c) => typeof c === "function",
+  );
+  if (!candidate) {
+    throw new Error("satori does not export a callable render function");
+  }
+  satoriFn = candidate as SatoriFn;
+  return satoriFn;
+}
+
+/** Any one of the four. Used to confirm a candidate directory is the real one. */
+const FONT_PROBE = "geist-sans-latin-400-normal.woff";
+
+/**
+ * Where the WOFF files live.
+ *
+ * Found by search rather than from `import.meta.url`. The production build is
+ * CJS (`script/build.ts` bundles with esbuild `format: "cjs"`), and esbuild
+ * replaces `import.meta` with an empty object there, so the built server
+ * called `fileURLToPath(undefined)`. That throws at module load, and because
+ * `server/routes.ts` imports this file at the top it took the whole server
+ * down on boot. It never showed up in development, which runs as ESM under
+ * tsx, or in the test suite, which imports the source.
+ *
+ * Dev resolves to `server/fonts`, the built server to `dist/fonts`, both
+ * relative to the working directory the process actually starts in.
+ */
+function resolveFontDir(): string {
+  const candidates = [
+    path.join(process.cwd(), "server", "fonts"),
+    path.join(process.cwd(), "dist", "fonts"),
+    path.join(process.cwd(), "fonts"),
+  ];
+  const found = candidates.find((dir) => existsSync(path.join(dir, FONT_PROBE)));
+  if (!found) {
+    throw new Error(
+      `Card renderer fonts not found. Looked in: ${candidates.join(", ")}. ` +
+      `The build must copy server/fonts to dist/fonts.`,
+    );
+  }
+  return found;
+}
+
+let fontDir: string | null = null;
+/* Resolved on first render, not at module load, so an import of this file can
+   never take the server down the way the old top level call did. */
+function fontDirectory(): string {
+  if (!fontDir) fontDir = resolveFontDir();
+  return fontDir;
+}
 
 /** CALIBER palette. Kept in sync with client/src/design/caliber/tokens.ts. */
 const C = {
@@ -72,7 +138,8 @@ let fontCache: Array<{ name: string; data: Buffer; weight: 400 | 500 | 700 | 800
 
 function fonts() {
   if (fontCache) return fontCache;
-  const read = (f: string) => readFileSync(path.join(FONT_DIR, f));
+  const dir = fontDirectory();
+  const read = (f: string) => readFileSync(path.join(dir, f));
   fontCache = [
     { name: "Archivo", data: read("archivo-latin-800-normal.woff"), weight: 800, style: "normal" },
     { name: "Geist", data: read("geist-sans-latin-400-normal.woff"), weight: 400, style: "normal" },
@@ -224,11 +291,23 @@ function cardTree(input: CardRenderInput, size: CardSize) {
 /** Renders one card to PNG bytes. */
 export async function renderCardPng(input: CardRenderInput, size: CardSize): Promise<Buffer> {
   const { width, height } = CARD_SIZES[size];
-  const svg = await satori(cardTree(input, size) as any, {
-    width,
-    height,
-    fonts: fonts() as any,
-  });
+
+  const toSvg = (i: CardRenderInput) =>
+    satori()(cardTree(i, size) as any, { width, height, fonts: fonts() as any });
+
+  let svg: string;
+  try {
+    svg = await toSvg(input);
+  } catch (err) {
+    /* The photo is the only part of a card that depends on something outside
+       this process, so it is the only part that can fail for reasons the
+       player did not cause: a dead URL, a slow host, a relative path satori
+       will not fetch. A card without a photo is still the player's card. A
+       500 is nothing at all, and this renders the image people share. */
+    if (!input.photoUrl) throw err;
+    console.error("Card photo failed to render, falling back without it:", err);
+    svg = await toSvg({ ...input, photoUrl: null });
+  }
   /* loadSystemFonts defaults to true, which makes resvg scan the OS font
      directories on every construction: measured at ~2.2s per card, against
      5-10ms for satori's layout and ~25ms for the actual rasterise. satori

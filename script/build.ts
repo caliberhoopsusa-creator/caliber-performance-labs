@@ -1,6 +1,6 @@
 import { build as esbuild } from "esbuild";
 import { build as viteBuild } from "vite";
-import { rm, readFile } from "fs/promises";
+import { rm, readFile, cp } from "fs/promises";
 
 // server deps to bundle to reduce openat(2) syscalls
 // which helps cold start times
@@ -58,6 +58,12 @@ async function buildAll() {
     external: externals,
     logLevel: "info",
   });
+
+  /* The card renderer reads WOFF files at runtime (server/cardRenderer.ts).
+     esbuild bundles code, not assets, so without this the built server has no
+     fonts to render a card with. */
+  console.log("copying server fonts...");
+  await cp("server/fonts", "dist/fonts", { recursive: true });
 }
 
 buildAll().catch((err) => {
