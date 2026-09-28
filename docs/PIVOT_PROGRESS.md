@@ -761,3 +761,42 @@ The SIGNAL app shell is fixed over the bottom of the viewport. Bottom padding
 raised to 120px so both the submit and the skip clear it.
 
 That second one is a symptom of the shell carry-over below, not a fix for it.
+
+---
+
+## 2026-09-28: the gate does not cover the production build
+
+Card rendering was completely broken in the built server. Four defects stacked
+behind each other, and the suite was green through all of them. See commit
+`cf50849` for the fixes.
+
+The reason none of it was caught: `npm run check` typechecks source, and
+vitest imports source as ESM. The production bundle is CJS, built by esbuild
+via `script/build.ts`, and **nothing in the gate ever builds it or boots it.**
+Every one of the four was a CJS-only or asset-only failure:
+
+- `import.meta.url` is an empty object in a CJS bundle, so the server threw at
+  module load and did not start at all.
+- esbuild bundles code, not assets, so the fonts were never in `dist/`.
+- esbuild's CJS interop makes an ESM package's `.default` the namespace rather
+  than the function, so satori was not callable.
+- satori refuses relative image URLs and blocks loopback as SSRF, so no player
+  photo could ever render.
+
+### What to add
+
+A smoke step that runs `npm run build`, boots `dist/index.cjs`, and asks for
+one card PNG would have caught all four in about twenty seconds. That does not
+exist yet and is the highest value thing missing from the gate.
+
+Until it does, treat "tests pass" as evidence about the source tree only. Any
+change touching `server/cardRenderer.ts`, asset loading, or a dependency's
+module format needs a real build and boot before it is called done.
+
+### Also worth knowing
+
+`uploads/*.meta` records the content type declared at upload and is not
+reliable. At least one existing player photo is a PNG recorded as
+`image/jpeg`. `GET /objects/local/:id` still serves that wrong type from the
+sidecar; browsers sniff and cope, so it is not urgent, but it is wrong and it
+is the same trap the card renderer just fell into.
