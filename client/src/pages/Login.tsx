@@ -3,6 +3,7 @@ import { useLocation, Link } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CaliberLogo } from "@/components/CaliberLogo";
 import { Loader2, ArrowRight, Trophy, BarChart3, GraduationCap } from "lucide-react";
+import { parseDateOfBirth, isUnderMinimumAge } from "@shared/age";
 
 async function loginRequest(email: string, password: string) {
   const res = await fetch("/api/login", {
@@ -18,7 +19,7 @@ async function loginRequest(email: string, password: string) {
   return res.json();
 }
 
-async function registerRequest(email: string, password: string, firstName: string, lastName: string, dateOfBirth?: string) {
+async function registerRequest(email: string, password: string, firstName: string, lastName: string, dateOfBirth: string) {
   const referralCode = localStorage.getItem("caliber_ref") ?? undefined;
   const res = await fetch("/api/register", {
     method: "POST",
@@ -78,18 +79,20 @@ export default function Login() {
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [error, setError] = useState("");
 
-  const isUnder13 = (dob: string) => {
-    if (!dob) return false;
-    const age = (new Date().getTime() - new Date(dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000);
-    return age < 13;
-  };
-  const under13Warning = mode === "register" && isUnder13(dateOfBirth);
+  /* Age check comes from shared/age.ts so this form and POST /api/register
+     cannot drift. The server enforces the same rule; this is only the courtesy
+     of saying so before the round trip. */
+  const parsedDob = mode === "register" ? parseDateOfBirth(dateOfBirth) : null;
+  const under13Warning = Boolean(parsedDob && isUnderMinimumAge(parsedDob));
+  // Date of birth is required at registration, so an empty or unparseable
+  // value has to block submit too, not just an under 13 one.
+  const dobMissing = mode === "register" && !parsedDob;
 
   const mutation = useMutation({
     mutationFn: () =>
       mode === "login"
         ? loginRequest(email, password)
-        : registerRequest(email, password, firstName, lastName, dateOfBirth || undefined),
+        : registerRequest(email, password, firstName, lastName, dateOfBirth),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/users/me"] });
@@ -377,7 +380,7 @@ export default function Login() {
 
             <button
               type="submit"
-              disabled={mutation.isPending || under13Warning}
+              disabled={mutation.isPending || under13Warning || dobMissing}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -393,8 +396,8 @@ export default function Login() {
                 fontWeight: 700,
                 fontFamily: "var(--font-display)",
                 letterSpacing: "0.03em",
-                cursor: mutation.isPending || under13Warning ? "not-allowed" : "pointer",
-                opacity: mutation.isPending || under13Warning ? 0.7 : 1,
+                cursor: mutation.isPending || under13Warning || dobMissing ? "not-allowed" : "pointer",
+                opacity: mutation.isPending || under13Warning || dobMissing ? 0.7 : 1,
                 boxShadow: "0 0 20px rgba(198,208,216,0.15)",
                 transition: "all 0.2s",
               }}

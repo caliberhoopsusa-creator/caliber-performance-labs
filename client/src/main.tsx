@@ -2,6 +2,8 @@ import * as Sentry from "@sentry/react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
+// CALIBER design system: self hosted faces plus the card keyframes.
+import "./design/caliber/fonts.css";
 import "./styles/globals.css";
 
 // Initialize Sentry (only when DSN is configured)

@@ -70,21 +70,53 @@ export function extractCookies(res: { headers: Record<string, any> }): string {
 }
 
 /**
+ * "YYYY-MM-DD" for a date exactly `years` ago, for age gate fixtures.
+ * Formats the LOCAL calendar date: toISOString would shift the day across the
+ * UTC boundary and make the boundary cases lie. See shared/age.ts.
+ */
+export function yearsAgo(years: number): string {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - years);
+  return toLocalDateString(d);
+}
+
+/** Local "YYYY-MM-DD", matching shared/age.ts toDateColumn. */
+export function toLocalDateString(d: Date): string {
+  const year = String(d.getFullYear()).padStart(4, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function seventeenYearsAgo(): string {
+  return yearsAgo(17);
+}
+
+/**
  * Register a fresh test user and return their session cookie + id.
  */
 export async function registerAndLogin(
   request: ReturnType<typeof import("supertest").default>,
-  overrides: { email?: string; password?: string; firstName?: string; lastName?: string } = {}
+  overrides: {
+    email?: string;
+    password?: string;
+    firstName?: string;
+    lastName?: string;
+    dateOfBirth?: string;
+  } = {}
 ) {
   const ts = Date.now();
   const email = overrides.email ?? `test_${ts}@caliber-test.dev`;
   const password = overrides.password ?? "TestPass123!";
   const firstName = overrides.firstName ?? "Test";
   const lastName = overrides.lastName ?? "User";
+  // POST /api/register requires a date of birth and rejects under 13s.
+  // Default to a 17 year old, which is the platform's typical athlete.
+  const dateOfBirth = overrides.dateOfBirth ?? seventeenYearsAgo();
 
   const regRes = await request
     .post("/api/register")
-    .send({ email, password, firstName, lastName });
+    .send({ email, password, firstName, lastName, dateOfBirth });
 
   if (regRes.status !== 201) {
     throw new Error(
@@ -141,4 +173,9 @@ export async function cleanupTestUsers(emailPattern = "%@caliber-test.dev") {
   `);
   await db.execute(sql`DELETE FROM players WHERE name LIKE 'Test%'`);
   await db.execute(sql`DELETE FROM users WHERE email LIKE ${emailPattern}`);
+  // Under 13 registration attempts never create a users row, so they need
+  // clearing separately or they accumulate across runs.
+  await db.execute(
+    sql`DELETE FROM pending_guardian_consents WHERE email LIKE ${emailPattern}`
+  );
 }

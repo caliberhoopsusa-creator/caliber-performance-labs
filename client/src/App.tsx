@@ -1,6 +1,7 @@
 import { Switch, Route, Redirect, useLocation, Link } from "wouter";
 import { queryClient } from "./lib/queryClient";
-import { canAccessRoute, isKnownRoute, ROLE_HOME, type UserRole } from "@shared/roles";
+import { canAccessRoute, isKnownRoute, roleHome, type UserRole } from "@shared/roles";
+import { featureFlags } from "@/lib/features";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -34,7 +35,10 @@ import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 // Eagerly loaded — on the critical path for unauthenticated and first-render flows
-import Landing from "./pages/Landing";
+/* The CALIBER front door (pivot Section 4). The SIGNAL era Landing.tsx is left
+   in place and listed in docs/DEAD_CODE_FOLLOWUPS.md rather than deleted. */
+import CaliberLanding from "./pages/caliber/CaliberLanding";
+import CaliberSignup from "./pages/caliber/CaliberSignup";
 import Login from "./pages/Login";
 import RoleSelection from "./pages/RoleSelection";
 import Dashboard from "./pages/Dashboard";
@@ -48,6 +52,12 @@ const TermsPage = lazy(() => import("./pages/TermsPage"));
 const PlayersList = lazy(() => import("./pages/PlayersList"));
 const PlayerDetail = lazy(() => import("./pages/PlayerDetail"));
 const PlayerCard = lazy(() => import("./pages/PlayerCard"));
+const CaliberCardPage = lazy(() => import("@/pages/CaliberCardPage"));
+const GradePending = lazy(() => import("@/pages/caliber/GradePending"));
+const PlayerHome = lazy(() => import("@/pages/caliber/PlayerHome"));
+const CaliberLeaderboard = lazy(() => import("@/pages/caliber/CaliberLeaderboard"));
+const RosterPrompt = lazy(() => import("@/pages/caliber/RosterPrompt"));
+const ClaimCard = lazy(() => import("@/pages/caliber/ClaimCard"));
 const AnalyzeGame = lazy(() => import("./pages/AnalyzeGame"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const ComparePlayers = lazy(() => import("./pages/ComparePlayers"));
@@ -276,10 +286,14 @@ function MainRouter() {
     if (location === "/terms") {
       return <TermsPage />;
     }
-    if (location === "/login" || location === "/register") {
+    // Sign up is the CALIBER player flow; sign in stays on the existing page.
+    if (location === "/register") {
+      return <CaliberSignup />;
+    }
+    if (location === "/login") {
       return <Login />;
     }
-    return <Landing />;
+    return <CaliberLanding />;
   }
   
   // New user who hasn't picked a role yet — show role selection immediately
@@ -326,9 +340,12 @@ function MainRouter() {
   // Roles are locked at sign-up, so each role only reaches its own surfaces.
   // A real page that belongs to another role bounces to this role's home; an
   // unrecognised URL falls through to the normal 404 below.
+  // A role whose product is switched off keeps only the shared routes and
+  // lands on the shared feed, so a signed-in coach does not hit a dead shell
+  // while ENABLE_COACH_PRODUCT is false.
   const currentRole = resolvedUser.role as UserRole;
-  if (isKnownRoute(location) && !canAccessRoute(currentRole, location)) {
-    return <Redirect to={ROLE_HOME[currentRole]} />;
+  if (isKnownRoute(location) && !canAccessRoute(currentRole, location, featureFlags)) {
+    return <Redirect to={roleHome(currentRole, featureFlags)} />;
   }
 
   // Fully authenticated with role - show main app
@@ -366,19 +383,29 @@ function MainRouter() {
             <PageTransition>
               <Suspense fallback={<div className="flex items-center justify-center py-24"><Loader2 className="w-8 h-8 text-accent animate-spin" /></div>}>
               <Switch>
+                {/* `/` is the coach dashboard, and every other role redirects
+                    away from it. Route through roleHome so a role whose product
+                    is switched off lands on the shared feed instead of a
+                    dashboard it is not supposed to have. Dashboard renders only
+                    for a coach whose product is actually on. */}
+                {/* The player is the default now (pivot Section 4A): `/` is
+                    their own card, not the coach dashboard and not a feed. */}
                 <Route path="/">
-                  {resolvedUser.role === 'player' && resolvedUser.playerId ? (
-                    <Redirect to="/community?tab=feed" />
-                  ) : resolvedUser.role === 'recruiter' ? (
-                    <Redirect to="/recruiter" />
-                  ) : resolvedUser.role === 'guardian' ? (
-                    <Redirect to="/family" />
-                  ) : (
+                  {resolvedUser.role === 'player' ? (
+                    <PlayerHome />
+                  ) : resolvedUser.role === 'coach' && featureFlags.ENABLE_COACH_PRODUCT ? (
                     <Dashboard />
+                  ) : (
+                    <Redirect to={roleHome(resolvedUser.role as UserRole, featureFlags)} />
                   )}
                 </Route>
+                <Route path="/grade-pending"><GradePending /></Route>
+                {/* Named right after profile completion (pivot Section 7). */}
+                <Route path="/roster"><RosterPrompt /></Route>
                 <Route path="/players" component={PlayersList} />
                 <Route path="/players/:id/card" component={PlayerCard} />
+                {/* The CALIBER card. The route above is the older SIGNAL page. */}
+                <Route path="/players/:id/caliber" component={CaliberCardPage} />
                 <Route path="/players/:id" component={PlayerDetail} />
                 <Route path="/analytics" component={AnalyticsHub} />
                 <Route path="/challenges">
@@ -395,9 +422,10 @@ function MainRouter() {
                 <Route path="/stories">
                   <Redirect to="/community?tab=stories" />
                 </Route>
-                <Route path="/leaderboard">
-                  <Redirect to="/analytics?tab=leaderboard" />
-                </Route>
+                {/* The CALIBER leaderboard: a stack of cards, not a table
+                    (pivot Section 6A). The analytics tab still holds the older
+                    SIGNAL table view for internal use. */}
+                <Route path="/leaderboard" component={CaliberLeaderboard} />
                 <Route path="/compare">
                   <Redirect to="/analytics?tab=compare" />
                 </Route>
@@ -508,6 +536,10 @@ function App() {
                     <Route path="/discover/players" component={PlayerDirectory} />
                     <Route path="/challenge/:code" component={ChallengePage} />
                     <Route path="/join/:code" component={JoinPage} />
+                    {/* The claim landing is public on purpose: an invited
+                        teammate has no account yet, and the referrer's card is
+                        the first thing they should see (pivot Section 7). */}
+                    <Route path="/claim/:token" component={ClaimCard} />
                     <Route>
                       <MainRouter />
                     </Route>

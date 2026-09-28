@@ -26,6 +26,7 @@ export const players = pgTable("players", {
   school: text("school"), // School or organization
   graduationYear: integer("graduation_year"), // Class year (e.g., 2025)
   level: text("level"), // 'middle_school', 'high_school', 'college'
+  phone: text("phone"), // Collected at sign up; governed by showPhone
   gpa: decimal("gpa", { precision: 3, scale: 2 }), // Academic GPA (0.00 - 4.00) for high school players
   highlightVideoUrl: text("highlight_video_url"), // YouTube/Hudl highlight reel URL
   profileVisibility: text("profile_visibility").default("public"), // 'public', 'link_only', 'hidden'
@@ -34,10 +35,18 @@ export const players = pgTable("players", {
   showSchool: boolean("show_school").default(true),
   showGpa: boolean("show_gpa").default(true),
   openToRecruiting: boolean("open_to_recruiting").default(false), // Boosts in recruiter search
-  showStatsToCoaches: boolean("show_stats_to_coaches").default(true),
-  showContactToCoaches: boolean("show_contact_to_coaches").default(true),
+  // Opt IN, not opt out. The privacy policy promises no sharing with coaches or
+  // recruiters "without your explicit action", so silence must mean no.
+  showStatsToCoaches: boolean("show_stats_to_coaches").default(false),
+  showContactToCoaches: boolean("show_contact_to_coaches").default(false),
   showDetailedStatsToGuardians: boolean("show_detailed_stats_to_guardians").default(true),
   showGradesToGuardians: boolean("show_grades_to_guardians").default(true),
+  // CALIBER rarity (pivot Section 3D). Persisted because it is public, shown on
+  // a shared card, and too expensive to derive per request. Recomputed nightly
+  // and on any grade change. Logic lives in shared/rarity.ts.
+  rarityTier: text("rarity_tier"), // 'chrome' | 'prism' | 'hot' | 'base' | 'rookie'
+  rarityPercentile: integer("rarity_percentile"), // 0-99 within class year + position
+  rarityComputedAt: timestamp("rarity_computed_at"),
   scoutingReport: text("scouting_report"),
   scoutingReportGeneratedAt: timestamp("scouting_report_generated_at"),
   // Coach contact info
@@ -3091,6 +3100,92 @@ export const waitlistSignups = pgTable("waitlist_signups", {
 export const insertWaitlistSignupSchema = createInsertSchema(waitlistSignups).omit({ id: true, createdAt: true });
 export type InsertWaitlistSignup = z.infer<typeof insertWaitlistSignupSchema>;
 export type WaitlistSignup = typeof waitlistSignups.$inferSelect;
+
+// === GRADE PROGRESSION (pivot Section 5) ===
+/**
+ * One row per grade computation. Append only.
+ *
+ * The card shows a 30 day trend, and a trend needs history, so this is the
+ * record rather than a derived value. `trigger` says what caused the
+ * recomputation, which is what makes a surprising movement debuggable later.
+ */
+export const gradeHistory = pgTable("grade_history", {
+  id: serial("id").primaryKey(),
+  playerId: integer("player_id").notNull(),
+  /** Letter grade at this point, for example "A-". */
+  grade: text("grade").notNull(),
+  /** Numeric value of that grade, so trend math needs no lookup table. */
+  gradeValue: integer("grade_value").notNull(),
+  /** Rarity tier at this point. Null before the first rarity computation. */
+  tier: text("tier"),
+  computedAt: timestamp("computed_at").defaultNow(),
+  /** 'game_logged' | 'film_uploaded' | 'coach_cosign' | 'nightly' */
+  trigger: text("trigger").notNull(),
+}, (table) => ({
+  playerIdx: index("grade_history_player_idx").on(table.playerId, table.computedAt),
+}));
+
+export type GradeHistoryRow = typeof gradeHistory.$inferSelect;
+
+// === COPPA (under 13 registrations held for guardian consent) ===
+/**
+ * A registration attempt by someone under 13. No `users` row is created and no
+ * session is issued, so the account does not exist until a guardian consents.
+ * This holds only what is needed to reach the guardian later. See
+ * docs/PIVOT_AUDIT.md section 7c for why the old client side gate was not one.
+ */
+export const pendingGuardianConsents = pgTable("pending_guardian_consents", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull(),
+  dateOfBirth: date("date_of_birth").notNull(),
+  guardianEmail: text("guardian_email"),
+  status: text("status").notNull().default("pending"), // 'pending' | 'granted' | 'denied'
+  requestedAt: timestamp("requested_at").defaultNow(),
+  resolvedAt: timestamp("resolved_at"),
+}, (table) => ({
+  emailIdx: index("pending_guardian_consents_email_idx").on(table.email),
+}));
+
+export type PendingGuardianConsent = typeof pendingGuardianConsents.$inferSelect;
+
+// === REFERRAL LOOP (pivot Section 7) ===
+/**
+ * One row per teammate a player added to their roster.
+ *
+ * The teammate is a real `players` row with a null `userId`, which is the
+ * shape this codebase already uses for a person who exists in the data but has
+ * no account ("null for coach-created players"). This table is what makes that
+ * row a CLAIMABLE placeholder rather than just an unlinked one, and it is the
+ * only thing that can tell the two apart.
+ *
+ * `claimToken` is random and stored, not derived from the player id. The older
+ * family invite code is a six character hash of a salt that sits in the source,
+ * which is guessable; a placeholder holds a real teenager's name, so taking one
+ * over needs a secret that cannot be enumerated.
+ *
+ * Unclaimed placeholders are hidden from every public listing. They describe
+ * someone who never signed up and cannot yet exercise any of the rights the
+ * privacy policy promises them.
+ */
+export const referrals = pgTable("referrals", {
+  id: serial("id").primaryKey(),
+  referrerPlayerId: integer("referrer_player_id").notNull(),
+  placeholderPlayerId: integer("placeholder_player_id").notNull(),
+  claimToken: text("claim_token").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  claimedAt: timestamp("claimed_at"),
+  /** The user who claimed it. Null until claimed. */
+  claimedByUserId: text("claimed_by_user_id"),
+}, (table) => ({
+  referrerIdx: index("referrals_referrer_player_id_idx").on(table.referrerPlayerId),
+  placeholderIdx: uniqueIndex("referrals_placeholder_player_id_idx").on(table.placeholderPlayerId),
+  tokenIdx: uniqueIndex("referrals_claim_token_idx").on(table.claimToken),
+}));
+
+export const insertReferralSchema = createInsertSchema(referrals)
+  .omit({ id: true, createdAt: true, claimedAt: true, claimedByUserId: true });
+export type InsertReferral = z.infer<typeof insertReferralSchema>;
+export type Referral = typeof referrals.$inferSelect;
 
 // Export auth models
 export * from "./models/auth";

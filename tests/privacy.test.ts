@@ -71,6 +71,9 @@ describe("hidden profiles stay out of public listings", () => {
     ["/api/public/players/directory?limit=200"],
     ["/api/discover"],
     ["/api/scout/players"],
+    // Added Section 6A: this one was unauthenticated and unfiltered, and had
+    // no test, so a hidden player was ranked in public.
+    ["/api/analytics/leaderboard"],
   ])("%s omits a hidden player", async (url) => {
     const res = await request.get(url);
     expect(res.status).toBe(200);

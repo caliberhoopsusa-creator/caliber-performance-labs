@@ -1,4 +1,5 @@
 import { useState, useContext } from "react";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { BASKETBALL_POSITIONS } from "@shared/sports-config";
+import { featureFlags } from "@/lib/features";
+import { isRoleEnabled } from "@shared/features";
 
 type RoleType = 'player' | 'coach' | 'recruiter' | 'guardian' | null;
 type CoachStep = 'select-team-action' | 'create-team' | 'join-team' | null;
@@ -19,7 +22,7 @@ const ROLE_OPTIONS = [
   {
     value: 'player' as const,
     label: 'Player',
-    description: 'Track my own stats, earn badges, and level up my game',
+    description: 'Track my own stats, earn badges, and get your Caliber Grade',
     icon: UserCircle,
   },
   {
@@ -51,10 +54,18 @@ function RoleDropdown({ isLoading, onSelect }: { isLoading: boolean; onSelect: (
     onSelect(role);
   };
 
+  /* Only offer roles whose product is live. Player has no flag and is always
+     offered, so with every flag off this collapses to a single choice. The
+     server enforces the same rule, so a hand-crafted request cannot claim a
+     dark role either. */
+  const availableRoles = ROLE_OPTIONS.filter((role) =>
+    isRoleEnabled(role.value, featureFlags),
+  );
+
   return (
     <div className="space-y-4">
       <div className="grid sm:grid-cols-2 gap-3">
-        {ROLE_OPTIONS.map((role) => {
+        {availableRoles.map((role) => {
           const Icon = role.icon;
           const isPicked = pickedRole === role.value;
           return (
@@ -112,6 +123,7 @@ function BasketballIcon({ className }: { className?: string }) {
 }
 
 export default function RoleSelection() {
+  const [, setLocation] = useLocation();
   const [selectedRole, setSelectedRole] = useState<RoleType>(null);
   const [coachStep, setCoachStep] = useState<CoachStep>(null);
   const [playerForm, setPlayerForm] = useState({
@@ -232,6 +244,12 @@ export default function RoleSelection() {
           description: "Your player profile has been created!",
         });
       }
+
+      /* Straight into naming the roster (pivot Section 7). The people most
+         likely to want a card are the teammates standing next to you, and
+         this is the only moment the player is already in setup mode. It is
+         skippable on the page itself. */
+      setLocation('/roster');
     },
     onError: (error) => {
       toast({

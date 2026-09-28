@@ -418,7 +418,7 @@ export default function Dashboard() {
                 <TelemetryStrip items={seasonTelemetry} className="mt-3" data-testid="hero-season-telemetry" />
               ) : (
                 <p className="mt-3 max-w-md font-body text-body text-muted-foreground">
-                  Track performance, analyze games, and unlock your potential
+                  Track performance, analyze games, and see where you stack up
                 </p>
               )}
             </div>

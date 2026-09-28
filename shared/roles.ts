@@ -7,6 +7,12 @@
  * client (route guard) read their rules from this file so the two can't drift.
  */
 
+import {
+  ALL_PRODUCTS_DISABLED,
+  isRoleEnabled,
+  type FeatureFlags,
+} from "./features";
+
 export const USER_ROLES = ["player", "coach", "recruiter", "guardian"] as const;
 
 export type UserRole = (typeof USER_ROLES)[number];
@@ -24,7 +30,10 @@ export function isUserRole(value: unknown): value is UserRole {
 
 /** Where each role lands when it hits "/" or gets bounced off a forbidden route. */
 export const ROLE_HOME: Record<UserRole, string> = {
-  player: "/community?tab=feed",
+  /* The player lands on their own card. This used to be the community feed,
+     which meant the player saw someone else's content before their own number:
+     the clearest artifact of the coach first era (pivot Section 4A). */
+  player: "/",
   coach: "/",
   recruiter: "/recruiter",
   guardian: "/family",
@@ -45,6 +54,11 @@ const SHARED_ROUTES: readonly string[] = [
   "/social-hub",
   "/discover/highlights",
   "/players/:id/card",
+  "/players/:id/caliber",
+  "/grade-pending",
+  /* Named right after profile completion. Shared because every role that can
+     hold a player profile can build a roster (pivot Section 7). */
+  "/roster",
   "/reels/:playerId",
   "/debug",
 ];
@@ -153,13 +167,41 @@ function matchesPattern(pattern: string, pathname: string): boolean {
 }
 
 /**
- * Whether `role` may reach `path`. Query strings and hashes are ignored — access
- * is decided by pathname only, so `/analytics?tab=grading` follows `/analytics`.
+ * Whether `role` may reach `path`. Query strings and hashes are ignored, so
+ * access is decided by pathname only and `/analytics?tab=grading` follows
+ * `/analytics`.
+ *
+ * `flags` defaults to every product disabled, which is deliberate: a caller
+ * that forgets to pass them denies a gated role rather than exposing a product
+ * that is meant to be dark. Player is never gated, so the player path is
+ * unaffected either way.
  */
-export function canAccessRoute(role: UserRole, path: string): boolean {
+export function canAccessRoute(
+  role: UserRole,
+  path: string,
+  flags: FeatureFlags = ALL_PRODUCTS_DISABLED,
+): boolean {
   const pathname = path.split("?")[0].split("#")[0] || "/";
   if (SHARED_ROUTES.some((pattern) => matchesPattern(pattern, pathname))) return true;
+  // A role whose product is switched off keeps only the shared routes.
+  if (!isRoleEnabled(role, flags)) return false;
   return ROLE_ROUTE_ACCESS[role].some((pattern) => matchesPattern(pattern, pathname));
+}
+
+/**
+ * Where `role` lands, accounting for a switched off product.
+ *
+ * A coach signed in while ENABLE_COACH_PRODUCT is false cannot be sent to `/`,
+ * because that is the coach dashboard. Send them to the shared community feed
+ * instead, which every role can reach.
+ */
+export const DISABLED_PRODUCT_HOME = "/community?tab=feed";
+
+export function roleHome(
+  role: UserRole,
+  flags: FeatureFlags = ALL_PRODUCTS_DISABLED,
+): string {
+  return isRoleEnabled(role, flags) ? ROLE_HOME[role] : DISABLED_PRODUCT_HOME;
 }
 
 /**

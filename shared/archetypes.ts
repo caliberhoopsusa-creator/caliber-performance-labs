@@ -1,3 +1,4 @@
+import type { BasketballPosition } from "./sports-config";
 import type { Game } from "./schema";
 
 export type ArchetypeId = 
@@ -18,7 +19,7 @@ export interface Archetype {
   description: string;
   shortDescription: string;
   emoji: string;
-  allowedPositions: ("Guard" | "Wing" | "Big")[];
+  allowedPositions: BasketballPosition[];
 }
 
 export const ARCHETYPES: Record<ArchetypeId, Archetype> = {
@@ -28,7 +29,7 @@ export const ARCHETYPES: Record<ArchetypeId, Archetype> = {
     description: "You're the go-to bucket getter. When your team needs points, they look to you.",
     shortDescription: "High volume scorer with a bag of moves",
     emoji: "🎯",
-    allowedPositions: ["Guard", "Wing"],
+    allowedPositions: ["PG", "SG", "SF"],
   },
   floor_general: {
     id: "floor_general",
@@ -36,7 +37,7 @@ export const ARCHETYPES: Record<ArchetypeId, Archetype> = {
     description: "You make everyone around you better with elite vision. The offense flows through you.",
     shortDescription: "Elite playmaker with court vision",
     emoji: "🧠",
-    allowedPositions: ["Guard", "Wing"],
+    allowedPositions: ["PG", "SG", "SF"],
   },
   three_and_d: {
     id: "three_and_d",
@@ -44,7 +45,7 @@ export const ARCHETYPES: Record<ArchetypeId, Archetype> = {
     description: "You're the coach's dream - knock down shots and guard anyone on the floor.",
     shortDescription: "Sniper + lockdown on the perimeter",
     emoji: "🏹",
-    allowedPositions: ["Guard", "Wing"],
+    allowedPositions: ["PG", "SG", "SF"],
   },
   two_way_slasher: {
     id: "two_way_slasher",
@@ -52,7 +53,7 @@ export const ARCHETYPES: Record<ArchetypeId, Archetype> = {
     description: "You attack the rim relentlessly and make life hard for opponents on both ends.",
     shortDescription: "Attacks the basket, plays both ends",
     emoji: "⚡",
-    allowedPositions: ["Guard", "Wing"],
+    allowedPositions: ["PG", "SG", "SF"],
   },
   stretch_big: {
     id: "stretch_big",
@@ -60,7 +61,7 @@ export const ARCHETYPES: Record<ArchetypeId, Archetype> = {
     description: "You're a modern big who can space the floor. Defenders don't know whether to sag or close out.",
     shortDescription: "Big with range - opens up the floor",
     emoji: "📏",
-    allowedPositions: ["Wing", "Big"],
+    allowedPositions: ["SF", "PF", "C"],
   },
   paint_beast: {
     id: "paint_beast",
@@ -68,7 +69,7 @@ export const ARCHETYPES: Record<ArchetypeId, Archetype> = {
     description: "You own the paint on both ends. Boards, blocks, and bully ball - that's your game.",
     shortDescription: "Dominates the paint, controls the glass",
     emoji: "🦬",
-    allowedPositions: ["Big"],
+    allowedPositions: ["PF", "C"],
   },
   glue_guy: {
     id: "glue_guy",
@@ -76,7 +77,7 @@ export const ARCHETYPES: Record<ArchetypeId, Archetype> = {
     description: "You do all the little things that don't show up in the box score. Teams win because of you.",
     shortDescription: "Hustle king - does everything",
     emoji: "🔧",
-    allowedPositions: ["Guard", "Wing", "Big"],
+    allowedPositions: ["PG", "SG", "SF", "PF", "C"],
   },
   sharpshooter: {
     id: "sharpshooter",
@@ -84,7 +85,7 @@ export const ARCHETYPES: Record<ArchetypeId, Archetype> = {
     description: "You're a pure sniper from deep. Defenders have to pick you up at halfcourt.",
     shortDescription: "Elite 3-point threat, lethal range",
     emoji: "🎯",
-    allowedPositions: ["Guard", "Wing", "Big"],
+    allowedPositions: ["PG", "SG", "SF", "PF", "C"],
   },
   lockdown_defender: {
     id: "lockdown_defender",
@@ -92,7 +93,7 @@ export const ARCHETYPES: Record<ArchetypeId, Archetype> = {
     description: "Offense wins games, but defense wins championships. You're the reason opponents struggle.",
     shortDescription: "Shuts down the best players",
     emoji: "🔒",
-    allowedPositions: ["Guard", "Wing", "Big"],
+    allowedPositions: ["PG", "SG", "SF", "PF", "C"],
   },
   all_around_star: {
     id: "all_around_star",
@@ -100,7 +101,7 @@ export const ARCHETYPES: Record<ArchetypeId, Archetype> = {
     description: "You can do it all at an elite level. The complete package - a true difference maker.",
     shortDescription: "Elite in every facet of the game",
     emoji: "⭐",
-    allowedPositions: ["Guard", "Wing", "Big"],
+    allowedPositions: ["PG", "SG", "SF", "PF", "C"],
   },
 };
 
@@ -165,7 +166,7 @@ function normalize(value: number, low: number, high: number): number {
 
 export function calculateArchetypeScores(
   stats: SeasonAverages,
-  position: "Guard" | "Wing" | "Big"
+  position: BasketballPosition
 ): Record<ArchetypeId, number> {
   const scores: Record<ArchetypeId, number> = {
     scoring_guard: 0,
@@ -209,7 +210,8 @@ export function calculateArchetypeScores(
     normalize(stats.fgPct, 40, 55) * 0.2;
 
   // Stretch Big: Big with good 3P shooting
-  const isBigPosition = position === "Big" || position === "Wing";
+  // Frontcourt and wings, the players a stretch big profile applies to.
+  const isBigPosition = position === "PF" || position === "C" || position === "SF";
   scores.stretch_big =
     (normalize(stats.threePct, 30, 42) * 0.4 +
     normalize(stats.threeAttempts, 2, 6) * 0.25 +
@@ -270,7 +272,7 @@ export function calculateArchetypeScores(
 
 export function getPlayerArchetype(
   games: Game[],
-  position: "Guard" | "Wing" | "Big"
+  position: BasketballPosition
 ): ArchetypeResult | null {
   const stats = calculateSeasonAverages(games);
   if (!stats || stats.gamesPlayed < 1) return null;

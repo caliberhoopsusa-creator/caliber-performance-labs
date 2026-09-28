@@ -48,7 +48,7 @@ export function HeroLanding() {
             <span className="text-white">Track Every </span>
             <span className="text-gradient">Rep.</span>
             <br />
-            <span className="text-white">Elevate Every </span>
+            <span className="text-white">Sharpen Every </span>
             <span className="text-gradient">Game.</span>
           </h1>
 

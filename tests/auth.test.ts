@@ -5,12 +5,15 @@
  */
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import supertest from "supertest";
-import { getTestApp, extractCookies, cleanupTestUsers } from "./helpers/setup.js";
+import { getTestApp, extractCookies, cleanupTestUsers, yearsAgo } from "./helpers/setup.js";
 
 let request: ReturnType<typeof supertest>;
 const TS = Date.now();
 const TEST_EMAIL = `auth_test_${TS}@caliber-test.dev`;
 const TEST_PASSWORD = "SecurePass999!";
+// POST /api/register requires a date of birth and rejects under 13s
+// (docs/PIVOT_AUDIT.md 7c). 17 is the platform's typical athlete.
+const TEST_DOB = yearsAgo(17);
 
 beforeAll(async () => {
   const app = await getTestApp();
@@ -25,7 +28,7 @@ describe("POST /api/register", () => {
   it("creates a new user and returns 201", async () => {
     const res = await request
       .post("/api/register")
-      .send({ email: TEST_EMAIL, password: TEST_PASSWORD, firstName: "Auth", lastName: "Tester" });
+      .send({ email: TEST_EMAIL, password: TEST_PASSWORD, firstName: "Auth", lastName: "Tester", dateOfBirth: TEST_DOB });
 
     expect(res.status).toBe(201);
     expect(res.body).toMatchObject({
@@ -42,7 +45,7 @@ describe("POST /api/register", () => {
   it("rejects duplicate email registration", async () => {
     const res = await request
       .post("/api/register")
-      .send({ email: TEST_EMAIL, password: TEST_PASSWORD });
+      .send({ email: TEST_EMAIL, password: TEST_PASSWORD, dateOfBirth: TEST_DOB });
 
     expect(res.status).toBe(400);
     expect(res.body.message).toMatch(/already exists/i);

@@ -8,6 +8,7 @@ import { players, games, badges, headToHeadChallenges, statVerifications, player
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { calculateAIRating, calculateProjection, type GameStats, type PlayerMetrics, type PeerStats, type AIRatingResult, type ProjectionResult } from "@shared/ai-rating-engine";
 import type { Sport } from "@shared/sports-config";
+import { normalizePosition, positionGroup, normalizePositionList, BASKETBALL_POSITIONS } from "@shared/sports-config";
 import { ROLE_LABELS, USER_ROLES, type UserRole } from "@shared/roles";
 import { GoogleGenAI } from "@google/genai";
 import multer from "multer";
@@ -17,6 +18,36 @@ import { registerObjectStorageRoutes } from "./replit_integrations/object_storag
 import { setupAuth, registerAuthRoutes, isAuthenticated, authStorage } from "./replit_integrations/auth";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 import { users } from "@shared/models/auth";
+import { renderCardCached, cardVersion } from "./cardRenderer";
+import { startRarityScheduler, recomputeRarityForPlayer } from "./rarityService";
+import {
+  addRosterTeammates,
+  rosterForPlayer,
+  previewClaim,
+  claimPlaceholder,
+  unclaimedPlaceholderIds,
+  MAX_ROSTER_SIZE,
+} from "./referralService";
+import {
+  recordGradeSnapshot,
+  startProgressionNotifications,
+  trendForPlayer,
+} from "./progressionService";
+import { computeRarity, type RarityTier } from "@shared/rarity";
+import { caliberGrade } from "@shared/progression";
+import {
+  isRoleProductEnabled,
+  isProductEnabled,
+  PRODUCT_DISABLED_BODY,
+} from "./features";
+import type { ProductFlag } from "@shared/features";
+import {
+  applyPlayerPrivacy,
+  applyPlayerPrivacyToList,
+  canViewPlayer,
+  ANONYMOUS_VIEWER,
+  type ViewerIdentity,
+} from "./privacy";
 import { eq, sql, and, desc, or, inArray, gte, lte, count, max, ne, ilike, isNull, type SQL } from "drizzle-orm";
 import { db } from "./db";
 import { apiKeyAuth } from "./middleware/apiKeyAuth";
@@ -55,6 +86,11 @@ const isAdmin: RequestHandler = (req: any, res, next) => {
 // Role-based middleware
 const isCoach: RequestHandler = async (req: any, res, next) => {
   try {
+    // Dark product check runs first: 404 before 401 or 403, so a prober cannot
+    // tell a flagged off route from one that never existed.
+    if (!productEnabledFor(req, 'coach')) {
+      return res.status(404).json(PRODUCT_DISABLED_BODY);
+    }
     if (!req.isAuthenticated() || !req.user?.claims?.sub) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -96,6 +132,16 @@ const isPlayer: RequestHandler = async (req: any, res, next) => {
  */
 const requireRole = (...roles: UserRole[]): RequestHandler => async (req: any, res, next) => {
   try {
+    /* Narrow the admitted roles to products that are actually shipping. A route
+       admitting player or coach stays open while the coach product is dark,
+       because player is never gated, but it stops admitting coaches. A route
+       whose every role is dark 404s before it can 401, so a prober cannot tell
+       it apart from a route that never existed. */
+    const enabledRoles = roles.filter((role) => isRoleProductEnabled(role));
+    if (enabledRoles.length === 0 && !isAppOwner(req?.user?.claims?.sub)) {
+      return res.status(404).json(PRODUCT_DISABLED_BODY);
+    }
+
     if (!req.isAuthenticated() || !req.user?.claims?.sub) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -114,8 +160,8 @@ const requireRole = (...roles: UserRole[]): RequestHandler => async (req: any, r
       return next();
     }
 
-    if (!user.role || !roles.includes(user.role as UserRole)) {
-      const required = roles.map((role) => ROLE_LABELS[role]).join(' or ');
+    if (!user.role || !enabledRoles.includes(user.role as UserRole)) {
+      const required = enabledRoles.map((role) => ROLE_LABELS[role]).join(' or ');
       return res.status(403).json({
         message: `${required} access required`,
         type: 'role_forbidden',
@@ -173,6 +219,45 @@ const isAppOwner = (userId: string | null | undefined): boolean => {
   return userId === ownerUserId;
 };
 
+/**
+ * Resolves who is asking, for the player privacy serializer in ./privacy.
+ *
+ * Safe to call from a route with no auth middleware: passport.session() runs on
+ * every request (see setupAuth), so req.user is populated whenever a valid
+ * session cookie is present, with or without isAuthenticated on the route.
+ * A logged out visitor costs no database call.
+ */
+async function getViewer(req: any): Promise<ViewerIdentity> {
+  const userId = req?.user?.claims?.sub;
+  if (!userId) return ANONYMOUS_VIEWER;
+  try {
+    const cached = req.caliberUser ?? (await authStorage.getUser(userId));
+    if (!cached) return ANONYMOUS_VIEWER;
+    req.caliberUser = cached;
+    return {
+      userId,
+      role: (cached.role as UserRole) ?? null,
+      isAdmin: isAppOwner(userId),
+    };
+  } catch (error) {
+    // A viewer lookup failure must never widen access, so fail closed.
+    console.error("getViewer failed, falling back to anonymous:", error);
+    return ANONYMOUS_VIEWER;
+  }
+}
+
+/**
+ * Whether this request may reach `role`'s product surface.
+ *
+ * The app owner keeps access to a dark product so it can be smoke tested
+ * before the flag is flipped for everyone, matching the existing owner bypass
+ * on the role checks.
+ */
+function productEnabledFor(req: any, role: UserRole): boolean {
+  if (isRoleProductEnabled(role)) return true;
+  return isAppOwner(req?.user?.claims?.sub);
+}
+
 // Subscription verification middleware
 const requiresSubscription: RequestHandler = async (req: any, res, next) => {
   // Dev override — only active in non-production environments
@@ -212,6 +297,9 @@ const requiresSubscription: RequestHandler = async (req: any, res, next) => {
 // Middleware for coach role only (no subscription required)
 const requiresCoach: RequestHandler = async (req: any, res, next) => {
   try {
+    if (!productEnabledFor(req, 'coach')) {
+      return res.status(404).json(PRODUCT_DISABLED_BODY);
+    }
     if (!req.isAuthenticated() || !req.user?.claims?.sub) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -242,6 +330,9 @@ const requiresCoach: RequestHandler = async (req: any, res, next) => {
 // Combined middleware for coach + subscription
 const requiresCoachPro: RequestHandler = async (req: any, res, next) => {
   // Dev override — only active in non-production environments
+  if (!productEnabledFor(req, 'coach')) {
+    return res.status(404).json(PRODUCT_DISABLED_BODY);
+  }
   if (process.env.DISABLE_SUBSCRIPTION_GATE === 'true' && process.env.NODE_ENV !== 'production') return next();
 
   try {
@@ -325,10 +416,23 @@ function scoreToGrade(score: number): string {
 // Extract primary position from comma-separated positions for stat calculation
 // For multi-position players like "QB, RB", returns "QB"
 // For single position players, returns the position as-is
+/**
+ * The broad position GROUP a player grades under.
+ *
+ * Returns 'Guard' | 'Wing' | 'Big', not the stored position. Seventeen
+ * comparison sites across the grading functions below are written against
+ * those three names, and they were designed around them: a point guard and a
+ * shooting guard want the same assist weighting.
+ *
+ * This is the choke point that survived the 2026-09-25 migration from three
+ * positions to five. Before it returned the raw stored value, so once players
+ * started storing 'PG' and 'SG' every one of those comparisons silently
+ * stopped matching and every player quietly graded on the default weights.
+ * Normalising here repairs all seventeen at once and keeps working for rows
+ * written under either taxonomy.
+ */
 function getPrimaryPosition(position: string): string {
-  if (!position) return 'Guard';
-  const positions = position.split(',').map(p => p.trim());
-  return positions[0] || 'Guard';
+  return positionGroup(position) ?? 'Guard';
 }
 
 // Category Grade: Defensive (steals, blocks, defensive rebounds)
@@ -1475,9 +1579,49 @@ export async function registerRoutes(
     console.error('Seed shop items error (non-fatal):', (err as Error).message);
   }
   
+  /* Nightly rarity recompute (pivot Section 3D). Unref'd, so it never holds
+     the process open, and it reschedules itself after a failure. */
+  startRarityScheduler();
+
+  /* Wires tier_promoted through to the notification seam. Nothing is
+     registered as a notifier yet, so nothing sends: the brief asked for the
+     hook and explicitly not for push (pivot Section 5). */
+  startProgressionNotifications();
+
   // Setup authentication FIRST before other routes
   await setupAuth(app);
   registerAuthRoutes(app);
+
+  /* Product feature gates (pivot Section 2).
+   *
+   * Registered here, ahead of every product route, because most of those
+   * routes mount `isAuthenticated` before their role middleware. Relying on
+   * the role middleware alone would answer 401 before the flag was ever
+   * consulted, which leaks that the route exists and is merely gated. A
+   * prefix guard cannot be defeated by per route middleware order.
+   *
+   * The checks inside isCoach, requiresCoach, requiresCoachPro and requireRole
+   * stay as defence in depth for any route outside these namespaces.
+   */
+  const PRODUCT_PREFIXES: Array<[ProductFlag, string[]]> = [
+    ['ENABLE_COACH_PRODUCT', [
+      '/api/coach', '/api/coach-goals', '/api/roster', '/api/live-game',
+      '/api/practices', '/api/drills', '/api/lineups', '/api/opponents',
+      '/api/alerts',
+    ]],
+    ['ENABLE_RECRUITER_PRODUCT', ['/api/recruiter']],
+    ['ENABLE_GUARDIAN_PRODUCT', ['/api/guardian']],
+  ];
+
+  for (const [flag, prefixes] of PRODUCT_PREFIXES) {
+    for (const prefix of prefixes) {
+      app.use(prefix, (req: any, res, next) => {
+        // The app owner keeps access so a dark product can be smoke tested.
+        if (isProductEnabled(flag) || isAppOwner(req?.user?.claims?.sub)) return next();
+        return res.status(404).json(PRODUCT_DISABLED_BODY);
+      });
+    }
+  }
   
   // Register object storage routes for file uploads
   registerObjectStorageRoutes(app);
@@ -1511,6 +1655,16 @@ export async function registerRoutes(
 
       const player = await storage.getPlayer(playerId);
       if (!player) return next();
+
+      /* Privacy gate (docs/PIVOT_AUDIT.md 7b).
+         Commit e89ae4d fixed the JSON endpoints and missed this one because it
+         renders HTML, so a hidden player's school and photo were still served
+         to anyone who asked. Falling through to next() hands back the generic
+         SPA shell with the site wide tags, which is what a player who hid their
+         profile should produce: a working link, no personal data in the
+         preview, and no confirmation that the id resolves to a real athlete. */
+      const ogViewer = await getViewer(req);
+      if (!canViewPlayer(player, ogViewer)) return next();
 
       const playerGames = await storage.getGamesByPlayerId(playerId);
       const gamesPlayed = playerGames.length;
@@ -1546,14 +1700,25 @@ export async function registerRoutes(
 
       const baseUrl = `${req.protocol}://${req.get('host')}`;
       const position = player.position || '';
-      const ogTitle = `${player.name}${position ? ` (${position})` : ''} — Caliber`;
+      const ogTitle = `${player.name}${position ? ` (${position})` : ''} · Caliber`;
       const statLine = player.sport === 'basketball'
         ? `${avgPoints} PPG • ${avgRebounds} RPG • ${avgAssists} APG`
         : `${gamesPlayed} game${gamesPlayed !== 1 ? 's' : ''} tracked`;
+
+      /* School follows showSchool, exactly as the JSON endpoints do. */
+      const ogSchool = player.showSchool !== false && player.school
+        ? ` · ${player.school}`
+        : '';
       const ogDescription = gamesPlayed > 0
-        ? `Grade: ${averageGrade} • ${statLine}${player.school ? ` — ${player.school}` : ''}`
-        : `${player.sport || 'Multi-sport'} athlete on Caliber${player.school ? ` — ${player.school}` : ''}`;
-      const ogImage = player.photoUrl || `${baseUrl}/og-image.png`;
+        ? `Grade: ${averageGrade} • ${statLine}${ogSchool}`
+        : `${player.sport || 'Multi-sport'} athlete on Caliber${ogSchool}`;
+
+      /* The player photo is a minor's face on a public, unauthenticated surface.
+         minorDataPublic exists for exactly this and was never read anywhere, so
+         honour it here and fall back to the site card. */
+      const ogImage = (player.minorDataPublic !== false && player.photoUrl)
+        ? player.photoUrl
+        : `${baseUrl}/og-image.png`;
       const ogUrl = `${baseUrl}/profile/${playerId}/public`;
 
       const esc = (s: string) =>
@@ -1582,6 +1747,98 @@ export async function registerRoutes(
     } catch (err) {
       console.error('OG meta route error:', err);
       next();
+    }
+  });
+
+  // --- Roster placeholders and claiming (pivot Section 7) ---
+
+  /* POST /api/me/roster — name the teammates you actually play with.
+     Each one becomes a claimable placeholder: a real players row with a null
+     userId, hidden everywhere until somebody claims it. */
+  app.post('/api/me/roster', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await authStorage.getUser(userId);
+      if (!user?.playerId) {
+        return res.status(400).json({ message: 'Finish your own profile first' });
+      }
+
+      const input = z.object({
+        teammates: z.array(z.object({
+          name: z.string().trim().min(1).max(80),
+          position: z.string().trim().min(1).max(20),
+          jerseyNumber: z.number().int().min(0).max(99).nullable().optional(),
+        })).min(1).max(MAX_ROSTER_SIZE),
+      }).parse(req.body);
+
+      const result = await addRosterTeammates(user.playerId, input.teammates);
+      res.status(201).json(result);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid roster', errors: err.errors });
+      }
+      if (err instanceof Error && err.message.includes('Roster is full')) {
+        return res.status(409).json({ message: err.message });
+      }
+      console.error('Error adding roster teammates:', err);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  /* GET /api/me/roster — who you added and who has claimed. Owner only: the
+     claim tokens are in this response. */
+  app.get('/api/me/roster', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await authStorage.getUser(userId);
+      if (!user?.playerId) return res.json([]);
+
+      const roster = await rosterForPlayer(user.playerId);
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      res.json(roster.map((r) => ({
+        ...r,
+        claimUrl: `${baseUrl}/claim/${r.claimToken}`,
+      })));
+    } catch (err) {
+      console.error('Error loading roster:', err);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  /* GET /api/claim/:token — what the invited teammate sees before signing in.
+     Unauthenticated on purpose: the whole point is that the card of the person
+     who invited you is the first thing you see. Returns the referrer's public
+     card fields and the placeholder's name, nothing more. */
+  app.get('/api/claim/:token', async (req, res) => {
+    try {
+      const preview = await previewClaim(req.params.token);
+      if (!preview) return res.status(404).json({ message: 'That link is not valid' });
+      res.json(preview);
+    } catch (err) {
+      console.error('Error previewing claim:', err);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  /* POST /api/claim/:token — take the placeholder over. */
+  app.post('/api/claim/:token', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const result = await claimPlaceholder(req.params.token, userId);
+
+      if (!result.ok) {
+        const status = result.reason === 'not_found' ? 404 : 409;
+        const message =
+          result.reason === 'not_found' ? 'That link is not valid'
+          : result.reason === 'already_claimed' ? 'Somebody has already claimed this profile'
+          : 'You already have a player profile, so there is nothing to claim';
+        return res.status(status).json({ message, reason: result.reason });
+      }
+
+      res.json({ claimed: true, player: result.player });
+    } catch (err) {
+      console.error('Error claiming placeholder:', err);
+      res.status(500).json({ message: 'Internal server error' });
     }
   });
 
@@ -2047,21 +2304,24 @@ export async function registerRoutes(
         height: z.string().optional(),
         team: z.string().optional(),
         jerseyNumber: z.number().optional(),
+        /* Collected at sign up (pivot Section 4B). Optional, so the older
+           sign up path that does not send them keeps working unchanged. */
+        school: z.string().max(120).optional(),
+        graduationYear: z.number().int().min(1900).max(2100).optional(),
+        phone: z.string().max(32).optional(),
       }).parse(req.body);
       
-      // Validate position based on sport (supports multi-position with comma-separated values)
-      const validBasketballPositions = ['Guard', 'Wing', 'Big'];
-      const validPositions = validBasketballPositions;
-      
-      // Split comma-separated positions and validate each one
-      const positionsList = input.position.split(',').map((p: string) => p.trim()).filter((p: string) => p);
-      const invalidPositions = positionsList.filter((p: string) => !validPositions.includes(p));
-      
-      if (invalidPositions.length > 0) {
+      /* Validate and normalise. Legacy group names are accepted and converted,
+         so the column only gains the five real positions from here on. */
+      const { positions: normalizedPositions, invalid: invalidPositions } =
+        normalizePositionList(input.position);
+
+      if (invalidPositions.length > 0 || normalizedPositions.length === 0) {
         return res.status(400).json({ 
-          message: `Invalid position(s) for ${input.sport}: ${invalidPositions.join(', ')}. Expected one of: ${validPositions.join(', ')}` 
+          message: `Invalid position(s) for ${input.sport}: ${invalidPositions.join(', ')}. Expected one of: ${BASKETBALL_POSITIONS.join(', ')}` 
         });
       }
+      input.position = normalizedPositions.join(', ');
       
       // Create player linked to user
       const player = await storage.createPlayer({
@@ -2071,6 +2331,13 @@ export async function registerRoutes(
       
       // Update user with playerId
       await authStorage.updateUserRole(userId, 'player', player.id);
+
+      /* Seed the rarity tier so a brand new player has one before their first
+         game and before the nightly pass. It will be Rookie, since the account
+         is minutes old. Non fatal: a null tier falls back to the same rule
+         client side, it is just less consistent in the database. */
+      try { await recomputeRarityForPlayer(player.id); }
+      catch (e) { console.error('Rarity seed error:', (e as Error).message); }
       
       res.status(201).json(player);
     } catch (err) {
@@ -2081,14 +2348,96 @@ export async function registerRoutes(
     }
   });
   
-  // --- Players ---
 
-  app.get(api.players.list.path, async (req, res) => {
-    const players = await storage.getPlayers();
-    res.json(players);
+  /**
+   * GET /api/players/:id/card.png?size=story|feed
+   *
+   * The shareable CALIBER card, rendered server side so it works on any device
+   * and so a link preview can point straight at it.
+   *
+   * Privacy: this is an image of a minor's name, school and face on an
+   * unauthenticated route, so it goes through the same gate as the JSON. A
+   * hidden player 404s, and school follows showSchool exactly as everywhere
+   * else (docs/PIVOT_AUDIT.md section 7).
+   */
+  app.get('/api/players/:id/card.png', async (req: any, res) => {
+    try {
+      const playerId = Number(req.params.id);
+      if (isNaN(playerId)) return res.status(400).json({ message: 'Invalid player ID' });
+
+      const size = req.query.size === 'story' ? 'story' : 'feed';
+
+      const player = await storage.getPlayer(playerId);
+      if (!player) return res.status(404).json({ message: 'Player not found' });
+
+      const viewer = await getViewer(req);
+      if (!canViewPlayer(player, viewer)) {
+        return res.status(404).json({ message: 'Player not found' });
+      }
+      const safe = applyPlayerPrivacy(player, viewer) as any;
+
+      const games = await storage.getGamesByPlayerId(playerId);
+      const played = games.length;
+
+      /* Only real numbers reach a card. With no games logged there is no grade
+         and no averages, so the card shows the honest placeholder rather than
+         inventing a stat line. */
+      const avg = (pick: (g: any) => number) =>
+        played ? (games.reduce((acc, g) => acc + (pick(g) || 0), 0) / played).toFixed(1) : '0.0';
+
+      /* Read the persisted tier. It is computed against the whole cohort, which
+         a card render must never scan for. A player who has never been through
+         a recompute falls back to the Rookie window rule. */
+      const tier = (player.rarityTier as RarityTier | null)
+        ?? computeRarity({ percentile: player.rarityPercentile, createdAt: player.createdAt }, new Date());
+
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      /* THE Caliber Grade is the mean of graded games, not the last game's
+         grade (shared/progression.ts). Three places used to disagree. */
+      const overall = caliberGrade(games.map((g) => g.grade));
+      const trend = await trendForPlayer(playerId).catch(() => null);
+
+      const input = {
+        name: safe.name ?? 'Player',
+        position: safe.position ?? '',
+        classYear: safe.graduationYear ? `'${String(safe.graduationYear).slice(-2)}` : '',
+        school: safe.school ?? '',
+        grade: overall?.grade ?? '-',
+        trend,
+        tier,
+        stats: [
+          { label: 'PPG', value: avg((g) => g.points) },
+          { label: 'RPG', value: avg((g) => g.rebounds) },
+        ],
+        profileUrl: `${baseUrl.replace(/^https?:\/\//, '')}/profile/${playerId}/public`,
+        photoUrl: safe.photoUrl ?? null,
+      };
+
+      const png = await renderCardCached(playerId, cardVersion(input), size, input);
+
+      res.setHeader('Content-Type', 'image/png');
+      // Safe to cache at the edge: the version hash changes whenever the face does.
+      res.setHeader('Cache-Control', 'public, max-age=300');
+      res.send(png);
+    } catch (error) {
+      console.error('Error rendering card:', error);
+      res.status(500).json({ message: 'Failed to render card' });
+    }
   });
 
-  app.get(api.players.get.path, async (req, res) => {
+  // --- Players ---
+
+  /* Both of these are registered with no auth middleware, so they answer the
+     open internet. Before the privacy serializer they returned the whole row:
+     date of birth, GPA, school, coach phone and every visibility setting, for
+     every player in the database. See docs/PIVOT_AUDIT.md section 7a. */
+  app.get(api.players.list.path, async (req: any, res) => {
+    const allPlayers = await storage.getPlayers();
+    const viewer = await getViewer(req);
+    res.json(applyPlayerPrivacyToList(allPlayers, viewer));
+  });
+
+  app.get(api.players.get.path, async (req: any, res) => {
     const playerId = Number(req.params.id);
     if (isNaN(playerId)) {
       return res.status(400).json({ message: 'Invalid player ID' });
@@ -2097,16 +2446,29 @@ export async function registerRoutes(
     if (!player) {
       return res.status(404).json({ message: 'Player not found' });
     }
-    
+
+    const viewer = await getViewer(req);
+    // A hidden player 404s rather than returning a redacted husk, so the
+    // response cannot be used to confirm the id belongs to a real athlete.
+    if (!canViewPlayer(player, viewer)) {
+      return res.status(404).json({ message: 'Player not found' });
+    }
+
     // Get player's games and calculate aggregated advanced metrics
     const playerGames = await storage.getGamesByPlayerId(player.id);
     const aggregatedAdvancedMetrics = calculateAggregatedAdvancedMetrics(playerGames);
-    
-    res.json({
+
+    /* The 30 day trend rides along rather than getting its own endpoint: the
+       card needs it on first paint, and a second round trip would show the
+       grade before the arrow. One indexed query on grade_history. */
+    const trend = await trendForPlayer(player.id).catch(() => null);
+
+    res.json(applyPlayerPrivacy({
       ...player,
       games: playerGames,
       advancedMetrics: aggregatedAdvancedMetrics,
-    });
+      trend,
+    }, viewer));
   });
 
   // Create player - coaches only
@@ -2186,18 +2548,15 @@ export async function registerRoutes(
       // Validate position if provided (supports multi-position with comma-separated values)
       if (input.position) {
         const playerSport = input.sport || player.sport || 'basketball';
-        const validBasketballPositions = ['Guard', 'Wing', 'Big'];
-          const validPositions = validBasketballPositions;
-        
-        // Split comma-separated positions and validate each one
-        const positionsList = input.position.split(',').map((p: string) => p.trim()).filter((p: string) => p);
-        const invalidPositions = positionsList.filter((p: string) => !validPositions.includes(p));
-        
-        if (invalidPositions.length > 0) {
+        const { positions: normalizedPositions, invalid: invalidPositions } =
+          normalizePositionList(input.position);
+
+        if (invalidPositions.length > 0 || normalizedPositions.length === 0) {
           return res.status(400).json({ 
-            message: `Invalid position(s) for ${playerSport}: ${invalidPositions.join(', ')}. Expected one of: ${validPositions.join(', ')}` 
+            message: `Invalid position(s) for ${playerSport}: ${invalidPositions.join(', ')}. Expected one of: ${BASKETBALL_POSITIONS.join(', ')}` 
           });
         }
+        input.position = normalizedPositions.join(', ');
       }
       // Convert GPA to string for database storage (decimal type)
       const updateData: any = { ...input };
@@ -3291,6 +3650,18 @@ export async function registerRoutes(
       // Check for performance alerts (drop detection)
       try { await checkPerformanceAlerts(input.playerId, game.id, input, grade, sport); }
       catch (e) { console.error('Performance alert error:', e); }
+
+      /* A new graded game can move this player's rarity tier, so recompute it
+         now rather than waiting for the nightly pass. Their cohort's percentiles
+         settle on the next nightly run; a full scan per logged game would not
+         scale. Failure is non fatal: a stale tier is not worth losing the game
+         the player just logged. */
+      /* Rarity and the grade history snapshot both move on a new game.
+         recordGradeSnapshot recomputes rarity itself, so this is one call.
+         Non fatal: a stale tier or a missed history point is not worth losing
+         the game the player just logged. */
+      try { await recordGradeSnapshot(input.playerId, 'game_logged'); }
+      catch (e) { console.error('Progression error (game_logged):', (e as Error).message); }
       
       // Calculate advanced metrics for the game
       const advancedMetrics = calculateAdvancedMetrics(input);
@@ -4482,7 +4853,9 @@ export async function registerRoutes(
           };
         }
         
-        const archetypeResult = getPlayerArchetype(games, player.position as "Guard" | "Wing" | "Big");
+        // Normalise, since pre migration rows still hold Guard / Wing / Big.
+        const normalizedPos = normalizePosition(player.position);
+        const archetypeResult = normalizedPos ? getPlayerArchetype(games, normalizedPos) : null;
         const archetype = archetypeResult ? ARCHETYPES[archetypeResult.primary].name : null;
 
         const ppg = games.reduce((acc, g) => acc + g.points, 0) / gamesPlayed;
@@ -4940,7 +5313,21 @@ export async function registerRoutes(
     const { state, position, level, sport, city } = req.query as { state?: string; position?: string; level?: string; sport?: string; city?: string };
     
     let playersList = await storage.getPlayers();
-    
+
+    /* Hidden players never appear on a leaderboard. The privacy policy says so
+       in as many words, and this route is unauthenticated, so without it a
+       player who hid their profile was still ranked in public.
+       Same family as docs/PIVOT_AUDIT.md section 7; this endpoint was not in
+       the set commit e89ae4d fixed and had no test covering it. */
+    playersList = playersList.filter(p => p.profileVisibility !== 'hidden');
+
+    /* Unclaimed roster placeholders are never ranked (pivot Section 7). They
+       are created hidden, so the filter above already catches them, but the
+       requirement is that an unclaimed placeholder cannot appear here at all
+       and that must not depend on one editable flag staying put. */
+    const unclaimed = await unclaimedPlaceholderIds();
+    playersList = playersList.filter(p => !unclaimed.has(p.id));
+
     // Apply filters
     if (sport) {
       playersList = playersList.filter(p => p.sport === sport);
@@ -4969,25 +5356,16 @@ export async function registerRoutes(
       // Filter games by sport if specified
       const sportGames = sport ? playerGames.filter(g => g.sport === sport) : playerGames;
       
-      // Calculate avg grade score for sorting
-      const gradeScores: Record<string, number> = {
-        'A+': 97, 'A': 94, 'A-': 90,
-        'B+': 87, 'B': 84, 'B-': 80,
-        'C+': 77, 'C': 74, 'C-': 70,
-        'D': 65, 'F': 55
-      };
-      
-      const avgGradeScore = sportGames.length > 0
-        ? sportGames.reduce((acc, g) => acc + (gradeScores[g.grade || 'C'] || 70), 0) / sportGames.length
-        : 0;
-
-      // Inverse map back to a grade label for the leaderboard
-      let avgGrade = 'C';
-      if (avgGradeScore >= 90) avgGrade = 'A';
-      else if (avgGradeScore >= 80) avgGrade = 'B';
-      else if (avgGradeScore >= 70) avgGrade = 'C';
-      else if (avgGradeScore >= 60) avgGrade = 'D';
-      else avgGrade = 'F';
+      /* THE Caliber Grade, from the one shared ladder.
+         This route used to carry its own grade table and then round the
+         average down to a bare letter, so a player reading 'A-' on their own
+         card was listed here as 'A'. Same player, two grades, and the whole
+         premise of this page is that a rank is a card you could have.
+         It also scored an ungraded game as a C, which invented a grade for a
+         game nobody had graded. caliberGrade skips those instead. */
+      const overall = caliberGrade(sportGames.map((g) => g.grade));
+      const avgGrade = overall?.grade ?? null;
+      const avgGradeScore = overall?.value ?? 0;
 
       // Calculate sport-specific stats
       const playerSport = p.sport || 'basketball';
@@ -5014,6 +5392,17 @@ export async function registerRoutes(
           city: p.city,
           level: p.level,
           photoUrl: p.photoUrl,
+          /* Card fields (pivot Section 6A). School follows showSchool exactly
+             as everywhere else: this route is unauthenticated, so a player who
+             opted out must not have it exposed by a ranking either. */
+          school: p.showSchool !== false ? p.school : null,
+          graduationYear: p.graduationYear,
+          rarityTier: p.rarityTier,
+          /* Null means the cohort is under MIN_COHORT, so this player is
+             genuinely unranked rather than measured and found average. The
+             card back says which (docs/INGEST_TOS_REVIEW.md, option 4). */
+          rarityPercentile: p.rarityPercentile,
+          createdAt: p.createdAt,
           avgGrade,
           avgGradeScore,
           gamesPlayed: sportGames.length,
@@ -5025,10 +5414,18 @@ export async function registerRoutes(
         };
     }));
 
-    // Sort by avg grade score descending
-    leaderboard.sort((a, b) => b.avgGradeScore - a.avgGradeScore);
+    /* A player with no graded games has no grade, so they are not ranked.
+       The ladder above floors to 'F' when there is nothing to average, which
+       put a fabricated failing grade on the card of anyone who had simply not
+       played yet. No invented numbers (docs/CALIBER_DESIGN.md section 7). */
+    const ranked = leaderboard.filter(
+      (row) => row.gamesPlayed > 0 && row.avgGrade !== null,
+    );
 
-    res.json(leaderboard.map(({ avgGradeScore, ...rest }) => rest));
+    // Sort by avg grade score descending
+    ranked.sort((a, b) => b.avgGradeScore - a.avgGradeScore);
+
+    res.json(ranked.map(({ avgGradeScore, ...rest }) => rest));
   });
 
   // Get player's state ranking
@@ -11231,6 +11628,11 @@ Only respond with the JSON array, no other text.`;
       }
       
       const newClip = await storage.createHighlightClip(validatedData);
+
+      // New film is a grade trigger (pivot Section 5).
+      try { await recordGradeSnapshot(validatedData.playerId, 'film_uploaded'); }
+      catch (e) { console.error('Progression error (film_uploaded):', (e as Error).message); }
+
       res.status(201).json(newClip);
     } catch (error: any) {
       if (error.name === 'ZodError') {
@@ -11791,8 +12193,12 @@ Only respond with the JSON array, no other text.`;
       
       // Get player data
       const rosterPlayers = await db.select().from(players).where(inArray(players.id, playerIds));
-      
-      res.json(rosterPlayers);
+
+      /* This is the coach surface showStatsToCoaches and showContactToCoaches
+         were written for. Both were read by nothing before this. A player on a
+         coach's roster who turned either off gets it honoured here. */
+      const viewer = await getViewer(req);
+      res.json(rosterPlayers.map((player) => applyPlayerPrivacy(player, viewer)));
     } catch (error) {
       console.error('Error fetching roster:', error);
       res.status(500).json({ message: "Failed to fetch roster" });
@@ -13532,9 +13938,12 @@ Only respond with the JSON array, no other text.`;
         height: player.height || undefined,
       };
 
-      const peerStats = await storage.getPeerStats(player.sport as Sport, player.position.split(',')[0].trim());
+      const peerStats = await storage.getPeerStats(player.sport as Sport, normalizePosition(player.position) ?? 'SG');
 
-      const primaryPosition = player.position.split(',')[0].trim();
+      /* Normalised, not the raw stored string. The grading weights are keyed on
+         the five real positions, and an unrecognised value silently falls back
+         to the default weights rather than erroring. */
+      const primaryPosition = normalizePosition(player.position) ?? 'SG';
       const aiRating = calculateAIRating(
         gameStats,
         player.sport as Sport,
@@ -13591,8 +14000,11 @@ Only respond with the JSON array, no other text.`;
 
       let metrics: PlayerMetrics | undefined;
 
-      const peerStats = await storage.getPeerStats(player.sport as Sport, player.position.split(',')[0].trim());
-      const primaryPosition = player.position.split(',')[0].trim();
+      const peerStats = await storage.getPeerStats(player.sport as Sport, normalizePosition(player.position) ?? 'SG');
+      /* Normalised, not the raw stored string. The grading weights are keyed on
+         the five real positions, and an unrecognised value silently falls back
+         to the default weights rather than erroring. */
+      const primaryPosition = normalizePosition(player.position) ?? 'SG';
       
       const aiRating = calculateAIRating(
         gameStats,
@@ -13674,8 +14086,11 @@ Only respond with the JSON array, no other text.`;
         defensiveInterceptions: g.defensiveInterceptions || undefined,
       }));
 
-      const peerStats = await storage.getPeerStats(player.sport as Sport, player.position.split(',')[0].trim());
-      const primaryPosition = player.position.split(',')[0].trim();
+      const peerStats = await storage.getPeerStats(player.sport as Sport, normalizePosition(player.position) ?? 'SG');
+      /* Normalised, not the raw stored string. The grading weights are keyed on
+         the five real positions, and an unrecognised value silently falls back
+         to the default weights rather than erroring. */
+      const primaryPosition = normalizePosition(player.position) ?? 'SG';
       
       const aiRating = calculateAIRating(
         gameStats,
@@ -13840,6 +14255,19 @@ Only respond with the JSON array, no other text.`;
       });
 
       const verification = await storage.createStatVerification(validatedData);
+
+      /* A coach cosign is a grade trigger (pivot Section 5). The player id
+         comes off the verified game rather than the request, so a malformed
+         body cannot point the snapshot at someone else. */
+      try {
+        const verifiedGame = await storage.getGame(gameId);
+        if (verifiedGame?.playerId) {
+          await recordGradeSnapshot(verifiedGame.playerId, 'coach_cosign');
+        }
+      } catch (e) {
+        console.error('Progression error (coach_cosign):', (e as Error).message);
+      }
+
       res.status(201).json(verification);
     } catch (error: any) {
       if (error.name === 'ZodError') {

@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { useSubscription, type SubscriptionTier } from "@/hooks/use-subscription";
 import { SportToggle, useSport } from "@/components/SportToggle";
 import { ROLE_LABELS, type UserRole } from "@shared/roles";
+import { featureFlags } from "@/lib/features";
 
 type NavItem = {
   href: string;
@@ -53,10 +54,14 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
   const { equippedTheme } = useEquippedItems();
   const sidebarThemeColor = 'hsl(var(--accent))';
   const currentSport = useSport();
-  const isPlayer = userRole === 'player';
-  const isCoach = userRole === 'coach';
-  const isRecruiter = userRole === 'recruiter';
-  const isGuardian = userRole === 'guardian';
+  /* Nav follows the product flags, not just the role. A role whose product is
+     switched off shows the player nav rather than its own, so nothing links
+     into a surface the server now answers with 404. */
+  const isCoach = userRole === 'coach' && featureFlags.ENABLE_COACH_PRODUCT;
+  const isRecruiter = userRole === 'recruiter' && featureFlags.ENABLE_RECRUITER_PRODUCT;
+  const isGuardian = userRole === 'guardian' && featureFlags.ENABLE_GUARDIAN_PRODUCT;
+  // Anything not landing on a live non-player product gets the player nav.
+  const isPlayer = !isCoach && !isRecruiter && !isGuardian;
 
   const { data: pendingGames } = useQuery<{ id: number }[]>({
     queryKey: ['/api/coach/unverified-games'],
@@ -359,11 +364,14 @@ type MobileNavProps = {
 
 export function MobileNav({ userRole, playerId }: MobileNavProps) {
   const [location] = useLocation();
-  const isPlayer = userRole === 'player';
-  const isRecruiter = userRole === 'recruiter';
-  
-  const isGuardian = userRole === 'guardian';
-  
+  /* Same rule as the sidebar: a switched off product shows the player bar.
+     This also closes a standing bug, where the coach bar was the `else` branch
+     and so was served to any role the chain did not recognise. Coach is now an
+     explicit case and player is the fallback. */
+  const isCoach = userRole === 'coach' && featureFlags.ENABLE_COACH_PRODUCT;
+  const isRecruiter = userRole === 'recruiter' && featureFlags.ENABLE_RECRUITER_PRODUCT;
+  const isGuardian = userRole === 'guardian' && featureFlags.ENABLE_GUARDIAN_PRODUCT;
+
   const navItems = isGuardian ? [
     { href: "/family", icon: Heart, label: "Family" },
     { href: "/discover/highlights", icon: Film, label: "Highlights" },
@@ -372,18 +380,18 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
     { href: "/recruiter?tab=bookmarks", icon: Bookmark, label: "Saved" },
     { href: "/discover/players", icon: Users, label: "Directory" },
     { href: "/discover/highlights", icon: Film, label: "Discover" },
-  ] : isPlayer ? [
-    { href: playerId ? `/players/${playerId}` : "/", icon: UserCircle, label: "Profile" },
-    { href: "/community?tab=feed", icon: Rss, label: "Feed" },
-    { href: "/analyze", icon: PlusCircle, label: "Log", featured: true },
-    { href: "/recruiting", icon: GraduationCap, label: "Recruiting" },
-    { href: "/discover/highlights", icon: Film, label: "Highlights" },
-  ] : [
+  ] : isCoach ? [
     { href: "/", icon: LayoutDashboard, label: "Home" },
     { href: "/analyze", icon: PlusCircle, label: "Log", featured: true },
     { href: "/scout", icon: Eye, label: "Scout" },
     { href: "/coach", icon: ClipboardList, label: "Coach" },
     { href: "/players", icon: Users, label: "Roster" },
+  ] : [
+    { href: playerId ? `/players/${playerId}` : "/", icon: UserCircle, label: "Profile" },
+    { href: "/community?tab=feed", icon: Rss, label: "Feed" },
+    { href: "/analyze", icon: PlusCircle, label: "Log", featured: true },
+    { href: "/recruiting", icon: GraduationCap, label: "Recruiting" },
+    { href: "/discover/highlights", icon: Film, label: "Highlights" },
   ];
   
   return (

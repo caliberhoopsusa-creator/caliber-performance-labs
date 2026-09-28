@@ -17,6 +17,7 @@ import { useEquippedItems } from "@/contexts/EquippedItemsContext";
 import { useSubscription, type SubscriptionTier } from "@/hooks/use-subscription";
 import { ROLE_LABELS, type UserRole } from "@shared/roles";
 import { SportToggle, useSport } from "@/components/SportToggle";
+import { featureFlags } from "@/lib/features";
 
 type NavItem = {
   href: string;
@@ -60,10 +61,14 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
   const { equippedTheme } = useEquippedItems();
   // Logo uses --accent from CSS so it adapts to light/dark theme automatically.
   const currentSport = useSport();
-  const isPlayer = userRole === 'player';
-  const isCoach = userRole === 'coach';
-  const isRecruiter = userRole === 'recruiter';
-  const isGuardian = userRole === 'guardian';
+  /* Nav follows the product flags, not just the role. A role whose product is
+     switched off shows the player nav rather than its own, so nothing links
+     into a surface the server now answers with 404. */
+  const isCoach = userRole === 'coach' && featureFlags.ENABLE_COACH_PRODUCT;
+  const isRecruiter = userRole === 'recruiter' && featureFlags.ENABLE_RECRUITER_PRODUCT;
+  const isGuardian = userRole === 'guardian' && featureFlags.ENABLE_GUARDIAN_PRODUCT;
+  // Anything not landing on a live non-player product gets the player nav.
+  const isPlayer = !isCoach && !isRecruiter && !isGuardian;
 
   const playerSections: NavSection[] = [
     {

@@ -83,7 +83,10 @@ describe("GET /api/players/:id", () => {
     expect(res.body.id).toBe(playerId);
     expect(res.body.name).toBe("Test Profile");
     expect(res.body.sport).toBe("basketball");
-    expect(res.body.position).toBe("Guard");
+    /* The fixture sends the legacy group name 'Guard'. The API accepts it and
+       stores the real position, so the column stops gaining old values. This
+       asserted 'Guard' before the 2026-09-25 five-position migration. */
+    expect(res.body.position).toBe("SG");
   });
 
   it("includes games array in response", async () => {

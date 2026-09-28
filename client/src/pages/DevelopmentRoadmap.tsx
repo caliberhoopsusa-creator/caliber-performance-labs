@@ -306,10 +306,10 @@ export default function DevelopmentRoadmap({ playerId }: DevelopmentRoadmapProps
             data-testid="select-target-level"
           >
             <SelectTrigger className="w-[160px]" data-testid="select-trigger-target-level">
-              <SelectValue placeholder="Auto (Next Level)" />
+              <SelectValue placeholder="Auto (Next Division)" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="auto" data-testid="select-item-auto">Auto (Next Level)</SelectItem>
+              <SelectItem value="auto" data-testid="select-item-auto">Auto (Next Division)</SelectItem>
               <SelectItem value="D1" data-testid="select-item-d1">D1</SelectItem>
               <SelectItem value="D2" data-testid="select-item-d2">D2</SelectItem>
               <SelectItem value="D3" data-testid="select-item-d3">D3</SelectItem>

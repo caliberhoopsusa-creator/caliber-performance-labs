@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CALIBER card explorations</title>
+<style>
+/* Self hosted only. These are the SIGNAL era faces already in the repo, used as
+   the temporary stack while the CALIBER faces (Neue Machina, Inter, Space
+   Grotesk) are licensed. No external font host, ever. */
+@font-face {
+  font-family: "Archivo";
+  src: url("/fonts/archivo-latin-wdth-normal.woff2") format("woff2");
+  font-weight: 100 900; font-display: swap;
+}
+@font-face {
+  font-family: "Geist";
+  src: url("/fonts/geist-latin-wght-normal.woff2") format("woff2");
+  font-weight: 100 900; font-display: swap;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/jetbrains-mono-latin-500-normal.woff2") format("woff2");
+  font-weight: 500; font-display: swap;
+}
+
+:root {
+  --court: #0B0B0D;
+  --bone: #F5F1E8;
+  --red: #FF2D2D;
+  --gold: #E8B84A;
+  --violet: #7C4DFF;
+  --steel: #6B7280;
+  --chalk: rgba(245,241,232,0.14);
+  --chalk-strong: rgba(245,241,232,0.28);
+  --ink: #0B0B0D;
+  --fog: rgba(245,241,232,0.62);
+
+  /* Temporary stack. Display falls back to Archivo Black per the brief. */
+  --f-display: "Archivo", "Archivo Black", "Arial Black", system-ui, sans-serif;
+  --f-body: "Inter", "Geist", system-ui, -apple-system, sans-serif;
+  --f-num: "Space Grotesk", "JetBrains Mono", ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #17171a; font-family: var(--f-body); padding: 40px; }
+.rig { display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start; }
+.tnum { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
+
+/* Ink on bone stock. Never pure black on pure white. */
+.card { position: relative; overflow: hidden; border-radius: 14px; color: var(--ink); }
+
+/* Prism rarity: 2px border, violet to red, static. Padding box keeps the
+   stock flat so the gradient reads as a frame and not a glow. */
+.prism {
+  border: var(--border, 2px) solid transparent;
+  background:
+    linear-gradient(var(--stock), var(--stock)) padding-box,
+    linear-gradient(135deg, var(--violet), var(--red)) border-box;
+}
+
+/* The photo slot is always 4:5 and always a marked placeholder here. No stock
+   photography, and nothing that could read as a real athlete. */
+.photo {
+  width: var(--photoW, 100%); height: var(--photoH, auto);
+  margin-inline: auto;
+  background:
+    repeating-linear-gradient(45deg,
+      rgba(11,11,13,0.05) 0 2px, transparent 2px 10px),
+    rgba(11,11,13,0.07);
+  display: grid; place-items: end start; padding: 16px;
+}
+.photo span {
+  font-family: var(--f-display); font-size: 11px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: rgba(11,11,13,0.38);
+}
+.meta {
+  font-size: 11px; line-height: 1.4; letter-spacing: 0.08em;
+  text-transform: uppercase; color: rgba(11,11,13,0.62);
+}
+.mark {
+  display: flex; justify-content: flex-end; align-items: baseline; gap: 8px;
+  opacity: 0.62; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+}
+.mark b { font-family: var(--f-display); font-weight: 800; }
+.mark i { font-style: normal; text-transform: none; letter-spacing: 0.02em; }
+.stats { display: flex; gap: 24px; }
+.stat-l { display: block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(11,11,13,0.62); }
+.stat-v { font-family: var(--f-num); font-weight: 700; font-size: 22px; letter-spacing: -0.01em; }
+.name { font-family: var(--f-display); font-weight: 800; letter-spacing: -0.02em; line-height: 1.05;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.grade { font-family: var(--f-num); font-weight: 700; line-height: 1; letter-spacing: -0.03em; }
+
+/* ---------------------------------------------------------- A: Card Stock */
+/* The literal collectible. Generous stock margin, photo sits in a window, the
+   grade lands on a plate beneath it. Reads as something you own. */
+.A { --stock: var(--bone); display: flex; flex-direction: column; }
+.A .inner { flex: 1; display: flex; flex-direction: column; gap: var(--g); padding: var(--pad); }
+.A .window { border: 1px solid rgba(11,11,13,0.18); padding: var(--hair); }
+.A .plate {
+  border-top: 1px solid rgba(11,11,13,0.18);
+  border-bottom: 1px solid rgba(11,11,13,0.18);
+  display: flex; align-items: center; justify-content: center; padding: var(--platePad) 0;
+}
+
+/* --------------------------------------------------------- B: Full Bleed */
+/* Photo runs edge to edge, grade overlays at the optical centre, identity sits
+   in a lower band. Built to survive being screenshotted onto a story. */
+.B { --stock: var(--court); color: var(--bone); display: flex; flex-direction: column; }
+.B .bleed { position: relative; flex: 1; overflow: hidden; }
+.B .bleed .photo {
+  height: 100% !important; width: 100% !important; margin: 0;
+  background:
+    repeating-linear-gradient(45deg, rgba(245,241,232,0.05) 0 2px, transparent 2px 10px),
+    rgba(245,241,232,0.06);
+}
+.B .bleed .photo span { color: rgba(245,241,232,0.38); }
+.B .overlay {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  background: linear-gradient(to bottom, transparent 40%, rgba(11,11,13,0.82) 100%);
+}
+.B .grade { color: var(--bone); }
+.B .band { padding: var(--pad); display: flex; flex-direction: column; gap: var(--g); }
+.B .meta, .B .stat-l { color: var(--fog); }
+.B .name { color: var(--bone); }
+.B .stat-v { color: var(--bone); }
+.B .mark { color: var(--bone); }
+
+/* ---------------------------------------------------- C: Instrument Plate */
+/* The card as a certified readout. Hard rules, machined numeral, meta set as
+   labelled rows. Coldest of the three, and the most credible to an adult. */
+.C { --stock: var(--bone); display: flex; flex-direction: column; }
+.C .inner { flex: 1; display: flex; flex-direction: column; padding: var(--pad); gap: var(--g); }
+.C .rule { height: 1px; background: rgba(11,11,13,0.2); }
+.C .rows { display: grid; grid-template-columns: auto 1fr; gap: var(--rowGap) var(--colGap); }
+.C .k { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(11,11,13,0.45); }
+.C .v { font-family: var(--f-num); font-weight: 500; font-size: 13px; letter-spacing: 0.02em; }
+.C .gradeblock {
+  display: flex; align-items: baseline; justify-content: space-between;
+  border: 1px solid rgba(11,11,13,0.2); padding: var(--platePad) var(--pad);
+}
+.C .gradeblock .cap { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(11,11,13,0.45); }
+</style>
+</head>
+<body>
+<div class="rig" id="rig"></div>
+
+<script>
+/* Placeholder athlete, fixed by the brief. Clearly a placeholder: the photo
+   slot is hatched and labelled, so nothing here reads as a real player or a
+   real stat line. */
+const P = {
+  name: "Jordan Reyes",
+  position: "SG",
+  classYear: "'27",
+  school: "Missoula Sentinel",
+  grade: "A-",
+  stats: [ { l: "PPG", v: "22.4" }, { l: "FG%", v: "48%" } ],
+  url: "caliber.app/jordanreyes",
+};
+
+const SIZES = {
+  story: { w: 1080, h: 1920 },
+  feed:  { w: 1080, h: 1080 },
+};
+
+/* Geometry scales off card width so one layout serves both outputs. */
+function vars(w, h) {
+  const u = w / 1080;
+  const tall = h / w > 1.2;
+  /* Photo takes a fixed share of the canvas and holds 4:5 by deriving its
+     width from that height. Sizing it as a full width 4:5 box instead pushed
+     the stats and the watermark off the bottom of a 1080x1920 card. */
+  const photoH = Math.round(h * (tall ? 0.44 : 0.40));
+  const photoW = Math.min(Math.round(photoH * 4 / 5), Math.round(w - 128 * u));
+  return {
+    "--border": Math.max(2, Math.round(2 * (w / 390))) + "px",
+    "--photoH": photoH + "px",
+    "--photoW": photoW + "px",
+    "--pad": Math.round(64 * u) + "px",
+    "--g": Math.round(28 * u) + "px",
+    "--hair": Math.round(10 * u) + "px",
+    "--platePad": Math.round((tall ? 40 : 24) * u) + "px",
+    "--rowGap": Math.round(10 * u) + "px",
+    "--colGap": Math.round(28 * u) + "px",
+    nameSize: Math.round((tall ? 86 : 72) * u),
+    gradeSize: Math.round((tall ? 300 : 210) * u),
+    metaSize: Math.round(22 * u),
+    statL: Math.round(22 * u),
+    statV: Math.round(44 * u),
+    markSize: Math.round(20 * u),
+  };
+}
+
+const meta = () => `${P.position}, ${P.classYear}, ${P.school}`;
+
+function markHtml(s) {
+  return `<div class="mark" style="font-size:${s.markSize}px">
+    <b>Caliber</b><i>${P.url}</i></div>`;
+}
+
+function statsHtml(s) {
+  return `<div class="stats">` + P.stats.map(st => `
+    <div>
+      <span class="stat-l" style="font-size:${s.statL}px">${st.l}</span>
+      <span class="stat-v tnum" style="font-size:${s.statV}px">${st.v}</span>
+    </div>`).join("") + `</div>`;
+}
+
+function cardA(w, h, s) {
+  return `
+  <div class="card prism A" style="width:${w}px;height:${h}px">
+    <div class="inner">
+      <div class="window"><div class="photo"><span>Photo 4:5</span></div></div>
+      <div>
+        <div class="name" style="font-size:${s.nameSize}px">${P.name}</div>
+        <div class="meta" style="font-size:${s.metaSize}px;margin-top:${Math.round(s.metaSize*0.5)}px">${meta()}</div>
+      </div>
+      <div class="plate"><div class="grade tnum" style="font-size:${s.gradeSize}px">${P.grade}</div></div>
+      ${statsHtml(s)}
+      <div style="flex:1"></div>
+      ${markHtml(s)}
+    </div>
+  </div>`;
+}
+
+function cardB(w, h, s) {
+  return `
+  <div class="card prism B" style="width:${w}px;height:${h}px">
+    <div class="bleed">
+      <div class="photo"><span>Photo 4:5</span></div>
+      <div class="overlay"><div class="grade tnum" style="font-size:${s.gradeSize}px">${P.grade}</div></div>
+    </div>
+    <div class="band">
+      <div>
+        <div class="name" style="font-size:${s.nameSize}px">${P.name}</div>
+        <div class="meta" style="font-size:${s.metaSize}px;margin-top:${Math.round(s.metaSize*0.5)}px">${meta()}</div>
+      </div>
+      ${statsHtml(s)}
+      ${markHtml(s)}
+    </div>
+  </div>`;
+}
+
+function cardC(w, h, s) {
+  return `
+  <div class="card prism C" style="width:${w}px;height:${h}px">
+    <div class="inner">
+      <div class="photo"><span>Photo 4:5</span></div>
+      <div class="rule"></div>
+      <div>
+        <div class="name" style="font-size:${s.nameSize}px">${P.name}</div>
+        <div class="rows" style="margin-top:${Math.round(s.metaSize*0.8)}px">
+          <span class="k" style="font-size:${s.metaSize}px">Pos</span><span class="v" style="font-size:${s.metaSize}px">${P.position}</span>
+          <span class="k" style="font-size:${s.metaSize}px">Class</span><span class="v" style="font-size:${s.metaSize}px">${P.classYear}</span>
+          <span class="k" style="font-size:${s.metaSize}px">School</span><span class="v" style="font-size:${s.metaSize}px">${P.school}</span>
+        </div>
+      </div>
+      <div class="gradeblock">
+        <span class="cap" style="font-size:${s.metaSize}px">Caliber Grade</span>
+        <span class="grade tnum" style="font-size:${s.gradeSize}px">${P.grade}</span>
+      </div>
+      ${statsHtml(s)}
+      <div style="flex:1"></div>
+      ${markHtml(s)}
+    </div>
+  </div>`;
+}
+
+const BUILDERS = { a: cardA, b: cardB, c: cardC };
+const rig = document.getElementById("rig");
+
+for (const [dir, build] of Object.entries(BUILDERS)) {
+  for (const [sizeKey, dim] of Object.entries(SIZES)) {
+    const s = vars(dim.w, dim.h);
+    const holder = document.createElement("div");
+    holder.id = `${dir}-${sizeKey}`;
+    holder.innerHTML = build(dim.w, dim.h, s);
+    const card = holder.firstElementChild;
+    for (const [k, v] of Object.entries(s)) {
+      if (k.startsWith("--")) card.style.setProperty(k, v);
+    }
+    rig.appendChild(holder);
+  }
+}
+</script>
+</body>
+</html>

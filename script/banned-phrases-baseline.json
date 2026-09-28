@@ -1,0 +1,218 @@
+{
+  "client/src/components/AthleticMeasurements.tsx": {
+    "em dash": 4
+  },
+  "client/src/components/CaliberLogo.tsx": {
+    "em dash": 4
+  },
+  "client/src/components/CaliberScore.tsx": {
+    "em dash": 3
+  },
+  "client/src/components/CollegeCompare.tsx": {
+    "em dash": 1
+  },
+  "client/src/components/GameCard.tsx": {
+    "em dash": 5
+  },
+  "client/src/components/GradientAccent.tsx": {
+    "em dash": 1
+  },
+  "client/src/components/GuidedOnboarding.tsx": {
+    "em dash": 2
+  },
+  "client/src/components/HeroCanvas.tsx": {
+    "em dash": 1
+  },
+  "client/src/components/HeroHeader.tsx": {
+    "em dash": 5
+  },
+  "client/src/components/OfflineBanner.tsx": {
+    "em dash": 1
+  },
+  "client/src/components/PlatformExportModal.tsx": {
+    "em dash": 1
+  },
+  "client/src/components/PlayerRatingsSection.tsx": {
+    "em dash": 2
+  },
+  "client/src/components/PlayerReportCard.tsx": {
+    "em dash": 10
+  },
+  "client/src/components/PreGameReport.tsx": {
+    "em dash": 1
+  },
+  "client/src/components/RecruitingCard.tsx": {
+    "em dash": 9
+  },
+  "client/src/components/ScoutReportCard.tsx": {
+    "em dash": 3
+  },
+  "client/src/components/ShareCaliberScoreButton.tsx": {
+    "em dash": 1
+  },
+  "client/src/components/ShareCaliberScoreModal.tsx": {
+    "em dash": 8
+  },
+  "client/src/components/ShareCard.tsx": {
+    "em dash": 4
+  },
+  "client/src/components/ShareableCard.tsx": {
+    "em dash": 3
+  },
+  "client/src/components/ShareableGameCard.tsx": {
+    "em dash": 1
+  },
+  "client/src/components/ShareablePlayerCard.tsx": {
+    "em dash": 4
+  },
+  "client/src/components/Sidebar.tsx": {
+    "em dash": 1
+  },
+  "client/src/components/SignalBackground.tsx": {
+    "em dash": 3
+  },
+  "client/src/components/StatCard.tsx": {
+    "em dash": 1
+  },
+  "client/src/components/TeamHistory.tsx": {
+    "em dash": 1
+  },
+  "client/src/components/WaitlistForm.tsx": {
+    "em dash": 1
+  },
+  "client/src/components/call/BeatCall.tsx": {
+    "em dash": 7
+  },
+  "client/src/components/call/BeatDawn.tsx": {
+    "em dash": 5
+  },
+  "client/src/components/call/BeatFilm.tsx": {
+    "em dash": 4
+  },
+  "client/src/components/call/BeatGame.tsx": {
+    "em dash": 4
+  },
+  "client/src/components/call/CameraField.tsx": {
+    "em dash": 15
+  },
+  "client/src/components/call/CourtGeometry.tsx": {
+    "em dash": 8
+  },
+  "client/src/components/call/TheCall.tsx": {
+    "em dash": 3
+  },
+  "client/src/components/call/index.ts": {
+    "em dash": 1
+  },
+  "client/src/components/call/shared.tsx": {
+    "em dash": 11
+  },
+  "client/src/components/report/CoachTeamReport.tsx": {
+    "em dash": 9
+  },
+  "client/src/components/report/index.ts": {
+    "em dash": 1
+  },
+  "client/src/components/sections/CtaSection.tsx": {
+    "em dash": 1
+  },
+  "client/src/components/sections/FeatureGrid.tsx": {
+    "em dash": 1
+  },
+  "client/src/components/sections/HeroLanding.tsx": {
+    "em dash": 1
+  },
+  "client/src/components/signal/AchievementToast.tsx": {
+    "em dash": 5
+  },
+  "client/src/components/signal/AttributeBars.tsx": {
+    "em dash": 3
+  },
+  "client/src/components/signal/GradeBadge.tsx": {
+    "em dash": 1
+  },
+  "client/src/components/signal/OvrPlate.tsx": {
+    "em dash": 2
+  },
+  "client/src/components/signal/PlasmaField.tsx": {
+    "em dash": 2
+  },
+  "client/src/components/signal/PlayerCard.tsx": {
+    "em dash": 6
+  },
+  "client/src/components/signal/SectionEyebrow.tsx": {
+    "em dash": 2
+  },
+  "client/src/components/signal/StatNumber.tsx": {
+    "em dash": 2
+  },
+  "client/src/components/signal/TelemetryStrip.tsx": {
+    "em dash": 2
+  },
+  "client/src/components/signal/index.ts": {
+    "em dash": 1
+  },
+  "client/src/components/signal/useCountUp.ts": {
+    "em dash": 2
+  },
+  "client/src/components/ui/metal-button.tsx": {
+    "em dash": 1
+  },
+  "client/src/components/ui/radial-orbital-timeline.tsx": {
+    "em dash": 2
+  },
+  "client/src/pages/AnalyzeGame.tsx": {
+    "em dash": 15
+  },
+  "client/src/pages/BlogPage.tsx": {
+    "em dash": 1
+  },
+  "client/src/pages/CanvasPage.tsx": {
+    "em dash": 7
+  },
+  "client/src/pages/Dashboard.tsx": {
+    "em dash": 23
+  },
+  "client/src/pages/DebugPage.tsx": {
+    "em dash": 2
+  },
+  "client/src/pages/FeedContent.tsx": {
+    "em dash": 1
+  },
+  "client/src/pages/GuardianDashboard.tsx": {
+    "em dash": 2
+  },
+  "client/src/pages/JoinPage.tsx": {
+    "em dash": 1
+  },
+  "client/src/pages/Landing.tsx": {
+    "em dash": 12
+  },
+  "client/src/pages/Leaderboard.tsx": {
+    "em dash": 8
+  },
+  "client/src/pages/Login.tsx": {
+    "em dash": 3
+  },
+  "client/src/pages/PlayerCard.tsx": {
+    "em dash": 5
+  },
+  "client/src/pages/PlayerDetail.tsx": {
+    "em dash": 26
+  },
+  "client/src/pages/PlayersList.tsx": {
+    "em dash": 5
+  },
+  "client/src/pages/PricingPage.tsx": {
+    "em dash": 1
+  },
+  "client/src/pages/PublicPlayerProfile.tsx": {
+    "em dash": 22
+  },
+  "client/src/pages/TransferPortal.tsx": {
+    "em dash": 3
+  },
+  "client/src/pages/VideoAnalysis.tsx": {
+    "em dash": 4
+  }
+}

@@ -277,7 +277,7 @@ export function ShareableLevelUpCard({ playerName, playerPhoto, newTier, totalXp
         <div className="text-center mb-4">
           <span className="text-xs font-bold uppercase tracking-widest text-accent/80 bg-accent/10 px-4 py-1 rounded-full inline-flex items-center gap-1">
             <TrendingUp className="w-3 h-3" />
-            Level Up!
+            Moving Up!
           </span>
         </div>
 

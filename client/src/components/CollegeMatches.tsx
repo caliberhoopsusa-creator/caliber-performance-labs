@@ -220,7 +220,7 @@ interface CollegeMatchCardProps {
 function generateMailtoLink(college: College, playerInfo?: PlayerInfo): string {
   if (!college.recruitingContactEmail) return '';
   
-  const playerName = playerInfo?.name || 'Prospective Student-Athlete';
+  const playerName = playerInfo?.name || 'Prospective Player';
   const position = playerInfo?.position || 'Athlete';
   const year = playerInfo?.graduationYear || new Date().getFullYear() + 1;
   const school = playerInfo?.school || 'My School';
