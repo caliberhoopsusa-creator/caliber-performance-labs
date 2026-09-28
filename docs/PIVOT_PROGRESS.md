@@ -800,3 +800,87 @@ reliable. At least one existing player photo is a PNG recorded as
 `image/jpeg`. `GET /objects/local/:id` still serves that wrong type from the
 sidecar; browsers sniff and cope, so it is not urgent, but it is wrong and it
 is the same trap the card renderer just fell into.
+
+---
+
+# RESUME HERE (2026-09-28)
+
+## State
+
+Branch `feat/role-lock-and-cleanup`. Five commits, tree clean.
+**NOT PUSHED.** `git push -u origin feat/role-lock-and-cleanup` was blocked by
+the sandbox classifier, so the operator has to run it.
+
+```
+a993d21 docs: deploy runbook for the beta
+0d16f51 feat(landing): finish the card face and give the landing atmosphere
+cf37be9 docs: record that the gate never builds or boots the production bundle
+cf50849 fix(card): make the card renderer work in the production build
+ad77297 feat(pivot): turn Caliber from coach-first to player-first
+```
+
+Gate: `npm run check` clean, 23 files, 374 passed, 2 skipped.
+
+Sections 1 to 7 are DONE. **Section 8 (the one metric) is NOT started.**
+
+## The deadline
+
+A beta has to be up for a **Nike application, one day of runway** from
+2026-09-28. `docs/DEPLOY_BETA.md` is the runbook and the deploy path is
+verified working end to end against the real production bundle.
+
+## The task that was in flight
+
+**Strip the SIGNAL app shell from the CALIBER demo path.** This is the biggest
+remaining visual problem and the highest value work left.
+
+Measured on a 390x844 phone at `/` signed in: the player's card, which is the
+entire product, gets about 580 of 844 pixels and is cut off. Above it sit
+roughly 190px of chrome, 22% of the viewport:
+
+1. Header: hamburger, crimson SIGNAL logo, coin balance in yellow, inventory
+   box, **a light/dark theme toggle**, notification bell.
+2. `StatsTicker`, a marquee repeating the grade the card already shows.
+3. An email verification banner.
+
+Then a bottom nav plus a floating action button below.
+
+Three of those are direct design system violations. `docs/CALIBER_DESIGN.md`
+section 7 refuses "Light mode or a theme toggle", and the logo is the SIGNAL
+crimson `#E11D2A` that the same doc bans on player surfaces.
+
+The demo path to fix, in order: `/` landing (already clean), `/signup`,
+`/grade-pending`, `/` PlayerHome, `/leaderboard`, `/players/:id/caliber`,
+`/roster`, `/claim/:token`.
+
+Two subagents were mapping this when the session ended and their findings were
+lost: one on the shell architecture and the safest way to suppress chrome
+per route, one auditing player path copy for false claims. **Both need
+relaunching.** `client/src/components/FloatingActionButton.tsx` already hides
+itself per route, so there is existing precedent to follow rather than a new
+mechanism to invent.
+
+## Known landmines
+
+- **The gate does not build or boot the production bundle.** Four production
+  only defects shipped because of this. Any change to `server/cardRenderer.ts`,
+  asset loading, or a dependency's module format needs a real
+  `npm run build` plus booting `dist/index.cjs` before it is called done.
+- **Secure cookies.** In production `secure: true` is set, so a session cookie
+  is not sent over plain HTTP. `app.set("trust proxy", 1)` is set, so it works
+  behind Replit's TLS proxy. For local authenticated browsing use the dev
+  server, not the production bundle.
+- **The browse daemon is single instance.** Do not have subagents drive the
+  browser at the same time as the main session; they contend and it crashes.
+- `.env` `DATABASE_URL` is the live Neon database. Any test data created must
+  be cleaned up. All test data from this session has been removed; the
+  leaderboard is back to one real player.
+
+## Still open, not scheduled
+
+- Section 8, the one metric.
+- The ten items in `docs/APP_AUDIT.md`, notably `/shop` 404 and the film to
+  grade honesty problem.
+- The family invite code needs a real secret before real guardians exist.
+- ShaderGradient was investigated and deliberately NOT used. Reasons in
+  commit `0d16f51`.
