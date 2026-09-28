@@ -60,7 +60,10 @@ const SHARED_ROUTES: readonly string[] = [
      hold a player profile can build a roster (pivot Section 7). */
   "/roster",
   "/reels/:playerId",
-  "/debug",
+  /* "/debug" is deliberately NOT here. It dumps database connectivity and
+     query state, which is internal diagnostics, not a player surface. It was
+     reachable by every signed in account. Reach it from the admin console
+     instead (ADMIN_PASSWORD, separate port). */
 ];
 
 /**

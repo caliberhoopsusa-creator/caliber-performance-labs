@@ -99,3 +99,15 @@ describe("ROLE_HOME", () => {
     }
   });
 });
+
+/* ---------------------------------------------- internal surfaces */
+
+describe("internal routes are not player reachable", () => {
+  it("denies /debug to every account role", () => {
+    // It dumps database connectivity and query state. It was in SHARED_ROUTES,
+    // so every signed in player could open it (app audit, item 3).
+    for (const role of USER_ROLES) {
+      expect(canAccessRoute(role, "/debug")).toBe(false);
+    }
+  });
+});

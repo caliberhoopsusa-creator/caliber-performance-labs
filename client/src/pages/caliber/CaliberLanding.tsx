@@ -107,9 +107,37 @@ export default function CaliberLanding() {
         background: color.court,
         color: color.bone,
         fontFamily: font.body,
+        position: "relative",
+        isolation: "isolate",
       }}
     >
+      {/* Atmosphere. Two fixed radial washes and a grain, painted in CSS.
+          A WebGL gradient was tried here once and removed in commit 633d336
+          for weight; it would also break the motion rule in
+          client/src/design/caliber/motion.ts, which is that nothing moves
+          except the four choreographed moments. This costs no bundle, never
+          animates, and so has nothing to disable for reduced motion. */}
+      <div className="cal-atmos" aria-hidden="true" />
+
       <style>{`
+        .cal-atmos {
+          position: fixed;
+          inset: 0;
+          z-index: -1;
+          pointer-events: none;
+          background:
+            radial-gradient(60% 45% at 78% 8%, rgba(255,45,45,0.10), transparent 70%),
+            radial-gradient(55% 40% at 8% 88%, rgba(124,77,255,0.07), transparent 72%);
+        }
+        /* Grain, so the large flat areas do not band on an OLED phone. An
+           inline SVG turbulence: no network request, no image asset. */
+        .cal-atmos::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          opacity: 0.16;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
         .cal-wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
         .cal-hero { display: grid; gap: 32px; padding: 32px 0 64px; }
         /* Mobile: the card sits ABOVE the copy, because the card is the thing

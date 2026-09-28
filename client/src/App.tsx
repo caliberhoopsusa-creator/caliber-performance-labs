@@ -495,6 +495,9 @@ function MainRouter() {
                 <Route path="/family" component={GuardianDashboard} />
                 <Route path="/transfer-portal" component={TransferPortal} />
                 <Route path="/canvas" component={CanvasPage} />
+                {/* Not in SHARED_ROUTES any more, so the role guard denies
+                    this before the route matches (pivot audit, app audit item
+                    3). Left mounted so it still works behind that guard. */}
                 <Route path="/debug" component={DebugPage} />
                 <Route component={NotFound} />
               </Switch>

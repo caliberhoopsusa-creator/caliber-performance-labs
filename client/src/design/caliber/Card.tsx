@@ -28,6 +28,7 @@ import {
   fitNameSize, type as typeScale,
 } from "./tokens";
 import { rarityDefinition, type RarityTier } from "@shared/rarity";
+import { initialsFor } from "@shared/cardIdentity";
 import { CARD_ASSEMBLY, motionStep, prefersReducedMotion } from "./motion";
 import { trendGlyph, trendLabel, type Trend } from "@shared/progression";
 
@@ -223,7 +224,30 @@ export function CaliberCard(props: CaliberCardProps) {
               alt=""
               style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
             />
-          ) : null}
+          ) : (
+            /* No photo yet. An empty window reads as broken on an object whose
+               whole job is to be a portrait, so it carries the player's
+               initials instead: specific to them, and promising nothing that
+               is not true. Low contrast, because it is a waiting state, not a
+               thing to look at. */
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                ...displayFace,
+                fontSize: px(64),
+                letterSpacing: "0.04em",
+                color: dark ? "rgba(245,241,232,0.13)" : "rgba(11,11,13,0.13)",
+                userSelect: "none",
+              }}
+              aria-hidden="true"
+            >
+              {initialsFor(name)}
+            </div>
+          )}
         </div>
       </div>
 

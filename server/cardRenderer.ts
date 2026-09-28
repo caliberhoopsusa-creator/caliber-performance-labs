@@ -27,6 +27,7 @@ import { readFileSync, existsSync } from "fs";
 import { createHash } from "crypto";
 import path from "path";
 import { rarityDefinition, type RarityTier } from "@shared/rarity";
+import { initialsFor } from "@shared/cardIdentity";
 import { trendGlyph, type Trend } from "@shared/progression";
 
 type SatoriFn = typeof import("satori").default;
@@ -206,9 +207,20 @@ function cardTree(input: CardRenderInput, size: CardSize) {
       border: `1px solid ${rule}`, padding: px(4), flexGrow: 1, minHeight: 0,
     }, el("div", {
       width: "100%", height: "100%",
+      display: "flex", alignItems: "center", justifyContent: "center",
       backgroundColor: dark ? "rgba(245,241,232,0.06)" : "rgba(11,11,13,0.07)",
       ...(input.photoUrl ? { backgroundImage: `url(${input.photoUrl})`, backgroundSize: "cover", backgroundPosition: "center" } : {}),
-    })),
+    }, input.photoUrl
+      ? []
+      /* Matches the client card exactly (client/src/design/caliber/Card.tsx):
+         an empty window reads as broken on an object whose job is to be a
+         portrait, so it carries the player's initials instead. This is the
+         card people share, so the two renderers must not disagree. */
+      : el("div", {
+          fontFamily: "Archivo", fontWeight: 800, fontSize: px(64),
+          letterSpacing: "0.04em",
+          color: dark ? "rgba(245,241,232,0.13)" : "rgba(11,11,13,0.13)",
+        }, initialsFor(input.name)))),
 
     // Slots 3 and 4: identity.
     el("div", { flexDirection: "column" }, [
