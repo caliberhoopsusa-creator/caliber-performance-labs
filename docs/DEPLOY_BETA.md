@@ -43,8 +43,9 @@ curl -s -o /tmp/card.png -w "%{http_code} %{size_download}\n" \
 file /tmp/card.png     # must say PNG, not JSON
 ```
 
-Expected: `200`, `{"status":"ok","db":"ok",...}`, and a PNG of roughly 40 to
-90 kB. A JSON body from the card endpoint means the renderer is broken again.
+Expected: `200`, `{"status":"ok","db":"ok",...}`, and a PNG. Roughly 40 to
+90 kB without a photo; a player with a photo renders larger (player 3 was
+360 kB on 2026-09-29). A JSON body from the card endpoint means the renderer is broken again.
 
 The card check matters more than it looks. It is the one endpoint that touches
 the filesystem, an ESM only dependency, and an image decoder, so it is where
@@ -89,6 +90,11 @@ nothing to the client.
 `ADMIN_PASSWORD` (the ops console on `ADMIN_PORT`, localhost only),
 `SENTRY_DSN`, `CFB_API_KEY`, `FITBIT_CLIENT_ID` and `FITBIT_CLIENT_SECRET`.
 
+`SKIP_STARTUP_SEEDS=true` skips the college and recruiting contact seeds. They
+run after the port opens (since 2026-09-29; before that they held the port
+closed for minutes against Neon), so leaving this unset on the deployment is
+safe. Set it in local `.env` so dev restarts stop rewriting the live tables.
+
 Stripe initialises through the Replit connector and logs a failure locally
 because `X_REPLIT_TOKEN` is absent off platform. That is expected and does not
 stop the server.
@@ -110,10 +116,10 @@ Verified on the production bundle, flags off:
 
 - **`/shop` 404s.** `Shop.tsx` is built and the coin balance is in the header,
   but no route renders it. See `docs/APP_AUDIT.md` item 2.
-- **The SIGNAL app shell still wraps every signed in page**: sidebar, coin
-  display, stats ticker, floating action button. It is visually inconsistent
-  with CALIBER. The landing, leaderboard, card and claim pages are clean; the
-  shell shows up once you sign in.
+- **The SIGNAL app shell is gone from the player demo path** (`/`,
+  `/grade-pending`, `/leaderboard`, `/players/:id/caliber`, `/roster`), which
+  render with `CaliberNav` only (`aa0a0ad`). Every other signed in page still
+  wears the SIGNAL shell.
 - **Film does not affect the grade.** `/api/analyze-video` returns Gemini
   commentary and persists nothing. Do not say film raises your grade until
   that is true. `docs/APP_AUDIT.md` section 1.
