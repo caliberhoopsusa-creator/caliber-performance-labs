@@ -106,7 +106,7 @@ Verified on the production bundle, flags off:
 | Path | Result |
 |---|---|
 | `/` | The landing. Single H1, hero card, four example cards. |
-| `/signup` | Sign up. |
+| `/signup` | Sign up (alias of `/register` since `f815bb3`). |
 | `/leaderboard` | Cards, not a table. Honest when thin. |
 | `/claim/:token` | A teammate's claim link. |
 | `/api/players/:id/card.png` | The shareable PNG. |

@@ -830,16 +830,26 @@ email banner, sidebar, bottom bar, FAB and `OnboardingTour`. The route list is
 `usesCaliberShell()` in `shared/roles.ts`, player only. `/claim/:token`,
 signup and the landing never entered the app shell.
 
-**Not yet verified visually.** Needs a signed in player at 390x844 on each of
-the five routes. Check in particular that `bg-background` does not render
-light for a player who once picked light mode (`ThemeProvider` still runs).
+**Verified visually 2026-09-29** at 390x844 with a signed in test player on
+all five routes: no SIGNAL chrome, content 53px from the top (was ~190), the
+whole card and share row fit the first screen, page stays dark. `aa0a0ad` also
+carries a `Log` link and `CaliberFooter` (Privacy, Terms, Sign out), which were
+added before that commit landed. `f815bb3` fixed `/signup` (ClaimCard sent
+invited teammates there and it rendered the landing) and the shell background.
+
+The test player (user `9337d8f7-...`, player 1262, game 2112) is still in the
+live DB pending the operator running the cleanup SQL; automated production
+reads and writes were blocked by the permission classifier.
 
 ## Next
 
-1. Visual check of the above (needs a test player on the live DB, cleaned up
-   after).
-2. Relaunch the lost audit of player path copy for false claims.
-3. Section 8.
+1. **Card name is the email prefix.** Signup has no name field and sends
+   `name: email.split("@")[0]`, so real cards read like `jdoe2009`.
+2. **False copy on `/grade-pending`:** "We are grading your film now" and
+   "lands in 24 hours". No film exists at signup, and a grade is computed the
+   moment a game is logged.
+3. Player 3 (the only real card) has a Sigma Chi / Huntsman logo as its photo.
+4. The remaining player path copy audit, then Section 8.
 
 ## Machine note
 
