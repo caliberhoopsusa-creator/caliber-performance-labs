@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   canAccessRoute,
   isKnownRoute,
+  usesCaliberShell,
   ROLE_HOME,
   USER_ROLES,
   type UserRole,
@@ -108,6 +109,34 @@ describe("internal routes are not player reachable", () => {
     // so every signed in player could open it (app audit, item 3).
     for (const role of USER_ROLES) {
       expect(canAccessRoute(role, "/debug")).toBe(false);
+    }
+  });
+});
+
+describe("usesCaliberShell", () => {
+  it("gives the player's demo path the bare CALIBER shell", () => {
+    for (const path of [
+      "/",
+      "/grade-pending",
+      "/leaderboard",
+      "/players/42/caliber",
+      "/roster",
+      "/leaderboard?class=2027",
+    ]) {
+      expect(usesCaliberShell("player", path)).toBe(true);
+    }
+  });
+
+  it("keeps the SIGNAL shell on pages that have not been ported", () => {
+    for (const path of ["/players/42", "/players/42/card", "/community", "/analyze", "/recruiting"]) {
+      expect(usesCaliberShell("player", path)).toBe(false);
+    }
+  });
+
+  it("keeps the SIGNAL shell for every other role, whose home is not a card", () => {
+    for (const role of USER_ROLES.filter((r) => r !== "player")) {
+      expect(usesCaliberShell(role, "/")).toBe(false);
+      expect(usesCaliberShell(role, "/leaderboard")).toBe(false);
     }
   });
 });

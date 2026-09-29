@@ -1,6 +1,6 @@
 import { Switch, Route, Redirect, useLocation, Link } from "wouter";
 import { queryClient } from "./lib/queryClient";
-import { canAccessRoute, isKnownRoute, roleHome, type UserRole } from "@shared/roles";
+import { canAccessRoute, isKnownRoute, roleHome, usesCaliberShell, type UserRole } from "@shared/roles";
 import { featureFlags } from "@/lib/features";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -56,6 +56,7 @@ const CaliberCardPage = lazy(() => import("@/pages/CaliberCardPage"));
 const GradePending = lazy(() => import("@/pages/caliber/GradePending"));
 const PlayerHome = lazy(() => import("@/pages/caliber/PlayerHome"));
 const CaliberLeaderboard = lazy(() => import("@/pages/caliber/CaliberLeaderboard"));
+import { CaliberNav, CaliberFooter } from "@/pages/caliber/CaliberNav";
 const RosterPrompt = lazy(() => import("@/pages/caliber/RosterPrompt"));
 const ClaimCard = lazy(() => import("@/pages/caliber/ClaimCard"));
 const AnalyzeGame = lazy(() => import("./pages/AnalyzeGame"));
@@ -348,10 +349,14 @@ function MainRouter() {
     return <Redirect to={roleHome(currentRole, featureFlags)} />;
   }
 
+  // The player's demo path renders bare: CaliberNav replaces the SIGNAL
+  // header, ticker, banner, sidebar, bottom bar, FAB and onboarding tour.
+  const caliberShell = usesCaliberShell(currentRole, location);
+
   // Fully authenticated with role - show main app
   return (
     <>
-      <OnboardingTour />
+      {!caliberShell && <OnboardingTour />}
       <SyncHandler />
       <SessionExpiryHandler />
       <OfflineBanner />
@@ -362,8 +367,9 @@ function MainRouter() {
         Skip to main content
       </a>
       <div className="flex min-h-screen w-full max-w-full overflow-x-hidden bg-background text-foreground font-body selection:bg-primary/30">
-        <Sidebar userRole={resolvedUser.role!} playerId={resolvedUser.playerId} />
+        {!caliberShell && <Sidebar userRole={resolvedUser.role!} playerId={resolvedUser.playerId} />}
         <div className="flex-1 flex flex-col min-w-0 relative bg-background">
+          {caliberShell ? <CaliberNav /> : (<>
           <header className="mobile-header-blur md:static md:backdrop-blur-none md:bg-transparent relative z-10 flex items-center justify-between gap-2 px-3 py-2 md:p-4 md:px-8 border-b border-border overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-accent/8 via-transparent to-transparent pointer-events-none" />
             <div className="relative z-[1] flex items-center gap-2 overflow-visible">
@@ -379,7 +385,8 @@ function MainRouter() {
           </header>
           <StatsTicker />
           <EmailVerificationBanner user={authUser} />
-          <main id="main-content" className="relative z-10 flex-1 p-4 pb-24 md:px-8 md:pb-8 w-full max-w-[1600px] mx-auto overflow-x-hidden overflow-y-auto">
+          </>)}
+          <main id="main-content" className={`relative z-10 flex-1 ${caliberShell ? "p-4 pb-8" : "p-4 pb-24"} md:px-8 md:pb-8 w-full max-w-[1600px] mx-auto overflow-x-hidden overflow-y-auto`}>
             <PageTransition>
               <Suspense fallback={<div className="flex items-center justify-center py-24"><Loader2 className="w-8 h-8 text-accent animate-spin" /></div>}>
               <Switch>
@@ -504,9 +511,14 @@ function MainRouter() {
               </Suspense>
             </PageTransition>
           </main>
+          {caliberShell && <CaliberFooter />}
         </div>
-        <MobileNav userRole={resolvedUser.role!} playerId={resolvedUser.playerId} />
-        <FloatingActionButton userRole={resolvedUser.role!} playerId={resolvedUser.playerId} />
+        {!caliberShell && (
+          <>
+            <MobileNav userRole={resolvedUser.role!} playerId={resolvedUser.playerId} />
+            <FloatingActionButton userRole={resolvedUser.role!} playerId={resolvedUser.playerId} />
+          </>
+        )}
       </div>
     </>
   );

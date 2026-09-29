@@ -219,3 +219,30 @@ export function isKnownRoute(path: string): boolean {
     ROLE_ROUTE_ACCESS[role].some((pattern) => matchesPattern(pattern, pathname)),
   );
 }
+
+/**
+ * The player's CALIBER demo path. These pages render in a bare shell: no SIGNAL
+ * header, stats ticker, theme toggle, coin balance, or SIGNAL bottom bar. On a
+ * phone that chrome took ~190px above the card, and CALIBER_DESIGN.md section 7
+ * refuses the theme toggle and the SIGNAL crimson logo outright.
+ * `/claim/:token` and the signed out landing and sign up never enter the app
+ * shell, so they are not listed.
+ */
+const CALIBER_SHELL_ROUTES: readonly string[] = [
+  "/",
+  "/grade-pending",
+  "/leaderboard",
+  "/players/:id/caliber",
+  "/roster",
+];
+
+/**
+ * Whether `path` renders in the bare CALIBER shell for `role`. Player only:
+ * every other role's `/` is a SIGNAL surface (dashboard or redirect), and the
+ * CALIBER nav points at the player's own card.
+ */
+export function usesCaliberShell(role: UserRole, path: string): boolean {
+  if (role !== "player") return false;
+  const pathname = path.split("?")[0].split("#")[0] || "/";
+  return CALIBER_SHELL_ROUTES.some((pattern) => matchesPattern(pattern, pathname));
+}
