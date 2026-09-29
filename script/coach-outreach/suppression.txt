@@ -1,0 +1,4 @@
+# One email per line. Anyone here is never emailed again, ever.
+# SendGrid's unsubscribe group handles opt-outs automatically at the ESP
+# level; this file is a local belt-and-suspenders layer for manual removals
+# (e.g. someone replies "please stop"). Add them here immediately.

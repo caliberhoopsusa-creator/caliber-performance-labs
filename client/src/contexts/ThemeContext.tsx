@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { tokens } from "@/config/tokens";
 
 interface ThemeData {
   active: boolean;
@@ -23,7 +22,7 @@ interface ThemeContextValue {
   refreshTheme: () => void;
 }
 
-const DEFAULT_ACCENT_COLOR = tokens.colors.primaryLight; // platinum #C6D0D8
+const DEFAULT_ACCENT_COLOR = "#E11D2A"; // Caliber crimson — primary brand accent (dark-first identity)
 
 const ThemeContext = createContext<ThemeContextValue>({
   themeData: null,

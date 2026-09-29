@@ -61,11 +61,11 @@ const ACTIVITY_ICONS: Record<string, typeof Target> = {
 };
 
 const ACTIVITY_COLORS: Record<string, string> = {
-  game: "from-green-500/20 to-transparent",
-  badge: "from-yellow-500/20 to-transparent",
-  streak: "from-accent/20 to-transparent",
-  story: "from-blue-500/20 to-transparent",
-  default: "from-accent/20 to-transparent",
+  game: "from-accent/10 to-transparent",
+  badge: "from-accent/10 to-transparent",
+  streak: "from-accent/15 to-transparent",
+  story: "from-accent/10 to-transparent",
+  default: "from-accent/10 to-transparent",
 };
 
 function PlayerSkeleton() {

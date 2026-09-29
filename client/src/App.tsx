@@ -1,5 +1,7 @@
 import { Switch, Route, Redirect, useLocation, Link } from "wouter";
 import { queryClient } from "./lib/queryClient";
+import { canAccessRoute, isKnownRoute, roleHome, usesCaliberShell, type UserRole } from "@shared/roles";
+import { featureFlags } from "@/lib/features";
 import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -21,67 +23,81 @@ import { useAuth } from "@/hooks/use-auth";
 import { useOffline } from "@/hooks/use-offline";
 import { useToast } from "@/hooks/use-toast";
 import { CaliberLogo } from "@/components/CaliberLogo";
+import { AuroraDefs } from "@/components/AuroraDefs";
 import { DarkModeToggle } from "@/components/DarkModeToggle";
 import { StatsTicker } from "@/components/StatsTicker";
 import { Loader2, ChevronLeft, Coins, Package, Mail } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-// Pages
-import ModernLandingPage from "./pages/ModernLandingPage";
-import Landing from "./pages/Landing";
-import PricingPage from "./pages/PricingPage";
-import BlogPage from "./pages/BlogPage";
-import PrivacyPage from "./pages/PrivacyPage";
-import TermsPage from "./pages/TermsPage";
+// Eagerly loaded — on the critical path for unauthenticated and first-render flows
+/* The CALIBER front door (pivot Section 4). The SIGNAL era Landing.tsx is left
+   in place and listed in docs/DEAD_CODE_FOLLOWUPS.md rather than deleted. */
+import CaliberLanding from "./pages/caliber/CaliberLanding";
+import CaliberSignup from "./pages/caliber/CaliberSignup";
 import Login from "./pages/Login";
 import RoleSelection from "./pages/RoleSelection";
 import Dashboard from "./pages/Dashboard";
-import PlayersList from "./pages/PlayersList";
-import PlayerDetail from "./pages/PlayerDetail";
-import PlayerCard from "./pages/PlayerCard";
-import AnalyzeGame from "./pages/AnalyzeGame";
-import Leaderboard from "./pages/Leaderboard";
-import ComparePlayers from "./pages/ComparePlayers";
-import GradingSystem from "./pages/GradingSystem";
-import VideoAnalysis from "./pages/VideoAnalysis";
-import ScoutHub from "./pages/ScoutHub";
-import Challenges from "./pages/Challenges";
-import Teams from "./pages/Teams";
-import CommunityHub from "./pages/CommunityHub";
-import CoachHub from "./pages/CoachHub";
-import Pricing from "./pages/Pricing";
-import Admin from "./pages/Admin";
-import PerformanceHub from "./pages/PerformanceHub";
-import ScheduleCalendar from "./pages/ScheduleCalendar";
-import HighlightClipsPage from "./pages/HighlightClipsPage";
-import Highlights from "./pages/Highlights";
-import ReelPage from "./pages/ReelPage";
-import ReelGenerator from "./pages/ReelGenerator";
-import TeamComparison from "./pages/TeamComparison";
-import ReportCardPage from "./pages/ReportCardPage";
-import AnalyticsHub from "./pages/AnalyticsHub";
-import LeagueHub from "./pages/LeagueHub";
-import LeagueDetail from "./pages/LeagueDetail";
-import RecruitingHub from "./pages/RecruitingHub";
-import PublicPlayerProfile from "./pages/PublicPlayerProfile";
-import PublicRecruitProfile from "./pages/PublicRecruitProfile";
-import PlayerDirectory from "./pages/PlayerDirectory";
-import DiscoverHighlights from "./pages/DiscoverHighlights";
-import ChallengePage from "./pages/ChallengePage";
-import JoinPage from "./pages/JoinPage";
-import RecruiterDashboard from "@/pages/RecruiterDashboard";
-import RecruiterDirectory from "@/pages/RecruiterDirectory";
-import WhosWatching from "@/pages/WhosWatching";
-import CollegeDetail from "@/pages/CollegeDetail";
-import GuardianDashboard from "./pages/GuardianDashboard";
-import DebugPage from "./pages/DebugPage";
-import TransferPortal from "./pages/TransferPortal";
 import NotFound from "./pages/not-found";
+
+// Lazy-loaded pages — split into separate chunks, fetched only when navigated to
+const PricingPage = lazy(() => import("./pages/PricingPage"));
+const BlogPage = lazy(() => import("./pages/BlogPage"));
+const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
+const TermsPage = lazy(() => import("./pages/TermsPage"));
+const PlayersList = lazy(() => import("./pages/PlayersList"));
+const PlayerDetail = lazy(() => import("./pages/PlayerDetail"));
+const PlayerCard = lazy(() => import("./pages/PlayerCard"));
+const CaliberCardPage = lazy(() => import("@/pages/CaliberCardPage"));
+const GradePending = lazy(() => import("@/pages/caliber/GradePending"));
+const PlayerHome = lazy(() => import("@/pages/caliber/PlayerHome"));
+const CaliberLeaderboard = lazy(() => import("@/pages/caliber/CaliberLeaderboard"));
+import { CaliberNav, CaliberFooter } from "@/pages/caliber/CaliberNav";
+import { color as caliberColor } from "@/design/caliber/tokens";
+const RosterPrompt = lazy(() => import("@/pages/caliber/RosterPrompt"));
+const ClaimCard = lazy(() => import("@/pages/caliber/ClaimCard"));
+const AnalyzeGame = lazy(() => import("./pages/AnalyzeGame"));
+const Leaderboard = lazy(() => import("./pages/Leaderboard"));
+const ComparePlayers = lazy(() => import("./pages/ComparePlayers"));
+const GradingSystem = lazy(() => import("./pages/GradingSystem"));
+const VideoAnalysis = lazy(() => import("./pages/VideoAnalysis"));
+const ScoutHub = lazy(() => import("./pages/ScoutHub"));
+const Challenges = lazy(() => import("./pages/Challenges"));
+const Teams = lazy(() => import("./pages/Teams"));
+const CommunityHub = lazy(() => import("./pages/CommunityHub"));
+const CoachHub = lazy(() => import("./pages/CoachHub"));
+const Pricing = lazy(() => import("./pages/Pricing"));
+const Admin = lazy(() => import("./pages/Admin"));
+const PerformanceHub = lazy(() => import("./pages/PerformanceHub"));
+const ScheduleCalendar = lazy(() => import("./pages/ScheduleCalendar"));
+const HighlightClipsPage = lazy(() => import("./pages/HighlightClipsPage"));
+const Highlights = lazy(() => import("./pages/Highlights"));
+const ReelPage = lazy(() => import("./pages/ReelPage"));
+const ReelGenerator = lazy(() => import("./pages/ReelGenerator"));
+const TeamComparison = lazy(() => import("./pages/TeamComparison"));
+const ReportCardPage = lazy(() => import("./pages/ReportCardPage"));
+const AnalyticsHub = lazy(() => import("./pages/AnalyticsHub"));
+const LeagueHub = lazy(() => import("./pages/LeagueHub"));
+const LeagueDetail = lazy(() => import("./pages/LeagueDetail"));
+const RecruitingHub = lazy(() => import("./pages/RecruitingHub"));
+const PublicPlayerProfile = lazy(() => import("./pages/PublicPlayerProfile"));
+const PublicRecruitProfile = lazy(() => import("./pages/PublicRecruitProfile"));
+const PlayerDirectory = lazy(() => import("./pages/PlayerDirectory"));
+const DiscoverHighlights = lazy(() => import("./pages/DiscoverHighlights"));
+const ChallengePage = lazy(() => import("./pages/ChallengePage"));
+const JoinPage = lazy(() => import("./pages/JoinPage"));
+const RecruiterDashboard = lazy(() => import("@/pages/RecruiterDashboard"));
+const RecruiterDirectory = lazy(() => import("@/pages/RecruiterDirectory"));
+const WhosWatching = lazy(() => import("@/pages/WhosWatching"));
+const CollegeDetail = lazy(() => import("@/pages/CollegeDetail"));
+const GuardianDashboard = lazy(() => import("./pages/GuardianDashboard"));
+const DebugPage = lazy(() => import("./pages/DebugPage"));
+const TransferPortal = lazy(() => import("./pages/TransferPortal"));
+const CanvasPage = lazy(() => import("./pages/CanvasPage"));
 
 interface ExtendedUser {
   id: string;
@@ -90,6 +106,7 @@ interface ExtendedUser {
   lastName: string | null;
   profileImageUrl: string | null;
   role: string | null;
+  roleSelectedAt: string | null;
   playerId: number | null;
   playerProfile?: {
     id: number;
@@ -175,11 +192,12 @@ function HeaderCoinDisplay() {
       {playerId && (
         <Link href={`/players/${playerId}?tab=inventory`}>
           <Button 
-            variant="ghost" 
-            size="icon" 
+            variant="ghost"
+            size="icon"
             className="text-muted-foreground hover:text-accent"
             data-testid="header-inventory-btn"
             title="My Inventory"
+            aria-label="My Inventory"
           >
             <Package className="w-4 h-4" />
           </Button>
@@ -239,6 +257,11 @@ function AuthenticatedLogo() {
   );
 }
 
+/* Cosmetic: the CALIBER pages paint `court`, and the SIGNAL `bg-background`
+   behind them is a shade darker, which drew a visible inset box around every
+   page. */
+const CALIBER_SHELL_BACKGROUND: React.CSSProperties = { background: caliberColor.court };
+
 function MainRouter() {
   const { user: authUser, isLoading: authLoading } = useAuth();
   const { data: extendedUser, isLoading: userLoading, isError: userError, refetch: refetchUser } = useExtendedUser();
@@ -270,14 +293,22 @@ function MainRouter() {
     if (location === "/terms") {
       return <TermsPage />;
     }
-    if (location === "/login" || location === "/register") {
+    // Sign up is the CALIBER player flow; sign in stays on the existing page.
+    // `/signup` is an alias: ClaimCard sends a signed out teammate there, and
+    // it used to fall through to the landing, stranding their claim token.
+    if (location === "/register" || location === "/signup") {
+      return <CaliberSignup />;
+    }
+    if (location === "/login") {
       return <Login />;
     }
-    return <Landing />;
+    return <CaliberLanding />;
   }
   
-  // New user with no role - show role selection immediately (don't wait for extended user)
-  if (!authUser.role) {
+  // New user who hasn't picked a role yet — show role selection immediately
+  // (don't wait for extended user). `role` defaults to 'player' in the DB, so
+  // `roleSelectedAt` is what tells us the user has actually chosen.
+  if (!(authUser as any).roleSelectedAt) {
     return <RoleSelection />;
   }
   
@@ -301,11 +332,12 @@ function MainRouter() {
     lastName: authUser.lastName ?? null,
     profileImageUrl: authUser.profileImageUrl ?? null,
     role: authUser.role ?? null,
+    roleSelectedAt: (authUser as any).roleSelectedAt ?? null,
     playerId: (authUser as any).playerId ?? null,
     playerProfile: null,
   };
 
-  if (!resolvedUser.role) {
+  if (!resolvedUser.roleSelectedAt || !resolvedUser.role) {
     return <RoleSelection />;
   }
   
@@ -313,17 +345,45 @@ function MainRouter() {
   if (resolvedUser.role === 'player' && !resolvedUser.playerId) {
     return <RoleSelection />;
   }
-  
+
+  // Roles are locked at sign-up, so each role only reaches its own surfaces.
+  // A real page that belongs to another role bounces to this role's home; an
+  // unrecognised URL falls through to the normal 404 below.
+  // A role whose product is switched off keeps only the shared routes and
+  // lands on the shared feed, so a signed-in coach does not hit a dead shell
+  // while ENABLE_COACH_PRODUCT is false.
+  const currentRole = resolvedUser.role as UserRole;
+  if (isKnownRoute(location) && !canAccessRoute(currentRole, location, featureFlags)) {
+    return <Redirect to={roleHome(currentRole, featureFlags)} />;
+  }
+
+  // The player's demo path renders bare: CaliberNav replaces the SIGNAL
+  // header, ticker, banner, sidebar, bottom bar, FAB and onboarding tour.
+  const caliberShell = usesCaliberShell(currentRole, location);
+
   // Fully authenticated with role - show main app
   return (
     <>
-      <OnboardingTour />
+      {!caliberShell && <OnboardingTour />}
       <SyncHandler />
       <SessionExpiryHandler />
       <OfflineBanner />
-      <div className="flex min-h-screen w-full max-w-full overflow-x-hidden bg-background text-foreground font-body selection:bg-primary/30">
-        <Sidebar userRole={resolvedUser.role!} playerId={resolvedUser.playerId} />
-        <div className="flex-1 flex flex-col min-w-0 relative bg-background">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[9999] focus:rounded-md focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-foreground focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-accent"
+      >
+        Skip to main content
+      </a>
+      <div
+        className="flex min-h-screen w-full max-w-full overflow-x-hidden bg-background text-foreground font-body selection:bg-primary/30"
+        style={caliberShell ? CALIBER_SHELL_BACKGROUND : undefined}
+      >
+        {!caliberShell && <Sidebar userRole={resolvedUser.role!} playerId={resolvedUser.playerId} />}
+        <div
+          className="flex-1 flex flex-col min-w-0 relative bg-background"
+          style={caliberShell ? CALIBER_SHELL_BACKGROUND : undefined}
+        >
+          {caliberShell ? <CaliberNav /> : (<>
           <header className="mobile-header-blur md:static md:backdrop-blur-none md:bg-transparent relative z-10 flex items-center justify-between gap-2 px-3 py-2 md:p-4 md:px-8 border-b border-border overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-accent/8 via-transparent to-transparent pointer-events-none" />
             <div className="relative z-[1] flex items-center gap-2 overflow-visible">
@@ -339,22 +399,34 @@ function MainRouter() {
           </header>
           <StatsTicker />
           <EmailVerificationBanner user={authUser} />
-          <main className="relative z-10 flex-1 p-4 pb-24 md:px-8 md:pb-8 w-full max-w-[1600px] mx-auto overflow-x-hidden overflow-y-auto">
+          </>)}
+          <main id="main-content" className={`relative z-10 flex-1 ${caliberShell ? "p-4 pb-8" : "p-4 pb-24"} md:px-8 md:pb-8 w-full max-w-[1600px] mx-auto overflow-x-hidden overflow-y-auto`}>
             <PageTransition>
+              <Suspense fallback={<div className="flex items-center justify-center py-24"><Loader2 className="w-8 h-8 text-accent animate-spin" /></div>}>
               <Switch>
+                {/* `/` is the coach dashboard, and every other role redirects
+                    away from it. Route through roleHome so a role whose product
+                    is switched off lands on the shared feed instead of a
+                    dashboard it is not supposed to have. Dashboard renders only
+                    for a coach whose product is actually on. */}
+                {/* The player is the default now (pivot Section 4A): `/` is
+                    their own card, not the coach dashboard and not a feed. */}
                 <Route path="/">
-                  {resolvedUser.role === 'player' && resolvedUser.playerId ? (
-                    <Redirect to="/community?tab=feed" />
-                  ) : resolvedUser.role === 'recruiter' ? (
-                    <Redirect to="/recruiter" />
-                  ) : resolvedUser.role === 'guardian' ? (
-                    <Redirect to="/family" />
-                  ) : (
+                  {resolvedUser.role === 'player' ? (
+                    <PlayerHome />
+                  ) : resolvedUser.role === 'coach' && featureFlags.ENABLE_COACH_PRODUCT ? (
                     <Dashboard />
+                  ) : (
+                    <Redirect to={roleHome(resolvedUser.role as UserRole, featureFlags)} />
                   )}
                 </Route>
+                <Route path="/grade-pending"><GradePending /></Route>
+                {/* Named right after profile completion (pivot Section 7). */}
+                <Route path="/roster"><RosterPrompt /></Route>
                 <Route path="/players" component={PlayersList} />
                 <Route path="/players/:id/card" component={PlayerCard} />
+                {/* The CALIBER card. The route above is the older SIGNAL page. */}
+                <Route path="/players/:id/caliber" component={CaliberCardPage} />
                 <Route path="/players/:id" component={PlayerDetail} />
                 <Route path="/analytics" component={AnalyticsHub} />
                 <Route path="/challenges">
@@ -371,9 +443,10 @@ function MainRouter() {
                 <Route path="/stories">
                   <Redirect to="/community?tab=stories" />
                 </Route>
-                <Route path="/leaderboard">
-                  <Redirect to="/analytics?tab=leaderboard" />
-                </Route>
+                {/* The CALIBER leaderboard: a stack of cards, not a table
+                    (pivot Section 6A). The analytics tab still holds the older
+                    SIGNAL table view for internal use. */}
+                <Route path="/leaderboard" component={CaliberLeaderboard} />
                 <Route path="/compare">
                   <Redirect to="/analytics?tab=compare" />
                 </Route>
@@ -442,14 +515,24 @@ function MainRouter() {
                 <Route path="/colleges/:id" component={CollegeDetail} />
                 <Route path="/family" component={GuardianDashboard} />
                 <Route path="/transfer-portal" component={TransferPortal} />
+                <Route path="/canvas" component={CanvasPage} />
+                {/* Not in SHARED_ROUTES any more, so the role guard denies
+                    this before the route matches (pivot audit, app audit item
+                    3). Left mounted so it still works behind that guard. */}
                 <Route path="/debug" component={DebugPage} />
                 <Route component={NotFound} />
               </Switch>
+              </Suspense>
             </PageTransition>
           </main>
+          {caliberShell && <CaliberFooter />}
         </div>
-        <MobileNav userRole={resolvedUser.role!} playerId={resolvedUser.playerId} />
-        <FloatingActionButton userRole={resolvedUser.role!} playerId={resolvedUser.playerId} />
+        {!caliberShell && (
+          <>
+            <MobileNav userRole={resolvedUser.role!} playerId={resolvedUser.playerId} />
+            <FloatingActionButton userRole={resolvedUser.role!} playerId={resolvedUser.playerId} />
+          </>
+        )}
       </div>
     </>
   );
@@ -457,16 +540,14 @@ function MainRouter() {
 
 function App() {
   useEffect(() => {
-    const stored = localStorage.getItem("caliber-theme");
-    if (stored === "light") {
-      document.documentElement.classList.remove("dark");
-    } else {
-      document.documentElement.classList.add("dark");
-    }
+    // Dark-only experience for now — force dark regardless of any stored preference.
+    document.documentElement.classList.add("dark");
+    localStorage.setItem("caliber-theme", "dark");
   }, []);
 
   return (
     <ErrorBoundary>
+      <AuroraDefs />
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <ThemeProvider>
@@ -476,6 +557,7 @@ function App() {
                   <XPNotificationProvider>
                     <Toaster />
                     <InstallPrompt />
+                    <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-8 h-8 text-accent animate-spin" /></div>}>
                     <Switch>
                     <Route path="/admin" component={Admin} />
                     <Route path="/profile/:id/public" component={PublicPlayerProfile} />
@@ -483,10 +565,15 @@ function App() {
                     <Route path="/discover/players" component={PlayerDirectory} />
                     <Route path="/challenge/:code" component={ChallengePage} />
                     <Route path="/join/:code" component={JoinPage} />
+                    {/* The claim landing is public on purpose: an invited
+                        teammate has no account yet, and the referrer's card is
+                        the first thing they should see (pivot Section 7). */}
+                    <Route path="/claim/:token" component={ClaimCard} />
                     <Route>
                       <MainRouter />
                     </Route>
                   </Switch>
+                    </Suspense>
                   </XPNotificationProvider>
                 </CelebrationProvider>
               </SportProvider>

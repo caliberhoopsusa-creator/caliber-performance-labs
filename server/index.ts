@@ -8,9 +8,7 @@ import { createServer, type Server } from "http";
 import { runMigrations } from 'stripe-replit-sync';
 import { getStripeSync } from './stripeClient';
 import { WebhookHandlers } from './webhookHandlers';
-import { seedColleges } from './seeds/colleges';
-import { updateCollegeStats } from './seeds/updateCollegeStats';
-import { seedRecruitingContacts, seedAdditionalLowerDivisionColleges } from './seeds/recruitingContacts';
+import { runStartupSeeds, shouldRunStartupSeeds } from './seeds/startup';
 import type Stripe from 'stripe';
 
 // Initialize Sentry before anything else (only when DSN is configured)
@@ -227,15 +225,6 @@ app.use((req, res, next) => {
 (async () => {
   await registerRoutes(httpServer, app);
 
-  try {
-    await seedColleges();
-    await updateCollegeStats();
-    await seedAdditionalLowerDivisionColleges();
-    await seedRecruitingContacts();
-  } catch (error) {
-    console.error('Failed to seed colleges:', error);
-  }
-
   // Sentry error handler must be before any other error handler
   if (process.env.SENTRY_DSN) {
     app.use(Sentry.expressErrorHandler());
@@ -266,6 +255,10 @@ app.use((req, res, next) => {
   const port = parseInt(process.env.PORT || "5000", 10);
   httpServer.listen(port, "0.0.0.0", () => {
     log(`serving on port ${port}`);
+    // Seeds run after the port is open, never before it (see seeds/startup.ts).
+    if (shouldRunStartupSeeds(process.env)) {
+      void runStartupSeeds();
+    }
   });
 
   // Admin server — binds to 127.0.0.1 only (never publicly reachable).

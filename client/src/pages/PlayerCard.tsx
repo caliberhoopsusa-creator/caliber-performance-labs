@@ -246,7 +246,7 @@ export default function PlayerCard() {
             <div className="mb-4">
               <PlayerArchetype 
                 games={games} 
-                position={player.position as "Guard" | "Wing" | "Big"}
+                position={player.position}
                 variant="badge"
               />
             </div>

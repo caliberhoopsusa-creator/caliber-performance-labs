@@ -25,7 +25,7 @@ const tourSteps: TourStep[] = [
     gradient: "from-blue-500 to-purple-600",
   },
   {
-    title: "Earn Badges & Level Up",
+    title: "Earn Badges and Climb",
     description: "Complete challenges, maintain streaks, and unlock badges as you progress from Rookie to Hall of Fame. Every game brings you closer to the top!",
     icon: <Trophy className="w-8 h-8" />,
     gradient: "from-accent to-accent/80",

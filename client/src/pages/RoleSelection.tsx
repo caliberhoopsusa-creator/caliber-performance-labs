@@ -1,4 +1,5 @@
 import { useState, useContext } from "react";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,10 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Activity, UserCircle, ClipboardList, ChevronRight, Loader2, Users, Plus, ArrowLeft, GraduationCap, Heart } from "lucide-react";
 import { GuardianOnboarding } from "@/components/GuardianOnboarding";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { BASKETBALL_POSITIONS } from "@shared/sports-config";
+import { featureFlags } from "@/lib/features";
+import { isRoleEnabled } from "@shared/features";
 
 type RoleType = 'player' | 'coach' | 'recruiter' | 'guardian' | null;
 type CoachStep = 'select-team-action' | 'create-team' | 'join-team' | null;
@@ -19,7 +22,7 @@ const ROLE_OPTIONS = [
   {
     value: 'player' as const,
     label: 'Player',
-    description: 'Track my own stats, earn badges, and level up my game',
+    description: 'Track my own stats, earn badges, and get your Caliber Grade',
     icon: UserCircle,
   },
   {
@@ -43,58 +46,66 @@ const ROLE_OPTIONS = [
 ];
 
 function RoleDropdown({ isLoading, onSelect }: { isLoading: boolean; onSelect: (role: RoleType) => void }) {
-  const [pickedRole, setPickedRole] = useState<string>("");
+  const [pickedRole, setPickedRole] = useState<RoleType>(null);
 
-  const selected = ROLE_OPTIONS.find(r => r.value === pickedRole);
+  const handlePick = (role: RoleType) => {
+    if (isLoading) return;
+    setPickedRole(role);
+    onSelect(role);
+  };
+
+  /* Only offer roles whose product is live. Player has no flag and is always
+     offered, so with every flag off this collapses to a single choice. The
+     server enforces the same rule, so a hand-crafted request cannot claim a
+     dark role either. */
+  const availableRoles = ROLE_OPTIONS.filter((role) =>
+    isRoleEnabled(role.value, featureFlags),
+  );
 
   return (
-    <div className="max-w-md mx-auto space-y-6">
-      <div className="space-y-2">
-        <Label className="text-sm text-muted-foreground">I am a...</Label>
-        <Select value={pickedRole} onValueChange={setPickedRole}>
-          <SelectTrigger className="w-full h-14 text-base" data-testid="select-role-trigger">
-            <SelectValue placeholder="Select your role" />
-          </SelectTrigger>
-          <SelectContent>
-            {ROLE_OPTIONS.map((role) => {
-              const Icon = role.icon;
-              return (
-                <SelectItem key={role.value} value={role.value} data-testid={`role-option-${role.value}`}>
-                  <div className="flex items-center gap-3">
-                    <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
-                    <span className="font-display font-bold tracking-wide uppercase">{role.label}</span>
-                  </div>
-                </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
+    <div className="space-y-4">
+      <div className="grid sm:grid-cols-2 gap-3">
+        {availableRoles.map((role) => {
+          const Icon = role.icon;
+          const isPicked = pickedRole === role.value;
+          return (
+            <button
+              key={role.value}
+              type="button"
+              disabled={isLoading}
+              onClick={() => handlePick(role.value)}
+              className={`group text-left p-5 rounded-xl border transition-all duration-150 ${
+                isPicked
+                  ? "border-accent bg-accent/10 shadow-lg shadow-accent/10"
+                  : "border-border bg-card hover:border-accent/50 hover:bg-accent/5 hover:-translate-y-0.5"
+              } ${isLoading && !isPicked ? "opacity-50" : ""}`}
+              data-testid={`role-option-${role.value}`}
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className={`w-11 h-11 rounded-lg flex items-center justify-center transition-colors ${
+                  isPicked ? "bg-accent text-accent-foreground" : "bg-accent/10 text-accent"
+                }`}>
+                  {isLoading && isPicked
+                    ? <Loader2 className="w-5 h-5 animate-spin" />
+                    : <Icon className="w-5 h-5" />}
+                </div>
+                <ChevronRight className={`w-4 h-4 mt-1 transition-all ${
+                  isPicked ? "text-accent translate-x-0.5" : "text-muted-foreground/40 group-hover:text-accent group-hover:translate-x-0.5"
+                }`} />
+              </div>
+              <p className="font-display font-bold text-foreground tracking-wide uppercase">
+                {role.label}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                {role.description}
+              </p>
+            </button>
+          );
+        })}
       </div>
-
-      {selected && (
-        <Card className="p-4 bg-accent/5 border-accent/20">
-          <div className="flex items-center gap-3">
-            <selected.icon className="w-6 h-6 text-accent shrink-0" />
-            <div>
-              <p className="font-display font-bold text-accent tracking-wide uppercase">{selected.label}</p>
-              <p className="text-xs text-muted-foreground">{selected.description}</p>
-            </div>
-          </div>
-        </Card>
-      )}
-
-      <Button
-        className="w-full"
-        size="lg"
-        disabled={!pickedRole || isLoading}
-        onClick={() => pickedRole && onSelect(pickedRole as RoleType)}
-        data-testid="button-continue-role"
-      >
-        {isLoading ? (
-          <Loader2 className="w-4 h-4 animate-spin mr-2" />
-        ) : null}
-        {selected ? `Continue as ${selected.label}` : "Select a role to continue"}
-      </Button>
+      <p className="text-xs text-muted-foreground text-center">
+        Tap the card that fits you best to continue.
+      </p>
     </div>
   );
 }
@@ -112,6 +123,7 @@ function BasketballIcon({ className }: { className?: string }) {
 }
 
 export default function RoleSelection() {
+  const [, setLocation] = useLocation();
   const [selectedRole, setSelectedRole] = useState<RoleType>(null);
   const [coachStep, setCoachStep] = useState<CoachStep>(null);
   const [playerForm, setPlayerForm] = useState({
@@ -232,6 +244,12 @@ export default function RoleSelection() {
           description: "Your player profile has been created!",
         });
       }
+
+      /* Straight into naming the roster (pivot Section 7). The people most
+         likely to want a card are the teammates standing next to you, and
+         this is the only moment the player is already in setup mode. It is
+         skippable on the page itself. */
+      setLocation('/roster');
     },
     onError: (error) => {
       toast({
@@ -411,12 +429,22 @@ export default function RoleSelection() {
     await joinTeamMutation.mutateAsync({ code: teamForm.code });
   };
 
+  // The role is locked once chosen at sign-up. A user can still land here to
+  // finish a half-built profile, so when locked we skip the picker entirely and
+  // go straight to that role's setup instead of offering a choice we'd reject.
+  const { data: me } = useQuery<{ role: string | null; roleSelectedAt: string | null } | null>({
+    queryKey: ['/api/users/me'],
+    staleTime: 1000 * 60 * 5,
+  });
+  const lockedRole: RoleType = me?.roleSelectedAt ? (me.role as RoleType) : null;
+  const activeRole: RoleType = lockedRole ?? selectedRole;
+
   const isLoading = setRoleMutation.isPending || createPlayerMutation.isPending || createTeamMutation.isPending || joinTeamMutation.isPending || createRecruiterProfileMutation.isPending;
 
   const getSubtitle = () => {
-    if (selectedRole === 'player') return "Let's set up your player profile";
-    if (selectedRole === 'recruiter') return "Let's set up your recruiter profile";
-    if (selectedRole === 'guardian') return "Welcome to the family experience";
+    if (activeRole === 'player') return "Let's set up your player profile";
+    if (activeRole === 'recruiter') return "Let's set up your recruiter profile";
+    if (activeRole === 'guardian') return "Welcome to the family experience";
     if (coachStep === 'select-team-action') return "Do you have an existing team or want to create one?";
     if (coachStep === 'create-team') return "Create your team and start building your roster";
     if (coachStep === 'join-team') return "Enter the team code to join an existing team";
@@ -430,21 +458,21 @@ export default function RoleSelection() {
           <div className="mx-auto h-16 w-16 rounded-2xl bg-accent flex items-center justify-center text-primary-foreground shadow-lg shadow-accent/20 mb-4">
             <Activity className="w-8 h-8" />
           </div>
-          <h1 className="text-3xl font-bold font-display text-foreground tracking-wider uppercase">Choose Your Path</h1>
+          <h1 className="text-3xl font-bold font-display text-foreground tracking-wider uppercase">{lockedRole ? "Finish Setting Up" : "Choose Your Path"}</h1>
           <p className="text-muted-foreground mt-2">{getSubtitle()}</p>
         </div>
 
-        {selectedRole === 'guardian' ? (
+        {activeRole === 'guardian' ? (
           <GuardianOnboarding
             onComplete={() => {
               queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
               queryClient.invalidateQueries({ queryKey: ['/api/users/me'] });
             }}
-            onBack={() => {
+            onBack={lockedRole ? undefined : () => {
               setSelectedRole(null);
             }}
           />
-        ) : selectedRole === 'recruiter' ? (
+        ) : activeRole === 'recruiter' ? (
           <Card className="p-6 bg-card border-border">
             <form onSubmit={handleRecruiterProfileSubmit} className="space-y-4">
               <div>
@@ -567,7 +595,7 @@ export default function RoleSelection() {
               </Button>
             </form>
           </Card>
-        ) : selectedRole === 'player' ? (
+        ) : activeRole === 'player' ? (
           <Card className="p-6 bg-card border-border">
             <form onSubmit={handlePlayerProfileSubmit} className="space-y-4">
               <div>
@@ -725,18 +753,20 @@ export default function RoleSelection() {
                 </div>
               </Card>
             </div>
-            <Button 
-              variant="ghost" 
-              className="w-full text-muted-foreground"
-              onClick={() => {
-                setSelectedRole(null);
-                setCoachStep(null);
-              }}
-              data-testid="button-back-role"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to role selection
-            </Button>
+            {!lockedRole && (
+              <Button
+                variant="ghost"
+                className="w-full text-muted-foreground"
+                onClick={() => {
+                  setSelectedRole(null);
+                  setCoachStep(null);
+                }}
+                data-testid="button-back-role"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to role selection
+              </Button>
+            )}
           </div>
         ) : coachStep === 'create-team' ? (
           <Card className="p-6 bg-card border-border">

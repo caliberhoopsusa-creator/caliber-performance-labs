@@ -30,7 +30,7 @@ const features: Feature[] = [
   {
     icon: <Trophy className="w-6 h-6" />,
     title: 'Badges & XP System',
-    description: 'Earn achievement badges, level up your profile, and showcase your progress to scouts and coaches.',
+    description: 'Earn achievement badges, build your profile, and showcase your progress to scouts and coaches.',
   },
   {
     icon: <Users className="w-6 h-6" />,

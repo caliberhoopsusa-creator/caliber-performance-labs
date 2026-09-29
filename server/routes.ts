@@ -8,6 +8,8 @@ import { players, games, badges, headToHeadChallenges, statVerifications, player
 import { getPlayerArchetype, ARCHETYPES } from "@shared/archetypes";
 import { calculateAIRating, calculateProjection, type GameStats, type PlayerMetrics, type PeerStats, type AIRatingResult, type ProjectionResult } from "@shared/ai-rating-engine";
 import type { Sport } from "@shared/sports-config";
+import { normalizePosition, positionGroup, normalizePositionList, BASKETBALL_POSITIONS } from "@shared/sports-config";
+import { ROLE_LABELS, USER_ROLES, type UserRole } from "@shared/roles";
 import { GoogleGenAI } from "@google/genai";
 import multer from "multer";
 import fs from "fs";
@@ -16,6 +18,36 @@ import { registerObjectStorageRoutes } from "./replit_integrations/object_storag
 import { setupAuth, registerAuthRoutes, isAuthenticated, authStorage } from "./replit_integrations/auth";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 import { users } from "@shared/models/auth";
+import { renderCardCached, cardVersion } from "./cardRenderer";
+import { startRarityScheduler, recomputeRarityForPlayer } from "./rarityService";
+import {
+  addRosterTeammates,
+  rosterForPlayer,
+  previewClaim,
+  claimPlaceholder,
+  unclaimedPlaceholderIds,
+  MAX_ROSTER_SIZE,
+} from "./referralService";
+import {
+  recordGradeSnapshot,
+  startProgressionNotifications,
+  trendForPlayer,
+} from "./progressionService";
+import { computeRarity, type RarityTier } from "@shared/rarity";
+import { caliberGrade } from "@shared/progression";
+import {
+  isRoleProductEnabled,
+  isProductEnabled,
+  PRODUCT_DISABLED_BODY,
+} from "./features";
+import type { ProductFlag } from "@shared/features";
+import {
+  applyPlayerPrivacy,
+  applyPlayerPrivacyToList,
+  canViewPlayer,
+  ANONYMOUS_VIEWER,
+  type ViewerIdentity,
+} from "./privacy";
 import { eq, sql, and, desc, or, inArray, gte, lte, count, max, ne, ilike, isNull, type SQL } from "drizzle-orm";
 import { db } from "./db";
 import { apiKeyAuth } from "./middleware/apiKeyAuth";
@@ -54,6 +86,11 @@ const isAdmin: RequestHandler = (req: any, res, next) => {
 // Role-based middleware
 const isCoach: RequestHandler = async (req: any, res, next) => {
   try {
+    // Dark product check runs first: 404 before 401 or 403, so a prober cannot
+    // tell a flagged off route from one that never existed.
+    if (!productEnabledFor(req, 'coach')) {
+      return res.status(404).json(PRODUCT_DISABLED_BODY);
+    }
     if (!req.isAuthenticated() || !req.user?.claims?.sub) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -86,6 +123,66 @@ const isPlayer: RequestHandler = async (req: any, res, next) => {
   }
 };
 
+/**
+ * Builds middleware that admits only the listed roles.
+ *
+ * Roles are locked at sign-up (see POST /api/users/role), so this is a durable
+ * check — a caller can't flip role to get past it. Mirrors the shape of the
+ * existing `requiresCoach`, including the app-owner bypass.
+ */
+const requireRole = (...roles: UserRole[]): RequestHandler => async (req: any, res, next) => {
+  try {
+    /* Narrow the admitted roles to products that are actually shipping. A route
+       admitting player or coach stays open while the coach product is dark,
+       because player is never gated, but it stops admitting coaches. A route
+       whose every role is dark 404s before it can 401, so a prober cannot tell
+       it apart from a route that never existed. */
+    const enabledRoles = roles.filter((role) => isRoleProductEnabled(role));
+    if (enabledRoles.length === 0 && !isAppOwner(req?.user?.claims?.sub)) {
+      return res.status(404).json(PRODUCT_DISABLED_BODY);
+    }
+
+    if (!req.isAuthenticated() || !req.user?.claims?.sub) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const user = await authStorage.getUser(req.user.claims.sub);
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    // Always publish the user first: handlers read req.caliberUser, and the
+    // app-owner bypass below must not leave it unset.
+    (req as any).caliberUser = user;
+
+    // App owner bypasses all role requirements
+    if (isAppOwner(req.user.claims.sub)) {
+      return next();
+    }
+
+    if (!user.role || !enabledRoles.includes(user.role as UserRole)) {
+      const required = enabledRoles.map((role) => ROLE_LABELS[role]).join(' or ');
+      return res.status(403).json({
+        message: `${required} access required`,
+        type: 'role_forbidden',
+      });
+    }
+
+    next();
+  } catch (error) {
+    console.error(`Error in requireRole(${roles.join(',')}) middleware:`, error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const isRecruiter = requireRole('recruiter');
+const isGuardian = requireRole('guardian');
+/** Athlete-side activity: logging, gear, training data. Recruiters and guardians
+ *  read player data but never write it. */
+const isPlayerOrCoach = requireRole('player', 'coach');
+/** Athlete-only surfaces — the athlete's own recruiting posture. */
+const isPlayerOnly = requireRole('player');
+
 // Helper to check if user can modify a specific player
 const canModifyPlayer = async (req: any, playerId: number): Promise<boolean> => {
   if (!req.isAuthenticated() || !req.user?.claims?.sub) return false;
@@ -101,6 +198,14 @@ const canModifyPlayer = async (req: any, playerId: number): Promise<boolean> => 
   return false;
 };
 
+// Resolve the authenticated user's own playerId. Null when unauthenticated
+// or the account has no player profile (e.g. coach/recruiter accounts).
+const getAuthedPlayerId = async (req: any): Promise<number | null> => {
+  if (!req.isAuthenticated() || !req.user?.claims?.sub) return null;
+  const user = await authStorage.getUser(req.user.claims.sub);
+  return user?.playerId ?? null;
+};
+
 // Helper to check if subscription is active (includes trialing)
 const isSubscriptionActive = (status: string | null | undefined): boolean => {
   return status === 'active' || status === 'trialing';
@@ -113,6 +218,45 @@ const isAppOwner = (userId: string | null | undefined): boolean => {
   if (!ownerUserId || !userId) return false;
   return userId === ownerUserId;
 };
+
+/**
+ * Resolves who is asking, for the player privacy serializer in ./privacy.
+ *
+ * Safe to call from a route with no auth middleware: passport.session() runs on
+ * every request (see setupAuth), so req.user is populated whenever a valid
+ * session cookie is present, with or without isAuthenticated on the route.
+ * A logged out visitor costs no database call.
+ */
+async function getViewer(req: any): Promise<ViewerIdentity> {
+  const userId = req?.user?.claims?.sub;
+  if (!userId) return ANONYMOUS_VIEWER;
+  try {
+    const cached = req.caliberUser ?? (await authStorage.getUser(userId));
+    if (!cached) return ANONYMOUS_VIEWER;
+    req.caliberUser = cached;
+    return {
+      userId,
+      role: (cached.role as UserRole) ?? null,
+      isAdmin: isAppOwner(userId),
+    };
+  } catch (error) {
+    // A viewer lookup failure must never widen access, so fail closed.
+    console.error("getViewer failed, falling back to anonymous:", error);
+    return ANONYMOUS_VIEWER;
+  }
+}
+
+/**
+ * Whether this request may reach `role`'s product surface.
+ *
+ * The app owner keeps access to a dark product so it can be smoke tested
+ * before the flag is flipped for everyone, matching the existing owner bypass
+ * on the role checks.
+ */
+function productEnabledFor(req: any, role: UserRole): boolean {
+  if (isRoleProductEnabled(role)) return true;
+  return isAppOwner(req?.user?.claims?.sub);
+}
 
 // Subscription verification middleware
 const requiresSubscription: RequestHandler = async (req: any, res, next) => {
@@ -153,6 +297,9 @@ const requiresSubscription: RequestHandler = async (req: any, res, next) => {
 // Middleware for coach role only (no subscription required)
 const requiresCoach: RequestHandler = async (req: any, res, next) => {
   try {
+    if (!productEnabledFor(req, 'coach')) {
+      return res.status(404).json(PRODUCT_DISABLED_BODY);
+    }
     if (!req.isAuthenticated() || !req.user?.claims?.sub) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -183,6 +330,9 @@ const requiresCoach: RequestHandler = async (req: any, res, next) => {
 // Combined middleware for coach + subscription
 const requiresCoachPro: RequestHandler = async (req: any, res, next) => {
   // Dev override — only active in non-production environments
+  if (!productEnabledFor(req, 'coach')) {
+    return res.status(404).json(PRODUCT_DISABLED_BODY);
+  }
   if (process.env.DISABLE_SUBSCRIPTION_GATE === 'true' && process.env.NODE_ENV !== 'production') return next();
 
   try {
@@ -266,10 +416,23 @@ function scoreToGrade(score: number): string {
 // Extract primary position from comma-separated positions for stat calculation
 // For multi-position players like "QB, RB", returns "QB"
 // For single position players, returns the position as-is
+/**
+ * The broad position GROUP a player grades under.
+ *
+ * Returns 'Guard' | 'Wing' | 'Big', not the stored position. Seventeen
+ * comparison sites across the grading functions below are written against
+ * those three names, and they were designed around them: a point guard and a
+ * shooting guard want the same assist weighting.
+ *
+ * This is the choke point that survived the 2026-09-25 migration from three
+ * positions to five. Before it returned the raw stored value, so once players
+ * started storing 'PG' and 'SG' every one of those comparisons silently
+ * stopped matching and every player quietly graded on the default weights.
+ * Normalising here repairs all seventeen at once and keeps working for rows
+ * written under either taxonomy.
+ */
 function getPrimaryPosition(position: string): string {
-  if (!position) return 'Guard';
-  const positions = position.split(',').map(p => p.trim());
-  return positions[0] || 'Guard';
+  return positionGroup(position) ?? 'Guard';
 }
 
 // Category Grade: Defensive (steals, blocks, defensive rebounds)
@@ -1416,9 +1579,49 @@ export async function registerRoutes(
     console.error('Seed shop items error (non-fatal):', (err as Error).message);
   }
   
+  /* Nightly rarity recompute (pivot Section 3D). Unref'd, so it never holds
+     the process open, and it reschedules itself after a failure. */
+  startRarityScheduler();
+
+  /* Wires tier_promoted through to the notification seam. Nothing is
+     registered as a notifier yet, so nothing sends: the brief asked for the
+     hook and explicitly not for push (pivot Section 5). */
+  startProgressionNotifications();
+
   // Setup authentication FIRST before other routes
   await setupAuth(app);
   registerAuthRoutes(app);
+
+  /* Product feature gates (pivot Section 2).
+   *
+   * Registered here, ahead of every product route, because most of those
+   * routes mount `isAuthenticated` before their role middleware. Relying on
+   * the role middleware alone would answer 401 before the flag was ever
+   * consulted, which leaks that the route exists and is merely gated. A
+   * prefix guard cannot be defeated by per route middleware order.
+   *
+   * The checks inside isCoach, requiresCoach, requiresCoachPro and requireRole
+   * stay as defence in depth for any route outside these namespaces.
+   */
+  const PRODUCT_PREFIXES: Array<[ProductFlag, string[]]> = [
+    ['ENABLE_COACH_PRODUCT', [
+      '/api/coach', '/api/coach-goals', '/api/roster', '/api/live-game',
+      '/api/practices', '/api/drills', '/api/lineups', '/api/opponents',
+      '/api/alerts',
+    ]],
+    ['ENABLE_RECRUITER_PRODUCT', ['/api/recruiter']],
+    ['ENABLE_GUARDIAN_PRODUCT', ['/api/guardian']],
+  ];
+
+  for (const [flag, prefixes] of PRODUCT_PREFIXES) {
+    for (const prefix of prefixes) {
+      app.use(prefix, (req: any, res, next) => {
+        // The app owner keeps access so a dark product can be smoke tested.
+        if (isProductEnabled(flag) || isAppOwner(req?.user?.claims?.sub)) return next();
+        return res.status(404).json(PRODUCT_DISABLED_BODY);
+      });
+    }
+  }
   
   // Register object storage routes for file uploads
   registerObjectStorageRoutes(app);
@@ -1452,6 +1655,16 @@ export async function registerRoutes(
 
       const player = await storage.getPlayer(playerId);
       if (!player) return next();
+
+      /* Privacy gate (docs/PIVOT_AUDIT.md 7b).
+         Commit e89ae4d fixed the JSON endpoints and missed this one because it
+         renders HTML, so a hidden player's school and photo were still served
+         to anyone who asked. Falling through to next() hands back the generic
+         SPA shell with the site wide tags, which is what a player who hid their
+         profile should produce: a working link, no personal data in the
+         preview, and no confirmation that the id resolves to a real athlete. */
+      const ogViewer = await getViewer(req);
+      if (!canViewPlayer(player, ogViewer)) return next();
 
       const playerGames = await storage.getGamesByPlayerId(playerId);
       const gamesPlayed = playerGames.length;
@@ -1487,14 +1700,25 @@ export async function registerRoutes(
 
       const baseUrl = `${req.protocol}://${req.get('host')}`;
       const position = player.position || '';
-      const ogTitle = `${player.name}${position ? ` (${position})` : ''} — Caliber`;
+      const ogTitle = `${player.name}${position ? ` (${position})` : ''} · Caliber`;
       const statLine = player.sport === 'basketball'
         ? `${avgPoints} PPG • ${avgRebounds} RPG • ${avgAssists} APG`
         : `${gamesPlayed} game${gamesPlayed !== 1 ? 's' : ''} tracked`;
+
+      /* School follows showSchool, exactly as the JSON endpoints do. */
+      const ogSchool = player.showSchool !== false && player.school
+        ? ` · ${player.school}`
+        : '';
       const ogDescription = gamesPlayed > 0
-        ? `Grade: ${averageGrade} • ${statLine}${player.school ? ` — ${player.school}` : ''}`
-        : `${player.sport || 'Multi-sport'} athlete on Caliber${player.school ? ` — ${player.school}` : ''}`;
-      const ogImage = player.photoUrl || `${baseUrl}/og-image.png`;
+        ? `Grade: ${averageGrade} • ${statLine}${ogSchool}`
+        : `${player.sport || 'Multi-sport'} athlete on Caliber${ogSchool}`;
+
+      /* The player photo is a minor's face on a public, unauthenticated surface.
+         minorDataPublic exists for exactly this and was never read anywhere, so
+         honour it here and fall back to the site card. */
+      const ogImage = (player.minorDataPublic !== false && player.photoUrl)
+        ? player.photoUrl
+        : `${baseUrl}/og-image.png`;
       const ogUrl = `${baseUrl}/profile/${playerId}/public`;
 
       const esc = (s: string) =>
@@ -1523,6 +1747,98 @@ export async function registerRoutes(
     } catch (err) {
       console.error('OG meta route error:', err);
       next();
+    }
+  });
+
+  // --- Roster placeholders and claiming (pivot Section 7) ---
+
+  /* POST /api/me/roster — name the teammates you actually play with.
+     Each one becomes a claimable placeholder: a real players row with a null
+     userId, hidden everywhere until somebody claims it. */
+  app.post('/api/me/roster', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await authStorage.getUser(userId);
+      if (!user?.playerId) {
+        return res.status(400).json({ message: 'Finish your own profile first' });
+      }
+
+      const input = z.object({
+        teammates: z.array(z.object({
+          name: z.string().trim().min(1).max(80),
+          position: z.string().trim().min(1).max(20),
+          jerseyNumber: z.number().int().min(0).max(99).nullable().optional(),
+        })).min(1).max(MAX_ROSTER_SIZE),
+      }).parse(req.body);
+
+      const result = await addRosterTeammates(user.playerId, input.teammates);
+      res.status(201).json(result);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid roster', errors: err.errors });
+      }
+      if (err instanceof Error && err.message.includes('Roster is full')) {
+        return res.status(409).json({ message: err.message });
+      }
+      console.error('Error adding roster teammates:', err);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  /* GET /api/me/roster — who you added and who has claimed. Owner only: the
+     claim tokens are in this response. */
+  app.get('/api/me/roster', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await authStorage.getUser(userId);
+      if (!user?.playerId) return res.json([]);
+
+      const roster = await rosterForPlayer(user.playerId);
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      res.json(roster.map((r) => ({
+        ...r,
+        claimUrl: `${baseUrl}/claim/${r.claimToken}`,
+      })));
+    } catch (err) {
+      console.error('Error loading roster:', err);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  /* GET /api/claim/:token — what the invited teammate sees before signing in.
+     Unauthenticated on purpose: the whole point is that the card of the person
+     who invited you is the first thing you see. Returns the referrer's public
+     card fields and the placeholder's name, nothing more. */
+  app.get('/api/claim/:token', async (req, res) => {
+    try {
+      const preview = await previewClaim(req.params.token);
+      if (!preview) return res.status(404).json({ message: 'That link is not valid' });
+      res.json(preview);
+    } catch (err) {
+      console.error('Error previewing claim:', err);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  /* POST /api/claim/:token — take the placeholder over. */
+  app.post('/api/claim/:token', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const result = await claimPlaceholder(req.params.token, userId);
+
+      if (!result.ok) {
+        const status = result.reason === 'not_found' ? 404 : 409;
+        const message =
+          result.reason === 'not_found' ? 'That link is not valid'
+          : result.reason === 'already_claimed' ? 'Somebody has already claimed this profile'
+          : 'You already have a player profile, so there is nothing to claim';
+        return res.status(status).json({ message, reason: result.reason });
+      }
+
+      res.json({ claimed: true, player: result.player });
+    } catch (err) {
+      console.error('Error claiming placeholder:', err);
+      res.status(500).json({ message: 'Internal server error' });
     }
   });
 
@@ -1860,14 +2176,35 @@ export async function registerRoutes(
     }
   });
 
-  // Set user role (player, coach, recruiter, or guardian)
+  // Set user role (player, coach, recruiter, or guardian).
+  // Write-once: the role is chosen at sign-up and locked from then on. Only an
+  // admin can change it afterwards, via PATCH /api/admin/users/:id/role.
   app.post('/api/users/role', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { role, organizationName } = z.object({
-        role: z.enum(['player', 'coach', 'recruiter', 'guardian']),
+        role: z.enum(USER_ROLES),
         organizationName: z.string().optional(),
       }).parse(req.body);
+
+      const existingUser = await authStorage.getUser(userId);
+      if (!existingUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // `role` defaults to 'player' in the DB, so it can't tell us whether the
+      // user has chosen — `roleSelectedAt` is the marker that they have.
+      if (existingUser.roleSelectedAt) {
+        // Re-posting the same role is a no-op so retries and refreshes stay safe.
+        if (existingUser.role === role) {
+          return res.json(existingUser);
+        }
+        return res.status(409).json({
+          message: `Your account is registered as a ${ROLE_LABELS[existingUser.role as UserRole] ?? existingUser.role}. Roles are set once at sign-up and can't be changed. Contact support if this is wrong.`,
+          type: 'role_locked',
+          role: existingUser.role,
+        });
+      }
 
       // Coach role requires an organization/team to prevent uncredentialed claims
       if (role === 'coach') {
@@ -1880,7 +2217,8 @@ export async function registerRoutes(
         }
       }
 
-      const updatedUser = await authStorage.updateUserRole(userId, role);
+      // Locks the role — from here only an admin can change it.
+      const updatedUser = await authStorage.selectUserRoleAtSignup(userId, role, existingUser.playerId);
       if (!updatedUser) {
         return res.status(404).json({ message: 'User not found' });
       }
@@ -1966,21 +2304,24 @@ export async function registerRoutes(
         height: z.string().optional(),
         team: z.string().optional(),
         jerseyNumber: z.number().optional(),
+        /* Collected at sign up (pivot Section 4B). Optional, so the older
+           sign up path that does not send them keeps working unchanged. */
+        school: z.string().max(120).optional(),
+        graduationYear: z.number().int().min(1900).max(2100).optional(),
+        phone: z.string().max(32).optional(),
       }).parse(req.body);
       
-      // Validate position based on sport (supports multi-position with comma-separated values)
-      const validBasketballPositions = ['Guard', 'Wing', 'Big'];
-      const validPositions = validBasketballPositions;
-      
-      // Split comma-separated positions and validate each one
-      const positionsList = input.position.split(',').map((p: string) => p.trim()).filter((p: string) => p);
-      const invalidPositions = positionsList.filter((p: string) => !validPositions.includes(p));
-      
-      if (invalidPositions.length > 0) {
+      /* Validate and normalise. Legacy group names are accepted and converted,
+         so the column only gains the five real positions from here on. */
+      const { positions: normalizedPositions, invalid: invalidPositions } =
+        normalizePositionList(input.position);
+
+      if (invalidPositions.length > 0 || normalizedPositions.length === 0) {
         return res.status(400).json({ 
-          message: `Invalid position(s) for ${input.sport}: ${invalidPositions.join(', ')}. Expected one of: ${validPositions.join(', ')}` 
+          message: `Invalid position(s) for ${input.sport}: ${invalidPositions.join(', ')}. Expected one of: ${BASKETBALL_POSITIONS.join(', ')}` 
         });
       }
+      input.position = normalizedPositions.join(', ');
       
       // Create player linked to user
       const player = await storage.createPlayer({
@@ -1990,6 +2331,13 @@ export async function registerRoutes(
       
       // Update user with playerId
       await authStorage.updateUserRole(userId, 'player', player.id);
+
+      /* Seed the rarity tier so a brand new player has one before their first
+         game and before the nightly pass. It will be Rookie, since the account
+         is minutes old. Non fatal: a null tier falls back to the same rule
+         client side, it is just less consistent in the database. */
+      try { await recomputeRarityForPlayer(player.id); }
+      catch (e) { console.error('Rarity seed error:', (e as Error).message); }
       
       res.status(201).json(player);
     } catch (err) {
@@ -2000,14 +2348,156 @@ export async function registerRoutes(
     }
   });
   
-  // --- Players ---
 
-  app.get(api.players.list.path, async (req, res) => {
-    const players = await storage.getPlayers();
-    res.json(players);
+  /**
+   * GET /api/players/:id/card.png?size=story|feed
+   *
+   * The shareable CALIBER card, rendered server side so it works on any device
+   * and so a link preview can point straight at it.
+   *
+   * Privacy: this is an image of a minor's name, school and face on an
+   * unauthenticated route, so it goes through the same gate as the JSON. A
+   * hidden player 404s, and school follows showSchool exactly as everywhere
+   * else (docs/PIVOT_AUDIT.md section 7).
+   */
+  /**
+   * The real image type, from the file's magic number.
+   *
+   * The stored `.meta` sidecar is not trustworthy: uploads on this platform
+   * carry a declared content type, and at least one existing player photo is
+   * a PNG recorded as `image/jpeg`. Handing satori a data URI that lied about
+   * the format made it decode a PNG as a JPEG and throw "Invalid JPEG".
+   * Bytes do not lie, so read those instead.
+   */
+  function sniffImageType(bytes: Buffer): string | null {
+    if (bytes.length < 12) return null;
+    if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) {
+      return 'image/png';
+    }
+    if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
+      return 'image/jpeg';
+    }
+    if (bytes.toString('ascii', 0, 3) === 'GIF') return 'image/gif';
+    if (bytes.toString('ascii', 0, 4) === 'RIFF' && bytes.toString('ascii', 8, 12) === 'WEBP') {
+      return 'image/webp';
+    }
+    return null;
+  }
+
+  /**
+   * The photo in a form satori will actually draw.
+   *
+   * satori fetches an image source itself, rejects anything that is not an
+   * absolute URL, and blocks loopback addresses as SSRF. So a stored app
+   * relative path failed outright, and absolutising it against our own host
+   * was blocked locally and would make the server issue an HTTP request to
+   * itself on every render in production.
+   *
+   * A locally uploaded object is on this disk, so read it and inline it. A
+   * remote URL is passed through for satori to fetch as before.
+   */
+  function cardPhotoSource(photoUrl: string | null | undefined): string | null {
+    if (!photoUrl) return null;
+    if (/^data:/.test(photoUrl)) return photoUrl;
+    if (/^https?:\/\//.test(photoUrl)) return photoUrl;
+
+    const local = photoUrl.match(/^\/objects\/local\/([0-9a-f-]+)$/i);
+    if (!local) return null;
+
+    try {
+      const file = path.join(process.cwd(), 'uploads', local[1]!);
+      if (!fs.existsSync(file)) return null;
+      const bytes = fs.readFileSync(file);
+      const contentType = sniffImageType(bytes);
+      /* Unknown magic number means it is not an image we can prove is safe to
+         hand a decoder, so the card renders without it. */
+      if (!contentType) return null;
+      return `data:${contentType};base64,${bytes.toString('base64')}`;
+    } catch (err) {
+      /* A card without a photo beats no card at all. */
+      console.error('Could not inline card photo:', err);
+      return null;
+    }
+  }
+
+  app.get('/api/players/:id/card.png', async (req: any, res) => {
+    try {
+      const playerId = Number(req.params.id);
+      if (isNaN(playerId)) return res.status(400).json({ message: 'Invalid player ID' });
+
+      const size = req.query.size === 'story' ? 'story' : 'feed';
+
+      const player = await storage.getPlayer(playerId);
+      if (!player) return res.status(404).json({ message: 'Player not found' });
+
+      const viewer = await getViewer(req);
+      if (!canViewPlayer(player, viewer)) {
+        return res.status(404).json({ message: 'Player not found' });
+      }
+      const safe = applyPlayerPrivacy(player, viewer) as any;
+
+      const games = await storage.getGamesByPlayerId(playerId);
+      const played = games.length;
+
+      /* Only real numbers reach a card. With no games logged there is no grade
+         and no averages, so the card shows the honest placeholder rather than
+         inventing a stat line. */
+      const avg = (pick: (g: any) => number) =>
+        played ? (games.reduce((acc, g) => acc + (pick(g) || 0), 0) / played).toFixed(1) : '0.0';
+
+      /* Read the persisted tier. It is computed against the whole cohort, which
+         a card render must never scan for. A player who has never been through
+         a recompute falls back to the Rookie window rule. */
+      const tier = (player.rarityTier as RarityTier | null)
+        ?? computeRarity({ percentile: player.rarityPercentile, createdAt: player.createdAt }, new Date());
+
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      /* THE Caliber Grade is the mean of graded games, not the last game's
+         grade (shared/progression.ts). Three places used to disagree. */
+      const overall = caliberGrade(games.map((g) => g.grade));
+      const trend = await trendForPlayer(playerId).catch(() => null);
+
+      const input = {
+        name: safe.name ?? 'Player',
+        position: safe.position ?? '',
+        classYear: safe.graduationYear ? `'${String(safe.graduationYear).slice(-2)}` : '',
+        school: safe.school ?? '',
+        grade: overall?.grade ?? '-',
+        trend,
+        tier,
+        stats: [
+          { label: 'PPG', value: avg((g) => g.points) },
+          { label: 'RPG', value: avg((g) => g.rebounds) },
+        ],
+        profileUrl: `${baseUrl.replace(/^https?:\/\//, '')}/profile/${playerId}/public`,
+        photoUrl: cardPhotoSource(safe.photoUrl),
+      };
+
+      const png = await renderCardCached(playerId, cardVersion(input), size, input);
+
+      res.setHeader('Content-Type', 'image/png');
+      // Safe to cache at the edge: the version hash changes whenever the face does.
+      res.setHeader('Cache-Control', 'public, max-age=300');
+      res.send(png);
+    } catch (error) {
+      console.error('Error rendering card:', error);
+      res.status(500).json({ message: 'Failed to render card' });
+    }
   });
 
-  app.get(api.players.get.path, async (req, res) => {
+  // --- Players ---
+
+  /* Both of these are registered with no auth middleware, so they answer the
+     open internet. Before the privacy serializer they returned the whole row:
+     date of birth, GPA, school, coach phone and every visibility setting, for
+     every player in the database. See docs/PIVOT_AUDIT.md section 7a. */
+  app.get(api.players.list.path, async (req: any, res) => {
+    const allPlayers = await storage.getPlayers();
+    const viewer = await getViewer(req);
+    res.json(applyPlayerPrivacyToList(allPlayers, viewer));
+  });
+
+  app.get(api.players.get.path, async (req: any, res) => {
     const playerId = Number(req.params.id);
     if (isNaN(playerId)) {
       return res.status(400).json({ message: 'Invalid player ID' });
@@ -2016,16 +2506,29 @@ export async function registerRoutes(
     if (!player) {
       return res.status(404).json({ message: 'Player not found' });
     }
-    
+
+    const viewer = await getViewer(req);
+    // A hidden player 404s rather than returning a redacted husk, so the
+    // response cannot be used to confirm the id belongs to a real athlete.
+    if (!canViewPlayer(player, viewer)) {
+      return res.status(404).json({ message: 'Player not found' });
+    }
+
     // Get player's games and calculate aggregated advanced metrics
     const playerGames = await storage.getGamesByPlayerId(player.id);
     const aggregatedAdvancedMetrics = calculateAggregatedAdvancedMetrics(playerGames);
-    
-    res.json({
+
+    /* The 30 day trend rides along rather than getting its own endpoint: the
+       card needs it on first paint, and a second round trip would show the
+       grade before the arrow. One indexed query on grade_history. */
+    const trend = await trendForPlayer(player.id).catch(() => null);
+
+    res.json(applyPlayerPrivacy({
       ...player,
       games: playerGames,
       advancedMetrics: aggregatedAdvancedMetrics,
-    });
+      trend,
+    }, viewer));
   });
 
   // Create player - coaches only
@@ -2105,18 +2608,15 @@ export async function registerRoutes(
       // Validate position if provided (supports multi-position with comma-separated values)
       if (input.position) {
         const playerSport = input.sport || player.sport || 'basketball';
-        const validBasketballPositions = ['Guard', 'Wing', 'Big'];
-          const validPositions = validBasketballPositions;
-        
-        // Split comma-separated positions and validate each one
-        const positionsList = input.position.split(',').map((p: string) => p.trim()).filter((p: string) => p);
-        const invalidPositions = positionsList.filter((p: string) => !validPositions.includes(p));
-        
-        if (invalidPositions.length > 0) {
+        const { positions: normalizedPositions, invalid: invalidPositions } =
+          normalizePositionList(input.position);
+
+        if (invalidPositions.length > 0 || normalizedPositions.length === 0) {
           return res.status(400).json({ 
-            message: `Invalid position(s) for ${playerSport}: ${invalidPositions.join(', ')}. Expected one of: ${validPositions.join(', ')}` 
+            message: `Invalid position(s) for ${playerSport}: ${invalidPositions.join(', ')}. Expected one of: ${BASKETBALL_POSITIONS.join(', ')}` 
           });
         }
+        input.position = normalizedPositions.join(', ');
       }
       // Convert GPA to string for database storage (decimal type)
       const updateData: any = { ...input };
@@ -2342,7 +2842,7 @@ export async function registerRoutes(
           sport: player.sport,
           currentTier: player.currentTier,
           totalXp: player.totalXp,
-          school: player.school,
+          school: player.showSchool ? player.school : null,
           graduationYear: player.graduationYear,
           state: player.state, // Only state, not city for privacy
           gpa: (player as any).isPublic !== false ? (player as any).gpa ?? null : null,
@@ -3210,6 +3710,18 @@ export async function registerRoutes(
       // Check for performance alerts (drop detection)
       try { await checkPerformanceAlerts(input.playerId, game.id, input, grade, sport); }
       catch (e) { console.error('Performance alert error:', e); }
+
+      /* A new graded game can move this player's rarity tier, so recompute it
+         now rather than waiting for the nightly pass. Their cohort's percentiles
+         settle on the next nightly run; a full scan per logged game would not
+         scale. Failure is non fatal: a stale tier is not worth losing the game
+         the player just logged. */
+      /* Rarity and the grade history snapshot both move on a new game.
+         recordGradeSnapshot recomputes rarity itself, so this is one call.
+         Non fatal: a stale tier or a missed history point is not worth losing
+         the game the player just logged. */
+      try { await recordGradeSnapshot(input.playerId, 'game_logged'); }
+      catch (e) { console.error('Progression error (game_logged):', (e as Error).message); }
       
       // Calculate advanced metrics for the game
       const advancedMetrics = calculateAdvancedMetrics(input);
@@ -3226,6 +3738,7 @@ export async function registerRoutes(
         advancedMetrics,
         newRecords,
         completedGoals,
+        awardedBadges,
         improvementTips,
         streakMultiplier: activeStreakMultiplier
       });
@@ -4334,7 +4847,12 @@ export async function registerRoutes(
     res.json(game);
   });
 
-  app.delete(api.games.delete.path, async (req, res) => {
+  app.delete(api.games.delete.path, isAuthenticated, async (req, res) => {
+    const game = await storage.getGame(Number(req.params.id));
+    if (!game) return res.status(404).json({ message: "Game not found" });
+    if (!(await canModifyPlayer(req, game.playerId))) {
+      return res.status(403).json({ message: "Not authorized to delete this game" });
+    }
     await storage.deleteGame(Number(req.params.id));
     res.status(204).send();
   });
@@ -4344,7 +4862,9 @@ export async function registerRoutes(
     try {
       const { position, minHeight, minGrade, sortBy } = req.query;
       
-      const playersWithStats = await storage.getPlayersWithStats();
+      const allPlayersWithStats = await storage.getPlayersWithStats();
+      // Privacy flags are enforced per-route (see CLAUDE.md).
+      const playersWithStats = allPlayersWithStats.filter(p => p.profileVisibility !== 'hidden');
       const badges = await Promise.all(
         playersWithStats.map(p => storage.getPlayerBadges(p.id))
       );
@@ -4393,7 +4913,9 @@ export async function registerRoutes(
           };
         }
         
-        const archetypeResult = getPlayerArchetype(games, player.position as "Guard" | "Wing" | "Big");
+        // Normalise, since pre migration rows still hold Guard / Wing / Big.
+        const normalizedPos = normalizePosition(player.position);
+        const archetypeResult = normalizedPos ? getPlayerArchetype(games, normalizedPos) : null;
         const archetype = archetypeResult ? ARCHETYPES[archetypeResult.primary].name : null;
 
         const ppg = games.reduce((acc, g) => acc + g.points, 0) / gamesPlayed;
@@ -4505,8 +5027,12 @@ export async function registerRoutes(
       // Default to basketball if no sport specified
       const selectedSport = (sport as string) || 'basketball';
       
-      const playersWithStats = await storage.getPlayersWithStats();
-      
+      const allPlayersWithStats = await storage.getPlayersWithStats();
+
+      // Privacy flags are enforced per-route (see CLAUDE.md). Drop players who
+      // hid their profile before any filtering, scoring or ranking happens.
+      const playersWithStats = allPlayersWithStats.filter(p => p.profileVisibility !== 'hidden');
+
       // Fetch all caliber badges once for efficiency
       const allCaliberBadges = await storage.getAllCaliberBadges();
       
@@ -4544,7 +5070,7 @@ export async function registerRoutes(
             photoUrl: player.photoUrl,
             city: player.city,
             state: player.state,
-            school: player.school,
+            school: player.showSchool ? player.school : null,
             graduationYear: player.graduationYear,
             currentTier: player.currentTier || 'Rookie',
             ppg: 0,
@@ -4567,7 +5093,7 @@ export async function registerRoutes(
             openToOpportunities: player.openToOpportunities || false,
             highlightCount,
             badgeCount,
-            gpa: player.gpa ? parseFloat(player.gpa) : null,
+            gpa: player.showGpa && player.gpa ? parseFloat(player.gpa) : null,
             threePtPct: null,
             completionPct: null,
             hasCaliberBadge,
@@ -4622,7 +5148,7 @@ export async function registerRoutes(
           photoUrl: player.photoUrl,
           city: player.city,
           state: player.state,
-          school: player.school,
+          school: player.showSchool ? player.school : null,
           graduationYear: player.graduationYear,
           currentTier: player.currentTier || 'Rookie',
           ppg: Number(ppg.toFixed(1)),
@@ -4645,7 +5171,7 @@ export async function registerRoutes(
           openToOpportunities: player.openToOpportunities || false,
           highlightCount,
           badgeCount,
-          gpa: player.gpa ? parseFloat(player.gpa) : null,
+          gpa: player.showGpa && player.gpa ? parseFloat(player.gpa) : null,
           threePtPct: threePtPct !== null ? Number(threePtPct.toFixed(1)) : null,
           completionPct: completionPct !== null ? Number(completionPct.toFixed(1)) : null,
           hasCaliberBadge,
@@ -4847,7 +5373,21 @@ export async function registerRoutes(
     const { state, position, level, sport, city } = req.query as { state?: string; position?: string; level?: string; sport?: string; city?: string };
     
     let playersList = await storage.getPlayers();
-    
+
+    /* Hidden players never appear on a leaderboard. The privacy policy says so
+       in as many words, and this route is unauthenticated, so without it a
+       player who hid their profile was still ranked in public.
+       Same family as docs/PIVOT_AUDIT.md section 7; this endpoint was not in
+       the set commit e89ae4d fixed and had no test covering it. */
+    playersList = playersList.filter(p => p.profileVisibility !== 'hidden');
+
+    /* Unclaimed roster placeholders are never ranked (pivot Section 7). They
+       are created hidden, so the filter above already catches them, but the
+       requirement is that an unclaimed placeholder cannot appear here at all
+       and that must not depend on one editable flag staying put. */
+    const unclaimed = await unclaimedPlaceholderIds();
+    playersList = playersList.filter(p => !unclaimed.has(p.id));
+
     // Apply filters
     if (sport) {
       playersList = playersList.filter(p => p.sport === sport);
@@ -4876,25 +5416,16 @@ export async function registerRoutes(
       // Filter games by sport if specified
       const sportGames = sport ? playerGames.filter(g => g.sport === sport) : playerGames;
       
-      // Calculate avg grade score for sorting
-      const gradeScores: Record<string, number> = {
-        'A+': 97, 'A': 94, 'A-': 90,
-        'B+': 87, 'B': 84, 'B-': 80,
-        'C+': 77, 'C': 74, 'C-': 70,
-        'D': 65, 'F': 55
-      };
-      
-      const avgGradeScore = sportGames.length > 0
-        ? sportGames.reduce((acc, g) => acc + (gradeScores[g.grade || 'C'] || 70), 0) / sportGames.length
-        : 0;
-
-      // Inverse map back to a grade label for the leaderboard
-      let avgGrade = 'C';
-      if (avgGradeScore >= 90) avgGrade = 'A';
-      else if (avgGradeScore >= 80) avgGrade = 'B';
-      else if (avgGradeScore >= 70) avgGrade = 'C';
-      else if (avgGradeScore >= 60) avgGrade = 'D';
-      else avgGrade = 'F';
+      /* THE Caliber Grade, from the one shared ladder.
+         This route used to carry its own grade table and then round the
+         average down to a bare letter, so a player reading 'A-' on their own
+         card was listed here as 'A'. Same player, two grades, and the whole
+         premise of this page is that a rank is a card you could have.
+         It also scored an ungraded game as a C, which invented a grade for a
+         game nobody had graded. caliberGrade skips those instead. */
+      const overall = caliberGrade(sportGames.map((g) => g.grade));
+      const avgGrade = overall?.grade ?? null;
+      const avgGradeScore = overall?.value ?? 0;
 
       // Calculate sport-specific stats
       const playerSport = p.sport || 'basketball';
@@ -4921,6 +5452,17 @@ export async function registerRoutes(
           city: p.city,
           level: p.level,
           photoUrl: p.photoUrl,
+          /* Card fields (pivot Section 6A). School follows showSchool exactly
+             as everywhere else: this route is unauthenticated, so a player who
+             opted out must not have it exposed by a ranking either. */
+          school: p.showSchool !== false ? p.school : null,
+          graduationYear: p.graduationYear,
+          rarityTier: p.rarityTier,
+          /* Null means the cohort is under MIN_COHORT, so this player is
+             genuinely unranked rather than measured and found average. The
+             card back says which (docs/INGEST_TOS_REVIEW.md, option 4). */
+          rarityPercentile: p.rarityPercentile,
+          createdAt: p.createdAt,
           avgGrade,
           avgGradeScore,
           gamesPlayed: sportGames.length,
@@ -4932,10 +5474,18 @@ export async function registerRoutes(
         };
     }));
 
-    // Sort by avg grade score descending
-    leaderboard.sort((a, b) => b.avgGradeScore - a.avgGradeScore);
+    /* A player with no graded games has no grade, so they are not ranked.
+       The ladder above floors to 'F' when there is nothing to average, which
+       put a fabricated failing grade on the card of anyone who had simply not
+       played yet. No invented numbers (docs/CALIBER_DESIGN.md section 7). */
+    const ranked = leaderboard.filter(
+      (row) => row.gamesPlayed > 0 && row.avgGrade !== null,
+    );
 
-    res.json(leaderboard.map(({ avgGradeScore, ...rest }) => rest));
+    // Sort by avg grade score descending
+    ranked.sort((a, b) => b.avgGradeScore - a.avgGradeScore);
+
+    res.json(ranked.map(({ avgGradeScore, ...rest }) => rest));
   });
 
   // Get player's state ranking
@@ -7058,15 +7608,14 @@ Respond in this exact JSON format (no extra text outside the JSON):
 
   // === DIRECT MESSAGES ===
   
-  // Get all DM threads for the current player
-  app.get('/api/dm/threads', async (req, res) => {
+  // Get all DM threads for the current player (identity from session, never the query)
+  app.get('/api/dm/threads', isAuthenticated, async (req, res) => {
     try {
-      const sessionId = req.query.sessionId as string;
-      const playerId = Number(req.query.playerId);
-      if (!playerId) {
-        return res.status(400).json({ message: 'playerId required' });
+      const myPlayerId = await getAuthedPlayerId(req);
+      if (!myPlayerId) {
+        return res.status(403).json({ message: 'No player profile on this account' });
       }
-      const threads = await storage.getPlayerDmThreads(playerId);
+      const threads = await storage.getPlayerDmThreads(myPlayerId);
       res.json(threads);
     } catch (err) {
       console.error('Get DM threads error:', err);
@@ -7074,14 +7623,14 @@ Respond in this exact JSON format (no extra text outside the JSON):
     }
   });
 
-  // Get unread DM count for a player
-  app.get('/api/dm/unread-count', async (req, res) => {
+  // Get unread DM count for the current player
+  app.get('/api/dm/unread-count', isAuthenticated, async (req, res) => {
     try {
-      const playerId = Number(req.query.playerId);
-      if (!playerId) {
-        return res.status(400).json({ message: 'playerId required' });
+      const myPlayerId = await getAuthedPlayerId(req);
+      if (!myPlayerId) {
+        return res.status(403).json({ message: 'No player profile on this account' });
       }
-      const count = await storage.getUnreadDmCount(playerId);
+      const count = await storage.getUnreadDmCount(myPlayerId);
       res.json({ count });
     } catch (err) {
       console.error('Get unread DM count error:', err);
@@ -7090,13 +7639,17 @@ Respond in this exact JSON format (no extra text outside the JSON):
   });
 
   // Start or find a DM thread with another player
-  app.post('/api/dm/threads', async (req, res) => {
+  app.post('/api/dm/threads', isAuthenticated, async (req, res) => {
     try {
       const { participantIds } = req.body; // array of player IDs
       if (!participantIds || !Array.isArray(participantIds) || participantIds.length < 2) {
         return res.status(400).json({ message: 'At least 2 participantIds required' });
       }
-      
+      const myPlayerId = await getAuthedPlayerId(req);
+      if (!myPlayerId || !participantIds.map(Number).includes(myPlayerId)) {
+        return res.status(403).json({ message: 'You can only start threads you participate in' });
+      }
+
       // Check if thread already exists between these players
       const existingThread = await storage.findExistingDmThread(participantIds);
       if (existingThread) {
@@ -7120,10 +7673,20 @@ Respond in this exact JSON format (no extra text outside the JSON):
     }
   });
 
-  // Get messages in a thread
-  app.get('/api/dm/threads/:threadId/messages', async (req, res) => {
+  // Membership gate: only thread participants may touch a thread
+  const isThreadParticipant = async (threadId: number, playerId: number): Promise<boolean> => {
+    const participants = await storage.getDmParticipants(threadId);
+    return participants.some((p) => p.playerId === playerId);
+  };
+
+  // Get messages in a thread (participants only)
+  app.get('/api/dm/threads/:threadId/messages', isAuthenticated, async (req, res) => {
     try {
       const threadId = Number(req.params.threadId);
+      const myPlayerId = await getAuthedPlayerId(req);
+      if (!myPlayerId || !(await isThreadParticipant(threadId, myPlayerId))) {
+        return res.status(403).json({ message: 'Not a participant in this thread' });
+      }
       const limit = Number(req.query.limit) || 50;
       const before = req.query.before ? Number(req.query.before) : undefined;
       const messages = await storage.getDmMessages(threadId, limit, before);
@@ -7134,17 +7697,21 @@ Respond in this exact JSON format (no extra text outside the JSON):
     }
   });
 
-  // Send a message in a thread
-  app.post('/api/dm/threads/:threadId/messages', async (req, res) => {
+  // Send a message in a thread — sender is always the session's player
+  app.post('/api/dm/threads/:threadId/messages', isAuthenticated, async (req, res) => {
     try {
       const threadId = Number(req.params.threadId);
-      const { senderPlayerId, content } = req.body;
-      if (!content || !senderPlayerId) {
-        return res.status(400).json({ message: 'content and senderPlayerId required' });
+      const { content } = req.body;
+      if (!content) {
+        return res.status(400).json({ message: 'content required' });
+      }
+      const myPlayerId = await getAuthedPlayerId(req);
+      if (!myPlayerId || !(await isThreadParticipant(threadId, myPlayerId))) {
+        return res.status(403).json({ message: 'Not a participant in this thread' });
       }
       const message = await storage.sendDmMessage({
         threadId,
-        senderPlayerId,
+        senderPlayerId: myPlayerId,
         content,
       });
       res.status(201).json(message);
@@ -7154,15 +7721,15 @@ Respond in this exact JSON format (no extra text outside the JSON):
     }
   });
 
-  // Mark thread as read
-  app.post('/api/dm/threads/:threadId/read', async (req, res) => {
+  // Mark thread as read (own membership only)
+  app.post('/api/dm/threads/:threadId/read', isAuthenticated, async (req, res) => {
     try {
       const threadId = Number(req.params.threadId);
-      const { playerId } = req.body;
-      if (!playerId) {
-        return res.status(400).json({ message: 'playerId required' });
+      const myPlayerId = await getAuthedPlayerId(req);
+      if (!myPlayerId || !(await isThreadParticipant(threadId, myPlayerId))) {
+        return res.status(403).json({ message: 'Not a participant in this thread' });
       }
-      await storage.markDmThreadRead(threadId, playerId);
+      await storage.markDmThreadRead(threadId, myPlayerId);
       res.json({ success: true });
     } catch (err) {
       console.error('Mark thread read error:', err);
@@ -7616,7 +8183,7 @@ Respond in this exact JSON format (no extra text outside the JSON):
   });
 
   // Delete story (requires authentication)
-  app.delete('/api/stories/:id', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/stories/:id', isAuthenticated, isPlayerOrCoach, async (req: any, res) => {
     try {
       const storyId = Number(req.params.id);
       const story = await storage.getStory(storyId);
@@ -7889,7 +8456,7 @@ Respond in this exact JSON format (no extra text outside the JSON):
     }
   });
 
-  app.delete('/api/highlights/:id', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/highlights/:id', isAuthenticated, isPlayerOrCoach, async (req: any, res) => {
     try {
       const highlightId = Number(req.params.id);
       const highlight = await storage.getStoryHighlight(highlightId);
@@ -9619,7 +10186,7 @@ Only respond with the JSON array, no other text.`;
       const playerResult = await db.execute(sql`
         SELECT 
           COUNT(*) as total_players,
-          COUNT(*) FILTER (WHERE sport = 'basketball') as basketball_players,
+          COUNT(*) FILTER (WHERE sport = 'basketball') as basketball_players
         FROM players
       `);
       const playerStats = playerResult.rows[0] as any;
@@ -10054,10 +10621,17 @@ Only respond with the JSON array, no other text.`;
     try {
       const userId = req.params.id;
       const { role } = req.body;
-      if (!['player', 'coach', 'recruiter'].includes(role)) {
+      // Includes 'guardian' — this is now the only way a role can change after
+      // sign-up, so it must cover every role.
+      if (!(USER_ROLES as readonly string[]).includes(role)) {
         return res.status(400).json({ error: 'Invalid role' });
       }
-      await db.update(users).set({ role }).where(eq(users.id, userId));
+      // Stamp the lock too, so an admin-assigned role doesn't leave the user a
+      // free self-serve pick. Partial update — must not disturb playerId.
+      const updated = await authStorage.updateUser(userId, { role, roleSelectedAt: new Date() });
+      if (!updated) {
+        return res.status(404).json({ error: 'User not found' });
+      }
       res.json({ success: true });
     } catch (err) {
       console.error('Admin update role error:', err);
@@ -11071,7 +11645,7 @@ Only respond with the JSON array, no other text.`;
           team: player.team,
           photoUrl: player.photoUrl,
           sport,
-          school: player.school,
+          school: player.showSchool ? player.school : null,
           graduationYear: player.graduationYear,
         },
         clips: topClips,
@@ -11114,6 +11688,11 @@ Only respond with the JSON array, no other text.`;
       }
       
       const newClip = await storage.createHighlightClip(validatedData);
+
+      // New film is a grade trigger (pivot Section 5).
+      try { await recordGradeSnapshot(validatedData.playerId, 'film_uploaded'); }
+      catch (e) { console.error('Progression error (film_uploaded):', (e as Error).message); }
+
       res.status(201).json(newClip);
     } catch (error: any) {
       if (error.name === 'ZodError') {
@@ -11294,7 +11873,7 @@ Only respond with the JSON array, no other text.`;
     }
   });
 
-  app.post('/api/workouts/:id/share', isAuthenticated, async (req: any, res) => {
+  app.post('/api/workouts/:id/share', isAuthenticated, isPlayerOrCoach, async (req: any, res) => {
     try {
       const workoutId = parseInt(req.params.id);
       const workout = await storage.getWorkout(workoutId);
@@ -11674,8 +12253,12 @@ Only respond with the JSON array, no other text.`;
       
       // Get player data
       const rosterPlayers = await db.select().from(players).where(inArray(players.id, playerIds));
-      
-      res.json(rosterPlayers);
+
+      /* This is the coach surface showStatsToCoaches and showContactToCoaches
+         were written for. Both were read by nothing before this. A player on a
+         coach's roster who turned either off gets it honoured here. */
+      const viewer = await getViewer(req);
+      res.json(rosterPlayers.map((player) => applyPlayerPrivacy(player, viewer)));
     } catch (error) {
       console.error('Error fetching roster:', error);
       res.status(500).json({ message: "Failed to fetch roster" });
@@ -12916,7 +13499,7 @@ Only respond with the JSON array, no other text.`;
   });
 
   // POST /api/shop/purchase - Purchase an item with coins (requires auth)
-  app.post('/api/shop/purchase', isAuthenticated, async (req: any, res) => {
+  app.post('/api/shop/purchase', isAuthenticated, isPlayerOrCoach, async (req: any, res) => {
     try {
       const user = await authStorage.getUser(req.user.claims.sub);
       if (!user) {
@@ -12991,7 +13574,7 @@ Only respond with the JSON array, no other text.`;
   });
 
   // POST /api/shop/equip - Equip/unequip an item (requires auth)
-  app.post('/api/shop/equip', isAuthenticated, async (req: any, res) => {
+  app.post('/api/shop/equip', isAuthenticated, isPlayerOrCoach, async (req: any, res) => {
     try {
       const user = await authStorage.getUser(req.user.claims.sub);
       if (!user) {
@@ -13152,7 +13735,7 @@ Only respond with the JSON array, no other text.`;
   });
 
   // POST /api/shop/coins/convert-xp - Convert XP to coins (100 XP = 1 coin)
-  app.post('/api/shop/coins/convert-xp', isAuthenticated, async (req: any, res) => {
+  app.post('/api/shop/coins/convert-xp', isAuthenticated, isPlayerOrCoach, async (req: any, res) => {
     try {
       const XP_PER_COIN = 100;
 
@@ -13278,7 +13861,7 @@ Only respond with the JSON array, no other text.`;
   });
 
   // PATCH /api/ratings/:id - Update a rating
-  app.patch('/api/ratings/:id', isAuthenticated, async (req: any, res) => {
+  app.patch('/api/ratings/:id', isAuthenticated, requiresCoach, async (req: any, res) => {
     try {
       const ratingId = parseInt(req.params.id);
       if (isNaN(ratingId)) {
@@ -13302,7 +13885,7 @@ Only respond with the JSON array, no other text.`;
   });
 
   // DELETE /api/ratings/:id - Delete a rating
-  app.delete('/api/ratings/:id', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/ratings/:id', isAuthenticated, requiresCoach, async (req: any, res) => {
     try {
       const ratingId = parseInt(req.params.id);
       if (isNaN(ratingId)) {
@@ -13415,9 +13998,12 @@ Only respond with the JSON array, no other text.`;
         height: player.height || undefined,
       };
 
-      const peerStats = await storage.getPeerStats(player.sport as Sport, player.position.split(',')[0].trim());
+      const peerStats = await storage.getPeerStats(player.sport as Sport, normalizePosition(player.position) ?? 'SG');
 
-      const primaryPosition = player.position.split(',')[0].trim();
+      /* Normalised, not the raw stored string. The grading weights are keyed on
+         the five real positions, and an unrecognised value silently falls back
+         to the default weights rather than erroring. */
+      const primaryPosition = normalizePosition(player.position) ?? 'SG';
       const aiRating = calculateAIRating(
         gameStats,
         player.sport as Sport,
@@ -13474,8 +14060,11 @@ Only respond with the JSON array, no other text.`;
 
       let metrics: PlayerMetrics | undefined;
 
-      const peerStats = await storage.getPeerStats(player.sport as Sport, player.position.split(',')[0].trim());
-      const primaryPosition = player.position.split(',')[0].trim();
+      const peerStats = await storage.getPeerStats(player.sport as Sport, normalizePosition(player.position) ?? 'SG');
+      /* Normalised, not the raw stored string. The grading weights are keyed on
+         the five real positions, and an unrecognised value silently falls back
+         to the default weights rather than erroring. */
+      const primaryPosition = normalizePosition(player.position) ?? 'SG';
       
       const aiRating = calculateAIRating(
         gameStats,
@@ -13557,8 +14146,11 @@ Only respond with the JSON array, no other text.`;
         defensiveInterceptions: g.defensiveInterceptions || undefined,
       }));
 
-      const peerStats = await storage.getPeerStats(player.sport as Sport, player.position.split(',')[0].trim());
-      const primaryPosition = player.position.split(',')[0].trim();
+      const peerStats = await storage.getPeerStats(player.sport as Sport, normalizePosition(player.position) ?? 'SG');
+      /* Normalised, not the raw stored string. The grading weights are keyed on
+         the five real positions, and an unrecognised value silently falls back
+         to the default weights rather than erroring. */
+      const primaryPosition = normalizePosition(player.position) ?? 'SG';
       
       const aiRating = calculateAIRating(
         gameStats,
@@ -13723,6 +14315,19 @@ Only respond with the JSON array, no other text.`;
       });
 
       const verification = await storage.createStatVerification(validatedData);
+
+      /* A coach cosign is a grade trigger (pivot Section 5). The player id
+         comes off the verified game rather than the request, so a malformed
+         body cannot point the snapshot at someone else. */
+      try {
+        const verifiedGame = await storage.getGame(gameId);
+        if (verifiedGame?.playerId) {
+          await recordGradeSnapshot(verifiedGame.playerId, 'coach_cosign');
+        }
+      } catch (e) {
+        console.error('Progression error (coach_cosign):', (e as Error).message);
+      }
+
       res.status(201).json(verification);
     } catch (error: any) {
       if (error.name === 'ZodError') {
@@ -14217,7 +14822,7 @@ Only respond with the JSON array, no other text.`;
   });
 
   // POST /api/highlights/:id/verify - Run verification check
-  app.post('/api/highlights/:id/verify', isAuthenticated, async (req: any, res) => {
+  app.post('/api/highlights/:id/verify', isAuthenticated, requiresCoach, async (req: any, res) => {
     try {
       const highlightId = parseInt(req.params.id);
       if (isNaN(highlightId)) {
@@ -14596,6 +15201,12 @@ Only respond with the JSON array, no other text.`;
         return res.status(400).json({ message: "Team does not belong to this league" });
       }
 
+      // Roster changes are the team captain's call, or the league creator's.
+      const league = await storage.getLeague(leagueId);
+      if (team.captainUserId !== userId && league?.createdByUserId !== userId) {
+        return res.status(403).json({ message: "Only the team captain or league creator can add players to this roster" });
+      }
+
       const validatedData = insertLeagueTeamRosterSchema.parse({
         ...req.body,
         leagueTeamId: teamId,
@@ -14634,6 +15245,12 @@ Only respond with the JSON array, no other text.`;
 
       if (team.leagueId !== leagueId) {
         return res.status(400).json({ message: "Team does not belong to this league" });
+      }
+
+      // Roster changes are the team captain's call, or the league creator's.
+      const league = await storage.getLeague(leagueId);
+      if (team.captainUserId !== userId && league?.createdByUserId !== userId) {
+        return res.status(403).json({ message: "Only the team captain or league creator can remove players from this roster" });
       }
 
       await storage.removePlayerFromLeagueTeam(teamId, playerId);
@@ -14683,6 +15300,11 @@ Only respond with the JSON array, no other text.`;
         return res.status(404).json({ message: "League not found" });
       }
 
+      // Only the league creator may change league-wide structure.
+      if (league.createdByUserId !== userId) {
+        return res.status(403).json({ message: "Only the league creator can schedule games" });
+      }
+
       const validatedData = insertLeagueGameSchema.parse({
         ...req.body,
         leagueId,
@@ -14722,6 +15344,12 @@ Only respond with the JSON array, no other text.`;
         return res.status(400).json({ message: "Game does not belong to this league" });
       }
 
+      // Only the league creator may change league-wide structure.
+      const league = await storage.getLeague(leagueId);
+      if (league?.createdByUserId !== userId) {
+        return res.status(403).json({ message: "Only the league creator can update games" });
+      }
+
       const updates = req.body;
       delete updates.id;
       delete updates.leagueId;
@@ -14756,6 +15384,12 @@ Only respond with the JSON array, no other text.`;
 
       if (game.leagueId !== leagueId) {
         return res.status(400).json({ message: "Game does not belong to this league" });
+      }
+
+      // Only the league creator may change league-wide structure.
+      const league = await storage.getLeague(leagueId);
+      if (league?.createdByUserId !== userId) {
+        return res.status(403).json({ message: "Only the league creator can finalize games" });
       }
 
       if (game.status === "final") {
@@ -15006,6 +15640,11 @@ Only respond with the JSON array, no other text.`;
         return res.status(404).json({ message: "League not found" });
       }
 
+      // Only the league creator may change league-wide structure.
+      if (league.createdByUserId !== userId) {
+        return res.status(403).json({ message: "Only the league creator can create rivalries" });
+      }
+
       const { team1Id, team2Id, rivalryName } = req.body;
 
       if (!team1Id || !team2Id) {
@@ -15071,6 +15710,12 @@ Only respond with the JSON array, no other text.`;
         return res.status(400).json({ message: "Rivalry does not belong to this league" });
       }
 
+      // Only the league creator may change league-wide structure.
+      const league = await storage.getLeague(leagueId);
+      if (league?.createdByUserId !== userId) {
+        return res.status(403).json({ message: "Only the league creator can update rivalries" });
+      }
+
       const { rivalryName, team1Wins, team2Wins, ties, currentStreakTeamId, currentStreakCount } = req.body;
 
       const updates: Record<string, any> = {};
@@ -15112,6 +15757,12 @@ Only respond with the JSON array, no other text.`;
         return res.status(400).json({ message: "Rivalry does not belong to this league" });
       }
 
+      // Only the league creator may change league-wide structure.
+      const league = await storage.getLeague(leagueId);
+      if (league?.createdByUserId !== userId) {
+        return res.status(403).json({ message: "Only the league creator can delete rivalries" });
+      }
+
       await storage.deleteLeagueRivalry(rivalryId);
       res.status(204).send();
     } catch (error) {
@@ -15141,6 +15792,12 @@ Only respond with the JSON array, no other text.`;
 
       if (rivalry.leagueId !== leagueId) {
         return res.status(400).json({ message: "Rivalry does not belong to this league" });
+      }
+
+      // Only the league creator may change league-wide structure.
+      const league = await storage.getLeague(leagueId);
+      if (league?.createdByUserId !== userId) {
+        return res.status(403).json({ message: "Only the league creator can update rivalry records" });
       }
 
       const { winningTeamId, isTie } = req.body;
@@ -15684,7 +16341,7 @@ Only respond with the JSON array, no other text.`;
   });
 
   // POST /api/players/:id/fitness - Create new fitness data entry (manual entry)
-  app.post("/api/players/:id/fitness", isAuthenticated, async (req, res) => {
+  app.post("/api/players/:id/fitness", isAuthenticated, isPlayerOrCoach, async (req, res) => {
     try {
       const playerId = parseInt(req.params.id);
       if (isNaN(playerId)) {
@@ -15713,7 +16370,7 @@ Only respond with the JSON array, no other text.`;
   });
 
   // PUT /api/players/:id/fitness/:dataId - Update fitness data entry
-  app.put("/api/players/:id/fitness/:dataId", isAuthenticated, async (req, res) => {
+  app.put("/api/players/:id/fitness/:dataId", isAuthenticated, isPlayerOrCoach, async (req, res) => {
     try {
       const playerId = parseInt(req.params.id);
       const dataId = parseInt(req.params.dataId);
@@ -15740,7 +16397,7 @@ Only respond with the JSON array, no other text.`;
   });
 
   // DELETE /api/players/:id/fitness/:dataId - Delete fitness data entry
-  app.delete("/api/players/:id/fitness/:dataId", isAuthenticated, async (req, res) => {
+  app.delete("/api/players/:id/fitness/:dataId", isAuthenticated, isPlayerOrCoach, async (req, res) => {
     try {
       const playerId = parseInt(req.params.id);
       const dataId = parseInt(req.params.dataId);
@@ -15763,7 +16420,7 @@ Only respond with the JSON array, no other text.`;
   });
 
   // POST /api/players/:id/fitness/sync - Endpoint for syncing wearable data (bulk)
-  app.post("/api/players/:id/fitness/sync", isAuthenticated, async (req, res) => {
+  app.post("/api/players/:id/fitness/sync", isAuthenticated, isPlayerOrCoach, async (req, res) => {
     try {
       const playerId = parseInt(req.params.id);
       if (isNaN(playerId)) {
@@ -16446,7 +17103,7 @@ Only respond with the JSON array, no other text.`;
   });
 
   // POST /api/players/:playerId/event-registrations - Register interest in an event
-  app.post("/api/players/:playerId/event-registrations", isAuthenticated, async (req, res) => {
+  app.post("/api/players/:playerId/event-registrations", isAuthenticated, isPlayerOrCoach, async (req, res) => {
     try {
       const playerId = parseInt(req.params.playerId);
       if (isNaN(playerId)) {
@@ -16515,7 +17172,7 @@ Only respond with the JSON array, no other text.`;
   });
 
   // DELETE /api/players/:playerId/event-registrations/:eventId - Remove registration
-  app.delete("/api/players/:playerId/event-registrations/:eventId", isAuthenticated, async (req, res) => {
+  app.delete("/api/players/:playerId/event-registrations/:eventId", isAuthenticated, isPlayerOrCoach, async (req, res) => {
     try {
       const playerId = parseInt(req.params.playerId);
       const eventId = parseInt(req.params.eventId);
@@ -16595,7 +17252,7 @@ Only respond with the JSON array, no other text.`;
   });
 
   // POST /api/players/:playerId/ncaa-eligibility - Create/Update player's NCAA eligibility progress
-  app.post("/api/players/:playerId/ncaa-eligibility", isAuthenticated, async (req, res) => {
+  app.post("/api/players/:playerId/ncaa-eligibility", isAuthenticated, isPlayerOrCoach, async (req, res) => {
     try {
       const playerId = parseInt(req.params.playerId);
       if (isNaN(playerId)) {
@@ -16756,7 +17413,7 @@ Only respond with the JSON array, no other text.`;
   });
   
   // DELETE a recommendation (only the coach who wrote it can delete)
-  app.delete('/api/players/:playerId/recommendations/:recommendationId', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/players/:playerId/recommendations/:recommendationId', isAuthenticated, isPlayerOrCoach, async (req: any, res) => {
     try {
       const playerId = parseInt(req.params.playerId, 10);
       const recommendationId = parseInt(req.params.recommendationId, 10);
@@ -16842,9 +17499,14 @@ Only respond with the JSON array, no other text.`;
       if (graduationYear) conditions.push(eq(players.graduationYear, parseInt(graduationYear)));
       if (search) conditions.push(ilike(players.name, `%${search}%`));
 
-      const matchingPlayers = await db.select()
+      const allMatching = await db.select()
         .from(players)
         .where(and(...conditions));
+
+      // Privacy flags are enforced per-route (see CLAUDE.md). This endpoint is
+      // reachable without a login, so a player who hid their profile must not
+      // appear in it at all.
+      const matchingPlayers = allMatching.filter(p => p.profileVisibility !== 'hidden');
 
       const enrichedPlayers = await Promise.all(matchingPlayers.map(async (player) => {
         const playerGames = await storage.getGamesByPlayerId(player.id);
@@ -16890,10 +17552,10 @@ Only respond with the JSON array, no other text.`;
           position: player.position,
           city: player.city,
           state: player.state,
-          school: player.school,
+          school: player.showSchool ? player.school : null,
           graduationYear: player.graduationYear,
           height: player.height,
-          gpa: player.gpa ? parseFloat(player.gpa as any) : null,
+          gpa: player.showGpa && player.gpa ? parseFloat(player.gpa as any) : null,
           currentTier: player.currentTier,
           totalXp: player.totalXp,
           openToOpportunities: player.openToOpportunities,
@@ -17131,10 +17793,10 @@ Only respond with the JSON array, no other text.`;
           city: player.city,
           state: player.state,
           height: player.height,
-          school: player.school,
+          school: player.showSchool ? player.school : null,
           graduationYear: player.graduationYear,
           level: player.level,
-          gpa: player.gpa ? parseFloat(player.gpa.toString()) : null,
+          gpa: player.showGpa && player.gpa ? parseFloat(player.gpa.toString()) : null,
           currentTier: player.currentTier,
           totalXp: player.totalXp,
           jerseyNumber: player.jerseyNumber,
@@ -17193,6 +17855,55 @@ Only respond with the JSON array, no other text.`;
     } catch (error) {
       console.error('Error fetching public player profile:', error);
       res.status(500).json({ message: "Failed to fetch public profile" });
+    }
+  });
+
+  // === WAITLIST (Founding Class early-access capture) ===
+  // POST /api/waitlist - Join the founding-class waitlist (public, no auth, idempotent on email)
+  app.post("/api/waitlist", async (req, res) => {
+    try {
+      const schema = z.object({
+        email: z.string().email("Valid email required").max(254),
+        name: z.string().max(200).optional().nullable(),
+        role: z.enum(["player", "coach", "parent", "recruiter"]).optional().nullable(),
+        teamName: z.string().max(200).optional().nullable(),
+        source: z.string().max(80).optional().nullable(),
+      });
+      const input = schema.parse(req.body);
+      const email = input.email.trim().toLowerCase();
+
+      const existing = await storage.getWaitlistSignupByEmail(email);
+      if (existing) {
+        return res.json({ success: true, message: "You're already on the list — see you soon." });
+      }
+
+      await storage.createWaitlistSignup({
+        email,
+        name: input.name?.trim() || null,
+        role: input.role || null,
+        teamName: input.teamName?.trim() || null,
+        sport: "basketball",
+        source: input.source || "landing",
+      });
+
+      res.json({ success: true, message: "You're in. Welcome to the founding class." });
+    } catch (error: any) {
+      if (error.name === "ZodError") {
+        return res.status(400).json({ message: error.errors[0]?.message || "Invalid input" });
+      }
+      console.error("Error creating waitlist signup:", error);
+      res.status(500).json({ message: "Failed to join the waitlist" });
+    }
+  });
+
+  // GET /api/public/waitlist-count - Honest live count for the landing
+  app.get("/api/public/waitlist-count", async (_req, res) => {
+    try {
+      const total = await storage.getWaitlistCount();
+      res.json({ total });
+    } catch (error) {
+      console.error("Error fetching waitlist count:", error);
+      res.status(500).json({ message: "Failed to fetch waitlist count" });
     }
   });
 
@@ -17351,7 +18062,7 @@ Only respond with the JSON array, no other text.`;
     }
   });
 
-  app.delete("/api/players/:playerId/athletic-measurements/:id", isAuthenticated, async (req, res) => {
+  app.delete("/api/players/:playerId/athletic-measurements/:id", isAuthenticated, isPlayerOrCoach, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteAthleticMeasurement(id);
@@ -17795,7 +18506,7 @@ The email should:
 
   // === RECRUITER FEATURES ===
 
-  app.post("/api/recruiter/profile", isAuthenticated, async (req: any, res) => {
+  app.post("/api/recruiter/profile", isAuthenticated, isRecruiter, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       if (!userId) return res.status(401).json({ message: "Not authenticated" });
@@ -17834,7 +18545,7 @@ The email should:
     }
   });
 
-  app.get("/api/recruiter/profile", isAuthenticated, async (req: any, res) => {
+  app.get("/api/recruiter/profile", isAuthenticated, isRecruiter, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       if (!userId) return res.status(401).json({ message: "Not authenticated" });
@@ -17849,7 +18560,7 @@ The email should:
     }
   });
 
-  app.patch("/api/recruiter/profile", isAuthenticated, async (req: any, res) => {
+  app.patch("/api/recruiter/profile", isAuthenticated, isRecruiter, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       if (!userId) return res.status(401).json({ message: "Not authenticated" });
@@ -17897,7 +18608,7 @@ The email should:
     }
   });
 
-  app.get("/api/recruiter/players", isAuthenticated, async (req: any, res) => {
+  app.get("/api/recruiter/players", isAuthenticated, isRecruiter, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       if (!userId) return res.status(401).json({ message: "Not authenticated" });
@@ -18023,7 +18734,7 @@ The email should:
     }
   });
 
-  app.get("/api/recruiter/bookmarks", isAuthenticated, async (req: any, res) => {
+  app.get("/api/recruiter/bookmarks", isAuthenticated, isRecruiter, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       if (!userId) return res.status(401).json({ message: "Not authenticated" });
@@ -18038,7 +18749,7 @@ The email should:
     }
   });
 
-  app.post("/api/recruiter/bookmarks/:playerId", isAuthenticated, async (req: any, res) => {
+  app.post("/api/recruiter/bookmarks/:playerId", isAuthenticated, isRecruiter, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       if (!userId) return res.status(401).json({ message: "Not authenticated" });
@@ -18061,7 +18772,7 @@ The email should:
     }
   });
 
-  app.delete("/api/recruiter/bookmarks/:playerId", isAuthenticated, async (req: any, res) => {
+  app.delete("/api/recruiter/bookmarks/:playerId", isAuthenticated, isRecruiter, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       if (!userId) return res.status(401).json({ message: "Not authenticated" });
@@ -18076,7 +18787,7 @@ The email should:
     }
   });
 
-  app.post("/api/recruiter/signals/:playerId", isAuthenticated, async (req: any, res) => {
+  app.post("/api/recruiter/signals/:playerId", isAuthenticated, isRecruiter, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       if (!userId) return res.status(401).json({ message: "Not authenticated" });
@@ -18107,7 +18818,7 @@ The email should:
     }
   });
 
-  app.post("/api/recruiter/views/:playerId", isAuthenticated, async (req: any, res) => {
+  app.post("/api/recruiter/views/:playerId", isAuthenticated, isRecruiter, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       if (!userId) return res.status(401).json({ message: "Not authenticated" });
@@ -18541,13 +19252,10 @@ The email should:
 
   // === GUARDIAN / FAMILY SYSTEM ROUTES ===
 
-  app.post("/api/guardian/request", isAuthenticated, async (req: any, res) => {
+  app.post("/api/guardian/request", isAuthenticated, isGuardian, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const user = await authStorage.getUser(userId);
-      if (!user || user.role !== 'guardian') {
-        return res.status(403).json({ message: "Guardian role required" });
-      }
+      const user = req.caliberUser;
 
       const { playerId, relationship, inviteCode } = req.body;
 
@@ -18679,7 +19387,7 @@ The email should:
     }
   });
 
-  app.get("/api/guardian/players", isAuthenticated, async (req: any, res) => {
+  app.get("/api/guardian/players", isAuthenticated, isGuardian, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const links = await storage.getLinkedPlayersByGuardian(userId);
@@ -18720,7 +19428,7 @@ The email should:
     }
   });
 
-  app.get("/api/guardian/players/:playerId/dashboard", isAuthenticated, async (req: any, res) => {
+  app.get("/api/guardian/players/:playerId/dashboard", isAuthenticated, isGuardian, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const playerId = parseInt(req.params.playerId);
@@ -19035,13 +19743,9 @@ The email should:
 
   // GET /api/coach/recommendations — coach's own list of recommendations they've written
   // This endpoint was missing but CoachEndorsements.tsx depends on it
-  app.get('/api/coach/recommendations', isAuthenticated, async (req: any, res) => {
+  app.get('/api/coach/recommendations', isAuthenticated, isCoach, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await authStorage.getUser(userId);
-      if (!user || user.role !== 'coach') {
-        return res.status(403).json({ message: 'Coach role required' });
-      }
+      const user = req.caliberUser;
       const recs = await db
         .select()
         .from(coachRecommendations)
@@ -19209,7 +19913,7 @@ The email should:
   });
 
   // DELETE /api/equipment/:id
-  app.delete('/api/equipment/:id', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/equipment/:id', isAuthenticated, isPlayerOrCoach, async (req: any, res) => {
     try {
       const itemId = parseInt(req.params.id);
       if (isNaN(itemId)) return res.status(400).json({ message: "Invalid equipment ID" });
@@ -19325,7 +20029,7 @@ The email should:
 
   // === RECRUITER CONTACT LOG (CRM) ===
 
-  app.get('/api/recruiter/notes/:playerId', isAuthenticated, async (req: any, res) => {
+  app.get('/api/recruiter/notes/:playerId', isRecruiter, async (req: any, res) => {
     try {
       const userId = req.user?.id || req.user?.claims?.sub;
       const recruiter = await storage.getRecruiterProfileByUserId(userId);
@@ -19340,7 +20044,7 @@ The email should:
     }
   });
 
-  app.post('/api/recruiter/notes/:playerId', isAuthenticated, async (req: any, res) => {
+  app.post('/api/recruiter/notes/:playerId', isRecruiter, async (req: any, res) => {
     try {
       const userId = req.user?.id || req.user?.claims?.sub;
       const recruiter = await storage.getRecruiterProfileByUserId(userId);
@@ -19361,7 +20065,7 @@ The email should:
     }
   });
 
-  app.delete('/api/recruiter/notes/:noteId', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/recruiter/notes/:noteId', isRecruiter, async (req: any, res) => {
     try {
       const userId = req.user?.id || req.user?.claims?.sub;
       const recruiter = await storage.getRecruiterProfileByUserId(userId);
@@ -19437,7 +20141,7 @@ The email should:
     }
   });
 
-  app.get('/api/me/transfer-portal-status', isAuthenticated, async (req: any, res) => {
+  app.get('/api/me/transfer-portal-status', isAuthenticated, isPlayerOnly, async (req: any, res) => {
     try {
       const userId = req.user?.id || req.user?.claims?.sub;
       const [player] = await db.select({
@@ -19453,7 +20157,7 @@ The email should:
 
   const portalNoteSchema = z.object({ note: z.string().max(200).optional() });
 
-  app.post('/api/me/transfer-portal', isAuthenticated, async (req: any, res) => {
+  app.post('/api/me/transfer-portal', isAuthenticated, isPlayerOnly, async (req: any, res) => {
     try {
       const userId = req.user?.id || req.user?.claims?.sub;
       const parsed = portalNoteSchema.safeParse(req.body ?? {});
@@ -19476,7 +20180,7 @@ The email should:
     }
   });
 
-  app.delete('/api/me/transfer-portal', isAuthenticated, async (req: any, res) => {
+  app.delete('/api/me/transfer-portal', isAuthenticated, isPlayerOnly, async (req: any, res) => {
     try {
       const userId = req.user?.id || req.user?.claims?.sub;
       const result = await db.update(players).set({

@@ -308,7 +308,7 @@ function PollCard({
                     <span className={`text-sm ${isUserVote ? "font-semibold text-accent" : ""}`}>
                       {option} {isUserVote && <Vote className="w-3 h-3 inline ml-1" />}
                     </span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground tabular-nums">
                       {voteCount} ({percentage.toFixed(0)}%)
                     </span>
                   </div>
@@ -561,7 +561,7 @@ function PredictionCard({
             >
               <span className="font-semibold">{prediction.player1Name}</span>
               {prediction.hasVoted && (
-                <span className="text-xs mt-1">
+                <span className="text-xs mt-1 tabular-nums">
                   {prediction.player1Votes} ({p1Percentage.toFixed(0)}%)
                 </span>
               )}
@@ -578,7 +578,7 @@ function PredictionCard({
             >
               <span className="font-semibold">{prediction.player2Name}</span>
               {prediction.hasVoted && (
-                <span className="text-xs mt-1">
+                <span className="text-xs mt-1 tabular-nums">
                   {prediction.player2Votes} ({p2Percentage.toFixed(0)}%)
                 </span>
               )}

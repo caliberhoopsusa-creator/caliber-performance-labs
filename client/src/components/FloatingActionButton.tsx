@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Plus, X, Video, Trophy, GraduationCap, Camera } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { featureFlags } from "@/lib/features";
 
 interface QuickAction {
   href: string;
@@ -20,7 +21,11 @@ export function FloatingActionButton({ userRole, playerId }: FloatingActionButto
   const [isOpen, setIsOpen] = useState(false);
   const [location] = useLocation();
   
-  const isPlayer = userRole === 'player';
+  /* Coach shortcuts are for coaches only, and only while the coach product is
+     live. This used to read `isPlayer ? playerActions : coachActions`, which
+     served Log Game, Video Analysis, Scout Hub and Endorsements to recruiters
+     and guardians as well. */
+  const isCoach = userRole === 'coach' && featureFlags.ENABLE_COACH_PRODUCT;
   
   const hiddenPaths = ['/analyze', '/video', '/role-selection', '/'];
   const shouldHide = hiddenPaths.some(path => 
@@ -43,7 +48,7 @@ export function FloatingActionButton({ userRole, playerId }: FloatingActionButto
     { href: "/coach/endorsements", icon: GraduationCap, label: "Endorsements", bg: "bg-emerald-600" },
   ];
 
-  const actions = isPlayer ? playerActions : coachActions;
+  const actions = isCoach ? coachActions : playerActions;
 
   return (
     <div className="md:hidden fixed bottom-20 right-4 z-40 pb-safe" data-testid="fab-container">

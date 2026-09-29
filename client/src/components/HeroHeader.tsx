@@ -1,14 +1,9 @@
-// client/src/components/HeroHeader.tsx
-// Reusable hero banner for the Community/Feed page top section.
-// Shows the current player's avatar, name, position, team, a primary CTA,
-// and a compact stat strip (PPG, grade, rank, games played).
-
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { GradeBadge } from "@/components/GradeBadge";
-import { Trophy } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import type { User } from "@shared/models/auth";
 
 interface PublicPlayerData {
@@ -66,68 +61,52 @@ export function HeroHeader({ user }: HeroHeaderProps) {
   ] as const;
 
   return (
-    <div className="relative rounded-2xl overflow-hidden" data-testid="hero-header">
-      {/* Amber radial glow backdrop */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(ellipse at 15% 60%, rgba(198,208,216,0.20) 0%, rgba(198,208,216,0.06) 45%, transparent 68%), " +
-            "linear-gradient(135deg, rgba(14,11,8,0.97) 0%, rgba(9,9,13,0.97) 100%)",
-        }}
-      />
-      {/* Subtle dot grid */}
-      <div
-        className="absolute inset-0 opacity-[0.04]"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle, #4f6878 1px, transparent 1px)",
-          backgroundSize: "20px 20px",
-        }}
-      />
-      {/* Amber left-edge accent line */}
-      <div className="absolute left-0 top-4 bottom-4 w-[3px] rounded-full bg-gradient-to-b from-amber-500/60 via-amber-400/80 to-amber-600/40" />
+    <div
+      className="relative rounded-xl overflow-hidden border border-accent/[0.15] bg-card/80"
+      data-testid="hero-header"
+    >
+      <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
+      <div className="absolute top-0 right-0 w-56 h-56 bg-accent/[0.07] blur-[70px] rounded-full pointer-events-none" />
 
-      <div className="relative z-10 flex items-center justify-between gap-3 px-5 py-5 sm:px-6">
-        {/* LEFT — Avatar + identity + CTA */}
+      <div className="relative z-10 flex items-center justify-between gap-3 px-5 py-4 sm:px-6">
         <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-          <Avatar className="w-14 h-14 shrink-0 border-2 border-amber-500/40 ring-1 ring-amber-500/10">
+          <Avatar className="w-13 h-13 shrink-0 border-2 border-accent/30 ring-1 ring-accent/10">
             <AvatarImage src={player?.photoUrl ?? undefined} alt={displayName} />
-            <AvatarFallback className="bg-amber-950/60 text-amber-300 font-display font-bold text-xl">
+            <AvatarFallback className="bg-accent/15 text-accent font-display font-bold text-xl">
               {initials}
             </AvatarFallback>
           </Avatar>
 
           <div className="min-w-0">
-            <p className="font-display font-bold text-white text-base sm:text-lg leading-tight">
+            <p className="font-display font-bold text-foreground text-base sm:text-lg leading-tight">
               {player?.name || displayName}
             </p>
-            <p className="text-xs sm:text-sm text-amber-400/75 font-medium truncate mt-0.5">
+            <p className="text-xs sm:text-sm text-muted-foreground truncate mt-0.5">
               {[player?.position, player?.school].filter(Boolean).join(" · ") || "Complete your profile"}
             </p>
             <Button
               size="sm"
-              className="mt-2 h-7 px-3 text-xs bg-amber-500 hover:bg-amber-400 text-black font-bold leading-none"
+              className="mt-2 h-7 px-3 text-xs font-semibold gap-1.5"
               onClick={() => setLocation("/analyze")}
               data-testid="hero-cta-log-game"
             >
+              <PlusCircle className="w-3 h-3" aria-hidden="true" />
               Log Game
             </Button>
           </div>
         </div>
 
-        {/* RIGHT — Compact stat strip */}
-        <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+        <div className="flex items-center gap-3 sm:gap-5 shrink-0">
           {statItems.map(({ label, value, isGrade }) => (
             <div key={label} className="flex flex-col items-center gap-1">
               {isGrade && typeof value === "string" && value !== "—" ? (
                 <GradeBadge grade={value} size="sm" />
               ) : (
-                <span className="font-display font-bold text-white text-base sm:text-lg leading-none tabular-nums">
+                <span className="font-display font-bold text-foreground text-base sm:text-lg leading-none tabular-nums">
                   {String(value)}
                 </span>
               )}
-              <span className="text-[10px] text-amber-200/40 uppercase tracking-widest leading-none">
+              <span className="text-[10px] text-muted-foreground/60 uppercase tracking-widest leading-none">
                 {label}
               </span>
             </div>

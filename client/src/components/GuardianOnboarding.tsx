@@ -36,7 +36,7 @@ const FEATURES = [
   {
     icon: Trophy,
     title: "Celebrate Milestones",
-    description: "Get notified when they earn badges, hit career highs, or level up",
+    description: "Get notified when they earn badges, hit career highs, or climb a tier",
   },
   {
     icon: TrendingUp,

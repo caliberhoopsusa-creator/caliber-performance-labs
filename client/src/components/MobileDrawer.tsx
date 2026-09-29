@@ -8,16 +8,16 @@ import {
   Menu, LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, 
   Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, 
   UsersRound, CalendarCheck, Eye, UserCircle, LogOut, CreditCard, Lock, Dumbbell, 
-  CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, Bell, ShoppingBag, GraduationCap,
-  ChevronDown, ChevronRight, BookOpen, Wand2, Medal, Binoculars, Search, Bookmark, Heart
+  CalendarDays, Film, FileText, UserPlus, Bell, ShoppingBag, GraduationCap,
+  ChevronDown, ChevronRight, BookOpen, Wand2, Medal, Binoculars, Search, Bookmark, Heart, LayoutTemplate
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CaliberLogo } from "@/components/CaliberLogo";
 import { useEquippedItems } from "@/contexts/EquippedItemsContext";
 import { useSubscription, type SubscriptionTier } from "@/hooks/use-subscription";
-import { useAuth } from "@/hooks/use-auth";
-import { useToast } from "@/hooks/use-toast";
+import { ROLE_LABELS, type UserRole } from "@shared/roles";
 import { SportToggle, useSport } from "@/components/SportToggle";
+import { featureFlags } from "@/lib/features";
 
 type NavItem = {
   href: string;
@@ -42,8 +42,6 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
   const [open, setOpen] = useState(false);
   const [location] = useLocation();
   const { hasAccess } = useSubscription();
-  const { switchRole, isSwitchingRole } = useAuth();
-  const { toast } = useToast();
   const prefersReducedMotion = useReducedMotion();
   
   const [moreExpanded, setMoreExpanded] = useState(() => {
@@ -61,56 +59,16 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
   }, [moreExpanded]);
 
   const { equippedTheme } = useEquippedItems();
-  const drawerThemeColor = '#4f6878';
+  // Logo uses --accent from CSS so it adapts to light/dark theme automatically.
   const currentSport = useSport();
-  const isPlayer = userRole === 'player';
-  const isCoach = userRole === 'coach';
-  const isRecruiter = userRole === 'recruiter';
-  const isGuardian = userRole === 'guardian';
-
-  const handleRoleSwitch = () => {
-    const roleOrder: Array<'player' | 'coach' | 'recruiter' | 'guardian'> = ['player', 'coach', 'recruiter', 'guardian'];
-    const currentIndex = roleOrder.indexOf(userRole as any);
-    const newRole = roleOrder[(currentIndex + 1) % roleOrder.length];
-    switchRole(newRole as any, {
-      onSuccess: () => {
-        const labels: Record<string, string> = { player: 'Player', coach: 'Coach', recruiter: 'Recruiter', guardian: 'Guardian' };
-        toast({ 
-          title: `Switched to ${labels[newRole]} Mode`,
-          description: `You're now viewing the app as a ${labels[newRole].toLowerCase()}.`
-        });
-        setOpen(false);
-      },
-      onError: (error) => {
-        const errorMessage = error?.message || 'Failed to switch mode';
-        const errorType = error?.type;
-        
-        if (errorType === 'session_expired') {
-          toast({ 
-            title: 'Session Expired', 
-            description: 'Your session has expired. Please log in again.',
-            variant: 'destructive'
-          });
-          return;
-        }
-        
-        if (errorType === 'network_error') {
-          toast({ 
-            title: 'Network Error', 
-            description: 'Unable to connect. Please check your internet connection.',
-            variant: 'destructive'
-          });
-          return;
-        }
-
-        toast({ 
-          title: 'Error', 
-          description: errorMessage,
-          variant: 'destructive'
-        });
-      }
-    });
-  };
+  /* Nav follows the product flags, not just the role. A role whose product is
+     switched off shows the player nav rather than its own, so nothing links
+     into a surface the server now answers with 404. */
+  const isCoach = userRole === 'coach' && featureFlags.ENABLE_COACH_PRODUCT;
+  const isRecruiter = userRole === 'recruiter' && featureFlags.ENABLE_RECRUITER_PRODUCT;
+  const isGuardian = userRole === 'guardian' && featureFlags.ENABLE_GUARDIAN_PRODUCT;
+  // Anything not landing on a live non-player product gets the player nav.
+  const isPlayer = !isCoach && !isRecruiter && !isGuardian;
 
   const playerSections: NavSection[] = [
     {
@@ -123,17 +81,23 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
         { href: "/analyze", label: "Log Game", icon: PlusCircle },
       ],
     },
+    {
+      title: "Exposure",
+      items: [
+        { href: "/whos-watching", label: "Who's Watching", icon: Binoculars },
+      ],
+    },
   ];
 
   const playerMoreItems: NavItem[] = [
     { href: "/performance", label: "Performance", icon: Activity },
     { href: "/analytics", label: "Analytics", icon: BarChart3 },
-    { href: "/whos-watching", label: "Who's Watching", icon: Binoculars },
     { href: "/community", label: "Community", icon: UsersRound },
     { href: "/community?tab=stories", label: "Stories", icon: BookOpen },
     { href: "/video", label: "Video Analysis", icon: Video, premium: "pro" },
     { href: "/highlights", label: "My Highlights", icon: Camera },
     { href: "/reel-builder", label: "Reel Builder", icon: Wand2 },
+    { href: "/canvas", label: "Canvas Studio", icon: LayoutTemplate },
     { href: "/scout", label: "Scout Hub", icon: Eye },
     { href: "/schedule", label: "Schedule", icon: CalendarDays },
     { href: "/leagues", label: "League Hub", icon: Medal },
@@ -262,31 +226,13 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
             <div className="relative z-[1] flex items-center gap-4 w-full">
               <div className="relative">
                 <div className="absolute inset-[-3px] rounded-xl bg-gradient-to-br from-accent/40 to-accent/20 blur-sm" />
-                <CaliberLogo size={50} color={drawerThemeColor} className="relative" />
+                <CaliberLogo size={50} className="relative" />
               </div>
               <div>
                 <h2 className="font-display font-bold text-foreground text-xl uppercase tracking-wider">Caliber</h2>
-                <p className="text-[10px] text-accent/80 uppercase tracking-[0.2em] font-medium">{isGuardian ? "Guardian" : isRecruiter ? "Recruiter" : isPlayer ? "Player" : "Coach"} Mode</p>
+                <p className="text-[10px] text-accent/80 uppercase tracking-[0.2em] font-medium" data-testid="text-user-role">{ROLE_LABELS[userRole as UserRole] ?? "Player"} Mode</p>
               </div>
             </div>
-          </div>
-
-          {/* Mode switching and sport toggle */}
-          <div className="p-4 border-b border-accent/10 space-y-4 bg-gradient-to-b from-white/[0.01] to-transparent">
-            <motion.div whileTap={prefersReducedMotion ? undefined : { scale: 0.96 }} transition={prefersReducedMotion ? undefined : { type: "spring", stiffness: 400, damping: 25 }}>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRoleSwitch}
-                disabled={isSwitchingRole}
-                className="w-full text-xs border-accent/20 bg-accent/5 min-h-11 touch-target"
-                data-testid="button-mobile-role-switch"
-              >
-                <ArrowLeftRight className="w-3.5 h-3.5 mr-2 text-accent" />
-                Switch to {isPlayer ? 'Coach' : isCoach ? 'Recruiter' : isRecruiter ? 'Guardian' : isGuardian ? 'Player' : 'Player'} Mode
-              </Button>
-            </motion.div>
-            
           </div>
 
           {/* Navigation with enhanced styling */}
@@ -394,8 +340,9 @@ export function MobileDrawer({ userRole, playerId }: MobileDrawerProps) {
                 >
                   <button
                     onClick={() => setMoreExpanded(!moreExpanded)}
-                    className="flex items-center gap-2 w-full text-[10px] uppercase font-semibold text-accent/50 tracking-[0.2em] px-3 mb-2 cursor-pointer transition-colors"
+                    className="flex items-center gap-2 w-full text-[10px] uppercase font-semibold text-accent tracking-[0.2em] px-3 mb-2 cursor-pointer transition-colors"
                     data-testid="button-mobile-more-toggle"
+                    aria-expanded={moreExpanded}
                   >
                     <span className="w-2 h-px bg-gradient-to-r from-accent/40 to-transparent" />
                     {moreExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}

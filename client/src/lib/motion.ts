@@ -1,0 +1,408 @@
+import { animate, createTimeline, onScroll, stagger, utils } from "animejs";
+import type { ScrollObserver, Timeline } from "animejs";
+
+const animeSet = utils.set;
+
+/**
+ * motion — the anime.js wrapper for choreographed timelines.
+ *
+ * Engine roles (DESIGN-LANGUAGE §1.5): anime.js owns choreographed timelines —
+ * hero boot sequences, unlock/toast moments, staggered set-piece reveals.
+ * framer-motion owns scroll-triggered reveals. Never both on the same element.
+ *
+ * Discipline this module enforces:
+ * - Compositor-only properties: transform / opacity / clip-path
+ *   (`CompositorProps` is the whole vocabulary — no layout properties exist).
+ * - `prefers-reduced-motion` → the timeline is SKIPPED entirely and content
+ *   stays at its final, fully-visible state.
+ * - Content is never stranded hidden: initial states are inline styles applied
+ *   only on the motion-allowed path (never CSS classes), and they are cleared
+ *   if the timeline fails or the owning component unmounts.
+ */
+
+export { stagger };
+export type { Timeline };
+
+/** anime's outExpo — the JS-side voice of --ease-out-expo. */
+export const EASE_OUT_EXPO = "outExpo";
+
+/** Default tween length for boot steps — broadcast-snappy (DESIGN-LANGUAGE §1.5). */
+const DEFAULT_DURATION_MS = 500;
+
+/** One property keyframe, e.g. a flicker step: `{ to: 0.35, duration: 55 }`. */
+export interface MotionKeyframe {
+  to: number | string;
+  duration?: number;
+  ease?: string;
+}
+
+type MotionValue =
+  | number
+  | string
+  | readonly [number | string, number | string]
+  | readonly MotionKeyframe[];
+
+/**
+ * The compositor-safe subset — transform, opacity, clip-path. Nothing else.
+ *
+ * GOTCHA — `x`/`y` on an <svg> element: SVG has native `x`/`y` ATTRIBUTES, and
+ * anime writes those instead of a transform, so the element never moves (and
+ * `restoreFinalState` won't clear it, since it only removes inline styles).
+ * Wrap the icon in a span and animate that. SVG targets here are for
+ * `strokeDashoffset` line-drawing, not translation.
+ */
+export interface CompositorProps {
+  opacity?: MotionValue;
+  /** translateX (px unless a unit string is given) */
+  x?: MotionValue;
+  /** translateY (px unless a unit string is given) */
+  y?: MotionValue;
+  scale?: MotionValue;
+  rotate?: MotionValue;
+  skewX?: MotionValue;
+  clipPath?: MotionValue;
+}
+
+/** Tween options that ride along with the props in a timeline step. */
+export interface CompositorTween extends CompositorProps {
+  duration?: number;
+  delay?: number | ReturnType<typeof stagger>;
+  ease?: string;
+}
+
+/** Timeline targets — HTML or SVG (score rings scrub stroke-dashoffset). */
+export type BootTarget = HTMLElement | SVGElement | null | undefined;
+
+type AnimeParams = Parameters<typeof animeSet>[1];
+
+function toElements(
+  target: BootTarget | readonly BootTarget[],
+): (HTMLElement | SVGElement)[] {
+  const list = Array.isArray(target) ? target : [target];
+  return list.filter(
+    (el): el is HTMLElement | SVGElement =>
+      el instanceof HTMLElement || el instanceof SVGElement,
+  );
+}
+
+export function prefersReducedMotion(): boolean {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    return true; // no runtime signal → don't animate; final state renders
+  }
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+/**
+ * Apply an initial (pre-boot) state as inline styles. Call ONLY inside a
+ * `runBootTimeline` build callback — i.e. only when motion is allowed — so
+ * content is never hidden for reduced-motion users or when JS can't animate.
+ */
+export function setInitial(
+  target: BootTarget | readonly BootTarget[],
+  props: CompositorProps,
+): void {
+  const els = toElements(target);
+  if (els.length > 0) animeSet(els, props as AnimeParams);
+}
+
+/** Clear every inline style a boot may have set — the final, visible state. */
+function restoreFinalState(els: ReadonlyArray<HTMLElement | SVGElement>): void {
+  for (const el of els) {
+    el.style.removeProperty("opacity");
+    el.style.removeProperty("transform");
+    el.style.removeProperty("clip-path");
+    el.style.removeProperty("stroke-dashoffset");
+  }
+}
+
+export interface BootTimelineOptions {
+  /**
+   * Every element the boot hides — restored to the final state if the
+   * timeline is skipped, fails, or is cleaned up mid-flight.
+   */
+  targets: ReadonlyArray<BootTarget>;
+  /** Choreograph the timeline. Runs only when motion is allowed. */
+  build: (tl: Timeline) => void;
+  /**
+   * Runs when the boot is skipped (reduced motion / no matchMedia) or fails —
+   * reveal any UI gated on timeline progress here.
+   */
+  onSkip?: () => void;
+}
+
+/**
+ * Run a one-shot boot timeline (autoplays immediately). Returns a cleanup
+ * function suited to `useEffect`/`useLayoutEffect`: it cancels the timeline
+ * and clears the inline motion styles.
+ *
+ * Under `prefers-reduced-motion` the build never runs — nothing is hidden and
+ * the page renders its final state (a single static frame).
+ */
+export function runBootTimeline({
+  targets,
+  build,
+  onSkip,
+}: BootTimelineOptions): () => void {
+  const els = toElements(targets);
+
+  if (prefersReducedMotion()) {
+    onSkip?.();
+    return () => {};
+  }
+
+  let tl: Timeline | undefined;
+  try {
+    tl = createTimeline({
+      defaults: { ease: EASE_OUT_EXPO, duration: DEFAULT_DURATION_MS },
+    });
+    build(tl);
+  } catch (error) {
+    // Never strand the page hidden — resolve straight to the final state.
+    restoreFinalState(els);
+    onSkip?.();
+    console.error("[motion] boot timeline failed — rendered final state", error);
+    return () => {};
+  }
+
+  return () => {
+    tl?.cancel();
+    restoreFinalState(els);
+  };
+}
+
+export interface PulseLoopOptions {
+  target: BootTarget;
+  /** Compositor-only props, `[from, to]` tuples — the loop alternates. */
+  props: CompositorProps;
+  /** One half-cycle in ms (alternate loop → full breath = 2×duration). */
+  duration: number;
+  /** Delay before the first cycle (e.g. wait out a boot timeline). */
+  delay?: number;
+}
+
+/**
+ * Run an infinite, alternating pulse (a breathing glow, a slow shimmer).
+ * Compositor-only, `inOutSine`. Under `prefers-reduced-motion` nothing runs —
+ * the element's static JSX state (tuned to mid-intensity) stands. Returns a
+ * cleanup function that cancels the loop and restores the static state.
+ */
+export function runPulseLoop({
+  target,
+  props,
+  duration,
+  delay = 0,
+}: PulseLoopOptions): () => void {
+  const els = toElements(target);
+  if (els.length === 0 || prefersReducedMotion()) {
+    return () => {};
+  }
+
+  let anim: ReturnType<typeof animate> | undefined;
+  try {
+    anim = animate(els, {
+      ...(props as AnimeParams),
+      duration,
+      delay,
+      loop: true,
+      alternate: true,
+      ease: "inOutSine",
+    });
+  } catch (error) {
+    restoreFinalState(els);
+    console.error("[motion] pulse loop failed — rendered static state", error);
+    return () => {};
+  }
+
+  return () => {
+    anim?.cancel();
+    restoreFinalState(els);
+  };
+}
+
+export interface HoverNudgeOptions {
+  /** Element whose pointer/focus state drives the nudge (usually the link). */
+  trigger: BootTarget;
+  /** Element that actually moves — e.g. the arrow inside the link. */
+  target: BootTarget;
+  /** Compositor props at rest — applied on pointerleave/blur. */
+  from: CompositorProps;
+  /** Compositor props while hovered or keyboard-focused. */
+  to: CompositorProps;
+  /** One direction of the nudge in ms. Keep it short — this is a micro-cue. */
+  duration?: number;
+  ease?: string;
+}
+
+/**
+ * Nudge an element while its trigger is hovered or focused (an arrow easing
+ * right inside a link). Focus is included deliberately: a CSS `:hover`-only
+ * nudge is invisible to keyboard users, and this is navigation.
+ *
+ * Under `prefers-reduced-motion` nothing is bound — the element keeps the rest
+ * state already in its JSX. Returns a cleanup suited to `useEffect`: it
+ * unbinds the listeners, cancels any in-flight tween, and clears inline styles.
+ */
+export function runHoverNudge({
+  trigger,
+  target,
+  from,
+  to,
+  duration = 220,
+  ease = EASE_OUT_EXPO,
+}: HoverNudgeOptions): () => void {
+  const [triggerEl] = toElements(trigger);
+  const els = toElements(target);
+  if (!triggerEl || els.length === 0 || prefersReducedMotion()) {
+    return () => {};
+  }
+
+  let anim: ReturnType<typeof animate> | undefined;
+
+  const run = (props: CompositorProps) => {
+    anim?.cancel();
+    try {
+      anim = animate(els, { ...(props as AnimeParams), duration, ease });
+    } catch (error) {
+      restoreFinalState(els);
+      console.error("[motion] hover nudge failed — rendered rest state", error);
+    }
+  };
+
+  const enter = () => run(to);
+  const leave = () => run(from);
+
+  triggerEl.addEventListener("pointerenter", enter);
+  triggerEl.addEventListener("pointerleave", leave);
+  triggerEl.addEventListener("focus", enter);
+  triggerEl.addEventListener("blur", leave);
+
+  return () => {
+    triggerEl.removeEventListener("pointerenter", enter);
+    triggerEl.removeEventListener("pointerleave", leave);
+    triggerEl.removeEventListener("focus", enter);
+    triggerEl.removeEventListener("blur", leave);
+    anim?.cancel();
+    restoreFinalState(els);
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/* scroll scrub — anime.js onScroll (scrollytelling scenes)            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Scroll-scrub discipline (DESIGN-LANGUAGE §4.5 — marketing scrollytelling):
+ * - The timeline is LINKED to scroll (`sync`), never time — scrolling back
+ *   scrubs it back. Pinning is CSS `position: sticky` only; no scroll-jacking.
+ * - Every tween uses `[from, to]` tuples so the JSX renders the FINAL state:
+ *   reduced motion, an observer failure, or no-JS all resolve to the finished
+ *   editorial layout — content is never stranded hidden.
+ * - Same compositor-only vocabulary as boots (+ `strokeDashoffset` for SVG
+ *   line drawing, which is paint-only on the SVG layer).
+ */
+
+export interface ScrollScrubOptions {
+  /**
+   * The tall scene wrapper whose traversal through the viewport drives
+   * progress (the element the sticky stage lives inside).
+   */
+  driver: BootTarget;
+  /** Every element the scrub styles — restored to final state on cleanup/failure. */
+  targets: ReadonlyArray<BootTarget>;
+  /** Choreograph the timeline. Runs only when motion is allowed. */
+  build: (tl: Timeline) => void;
+  /** anime.js threshold "container target" — default: sticky engages. */
+  enter?: string;
+  /** anime.js threshold "container target" — default: sticky releases. */
+  leave?: string;
+  /** true = hard-linked scrub · number = smoothed follow (see anime docs). */
+  sync?: boolean | number;
+  /** Runs when the scrub is skipped (reduced motion) or fails. */
+  onSkip?: () => void;
+}
+
+/**
+ * Link a timeline to an element's scroll traversal. Returns a cleanup
+ * function suited to `useLayoutEffect`. Under `prefers-reduced-motion` the
+ * build never runs — the static final state (already in the JSX) stands.
+ */
+export function runScrollScrub({
+  driver,
+  targets,
+  build,
+  enter = "top top",
+  leave = "bottom bottom",
+  sync = true,
+  onSkip,
+}: ScrollScrubOptions): () => void {
+  const els = toElements(targets);
+
+  if (!driver || prefersReducedMotion()) {
+    onSkip?.();
+    return () => {};
+  }
+
+  let observer: ScrollObserver | undefined;
+  let tl: Timeline | undefined;
+  try {
+    observer = onScroll({ target: driver, enter, leave, sync });
+    tl = createTimeline({
+      autoplay: observer,
+      defaults: { ease: "linear", duration: DEFAULT_DURATION_MS },
+    });
+    build(tl);
+  } catch (error) {
+    observer?.revert();
+    tl?.cancel();
+    restoreFinalState(els);
+    onSkip?.();
+    console.error("[motion] scroll scrub failed — rendered final state", error);
+    return () => {};
+  }
+
+  return () => {
+    observer?.revert();
+    tl?.cancel();
+    restoreFinalState(els);
+  };
+}
+
+/**
+ * Scrub a numeric text readout (e.g. a rank counter). The element's JSX
+ * should render the FINAL value; the tween rewrites `textContent` frame by
+ * frame while scrubbing. Rounded — pair with `tabular-nums`.
+ */
+export function addTextCounter(
+  tl: Timeline,
+  el: BootTarget,
+  {
+    from,
+    to,
+    duration,
+    at,
+    format = (n) => String(n),
+  }: {
+    from: number;
+    to: number;
+    duration: number;
+    at: number;
+    format?: (n: number) => string;
+  },
+): void {
+  if (!el) return;
+  const state = { value: from };
+  el.textContent = format(from);
+  tl.add(
+    state,
+    {
+      value: to,
+      duration,
+      ease: "linear",
+      modifier: utils.round(0),
+      onUpdate: () => {
+        el.textContent = format(state.value);
+      },
+    },
+    at,
+  );
+}

@@ -24,6 +24,21 @@ function loadDotEnv(filePath: string): Record<string, string> {
 
 const envVars = loadDotEnv(path.resolve(__dirname, ".env"));
 
+/* The coach, recruiter and guardian products ship dark (pivot Section 2), but
+ * most suites here exist to test ROLE enforcement on those surfaces, which
+ * needs them reachable. Turn all three on for the test run so those suites keep
+ * asserting what they were written to assert.
+ *
+ * tests/feature-flags.test.ts owns the dark behaviour and sets these to "false"
+ * itself in a beforeEach, restoring the originals afterwards. Keep that file as
+ * the single place that exercises a switched off product. */
+const testEnv: Record<string, string> = {
+  ...envVars,
+  ENABLE_COACH_PRODUCT: "true",
+  ENABLE_RECRUITER_PRODUCT: "true",
+  ENABLE_GUARDIAN_PRODUCT: "true",
+};
+
 export default defineConfig({
   test: {
     globals: true,
@@ -34,7 +49,7 @@ export default defineConfig({
     pool: "forks",
     singleFork: true,
     fileParallelism: false,
-    env: envVars,
+    env: testEnv,
   },
   resolve: {
     alias: {

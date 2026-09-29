@@ -17,6 +17,7 @@ import {
   colleges, playerCollegeMatches, fitnessData, wearableConnections, profileViews, athleticMeasurements,
 } from "@shared/schema";
 import { users } from "@shared/models/auth";
+import { waitlistSignups, type InsertWaitlistSignup, type WaitlistSignup } from "@shared/schema";
 import {
   type Player, type InsertPlayer,
   type Game, type InsertGame,
@@ -744,6 +745,11 @@ export interface IStorage {
   getVideoAnalysesByUser(userId: string): Promise<VideoAnalysis[]>;
   getVideoAnalysis(id: number): Promise<VideoAnalysis | undefined>;
   deleteVideoAnalysis(id: number): Promise<void>;
+
+  // Waitlist (Founding Class)
+  createWaitlistSignup(signup: InsertWaitlistSignup): Promise<WaitlistSignup>;
+  getWaitlistSignupByEmail(email: string): Promise<WaitlistSignup | undefined>;
+  getWaitlistCount(): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -4249,6 +4255,22 @@ export class DatabaseStorage implements IStorage {
 
   async deleteVideoAnalysis(id: number): Promise<void> {
     await db.delete(videoAnalyses).where(eq(videoAnalyses.id, id));
+  }
+
+  // Waitlist (Founding Class)
+  async createWaitlistSignup(signup: InsertWaitlistSignup): Promise<WaitlistSignup> {
+    const [created] = await db.insert(waitlistSignups).values(signup).returning();
+    return created;
+  }
+
+  async getWaitlistSignupByEmail(email: string): Promise<WaitlistSignup | undefined> {
+    const [row] = await db.select().from(waitlistSignups).where(eq(waitlistSignups.email, email));
+    return row;
+  }
+
+  async getWaitlistCount(): Promise<number> {
+    const [result] = await db.select({ count: count() }).from(waitlistSignups);
+    return result?.count ?? 0;
   }
 }
 

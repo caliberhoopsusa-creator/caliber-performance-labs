@@ -6,6 +6,7 @@ import connectPg from "connect-pg-simple";
 import { authStorage } from "./storage";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
+import { parseDateOfBirth, isUnderMinimumAge, toDateColumn } from "@shared/age";
 
 const scryptAsync = promisify(scrypt);
 
@@ -74,17 +75,60 @@ export async function setupAuth(app: Express) {
   // Register endpoint
   app.post("/api/register", async (req, res) => {
     try {
-      const { email, password, firstName, lastName, referralCode } = req.body;
+      const { email, password, firstName, lastName, referralCode, dateOfBirth } = req.body;
       if (!email || !password) {
         return res.status(400).json({ message: "Email and password are required" });
       }
       if (typeof password !== 'string' || password.length < 8) {
         return res.status(400).json({ message: "Password must be at least 8 characters" });
       }
+
+      /* Age gate (docs/PIVOT_AUDIT.md 7c). Date of birth used to be collected by
+         the form, sent by the client, and dropped on the floor here, so nothing
+         in the database recorded how old anyone was. It is required now. */
+      const birthDate = parseDateOfBirth(dateOfBirth);
+      if (!birthDate) {
+        return res.status(400).json({
+          message: "A valid date of birth is required",
+          type: "date_of_birth_required",
+        });
+      }
+
       const existing = await authStorage.getUserByEmail(email);
       if (existing) {
         return res.status(400).json({ message: "An account with this email already exists" });
       }
+
+      if (isUnderMinimumAge(birthDate)) {
+        /* No users row and no session: the account does not exist until a
+           guardian consents. Hold only what is needed to reach them later.
+           The guardian flow itself is a stub, see POST /api/guardian-consent. */
+        const { db } = await import("../../db");
+        const { pendingGuardianConsents } = await import("../../../shared/schema");
+        const { and, eq: eqOp } = await import("drizzle-orm");
+
+        const [alreadyPending] = await db
+          .select({ id: pendingGuardianConsents.id })
+          .from(pendingGuardianConsents)
+          .where(and(
+            eqOp(pendingGuardianConsents.email, email),
+            eqOp(pendingGuardianConsents.status, "pending"),
+          ))
+          .limit(1);
+
+        if (!alreadyPending) {
+          await db.insert(pendingGuardianConsents).values({
+            email,
+            dateOfBirth: toDateColumn(birthDate),
+          });
+        }
+
+        return res.status(403).json({
+          message: "Guardian consent required",
+          type: "guardian_consent_required",
+        });
+      }
+
       const hash = await hashPassword(password);
 
       // Resolve referral code to a referrer user ID
@@ -107,6 +151,7 @@ export async function setupAuth(app: Express) {
         lastName: lastName || null,
         passwordHash: hash,
         emailVerified: false,
+        dateOfBirth: birthDate,
         ...(referredBy ? { referredBy } : {}),
       } as any);
       const sessionUser = { claims: { sub: user.id }, userId: user.id };
@@ -142,6 +187,60 @@ export async function setupAuth(app: Express) {
     req.logout(() => {
       res.redirect("/");
     });
+  });
+
+  /**
+   * Guardian consent: STUB.
+   *
+   * Registration below the COPPA line parks a row in pending_guardian_consents
+   * and stops. This lets an under 13 registrant attach a guardian email to that
+   * row so the real flow has something to work with, and reports status back.
+   * It grants nothing: no account is created and no session is issued here.
+   *
+   * Building the actual verifiable parental consent flow is a separate piece of
+   * work and is deliberately not attempted yet.
+   */
+  app.post("/api/guardian-consent", async (req, res) => {
+    try {
+      const { email, guardianEmail } = req.body ?? {};
+      if (!email || typeof email !== "string") {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      const { db } = await import("../../db");
+      const { pendingGuardianConsents } = await import("../../../shared/schema");
+      const { and, eq: eqOp } = await import("drizzle-orm");
+
+      const [pending] = await db
+        .select()
+        .from(pendingGuardianConsents)
+        .where(and(
+          eqOp(pendingGuardianConsents.email, email),
+          eqOp(pendingGuardianConsents.status, "pending"),
+        ))
+        .limit(1);
+
+      if (!pending) {
+        return res.status(404).json({ message: "No pending consent request for that email" });
+      }
+
+      if (guardianEmail && typeof guardianEmail === "string") {
+        await db
+          .update(pendingGuardianConsents)
+          .set({ guardianEmail })
+          .where(eqOp(pendingGuardianConsents.id, pending.id));
+      }
+
+      return res.status(202).json({
+        message: "Guardian consent required",
+        type: "guardian_consent_required",
+        status: "pending",
+        implemented: false,
+      });
+    } catch (err) {
+      console.error("Guardian consent stub error:", err);
+      return res.status(500).json({ message: "Failed to record consent request" });
+    }
   });
 }
 

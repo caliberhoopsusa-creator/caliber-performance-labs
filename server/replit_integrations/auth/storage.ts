@@ -10,6 +10,7 @@ export interface IAuthStorage {
   upsertUser(user: UpsertUser): Promise<User>;
   updateUser(id: string, fields: Partial<UpsertUser>): Promise<User | undefined>;
   updateUserRole(id: string, role: string, playerId?: number | null): Promise<User | undefined>;
+  selectUserRoleAtSignup(id: string, role: string, playerId?: number | null): Promise<User | undefined>;
   updateUserSport(id: string, sport: string): Promise<User | undefined>;
 }
 
@@ -52,6 +53,21 @@ class AuthStorage implements IAuthStorage {
     const [user] = await db
       .update(users)
       .set({ role, playerId: playerId ?? null, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  /**
+   * Records the role the user picked at sign-up and stamps `roleSelectedAt`,
+   * which locks the role. Use this for the sign-up selection only; the admin
+   * override path uses `updateUserRole`, which leaves the stamp alone.
+   */
+  async selectUserRoleAtSignup(id: string, role: string, playerId?: number | null): Promise<User | undefined> {
+    const now = new Date();
+    const [user] = await db
+      .update(users)
+      .set({ role, playerId: playerId ?? null, roleSelectedAt: now, updatedAt: now })
       .where(eq(users.id, id))
       .returning();
     return user;

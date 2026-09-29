@@ -49,7 +49,7 @@ export function PublicFooter() {
               <CaliberLogo size={28} color="#4f6878" />
               <span
                 style={{
-                  fontFamily: 'Outfit, sans-serif',
+                  fontFamily: 'var(--font-display)',
                   fontSize: 16,
                   fontWeight: 800,
                   letterSpacing: '0.12em',

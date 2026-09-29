@@ -15,6 +15,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { normalizePosition } from "@shared/sports-config";
 
 const ARCHETYPE_ICONS: Record<ArchetypeId, React.ElementType> = {
   scoring_guard: Target,
@@ -107,8 +108,11 @@ export function PlayerArchetype({
   variant = "full",
   className
 }: PlayerArchetypeProps) {
-  const basketballPosition = position as "Guard" | "Wing" | "Big";
-  const result = getPlayerArchetype(games, basketballPosition);
+  /* Rows written before the position migration still hold Guard / Wing / Big,
+     so normalise rather than cast. A bad cast would have shipped a wrong
+     archetype instead of failing. */
+  const basketballPosition = normalizePosition(position);
+  const result = basketballPosition ? getPlayerArchetype(games, basketballPosition) : null;
 
   if (!result) {
     return (

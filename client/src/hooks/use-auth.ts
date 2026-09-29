@@ -93,68 +93,6 @@ async function logout(): Promise<void> {
   }
 }
 
-async function switchRole(role: 'player' | 'coach' | 'recruiter' | 'guardian'): Promise<User> {
-  try {
-    if (!role || !['player', 'coach', 'recruiter', 'guardian'].includes(role)) {
-      throw {
-        status: 400,
-        message: AUTH_ERROR_MESSAGES.INVALID_ROLE,
-        type: "validation_error",
-      };
-    }
-
-    const response = await fetch("/api/auth/role", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ role }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      
-      if (response.status === 401) {
-        throw {
-          status: 401,
-          message: AUTH_ERROR_MESSAGES.SESSION_EXPIRED,
-          type: "session_expired",
-        };
-      }
-      if (response.status === 403) {
-        throw {
-          status: 403,
-          message: AUTH_ERROR_MESSAGES.UNAUTHORIZED,
-          type: "unauthorized",
-        };
-      }
-      if (response.status === 400) {
-        throw {
-          status: 400,
-          message: errorData.message || AUTH_ERROR_MESSAGES.INVALID_ROLE,
-          type: "validation_error",
-        };
-      }
-
-      throw {
-        status: response.status,
-        message: errorData.message || AUTH_ERROR_MESSAGES.SWITCH_ROLE_FAILED,
-        type: "switch_role_error",
-      };
-    }
-
-    return response.json();
-  } catch (error) {
-    if (error instanceof TypeError) {
-      throw {
-        status: 0,
-        message: AUTH_ERROR_MESSAGES.NETWORK_ERROR,
-        type: "network_error",
-      };
-    }
-    throw error;
-  }
-}
-
 export interface AuthError {
   status: number;
   message: string;
@@ -183,15 +121,6 @@ export function useAuth() {
     },
   });
 
-  const switchRoleMutation = useMutation<User, AuthError, 'player' | 'coach' | 'recruiter' | 'guardian'>({
-    mutationFn: switchRole,
-    onSuccess: (updatedUser) => {
-      queryClient.setQueryData(["/api/auth/user"], updatedUser);
-      // Also update the extended user query used by App.tsx
-      queryClient.invalidateQueries({ queryKey: ["/api/users/me"] });
-    },
-  });
-
   // Detect session expiry
   const isSessionExpired = 
     isFetchError && 
@@ -200,11 +129,10 @@ export function useAuth() {
   // Detect network errors
   const isNetworkError = 
     (isFetchError && fetchError?.type === "network_error") ||
-    (logoutMutation.isError && logoutMutation.error?.type === "network_error") ||
-    (switchRoleMutation.isError && switchRoleMutation.error?.type === "network_error");
+    (logoutMutation.isError && logoutMutation.error?.type === "network_error");
 
   // Get the current error (from any auth operation)
-  const authError = fetchError || logoutMutation.error || switchRoleMutation.error;
+  const authError = fetchError || logoutMutation.error;
 
   return {
     // User state
@@ -214,7 +142,7 @@ export function useAuth() {
 
     // Error handling
     error: authError,
-    isError: isFetchError || logoutMutation.isError || switchRoleMutation.isError,
+    isError: isFetchError || logoutMutation.isError,
     isSessionExpired,
     isNetworkError,
     errorMessage: authError?.message || null,
@@ -224,10 +152,5 @@ export function useAuth() {
     logout: logoutMutation.mutate,
     isLoggingOut: logoutMutation.isPending,
     logoutError: logoutMutation.error,
-
-    // Role switching
-    switchRole: switchRoleMutation.mutate,
-    isSwitchingRole: switchRoleMutation.isPending,
-    switchRoleError: switchRoleMutation.error,
   };
 }

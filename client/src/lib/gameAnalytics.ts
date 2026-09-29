@@ -1,6 +1,7 @@
 // client/src/lib/gameAnalytics.ts
-// Pure analytics functions — no React, no form dependencies.
+// Pure analytics functions. No React, no form dependencies.
 // Benefit: coach-facing scores can be corrected or tuned here without touching form UI.
+import { positionGroup } from "@shared/sports-config";
 
 export interface BasketballDefenseParams {
   steals: number;
@@ -24,10 +25,14 @@ export function calcDefenseRating(p: BasketballDefenseParams): number {
   const mins = p.minutes || 1;
   let rating = 50;
   rating += (p.steals / mins) * 36 * 8;
-  rating += (p.blocks / mins) * 36 * (p.position === 'Big' ? 6 : 4);
+  /* Compared on the broad group, not the exact position. These bonuses were
+     written against Guard / Wing / Big; after the migration to five positions
+     a literal comparison silently stops matching and the bonus vanishes. */
+  const group = positionGroup(p.position);
+  rating += (p.blocks / mins) * 36 * (group === 'Big' ? 6 : 4);
   rating += (p.defensiveRebounds / mins) * 36 * 1.5;
-  if (p.position === 'Guard') rating += p.steals * 2;
-  else if (p.position === 'Big') rating += p.blocks * 2;
+  if (group === 'Guard') rating += p.steals * 2;
+  else if (group === 'Big') rating += p.blocks * 2;
   return Math.max(0, Math.min(100, Math.round(rating)));
 }
 
@@ -41,8 +46,9 @@ export function calcBasketballHustle(p: BasketballHustleParams): number {
   score += (p.blocks / mins) * 36 * 3;
   if (p.minutes >= 30) score += 5;
   else if (p.minutes >= 20) score += 3;
-  if (p.position === 'Guard') score += p.steals * 3;
-  else if (p.position === 'Big') score += p.offensiveRebounds * 4;
-  else if (p.position === 'Wing') score += (p.steals + p.offensiveRebounds) * 2;
+  const group = positionGroup(p.position);
+  if (group === 'Guard') score += p.steals * 3;
+  else if (group === 'Big') score += p.offensiveRebounds * 4;
+  else if (group === 'Wing') score += (p.steals + p.offensiveRebounds) * 2;
   return Math.max(0, Math.min(100, Math.round(score)));
 }

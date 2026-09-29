@@ -83,13 +83,13 @@ function TrendingPlayerCard({ entry }: { entry: LeaderboardEntry }) {
 
   return (
     <div
-      className="flex-shrink-0 w-48 p-4 rounded-xl border border-border bg-gradient-to-br from-card to-muted dark:from-[hsl(220,25%,10%)] dark:to-[hsl(220,25%,7%)] space-y-3"
+      className="flex-shrink-0 w-48 p-4 rounded-xl border border-border bg-card/80 space-y-3"
       data-testid={`card-trending-player-${entry.playerId}`}
     >
       <div className="flex flex-col items-center text-center gap-2">
         <Link href={`/players/${entry.playerId}`}>
           <Avatar className="w-14 h-14 border-2 border-border cursor-pointer">
-            <AvatarFallback className="bg-gradient-to-br from-accent/20 to-secondary text-white font-bold text-lg">
+            <AvatarFallback className="bg-accent/15 text-accent font-bold text-lg">
               {initials}
             </AvatarFallback>
           </Avatar>
@@ -134,13 +134,13 @@ function SuggestedPlayerCard({ player }: { player: Player }) {
 
   return (
     <div
-      className="p-4 rounded-xl border border-border bg-gradient-to-br from-card to-muted dark:from-[hsl(220,25%,10%)] dark:to-[hsl(220,25%,7%)]"
+      className="p-4 rounded-xl border border-border bg-card/80"
       data-testid={`card-suggested-player-${player.id}`}
     >
       <div className="flex items-center gap-3">
         <Link href={`/players/${player.id}`}>
           <Avatar className="w-12 h-12 border-2 border-border cursor-pointer">
-            <AvatarFallback className="bg-gradient-to-br from-accent/20 to-secondary text-white font-bold">
+            <AvatarFallback className="bg-accent/15 text-accent font-bold">
               {initials}
             </AvatarFallback>
           </Avatar>
@@ -230,7 +230,7 @@ export default function DiscoverContent() {
   return (
     <div className="space-y-8" data-testid="page-discover">
       <div className="flex items-center gap-3 mb-2">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20 flex items-center justify-center">
+        <div className="w-10 h-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center">
           <Compass className="w-5 h-5 text-accent" />
         </div>
         <div>
@@ -309,7 +309,7 @@ export default function DiscoverContent() {
 
           <section data-testid="section-suggested">
             <div className="flex items-center gap-2 mb-4">
-              <Users className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              <Users className="w-5 h-5 text-accent" />
               <h3 className="text-lg font-display font-bold text-foreground tracking-wide">Suggested For You</h3>
             </div>
             {isPlayersLoading ? (
@@ -369,7 +369,7 @@ export default function DiscoverContent() {
                   return (
                     <div
                       key={activity.id}
-                      className="flex items-center gap-3 p-3 rounded-xl border border-border bg-gradient-to-br from-card to-muted dark:from-[hsl(220,25%,10%)] dark:to-[hsl(220,25%,7%)]"
+                      className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card/80"
                       data-testid={`card-performance-${activity.id}`}
                     >
                       <span className="text-lg font-bold text-muted-foreground w-6 text-center">
@@ -378,14 +378,14 @@ export default function DiscoverContent() {
                       {activity.playerId ? (
                         <Link href={`/players/${activity.playerId}`}>
                           <Avatar className="w-9 h-9 border border-border cursor-pointer shrink-0">
-                            <AvatarFallback className="bg-gradient-to-br from-accent/20 to-secondary text-white text-xs font-bold">
+                            <AvatarFallback className="bg-accent/15 text-accent text-xs font-bold">
                               {initials}
                             </AvatarFallback>
                           </Avatar>
                         </Link>
                       ) : (
                         <Avatar className="w-9 h-9 border border-border shrink-0">
-                          <AvatarFallback className="bg-gradient-to-br from-accent/20 to-secondary text-white text-xs font-bold">
+                          <AvatarFallback className="bg-accent/15 text-accent text-xs font-bold">
                             {initials}
                           </AvatarFallback>
                         </Avatar>

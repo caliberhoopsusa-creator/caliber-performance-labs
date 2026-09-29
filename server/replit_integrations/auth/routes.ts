@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { authStorage } from "./storage";
 import { isAuthenticated } from "./replitAuth";
+import { ROLE_LABELS, USER_ROLES, type UserRole } from "@shared/roles";
 
 // Register auth-specific routes
 export function registerAuthRoutes(app: Express): void {
@@ -44,7 +45,9 @@ export function registerAuthRoutes(app: Express): void {
     }
   });
 
-  // Switch user role between player and coach
+  // Set the account role. Write-once: usable only while the user has no role yet
+  // (i.e. during sign-up). Once set, the role is locked and only an admin can
+  // change it via PATCH /api/admin/users/:id/role.
   app.patch("/api/auth/role", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
@@ -58,27 +61,41 @@ export function registerAuthRoutes(app: Express): void {
 
       const { role } = req.body;
       
-      if (!role || !['player', 'coach', 'recruiter', 'guardian'].includes(role)) {
+      if (!role || !(USER_ROLES as readonly string[]).includes(role)) {
         return res.status(400).json({ 
           message: "Invalid role selection. Please choose 'player', 'coach', 'recruiter', or 'guardian'.",
           type: "invalid_role"
         });
       }
       
-      // Always preserve the playerId when switching roles
-      // This allows users to switch between player/coach without losing their player profile
       const currentUser = await authStorage.getUser(userId);
-      
+
       if (!currentUser) {
-        return res.status(401).json({ 
+        return res.status(401).json({
           message: "Your session has expired. Please log in again.",
           type: "session_expired"
         });
       }
 
+      // `role` defaults to 'player' in the DB, so it can't tell us whether the
+      // user has chosen — `roleSelectedAt` is the marker that they have.
+      if (currentUser.roleSelectedAt) {
+        // Re-sending the same role is a no-op so retries stay safe.
+        if (currentUser.role === role) {
+          return res.json(currentUser);
+        }
+        return res.status(409).json({
+          message: `Your account is registered as a ${ROLE_LABELS[currentUser.role as UserRole] ?? currentUser.role}. Roles are set once at sign-up and can't be changed. Contact support if this is wrong.`,
+          type: "role_locked",
+          role: currentUser.role,
+        });
+      }
+
+      // Preserve any existing player profile link when the role is first set.
       const playerId = currentUser?.playerId ?? null;
-      
-      const user = await authStorage.updateUserRole(userId, role, playerId);
+
+      // Locks the role — from here only an admin can change it.
+      const user = await authStorage.selectUserRoleAtSignup(userId, role, playerId);
       if (!user) {
         return res.status(404).json({ 
           message: "User not found. Please try logging in again.",

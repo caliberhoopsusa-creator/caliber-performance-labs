@@ -3,6 +3,7 @@ import { useLocation, Link } from "wouter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CaliberLogo } from "@/components/CaliberLogo";
 import { Loader2, ArrowRight, Trophy, BarChart3, GraduationCap } from "lucide-react";
+import { parseDateOfBirth, isUnderMinimumAge } from "@shared/age";
 
 async function loginRequest(email: string, password: string) {
   const res = await fetch("/api/login", {
@@ -18,7 +19,7 @@ async function loginRequest(email: string, password: string) {
   return res.json();
 }
 
-async function registerRequest(email: string, password: string, firstName: string, lastName: string, dateOfBirth?: string) {
+async function registerRequest(email: string, password: string, firstName: string, lastName: string, dateOfBirth: string) {
   const referralCode = localStorage.getItem("caliber_ref") ?? undefined;
   const res = await fetch("/api/register", {
     method: "POST",
@@ -50,7 +51,7 @@ const inputStyle: React.CSSProperties = {
   fontSize: 14,
   outline: "none",
   transition: "border-color 0.15s",
-  fontFamily: "Inter, sans-serif",
+  fontFamily: "var(--font-body)",
 };
 
 const labelStyle: React.CSSProperties = {
@@ -66,7 +67,10 @@ const labelStyle: React.CSSProperties = {
 export default function Login() {
   const [location, navigate] = useLocation();
   const queryClient = useQueryClient();
-  const [mode, setMode] = useState<"login" | "register">("login");
+  // Arriving via /register (all "Get started" CTAs) opens sign-up, not "Welcome back"
+  const [mode, setMode] = useState<"login" | "register">(
+    window.location.pathname === "/register" ? "register" : "login",
+  );
   const redirectTo = new URLSearchParams(location.split("?")[1] ?? "").get("redirect") ?? "/";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -75,18 +79,20 @@ export default function Login() {
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [error, setError] = useState("");
 
-  const isUnder13 = (dob: string) => {
-    if (!dob) return false;
-    const age = (new Date().getTime() - new Date(dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000);
-    return age < 13;
-  };
-  const under13Warning = mode === "register" && isUnder13(dateOfBirth);
+  /* Age check comes from shared/age.ts so this form and POST /api/register
+     cannot drift. The server enforces the same rule; this is only the courtesy
+     of saying so before the round trip. */
+  const parsedDob = mode === "register" ? parseDateOfBirth(dateOfBirth) : null;
+  const under13Warning = Boolean(parsedDob && isUnderMinimumAge(parsedDob));
+  // Date of birth is required at registration, so an empty or unparseable
+  // value has to block submit too, not just an under 13 one.
+  const dobMissing = mode === "register" && !parsedDob;
 
   const mutation = useMutation({
     mutationFn: () =>
       mode === "login"
         ? loginRequest(email, password)
-        : registerRequest(email, password, firstName, lastName, dateOfBirth || undefined),
+        : registerRequest(email, password, firstName, lastName, dateOfBirth),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/users/me"] });
@@ -107,10 +113,9 @@ export default function Login() {
       minHeight: "100vh",
       background: "#080808",
       display: "flex",
-      fontFamily: "Inter, sans-serif",
+      fontFamily: "var(--font-body)",
     }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Inter:wght@400;500;600&display=swap');
         .login-input:focus { border-color: rgba(198,208,216,0.4) !important; }
         @keyframes login-glow {
           0%,100% { opacity: 0.5; }
@@ -139,7 +144,7 @@ export default function Login() {
             <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", marginBottom: 56 }}>
               <CaliberLogo size={28} color="#4f6878" />
               <span style={{
-                fontFamily: "Outfit, sans-serif",
+                fontFamily: "var(--font-display)",
                 fontSize: 15,
                 fontWeight: 800,
                 letterSpacing: "0.12em",
@@ -161,7 +166,7 @@ export default function Login() {
           </div>
 
           <h2 style={{
-            fontFamily: "Outfit, sans-serif",
+            fontFamily: "var(--font-display)",
             fontSize: 34,
             fontWeight: 800,
             color: "#fff",
@@ -225,13 +230,13 @@ export default function Login() {
             <Link href="/">
               <div style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
                 <CaliberLogo size={24} color="#4f6878" />
-                <span style={{ fontFamily: "Outfit, sans-serif", fontSize: 14, fontWeight: 800, letterSpacing: "0.1em", color: "#C6D0D8", textTransform: "uppercase" }}>CALIBER</span>
+                <span style={{ fontFamily: "var(--font-display)", fontSize: 14, fontWeight: 800, letterSpacing: "0.1em", color: "#C6D0D8", textTransform: "uppercase" }}>CALIBER</span>
               </div>
             </Link>
           </div>
 
           <h1 style={{
-            fontFamily: "Outfit, sans-serif",
+            fontFamily: "var(--font-display)",
             fontSize: 26,
             fontWeight: 800,
             color: "#fff",
@@ -375,7 +380,7 @@ export default function Login() {
 
             <button
               type="submit"
-              disabled={mutation.isPending || under13Warning}
+              disabled={mutation.isPending || under13Warning || dobMissing}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -389,10 +394,10 @@ export default function Login() {
                 color: "#fff",
                 fontSize: 15,
                 fontWeight: 700,
-                fontFamily: "Outfit, sans-serif",
+                fontFamily: "var(--font-display)",
                 letterSpacing: "0.03em",
-                cursor: mutation.isPending || under13Warning ? "not-allowed" : "pointer",
-                opacity: mutation.isPending || under13Warning ? 0.7 : 1,
+                cursor: mutation.isPending || under13Warning || dobMissing ? "not-allowed" : "pointer",
+                opacity: mutation.isPending || under13Warning || dobMissing ? 0.7 : 1,
                 boxShadow: "0 0 20px rgba(198,208,216,0.15)",
                 transition: "all 0.2s",
               }}

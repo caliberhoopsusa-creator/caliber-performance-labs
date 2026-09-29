@@ -151,7 +151,7 @@ export function RecruitingCard({ open, onOpenChange, player, stats }: Recruiting
             style={{
               width: 400,
               background: 'linear-gradient(145deg, #0f1419 0%, #1a1f2e 50%, #0f1419 100%)',
-              fontFamily: "'Inter', sans-serif",
+              fontFamily: "var(--font-body)",
               overflow: 'hidden',
               display: 'flex',
               flexDirection: 'column',

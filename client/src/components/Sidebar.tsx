@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, CalendarDays, Film, FileText, ArrowLeftRight, UserPlus, ShoppingBag, ClipboardCheck, Medal, GraduationCap, Heart, Wand2, ChevronDown, ChevronRight, BookOpen, Binoculars, Search, Bookmark, UserSearch, Shield } from "lucide-react";
+import { LayoutDashboard, Users, PlusCircle, Activity, Trophy, Calculator, Video, Target, MessageSquare, BarChart3, Rss, Camera, ClipboardList, UsersRound, CalendarCheck, Eye, Bell, UserCircle, LogOut, CreditCard, Lock, Dumbbell, CalendarDays, Film, FileText, UserPlus, ShoppingBag, ClipboardCheck, Medal, GraduationCap, Heart, Wand2, ChevronDown, ChevronRight, BookOpen, Binoculars, Search, Bookmark, UserSearch, Shield, LayoutTemplate } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -9,9 +9,9 @@ import { useEquippedItems } from "@/contexts/EquippedItemsContext";
 import { AlertsBadge } from "@/components/AlertsCenter";
 import { Button } from "@/components/ui/button";
 import { useSubscription, type SubscriptionTier } from "@/hooks/use-subscription";
-import { useAuth } from "@/hooks/use-auth";
-import { useToast } from "@/hooks/use-toast";
 import { SportToggle, useSport } from "@/components/SportToggle";
+import { ROLE_LABELS, type UserRole } from "@shared/roles";
+import { featureFlags } from "@/lib/features";
 
 type NavItem = {
   href: string;
@@ -36,8 +36,6 @@ type SidebarProps = {
 export function Sidebar({ userRole, playerId }: SidebarProps) {
   const [location] = useLocation();
   const { hasAccess, isPro } = useSubscription();
-  const { switchRole, isSwitchingRole, switchRoleError } = useAuth();
-  const { toast } = useToast();
 
   const [moreExpanded, setMoreExpanded] = useState(() => {
     try {
@@ -54,61 +52,22 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
   }, [moreExpanded]);
 
   const { equippedTheme } = useEquippedItems();
-  const sidebarThemeColor = '#C6D0D8';
+  const sidebarThemeColor = 'hsl(var(--accent))';
   const currentSport = useSport();
-  const isPlayer = userRole === 'player';
-  const isCoach = userRole === 'coach';
-  const isRecruiter = userRole === 'recruiter';
-  const isGuardian = userRole === 'guardian';
+  /* Nav follows the product flags, not just the role. A role whose product is
+     switched off shows the player nav rather than its own, so nothing links
+     into a surface the server now answers with 404. */
+  const isCoach = userRole === 'coach' && featureFlags.ENABLE_COACH_PRODUCT;
+  const isRecruiter = userRole === 'recruiter' && featureFlags.ENABLE_RECRUITER_PRODUCT;
+  const isGuardian = userRole === 'guardian' && featureFlags.ENABLE_GUARDIAN_PRODUCT;
+  // Anything not landing on a live non-player product gets the player nav.
+  const isPlayer = !isCoach && !isRecruiter && !isGuardian;
 
   const { data: pendingGames } = useQuery<{ id: number }[]>({
     queryKey: ['/api/coach/unverified-games'],
     enabled: isCoach,
   });
   const pendingCount = pendingGames?.length ?? 0;
-
-  const handleRoleSwitch = () => {
-    const roleOrder: Array<'player' | 'coach' | 'recruiter' | 'guardian'> = ['player', 'coach', 'recruiter', 'guardian'];
-    const currentIndex = roleOrder.indexOf(userRole as any);
-    const newRole = roleOrder[(currentIndex + 1) % roleOrder.length];
-    switchRole(newRole as any, {
-      onSuccess: () => {
-        const labels: Record<string, string> = { player: 'Player', coach: 'Coach', recruiter: 'Recruiter', guardian: 'Guardian' };
-        toast({ 
-          title: `Switched to ${labels[newRole]} Mode`,
-          description: `You're now viewing the app as a ${labels[newRole].toLowerCase()}.`
-        });
-      },
-      onError: (error) => {
-        const errorMessage = error?.message || 'Failed to switch mode';
-        const errorType = error?.type;
-        
-        if (errorType === 'session_expired') {
-          toast({ 
-            title: 'Session Expired', 
-            description: 'Your session has expired. Please log in again.',
-            variant: 'destructive'
-          });
-          return;
-        }
-        
-        if (errorType === 'network_error') {
-          toast({ 
-            title: 'Network Error', 
-            description: 'Unable to connect. Please check your internet connection.',
-            variant: 'destructive'
-          });
-          return;
-        }
-
-        toast({ 
-          title: 'Error', 
-          description: errorMessage,
-          variant: 'destructive'
-        });
-      }
-    });
-  };
 
   const playerSections: NavSection[] = [
     {
@@ -126,6 +85,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         { href: "/whos-watching", label: "Who's Watching", icon: Binoculars },
         { href: "/highlights", label: "Highlights", icon: Camera },
         { href: "/reel-builder", label: "Reel Builder", icon: Wand2 },
+        { href: "/canvas", label: "Canvas Studio", icon: LayoutTemplate },
         { href: "/scout", label: "Scout Hub", icon: Eye },
       ],
     },
@@ -246,16 +206,13 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         <CaliberLogo size={44} color={sidebarThemeColor} />
         <div className="flex-1">
           <h1 className="text-xl font-bold font-display tracking-wider uppercase text-platinum" style={{ color: sidebarThemeColor }}>CALIBER</h1>
-          <button 
-            onClick={handleRoleSwitch}
-            disabled={isSwitchingRole}
-            className="flex items-center gap-1.5 text-xs text-muted-foreground uppercase tracking-widest font-medium transition-colors cursor-pointer"
-            data-testid="button-switch-role"
-            aria-label={`Switch to ${isPlayer ? 'Coach' : isCoach ? 'Recruiter' : isRecruiter ? 'Guardian' : isGuardian ? 'Player' : 'Player'} Mode`}
+          {/* Role is locked to the one chosen at sign-up — a label, not a control. */}
+          <p
+            className="text-xs text-muted-foreground uppercase tracking-widest font-medium"
+            data-testid="text-user-role"
           >
-            {isGuardian ? "Guardian" : isRecruiter ? "Recruiter" : isPlayer ? "Player" : "Coach"} Mode
-            <ArrowLeftRight className="w-3 h-3" />
-          </button>
+            {ROLE_LABELS[userRole as UserRole] ?? "Player"} Mode
+          </p>
         </div>
         {isCoach && (
           <Link href="/coach/alerts" className="text-muted-foreground transition-colors" data-testid="header-alerts-badge">
@@ -267,7 +224,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
       <nav className="flex-1 p-3 space-y-6">
         {navSections.map((section) => (
           <div key={section.title}>
-            <h3 className="text-[11px] font-bold text-muted-foreground/55 uppercase tracking-[0.13em] mb-3 px-3">{section.title}</h3>
+            <h3 className="text-[11px] font-bold text-muted-foreground/70 uppercase tracking-[0.13em] mb-3 px-3">{section.title}</h3>
             <div className="space-y-0.5">
               {section.items.map((item) => {
                 const baseHref = item.href.split('?')[0];
@@ -316,7 +273,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
           <div>
             <button
               onClick={() => setMoreExpanded(!moreExpanded)}
-              className="flex items-center gap-2 w-full text-[11px] font-bold text-muted-foreground/55 uppercase tracking-[0.13em] mb-3 px-3 cursor-pointer transition-colors hover:text-muted-foreground/80"
+              className="flex items-center gap-2 w-full text-[11px] font-bold text-muted-foreground/70 uppercase tracking-[0.13em] mb-3 px-3 cursor-pointer transition-colors hover:text-muted-foreground/90"
               data-testid="button-more-toggle"
             >
               {moreExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
@@ -363,7 +320,7 @@ export function Sidebar({ userRole, playerId }: SidebarProps) {
         )}
 
         <div>
-          <h3 className="text-[11px] font-bold text-muted-foreground/55 uppercase tracking-[0.13em] mb-3 px-3">{accountSection.title}</h3>
+          <h3 className="text-[11px] font-bold text-muted-foreground/70 uppercase tracking-[0.13em] mb-3 px-3">{accountSection.title}</h3>
           <div className="space-y-0.5">
             {accountSection.items.map((item) => {
               const isActive = location === item.href;
@@ -407,11 +364,14 @@ type MobileNavProps = {
 
 export function MobileNav({ userRole, playerId }: MobileNavProps) {
   const [location] = useLocation();
-  const isPlayer = userRole === 'player';
-  const isRecruiter = userRole === 'recruiter';
-  
-  const isGuardian = userRole === 'guardian';
-  
+  /* Same rule as the sidebar: a switched off product shows the player bar.
+     This also closes a standing bug, where the coach bar was the `else` branch
+     and so was served to any role the chain did not recognise. Coach is now an
+     explicit case and player is the fallback. */
+  const isCoach = userRole === 'coach' && featureFlags.ENABLE_COACH_PRODUCT;
+  const isRecruiter = userRole === 'recruiter' && featureFlags.ENABLE_RECRUITER_PRODUCT;
+  const isGuardian = userRole === 'guardian' && featureFlags.ENABLE_GUARDIAN_PRODUCT;
+
   const navItems = isGuardian ? [
     { href: "/family", icon: Heart, label: "Family" },
     { href: "/discover/highlights", icon: Film, label: "Highlights" },
@@ -420,18 +380,18 @@ export function MobileNav({ userRole, playerId }: MobileNavProps) {
     { href: "/recruiter?tab=bookmarks", icon: Bookmark, label: "Saved" },
     { href: "/discover/players", icon: Users, label: "Directory" },
     { href: "/discover/highlights", icon: Film, label: "Discover" },
-  ] : isPlayer ? [
-    { href: playerId ? `/players/${playerId}` : "/", icon: UserCircle, label: "Profile" },
-    { href: "/community?tab=feed", icon: Rss, label: "Feed" },
-    { href: "/analyze", icon: PlusCircle, label: "Log", featured: true },
-    { href: "/recruiting", icon: GraduationCap, label: "Recruiting" },
-    { href: "/discover/highlights", icon: Film, label: "Highlights" },
-  ] : [
+  ] : isCoach ? [
     { href: "/", icon: LayoutDashboard, label: "Home" },
     { href: "/analyze", icon: PlusCircle, label: "Log", featured: true },
     { href: "/scout", icon: Eye, label: "Scout" },
     { href: "/coach", icon: ClipboardList, label: "Coach" },
     { href: "/players", icon: Users, label: "Roster" },
+  ] : [
+    { href: playerId ? `/players/${playerId}` : "/", icon: UserCircle, label: "Profile" },
+    { href: "/community?tab=feed", icon: Rss, label: "Feed" },
+    { href: "/analyze", icon: PlusCircle, label: "Log", featured: true },
+    { href: "/recruiting", icon: GraduationCap, label: "Recruiting" },
+    { href: "/discover/highlights", icon: Film, label: "Highlights" },
   ];
   
   return (

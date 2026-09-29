@@ -52,7 +52,7 @@ export const tokens = {
   // TYPOGRAPHY
   typography: {
     fonts: {
-      sans: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      sans: '"Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
       mono: '"Fira Code", monospace',
     },
     sizes: {

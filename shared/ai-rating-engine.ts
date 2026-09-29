@@ -1,5 +1,26 @@
 import { Sport, BASKETBALL_POSITIONS, BasketballPosition } from './sports-config';
 
+/**
+ * Production weights per position. They sum to 1.0 each.
+ *
+ * PG and SG split the old Guard weights: a point guard is credited more for
+ * creating, a shooting guard more for scoring. PF and C split the old Big
+ * weights the same way, with the centre weighted toward rebounding and blocks.
+ * SF keeps the old Wing profile unchanged.
+ */
+const POSITION_WEIGHTS: Record<BasketballPosition, { pts: number; reb: number; ast: number; stl: number; blk: number }> = {
+  PG: { pts: 0.40, reb: 0.10, ast: 0.40, stl: 0.07, blk: 0.03 },
+  SG: { pts: 0.50, reb: 0.15, ast: 0.25, stl: 0.05, blk: 0.05 },
+  SF: { pts: 0.40, reb: 0.20, ast: 0.20, stl: 0.10, blk: 0.10 },
+  PF: { pts: 0.35, reb: 0.33, ast: 0.12, stl: 0.08, blk: 0.12 },
+  C:  { pts: 0.28, reb: 0.37, ast: 0.08, stl: 0.07, blk: 0.20 },
+};
+
+/** Typical height in inches, used only to scale the athletic sub score. */
+const POSITION_HEIGHT_AVG_INCHES: Record<BasketballPosition, number> = {
+  PG: 73, SG: 75, SF: 78, PF: 80, C: 82,
+};
+
 export interface SubScores {
   production: number;
   efficiency: number;
@@ -222,12 +243,12 @@ export function calculateBasketballSubScores(
     const blk = (game.blocks || 0) * per36;
     const tov = (game.turnovers || 0) * per36;
     
-    let positionWeights = { pts: 0.5, reb: 0.15, ast: 0.25, stl: 0.05, blk: 0.05 };
-    if (position === 'Wing') {
-      positionWeights = { pts: 0.4, reb: 0.2, ast: 0.2, stl: 0.1, blk: 0.1 };
-    } else if (position === 'Big') {
-      positionWeights = { pts: 0.3, reb: 0.35, ast: 0.1, stl: 0.1, blk: 0.15 };
-    }
+    /* Weights per position (migrated to the five, 2026-09-25).
+       The old three bucket weights are preserved at the ends of the spectrum;
+       the two new positions sit between their neighbours rather than being
+       invented from nothing. A PG is credited for creating, a C for finishing
+       and protecting the rim. */
+    const positionWeights = POSITION_WEIGHTS[position] ?? POSITION_WEIGHTS.SG;
     
     const prodScore = (
       (pts / 25) * positionWeights.pts +
@@ -295,7 +316,7 @@ export function calculateBasketballSubScores(
     }
     if (metrics.height) {
       const heightInches = parseHeightToInches(metrics.height);
-      const positionAvg = position === 'Guard' ? 74 : position === 'Wing' ? 78 : 82;
+      const positionAvg = POSITION_HEIGHT_AVG_INCHES[position] ?? 76;
       athleticScore += 50 + ((heightInches - positionAvg) / 6) * 25;
       athleticCount++;
     }

@@ -218,7 +218,7 @@ export default function Pricing() {
             Upgrade Your <span className="text-accent">Game</span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mt-4">
-            Choose the plan that fits your goals. Level up with premium analytics and insights.
+            Choose the plan that fits your goals. Go deeper with premium analytics and insights.
           </p>
         </div>
 

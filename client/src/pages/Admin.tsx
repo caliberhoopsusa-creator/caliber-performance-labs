@@ -39,10 +39,9 @@ const T = {
 function AdminFonts() {
   return (
     <style>{`
-      @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Barlow:wght@400;500;600&display=swap');
       .admin-root * { box-sizing: border-box; }
-      .admin-root { font-family: 'Barlow', sans-serif; color: ${T.text}; background: ${T.bg}; }
-      .admin-heading { font-family: 'Barlow Condensed', sans-serif; }
+      .admin-root { font-family: var(--font-body); color: ${T.text}; background: ${T.bg}; }
+      .admin-heading { font-family: var(--font-display); }
       .admin-mono { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
       .admin-scan {
         background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(198,208,216,0.01) 2px, rgba(198,208,216,0.01) 4px);
@@ -137,7 +136,7 @@ function LoginScreen({ onLogin }: { onLogin: () => void }) {
             display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
             width: "100%", padding: "11px 0",
             background: T.platinum, color: "#07090f", border: "none", borderRadius: 8,
-            fontFamily: "'Barlow Condensed', sans-serif", fontSize: 15, fontWeight: 700,
+            fontFamily: "var(--font-display)", fontSize: 15, fontWeight: 700,
             letterSpacing: "0.06em", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1,
           }}>
             {loading && <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} />}
@@ -970,7 +969,7 @@ function SeasonsPanel() {
           <button onClick={() => setCreating(c => !c)} style={{
             display: "flex", alignItems: "center", gap: 6, padding: "8px 16px",
             background: T.platinum, color: T.bg, border: "none", borderRadius: 8,
-            fontFamily: "'Barlow Condensed', sans-serif", fontSize: 13, fontWeight: 700,
+            fontFamily: "var(--font-display)", fontSize: 13, fontWeight: 700,
             letterSpacing: "0.06em", cursor: "pointer",
           }}>
             {creating ? "Cancel" : "+ New Season"}
@@ -997,7 +996,7 @@ function SeasonsPanel() {
           <button onClick={() => createSeason.mutate()} disabled={createSeason.isPending} style={{
             display: "flex", alignItems: "center", gap: 6, padding: "9px 20px",
             background: T.platinum, color: T.bg, border: "none", borderRadius: 8,
-            fontFamily: "'Barlow Condensed', sans-serif", fontSize: 13, fontWeight: 700,
+            fontFamily: "var(--font-display)", fontSize: 13, fontWeight: 700,
             cursor: createSeason.isPending ? "wait" : "pointer", opacity: createSeason.isPending ? 0.7 : 1,
           }}>
             {createSeason.isPending && <Loader2 size={13} style={{ animation: "spin 1s linear infinite" }} />}

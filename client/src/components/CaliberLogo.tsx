@@ -5,6 +5,12 @@ interface CaliberLogoProps {
   size?: number;
   color?: string;
   className?: string;
+  /**
+   * Chrome-fill mode (operator 2026-07-17, metal-led direction): paints the
+   * glyph with the liquid-metal sheen (same stops as `.wordmark-metal` /
+   * `METAL_TEXT_STYLE`) instead of a flat color. Takes priority over `color`.
+   */
+  chrome?: boolean;
 }
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
@@ -63,7 +69,16 @@ function hslStringToHex(hslStr: string): string {
 
 const IMG_ASPECT = 1204 / 650;
 
-export function CaliberLogo({ size = 32, color, className }: CaliberLogoProps) {
+/** Read a token's raw "H S% L%" custom property as a canvas-safe hsl() string
+ *  (canvas fillStyle can't resolve var() — it isn't cascaded to an element). */
+function resolveTokenHsl(varName: string, fallback = "#9aa3ad"): string {
+  if (typeof document === "undefined") return fallback;
+  const raw = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+  const parts = raw.split(/\s+/);
+  return parts.length >= 3 ? `hsl(${parts[0]}, ${parts[1]}, ${parts[2]})` : fallback;
+}
+
+export function CaliberLogo({ size = 32, color, chrome, className }: CaliberLogoProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [imgLoaded, setImgLoaded] = useState(false);
   const imgRef = useRef<HTMLImageElement | null>(null);
@@ -86,7 +101,66 @@ export function CaliberLogo({ size = 32, color, className }: CaliberLogoProps) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-    let targetHex = color;
+    if (chrome) {
+      /* Chrome-fill: build a pure alpha silhouette from the glyph's darkness
+         (white fill, alpha = darkness), then composite the liquid-metal
+         gradient into it with `source-in` — a true chrome fill instead of a
+         flat recolor. Tokens only (design-language §4). */
+      const silhouette = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const sData = silhouette.data;
+      for (let i = 0; i < sData.length; i += 4) {
+        const r = sData[i], g = sData[i + 1], b = sData[i + 2], a = sData[i + 3];
+        if (a < 10) continue;
+        const darkness = 1 - (r + g + b) / 3 / 255;
+        if (darkness > 0.15) {
+          sData[i] = 255;
+          sData[i + 1] = 255;
+          sData[i + 2] = 255;
+          sData[i + 3] = Math.round(darkness * 255);
+        } else {
+          sData[i + 3] = 0;
+        }
+      }
+      ctx.putImageData(silhouette, 0, 0);
+
+      const gradient = ctx.createLinearGradient(
+        0,
+        canvas.height * 0.1,
+        canvas.width,
+        canvas.height * 0.9,
+      );
+      gradient.addColorStop(0, resolveTokenHsl("--silver-mute"));
+      gradient.addColorStop(0.25, resolveTokenHsl("--silver"));
+      gradient.addColorStop(0.5, resolveTokenHsl("--silver-hi"));
+      gradient.addColorStop(0.75, resolveTokenHsl("--silver"));
+      gradient.addColorStop(1, resolveTokenHsl("--silver-mute"));
+
+      ctx.globalCompositeOperation = "source-in";
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.globalCompositeOperation = "source-over";
+      return;
+    }
+
+    /* Resolve the target color to hex. Accepts hex, hsl(...), or a token
+       reference like "hsl(var(--crimson))" (tokens-only rule — no raw hex at
+       call sites). Raw token values are space-separated: "356 85% 55%". */
+    let targetHex: string | undefined = color;
+    if (targetHex) {
+      const varMatch = targetHex.match(/^hsl\(\s*var\((--[\w-]+)\)\s*\)$/);
+      if (varMatch) {
+        const raw = getComputedStyle(document.documentElement)
+          .getPropertyValue(varMatch[1])
+          .trim();
+        const parts = raw.split(/\s+/);
+        targetHex =
+          parts.length >= 3
+            ? hslStringToHex(`hsl(${parts[0]}, ${parts[1]}, ${parts[2]})`)
+            : undefined;
+      } else if (targetHex.startsWith("hsl")) {
+        targetHex = hslStringToHex(targetHex);
+      }
+    }
     if (!targetHex) {
       const cssColor = getAccentColorFromCSS();
       targetHex = cssColor.startsWith("hsl") ? hslStringToHex(cssColor) : cssColor;
@@ -116,7 +190,7 @@ export function CaliberLogo({ size = 32, color, className }: CaliberLogoProps) {
     }
 
     ctx.putImageData(imageData, 0, 0);
-  }, [displayWidth, displayHeight, color, imgLoaded]);
+  }, [displayWidth, displayHeight, color, chrome, imgLoaded]);
 
   useEffect(() => {
     const img = new Image();
@@ -136,12 +210,15 @@ export function CaliberLogo({ size = 32, color, className }: CaliberLogoProps) {
   }, [recolor]);
 
   useEffect(() => {
-    if (!color) {
+    /* only the "follow the live accent token" path needs to watch for theme
+       mutations — an explicit color or chrome fill is already token-resolved
+       fresh on every recolor() call. */
+    if (!color && !chrome) {
       const observer = new MutationObserver(() => recolor());
       observer.observe(document.documentElement, { attributes: true, attributeFilter: ["style"] });
       return () => observer.disconnect();
     }
-  }, [color, recolor]);
+  }, [color, chrome, recolor]);
 
   return (
     <canvas
