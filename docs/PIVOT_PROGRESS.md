@@ -803,62 +803,50 @@ is the same trap the card renderer just fell into.
 
 ---
 
-# RESUME HERE (2026-09-28)
+# RESUME HERE (2026-09-29)
 
 ## State
 
-Branch `feat/role-lock-and-cleanup`. Five commits, tree clean.
+Branch `feat/role-lock-and-cleanup`. Tree clean after the docs commit.
 **NOT PUSHED.** `git push -u origin feat/role-lock-and-cleanup` was blocked by
 the sandbox classifier, so the operator has to run it.
 
-```
-a993d21 docs: deploy runbook for the beta
-0d16f51 feat(landing): finish the card face and give the landing atmosphere
-cf37be9 docs: record that the gate never builds or boots the production bundle
-cf50849 fix(card): make the card renderer work in the production build
-ad77297 feat(pivot): turn Caliber from coach-first to player-first
-```
-
-Gate: `npm run check` clean, 23 files, 374 passed, 2 skipped.
+Gate: `npm run check` clean, 23 files, 377 passed, 2 skipped.
+`npm run build` passes. `dist/index.cjs` was NOT booted this session.
 
 Sections 1 to 7 are DONE. **Section 8 (the one metric) is NOT started.**
 
 ## The deadline
 
-A beta has to be up for a **Nike application, one day of runway** from
-2026-09-28. `docs/DEPLOY_BETA.md` is the runbook and the deploy path is
-verified working end to end against the real production bundle.
+A beta has to be up for a **Nike application**. `docs/DEPLOY_BETA.md` is the
+runbook.
 
-## The task that was in flight
+## Done 2026-09-29: SIGNAL chrome stripped from the demo path (`aa0a0ad`)
 
-**Strip the SIGNAL app shell from the CALIBER demo path.** This is the biggest
-remaining visual problem and the highest value work left.
+For a player on `/`, `/grade-pending`, `/leaderboard`, `/players/:id/caliber`
+and `/roster`, `MainRouter` renders `pages/caliber/CaliberNav.tsx` (wordmark,
+Card, Board, Sign out, 52px) instead of the SIGNAL header, `StatsTicker`,
+email banner, sidebar, bottom bar, FAB and `OnboardingTour`. The route list is
+`usesCaliberShell()` in `shared/roles.ts`, player only. `/claim/:token`,
+signup and the landing never entered the app shell.
 
-Measured on a 390x844 phone at `/` signed in: the player's card, which is the
-entire product, gets about 580 of 844 pixels and is cut off. Above it sit
-roughly 190px of chrome, 22% of the viewport:
+**Not yet verified visually.** Needs a signed in player at 390x844 on each of
+the five routes. Check in particular that `bg-background` does not render
+light for a player who once picked light mode (`ThemeProvider` still runs).
 
-1. Header: hamburger, crimson SIGNAL logo, coin balance in yellow, inventory
-   box, **a light/dark theme toggle**, notification bell.
-2. `StatsTicker`, a marquee repeating the grade the card already shows.
-3. An email verification banner.
+## Next
 
-Then a bottom nav plus a floating action button below.
+1. Visual check of the above (needs a test player on the live DB, cleaned up
+   after).
+2. Relaunch the lost audit of player path copy for false claims.
+3. Section 8.
 
-Three of those are direct design system violations. `docs/CALIBER_DESIGN.md`
-section 7 refuses "Light mode or a theme toggle", and the logo is the SIGNAL
-crimson `#E11D2A` that the same doc bans on player surfaces.
+## Machine note
 
-The demo path to fix, in order: `/` landing (already clean), `/signup`,
-`/grade-pending`, `/` PlayerHome, `/leaderboard`, `/players/:id/caliber`,
-`/roster`, `/claim/:token`.
-
-Two subagents were mapping this when the session ended and their findings were
-lost: one on the shell architecture and the safest way to suppress chrome
-per route, one auditing player path copy for false claims. **Both need
-relaunching.** `client/src/components/FloatingActionButton.tsx` already hides
-itself per route, so there is existing precedent to follow rather than a new
-mechanism to invent.
+On 2026-09-28 the machine ran critically low on memory: the dev server was
+killed and a full test run took 5.9 hours with 35 spurious failures. The same
+suite passed in 6 minutes once memory recovered. Do not run the build and the
+suite at the same time; the build was killed (exit 144) doing that.
 
 ## Known landmines
 
