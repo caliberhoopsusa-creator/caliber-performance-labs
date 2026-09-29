@@ -57,6 +57,7 @@ const GradePending = lazy(() => import("@/pages/caliber/GradePending"));
 const PlayerHome = lazy(() => import("@/pages/caliber/PlayerHome"));
 const CaliberLeaderboard = lazy(() => import("@/pages/caliber/CaliberLeaderboard"));
 import { CaliberNav, CaliberFooter } from "@/pages/caliber/CaliberNav";
+import { color as caliberColor } from "@/design/caliber/tokens";
 const RosterPrompt = lazy(() => import("@/pages/caliber/RosterPrompt"));
 const ClaimCard = lazy(() => import("@/pages/caliber/ClaimCard"));
 const AnalyzeGame = lazy(() => import("./pages/AnalyzeGame"));
@@ -256,6 +257,11 @@ function AuthenticatedLogo() {
   );
 }
 
+/* Cosmetic: the CALIBER pages paint `court`, and the SIGNAL `bg-background`
+   behind them is a shade darker, which drew a visible inset box around every
+   page. */
+const CALIBER_SHELL_BACKGROUND: React.CSSProperties = { background: caliberColor.court };
+
 function MainRouter() {
   const { user: authUser, isLoading: authLoading } = useAuth();
   const { data: extendedUser, isLoading: userLoading, isError: userError, refetch: refetchUser } = useExtendedUser();
@@ -288,7 +294,9 @@ function MainRouter() {
       return <TermsPage />;
     }
     // Sign up is the CALIBER player flow; sign in stays on the existing page.
-    if (location === "/register") {
+    // `/signup` is an alias: ClaimCard sends a signed out teammate there, and
+    // it used to fall through to the landing, stranding their claim token.
+    if (location === "/register" || location === "/signup") {
       return <CaliberSignup />;
     }
     if (location === "/login") {
@@ -366,9 +374,15 @@ function MainRouter() {
       >
         Skip to main content
       </a>
-      <div className="flex min-h-screen w-full max-w-full overflow-x-hidden bg-background text-foreground font-body selection:bg-primary/30">
+      <div
+        className="flex min-h-screen w-full max-w-full overflow-x-hidden bg-background text-foreground font-body selection:bg-primary/30"
+        style={caliberShell ? CALIBER_SHELL_BACKGROUND : undefined}
+      >
         {!caliberShell && <Sidebar userRole={resolvedUser.role!} playerId={resolvedUser.playerId} />}
-        <div className="flex-1 flex flex-col min-w-0 relative bg-background">
+        <div
+          className="flex-1 flex flex-col min-w-0 relative bg-background"
+          style={caliberShell ? CALIBER_SHELL_BACKGROUND : undefined}
+        >
           {caliberShell ? <CaliberNav /> : (<>
           <header className="mobile-header-blur md:static md:backdrop-blur-none md:bg-transparent relative z-10 flex items-center justify-between gap-2 px-3 py-2 md:p-4 md:px-8 border-b border-border overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-accent/8 via-transparent to-transparent pointer-events-none" />
